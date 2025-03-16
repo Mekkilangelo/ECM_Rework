@@ -1,0 +1,23 @@
+# Dépendances
+node_modules/
+**/node_modules/
+
+# Fichiers d'environnement
+.env
+**/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+/build
+/dist
+**/build
+**/dist
+
+# Divers
+.DS_Store
+.vscode/
+.idea/

@@ -3,13 +3,30 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const errorHandler = require('./middleware/errorHandler');
+const db = require('./models');
+const { testConnection } = require('./config/database');
+const { PORT } = require('./config/config');
 const logger = require('./utils/logger');
+
+// Routes
+const authRoutes = require('./routes/auth');
+const clientRoutes = require('./routes/clients');
+const orderRoutes = require('./routes/orders');
+const partRoutes = require('./routes/parts');
+const testRoutes = require('./routes/tests');
+const steelRoutes = require('./routes/steels');
+const fileRoutes = require('./routes/files');
+const enumRoutes = require('./routes/enums');
+const hierarchyRoutes = require('./routes/hierarchy');
 
 // Initialize express app
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -19,19 +36,26 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Routes (commented out for initial testing)
-// Auth routes
-// app.use('/api/auth', require('./routes/auth'));
+testConnection();
 
-// Data routes - uncomment as you implement each one
-// app.use('/api/clients', require('./routes/clients'));
-// app.use('/api/orders', require('./routes/orders')); 
-// app.use('/api/parts', require('./routes/parts'));
-// app.use('/api/tests', require('./routes/tests'));
-// app.use('/api/steels', require('./routes/steels'));
-// app.use('/api/files', require('./routes/files'));
-// app.use('/api/enums', require('./routes/enums'));
-// app.use('/api/hierarchy', require('./routes/hierarchy'));
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// Data routes
+
+// app.use('/api/clients', clientRoutes);
+// app.use('/api/orders', orderRoutes);
+// app.use('/api/parts', partRoutes);
+// app.use('/api/tests', testRoutes);
+// app.use('/api/steels', steelRoutes);
+// app.use('/api/files', fileRoutes);
+// app.use('/api/enums', enumRoutes);
+app.use('/api/hierarchy', hierarchyRoutes);
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'Bienvenue sur l\'API de gestion hiérarchique' });
+});
 
 // Basic test route to verify API is working
 app.get('/api/test', (req, res) => {

@@ -1,20 +1,11 @@
 {
-  "name": "rework_ecm",
+  "name": "rework",
   "version": "1.0.0",
+  "description": "OK\r TEST DISTANT",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Mekkilangelo/ECM_Rework.git"
-  },
-  "keywords": [],
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Mekkilangelo/ECM_Rework/issues"
-  },
-  "homepage": "https://github.com/Mekkilangelo/ECM_Rework#readme",
-  "description": ""
+  "license": "ISC"
 }

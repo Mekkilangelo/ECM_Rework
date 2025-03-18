@@ -1,3 +1,5 @@
+const { sequelize } = require('../models');
+
 /**
  * Configuration de la connexion à la base de données
  */
@@ -37,6 +39,7 @@ const testConnection = async () => {
 };
 
 module.exports = {
+  sequelize,
   ...config,
   testConnection
 };

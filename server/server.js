@@ -9,8 +9,13 @@ const PORT = process.env.PORT || 5001;
 // Test database connection before starting server
 async function startServer() {
   try {
+    // Test database connection
     await sequelize.authenticate();
     logger.info('Database connection established successfully.');
+
+    // Sync models with the database
+    await sequelize.sync({ force: true }); // This will create the tables if they don't exist
+    logger.info('Tables synchronized successfully.');    
 
     // Start the server
     app.listen(PORT, () => {

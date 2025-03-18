@@ -1,0 +1,54 @@
+/* Header styles */
+.topbar .nav-item {
+    height: 4.375rem;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+  }
+  
+  .topbar .topbar-divider {
+    width: 0;
+    border-right: 1px solid #e3e6f0;
+    height: calc(4.375rem - 2rem);
+    margin: auto 1rem;
+  }
+  
+  .img-profile {
+    height: 2.5rem;
+    width: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  
+  .username-display {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .user-avatar {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Button animation on hover */
+  .btn-outline-danger:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s;
+  }
+  
+  /* Search focus effects */
+  .form-control:focus {
+    border-color: rgba(220, 53, 69, 0.2) !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.2) !important;
+  }
+  
+  /* Mobile search optimizations */
+  @media (max-width: 576px) {
+    #mobileSearchForm {
+      width: 18rem;
+      right: -60px;
+    }
+  }
+  

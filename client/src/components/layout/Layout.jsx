@@ -2,7 +2,7 @@ import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
-import Chatbot from '../common/Chatbot/Chatbot';
+import Chatbot from './Chatbot';
 
 const Layout = ({ children }) => {
   return (

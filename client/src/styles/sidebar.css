@@ -1,0 +1,91 @@
+/* styles/sidebar.css */
+/* Augmenter la spécificité en précisant l'ID et forcer les styles avec !important */
+#accordionSidebar.navbar-nav.bg-dark.sidebar {
+    min-height: 100vh !important;
+    width: 225px !important;
+    transition: all 0.3s !important;
+    z-index: 1 !important;
+    background-color: #343a40 !important; /* bg-dark de Bootstrap */
+}
+
+#accordionSidebar.sidebar.toggled {
+    width: 0 !important;
+    overflow: hidden !important;
+}
+
+#accordionSidebar .sidebar-heading {
+    padding: 0.75rem 1rem !important;
+    font-weight: 800 !important;
+    font-size: 0.65rem !important;
+    text-transform: uppercase !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Override pour les liens - augmenter la spécificité */
+#accordionSidebar.sidebar .nav-item .nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+    padding: 0.5rem 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+#accordionSidebar.sidebar .nav-item .nav-link:hover,
+#accordionSidebar.sidebar .nav-item .nav-link.active {
+    color: #ffc107 !important; /* Bootstrap warning color */
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-radius: 0.35rem !important;
+}
+
+/* Style spécifique pour les icônes */
+#accordionSidebar.sidebar .nav-link svg.svg-inline--fa,
+#accordionSidebar.sidebar .nav-link i.fas {
+    margin-right: 0.5rem !important;
+    width: 1.25em !important;
+}
+
+/* Style pour le lien actif avec fond jaune */
+#accordionSidebar.sidebar .nav-link.active.bg-warning {
+    background-color: #ffc107 !important; 
+    color: #212529 !important;
+}
+
+/* Styling for mobile responsive */
+@media (max-width: 768px) {
+    #accordionSidebar.sidebar {
+        width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    #accordionSidebar.sidebar.toggled {
+        width: 225px !important;
+    }
+}
+
+/* Dividers avec spécificité accrue */
+#accordionSidebar.sidebar hr.border-secondary {
+    margin: 0.5rem 1rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Sidebar toggle button avec spécificité accrue */
+#accordionSidebar #sidebarToggle {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+}
+
+#accordionSidebar #sidebarToggle:hover {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Client selection form styling avec spécificité accrue */
+#accordionSidebar.sidebar #client-form {
+    padding: 0 0.75rem !important;
+}
+
+#accordionSidebar.sidebar #client-form label {
+    display: block !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.85rem !important;
+}

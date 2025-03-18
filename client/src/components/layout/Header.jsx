@@ -1,45 +1,131 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faSearch, 
+  faBars, 
+  faSignOutAlt,
+  faUser
+} from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
+import '../../styles/header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Logique de recherche ici
+    console.log('Searching for:', searchTerm);
+  };
+
+  // Format the user initials for the avatar if no profile image
+  const getUserInitials = () => {
+    if (!user?.username) return 'U';
+    return user.username.split(' ')
+      .map(name => name.charAt(0).toUpperCase())
+      .join('').substring(0, 2);
+  };
 
   return (
     <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-      <form className="form-inline">
-        <button id="sidebarToggleTop" className="btn btn-link d-md-none rounded-circle mr-3">
-          <i className="fa fa-bars"></i>
-        </button>
-      </form>
+      {/* Sidebar Toggle (Topbar) - Mobile */}
+      <button id="sidebarToggleTop" className="btn btn-link d-md-none rounded-circle mr-3">
+        <FontAwesomeIcon icon={faBars} />
+      </button>
       
-      <form className="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+      {/* Topbar Search */}
+      <form 
+        className="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search"
+        onSubmit={handleSearch}
+      >
         <div className="input-group">
           <input 
             type="text" 
             className="form-control bg-light border-0 small" 
-            placeholder="Search for..."
+            placeholder="Search for data, clients, reports..."
             aria-label="Search" 
             aria-describedby="basic-addon2"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <div className="input-group-append">
-            <button className="btn btn-dark" type="button">
-              <i className="fas fa-search fa-sm"></i>
+            <button className="btn btn-danger" type="submit">
+              <FontAwesomeIcon icon={faSearch} size="sm" />
             </button>
           </div>
         </div>
       </form>
       
+      {/* Topbar Navbar */}
       <ul className="navbar-nav ml-auto">
-        <li className="nav-item">
-          <span className="nav-link text-gray-600 small">{user?.username}</span>
-        </li>
-        <li className="nav-item">
-          <button 
-            className="nav-link text-gray-600 small" 
-            onClick={logout} 
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+        {/* Nav Item - Search Dropdown (Only Visible in Mobile) */}
+        <li className="nav-item dropdown no-arrow d-sm-none">
+          <a 
+            className="nav-link" 
+            href="#" 
+            id="searchDropdown" 
+            role="button" 
+            data-toggle="dropdown" 
+            aria-haspopup="true" 
+            aria-expanded="false"
+            onClick={(e) => {
+              e.preventDefault();
+              document.getElementById('mobileSearchForm').classList.toggle('d-none');
+            }}
           >
-            <i className="fas fa-sign-out-alt fa-sm fa-fw text-gray-400"></i>
+            <FontAwesomeIcon icon={faSearch} />
+          </a>
+          <div 
+            className="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in d-none" 
+            id="mobileSearchForm"
+          >
+            <form className="form-inline mr-auto w-100 navbar-search" onSubmit={handleSearch}>
+              <div className="input-group">
+                <input 
+                  type="text" 
+                  className="form-control bg-light border-0 small" 
+                  placeholder="Search for..." 
+                  aria-label="Search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="input-group-append">
+                  <button className="btn btn-danger" type="submit">
+                    <FontAwesomeIcon icon={faSearch} size="sm" />
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </li>
+
+        <div className="topbar-divider d-none d-sm-block"></div>
+
+        {/* User Info */}
+        <li className="nav-item d-flex align-items-center">
+          <span className="text-gray-600 small mr-3 username-display">
+            {user?.username || 'User'}
+          </span>
+          <div className="user-avatar mr-2">
+            {user?.profileImage ? (
+              <img 
+                className="img-profile rounded-circle" 
+                src={user.profileImage}
+                alt={user.username}
+              />
+            ) : (
+              <div className="img-profile rounded-circle bg-danger text-white d-flex align-items-center justify-content-center">
+                {getUserInitials()}
+              </div>
+            )}
+          </div>
+          <button
+            className="btn btn-sm btn-outline-danger"
+            onClick={logout}
+            title="Logout"
+          >
+            <FontAwesomeIcon icon={faSignOutAlt} className="mr-1" />
             Logout
           </button>
         </li>

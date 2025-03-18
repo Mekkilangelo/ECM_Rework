@@ -11,7 +11,7 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   
   // JWT pour l'authentification
-  JWT_SECRET: process.env.JWT_SECRET || 'votre_secret_jwt',
+  JWT_SECRET: process.env.JWT_SECRET || 'your_secret_jwt',
   JWT_EXPIRE: process.env.JWT_EXPIRE || '24h',
   
   // Chemins pour les fichiers

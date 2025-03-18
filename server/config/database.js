@@ -6,7 +6,7 @@ require('dotenv').config();
 // Paramètres de la base de données depuis les variables d'environnement
 const config = {
   host: process.env.DB_HOST || '127.0.0.1',
-  database: process.env.DB_NAME || 'ecm_wp1',
+  database: process.env.DB_NAME || 'synergy',
   port: process.env.DB_PORT || 3306,
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',

@@ -15,8 +15,10 @@ const orderRoutes = require('./routes/orders');
 const partRoutes = require('./routes/parts');
 const testRoutes = require('./routes/tests');
 const steelRoutes = require('./routes/steels');
-const fileRoutes = require('./routes/files');
-const enumRoutes = require('./routes/enums');
+//const fileRoutes = require('./routes/files');
+const furnaceRoutes = require('./routes/furnaces'); 
+//const userRoutes = require('./routes/users'); 
+// const enumRoutes = require('./routes/enums');
 const hierarchyRoutes = require('./routes/hierarchy');
 
 // Initialize express app
@@ -38,19 +40,20 @@ app.use((req, res, next) => {
 
 testConnection();
 
-// Auth routes
+// Auth routes - si différent de userRoutes
 app.use('/api/auth', authRoutes);
 
-// Data routes
-
-// app.use('/api/clients', clientRoutes);
-// app.use('/api/orders', orderRoutes);
-// app.use('/api/parts', partRoutes);
-// app.use('/api/tests', testRoutes);
-// app.use('/api/steels', steelRoutes);
-// app.use('/api/files', fileRoutes);
+// Data routes - décommentés et ajoutés
+app.use('/api/clients', clientRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/parts', partRoutes);
+app.use('/api/tests', testRoutes);
+app.use('/api/steels', steelRoutes);
+//app.use('/api/files', fileRoutes);
+app.use('/api/furnaces', furnaceRoutes); 
+//app.use('/api/users', userRoutes); 
 // app.use('/api/enums', enumRoutes);
-app.use('/api/hierarchy', hierarchyRoutes);
+app.use('/api/nodes', hierarchyRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -75,7 +78,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// 404 handler for undefined routes
+// 404 handler for undefined routes - doit être APRÈS toutes les routes définies
 app.use('*', (req, res) => {
   res.status(404).json({ message: 'Resource not found' });
 });

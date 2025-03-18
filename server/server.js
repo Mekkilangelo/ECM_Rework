@@ -1,4 +1,3 @@
-// server/server.js
 require('dotenv').config();
 const app = require('./app');
 const { sequelize } = require('./models');
@@ -15,8 +14,10 @@ async function startServer() {
 
     // Start the server
     app.listen(PORT, () => {
+      const url = `http://localhost:${PORT}`;
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Accédez à votre serveur à l'adresse : ${url} pour voir un "Hello World" !`);
     });
   } catch (error) {
     logger.error('Unable to connect to the database:', error.message);

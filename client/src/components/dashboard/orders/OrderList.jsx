@@ -20,7 +20,7 @@ const OrderList = () => {
     if (order.data_status === 'new') {
       updateItemStatus(order.id);
     }
-    navigateToLevel('part', order.id, order.reference);
+    navigateToLevel('part', order.id, order.name);
   };
   
   const handleViewDetails = (order) => {
@@ -76,7 +76,7 @@ const OrderList = () => {
                     }}
                     style={{ cursor: 'pointer' }}
                   >
-                    {order.reference || "Sans référence"}
+                    {order.name || "Sans référence"}
                     <StatusBadge status={order.data_status} />
                   </a>
                 </td>

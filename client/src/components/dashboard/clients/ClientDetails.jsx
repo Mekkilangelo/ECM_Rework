@@ -1,48 +1,70 @@
-// clients/ClientDetails.jsx
-import React, { useEffect, useState } from 'react';
-import { Spinner, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Spinner, Button, Alert, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 const ClientDetails = ({ clientId, onClose }) => {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   useEffect(() => {
     const fetchClientDetails = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get(`/api/clients/${clientId}`);
+        const response = await axios.get(`${API_URL}/clients/${clientId}`);
+        console.log('Client details:', response.data);
         setClient(response.data);
-        setLoading(false);
       } catch (err) {
-        console.error("Erreur lors du chargement des détails:", err);
-        setError("Impossible de charger les détails du client");
+        console.error('Erreur lors du chargement des détails du client:', err);
+        setError(err.response?.data?.message || err.message || 'Une erreur est survenue');
+      } finally {
         setLoading(false);
       }
     };
-
-    if (clientId) {
-      fetchClientDetails();
-    }
+    
+    fetchClientDetails();
   }, [clientId]);
-
+  
   if (loading) return <Spinner animation="border" />;
+  
   if (error) return <Alert variant="danger">{error}</Alert>;
-  if (!client) return <Alert variant="warning">Aucune donnée disponible</Alert>;
-
+  
+  if (!client) return <Alert variant="warning">Client non trouvé</Alert>;
+  
   return (
-    <div className="client-details">
-      <h3>{client.name}</h3>
-      <div className="mt-3">
-        <p><strong>Groupe:</strong> {client.client_group || "Non spécifié"}</p>
-        <p><strong>Pays:</strong> {client.country || "Non spécifié"}</p>
-        <p><strong>Ville:</strong> {client.city || "Non spécifié"}</p>
-        <p><strong>Adresse:</strong> {client.address || "Non spécifiée"}</p>
-        <p><strong>Téléphone:</strong> {client.phone || "Non spécifié"}</p>
-        <p><strong>Email:</strong> {client.email || "Non spécifié"}</p>
-        <p><strong>Date de création:</strong> {client.created_at || "Non spécifiée"}</p>
-        <p><strong>Dernière modification:</strong> {client.modified_at || "Non spécifiée"}</p>
+    <div>
+      <Row>
+        <Col md={6}>
+          <p><strong>Nom:</strong> {client.name}</p>
+          <p><strong>Code client:</strong> {client.Client?.client_code}</p>
+          <p><strong>Status:</strong> {client.data_status}</p>
+        </Col>
+        <Col md={6}>
+          <p><strong>Pays:</strong> {client.Client?.country || 'Non spécifié'}</p>
+          <p><strong>Ville:</strong> {client.Client?.city || 'Non spécifiée'}</p>
+          <p><strong>Groupe:</strong> {client.Client?.client_group || 'Non spécifié'}</p>
+        </Col>
+      </Row>
+      
+      <Row className="mt-3">
+        <Col>
+          <p><strong>Adresse:</strong></p>
+          <p>{client.Client?.address || 'Non spécifiée'}</p>
+        </Col>
+      </Row>
+      
+      <Row className="mt-3">
+        <Col>
+          <p><strong>Créé le:</strong> {new Date(client.created_at).toLocaleString()}</p>
+          <p><strong>Dernière modification:</strong> {new Date(client.modified_at).toLocaleString()}</p>
+        </Col>
+      </Row>
+      
+      <div className="d-flex justify-content-end mt-4">
+        <Button variant="secondary" onClick={onClose}>
+          Fermer
+        </Button>
       </div>
     </div>
   );

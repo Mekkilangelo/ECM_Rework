@@ -1,4 +1,3 @@
-// client/src/hooks/useHierarchy.js
 import { useState, useEffect } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import axios from 'axios';
@@ -28,13 +27,17 @@ export const useHierarchy = () => {
       switch(currentLevel) {
         case 'client':
           url = `${API_URL}/clients`;
-          params = { page: currentPage, limit: itemsPerPage };
+          // Convertir page en offset pour l'API
+          params = { 
+            offset: (currentPage - 1) * itemsPerPage, 
+            limit: itemsPerPage 
+          };
           break;
         case 'order':
           url = `${API_URL}/orders`;
           params = { 
             clientId: hierarchyState.clientId, 
-            page: currentPage, 
+            offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };
           break;
@@ -42,7 +45,7 @@ export const useHierarchy = () => {
           url = `${API_URL}/parts`;
           params = { 
             orderId: hierarchyState.orderId, 
-            page: currentPage, 
+            offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };
           break;
@@ -50,22 +53,46 @@ export const useHierarchy = () => {
           url = `${API_URL}/tests`;
           params = { 
             partId: hierarchyState.partId, 
-            page: currentPage, 
+            offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };
           break;
         default:
           url = `${API_URL}/clients`;
-          params = { page: currentPage, limit: itemsPerPage };
+          params = { 
+            offset: (currentPage - 1) * itemsPerPage, 
+            limit: itemsPerPage 
+          };
       }
       
-      const response = await axios.get(url, { params });
+      console.log(`Fetching data from ${url} with params:`, params);
       
-      setData(response.data.items || []);
-      setTotalItems(response.data.total || 0);
+      const response = await axios.get(url, { params });
+      console.log('API Response:', response.data);
+      
+      // Adapter la structure de données selon le niveau
+      if (currentLevel === 'client') {
+        setData(response.data.clients || []);
+        setTotalItems(response.data.pagination?.total || 0);
+      } else if (currentLevel === 'order') {
+        // Adapter selon la structure de la réponse pour les commandes
+        setData(response.data.orders || []);
+        setTotalItems(response.data.pagination?.total || 0);
+      } else if (currentLevel === 'part') {
+        // Adapter selon la structure de la réponse pour les pièces
+        setData(response.data.parts || []);
+        setTotalItems(response.data.pagination?.total || 0);
+      } else if (currentLevel === 'test') {
+        // Adapter selon la structure de la réponse pour les tests
+        setData(response.data.tests || []);
+        setTotalItems(response.data.pagination?.total || 0);
+      }
+      
+      console.log('Parsed data:', data);
+      console.log('Total items:', totalItems);
     } catch (err) {
-      setError(err.message || 'Une erreur est survenue lors du chargement des données');
       console.error('Erreur lors du chargement des données:', err);
+      setError(err.response?.data?.message || err.message || 'Une erreur est survenue lors du chargement des données');
     } finally {
       setLoading(false);
     }
@@ -73,6 +100,14 @@ export const useHierarchy = () => {
   
   // Recharger les données quand le niveau, la page ou les filtres changent
   useEffect(() => {
+    console.log('useEffect triggered with:', {
+      currentLevel,
+      clientId: hierarchyState.clientId,
+      orderId: hierarchyState.orderId,
+      partId: hierarchyState.partId,
+      currentPage,
+      itemsPerPage
+    });
     fetchData();
   }, [currentLevel, hierarchyState.clientId, hierarchyState.orderId, 
       hierarchyState.partId, currentPage, itemsPerPage]);

@@ -1,13 +1,14 @@
 // client/src/services/hierarchyService.js
-import axios from 'axios';
+import api from './api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import clientService from './clientService';
+import orderService from './orderService';
+import partService from './partService';
+import testService from './testService';
 
 export const fetchClients = async (page = 1, limit = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/clients`, {
-      params: { page, limit }
-    });
+    const response = await clientService.getClients(page, limit);
     return response.data;
   } catch (error) {
     console.error('Erreur lors du chargement des clients:', error);
@@ -17,9 +18,7 @@ export const fetchClients = async (page = 1, limit = 10) => {
 
 export const fetchOrders = async (clientId, page = 1, limit = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/orders`, {
-      params: { clientId, page, limit }
-    });
+    const response = await orderService.getOrders(clientId, page, limit);
     return response.data;
   } catch (error) {
     console.error('Erreur lors du chargement des commandes:', error);
@@ -29,7 +28,7 @@ export const fetchOrders = async (clientId, page = 1, limit = 10) => {
 
 export const fetchParts = async (orderId, page = 1, limit = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/parts`, {
+    const response = await api.get(`${API_URL}/parts`, {
       params: { orderId, page, limit }
     });
     return response.data;
@@ -41,7 +40,7 @@ export const fetchParts = async (orderId, page = 1, limit = 10) => {
 
 export const fetchTests = async (partId, page = 1, limit = 10) => {
   try {
-    const response = await axios.get(`${API_URL}/tests`, {
+    const response = await api.get(`${API_URL}/tests`, {
       params: { partId, page, limit }
     });
     return response.data;
@@ -53,7 +52,7 @@ export const fetchTests = async (partId, page = 1, limit = 10) => {
 
 export const updateNodeStatus = async (nodeId, status) => {
   try {
-    const response = await axios.put(`${API_URL}/hierarchy/nodes/${nodeId}/status`, {
+    const response = await api.put(`${API_URL}/hierarchy/nodes/${nodeId}/status`, {
       status
     });
     return response.data;
@@ -65,7 +64,7 @@ export const updateNodeStatus = async (nodeId, status) => {
 
 export const fetchNodeDetails = async (nodeId, nodeType) => {
   try {
-    const response = await axios.get(`${API_URL}/${nodeType}s/${nodeId}`);
+    const response = await api.get(`${API_URL}/${nodeType}s/${nodeId}`);
     return response.data;
   } catch (error) {
     console.error(`Erreur lors du chargement des détails du ${nodeType}:`, error);

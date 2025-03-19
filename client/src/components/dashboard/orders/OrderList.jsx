@@ -59,7 +59,6 @@ const OrderList = () => {
               <th>Référence</th>
               <th className="text-center">Contact</th>
               <th className="text-center">Date</th>
-              <th className="text-center">Statut</th>
               <th className="text-center">Modifié le</th>
               <th className="text-center">Actions</th>
             </tr>
@@ -82,7 +81,6 @@ const OrderList = () => {
                 </td>
                 <td className="text-center">{order.contact_name || "Inconnu"}</td>
                 <td className="text-center">{order.order_date || "Inconnu"}</td>
-                <td className="text-center">{order.status || "Inconnu"}</td>
                 <td className="text-center">{order.modified_at || "Inconnu"}</td>
                 <td className="text-center align-middle">
                   <DropdownButton

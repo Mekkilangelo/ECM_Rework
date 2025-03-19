@@ -2,16 +2,17 @@
 import React, { useState } from 'react';
 import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faEllipsisV, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import ClientForm from './ClientForm';
 import ClientDetails from './ClientDetails';
+import clientService from '../../../services/clientService';
 
 const ClientList = () => {
   const { navigateToLevel } = useNavigation();
-  const { data, loading, error, updateItemStatus, totalItems } = useHierarchy();
+  const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -26,6 +27,20 @@ const ClientList = () => {
   const handleViewDetails = (client) => {
     setSelectedClient(client);
     setShowDetailModal(true);
+  };
+
+  const handleDeleteClient = async (clientId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.")) {
+      try {
+        await clientService.deleteClient(clientId);
+        alert("Client supprimé avec succès");
+        // Rafraîchir les données
+        refreshData();
+      } catch (err) {
+        console.error('Erreur lors de la suppression du client:', err);
+        alert(err.response?.data?.message || "Une erreur est survenue lors de la suppression du client");
+      }
+    }
   };
   
   if (loading) return <Spinner animation="border" role="status" />;
@@ -86,6 +101,11 @@ const ClientList = () => {
                       onClick={() => handleViewDetails(client)}
                     >
                       <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
+                    </Dropdown.Item>
+                    <Dropdown.Item 
+                      onClick={() => handleDeleteClient(client.id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} className="mr-2" /> Delete
                     </Dropdown.Item>
                   </DropdownButton>
                 </td>

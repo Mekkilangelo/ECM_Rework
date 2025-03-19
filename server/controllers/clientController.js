@@ -69,20 +69,23 @@ exports.getClientById = async (req, res) => {
  */
 exports.createClient = async (req, res) => {
   try {
-    const { name, client_code, country, city, client_group, address } = req.body;
+    const { name, group, country, city, description, address } = req.body;
     
     // Validation des données
-    if (!name || !client_code) {
-      return res.status(400).json({ message: 'Nom et code client requis' });
+    if (!name) {
+      return res.status(400).json({ message: 'Nom du client requis' });
     }
     
-    // Vérifier si le code client est déjà utilisé
-    const existingClient = await Client.findOne({
-      where: { client_code }
+    // Vérifier si un client avec ce nom existe déjà
+    const existingClient = await Node.findOne({
+      where: { 
+        name,
+        type: 'client'
+      }
     });
     
     if (existingClient) {
-      return res.status(409).json({ message: 'Ce code client existe déjà' });
+      return res.status(409).json({ message: 'Un client avec ce nom existe déjà' });
     }
     
     // Créer le client dans une transaction
@@ -95,8 +98,12 @@ exports.createClient = async (req, res) => {
         parent_id: null,
         created_at: new Date(),
         modified_at: new Date(),
-        data_status: 'new'
+        data_status: 'new',
+        description
       }, { transaction: t });
+      
+      // Générer le client_code à partir du node_id
+      const client_code = `CLI_${newNode.id}`;
       
       // Créer les données du client
       await Client.create({
@@ -104,7 +111,7 @@ exports.createClient = async (req, res) => {
         client_code,
         country,
         city,
-        client_group,
+        client_group: group,
         address
       }, { transaction: t });
       

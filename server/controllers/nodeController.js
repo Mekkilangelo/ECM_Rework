@@ -188,7 +188,7 @@ exports.getTotalNodes = async (req, res) => {
  */
 exports.createNode = async (req, res) => {
   try {
-    const { name, type, parentId, data } = req.body;
+    const { name, type, parentId, data, description } = req.body;
     
     // Validation des entrées
     if (!name || !type || !['client', 'order', 'test', 'file', 'part', 'furnace', 'steel'].includes(type)) {
@@ -226,7 +226,8 @@ exports.createNode = async (req, res) => {
         parent_id: parentId || null,
         created_at: new Date(),
         modified_at: new Date(),
-        data_status: 'new'
+        data_status: 'new',
+        description
       }, { transaction: t });
       
       // Créer l'entrée dans la table spécifique
@@ -347,28 +348,6 @@ exports.updateNode = async (req, res) => {
   }
 };
 
-/**
- * Fonction pour supprimer un nœud et tous ses descendants
- */
-exports.deleteNode = async (req, res) => {
-  try {
-    const { nodeId } = req.params;
-    
-    const node = await Node.findByPk(nodeId);
-    if (!node) {
-      return res.status(404).json({ message: 'Nœud non trouvé' });
-    }
-    
-    // La cascade de suppression s'occupera de supprimer tous les enregistrements associés
-    // grâce aux contraintes de clé étrangère avec ON DELETE CASCADE
-    await node.destroy();
-    
-    return res.status(200).json({ message: 'Nœud supprimé avec succès' });
-  } catch (error) {
-    console.error('Erreur lors de la suppression du nœud:', error);
-    return res.status(500).json({ message: 'Erreur lors de la suppression du nœud', error: error.message });
-  }
-};
 
 exports.getTable = async (req, res) => {
   try {
@@ -446,7 +425,32 @@ exports.getNodeById = async (req, res) => {
 };
 
 
-
+exports.updateNodeStatus = async (req, res) => {
+  try {
+    const { nodeId } = req.params;
+    const { status } = req.body;
+    
+    const node = await Node.findByPk(nodeId);
+    if (!node) {
+      return res.status(404).json({ message: 'Nœud non trouvé' });
+    }
+    
+    // Mettre à jour le statut et la date de modification
+    await node.update({
+      data_status: status,
+      modified_at: new Date()
+    });
+    
+    return res.status(200).json({ 
+      message: 'Statut mis à jour avec succès',
+      id: nodeId,
+      data_status: status
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut du nœud:', error);
+    return res.status(500).json({ message: 'Erreur lors de la mise à jour du statut', error: error.message });
+  }
+};
 
 
 

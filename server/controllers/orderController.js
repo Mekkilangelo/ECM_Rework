@@ -7,29 +7,20 @@ const { Op } = require('sequelize');
  */
 exports.getOrders = async (req, res) => {
   try {
-    const { limit = 10, offset = 0, client_id } = req.query;
+    const { limit = 10, offset = 0, parent_id } = req.query;
     
     const whereCondition = { type: 'order' };
     
-    // Si un client_id est fourni, rechercher les commandes associées à ce client
-    if (client_id) {
-      const clientDescendants = await Closure.findAll({
-        where: { ancestor_id: client_id },
-        attributes: ['descendant_id']
-      });
-      
-      const descendantIds = clientDescendants.map(d => d.descendant_id);
-      
-      whereCondition.id = {
-        [Op.in]: descendantIds
-      };
+    // Si un parent_id est fourni, filtrer par parent direct
+    if (parent_id) {
+      whereCondition.parent_id = parent_id;
     }
     
     const orders = await Node.findAll({
       where: whereCondition,
       include: [{
         model: Order,
-        attributes: ['order_number', 'order_date', 'status', 'commercial', 'contacts']
+        attributes: ['order_number', 'order_date', 'commercial', 'contacts']
       }],
       order: [['modified_at', 'DESC']],
       limit: parseInt(limit),
@@ -53,6 +44,7 @@ exports.getOrders = async (req, res) => {
     return res.status(500).json({ message: 'Erreur lors de la récupération des commandes', error: error.message });
   }
 };
+
 
 /**
  * Récupérer une commande spécifique
@@ -85,20 +77,17 @@ exports.getOrderById = async (req, res) => {
  */
 exports.createOrder = async (req, res) => {
   try {
-    const { name, parent_id, order_number, order_date, status, commercial, contacts } = req.body;
+    const {  
+      parent_id, 
+      order_date, 
+      description, 
+      commercial, 
+      contacts 
+    } = req.body;
     
     // Validation des données
-    if (!name || !order_number || !parent_id) {
-      return res.status(400).json({ message: 'Nom, numéro de commande et ID parent sont requis' });
-    }
-    
-    // Vérifier si le numéro de commande est déjà utilisé
-    const existingOrder = await Order.findOne({
-      where: { order_number }
-    });
-    
-    if (existingOrder) {
-      return res.status(409).json({ message: 'Ce numéro de commande existe déjà' });
+    if (!parent_id) {
+      return res.status(400).json({ message: 'ID parent est requis' });
     }
     
     // Vérifier si le parent existe et est un client
@@ -111,27 +100,72 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Le parent doit être un client' });
     }
     
+    // Vérifier si une commande existe déjà pour la même date
+    const orderDate = new Date(order_date);
+    const formattedDate = orderDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    
+    // Fonction pour générer le nom avec indice si nécessaire
+    async function generateNodeName() {
+      const baseName = `TRQ_${formattedDate}`;
+      
+      // Trouver toutes les commandes du même jour
+      const existingNodes = await Node.findAll({
+        where: {
+          parent_id: parent_id,
+          type: 'order',
+          name: {
+            [Op.like]: `${baseName}%`
+          }
+        }
+      });
+      
+      if (existingNodes.length === 0) {
+        return baseName;
+      }
+      
+      // Trouver le plus grand indice
+      let maxIndex = 0;
+      
+      existingNodes.forEach(node => {
+        const nameMatch = node.name.match(`${baseName}\\((\\d+)\\)`);
+        if (nameMatch) {
+          const index = parseInt(nameMatch[1], 10);
+          if (index > maxIndex) {
+            maxIndex = index;
+          }
+        }
+      });
+      
+      return `${baseName}(${maxIndex + 1})`;
+    }
+    
     // Créer la commande dans une transaction
     const result = await sequelize.transaction(async (t) => {
+      // Générer le nom du nœud avec indice si nécessaire
+      const nodeName = await generateNodeName();
+      
       // Créer le nœud
       const newNode = await Node.create({
-        name,
-        path: `${parentNode.path}/${name}`,
+        name: nodeName,
+        path: `${parentNode.path}/${nodeName}`,
         type: 'order',
         parent_id,
         created_at: new Date(),
         modified_at: new Date(),
-        data_status: 'new'
+        data_status: 'new',
+        description
       }, { transaction: t });
+      
+      // Générer le numéro de commande basé sur l'ID du nœud
+      const order_number = `TRQ_${newNode.id}`;
       
       // Créer les données de la commande
       await Order.create({
         node_id: newNode.id,
         order_number,
-        order_date: order_date || null,
-        status: status || 'en_cours',
+        order_date: order_date || null, 
         commercial,
-        contacts
+        contacts: contacts || []
       }, { transaction: t });
       
       // Créer l'entrée de fermeture (auto-relation)
@@ -169,7 +203,10 @@ exports.createOrder = async (req, res) => {
     return res.status(201).json(newOrder);
   } catch (error) {
     console.error('Erreur lors de la création de la commande:', error);
-    return res.status(500).json({ message: 'Erreur lors de la création de la commande', error: error.message });
+    return res.status(500).json({ 
+      message: 'Erreur lors de la création de la commande', 
+      error: error.message 
+    });
   }
 };
 

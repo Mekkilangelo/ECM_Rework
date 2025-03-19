@@ -14,7 +14,7 @@ const StatusBadge = ({ status }) => {
       case 'completed':
         return 'success';
       default:
-        return 'secondary';
+        return 'danger';
     }
   };
   
@@ -38,7 +38,7 @@ const StatusBadge = ({ status }) => {
   return (
     <Badge 
       variant={getVariant()} 
-      className="ml-2"
+      className="m-2"
     >
       {getLabel()}
     </Badge>

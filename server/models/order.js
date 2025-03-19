@@ -20,10 +20,6 @@ module.exports = (sequelize) => {
       type: DataTypes.DATEONLY,
       allowNull: true
     },
-    status: {
-      type: DataTypes.ENUM('en_cours', 'terminee', 'annulee'),
-      allowNull: true
-    },
     commercial: {
       type: DataTypes.STRING(50),
       allowNull: true

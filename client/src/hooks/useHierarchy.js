@@ -36,7 +36,7 @@ export const useHierarchy = () => {
         case 'order':
           url = `${API_URL}/orders`;
           params = { 
-            clientId: hierarchyState.clientId, 
+            parent_id: hierarchyState.clientId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };
@@ -115,7 +115,7 @@ export const useHierarchy = () => {
   // Mettre à jour le statut d'un élément (nouveau -> lu)
   const updateItemStatus = async (nodeId) => {
     try {
-      await axios.put(`${API_URL}/hierarchy/nodes/${nodeId}/status`, {
+      await axios.put(`${API_URL}/nodes/${nodeId}/status`, {
         status: 'opened'
       });
       

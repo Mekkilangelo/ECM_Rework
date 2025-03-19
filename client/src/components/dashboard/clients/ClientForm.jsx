@@ -7,7 +7,6 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 const ClientForm = ({ onClose, onClientCreated }) => {
   const [formData, setFormData] = useState({
     name: '',
-    client_code: '',
     country: '',
     city: '',
     client_group: '',

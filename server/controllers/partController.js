@@ -85,7 +85,7 @@ exports.getPartById = async (req, res) => {
  */
 exports.createPart = async (req, res) => {
   try {
-    const { name, parent_id, designation, dimensions, specifications, steel } = req.body;
+    const { name, parent_id, designation, dimensions, specifications, steel, description } = req.body;
     
     // Validation des données
     if (!name || !parent_id) {
@@ -112,13 +112,14 @@ exports.createPart = async (req, res) => {
         parent_id,
         created_at: new Date(),
         modified_at: new Date(),
-        data_status: 'new'
+        data_status: 'new',
+        description
       }, { transaction: t });
       
       // Créer les données de la pièce
       await Part.create({
         node_id: newNode.id,
-        designation,
+        designation: 'Pinion',
         dimensions,
         specifications,
         steel

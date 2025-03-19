@@ -348,6 +348,92 @@ exports.updateNode = async (req, res) => {
   }
 };
 
+/**
+ * Fonction pour supprimer un nœud et tous ses descendants
+ */
+exports.deleteNode = async (req, res) => {
+  const t = await sequelize.transaction();
+  
+  try {
+    const { nodeId } = req.params;
+    
+    console.log(`Tentative de suppression du nœud avec l'ID ${nodeId}`);
+    
+    // 1. Vérifier que le nœud existe
+    const node = await Node.findByPk(nodeId, { transaction: t });
+    
+    if (!node) {
+      await t.rollback();
+      return res.status(404).json({ message: 'Nœud non trouvé' });
+    }
+    
+    console.log(`Nœud trouvé: ${node.name} (ID: ${node.id}, Type: ${node.type})`);
+    
+    // 2. Supprimer d'abord les références dans Closure
+    console.log(`Suppression des références dans Closure pour le nœud ${nodeId}`);
+    const closureDeleted = await Closure.destroy({
+      where: {
+        [Op.or]: [
+          { ancestor_id: nodeId },
+          { descendant_id: nodeId }
+        ]
+      },
+      transaction: t
+    });
+    
+    console.log(`${closureDeleted} entrées supprimées dans la table Closure`);
+    
+    // 3. Supprimer les données spécifiques au type (avec une fonction helper)
+    if (node.type) {
+      const deletedSpecific = await deleteSpecificData(node.type, nodeId, t);
+      console.log(`Données spécifiques au type ${node.type} supprimées: ${deletedSpecific}`);
+    }
+    
+    // 4. Supprimer le nœud
+    console.log(`Suppression du nœud ${nodeId}`);
+    await node.destroy({ transaction: t });
+    
+    console.log(`Nœud ${nodeId} supprimé avec succès`);
+    
+    // 5. Valider la transaction
+    await t.commit();
+    return res.status(200).json({ message: 'Nœud supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du nœud:', error);
+    
+    // En cas d'erreur, annuler toutes les modifications
+    await t.rollback();
+    
+    return res.status(500).json({
+      message: 'Erreur lors de la suppression du nœud',
+      error: error.message
+    });
+  }
+};
+
+// Fonction helper pour supprimer les données spécifiques au type
+async function deleteSpecificData(nodeType, nodeId, transaction) {
+  const { Client, Order, Part, Test, File, Steel, Furnace } = require('../models');
+  
+  switch (nodeType) {
+    case 'client':
+      return await Client.destroy({ where: { node_id: nodeId }, transaction });
+    case 'order':
+      return await Order.destroy({ where: { node_id: nodeId }, transaction });
+    case 'part':
+      return await Part.destroy({ where: { node_id: nodeId }, transaction });
+    case 'test':
+      return await Test.destroy({ where: { node_id: nodeId }, transaction });
+    case 'file':
+      return await File.destroy({ where: { node_id: nodeId }, transaction });
+    case 'steel':
+      return await Steel.destroy({ where: { node_id: nodeId }, transaction });
+    case 'furnace':
+      return await Furnace.destroy({ where: { node_id: nodeId }, transaction });
+    default:
+      return 0;
+  }
+}
 
 exports.getTable = async (req, res) => {
   try {

@@ -18,7 +18,7 @@ const steelRoutes = require('./routes/steels');
 //const fileRoutes = require('./routes/files');
 const furnaceRoutes = require('./routes/furnaces'); 
 const userRoutes = require('./routes/users'); 
-// const enumRoutes = require('./routes/enums');
+const enumRoutes = require('./routes/enums');
 const hierarchyRoutes = require('./routes/hierarchy');
 
 // Initialize express app
@@ -52,7 +52,7 @@ app.use('/api/steels', steelRoutes);
 //app.use('/api/files', fileRoutes);
 app.use('/api/furnaces', furnaceRoutes); 
 app.use('/api/users', userRoutes); 
-// app.use('/api/enums', enumRoutes);
+app.use('/api/enums', enumRoutes);
 app.use('/api/nodes', hierarchyRoutes);
 
 // Root route

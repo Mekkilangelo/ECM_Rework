@@ -39,6 +39,35 @@ exports.getSteels = async (req, res) => {
   }
 };
 
+exports.getSteelsGrades = async (req, res) => {
+  try {
+    const steels = await Node.findAll({
+      where: { type: 'steel' },
+      include: [{
+        model: Steel,
+        attributes: ['grade'] 
+      }],
+    });
+    
+    // Extraction des grades uniques
+    const grades = steels
+      .filter(node => node.Steel && node.Steel.grade)
+      .map(node => node.Steel.grade)
+      .filter((grade, index, self) => self.indexOf(grade) === index);
+    
+    return res.status(200).json({
+      success: true,
+      data: grades
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des grades d\'acier:', error);
+    return res.status(500).json({ 
+      message: 'Erreur lors de la récupération des grades d\'acier', 
+      error: error.message 
+    });
+  }
+};
+
 /**
  * Récupérer un acier spécifique
  */
@@ -70,7 +99,7 @@ exports.getSteelById = async (req, res) => {
  */
 exports.createSteel = async (req, res) => {
   try {
-    const { name, grade, family, standard, equivalents, chemistery, elements, parent_id } = req.body;
+    const { name, grade, family, standard, equivalents, chemistery } = req.body;
     
     // Validation des données
     if (!name || !grade) {
@@ -90,19 +119,12 @@ exports.createSteel = async (req, res) => {
     const result = await sequelize.transaction(async (t) => {
       // Préparer le chemin
       let path = `/${name}`;
-      if (parent_id) {
-        const parentNode = await Node.findByPk(parent_id, { transaction: t });
-        if (parentNode) {
-          path = `${parentNode.path}/${name}`;
-        }
-      }
       
       // Créer le nœud
       const newNode = await Node.create({
         name,
         path,
         type: 'steel',
-        parent_id,
         created_at: new Date(),
         modified_at: new Date(),
         data_status: 'new'
@@ -115,8 +137,7 @@ exports.createSteel = async (req, res) => {
         family,
         standard,
         equivalents,
-        chemistery,
-        elements
+        chemistery
       }, { transaction: t });
       
       // Créer l'entrée de fermeture (auto-relation)
@@ -125,22 +146,6 @@ exports.createSteel = async (req, res) => {
         descendant_id: newNode.id,
         depth: 0
       }, { transaction: t });
-      
-      // Si parent_id est spécifié, créer des relations closure avec tous ses ancêtres
-      if (parent_id) {
-        const parentClosures = await Closure.findAll({
-          where: { descendant_id: parent_id },
-          transaction: t
-        });
-        
-        for (const parentClosure of parentClosures) {
-          await Closure.create({
-            ancestor_id: parentClosure.ancestor_id,
-            descendant_id: newNode.id,
-            depth: parentClosure.depth + 1
-          }, { transaction: t });
-        }
-      }
       
       return newNode;
     });

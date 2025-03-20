@@ -84,8 +84,7 @@ exports.getTestById = async (req, res) => {
 exports.createTest = async (req, res) => {
   try {
     const { 
-      name, 
-      test_code, 
+      name,  
       test_date, 
       status,
       location,
@@ -94,26 +93,26 @@ exports.createTest = async (req, res) => {
       load_data,
       recipe_data,
       quench_data,
-      results_data,
       mounting_type,
       position_type,
       process_type,
-      parent_id 
+      parent_id,
+      description 
     } = req.body;
     
     // Validation des données
-    if (!name || !test_code || !parent_id) {
-      return res.status(400).json({ message: 'Nom, code de test et ID parent requis' });
+    if (!name || !parent_id) {
+      return res.status(400).json({ message: 'Nom et ID parent requis' });
     }
     
     // Vérifier si le code de test est déjà utilisé
-    const existingTest = await Test.findOne({
-      where: { test_code }
-    });
+    // const existingTest = await Test.findOne({
+    //   where: { test_code }
+    // });
     
-    if (existingTest) {
-      return res.status(409).json({ message: 'Ce code de test existe déjà' });
-    }
+    // if (existingTest) {
+    //   return res.status(409).json({ message: 'Ce code de test existe déjà' });
+    // }
     
     // Vérifier si le parent existe
     const parentNode = await Node.findByPk(parent_id);
@@ -131,9 +130,13 @@ exports.createTest = async (req, res) => {
         parent_id,
         created_at: new Date(),
         modified_at: new Date(),
-        data_status: 'new'
+        data_status: 'new',
+        description
       }, { transaction: t });
       
+      // Générer le numéro de commande basé sur l'ID du nœud
+      const test_code = `TRIAL_${newNode.id}`;
+
       // Créer les données du test
       await Test.create({
         node_id: newNode.id,
@@ -146,7 +149,6 @@ exports.createTest = async (req, res) => {
         load_data,
         recipe_data,
         quench_data,
-        results_data,
         mounting_type,
         position_type,
         process_type

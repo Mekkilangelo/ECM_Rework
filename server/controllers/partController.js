@@ -119,7 +119,7 @@ exports.createPart = async (req, res) => {
       // Créer les données de la pièce
       await Part.create({
         node_id: newNode.id,
-        designation: 'Pinion',
+        designation,
         dimensions,
         specifications,
         steel

@@ -1,217 +1,27 @@
-import React, { useState, useEffect } from 'react';
+// client/src/components/dashboard/parts/PartForm.jsx
+import React from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import Select from 'react-select';
-import axios from 'axios';
-import { useNavigation } from '../../../context/NavigationContext';
-import enumService from '../../../services/enumService';
-import steelService from '../../../services/steelService';
+import usePartForm from './hooks/usePartForm';
 
 const PartForm = ({ onClose, onPartCreated }) => {
-  const { hierarchyState } = useNavigation();
-  const parentId = hierarchyState.orderId;
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    designation: '',
-    // Dimensions
-    length: '',
-    width: '',
-    height: '',
-    dimensionsUnit: '',
-    diameterIn: '',
-    diameterOut: '',
-    diameterUnit: '',
-    weight: '',
-    weightUnit: '',
-    // Specifications
-    coreHardnessMin: '',
-    coreHardnessMax: '',
-    coreHardnessUnit: '',
-    surfaceHardnessMin: '',
-    surfaceHardnessMax: '',
-    surfaceHardnessUnit: '',
-    ecdDepthMin: '',
-    ecdDepthMax: '',
-    ecdHardness: '',
-    ecdHardnessUnit: '',
-    steel: '',
-    description: ''
-  });
-  
-  const [designationOptions, setDesignationOptions] = useState([]);
-  const [unitOptions, setUnitOptions] = useState([]);
-  const [steelOptions, setSteelOptions] = useState([]);
-  
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
-  
-  // Fetch options for select fields
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        // Utiliser les services existants
-        const units = await enumService.getUnits();
-        const steels = await steelService.getSteelGrades();
-        const designations = await enumService.getDesignations();
-        
-        setUnitOptions(units.map(unit => ({ value: unit.id, label: unit.name })));
-        setSteelOptions(steels.map(steel => ({ value: steel.id, label: steel.grade })));
-        setDesignationOptions(designations.map(designation => ({ value: designation, label: designation })));
-      } catch (error) {
-        console.error('Erreur lors du chargement des options:', error);
-      }
-    };
-    
-    fetchOptions();
-  }, []);
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Réinitialiser les erreurs pour ce champ
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
-  
-  const handleSelectChange = (selectedOption, { name }) => {
-    setFormData(prev => ({ ...prev, [name]: selectedOption ? selectedOption.value : '' }));
-    
-    // Réinitialiser les erreurs pour ce champ
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
-  
-  const validate = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) newErrors.name = 'Le nom est requis';
-    if (!parentId) newErrors.parent = 'Commande parente non identifiée';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  const formatDataForApi = () => {
-    // Structurer les dimensions en JSON
-    const dimensions = {
-      rectangular: {
-        length: formData.length || null,
-        width: formData.width || null,
-        height: formData.height || null,
-        unit: formData.dimensionsUnit || null
-      },
-      circular: {
-        diameterIn: formData.diameterIn || null,
-        diameterOut: formData.diameterOut || null,
-        unit: formData.diameterUnit || null
-      },
-      weight: {
-        value: formData.weight || null,
-        unit: formData.weightUnit || null
-      }
-    };
-    
-    // Structurer les spécifications en JSON
-    const specifications = {
-      coreHardness: {
-        min: formData.coreHardnessMin || null,
-        max: formData.coreHardnessMax || null,
-        unit: formData.coreHardnessUnit || null
-      },
-      surfaceHardness: {
-        min: formData.surfaceHardnessMin || null,
-        max: formData.surfaceHardnessMax || null,
-        unit: formData.surfaceHardnessUnit || null
-      },
-      ecd: {
-        depthMin: formData.ecdDepthMin || null,
-        depthMax: formData.ecdDepthMax || null,
-        hardness: formData.ecdHardness || null,
-        unit: formData.ecdHardnessUnit || null
-      },
-      description: formData.description || null
-    };
-    
-    return {
-      parent_id: parentId,
-      name: formData.name,
-      designation: formData.designation,
-      dimensions,
-      specifications,
-      steel: formData.steel
-    };
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validate()) return;
-    
-    setLoading(true);
-    setMessage(null);
-    
-    try {
-      const partData = formatDataForApi();
-      
-      // Utiliser axios directement pour la cohérence avec le code existant
-      const response = await axios.post('/api/parts', partData);
-      
-      setMessage({
-        type: 'success',
-        text: 'Pièce créée avec succès!'
-      });
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        name: '',
-        designation: '',
-        length: '',
-        width: '',
-        height: '',
-        dimensionsUnit: '',
-        diameterIn: '',
-        diameterOut: '',
-        diameterUnit: '',
-        weight: '',
-        weightUnit: '',
-        coreHardnessMin: '',
-        coreHardnessMax: '',
-        coreHardnessUnit: '',
-        surfaceHardnessMin: '',
-        surfaceHardnessMax: '',
-        surfaceHardnessUnit: '',
-        ecdDepthMin: '',
-        ecdDepthMax: '',
-        ecdHardness: '',
-        ecdHardnessUnit: '',
-        steel: '',
-        description: ''
-      });
-      
-      // Notifier le parent
-      if (onPartCreated) {
-        onPartCreated(response.data);
-      }
-      
-      // Fermer le formulaire après un délai
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error('Erreur lors de la création de la pièce:', error);
-      setMessage({
-        type: 'danger',
-        text: error.response?.data?.message || 'Une erreur est survenue lors de la création de la pièce'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+  const {
+    formData,
+    errors,
+    loading,
+    message,
+    designationOptions,
+    steelOptions,
+    handleChange,
+    handleSelectChange,
+    handleSubmit,
+    getSelectedOption,
+    getLengthUnitOptions,
+    getWeightUnitOptions,
+    getHardnessUnitOptions,
+    selectStyles
+  } = usePartForm(onClose, onPartCreated);
+
   return (
     <div>
       {message && (
@@ -227,368 +37,360 @@ const PartForm = ({ onClose, onPartCreated }) => {
       )}
       
       <Form onSubmit={handleSubmit}>
-        {/* Informations générales */}
-        <div className="mb-4">
-          <h5>Informations générales</h5>
-          <hr />
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Nom *</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  isInvalid={!!errors.name}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.name}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Désignation</Form.Label>
-                <Select
-                  name="designation"
-                  options={designationOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'designation' })}
-                  isClearable
-                  placeholder="Sélectionnez une désignation"
-                  className={errors.designation ? 'is-invalid' : ''}
-                />
-                {errors.designation && (
-                  <div className="invalid-feedback d-block">
-                    {errors.designation}
-                  </div>
-                )}
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        {/* Section des informations de base */}
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Nom <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                isInvalid={!!errors.name}
+              />
+              <Form.Control.Feedback type="invalid">
+                {errors.name}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Désignation</Form.Label>
+              <Select
+                name="designation"
+                value={getSelectedOption(designationOptions, formData.designation)}
+                onChange={(option) => handleSelectChange(option, { name: 'designation' })}
+                options={designationOptions}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une désignation"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Dimensions rectangulaires */}
-        <div className="mb-4">
-          <h5>Dimensions rectangulaires</h5>
-          <hr />
-          <Row>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Longueur</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="length"
-                  value={formData.length}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Largeur</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="width"
-                  value={formData.width}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Hauteur</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="height"
-                  value={formData.height}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Unité</Form.Label>
-                <Select
-                  name="dimensionsUnit"
-                  options={unitOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
-                  isClearable
-                  placeholder="Sélectionnez une unité"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        {/* Section des dimensions */}
+        <h4 className="mt-4">Dimensions</h4>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Longueur</Form.Label>
+              <Form.Control
+                type="number"
+                name="length"
+                value={formData.length}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Largeur</Form.Label>
+              <Form.Control
+                type="number"
+                name="width"
+                value={formData.width}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Hauteur</Form.Label>
+              <Form.Control
+                type="number"
+                name="height"
+                value={formData.height}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Dimensions circulaires */}
-        <div className="mb-4">
-          <h5>Dimensions circulaires</h5>
-          <hr />
-          <Row>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Diamètre intérieur</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="diameterIn"
-                  value={formData.diameterIn}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Diamètre extérieur</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="diameterOut"
-                  value={formData.diameterOut}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Unité</Form.Label>
-                <Select
-                  name="diameterUnit"
-                  options={unitOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
-                  isClearable
-                  placeholder="Sélectionnez une unité"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Unité (dimensions)</Form.Label>
+              <Select
+                name="dimensionsUnit"
+                value={getSelectedOption(getLengthUnitOptions(), formData.dimensionsUnit)}
+                onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
+                options={getLengthUnitOptions()}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une unité"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Diamètre intérieur</Form.Label>
+              <Form.Control
+                type="number"
+                name="diameterIn"
+                value={formData.diameterIn}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Diamètre extérieur</Form.Label>
+              <Form.Control
+                type="number"
+                name="diameterOut"
+                value={formData.diameterOut}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Masse */}
-        <div className="mb-4">
-          <h5>Masse</h5>
-          <hr />
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Poids</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="weight"
-                  value={formData.weight}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Unité</Form.Label>
-                <Select
-                  name="weightUnit"
-                  options={unitOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
-                  isClearable
-                  placeholder="Sélectionnez une unité"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Unité (diamètres)</Form.Label>
+              <Select
+                name="diameterUnit"
+                value={getSelectedOption(getLengthUnitOptions(), formData.diameterUnit)}
+                onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
+                options={getLengthUnitOptions()}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une unité"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Poids</Form.Label>
+              <Form.Control
+                type="number"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Unité (poids)</Form.Label>
+              <Select
+                name="weightUnit"
+                value={getSelectedOption(getWeightUnitOptions(), formData.weightUnit)}
+                onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
+                options={getWeightUnitOptions()}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une unité"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Dureté du cœur */}
-        <div className="mb-4">
-          <h5>Dureté du cœur</h5>
-          <hr />
-          <Row>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Minimum</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="coreHardnessMin"
-                  value={formData.coreHardnessMin}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Maximum</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="coreHardnessMax"
-                  value={formData.coreHardnessMax}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Unité</Form.Label>
-                <Select
-                  name="coreHardnessUnit"
-                  options={unitOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'coreHardnessUnit' })}
-                  isClearable
-                  placeholder="Sélectionnez une unité"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        {/* Section des spécifications */}
+        <h4 className="mt-4">Spécifications</h4>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Dureté à cœur (min)</Form.Label>
+              <Form.Control
+                type="number"
+                name="coreHardnessMin"
+                value={formData.coreHardnessMin}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Dureté à cœur (max)</Form.Label>
+              <Form.Control
+                type="number"
+                name="coreHardnessMax"
+                value={formData.coreHardnessMax}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Unité (dureté à cœur)</Form.Label>
+              <Select
+                name="coreHardnessUnit"
+                value={getSelectedOption(getHardnessUnitOptions(), formData.coreHardnessUnit)}
+                onChange={(option) => handleSelectChange(option, { name: 'coreHardnessUnit' })}
+                options={getHardnessUnitOptions()}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une unité"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Dureté de surface */}
-        <div className="mb-4">
-          <h5>Dureté de surface</h5>
-          <hr />
-          <Row>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Minimum</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="surfaceHardnessMin"
-                  value={formData.surfaceHardnessMin}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Maximum</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="surfaceHardnessMax"
-                  value={formData.surfaceHardnessMax}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group className="mb-3">
-                <Form.Label>Unité</Form.Label>
-                <Select
-                  name="surfaceHardnessUnit"
-                  options={unitOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'surfaceHardnessUnit' })}
-                  isClearable
-                  placeholder="Sélectionnez une unité"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        <Row>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Dureté superficielle (min)</Form.Label>
+              <Form.Control
+                type="number"
+                name="surfaceHardnessMin"
+                value={formData.surfaceHardnessMin}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Dureté superficielle (max)</Form.Label>
+              <Form.Control
+                type="number"
+                name="surfaceHardnessMax"
+                value={formData.surfaceHardnessMax}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={4}>
+            <Form.Group className="mb-3">
+              <Form.Label>Unité (dureté superficielle)</Form.Label>
+              <Select
+                name="surfaceHardnessUnit"
+                value={getSelectedOption(getHardnessUnitOptions(), formData.surfaceHardnessUnit)}
+                onChange={(option) => handleSelectChange(option, { name: 'surfaceHardnessUnit' })}
+                options={getHardnessUnitOptions()}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une unité"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* ECD */}
-        <div className="mb-4">
-          <h5>ECD</h5>
-          <hr />
-          <Row>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Profondeur min</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="ecdDepthMin"
-                  value={formData.ecdDepthMin}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Profondeur max</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="ecdDepthMax"
-                  value={formData.ecdDepthMax}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Dureté</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  name="ecdHardness"
-                  value={formData.ecdHardness}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>Unité</Form.Label>
-                <Select
-                  name="ecdHardnessUnit"
-                  options={unitOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'ecdHardnessUnit' })}
-                  isClearable
-                  placeholder="Sélectionnez une unité"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        <Row>
+          <Col md={3}>
+            <Form.Group className="mb-3">
+              <Form.Label>Profondeur ECD (min)</Form.Label>
+              <Form.Control
+                type="number"
+                name="ecdDepthMin"
+                value={formData.ecdDepthMin}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={3}>
+            <Form.Group className="mb-3">
+              <Form.Label>Profondeur ECD (max)</Form.Label>
+              <Form.Control
+                type="number"
+                name="ecdDepthMax"
+                value={formData.ecdDepthMax}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={3}>
+            <Form.Group className="mb-3">
+              <Form.Label>Dureté ECD</Form.Label>
+              <Form.Control
+                type="number"
+                name="ecdHardness"
+                value={formData.ecdHardness}
+                onChange={handleChange}
+                step="0.1"
+              />
+            </Form.Group>
+          </Col>
+          <Col md={3}>
+            <Form.Group className="mb-3">
+              <Form.Label>Unité (dureté ECD)</Form.Label>
+              <Select
+                name="ecdHardnessUnit"
+                value={getSelectedOption(getHardnessUnitOptions(), formData.ecdHardnessUnit)}
+                onChange={(option) => handleSelectChange(option, { name: 'ecdHardnessUnit' })}
+                options={getHardnessUnitOptions()}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner une unité"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Acier */}
-        <div className="mb-4">
-          <h5>Acier</h5>
-          <hr />
-          <Row>
-            <Col md={12}>
-              <Form.Group className="mb-3">
-                <Form.Label>Nuance d'acier</Form.Label>
-                <Select
-                  name="steel"
-                  options={steelOptions}
-                  onChange={(option) => handleSelectChange(option, { name: 'steel' })}
-                  isClearable
-                  placeholder="Sélectionnez une nuance d'acier"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Acier</Form.Label>
+              <Select
+                name="steel"
+                value={getSelectedOption(steelOptions, formData.steel)}
+                onChange={(option) => handleSelectChange(option, { name: 'steel' })}
+                options={steelOptions}
+                isClearable
+                styles={selectStyles}
+                placeholder="Sélectionner un acier"
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isLoading={loading}
+              />
+            </Form.Group>
+          </Col>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
         
-        {/* Description */}
-        <div className="mb-4">
-          <h5>Description</h5>
-          <hr />
-          <Row>
-            <Col md={12}>
-              <Form.Group className="mb-3">
-                <Form.Control
-                  as="textarea"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={3}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </div>
-        
-        <div className="d-flex justify-content-end mt-3">
+        <div className="d-flex justify-content-end mt-4">
           <Button variant="secondary" onClick={onClose} className="me-2">
             Annuler
           </Button>
-          <Button variant="danger" type="submit" disabled={loading}>
-            {loading ? 'Création en cours...' : 'Créer'}
+          <Button variant="primary" type="submit" disabled={loading}>
+            {loading ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
         </div>
       </Form>

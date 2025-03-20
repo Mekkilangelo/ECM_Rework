@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth');
 
 // Routes pour la gestion des aciers
 router.get('/', steelController.getSteels);
+router.get('/grades', steelController.getSteelsGrades);
 router.get('/:steelId', steelController.getSteelById);
 
 // Protected routes

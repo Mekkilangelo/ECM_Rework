@@ -7,8 +7,8 @@ const LoadDataSection = ({
   handleChange, 
   handleSelectChange, 
   getSelectedOption, 
-  getLengthUnitOptions, 
-  getWeightUnitOptions, 
+  lengthUnitOptions, 
+  weightUnitOptions, 
   loading, 
   selectStyles 
 }) => {
@@ -57,9 +57,9 @@ const LoadDataSection = ({
             <Form.Label>Unité de taille</Form.Label>
             <Select
               name="loadData.sizeUnit"
-              value={getSelectedOption(getLengthUnitOptions, formData.loadData?.sizeUnit)}
+              value={getSelectedOption(lengthUnitOptions, formData.loadData?.sizeUnit)}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.sizeUnit' })}
-              options={getLengthUnitOptions}
+              options={lengthUnitOptions}
               isClearable
               styles={selectStyles}
               placeholder="Sélectionner une unité"
@@ -113,9 +113,9 @@ const LoadDataSection = ({
             <Form.Label>Unité de poids</Form.Label>
             <Select
               name="loadData.weightUnit"
-              value={getSelectedOption(getWeightUnitOptions, formData.loadData?.weightUnit)}
+              value={getSelectedOption(weightUnitOptions, formData.loadData?.weightUnit)}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.weightUnit' })}
-              options={getWeightUnitOptions}
+              options={weightUnitOptions}
               isClearable
               styles={selectStyles}
               placeholder="Sélectionner une unité"

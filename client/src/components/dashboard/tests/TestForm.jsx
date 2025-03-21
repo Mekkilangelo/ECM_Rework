@@ -7,8 +7,7 @@ import BasicInfoSection from './sections/BasicInfoSection';
 import TestTypeSection from './sections/TestTypeSection';
 import FurnaceDataSection from './sections/FurnaceDataSection';
 import LoadDataSection from './sections/LoadDataSection';
-// import RecipeDataSection from './sections/RecipeDataSection';
-// import QuenchDataSection from './sections/QuenchDataSection';
+import RecipeDataSection from './sections/RecipeDataSection';
 
 const TestForm = ({ onClose, onTestCreated }) => {
   const {
@@ -81,7 +80,7 @@ const TestForm = ({ onClose, onTestCreated }) => {
           selectStyles={formHandlers.selectStyles}
         />
         
-        {/* <RecipeDataSection
+        <RecipeDataSection
           formData={formData}
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
@@ -93,17 +92,6 @@ const TestForm = ({ onClose, onTestCreated }) => {
           handleThermalCycleRemove={formHandlers.handleThermalCycleRemove}
           handleChemicalCycleAdd={formHandlers.handleChemicalCycleAdd}
           handleChemicalCycleRemove={formHandlers.handleChemicalCycleRemove}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
-        /> */}
-        
-        {/* <QuenchDataSection
-          formData={formData}
-          handleChange={formHandlers.handleChange}
-          handleSelectChange={formHandlers.handleSelectChange}
-          getSelectedOption={formHandlers.getSelectedOption}
-          temperatureUnitOptions={formHandlers.temperatureUnitOptions}
-          timeUnitOptions={formHandlers.timeUnitOptions}
           handleGasQuenchSpeedAdd={formHandlers.handleGasQuenchSpeedAdd}
           handleGasQuenchSpeedRemove={formHandlers.handleGasQuenchSpeedRemove}
           handleGasQuenchPressureAdd={formHandlers.handleGasQuenchPressureAdd}
@@ -112,7 +100,7 @@ const TestForm = ({ onClose, onTestCreated }) => {
           handleOilQuenchSpeedRemove={formHandlers.handleOilQuenchSpeedRemove}
           loading={loading}
           selectStyles={formHandlers.selectStyles}
-        /> */}
+        />
 
         {/* Boutons de soumission */}
         <div className="d-flex justify-content-end mt-4">

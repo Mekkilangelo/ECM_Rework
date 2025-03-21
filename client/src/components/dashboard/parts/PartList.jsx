@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faEllipsisV, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
@@ -9,7 +9,7 @@ import PartForm from './PartForm';
 import PartDetails from './PartDetails';
 
 const PartList = ({ orderId }) => {
-  const { navigateToLevel } = useNavigation();
+  const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus } = useHierarchy();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -33,7 +33,16 @@ const PartList = ({ orderId }) => {
   return (
     <>
       <div className="d-flex justify-content-between mb-3">
-        <h2>Parts</h2>
+        <div>
+          <Button 
+            variant="outline-secondary" 
+            className="mr-2"
+            onClick={navigateBack}
+          >
+            <FontAwesomeIcon icon={faArrowLeft} /> Retour
+          </Button>
+          <h2 className="d-inline-block">Parts - {hierarchyState.orderName}</h2>
+        </div>
         <Button 
           variant="outline-danger" 
           onClick={() => setShowCreateForm(true)}

@@ -1,87 +1,26 @@
-import React, { useState } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import axios from 'axios';
+import React from 'react';
+import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
+import Select from 'react-select';
+import useClientForm from './hooks/useClientForm';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-
-const ClientForm = ({ onClose, onClientCreated }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    country: '',
-    city: '',
-    client_group: '',
-    address: ''
-  });
+const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
+  const {
+    formData,
+    errors,
+    loading,
+    fetchingClient,
+    message,
+    countryOptions,
+    selectStyles,
+    getSelectedOption,
+    handleChange,
+    handleSelectChange,
+    handleSubmit
+  } = useClientForm(client, onClose, onClientCreated, onClientUpdated);
   
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Réinitialiser les erreurs pour ce champ
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
-  
-  const validate = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) newErrors.name = 'Le nom est requis';
-    if (!formData.client_code.trim()) newErrors.client_code = 'Le code client est requis';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validate()) return;
-    
-    setLoading(true);
-    setMessage(null);
-    
-    try {
-      const response = await axios.post(`${API_URL}/clients`, formData);
-      
-      setMessage({
-        type: 'success',
-        text: 'Client créé avec succès!'
-      });
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        name: '',
-        client_code: '',
-        country: '',
-        city: '',
-        client_group: '',
-        address: ''
-      });
-      
-      // Notifier le parent
-      if (onClientCreated) {
-        onClientCreated(response.data);
-      }
-      
-      // Fermer le formulaire après un délai
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error('Erreur lors de la création du client:', error);
-      setMessage({
-        type: 'danger',
-        text: error.response?.data?.message || 'Une erreur est survenue lors de la création du client'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (fetchingClient) {
+    return <div className="text-center p-4"><Spinner animation="border" /></div>;
+  }
   
   return (
     <div>
@@ -129,11 +68,16 @@ const ClientForm = ({ onClose, onClientCreated }) => {
           <Col md={6}>
             <Form.Group className="mb-3">
               <Form.Label>Pays</Form.Label>
-              <Form.Control
-                type="text"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
+              {/* Remplacer le champ texte par un Select */}
+              <Select
+                styles={selectStyles}
+                options={countryOptions}
+                value={getSelectedOption(countryOptions, formData.country)}
+                onChange={(option) => handleSelectChange(option, 'country')}
+                isClearable
+                placeholder="Sélectionnez un pays"
+                isLoading={loading && countryOptions.length === 0}
+                noOptionsMessage={() => "Aucun pays disponible"}
               />
             </Form.Group>
           </Col>
@@ -176,12 +120,27 @@ const ClientForm = ({ onClose, onClientCreated }) => {
           </Col>
         </Row>
         
+        <Row>
+          <Col md={12}>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        
         <div className="d-flex justify-content-end mt-3">
           <Button variant="secondary" onClick={onClose} className="me-2">
             Annuler
           </Button>
           <Button variant="danger" type="submit" disabled={loading}>
-            {loading ? 'Création en cours...' : 'Créer'}
+            {loading ? (client ? 'Modification en cours...' : 'Création en cours...') : (client ? 'Modifier' : 'Créer')}
           </Button>
         </div>
       </Form>

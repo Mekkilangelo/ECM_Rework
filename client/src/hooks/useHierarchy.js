@@ -136,6 +136,6 @@ export const useHierarchy = () => {
     error,
     totalItems,
     updateItemStatus,
-    refresh: fetchData
+    refreshData: fetchData
   };
 };

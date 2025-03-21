@@ -1,10 +1,10 @@
-// client/src/components/dashboard/clients/ClientList.jsx
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faEllipsisV, faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
+import { AuthContext } from '../../../context/AuthContext'; 
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import ClientForm from './ClientForm';
 import ClientDetails from './ClientDetails';
@@ -13,9 +13,15 @@ import clientService from '../../../services/clientService';
 const ClientList = () => {
   const { navigateToLevel } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
+  const { user } = useContext(AuthContext); // Récupérer l'utilisateur connecté
+  
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  
+  // Vérifier si l'utilisateur a les droits d'édition
+  const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   
   const handleClientClick = (client) => {
     if (client.data_status === 'new') {
@@ -27,6 +33,11 @@ const ClientList = () => {
   const handleViewDetails = (client) => {
     setSelectedClient(client);
     setShowDetailModal(true);
+  };
+  
+  const handleEditClient = (client) => {
+    setSelectedClient(client);
+    setShowEditForm(true);
   };
 
   const handleDeleteClient = async (clientId) => {
@@ -41,6 +52,14 @@ const ClientList = () => {
         alert(err.response?.data?.message || "Une erreur est survenue lors de la suppression du client");
       }
     }
+  };
+  
+  const handleClientUpdated = () => {
+    refreshData();
+  };
+  
+  const handleClientCreated = () => {
+    refreshData();
   };
   
   if (loading) return <Spinner animation="border" role="status" />;
@@ -102,6 +121,13 @@ const ClientList = () => {
                     >
                       <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
                     </Dropdown.Item>
+                    {hasEditRights && (
+                      <Dropdown.Item 
+                        onClick={() => handleEditClient(client)}
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
+                      </Dropdown.Item>
+                    )}
                     <Dropdown.Item 
                       onClick={() => handleDeleteClient(client.id)}
                     >
@@ -127,7 +153,30 @@ const ClientList = () => {
           <Modal.Title>Nouveau client</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ClientForm onClose={() => setShowCreateForm(false)} />
+          <ClientForm 
+            onClose={() => setShowCreateForm(false)} 
+            onClientCreated={() => refreshData()}
+          />
+        </Modal.Body>
+      </Modal>
+      
+      {/* Modal pour éditer un client */}
+      <Modal 
+        show={showEditForm} 
+        onHide={() => setShowEditForm(false)}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Modifier le client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedClient && (
+            <ClientForm 
+              client={selectedClient}
+              onClose={() => setShowEditForm(false)} 
+              onClientUpdated={() => refreshData()}
+            />
+          )}
         </Modal.Body>
       </Modal>
       

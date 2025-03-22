@@ -54,13 +54,6 @@ const ClientList = () => {
     }
   };
   
-  const handleClientUpdated = () => {
-    refreshData();
-  };
-  
-  const handleClientCreated = () => {
-    refreshData();
-  };
   
   if (loading) return <Spinner animation="border" role="status" />;
   if (error) return <Alert variant="danger">{error}</Alert>;

@@ -1,12 +1,13 @@
 import React from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col,Spinner } from 'react-bootstrap';
 import useOrderForm from './hooks/useOrderForm';
 
-const OrderForm = ({ onClose, onOrderCreated }) => {
+const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
   const {
     formData,
     errors,
     loading,
+    fetchingOrder,
     message,
     parentId,
     handleChange,
@@ -14,8 +15,12 @@ const OrderForm = ({ onClose, onOrderCreated }) => {
     addContact,
     removeContact,
     handleSubmit
-  } = useOrderForm(onClose, onOrderCreated);
+  } = useOrderForm(order,onClose, onOrderCreated, onOrderUpdated);
   
+  if (fetchingOrder) {
+    return <div className="text-center p-4"><Spinner animation="border" /></div>;
+  }
+
   return (
     <div>
       {message && (
@@ -142,7 +147,7 @@ const OrderForm = ({ onClose, onOrderCreated }) => {
             Annuler
           </Button>
           <Button variant="danger" type="submit" disabled={loading}>
-            {loading ? 'Création en cours...' : 'Créer'}
+            {loading ? (order ? 'Modification en cours...' : 'Création en cours...') : (order ? 'Modifier' : 'Créer')}
           </Button>
         </div>
       </Form>

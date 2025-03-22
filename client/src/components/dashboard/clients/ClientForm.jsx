@@ -68,7 +68,6 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
           <Col md={6}>
             <Form.Group className="mb-3">
               <Form.Label>Pays</Form.Label>
-              {/* Remplacer le champ texte par un Select */}
               <Select
                 styles={selectStyles}
                 options={countryOptions}

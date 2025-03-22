@@ -216,7 +216,7 @@ exports.createOrder = async (req, res) => {
 exports.updateOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { name, order_number, order_date, status, commercial, contacts } = req.body;
+    const { name, order_number, order_date, status, commercial, contacts, description } = req.body;
     
     const node = await Node.findOne({
       where: { id: orderId, type: 'order' },

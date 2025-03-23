@@ -13,29 +13,6 @@ const DashboardContent = () => {
   // Calculer le nombre de pages
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   
-  // Générer le fil d'Ariane dynamique
-  const generateBreadcrumb = () => {
-    const breadcrumb = ['Clients'];
-    
-    if (hierarchyState.clientId) {
-      breadcrumb.push(hierarchyState.clientName || 'Client');
-      
-      if (hierarchyState.orderId) {
-        breadcrumb.push(hierarchyState.orderName || 'Commande');
-        
-        if (hierarchyState.partId) {
-          breadcrumb.push(hierarchyState.partName || 'Pièce');
-          
-          if (hierarchyState.testId) {
-            breadcrumb.push(hierarchyState.testName || 'Test');
-          }
-        }
-      }
-    }
-    
-    return breadcrumb;
-  };
-  
   // Déterminer si on affiche le bouton de retour
   const showBackButton = currentLevel !== 'client';
   
@@ -56,21 +33,6 @@ const DashboardContent = () => {
       <Container fluid>
         <Row>
           <Col>
-            {/* Navigation en fil d'Ariane */}
-            <nav aria-label="breadcrumb">
-              <ol id="breadcrumb-nav" className="breadcrumb">
-                {generateBreadcrumb().map((item, index) => (
-                  <li 
-                    key={index} 
-                    className={`breadcrumb-item ${index === generateBreadcrumb().length - 1 ? 'active' : ''}`}
-                    aria-current={index === generateBreadcrumb().length - 1 ? 'page' : null}
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ol>
-            </nav>
-
             {/* Contrôles de pagination */}
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>

@@ -206,6 +206,8 @@ const useOptionsFetcher = (setLoading) => {
             // Log pour déboguer
             console.log('Length units:', allUnitOptions.filter(unit => unit.type === 'length'));
             console.log('Temperature units:', allUnitOptions.filter(unit => unit.type === 'temperature'));
+            console.log('Hardness units:', allUnitOptions.filter(unit => unit.type === 'hardness'));
+
           } else {
             console.warn('Units data is not in expected format:', units);
             setUnitOptions([]);

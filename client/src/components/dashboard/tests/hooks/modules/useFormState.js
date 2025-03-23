@@ -115,6 +115,34 @@ const useFormState = () => {
       oilInertingDelayUnit: '',
       oilDrippingTime: '',
       oilDrippingTimeUnit: ''
+    },
+    
+    // Ajout de la section resultsData avec un bloc initial
+    resultsData: {
+      results: [
+        {
+          step: 1,
+          description: '',
+          hardnessPoints: [
+            {
+              location: '',
+              value: '',
+              unit: ''
+            }
+          ],
+          ecd: {
+            toothFlank: {
+              distance: '',
+              unit: ''
+            },
+            toothRoot: {
+              distance: '',
+              unit: ''
+            }
+          },
+          comment: ''
+        }
+      ]
     }
   });
   

@@ -19,7 +19,7 @@ const useTestForm = (onClose, onTestCreated) => {
     processTypeOptions, furnaceTypeOptions, heatingCellOptions, coolingMediaOptions, 
     furnaceSizeOptions, quenchCellOptions, gasOptions, rampOptions,
     selectStyles, getSelectedOption, lengthUnitOptions, weightUnitOptions, 
-    timeUnitOptions, temperatureUnitOptions, pressureUnitOptions 
+    timeUnitOptions, temperatureUnitOptions, pressureUnitOptions, hardnessUnitOptions 
   } = useOptionsFetcher(setLoading);
   
   // Handlers pour le formulaire
@@ -29,7 +29,9 @@ const useTestForm = (onClose, onTestCreated) => {
     handleChemicalCycleAdd, handleChemicalCycleRemove,
     handleGasQuenchSpeedAdd, handleGasQuenchSpeedRemove,
     handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,
-    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove
+    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
+    handleResultBlocAdd, handleResultBlocRemove,
+    handleHardnessResultAdd, handleHardnessResultRemove
   } = useFormHandlers(formData, setFormData, errors, setErrors);
   
   // Validation du formulaire
@@ -75,6 +77,7 @@ const useTestForm = (onClose, onTestCreated) => {
     timeUnitOptions,
     temperatureUnitOptions,
     pressureUnitOptions,
+    hardnessUnitOptions,
     selectStyles,
     // Thermal cycle
     handleThermalCycleAdd,
@@ -87,7 +90,11 @@ const useTestForm = (onClose, onTestCreated) => {
     handleGasQuenchPressureAdd,
     handleGasQuenchPressureRemove,
     handleOilQuenchSpeedAdd,
-    handleOilQuenchSpeedRemove
+    handleOilQuenchSpeedRemove,
+    handleResultBlocAdd,
+    handleResultBlocRemove,
+    handleHardnessResultAdd,
+    handleHardnessResultRemove
   };
 };
 

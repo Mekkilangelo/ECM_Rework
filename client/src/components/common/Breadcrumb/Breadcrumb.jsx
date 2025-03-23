@@ -45,7 +45,7 @@ const Breadcrumb = () => {
   };
   
   const handleClick = (level, isActive) => {
-    if (isActive) return; // Ne rien faire si c'est déjà le niveau actif
+    if (isActive) return;
     
     switch(level) {
       case 'client':

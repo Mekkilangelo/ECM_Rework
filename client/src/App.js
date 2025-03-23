@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import './styles/sb-admin-2.min.css';
@@ -85,6 +88,20 @@ function App() {
             element={<Navigate to="/login" replace />} 
           />
         </Routes>
+
+        {/* ToastContainer pour afficher les notifications */}
+        <ToastContainer 
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+        
       </BrowserRouter>
     </AuthProvider>
   );

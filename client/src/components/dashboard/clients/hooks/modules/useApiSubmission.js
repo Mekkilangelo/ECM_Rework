@@ -1,4 +1,5 @@
 import clientService from '../../../../../services/clientService';
+import { toast } from 'react-toastify';
 
 const useApiSubmission = (
   formData, 
@@ -56,6 +57,9 @@ const useApiSubmission = (
         }
       }
       
+      // Afficher un message de succès
+      toast.success(response.message || 'TEST');
+
       setTimeout(() => {
         onClose();
       }, 1500);

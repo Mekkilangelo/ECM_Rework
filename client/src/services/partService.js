@@ -1,8 +1,8 @@
 import api from './api';
 
 export const partService = {
-  getParts: (page = 1, limit = 10) => 
-    api.get('/parts', { params: { page, limit } }),
+  getParts: (orderId, page = 1, limit = 10) => 
+    api.get('/parts', { params: { orderId, page, limit } }),
   
   getPart: (id) => 
     api.get(`/parts/${id}`),

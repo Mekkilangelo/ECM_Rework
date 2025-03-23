@@ -1,19 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV, faArrowLeft} from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faEllipsisV, faTrash, faEdit, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
+import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import PartForm from './PartForm';
 import PartDetails from './PartDetails';
+import partService from '../../../services/partService';
 
 const PartList = ({ orderId }) => {
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
-  const { data, loading, error, updateItemStatus } = useHierarchy();
+  const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
+  const { user } = useContext(AuthContext);
+  
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPart, setSelectedPart] = useState(null);
+  
+  // Vérifier si l'utilisateur a les droits d'édition
+  const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   
   const handlePartClick = (part) => {
     if (part.data_status === 'new') {
@@ -25,6 +33,26 @@ const PartList = ({ orderId }) => {
   const handleViewDetails = (part) => {
     setSelectedPart(part);
     setShowDetailModal(true);
+  };
+  
+  const handleEditPart = (part) => {
+    console.log("Editing part:", part);
+    setSelectedPart(part);
+    setShowEditForm(true);
+  };
+  
+  const handleDeletePart = async (partId) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette pièce ? Cette action est irréversible.")) {
+      try {
+        await partService.deletePart(partId);
+        alert("Pièce supprimée avec succès");
+        // Rafraîchir les données
+        refreshData();
+      } catch (err) {
+        console.error('Erreur lors de la suppression de la pièce:', err);
+        alert(err.response?.data?.message || "Une erreur est survenue lors de la suppression de la pièce");
+      }
+    }
   };
   
   if (loading) return <Spinner animation="border" role="status" />;
@@ -93,6 +121,18 @@ const PartList = ({ orderId }) => {
                     >
                       <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
                     </Dropdown.Item>
+                    {hasEditRights && (
+                      <Dropdown.Item 
+                        onClick={() => handleEditPart(part)}
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
+                      </Dropdown.Item>
+                    )}
+                    <Dropdown.Item 
+                      onClick={() => handleDeletePart(part.id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} className="mr-2" /> Supprimer
+                    </Dropdown.Item>
                   </DropdownButton>
                 </td>
               </tr>
@@ -113,12 +153,37 @@ const PartList = ({ orderId }) => {
           <Modal.Title>Nouvelle pièce</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <PartForm orderId={orderId} onClose={() => setShowCreateForm(false)} />
+          <PartForm 
+            orderId={orderId} 
+            onClose={() => setShowCreateForm(false)} 
+            onPartCreated={() => refreshData()}
+          />
+        </Modal.Body>
+      </Modal>
+      
+      {/* Modal pour éditer une pièce */}
+      <Modal 
+        show={showEditForm} 
+        onHide={() => setShowEditForm(false)}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Modifier la pièce</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedPart && (
+            <PartForm
+              part={selectedPart} 
+              orderId={orderId} 
+              onClose={() => setShowEditForm(false)} 
+              onPartUpdated={() => refreshData()}
+            />
+          )}
         </Modal.Body>
       </Modal>
       
       {/* Modal pour voir les détails */}
-      <Modal
+      {/* <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
         size="lg"
@@ -135,7 +200,7 @@ const PartList = ({ orderId }) => {
             />
           )}
         </Modal.Body>
-      </Modal>
+      </Modal> */}
     </>
   );
 };

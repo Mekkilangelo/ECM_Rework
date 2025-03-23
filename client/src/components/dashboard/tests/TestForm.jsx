@@ -1,22 +1,31 @@
-import React from 'react';
-import { Form, Button } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Form, Button, Tabs, Tab } from 'react-bootstrap';
 import useTestForm from './hooks/useTestForm';
 
 // Sections importées
 import BasicInfoSection from './sections/BasicInfoSection';
-import TestTypeSection from './sections/TestTypeSection';
-import FurnaceDataSection from './sections/FurnaceDataSection';
-import LoadDataSection from './sections/LoadDataSection';
-import RecipeDataSection from './sections/RecipeDataSection';
+import BeforeTabContent from './sections/before/BeforeTabContent';
+import AfterTabContent from './sections/after/AfterTabContent';
 
-const TestForm = ({ onClose, onTestCreated }) => {
+const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
   const {
     formData,
     errors,
     loading,
     message,
     ...formHandlers
-  } = useTestForm(onClose, onTestCreated);
+  } = useTestForm(test, onClose, onTestCreated, onTestUpdated);
+
+  // État pour gérer l'onglet actif
+  const [activeTab, setActiveTab] = useState('before');
+
+  // Fonction pour gérer le changement d'onglet
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+  };
+
+  // Détermine si nous sommes en mode édition
+  const isEditMode = Boolean(test);
 
   return (
     <div>
@@ -33,6 +42,7 @@ const TestForm = ({ onClose, onTestCreated }) => {
       )}
       
       <Form onSubmit={formHandlers.handleSubmit}>
+        {/* Section BasicInfo toujours visible */}
         <BasicInfoSection
           formData={formData}
           errors={errors}
@@ -45,62 +55,45 @@ const TestForm = ({ onClose, onTestCreated }) => {
           selectStyles={formHandlers.selectStyles}
         />
         
-        <TestTypeSection
-          formData={formData}
-          handleSelectChange={formHandlers.handleSelectChange}
-          getSelectedOption={formHandlers.getSelectedOption}
-          mountingTypeOptions={formHandlers.mountingTypeOptions}
-          positionTypeOptions={formHandlers.positionTypeOptions}
-          processTypeOptions={formHandlers.processTypeOptions}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
-        />
-        
-        <FurnaceDataSection
-          formData={formData}
-          handleSelectChange={formHandlers.handleSelectChange}
-          getSelectedOption={formHandlers.getSelectedOption}
-          furnaceTypeOptions={formHandlers.furnaceTypeOptions}
-          heatingCellOptions={formHandlers.heatingCellOptions}
-          coolingMediaOptions={formHandlers.coolingMediaOptions}
-          furnaceSizeOptions={formHandlers.furnaceSizeOptions}
-          quenchCellOptions={formHandlers.quenchCellOptions}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
-        />
-        
-        <LoadDataSection
-          formData={formData}
-          handleChange={formHandlers.handleChange}
-          handleSelectChange={formHandlers.handleSelectChange}
-          getSelectedOption={formHandlers.getSelectedOption}
-          lengthUnitOptions={formHandlers.lengthUnitOptions}
-          weightUnitOptions={formHandlers.weightUnitOptions}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
-        />
-        
-        <RecipeDataSection
-          formData={formData}
-          handleChange={formHandlers.handleChange}
-          handleSelectChange={formHandlers.handleSelectChange}
-          getSelectedOption={formHandlers.getSelectedOption}
-          temperatureUnitOptions={formHandlers.temperatureUnitOptions}
-          timeUnitOptions={formHandlers.timeUnitOptions}
-          pressureUnitOptions={formHandlers.pressureUnitOptions}
-          handleThermalCycleAdd={formHandlers.handleThermalCycleAdd}
-          handleThermalCycleRemove={formHandlers.handleThermalCycleRemove}
-          handleChemicalCycleAdd={formHandlers.handleChemicalCycleAdd}
-          handleChemicalCycleRemove={formHandlers.handleChemicalCycleRemove}
-          handleGasQuenchSpeedAdd={formHandlers.handleGasQuenchSpeedAdd}
-          handleGasQuenchSpeedRemove={formHandlers.handleGasQuenchSpeedRemove}
-          handleGasQuenchPressureAdd={formHandlers.handleGasQuenchPressureAdd}
-          handleGasQuenchPressureRemove={formHandlers.handleGasQuenchPressureRemove}
-          handleOilQuenchSpeedAdd={formHandlers.handleOilQuenchSpeedAdd}
-          handleOilQuenchSpeedRemove={formHandlers.handleOilQuenchSpeedRemove}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
-        />
+        {/* Affichage conditionnel des onglets en fonction du mode */}
+        {isEditMode ? (
+          <Tabs
+            activeKey={activeTab}
+            onSelect={handleTabChange}
+            className="mb-4 mt-4"
+            id="test-form-tabs"
+          >
+            <Tab eventKey="before" title="Before">
+              <BeforeTabContent 
+                formData={formData}
+                errors={errors}
+                loading={loading}
+                formHandlers={formHandlers}
+              />
+            </Tab>
+            <Tab eventKey="after" title="After">
+              <AfterTabContent 
+                formData={formData}
+                errors={errors}
+                loading={loading}
+                formHandlers={formHandlers}
+              />
+            </Tab>
+            <Tab eventKey="report" title="Report">
+              <ReportTabContent />
+            </Tab>
+          </Tabs>
+        ) : (
+          // En mode création, on affiche directement le contenu de l'onglet "Before"
+          <div className="mt-4">
+            <BeforeTabContent 
+              formData={formData}
+              errors={errors}
+              loading={loading}
+              formHandlers={formHandlers}
+            />
+          </div>
+        )}
 
         {/* Boutons de soumission */}
         <div className="d-flex justify-content-end mt-4">
@@ -108,12 +101,21 @@ const TestForm = ({ onClose, onTestCreated }) => {
             Annuler
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
+            {loading ? (isEditMode ? 'Modification en cours...' : 'Création en cours...') : (isEditMode ? 'Modifier' : 'Créer')}
           </Button>
         </div>
       </Form>
     </div>
   );
 };
+
+// Composant pour l'onglet "Report" (à implémenter selon vos besoins)
+const ReportTabContent = () => (
+  <div className="p-3 text-muted">
+    {/* Remplacez ce contenu placeholder par vos sections d'onglet Report */}
+    <h4>Rapport de Test</h4>
+    <p>Contenu de l'onglet Report à implémenter</p>
+  </div>
+);
 
 export default TestForm;

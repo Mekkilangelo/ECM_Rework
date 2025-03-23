@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button, Row, Col,Spinner } from 'react-bootstrap';
+import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import useOrderForm from './hooks/useOrderForm';
 
 const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
@@ -9,7 +9,6 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
     loading,
     fetchingOrder,
     message,
-    parentId,
     handleChange,
     handleContactChange,
     addContact,
@@ -35,7 +34,7 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
         </div>
       )}
       
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} autoComplete="off">
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
@@ -60,6 +59,7 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
                 name="commercial"
                 value={formData.commercial}
                 onChange={handleChange}
+                autoComplete="off"
               />
             </Form.Group>
           </Col>
@@ -75,6 +75,7 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
+                autoComplete="off"
               />
             </Form.Group>
           </Col>
@@ -112,6 +113,7 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
                       name="name"
                       value={contact.name}
                       onChange={(e) => handleContactChange(index, e)}
+                      autoComplete="off"
                     />
                   </Form.Group>
                 </Col>
@@ -123,6 +125,7 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
                       name="phone"
                       value={contact.phone}
                       onChange={(e) => handleContactChange(index, e)}
+                      autoComplete="off"
                     />
                   </Form.Group>
                 </Col>
@@ -134,6 +137,7 @@ const OrderForm = ({ order, onClose, onOrderCreated, onOrderUpdated }) => {
                       name="email"
                       value={contact.email}
                       onChange={(e) => handleContactChange(index, e)}
+                      autoComplete="off"
                     />
                   </Form.Group>
                 </Col>

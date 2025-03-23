@@ -28,12 +28,10 @@ export const fetchOrders = async (clientId, page = 1, limit = 10) => {
 
 export const fetchParts = async (orderId, page = 1, limit = 10) => {
   try {
-    const response = await api.get(`${API_URL}/parts`, {
-      params: { orderId, page, limit }
-    });
+    const response = await partService.getParts(orderId, page, limit);
     return response.data;
   } catch (error) {
-    console.error('Erreur lors du chargement des pièces:', error);
+    console.error('Erreur lors du chargement des commandes:', error);
     throw error;
   }
 };

@@ -7,14 +7,14 @@ const { Op } = require('sequelize');
  */
 exports.getParts = async (req, res) => {
   try {
-    const { limit = 10, offset = 0, order_id } = req.query;
+    const { limit = 10, offset = 0, parent_id } = req.query;
     
     const whereCondition = { type: 'part' };
     
     // Si un order_id est fourni, rechercher les pièces associées à cette commande
-    if (order_id) {
+    if (parent_id) {
       const orderDescendants = await Closure.findAll({
-        where: { ancestor_id: order_id },
+        where: { ancestor_id: parent_id },
         attributes: ['descendant_id']
       });
       

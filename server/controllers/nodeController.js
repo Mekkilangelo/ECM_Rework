@@ -1,4 +1,4 @@
-const { Node, Closure, Client, Order, Part, Test, File, Furnace, Steel } = require('../models');
+const { Node, Closure, Client, Order, Part, Test, File, Furnace, Steel, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 // Fonction utilitaire pour obtenir le modèle correspondant au type
@@ -19,7 +19,7 @@ const getModelForType = (type) => {
 const getAttributesForType = (type) => {
   const typeAttributesMap = {
     'client': ['country', 'city', 'client_group','address'],
-    'order': ['order_number', 'status', 'order_date', 'commercial'],
+    'order': ['order_number', 'order_date', 'commercial'],
     'part': ['designation', 'steel'],
     'test': ['test_code', 'status', 'test_date', 'location', 'is_mesured'],
     'file': ['size', 'mime_type'],
@@ -435,6 +435,60 @@ async function deleteSpecificData(nodeType, nodeId, transaction) {
   }
 }
 
+/**
+ * Fonction pour vider toutes les tables de la base de données
+ * Permet de réinitialiser complètement les données
+ */
+exports.deleteNodes = async (req, res) => {
+  const t = await sequelize.transaction();
+  
+  try {
+    console.log('Début de la procédure de suppression des données');
+    
+    // Désactiver les contraintes de clé étrangère
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction: t });
+    
+    // Tables à nettoyer avec leurs modèles Sequelize correspondants
+    const models = [Client, Order, Part, Test, File, Furnace, Node, Closure];
+    
+    // Suppression des données de chaque table en utilisant les méthodes Sequelize
+    for (const model of models) {
+      console.log(`Suppression des données de la table ${model.tableName}`);
+      await model.destroy({ 
+        truncate: true,
+        cascade: true, 
+        force: true, 
+        transaction: t 
+      });
+    }
+    
+    // Réactiver les contraintes de clé étrangère
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction: t });
+    
+    console.log('Toutes les tables ont été vidées avec succès');
+    
+    // Valider la transaction
+    await t.commit();
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Toutes les tables ont été vidées avec succès',
+      tables: models.map(model => model.tableName || model.name)
+    });
+  } catch (error) {
+    // En cas d'erreur, annuler la transaction
+    await t.rollback();
+    
+    console.error('Erreur lors de la suppression des données:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Erreur lors de la suppression des données', 
+      error: error.message 
+    });
+  }
+};
+
+
 exports.getTable = async (req, res) => {
   try {
     const { parentId = null, limit = 10, page = 1 } = req.query;
@@ -489,27 +543,6 @@ exports.getTable = async (req, res) => {
   }
 };
 
-exports.getAllNodes = async (req, res) => {
-  try {
-    const nodes = await Node.findAll();
-    res.json(nodes);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.getNodeById = async (req, res) => {
-  try {
-    const node = await Node.findByPk(req.params.id);
-    if (!node) {
-      return res.status(404).json({ message: 'Node not found' });
-    }
-    res.json(node);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 
 exports.updateNodeStatus = async (req, res) => {
   try {
@@ -537,7 +570,6 @@ exports.updateNodeStatus = async (req, res) => {
     return res.status(500).json({ message: 'Erreur lors de la mise à jour du statut', error: error.message });
   }
 };
-
 
 
 

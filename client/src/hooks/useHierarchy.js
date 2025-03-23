@@ -44,7 +44,7 @@ export const useHierarchy = () => {
         case 'part':
           url = `${API_URL}/parts`;
           params = { 
-            orderId: hierarchyState.orderId, 
+            parent_id: hierarchyState.orderId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };
@@ -52,7 +52,7 @@ export const useHierarchy = () => {
         case 'test':
           url = `${API_URL}/tests`;
           params = { 
-            partId: hierarchyState.partId, 
+            parent_id: hierarchyState.partId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };

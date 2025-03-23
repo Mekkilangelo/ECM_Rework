@@ -1,14 +1,15 @@
 // client/src/components/dashboard/parts/PartForm.jsx
 import React from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
+import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
 import usePartForm from './hooks/usePartForm';
 
-const PartForm = ({ onClose, onPartCreated }) => {
+const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
   const {
     formData,
     errors,
     loading,
+    fetchingPart,
     message,
     designationOptions,
     steelOptions,
@@ -20,7 +21,11 @@ const PartForm = ({ onClose, onPartCreated }) => {
     getWeightUnitOptions,
     getHardnessUnitOptions,
     selectStyles
-  } = usePartForm(onClose, onPartCreated);
+  } = usePartForm(part, onClose, onPartCreated, onPartUpdated);
+
+  if (fetchingPart) {
+    return <div className="text-center p-4"><Spinner animation="border" /></div>;
+  }
 
   return (
     <div>
@@ -36,7 +41,7 @@ const PartForm = ({ onClose, onPartCreated }) => {
         </div>
       )}
       
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} autoComplete="off">
         {/* Section des informations de base */}
         <Row>
           <Col md={6}>
@@ -48,6 +53,7 @@ const PartForm = ({ onClose, onPartCreated }) => {
                 value={formData.name}
                 onChange={handleChange}
                 isInvalid={!!errors.name}
+                autoComplete="off"
               />
               <Form.Control.Feedback type="invalid">
                 {errors.name}
@@ -390,7 +396,7 @@ const PartForm = ({ onClose, onPartCreated }) => {
             Annuler
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
+            {loading ? (part ? 'Modification en cours...' : 'Création en cours...') : (part ? 'Modifier' : 'Créer')}
           </Button>
         </div>
       </Form>

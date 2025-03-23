@@ -30,9 +30,9 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
         </div>
       )}
       
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} autoComplete="off">
         <Row>
-          <Col md={6}>
+          <Col md={12}>
             <Form.Group className="mb-3">
               <Form.Label>Nom du client *</Form.Label>
               <Form.Control
@@ -41,24 +41,10 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
                 value={formData.name}
                 onChange={handleChange}
                 isInvalid={!!errors.name}
+                autoComplete="off"
               />
               <Form.Control.Feedback type="invalid">
                 {errors.name}
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>Code client *</Form.Label>
-              <Form.Control
-                type="text"
-                name="client_code"
-                value={formData.client_code}
-                onChange={handleChange}
-                isInvalid={!!errors.client_code}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.client_code}
               </Form.Control.Feedback>
             </Form.Group>
           </Col>
@@ -88,6 +74,7 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
+                autoComplete="off"
               />
             </Form.Group>
           </Col>
@@ -102,6 +89,7 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
                 name="client_group"
                 value={formData.client_group}
                 onChange={handleChange}
+                autoComplete="off"
               />
             </Form.Group>
           </Col>
@@ -114,6 +102,7 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
                 value={formData.address}
                 onChange={handleChange}
                 rows={3}
+                autoComplete="off"
               />
             </Form.Group>
           </Col>
@@ -129,6 +118,7 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
+                autoComplete="off"
               />
             </Form.Group>
           </Col>

@@ -7,6 +7,8 @@ import {
     faTicketAlt, faAngleLeft, faAngleRight, faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import Select from 'react-select';
+import { cleanData } from '../../services/nodeService';
+import { toast } from 'react-toastify';
 import '../../styles/sidebar.css';
 
 const Sidebar = () => {
@@ -14,6 +16,40 @@ const Sidebar = () => {
     const [allClients, setAllClients] = useState([]);
     const [selectedClient, setSelectedClient] = useState(null);
     const [isToggled, setIsToggled] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Fonction pour gérer le nettoyage des données
+    const handleDataCleaning = async (e) => {
+        e.preventDefault();
+        
+        // Confirmation avant suppression
+        const isConfirmed = window.confirm(
+            'Attention ! Cette action va supprimer définitivement toutes les données de l\'application.\n\n' +
+            'Êtes-vous sûr de vouloir continuer ?'
+        );
+        
+        if (!isConfirmed) return;
+        
+        try {
+            setIsLoading(true);
+            
+            // Appel de l'API pour nettoyer les données
+            const result = await cleanData();
+            
+            // Afficher un message de succès
+            toast.success(result.message || 'Données supprimées avec succès');
+            
+            // Attendre 2 secondes avant de recharger la page
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+            
+        } catch (error) {
+            // Afficher un message d'erreur
+            toast.error(error.message || 'Erreur lors de la suppression des données');
+            setIsLoading(false);
+        }
+    };
 
     // Fonction pour simuler le chargement des clients depuis l'API
     useEffect(() => {
@@ -201,20 +237,17 @@ const Sidebar = () => {
                     <span>Indexing</span>
                 </Link>
             </li>
-
+            
             <li className="nav-item">
-                <Link 
+                <a 
                     className="nav-link d-flex align-items-center px-3"
-                    to="/data-cleaning"
-                    onClick={(e) => {
-                        if (!window.confirm('Are you sure you want to erase the entire database? (This action is irreversible)')) {
-                            e.preventDefault();
-                        }
-                    }}
+                    href="#"
+                    onClick={handleDataCleaning}
+                    style={{ cursor: isLoading ? 'wait' : 'pointer' }}
                 >
                     <FontAwesomeIcon icon={faEraser} className="fa-fw mr-2" />
-                    <span>Data Cleaning</span>
-                </Link>
+                    <span>{isLoading ? 'Nettoyage en cours...' : 'Data Cleaning'}</span>
+                </a>
             </li>
 
             <li className="nav-item">

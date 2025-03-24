@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button, Tabs, Tab } from 'react-bootstrap';
+import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import useTestForm from './hooks/useTestForm';
 
 // Sections importées
@@ -12,6 +12,7 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
     formData,
     errors,
     loading,
+    fetchingTest,
     message,
     ...formHandlers
   } = useTestForm(test, onClose, onTestCreated, onTestUpdated);
@@ -26,6 +27,10 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
 
   // Détermine si nous sommes en mode édition
   const isEditMode = Boolean(test);
+
+  if (fetchingTest) {
+    return <div className="text-center p-4"><Spinner animation="border" /></div>;
+  }
 
   return (
     <div>

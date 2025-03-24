@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
+import React, { useState, useContext } from 'react';
+import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faEdit, faArrowLeft, faFlask } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import TestForm from './TestForm';
 import TestDetails from './TestDetails';
+import '../../../styles/dataList.css';
 
 const TestList = ({ partId }) => {
-  const { navigateToLevel } = useNavigation();
+  const { navigateBack } = useNavigation();
   const { data, loading, error, updateItemStatus, totalItems } = useHierarchy('tests', partId);
-  const { user } = React.useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -42,78 +43,110 @@ const TestList = ({ partId }) => {
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
-  if (loading) return <Spinner animation="border" role="status" />;
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="warning" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
     <>
-      <div className="d-flex justify-content-between mb-3">
-        <h2>Tests</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex align-items-center">
+          <Button 
+            variant="outline-secondary" 
+            className="mr-3"
+            onClick={navigateBack}
+            size="sm"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} />
+          </Button>
+          <h2 className="mb-0">
+            <FontAwesomeIcon icon={faFlask} className="mr-2 text-warning" />
+            Tests
+          </h2>
+        </div>
         <Button
-          variant="outline-warning"
+          variant="warning"
           onClick={() => setShowCreateForm(true)}
+          className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-1" /> Nouvel essai
+          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouvel essai
         </Button>
       </div>
 
       {data.length > 0 ? (
-        <Table hover>
-          <thead className="bg-warning">
-            <tr>
-              <th className="text-center">Code d'essai</th>
-              <th className="text-center">Date</th>
-              <th className="text-center">Lieu</th>
-              <th className="text-center">Modifié le</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(test => (
-              <tr key={test.id}>
-                <td>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleEditTest(test);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {test.name || "Sans nom"}
-                    <StatusBadge status={test.data_status} />
-                  </a>
-                </td>
-                <td className="text-center">{test.test_date || "Pas encore réalisé"}</td>
-                <td className="text-center">{test.location || ""}</td>
-                <td className="text-center">{test.modified_at || "Inconnu"}</td>
-                <td className="text-center align-middle">
-                  <DropdownButton
-                    size="sm"
-                    variant="outline-secondary"
-                    title={<FontAwesomeIcon icon={faEllipsisV} />}
-                    id={`dropdown-test-${test.id}`}
-                  >
-                    <Dropdown.Item
-                      onClick={() => handleViewDetails(test)}
-                    >
-                      <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
-                    </Dropdown.Item>
-                    {hasEditRights && (
-                      <Dropdown.Item
-                        onClick={() => handleEditTest(test)}
-                      >
-                        <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
-                      </Dropdown.Item>
-                    )}
-                  </DropdownButton>
-                </td>
+        <div className="data-list-container">
+          <Table hover responsive className="data-table border-bottom">
+            <thead>
+              <tr className="bg-light">
+                <th style={{ width: '30%' }}>Code d'essai</th>
+                <th className="text-center">Date</th>
+                <th className="text-center">Lieu</th>
+                <th className="text-center">Modifié le</th>
+                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {data.map(test => (
+                <tr key={test.id}>
+                  <td>
+                    <div 
+                      onClick={() => handleTestClick(test)}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center"
+                    >
+                      <div className="item-name font-weight-bold text-primary">
+                        {test.name || "Sans nom"}
+                      </div>
+                      <div className="ml-2">
+                        <StatusBadge status={test.data_status} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center">{test.test_date || "Pas encore réalisé"}</td>
+                  <td className="text-center">{test.location || "-"}</td>
+                  <td className="text-center">{test.modified_at || "Inconnu"}</td>
+                  <td className="text-center">
+                    <div className="d-flex justify-content-center">
+                      <Button 
+                        variant="outline-info" 
+                        size="sm" 
+                        className="mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(test);
+                        }}
+                        title="Détails"
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </Button>
+                      
+                      {hasEditRights && (
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditTest(test);
+                          }}
+                          title="Modifier"
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       ) : (
-        <Alert variant="warning">Aucun essai trouvé pour cette pièce.</Alert>
+        <Card className="text-center p-5 bg-light">
+          <Card.Body>
+            <FontAwesomeIcon icon={faFlask} size="3x" className="text-secondary mb-3" />
+            <h4>Aucun essai trouvé pour cette pièce</h4>
+            <p className="text-muted">Cliquez sur "Nouvel essai" pour en ajouter un</p>
+          </Card.Body>
+        </Card>
       )}
 
       {/* Modal pour créer un essai */}
@@ -122,7 +155,7 @@ const TestList = ({ partId }) => {
         onHide={() => setShowCreateForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Nouvel essai</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -140,7 +173,7 @@ const TestList = ({ partId }) => {
         onHide={() => setShowEditForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Modifier l'essai</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -160,7 +193,7 @@ const TestList = ({ partId }) => {
         onHide={() => setShowDetailModal(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Détails de l'essai</Modal.Title>
         </Modal.Header>
         <Modal.Body>

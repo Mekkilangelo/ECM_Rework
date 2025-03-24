@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV, faTrash, faEdit, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faCog } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
@@ -9,6 +9,7 @@ import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import PartForm from './PartForm';
 import PartDetails from './PartDetails';
 import partService from '../../../services/partService';
+import '../../../styles/dataList.css';
 
 const PartList = ({ orderId }) => {
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
@@ -36,7 +37,6 @@ const PartList = ({ orderId }) => {
   };
   
   const handleEditPart = (part) => {
-    console.log("Editing part:", part);
     setSelectedPart(part);
     setShowEditForm(true);
   };
@@ -46,7 +46,6 @@ const PartList = ({ orderId }) => {
       try {
         await partService.deletePart(partId);
         alert("Pièce supprimée avec succès");
-        // Rafraîchir les données
         refreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression de la pièce:', err);
@@ -55,92 +54,124 @@ const PartList = ({ orderId }) => {
     }
   };
   
-  if (loading) return <Spinner animation="border" role="status" />;
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
   
   return (
     <>
-      <div className="d-flex justify-content-between mb-3">
-        <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex align-items-center">
           <Button 
             variant="outline-secondary" 
-            className="mr-2"
+            className="mr-3"
             onClick={navigateBack}
+            size="sm"
           >
-            <FontAwesomeIcon icon={faArrowLeft} /> Retour
+            <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
-          <h2 className="d-inline-block">Parts - {hierarchyState.orderName}</h2>
+          <h2 className="mb-0">
+            <FontAwesomeIcon icon={faCog} className="mr-2 text-danger" />
+            Pièces - {hierarchyState.orderName}
+          </h2>
         </div>
         <Button 
-          variant="outline-danger" 
+          variant="danger" 
           onClick={() => setShowCreateForm(true)}
+          className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-1" /> Nouvelle pièce
+          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouvelle pièce
         </Button>
       </div>
       
       {data.length > 0 ? (
-        <Table hover>
-          <thead className="bg-warning">
-            <tr>
-              <th>Nom de la pièce</th>
-              <th className="text-center">Désignation</th>
-              <th className="text-center">Acier</th>
-              <th className="text-center">Modifié le</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(part => (
-              <tr key={part.id}>
-                <td>
-                  <a 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePartClick(part);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {part.name || "Référence Inconnue"}
-                    <StatusBadge status={part.data_status} />
-                  </a>
-                </td>
-                <td className="text-center">{part.designation || ""}</td>
-                <td className="text-center">{part.steel || ""}</td>
-                <td className="text-center">{part.modified_at || "Inconnu"}</td>
-                <td className="text-center align-middle">
-                  <DropdownButton
-                    size="sm"
-                    variant="outline-secondary"
-                    title={<FontAwesomeIcon icon={faEllipsisV} />}
-                    id={`dropdown-part-${part.id}`}
-                  >
-                    <Dropdown.Item 
-                      onClick={() => handleViewDetails(part)}
-                    >
-                      <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
-                    </Dropdown.Item>
-                    {hasEditRights && (
-                      <Dropdown.Item 
-                        onClick={() => handleEditPart(part)}
-                      >
-                        <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
-                      </Dropdown.Item>
-                    )}
-                    <Dropdown.Item 
-                      onClick={() => handleDeletePart(part.id)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} className="mr-2" /> Supprimer
-                    </Dropdown.Item>
-                  </DropdownButton>
-                </td>
+        <div className="data-list-container">
+          <Table hover responsive className="data-table border-bottom">
+            <thead>
+              <tr className="bg-light">
+                <th style={{ width: '25%' }}>Nom de la pièce</th>
+                <th className="text-center">Désignation</th>
+                <th className="text-center">Acier</th>
+                <th className="text-center">Modifié le</th>
+                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {data.map(part => (
+                <tr key={part.id}>
+                  <td>
+                    <div 
+                      onClick={() => handlePartClick(part)}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center"
+                    >
+                      <div className="item-name font-weight-bold text-primary">
+                        {part.name || "Référence Inconnue"}
+                      </div>
+                      <div className="ml-2">
+                        <StatusBadge status={part.data_status} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center">{part.designation || "-"}</td>
+                  <td className="text-center">{part.steel || "-"}</td>
+                  <td className="text-center">{part.modified_at || "Inconnu"}</td>
+                  <td className="text-center">
+                    <div className="d-flex justify-content-center">
+                      <Button 
+                        variant="outline-info" 
+                        size="sm" 
+                        className="mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(part);
+                        }}
+                        title="Détails"
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </Button>
+                      
+                      {hasEditRights && (
+                        <>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            className="mr-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditPart(part);
+                            }}
+                            title="Modifier"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePart(part.id);
+                            }}
+                            title="Supprimer"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       ) : (
-        <Alert variant="warning">Aucune pièce trouvée pour cette commande.</Alert>
+        <Card className="text-center p-5 bg-light">
+          <Card.Body>
+            <FontAwesomeIcon icon={faCog} size="3x" className="text-secondary mb-3" />
+            <h4>Aucune pièce trouvée pour cette commande</h4>
+            <p className="text-muted">Cliquez sur "Nouvelle pièce" pour en ajouter une</p>
+          </Card.Body>
+        </Card>
       )}
       
       {/* Modal pour créer une pièce */}
@@ -149,7 +180,7 @@ const PartList = ({ orderId }) => {
         onHide={() => setShowCreateForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Nouvelle pièce</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -167,7 +198,7 @@ const PartList = ({ orderId }) => {
         onHide={() => setShowEditForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Modifier la pièce</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -183,12 +214,12 @@ const PartList = ({ orderId }) => {
       </Modal>
       
       {/* Modal pour voir les détails */}
-      {/* <Modal
+      <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Détails de la pièce</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -200,7 +231,7 @@ const PartList = ({ orderId }) => {
             />
           )}
         </Modal.Body>
-      </Modal> */}
+      </Modal>
     </>
   );
 };

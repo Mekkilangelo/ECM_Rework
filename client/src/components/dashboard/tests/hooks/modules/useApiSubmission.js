@@ -6,10 +6,12 @@ const useApiSubmission = (
   formData, 
   setFormData, 
   validate, 
-  parentId, 
+  parentId,
+  test, // Ajout du paramètre test pour gérer le mode mise à jour
   setLoading, 
   setMessage, 
-  onTestCreated, 
+  onTestCreated,
+  onTestUpdated, 
   onClose
 ) => {
   // Préparation des données pour l'API
@@ -158,6 +160,46 @@ const useApiSubmission = (
       }
     };
     
+    // Formatage des données de résultat
+    const resultsData = formData.resultsData && formData.resultsData.results?.length > 0 && 
+      formData.resultsData.results.some(result => 
+        result.description || 
+        (result.hardnessPoints && result.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
+        (result.ecd && (result.ecd.toothFlank?.distance || result.ecd.toothRoot?.distance)) ||
+        result.comment
+      ) ? {
+        results: formData.resultsData.results.map(result => {
+          // Formatage des points de dureté
+          const hardnessPoints = result.hardnessPoints?.length > 0 && 
+            result.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
+            result.hardnessPoints.map(point => ({
+              location: point.location || null,
+              value: point.value || null,
+              unit: point.unit || null
+            })) : null;
+          
+          // Formatage des données ECD
+          const ecdData = result.ecd ? {
+            tooth_flank: {
+              distance: result.ecd.toothFlank?.distance || null,
+              unit: result.ecd.toothFlank?.unit || null
+            },
+            tooth_root: {
+              distance: result.ecd.toothRoot?.distance || null,
+              unit: result.ecd.toothRoot?.unit || null
+            }
+          } : null;
+          
+          return {
+            step: result.step,
+            description: result.description || null,
+            hardness_points: hardnessPoints,
+            ecd: ecdData,
+            comment: result.comment || null
+          };
+        })
+      } : null;
+    
     return {
       parent_id: parentId,
       name: formData.name,
@@ -170,7 +212,8 @@ const useApiSubmission = (
       furnace_data: furnaceData,
       load_data: loadData,
       recipe_data: recipeData,
-      quench_data: quenchData
+      quench_data: quenchData,
+      results_data: resultsData // Ajout des données de résultats
     };
   };
   
@@ -186,78 +229,104 @@ const useApiSubmission = (
     try {
       const testData = formatDataForApi();
       
-      const response = await axios.post(`${API_URL}/tests`, testData);
+      let response;
       
-      setMessage({
-        type: 'success',
-        text: 'Test créé avec succès!'
-      });
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        name: '',
-        location: '',
-        status: '',
-        description: '',
-        mountingType: '',
-        positionType: '',
-        processType: '',
-        furnaceData: {
-          furnaceType: '',
-          heatingCell: '',
-          coolingMedia: '',
-          furnaceSize: '',
-          quenchCell: '',
-        },
-        loadData: {
-          length: '',
-          width: '',
-          height: '',
-          sizeUnit: '',
-          floorCount: '',
-          partCount: '',
-          weight: '',
-          weightUnit: '',
-          loadComments: '',
-        },
-        recipeData: {
-          recipeNumber: '',
-          preoxTemp: '',
-          preoxTempUnit: '',
-          preoxDuration: '',
-          preoxDurationUnit: '',
-          thermalCycle: [{ step: 1, ramp: 'up', setpoint: '', duration: '' }],
-          chemicalCycle: [{ step: 1, time: '', gas: '', debit: '', pressure: '' }],
-          waitTime: '',
-          waitTimeUnit: '',
-          programDuration: '',
-          programDurationUnit: '',
-          cellTemp: '',
-          cellTempUnit: '',
-          waitPressure: '',
-          waitPressureUnit: '',
-        },
-        quenchData: {
-          gasQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
-          gasQuenchPressure: [{ step: 1, duration: '', pressure: '' }],
-          gasToleranceMin: '',
-          gasToleranceMax: '',
-          oilQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
-          oilTemperature: '',
-          oilTempUnit: '',
-          oilToleranceMin: '',
-          oilToleranceMax: '',
-          oilPressure: '',
-          oilInertingDelay: '',
-          oilInertingDelayUnit: '',
-          oilDrippingTime: '',
-          oilDrippingTimeUnit: ''
+      if (test) {
+        // Mode édition
+        response = await axios.put(`${API_URL}/tests/${test.id}`, testData);
+        setMessage({
+          type: 'success',
+          text: 'Test mis à jour avec succès!'
+        });
+        
+        if (onTestUpdated) {
+          onTestUpdated(response.data);
         }
-      });
-      
-      // Notifier le parent
-      if (onTestCreated) {
-        onTestCreated(response.data);
+      } else {
+        // Mode création
+        response = await axios.post(`${API_URL}/tests`, testData);
+        setMessage({
+          type: 'success',
+          text: 'Test créé avec succès!'
+        });
+        
+        // Réinitialiser le formulaire
+        setFormData({
+          name: '',
+          location: '',
+          status: '',
+          description: '',
+          mountingType: '',
+          positionType: '',
+          processType: '',
+          furnaceData: {
+            furnaceType: '',
+            heatingCell: '',
+            coolingMedia: '',
+            furnaceSize: '',
+            quenchCell: '',
+          },
+          loadData: {
+            length: '',
+            width: '',
+            height: '',
+            sizeUnit: '',
+            floorCount: '',
+            partCount: '',
+            weight: '',
+            weightUnit: '',
+            loadComments: '',
+          },
+          recipeData: {
+            recipeNumber: '',
+            preoxTemp: '',
+            preoxTempUnit: '',
+            preoxDuration: '',
+            preoxDurationUnit: '',
+            thermalCycle: [{ step: 1, ramp: 'up', setpoint: '', duration: '' }],
+            chemicalCycle: [{ step: 1, time: '', gas: '', debit: '', pressure: '' }],
+            waitTime: '',
+            waitTimeUnit: '',
+            programDuration: '',
+            programDurationUnit: '',
+            cellTemp: '',
+            cellTempUnit: '',
+            waitPressure: '',
+            waitPressureUnit: '',
+          },
+          quenchData: {
+            gasQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
+            gasQuenchPressure: [{ step: 1, duration: '', pressure: '' }],
+            gasToleranceMin: '',
+            gasToleranceMax: '',
+            oilQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
+            oilTemperature: '',
+            oilTempUnit: '',
+            oilToleranceMin: '',
+            oilToleranceMax: '',
+            oilPressure: '',
+            oilInertingDelay: '',
+            oilInertingDelayUnit: '',
+            oilDrippingTime: '',
+            oilDrippingTimeUnit: ''
+          },
+          resultsData: {
+            results: [{
+              step: 1,
+              description: '',
+              hardnessPoints: [{ location: '', value: '', unit: '' }],
+              ecd: {
+                toothFlank: { distance: '', unit: '' },
+                toothRoot: { distance: '', unit: '' }
+              },
+              comment: ''
+            }]
+          }
+        });
+        
+        if (onTestCreated) {
+          onTestCreated(response.data);
+        }
       }
       
       // Fermer le formulaire après un délai
@@ -265,10 +334,10 @@ const useApiSubmission = (
         onClose();
       }, 1500);
     } catch (error) {
-      console.error('Erreur lors de la création du test:', error);
+      console.error('Erreur lors de l\'opération sur le test:', error);
       setMessage({
         type: 'danger',
-        text: error.response?.data?.message || 'Une erreur est survenue lors de la création du test'
+        text: error.response?.data?.message || 'Une erreur est survenue lors de l\'opération sur le test'
       });
     } finally {
       setLoading(false);

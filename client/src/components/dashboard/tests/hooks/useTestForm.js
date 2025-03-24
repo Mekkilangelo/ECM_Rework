@@ -5,13 +5,25 @@ import useFormHandlers from './modules/useFormHandlers';
 import useFormValidation from './modules/useFormValidation';
 import useOptionsFetcher from './modules/useOptionsFetcher';
 import useApiSubmission from './modules/useApiSubmission';
+import useTestData from './modules/useTestData';
 
-const useTestForm = (onClose, onTestCreated) => {
+const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.partId;
   
   // État du formulaire et initialisation
   const { formData, setFormData, errors, setErrors, loading, setLoading, message, setMessage } = useFormState();
+
+  // State for fetching test
+  const [fetchingTest, setFetchingTest] = useState(false);
+
+  // Load test data in edit mode
+  useTestData(
+    test,
+    setFormData,
+    setMessage,
+    setFetchingTest
+  );
   
   // Chargement des options pour les selects
   const { 
@@ -42,10 +54,12 @@ const useTestForm = (onClose, onTestCreated) => {
     formData, 
     setFormData, 
     validate, 
-    parentId, 
+    parentId,
+    test, 
     setLoading, 
     setMessage, 
-    onTestCreated, 
+    onTestCreated,
+    onTestUpdated,
     onClose
   );
   
@@ -53,6 +67,7 @@ const useTestForm = (onClose, onTestCreated) => {
     formData,
     errors,
     loading,
+    fetchingTest,
     message,
     parentId,
     locationOptions,

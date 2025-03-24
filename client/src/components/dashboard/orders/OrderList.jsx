@@ -1,8 +1,7 @@
-// client/src/components/dashboard/orders/OrderList.jsx
 import React, { useState, useContext } from 'react';
-import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV, faTrash, faEdit, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext'; 
@@ -10,6 +9,7 @@ import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import OrderForm from './OrderForm';
 import OrderDetails from './OrderDetails';
 import orderService from '../../../services/orderService';
+import '../../../styles/dataList.css';
 
 const OrderList = () => {
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
@@ -46,7 +46,6 @@ const OrderList = () => {
       try {
         await orderService.deleteClient(orderId);
         alert("Commande supprimée avec succès");
-        // Rafraîchir les données
         refreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression de la commande:', err);
@@ -55,92 +54,124 @@ const OrderList = () => {
     }
   };  
   
-  if (loading) return <Spinner animation="border" role="status" />;
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
   
   return (
     <>
-      <div className="d-flex justify-content-between mb-3">
-        <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex align-items-center">
           <Button 
             variant="outline-secondary" 
-            className="mr-2"
+            className="mr-3"
             onClick={navigateBack}
+            size="sm"
           >
-            <FontAwesomeIcon icon={faArrowLeft} /> Retour
+            <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
-          <h2 className="d-inline-block">Commandes - {hierarchyState.clientName}</h2>
+          <h2 className="mb-0">
+            <FontAwesomeIcon icon={faFileInvoice} className="mr-2 text-danger" />
+            Commandes - {hierarchyState.clientName}
+          </h2>
         </div>
         <Button 
-          variant="outline-danger" 
+          variant="danger"
           onClick={() => setShowCreateForm(true)}
+          className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-1" /> Nouvelle commande
+          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouvelle commande
         </Button>
       </div>
       
       {data.length > 0 ? (
-        <Table hover>
-          <thead className="bg-warning">
-            <tr>
-              <th>Référence</th>
-              <th className="text-center">Contact</th>
-              <th className="text-center">Date</th>
-              <th className="text-center">Modifié le</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(order => (
-              <tr key={order.id}>
-                <td>
-                  <a 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleOrderClick(order);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {order.name || "Sans référence"}
-                    <StatusBadge status={order.data_status} />
-                  </a>
-                </td>
-                <td className="text-center">{order.contact_name || "Inconnu"}</td>
-                <td className="text-center">{order.order_date || "Inconnu"}</td>
-                <td className="text-center">{order.modified_at || "Inconnu"}</td>
-                <td className="text-center align-middle">
-                  <DropdownButton
-                    size="sm"
-                    variant="outline-secondary"
-                    title={<FontAwesomeIcon icon={faEllipsisV} />}
-                    id={`dropdown-order-${order.id}`}
-                  >
-                    <Dropdown.Item 
-                      onClick={() => handleViewDetails(order)}
-                    >
-                      <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
-                    </Dropdown.Item>
-                    {hasEditRights && (
-                      <Dropdown.Item 
-                        onClick={() => handleEditOrder(order)}
-                      >
-                        <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
-                      </Dropdown.Item>
-                    )}
-                    <Dropdown.Item 
-                      onClick={() => handleDeleteOrder(order.id)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} className="mr-2" /> Delete
-                    </Dropdown.Item>
-                  </DropdownButton>
-                </td>
+        <div className="data-list-container">
+          <Table hover responsive className="data-table border-bottom">
+            <thead>
+              <tr className="bg-light">
+                <th style={{ width: '30%' }}>Référence</th>
+                <th className="text-center">Contact</th>
+                <th className="text-center">Date</th>
+                <th className="text-center">Modifié le</th>
+                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {data.map(order => (
+                <tr key={order.id}>
+                  <td>
+                    <div 
+                      onClick={() => handleOrderClick(order)}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center"
+                    >
+                      <div className="item-name font-weight-bold text-primary">
+                        {order.name || "Sans référence"}
+                      </div>
+                      <div className="ml-2">
+                        <StatusBadge status={order.data_status} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center">{order.contact_name || "-"}</td>
+                  <td className="text-center">{order.order_date || "-"}</td>
+                  <td className="text-center">{order.modified_at || "-"}</td>
+                  <td className="text-center">
+                    <div className="d-flex justify-content-center">
+                      <Button 
+                        variant="outline-info" 
+                        size="sm" 
+                        className="mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(order);
+                        }}
+                        title="Détails"
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </Button>
+                      
+                      {hasEditRights && (
+                        <>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            className="mr-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditOrder(order);
+                            }}
+                            title="Modifier"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteOrder(order.id);
+                            }}
+                            title="Supprimer"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       ) : (
-        <Alert variant="warning">Aucune commande trouvée.</Alert>
+        <Card className="text-center p-5 bg-light">
+          <Card.Body>
+            <FontAwesomeIcon icon={faFileInvoice} size="3x" className="text-secondary mb-3" />
+            <h4>Aucune commande trouvée pour ce client</h4>
+            <p className="text-muted">Cliquez sur "Nouvelle commande" pour en ajouter une</p>
+          </Card.Body>
+        </Card>
       )}
       
       {/* Modal pour créer une commande */}
@@ -149,7 +180,7 @@ const OrderList = () => {
         onHide={() => setShowCreateForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Nouvelle commande</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -167,7 +198,7 @@ const OrderList = () => {
         onHide={() => setShowEditForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Modifier la commande</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -188,7 +219,7 @@ const OrderList = () => {
         onHide={() => setShowDetailModal(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Détails de la commande</Modal.Title>
         </Modal.Header>
         <Modal.Body>

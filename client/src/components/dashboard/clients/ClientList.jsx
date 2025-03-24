@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { Table, Button, Dropdown, DropdownButton, Spinner, Alert, Modal } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEllipsisV, faTrash, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faTrash, faEdit, faBuilding } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext'; 
@@ -9,18 +9,19 @@ import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import ClientForm from './ClientForm';
 import ClientDetails from './ClientDetails';
 import clientService from '../../../services/clientService';
+import '../../../styles/dataList.css';
+
 
 const ClientList = () => {
   const { navigateToLevel } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
-  const { user } = useContext(AuthContext); // Récupérer l'utilisateur connecté
+  const { user } = useContext(AuthContext);
   
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   
-  // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   
   const handleClientClick = (client) => {
@@ -45,7 +46,6 @@ const ClientList = () => {
       try {
         await clientService.deleteClient(clientId);
         alert("Client supprimé avec succès");
-        // Rafraîchir les données
         refreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression du client:', err);
@@ -54,86 +54,116 @@ const ClientList = () => {
     }
   };
   
-  
-  if (loading) return <Spinner animation="border" role="status" />;
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
   
   return (
     <>
-      <div className="d-flex justify-content-between mb-3">
-        <h2>Clients</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">
+          <FontAwesomeIcon icon={faBuilding} className="mr-2 text-danger" />
+          Clients
+        </h2>
         <Button 
-          variant="outline-danger" 
+          variant="danger" 
           onClick={() => setShowCreateForm(true)}
+          className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-1" /> Nouveau client
+          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouveau client
         </Button>
       </div>
       
       {data.length > 0 ? (
-        <Table hover>
-          <thead className="bg-warning">
-            <tr>
-              <th>Client</th>
-              <th className="text-center">Groupe</th>
-              <th className="text-center">Pays</th>
-              <th className="text-center">Ville</th>
-              <th className="text-center">Modifié le</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(client => (
-              <tr key={client.id}>
-                <td>
-                  <a 
-                    href="#" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleClientClick(client);
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {client.name || "Sans nom"}
-                    <StatusBadge status={client.data_status} />
-                  </a>
-                </td>
-                <td className="text-center">{client.client_group || "Inconnu"}</td>
-                <td className="text-center">{client.country || "Inconnu"}</td>
-                <td className="text-center">{client.city || "Inconnu"}</td>
-                <td className="text-center">{client.modified_at || "Inconnu"}</td>
-                <td className="text-center align-middle">
-                  <DropdownButton
-                    size="sm"
-                    variant="outline-secondary"
-                    title={<FontAwesomeIcon icon={faEllipsisV} />}
-                    id={`dropdown-client-${client.id}`}
-                  >
-                    <Dropdown.Item 
-                      onClick={() => handleViewDetails(client)}
-                    >
-                      <FontAwesomeIcon icon={faEye} className="mr-2" /> Détails
-                    </Dropdown.Item>
-                    {hasEditRights && (
-                      <Dropdown.Item 
-                        onClick={() => handleEditClient(client)}
-                      >
-                        <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
-                      </Dropdown.Item>
-                    )}
-                    <Dropdown.Item 
-                      onClick={() => handleDeleteClient(client.id)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} className="mr-2" /> Delete
-                    </Dropdown.Item>
-                  </DropdownButton>
-                </td>
+        <div className="data-list-container">
+          <Table hover responsive className="data-table border-bottom">
+            <thead>
+              <tr className="bg-light">
+                <th style={{ width: '30%' }}>Client</th>
+                <th className="text-center">Groupe</th>
+                <th className="text-center">Pays</th>
+                <th className="text-center">Ville</th>
+                <th className="text-center">Modifié le</th>
+                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {data.map(client => (
+                <tr key={client.id}>
+                  <td>
+                    <div 
+                      onClick={() => handleClientClick(client)}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center"
+                    >
+                      <div className="item-name font-weight-bold text-primary">
+                        {client.name || "Sans nom"}
+                      </div>
+                      <div className="ml-2">
+                        <StatusBadge status={client.data_status} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-center">{client.client_group || "-"}</td>
+                  <td className="text-center">{client.country || "-"}</td>
+                  <td className="text-center">{client.city || "-"}</td>
+                  <td className="text-center">{client.modified_at || "-"}</td>
+                  <td className="text-center">
+                    <div className="d-flex justify-content-center">
+                      <Button 
+                        variant="outline-info" 
+                        size="sm" 
+                        className="mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(client);
+                        }}
+                        title="Détails"
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </Button>
+                      
+                      {hasEditRights && (
+                        <>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            className="mr-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditClient(client);
+                            }}
+                            title="Modifier"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClient(client.id);
+                            }}
+                            title="Supprimer"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       ) : (
-        <Alert variant="warning">Aucun client trouvé.</Alert>
+        <Card className="text-center p-5 bg-light">
+          <Card.Body>
+            <FontAwesomeIcon icon={faBuilding} size="3x" className="text-secondary mb-3" />
+            <h4>Aucun client trouvé</h4>
+            <p className="text-muted">Cliquez sur "Nouveau client" pour ajouter un client</p>
+          </Card.Body>
+        </Card>
       )}
       
       {/* Modal pour créer un client */}
@@ -142,7 +172,7 @@ const ClientList = () => {
         onHide={() => setShowCreateForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Nouveau client</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -159,7 +189,7 @@ const ClientList = () => {
         onHide={() => setShowEditForm(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Modifier le client</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -179,7 +209,7 @@ const ClientList = () => {
         onHide={() => setShowDetailModal(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
+        <Modal.Header closeButton className="bg-light">
           <Modal.Title>Détails du client</Modal.Title>
         </Modal.Header>
         <Modal.Body>

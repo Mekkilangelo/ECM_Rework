@@ -1,0 +1,83 @@
+/* src/styles/DataList.css */
+
+.data-list-container {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  
+  .data-table th {
+    vertical-align: middle;
+    border-top: none;
+    padding: 12px 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  
+  .data-table td {
+    vertical-align: middle;
+    padding: 12px 8px;
+  }
+  
+  .data-table tr:hover {
+    background-color: rgba(0,0,0,0.02);
+  }
+  
+  .item-name:hover {
+    text-decoration: underline;
+  }
+  
+  .data-table tbody tr {
+    transition: background-color 0.15s ease;
+  }
+  
+  /* Pour les spinners de chargement */
+  .spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+  
+  /* Pour l'état vide */
+  .empty-state {
+    background-color: #f8f9fa;
+    padding: 3rem 2rem;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .empty-state-icon {
+    margin-bottom: 1.5rem;
+    color: #adb5bd;
+  }
+  
+  /* Styles pour les modals */
+  .modal-header.bg-light {
+    background-color: #f8f9fa;
+    border-bottom-color: #e9ecef;
+  }
+  
+  /* Pagination et contrôles de navigation */
+  .pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .data-list-container {
+      box-shadow: none;
+      border: 1px solid #dee2e6;
+    }
+    
+    .data-table th, 
+    .data-table td {
+      padding: 8px 4px;
+      font-size: 0.9rem;
+    }
+  }
+  

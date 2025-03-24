@@ -12,4 +12,8 @@ router.get('/table/:tableName', enumController.getEnumsByTable);
 // Correction du nom de la méthode
 router.get('/table/:tableName/column/:columnName', enumController.getEnumValues);
 
+router.post('/table/:tableName/column/:columnName', protect, enumController.addEnumValue);
+router.put('/table/:tableName/column/:columnName', protect, enumController.updateEnumValue);
+router.delete('/table/:tableName/column/:columnName', protect, enumController.deleteEnumValue);
+
 module.exports = router;

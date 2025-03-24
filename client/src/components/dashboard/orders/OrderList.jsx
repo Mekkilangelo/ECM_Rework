@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
@@ -20,6 +20,7 @@ const OrderList = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const orderFormRef = useRef(null);
   
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -177,25 +178,41 @@ const OrderList = () => {
       {/* Modal pour créer une commande */}
       <Modal 
         show={showCreateForm} 
-        onHide={() => setShowCreateForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (orderFormRef.current && orderFormRef.current.handleCloseRequest) {
+            orderFormRef.current.handleCloseRequest();
+          } else {
+            setShowCreateForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>Nouvelle commande</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <OrderForm 
-            clientId={hierarchyState.clientId} 
+          <OrderForm
+            ref={orderFormRef}
+            clientId={hierarchyState.clientId}
             onClose={() => setShowCreateForm(false)}
             onOrderCreated={() => refreshData()} 
           />
         </Modal.Body>
       </Modal>
 
+
       {/* Modal pour éditer une commande */}
       <Modal 
         show={showEditForm} 
-        onHide={() => setShowEditForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (orderFormRef.current && orderFormRef.current.handleCloseRequest) {
+            orderFormRef.current.handleCloseRequest();
+          } else {
+            setShowEditForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -204,6 +221,7 @@ const OrderList = () => {
         <Modal.Body>
           {selectedOrder && (
             <OrderForm
+              ref={orderFormRef}
               order={selectedOrder} 
               clientId={hierarchyState.clientId} 
               onClose={() => setShowEditForm(false)} 

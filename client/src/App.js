@@ -14,6 +14,7 @@ import './styles/sidebar.css';
 // Pages/Composants
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Reference from './pages/Reference';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Composant pour protéger les routes privées
@@ -78,6 +79,15 @@ function App() {
             element={
               <PrivateRouteComponent>
                 <Dashboard />
+              </PrivateRouteComponent>
+            } 
+          />
+
+          <Route 
+            path="/reference" 
+            element={
+              <PrivateRouteComponent>
+                <Reference />
               </PrivateRouteComponent>
             } 
           />

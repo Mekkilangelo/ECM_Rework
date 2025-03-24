@@ -1,0 +1,27 @@
+/* client/src/components/common/FileUploader/FileUploader.css */
+.file-uploader-container {
+  margin-bottom: 20px;
+}
+
+.drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  text-align: center;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.drop-zone:hover {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+}
+
+.drop-zone p {
+  margin: 10px 0;
+}
+
+.selected-files, .uploaded-files {
+  margin-top: 15px;
+}

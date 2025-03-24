@@ -85,7 +85,33 @@ const enumService = {
       console.error('Error fetching units:', error);
       return [];
     }
+  },
+
+  // Add a new enum value
+  addEnumValue: async (tableName, columnName, value) => {
+    const response = await api.post(`/enums/table/${tableName}/column/${columnName}`, { value });
+    return response.data;
+  },
+
+  // Update an enum value
+  updateEnumValue: async (tableName, columnName, oldValue, newValue) => {
+    const response = await api.put(`/enums/table/${tableName}/column/${columnName}`, { 
+      oldValue, 
+      newValue 
+    });
+    return response.data;
+  },
+
+  // Delete an enum value
+  deleteEnumValue: async (tableName, columnName, value) => {
+    const response = await api.delete(`/enums/table/${tableName}/column/${columnName}`, { 
+      data: { value } 
+    });
+    return response.data;
   }
+
 };
+
+
 
 export default enumService;

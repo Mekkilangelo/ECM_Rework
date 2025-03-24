@@ -1,0 +1,108 @@
+/* CloseConfirmationModal.css */
+.confirmation-modal {
+    max-width: 520px;
+  }
+  
+  .confirmation-modal-content {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: none;
+  }
+  
+  .modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .modal-message {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 0;
+    line-height: 1.5;
+  }
+  
+  .btn-close {
+    background-size: 0.8rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  
+  .btn-close:hover {
+    opacity: 1;
+  }
+  
+  .btn-cancel, 
+  .btn-continue,
+  .btn-save {
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  
+  .btn-cancel {
+    color: #555;
+    background-color: transparent;
+    border-color: #dee2e6;
+  }
+  
+  .btn-cancel:hover {
+    background-color: #f8f9fa;
+    color: #333;
+  }
+  
+  .btn-continue {
+    color: #dc3545;
+    background-color: transparent;
+    border-color: #dc3545;
+  }
+  
+  .btn-continue:hover {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .btn-save {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+  
+  .btn-save:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+  }
+  
+  /* Animation subtile */
+  .modal.fade .modal-dialog {
+    transition: transform 0.25s ease-out;
+    transform: scale(0.95);
+  }
+  
+  .modal.show .modal-dialog {
+    transform: scale(1);
+  }
+  
+  /* Style pour les boutons sur mobile */
+  @media (max-width: 576px) {
+    .confirmation-modal {
+      max-width: 95%;
+      margin: 0 auto;
+    }
+    
+    .btn-cancel, 
+    .btn-continue,
+    .btn-save {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.5rem;
+    }
+    
+    .modal-footer {
+      padding: 0.5rem 1rem 1rem;
+    }
+  }
+  

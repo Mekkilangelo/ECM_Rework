@@ -121,3 +121,225 @@ exports.getEnumInfo = async (req, res) => {
     });
   }
 };
+
+// Ajouter une nouvelle valeur à une colonne ENUM
+exports.addEnumValue = async (req, res) => {
+  try {
+    const { tableName, columnName } = req.params;
+    const { value } = req.body;
+    
+    if (!tableName || !columnName || !value) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Le nom de la table, le nom de la colonne et la valeur sont requis' 
+      });
+    }
+    
+    // 1. Récupérer les valeurs actuelles de l'enum
+    const currentEnum = await EnumModel.getEnumValues(tableName, columnName);
+    
+    if (currentEnum.error) {
+      return res.status(404).json({ 
+        success: false, 
+        message: currentEnum.error 
+      });
+    }
+    
+    // 2. Vérifier si la valeur existe déjà
+    if (currentEnum.values.includes(value)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `La valeur ${value} existe déjà dans ${tableName}.${columnName}` 
+      });
+    }
+    
+    // 3. Ajouter la nouvelle valeur à la liste
+    const newValues = [...currentEnum.values, value];
+    
+    // 4. Construire la requête SQL pour modifier la colonne ENUM
+    const enumDefinition = newValues.map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+    const query = `ALTER TABLE ${tableName} MODIFY COLUMN ${columnName} ENUM(${enumDefinition})`;
+    
+    // 5. Exécuter la requête avec Sequelize
+    await db.sequelize.query(query);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: `Value ${value} added to ${tableName}.${columnName} successfully`,
+      data: {
+        tableName,
+        columnName,
+        values: newValues
+      }
+    });
+  } catch (error) {
+    console.error('Erreur dans le contrôleur addEnumValue:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+// Mettre à jour une valeur d'une colonne ENUM
+exports.updateEnumValue = async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  
+  try {
+    const { tableName, columnName } = req.params;
+    const { oldValue, newValue } = req.body;
+    
+    if (!tableName || !columnName || !oldValue || !newValue) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Le nom de la table, le nom de la colonne, l\'ancienne valeur et la nouvelle valeur sont requis' 
+      });
+    }
+    
+    // 1. Récupérer les valeurs actuelles de l'enum
+    const currentEnum = await EnumModel.getEnumValues(tableName, columnName);
+    
+    if (currentEnum.error) {
+      return res.status(404).json({ 
+        success: false, 
+        message: currentEnum.error 
+      });
+    }
+    
+    // 2. Vérifier si l'ancienne valeur existe
+    if (!currentEnum.values.includes(oldValue)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `La valeur ${oldValue} n'existe pas dans ${tableName}.${columnName}` 
+      });
+    }
+    
+    // 3. Vérifier si la nouvelle valeur existe déjà (sauf si c'est la même)
+    if (oldValue !== newValue && currentEnum.values.includes(newValue)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `La valeur ${newValue} existe déjà dans ${tableName}.${columnName}` 
+      });
+    }
+    
+    // 4. Mettre à jour la liste des valeurs
+    const newValues = currentEnum.values.map(val => val === oldValue ? newValue : val);
+    
+    // 5. Construire la requête SQL pour modifier la colonne ENUM
+    const enumDefinition = newValues.map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+    const modifyQuery = `ALTER TABLE ${tableName} MODIFY COLUMN ${columnName} ENUM(${enumDefinition})`;
+    
+    // 6. Mettre à jour les données existantes qui utilisent cette valeur
+    const updateQuery = `UPDATE ${tableName} SET ${columnName} = '${newValue.replace(/'/g, "''")}' WHERE ${columnName} = '${oldValue.replace(/'/g, "''")}'`;
+    
+    // 7. Exécuter les requêtes dans une transaction
+    await db.sequelize.query(updateQuery, { transaction });
+    await db.sequelize.query(modifyQuery, { transaction });
+    
+    // 8. Valider la transaction
+    await transaction.commit();
+    
+    res.status(200).json({ 
+      success: true, 
+      message: `Value ${oldValue} updated to ${newValue} in ${tableName}.${columnName} successfully`,
+      data: {
+        tableName,
+        columnName,
+        values: newValues
+      }
+    });
+  } catch (error) {
+    // En cas d'erreur, annuler la transaction
+    await transaction.rollback();
+    console.error('Erreur dans le contrôleur updateEnumValue:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+// Supprimer une valeur d'une colonne ENUM
+exports.deleteEnumValue = async (req, res) => {
+  const transaction = await db.sequelize.transaction();
+  
+  try {
+    const { tableName, columnName } = req.params;
+    const { value } = req.body;
+    
+    if (!tableName || !columnName || !value) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Le nom de la table, le nom de la colonne et la valeur sont requis' 
+      });
+    }
+    
+    // 1. Récupérer les valeurs actuelles de l'enum
+    const currentEnum = await EnumModel.getEnumValues(tableName, columnName);
+    
+    if (currentEnum.error) {
+      return res.status(404).json({ 
+        success: false, 
+        message: currentEnum.error 
+      });
+    }
+    
+    // 2. Vérifier si la valeur existe
+    if (!currentEnum.values.includes(value)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `La valeur ${value} n'existe pas dans ${tableName}.${columnName}` 
+      });
+    }
+    
+    // 3. Vérifier si la valeur est utilisée dans la table
+    const checkQuery = `SELECT COUNT(*) as count FROM ${tableName} WHERE ${columnName} = '${value.replace(/'/g, "''")}'`;
+    const [checkResult] = await db.sequelize.query(checkQuery);
+    
+    if (checkResult[0].count > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Impossible de supprimer la valeur ${value} car elle est utilisée dans ${checkResult[0].count} enregistrements` 
+      });
+    }
+    
+    // 4. Supprimer la valeur de la liste
+    const newValues = currentEnum.values.filter(val => val !== value);
+    
+    // 5. Si aucune valeur ne reste, nous ne pouvons pas avoir un ENUM vide en MySQL
+    if (newValues.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Impossible de supprimer la dernière valeur de l'enum ${tableName}.${columnName}` 
+      });
+    }
+    
+    // 6. Construire la requête SQL pour modifier la colonne ENUM
+    const enumDefinition = newValues.map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+    const modifyQuery = `ALTER TABLE ${tableName} MODIFY COLUMN ${columnName} ENUM(${enumDefinition})`;
+    
+    // 7. Exécuter la requête
+    await db.sequelize.query(modifyQuery, { transaction });
+    
+    // 8. Valider la transaction
+    await transaction.commit();
+    
+    res.status(200).json({ 
+      success: true, 
+      message: `Value ${value} removed from ${tableName}.${columnName} successfully`,
+      data: {
+        tableName,
+        columnName,
+        values: newValues
+      }
+    });
+  } catch (error) {
+    // En cas d'erreur, annuler la transaction
+    await transaction.rollback();
+    console.error('Erreur dans le contrôleur deleteEnumValue:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};

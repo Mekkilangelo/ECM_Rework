@@ -2,7 +2,6 @@ require('dotenv').config();
 const app = require('./app');
 const { sequelize } = require('./models');
 const logger = require('./utils/logger');
-const { initStoredProcedures } = require('./utils/storedProcedures');
 
 // Port configuration
 const PORT = process.env.PORT || 5001;
@@ -17,10 +16,6 @@ async function startServer() {
     // Sync models with the database
     await sequelize.sync({ alter: true }); // This will create the tables if they don't exist
     logger.info('Tables synchronized successfully.');    
-
-    // Initialize stored procedures
-    await initStoredProcedures(sequelize);
-    logger.info('Stored procedures initialized successfully.');
 
     // Start the server
     app.listen(PORT, () => {

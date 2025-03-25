@@ -8,21 +8,28 @@ const { Op } = require('sequelize');
  */
 exports.getTests = async (req, res) => {
   try {
-    const { limit = 10, offset = 0, status } = req.query;
+    const { limit = 10, offset = 0, parent_id } = req.query;
     
-    const whereClause = { type: 'test' };
-    const testWhereClause = {};
-    
-    // Filtre optionnel par statut
-    if (status) {
-      testWhereClause.status = status;
+    const whereCondition = { type: 'test' };
+
+    // Si un part_id est fourni, rechercher les tests associés à cette pièce
+    if (parent_id) {
+      const partsDescendants = await Closure.findAll({
+        where: { ancestor_id: parent_id },
+        attributes: ['descendant_id']
+      });
+      
+      const descendantIds = partsDescendants.map(d => d.descendant_id);
+      
+      whereCondition.id = {
+        [Op.in]: descendantIds
+      };
     }
     
     const tests = await Node.findAll({
-      where: whereClause,
+      where: whereCondition,
       include: [{
         model: Test,
-        where: Object.keys(testWhereClause).length > 0 ? testWhereClause : undefined,
         attributes: { exclude: ['node_id'] }
       }],
       order: [['modified_at', 'DESC']],
@@ -31,11 +38,7 @@ exports.getTests = async (req, res) => {
     });
     
     const total = await Node.count({
-      where: whereClause,
-      include: [{
-        model: Test,
-        where: Object.keys(testWhereClause).length > 0 ? testWhereClause : undefined
-      }]
+      where: whereCondition
     });
     
     return res.status(200).json({

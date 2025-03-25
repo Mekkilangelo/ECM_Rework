@@ -14,7 +14,6 @@ const TestTypeSection = ({
 }) => {
   return (
     <>
-      <h4 className="mt-4 mb-3">Types de test</h4>
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">

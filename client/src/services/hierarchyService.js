@@ -38,9 +38,7 @@ export const fetchParts = async (orderId, page = 1, limit = 10) => {
 
 export const fetchTests = async (partId, page = 1, limit = 10) => {
   try {
-    const response = await api.get(`${API_URL}/tests`, {
-      params: { partId, page, limit }
-    });
+    const response = await testService.getTests(partId, page, limit);
     return response.data;
   } catch (error) {
     console.error('Erreur lors du chargement des tests:', error);

@@ -17,7 +17,7 @@ const sequelize = new Sequelize(
     logging: config.logging,
     pool: config.pool,
     define: {
-      underscored: true
+      underscored: false
     }
   }
 );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import useTestForm from './hooks/useTestForm';
+import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 
 // Sections importées
 import BasicInfoSection from './sections/BasicInfoSection';
@@ -47,18 +48,26 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
       )}
       
       <Form onSubmit={formHandlers.handleSubmit}>
-        {/* Section BasicInfo toujours visible */}
-        <BasicInfoSection
-          formData={formData}
-          errors={errors}
-          handleChange={formHandlers.handleChange}
-          handleSelectChange={formHandlers.handleSelectChange}
-          getSelectedOption={formHandlers.getSelectedOption}
-          locationOptions={formHandlers.locationOptions}
-          statusOptions={formHandlers.statusOptions}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
-        />
+
+        <CollapsibleSection 
+          title="Informations de base" 
+          isExpandedByDefault={true}
+          sectionId="test-basic-info"
+          rememberState={true}
+        >
+          {/* Section BasicInfo toujours visible */}
+          <BasicInfoSection
+            formData={formData}
+            errors={errors}
+            handleChange={formHandlers.handleChange}
+            handleSelectChange={formHandlers.handleSelectChange}
+            getSelectedOption={formHandlers.getSelectedOption}
+            locationOptions={formHandlers.locationOptions}
+            statusOptions={formHandlers.statusOptions}
+            loading={loading}
+            selectStyles={formHandlers.selectStyles}
+          />
+        </CollapsibleSection>
         
         {/* Affichage conditionnel des onglets en fonction du mode */}
         {isEditMode ? (

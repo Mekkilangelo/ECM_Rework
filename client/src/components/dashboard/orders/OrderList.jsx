@@ -45,7 +45,7 @@ const OrderList = () => {
   const handleDeleteOrder = async (orderId) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cette commande ? Cette action est irréversible.")) {
       try {
-        await orderService.deleteClient(orderId);
+        await orderService.deleteOrder(orderId);
         alert("Commande supprimée avec succès");
         refreshData();
       } catch (err) {

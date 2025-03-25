@@ -79,6 +79,10 @@ export const NavigationProvider = ({ children }) => {
     // Obtenir l'ID parent pour la navigation en arrière
     let parentId, parentName;
     switch(nextLevel) {
+      case 'test':
+        parentId = hierarchyState.partId;
+        parentName = hierarchyState.partName;
+        break;
       case 'part':
         parentId = hierarchyState.orderId;
         parentName = hierarchyState.orderName;

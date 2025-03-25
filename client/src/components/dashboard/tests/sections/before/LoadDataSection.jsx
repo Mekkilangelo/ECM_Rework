@@ -14,7 +14,6 @@ const LoadDataSection = ({
 }) => {
   return (
     <>
-      <h4 className="mt-4 mb-3">Données de charge</h4>
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">

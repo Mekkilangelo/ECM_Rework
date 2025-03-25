@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Row, Col, Form, Button, Nav } from 'react-bootstrap';
 import Select from 'react-select';
+import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
+
 import PreoxidationSection from './recipe/PreoxidationSection';
 import ThermalCycleSection from './recipe/ThermalCycleSection';
 import ChemicalCycleSection from './recipe/ChemicalCycleSection';
@@ -28,9 +30,7 @@ const RecipeDataSection = ({
   selectStyles
 }) => {
   return (
-    <>
-      <h4 className="mt-4 mb-3">Données de recette</h4>
-      
+    <>    
       {/* Recipe Number */}
       <Row>
         <Col md={12}>
@@ -58,50 +58,71 @@ const RecipeDataSection = ({
         selectStyles={selectStyles}
       />
       
-      {/* Thermal Cycle Section */}
-      <ThermalCycleSection 
-        formData={formData}
-        handleChange={handleChange}
-        handleSelectChange={handleSelectChange}
-        getSelectedOption={getSelectedOption}
-        temperatureUnitOptions={temperatureUnitOptions}
-        timeUnitOptions={timeUnitOptions}
-        pressureUnitOptions={pressureUnitOptions}
-        handleThermalCycleAdd={handleThermalCycleAdd}
-        handleThermalCycleRemove={handleThermalCycleRemove}
-        loading={loading}
-        selectStyles={selectStyles}
-      />
+      <CollapsibleSection 
+        title="Cycle Thermique" 
+        isExpandedByDefault={true}
+        sectionId="test-thermal-cycle"
+        rememberState={true}
+      >
+        {/* Thermal Cycle Section */}
+        <ThermalCycleSection 
+          formData={formData}
+          handleChange={handleChange}
+          handleSelectChange={handleSelectChange}
+          getSelectedOption={getSelectedOption}
+          temperatureUnitOptions={temperatureUnitOptions}
+          timeUnitOptions={timeUnitOptions}
+          pressureUnitOptions={pressureUnitOptions}
+          handleThermalCycleAdd={handleThermalCycleAdd}
+          handleThermalCycleRemove={handleThermalCycleRemove}
+          loading={loading}
+          selectStyles={selectStyles}
+        />
+      </CollapsibleSection>
       
-      {/* Chemical Cycle Section */}
-      <ChemicalCycleSection 
-        formData={formData}
-        handleChange={handleChange}
-        handleSelectChange={handleSelectChange}
-        getSelectedOption={getSelectedOption}
-        handleChemicalCycleAdd={handleChemicalCycleAdd}
-        handleChemicalCycleRemove={handleChemicalCycleRemove}
-        loading={loading}
-        selectStyles={selectStyles}
-      />
+      <CollapsibleSection 
+        title="Cycle Chimique" 
+        isExpandedByDefault={true}
+        sectionId="test-chemical-cycle"
+        rememberState={true}
+      >  
+        {/* Chemical Cycle Section */}
+        <ChemicalCycleSection 
+          formData={formData}
+          handleChange={handleChange}
+          handleSelectChange={handleSelectChange}
+          getSelectedOption={getSelectedOption}
+          handleChemicalCycleAdd={handleChemicalCycleAdd}
+          handleChemicalCycleRemove={handleChemicalCycleRemove}
+          loading={loading}
+          selectStyles={selectStyles}
+        />
+      </CollapsibleSection>
       
-      {/* Quench Data Section - Imported from external component */}
-      <QuenchDataSection
-        formData={formData}
-        handleChange={handleChange}
-        handleSelectChange={handleSelectChange}
-        getSelectedOption={getSelectedOption}
-        temperatureUnitOptions={temperatureUnitOptions}
-        handleGasQuenchSpeedAdd={handleGasQuenchSpeedAdd}
-        handleGasQuenchSpeedRemove={handleGasQuenchSpeedRemove}
-        handleGasQuenchPressureAdd={handleGasQuenchPressureAdd}
-        handleGasQuenchPressureRemove={handleGasQuenchPressureRemove}
-        handleOilQuenchSpeedAdd={handleOilQuenchSpeedAdd}
-        handleOilQuenchSpeedRemove={handleOilQuenchSpeedRemove}
-        timeUnitOptions={timeUnitOptions}
-        loading={loading}
-        selectStyles={selectStyles}
-      />
+      <CollapsibleSection 
+        title="Données de trempe" 
+        isExpandedByDefault={true}
+        sectionId="test-quench-data"
+        rememberState={true}
+      >
+        {/* Quench Data Section - Imported from external component */}
+        <QuenchDataSection
+          formData={formData}
+          handleChange={handleChange}
+          handleSelectChange={handleSelectChange}
+          getSelectedOption={getSelectedOption}
+          temperatureUnitOptions={temperatureUnitOptions}
+          handleGasQuenchSpeedAdd={handleGasQuenchSpeedAdd}
+          handleGasQuenchSpeedRemove={handleGasQuenchSpeedRemove}
+          handleGasQuenchPressureAdd={handleGasQuenchPressureAdd}
+          handleGasQuenchPressureRemove={handleGasQuenchPressureRemove}
+          handleOilQuenchSpeedAdd={handleOilQuenchSpeedAdd}
+          handleOilQuenchSpeedRemove={handleOilQuenchSpeedRemove}
+          timeUnitOptions={timeUnitOptions}
+          loading={loading}
+          selectStyles={selectStyles}
+        />
+      </CollapsibleSection>
     </>
   );
 };

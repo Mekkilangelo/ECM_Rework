@@ -28,12 +28,12 @@ const login = async (req, res) => {
     }
 
     // Vérifier si l'utilisateur a les droits nécessaires
-    if (user.role !== 'admin' && user.role !== 'superuser') {
-      return res.status(403).json({
-        success: false,
-        message: 'Droits insuffisants'
-      });
-    }
+    // if (user.role !== 'admin' && user.role !== 'superuser') {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Droits insuffisants'
+    //   });
+    // }
 
     // Générer un token JWT
     const token = generateToken(user);

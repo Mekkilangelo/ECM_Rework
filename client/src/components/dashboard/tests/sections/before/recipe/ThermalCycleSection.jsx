@@ -40,8 +40,6 @@ const ThermalCycleSection = ({
 
   return (
     <>
-      <h5 className="mt-4 mb-2">Cycle Thermique</h5>
-      
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>

@@ -16,7 +16,6 @@ const BasicInfoSection = ({
 }) => {
   return (
     <>
-      <h4 className="mb-3">Informations de base du test</h4>
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">

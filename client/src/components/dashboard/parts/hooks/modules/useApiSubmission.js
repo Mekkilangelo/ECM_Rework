@@ -12,7 +12,8 @@ const useApiSubmission = (
   setMessage, 
   onPartCreated, 
   onPartUpdated, 
-  onClose
+  onClose,
+  fileAssociationCallback
 ) => {
   // Préparation des données pour l'API
   const formatDataForApi = () => {
@@ -83,6 +84,11 @@ const useApiSubmission = (
       if (part) {
         // Mode édition
         response = await axios.put(`${API_URL}/parts/${part.id}`, partData);
+
+        // Associer les fichiers à la pièce existante si nécessaire
+        if (fileAssociationCallback) {
+          await fileAssociationCallback(part.id);
+        }
         setMessage({
           type: 'success',
           text: 'Pièce mise à jour avec succès!'
@@ -94,6 +100,12 @@ const useApiSubmission = (
       } else {
         // Mode création
         response = await axios.post(`${API_URL}/parts`, partData);
+
+        // Associer les fichiers à la nouvelle pièce si nécessaire
+        if (fileAssociationCallback) {
+          await fileAssociationCallback(response.data.id);
+        }
+        
         setMessage({
           type: 'success',
           text: 'Pièce créée avec succès!'

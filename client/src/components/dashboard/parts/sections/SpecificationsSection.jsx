@@ -1,7 +1,8 @@
-// src/components/dashboard/parts/sections/SpecificationsSection.jsx
 import React from 'react';
-import { Form } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import Select from 'react-select';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const SpecificationsSection = ({
   formData,
@@ -11,7 +12,8 @@ const SpecificationsSection = ({
   steelOptions,
   getHardnessUnitOptions,
   loading,
-  selectStyles
+  selectStyles,
+  onOpenSteelModal
 }) => (
   <>
     {/* Core Hardness */}
@@ -161,38 +163,46 @@ const SpecificationsSection = ({
       </div>
     </div>
     
-    {/* Additional Details */}
-    <div className="row">
-      <div className="col-md-6">
-        <Form.Group className="mb-3">
-          <Form.Label>Acier</Form.Label>
-          <Select
-            name="steel"
-            value={getSelectedOption(steelOptions, formData.steel)}
-            onChange={(option) => handleSelectChange(option, { name: 'steel' })}
-            options={steelOptions}
-            isClearable
-            styles={selectStyles}
-            placeholder="Sélectionner un acier"
-            className="react-select-container"
-            classNamePrefix="react-select"
-            isLoading={loading}
-          />
-        </Form.Group>
-      </div>
-      <div className="col-md-6">
-        <Form.Group className="mb-3">
-          <Form.Label>Description</Form.Label>
-          <Form.Control
-            as="textarea"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={3}
-          />
-        </Form.Group>
-      </div>
-    </div>
+{/* Additional Details */}
+<div className="row">
+  <div className="col-md-6">
+    <Form.Group className="mb-3">
+      <Form.Label>Acier</Form.Label>
+      <Select
+        name="steel"
+        value={getSelectedOption(steelOptions, formData.steel)}
+        onChange={(option) => handleSelectChange(option, { name: 'steel' })}
+        options={steelOptions}
+        isClearable
+        styles={selectStyles}
+        placeholder="Sélectionner un acier"
+        className="react-select-container mb-2"
+        classNamePrefix="react-select"
+        isLoading={loading}
+      />
+      <Button 
+        variant="outline-primary"
+        onClick={onOpenSteelModal}
+        title="Ajouter un nouvel acier"
+        className="add-steel-btn"
+      >
+        <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter un acier
+      </Button>
+    </Form.Group>
+  </div>
+  <div className="col-md-6">
+    <Form.Group className="mb-3">
+      <Form.Label>Description</Form.Label>
+      <Form.Control
+        as="textarea"
+        name="description"
+        value={formData.description}
+        onChange={handleChange}
+        rows={3}
+      />
+    </Form.Group>
+  </div>
+</div>
   </>
 );
 

@@ -1,20 +1,12 @@
 // src/components/dashboard/orders/sections/DocumentsSection.jsx
 import React from 'react';
-import FileUploader from '../../../common/FileUploader/FileUploader';
 
 const DocumentsSection = ({ 
-  orderId, 
-  setTempFileId 
+  formData,
+  errors,
+  handleChange
 }) => (
-  <FileUploader 
-    nodeId={orderId}
-    entityType="orders"
-    category="general"
-    onUploadComplete={(data, tempId) => {
-      if (tempId) setTempFileId(tempId);
-    }}
-    onError={(error) => console.error('Erreur FileUploader:', error)}
-  />
+  <><h2>test</h2></>
 );
 
 export default DocumentsSection;

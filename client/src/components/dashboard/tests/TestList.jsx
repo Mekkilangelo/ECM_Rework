@@ -43,7 +43,7 @@ const TestList = ({ partId }) => {
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
-  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="warning" /></div>;
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
@@ -59,12 +59,12 @@ const TestList = ({ partId }) => {
             <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
           <h2 className="mb-0">
-            <FontAwesomeIcon icon={faFlask} className="mr-2 text-warning" />
+            <FontAwesomeIcon icon={faFlask} className="mr-2 text-danger" />
             Tests
           </h2>
         </div>
         <Button
-          variant="warning"
+          variant="danger"
           onClick={() => setShowCreateForm(true)}
           className="d-flex align-items-center"
         >

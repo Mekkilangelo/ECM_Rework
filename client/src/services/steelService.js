@@ -1,37 +1,41 @@
 import api from './api';
 
 const steelService = {
-  // Récupérer tous les grades d'acier
+  // Get all steels with pagination
+  getAllSteels: (page = 1, limit = 10) =>
+    api.get('/steels', { params: { limit, offset: (page - 1) * limit }}),
+
+  // Get all steel grades
   getSteelGrades: () => 
-    api.get('/steels/grades').then(response => response.data.data),
+    api.get('/steels/grades'),
   
-  // Récupérer un acier spécifique par ID
+  // Get a specific steel by ID
   getSteelById: (id) => 
-    api.get(`/api/steels/${id}`).then(response => response.data),
+    api.get(`/steels/${id}`),
   
-  // Créer un nouvel acier
+  // Create a new steel
   createSteel: (steelData) => 
-    api.post('/steels', steelData).then(response => response.data),
+    api.post('/steels', steelData),
   
-  // Mettre à jour un acier existant
+  // Update an existing steel
   updateSteel: (id, steelData) => 
-    api.put(`/steels/${id}`, steelData).then(response => response.data),
+    api.put(`/steels/${id}`, steelData),
   
-  // Supprimer un acier
+  // Delete a steel
   deleteSteel: (id) => 
-    api.delete(`/steels/${id}`).then(response => response.data),
+    api.delete(`/steels/${id}`),
   
-  // Rechercher des aciers par grade ou famille
+  // Search steels by grade or family
   searchSteels: (query) => 
-    api.get(`/steels/search?q=${query}`).then(response => response.data),
+    api.get(`/steels/search`, { params: { q: query }}),
   
-  // Récupérer les aciers par famille
+  // Get steels by family
   getSteelsByFamily: (family) => 
-    api.get(`/steels/family/${family}`).then(response => response.data),
+    api.get(`/steels/family/${family}`),
   
-  // Récupérer les aciers par standard
+  // Get steels by standard
   getSteelsByStandard: (standard) => 
-    api.get(`/steels/standard/${standard}`).then(response => response.data)
+    api.get(`/steels/standard/${standard}`)
 };
 
 export default steelService;

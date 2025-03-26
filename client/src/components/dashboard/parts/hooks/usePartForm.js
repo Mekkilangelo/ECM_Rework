@@ -1,3 +1,6 @@
+// usePartForm.js
+
+import { useState, useCallback } from 'react';
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
@@ -10,6 +13,14 @@ import useSelectHelpers from './modules/useSelectHelpers';
 const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.orderId;
+
+  // État pour stocker la fonction de rappel d'association de fichiers
+  const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
+  
+  // Fonction de rappel pour recevoir la méthode d'association de fichiers
+  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    setFileAssociationCallback(() => associateFilesFunc);
+  }, []);
   
   // État du formulaire et initialisation
   const { 
@@ -47,8 +58,8 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     handleSelectChange 
   } = useFormHandlers(formData, setFormData, errors, setErrors);
   
-  // Chargement des options pour les selects
-  useOptionsData(
+  // Chargement des options pour les selects et récupération de la fonction de rafraîchissement
+  const { refreshSteelOptions } = useOptionsData(
     setLoading,
     setDesignationOptions,
     setUnitOptions,
@@ -78,7 +89,8 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     setMessage, 
     onPartCreated, 
     onPartUpdated, 
-    onClose
+    onClose,
+    fileAssociationCallback
   );
 
   return {
@@ -93,11 +105,13 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     handleChange,
     handleSelectChange,
     handleSubmit,
+    handleFileAssociationNeeded,
     getSelectedOption,
     getLengthUnitOptions,
     getWeightUnitOptions,
     getHardnessUnitOptions,
-    selectStyles
+    selectStyles,
+    refreshSteels: refreshSteelOptions // Exposer la fonction de rafraîchissement
   };
 };
 

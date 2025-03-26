@@ -1,65 +1,88 @@
 // utils/fileStorage.js
 const multer = require('multer');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
-// Création du dossier de base pour les uploads si n'existe pas
-const createBaseUploadDir = () => {
-  const baseDir = path.join(__dirname, '../uploads');
-  if (!fs.existsSync(baseDir)) {
-    fs.mkdirSync(baseDir, { recursive: true });
-  }
-  return baseDir;
-};
+// Configuration des chemins de stockage
+const UPLOAD_BASE_DIR = path.join(__dirname, '../uploads');
+const TEMP_DIR = path.join(UPLOAD_BASE_DIR, 'temp');
 
-// Configuration du stockage selon le type d'entité
+// Assurer que les répertoires existent
+if (!fs.existsSync(UPLOAD_BASE_DIR)) {
+  fs.mkdirSync(UPLOAD_BASE_DIR, { recursive: true });
+}
+if (!fs.existsSync(TEMP_DIR)) {
+  fs.mkdirSync(TEMP_DIR, { recursive: true });
+}
+
+// Configuration du stockage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const baseDir = createBaseUploadDir();
-    const nodeId = req.params.nodeId || req.body.nodeId;
-    const entityType = req.params.entityType || req.body.entityType; // 'orders', 'clients', etc.
-    
-    // Création d'un chemin hiérarchique: uploads/entityType/nodeId/
-    const uploadPath = path.join(baseDir, entityType, nodeId.toString());
-    
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    
-    cb(null, uploadPath);
+  destination: function (req, file, cb) {
+    cb(null, TEMP_DIR);
   },
-  filename: (req, file, cb) => {
-    // Nom unique pour éviter les conflits
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname);
-    cb(null, uniqueSuffix + extension);
+  filename: function (req, file, cb) {
+    const uniquePrefix = uuidv4();
+    const fileExt = path.extname(file.originalname);
+    cb(null, `${uniquePrefix}${fileExt}`);
   }
 });
 
+// Configuration des limites et filtres
 const fileFilter = (req, file, cb) => {
-  // Validation des types de fichiers autorisés
-  const allowedTypes = [
-    'application/pdf', 
-    'image/jpeg', 
-    'image/png', 
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain'
-  ];
-  
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Type de fichier non supporté'), false);
-  }
+  // Accepte tous les types de fichiers pour l'instant
+  cb(null, true);
 };
 
+// CORRECTION ICI : exportez directement l'instance multer configurée
+// Plutôt qu'un objet contenant l'instance
 const upload = multer({
   storage: storage,
+  fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // limite à 10MB
-  },
-  fileFilter: fileFilter
+    fileSize: 50 * 1024 * 1024, // 50 Mo par défaut
+    files: 10 // Max 10 fichiers par requête
+  }
 });
 
-module.exports = upload;
+// Fonction pour générer un checksum de fichier
+const generateFileChecksum = (filePath) => {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha256');
+    const stream = fs.createReadStream(filePath);
+    
+    stream.on('error', err => reject(err));
+    stream.on('data', chunk => hash.update(chunk));
+    stream.on('end', () => resolve(hash.digest('hex')));
+  });
+};
+
+// Utilitaire pour nettoyer le dossier temporaire
+const cleanupTempDir = async (olderThan = 24 * 60 * 60 * 1000) => {
+  try {
+    const files = fs.readdirSync(TEMP_DIR);
+    const now = Date.now();
+    
+    for (const file of files) {
+      const filePath = path.join(TEMP_DIR, file);
+      const stats = fs.statSync(filePath);
+      
+      if (now - stats.mtimeMs > olderThan) {
+        fs.unlinkSync(filePath);
+        console.log(`Fichier temporaire nettoyé: ${file}`);
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors du nettoyage des fichiers temporaires:', error);
+  }
+};
+
+// Exportez l'instance multer et les autres utilitaires
+module.exports = {
+  upload,
+  generateFileChecksum,
+  cleanupTempDir,
+  UPLOAD_BASE_DIR,
+  TEMP_DIR
+};

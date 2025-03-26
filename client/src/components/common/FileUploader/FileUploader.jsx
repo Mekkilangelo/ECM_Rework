@@ -1,227 +1,186 @@
-// client/src/components/common/FileUploader/FileUploader.jsx
-import React, { useState, useCallback } from 'react';
-import { Button, Alert, ProgressBar, ListGroup } from 'react-bootstrap';
+// src/components/common/FileUploader/FileUploader.jsx
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Button, ProgressBar, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload, faTrash, faFile, faImage, faFilePdf } from '@fortawesome/free-solid-svg-icons';
-import './FileUploader.css';
+import { faUpload, faImage, faFile, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import fileService from '../../../services/fileService';
+import './FileUploader.css';
 
-const FileUploader = ({ 
+const FileUploader = ({
+  category,
+  subcategory,
   nodeId,
-  entityType,
-  category = 'general',
-  subcategory = null,
+  onFilesUploaded,
   maxFiles = 5,
-  acceptedTypes = '.pdf,.jpg,.jpeg,.png,.docx,.xlsx,.txt',
-  onUploadComplete = () => {},
-  onError = () => {}
+  acceptedFileTypes = '*',
+  title = 'Importer des fichiers',
+  showPreview = true,
+  height = '150px',
+  width = '100%',
+  fileIcon = faFile
 }) => {
   const [files, setFiles] = useState([]);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
-  const [tempId, setTempId] = useState(null);
-
-  // Récupérer les fichiers existants au chargement
-  React.useEffect(() => {
-    if (nodeId) {
-      fetchFiles();
-    }
-  }, [nodeId]);
-
-  const fetchFiles = async () => {
-    try {
-      const response = await fileService.getFilesByNode(nodeId);
-      setUploadedFiles(response.data);
-    } catch (error) {
-      setError('Erreur lors de la récupération des fichiers');
-      onError(error);
-    }
-  };
-
-  const handleFileSelect = useCallback((e) => {
-    const selectedFiles = Array.from(e.target.files);
-    if (selectedFiles.length + files.length > maxFiles) {
-      setError(`Vous ne pouvez pas télécharger plus de ${maxFiles} fichiers à la fois.`);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  
+  const onDrop = useCallback((acceptedFiles) => {
+    // Ajouter les fichiers à la liste
+    setFiles(prev => [...prev, ...acceptedFiles].slice(0, maxFiles));
+    setError(null);
+  }, [maxFiles]);
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: acceptedFileTypes,
+    maxFiles: maxFiles
+  });
+  
+  const handleUpload = async () => {
+    if (files.length === 0) {
+      setError('Veuillez sélectionner au moins un fichier');
       return;
     }
-    setFiles(prev => [...prev, ...selectedFiles]);
-    setError(null);
-  }, [files, maxFiles]);
-
-  const handleFileDrop = useCallback((e) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length + files.length > maxFiles) {
-      setError(`Vous ne pouvez pas télécharger plus de ${maxFiles} fichiers à la fois.`);
-      return;
-    }
-    setFiles(prev => [...prev, ...droppedFiles]);
-    setError(null);
-  }, [files, maxFiles]);
-
-  const removeFile = useCallback((index) => {
-    setFiles(files.filter((_, i) => i !== index));
-  }, [files]);
-
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-  }, []);
-
-  const uploadFiles = async () => {
-    if (files.length === 0) return;
     
-    setIsUploading(true);
-    setProgress(0);
+    setUploading(true);
+    setError(null);
+    
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+    
+    if (nodeId) formData.append('nodeId', nodeId);
+    if (category) formData.append('category', category);
+    if (subcategory) formData.append('subcategory', subcategory);
     
     try {
-      const formData = new FormData();
-      files.forEach(file => formData.append('files', file));
-      
-      if (nodeId) formData.append('nodeId', nodeId);
-      formData.append('entityType', entityType);
-      formData.append('category', category);
-      if (subcategory) formData.append('subcategory', subcategory);
-      
       const response = await fileService.uploadFiles(formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        setProgress(percentCompleted);
+        setUploadProgress(percentCompleted);
       });
       
-      // Si c'est un upload sans nodeId (création), sauvegarde du tempId
-      if (response.data.tempId) {
-        setTempId(response.data.tempId);
-      }
-      
-      // Mise à jour des fichiers
-      if (nodeId) {
-        fetchFiles();
-      } else {
-        setUploadedFiles(prev => [...prev, ...response.data.files]);
-      }
-      
+      setUploadedFiles(response.data.files);
       setFiles([]);
-      setIsUploading(false);
-      onUploadComplete(response.data, tempId || response.data.tempId);
-    } catch (error) {
-      setError('Erreur lors du téléchargement des fichiers');
-      setIsUploading(false);
-      onError(error);
+      setUploadProgress(0);
+      
+      // Appeler le callback avec les fichiers uploadés
+      if (onFilesUploaded) {
+        onFilesUploaded(response.data.files, response.data.tempId);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erreur lors de l\'upload des fichiers');
+      console.error('Erreur d\'upload:', err);
+    } finally {
+      setUploading(false);
     }
   };
-
-  const deleteFile = async (fileId) => {
+  
+  const removeFile = (index) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const removeUploadedFile = async (fileId) => {
     try {
       await fileService.deleteFile(fileId);
-      setUploadedFiles(uploadedFiles.filter(file => file.id !== fileId));
-    } catch (error) {
+      setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+    } catch (err) {
       setError('Erreur lors de la suppression du fichier');
-      onError(error);
+      console.error('Erreur de suppression:', err);
     }
   };
-
-  const getFileIcon = (mimeType) => {
-    if (mimeType.includes('image')) return faImage;
-    if (mimeType.includes('pdf')) return faFilePdf;
-    return faFile;
+  
+  const previewFile = (fileId) => {
+    window.open(`/files/download/${fileId}`, '_blank');
   };
-
+  
+  const renderFileIcon = (fileType) => {
+    if (fileType.startsWith('image/')) {
+      return faImage;
+    }
+    return fileIcon;
+  };
+  
   return (
-    <div className="file-uploader-container">
-      <h5>Documents {category !== 'general' ? `- ${category}` : ''}</h5>
-      
+    <div className="file-uploader mb-4">
       {error && <Alert variant="danger">{error}</Alert>}
       
+      {/* Zone de glisser-déposer */}
       <div 
-        className="drop-zone" 
-        onDrop={handleFileDrop} 
-        onDragOver={handleDragOver}
+        {...getRootProps()} 
+        className={`upload-dropzone ${isDragActive ? 'active' : ''}`}
+        style={{ height, width }}
       >
-        <FontAwesomeIcon icon={faUpload} size="2x" />
-        <p>Glissez vos fichiers ici ou</p>
-        <input
-          type="file"
-          multiple
-          accept={acceptedTypes}
-          onChange={handleFileSelect}
-          id={`file-input-${category}`}
-          style={{ display: 'none' }}
-        />
-        <Button 
-          variant="outline-primary" 
-          onClick={() => document.getElementById(`file-input-${category}`).click()}
-        >
-          Parcourir
-        </Button>
-        <p className="text-muted small">
-          Max {maxFiles} fichiers ({acceptedTypes.replace(/\./g, '')})
-        </p>
+        <input {...getInputProps()} />
+        <FontAwesomeIcon icon={fileIcon} size="3x" className="mb-3 text-secondary" />
+        <span className="fw-bold">{title}</span>
+        <div className="mt-2 text-muted small">
+          <FontAwesomeIcon icon={faUpload} className="me-1" />
+          {isDragActive ? 'Déposez les fichiers ici' : 'Cliquez ou glissez-déposez vos fichiers'}
+        </div>
       </div>
       
+      {/* Liste des fichiers sélectionnés */}
       {files.length > 0 && (
         <div className="selected-files mt-3">
-          <h6>Fichiers sélectionnés:</h6>
-          <ListGroup>
+          <h6>Fichiers sélectionnés ({files.length})</h6>
+          <ul className="list-group">
             {files.map((file, index) => (
-              <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+              <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                  <FontAwesomeIcon icon={getFileIcon(file.type)} className="mr-2" />
-                  {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                  <FontAwesomeIcon icon={renderFileIcon(file.type)} className="me-2" />
+                  {file.name} <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
                 </div>
                 <Button variant="outline-danger" size="sm" onClick={() => removeFile(index)}>
                   <FontAwesomeIcon icon={faTrash} />
                 </Button>
-              </ListGroup.Item>
+              </li>
             ))}
-          </ListGroup>
+          </ul>
           
-          <div className="mt-3">
-            {isUploading ? (
-              <ProgressBar animated now={progress} label={`${progress}%`} />
-            ) : (
-              <Button 
-                variant="primary" 
-                onClick={uploadFiles} 
-                disabled={files.length === 0}
-              >
-                Télécharger {files.length} fichier(s)
-              </Button>
-            )}
-          </div>
+          <Button 
+            variant="primary" 
+            className="mt-2" 
+            onClick={handleUpload} 
+            disabled={uploading}
+          >
+            {uploading ? 'Téléchargement en cours...' : 'Télécharger les fichiers'}
+          </Button>
+          
+          {uploading && (
+            <ProgressBar 
+              now={uploadProgress} 
+              label={`${uploadProgress}%`} 
+              className="mt-2" 
+            />
+          )}
         </div>
       )}
       
-      {uploadedFiles.length > 0 && (
-        <div className="uploaded-files mt-3">
-          <h6>Fichiers téléchargés:</h6>
-          <ListGroup>
+      {/* Affichage des fichiers déjà téléchargés */}
+      {showPreview && uploadedFiles.length > 0 && (
+        <div className="uploaded-files mt-4">
+          <h6>Fichiers téléchargés ({uploadedFiles.length})</h6>
+          <ul className="list-group">
             {uploadedFiles.map((file) => (
-              <ListGroup.Item key={file.id} className="d-flex justify-content-between align-items-center">
+              <li key={file.id} className="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                  <FontAwesomeIcon icon={getFileIcon(file.type)} className="mr-2" />
-                  {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                  <FontAwesomeIcon icon={renderFileIcon(file.type)} className="me-2" />
+                  {file.name} <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
                 </div>
                 <div>
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm" 
-                    className="mr-2"
-                    onClick={() => fileService.downloadFile(file.id)}
-                  >
-                    Télécharger
+                  <Button variant="outline-info" size="sm" className="me-2" onClick={() => previewFile(file.id)}>
+                    <FontAwesomeIcon icon={faEye} />
                   </Button>
-                  <Button 
-                    variant="outline-danger" 
-                    size="sm" 
-                    onClick={() => deleteFile(file.id)}
-                  >
+                  <Button variant="outline-danger" size="sm" onClick={() => removeUploadedFile(file.id)}>
                     <FontAwesomeIcon icon={faTrash} />
                   </Button>
                 </div>
-              </ListGroup.Item>
+              </li>
             ))}
-          </ListGroup>
+          </ul>
         </div>
       )}
     </div>

@@ -1,27 +1,45 @@
-/* client/src/components/common/FileUploader/FileUploader.css */
-.file-uploader-container {
-  margin-bottom: 20px;
-}
-
-.drop-zone {
-  border: 2px dashed #ccc;
-  border-radius: 5px;
-  padding: 20px;
-  text-align: center;
-  background-color: #f8f9fa;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.drop-zone:hover {
-  border-color: #007bff;
-  background-color: #f0f7ff;
-}
-
-.drop-zone p {
-  margin: 10px 0;
-}
-
-.selected-files, .uploaded-files {
-  margin-top: 15px;
-}
+/* src/components/common/FileUploader/FileUploader.css */
+.file-uploader {
+    margin-bottom: 1.5rem;
+  }
+  
+  .upload-dropzone {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #ced4da;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 20px;
+    padding: 20px;
+    color: #495057;
+  }
+  
+  .upload-dropzone.active {
+    background: linear-gradient(135deg, #e9f8f6 0%, #d1ebe7 100%);
+    border-color: #6bc5a4;
+  }
+  
+  .upload-dropzone:hover {
+    background: linear-gradient(135deg, #f1f3f5 0%, #e9ecef 100%);
+    border-color: #adb5bd;
+  }
+  
+  .selected-files, .uploaded-files {
+    margin-top: 1rem;
+  }
+  
+  .selected-files h6, .uploaded-files h6 {
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+  
+  .list-group-item {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  

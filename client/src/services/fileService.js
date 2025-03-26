@@ -1,5 +1,5 @@
 // client/src/services/fileService.js
-import api from './api'
+import api from './api';
 
 const fileService = {
   uploadFiles: (formData, onUploadProgress) => {
@@ -11,8 +11,22 @@ const fileService = {
     });
   },
   
-  getFilesByNode: (nodeId) => {
-    return api.get(`/files/node/${nodeId}`);
+  getFilesByNode: (nodeId, options = {}) => {
+    const { category, subcategory } = options;
+    let url = `/files/node/${nodeId}`;
+    
+    // Ajouter les paramètres de requête si nécessaire
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (subcategory) params.append('subcategory', subcategory);
+    
+    // Ajouter les paramètres à l'URL si nécessaires
+    const queryString = params.toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
+    
+    return api.get(url);
   },
   
   deleteFile: (fileId) => {
@@ -20,11 +34,22 @@ const fileService = {
   },
   
   downloadFile: (fileId) => {
-    window.open(`/files/download/${fileId}`, '_blank');
+    window.open(`${api.defaults.baseURL}/files/download/${fileId}`, '_blank');
   },
   
-  associateFiles: (nodeId, tempId) => {
-    return api.post(`/files/associate`, { nodeId, tempId });
+  associateFiles: (nodeId, tempId, options = {}) => {
+    const { category, subcategory } = options;
+    return api.post(`/files/associate`, { 
+      nodeId, 
+      tempId,
+      category,
+      subcategory
+    });
+  },
+  
+  // Méthode pour récupérer des statistiques sur les fichiers (par exemple, nombre par catégorie)
+  getFileStats: (nodeId) => {
+    return api.get(`/files/stats/${nodeId}`);
   }
 };
 

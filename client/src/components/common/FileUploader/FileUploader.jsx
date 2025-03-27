@@ -1,10 +1,8 @@
-// src/components/common/FileUploader/FileUploader.jsx
-import React, { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Button, ProgressBar, Alert } from 'react-bootstrap';
+import React from 'react';
+import { Button, ProgressBar, Alert, Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload, faImage, faFile, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
-import fileService from '../../../services/fileService';
+import { faUpload, faTrash, faEye, faDownload, faFile } from '@fortawesome/free-solid-svg-icons';
+import useFileUploader from './hooks/useFileUploader';
 import './FileUploader.css';
 
 const FileUploader = ({
@@ -13,112 +11,57 @@ const FileUploader = ({
   nodeId,
   onFilesUploaded,
   maxFiles = 5,
-  acceptedFileTypes = '*',
+  acceptedFileTypes = {},
   title = 'Importer des fichiers',
   showPreview = true,
   height = '150px',
   width = '100%',
-  fileIcon = faFile
+  fileIcon = faFile,
+  existingFiles = []
 }) => {
-  const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState(null);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  
-  const onDrop = useCallback((acceptedFiles) => {
-    // Ajouter les fichiers à la liste
-    setFiles(prev => [...prev, ...acceptedFiles].slice(0, maxFiles));
-    setError(null);
-  }, [maxFiles]);
-  
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: acceptedFileTypes,
-    maxFiles: maxFiles
+  // Utiliser le hook personnalisé
+  const fileUploader = useFileUploader({
+    maxFiles,
+    acceptedFileTypes,
+    fileIcon,
+    existingFiles,
+    onFilesUploaded
   });
   
-  const handleUpload = async () => {
-    if (files.length === 0) {
-      setError('Veuillez sélectionner au moins un fichier');
-      return;
-    }
-    
-    setUploading(true);
-    setError(null);
-    
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('files', file);
-    });
-    
-    if (nodeId) formData.append('nodeId', nodeId);
-    if (category) formData.append('category', category);
-    if (subcategory) formData.append('subcategory', subcategory);
-    
-    try {
-      const response = await fileService.uploadFiles(formData, (progressEvent) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        setUploadProgress(percentCompleted);
-      });
-      
-      setUploadedFiles(response.data.files);
-      setFiles([]);
-      setUploadProgress(0);
-      
-      // Appeler le callback avec les fichiers uploadés
-      if (onFilesUploaded) {
-        onFilesUploaded(response.data.files, response.data.tempId);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'upload des fichiers');
-      console.error('Erreur d\'upload:', err);
-    } finally {
-      setUploading(false);
-    }
-  };
-  
-  const removeFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  const removeUploadedFile = async (fileId) => {
-    try {
-      await fileService.deleteFile(fileId);
-      setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
-    } catch (err) {
-      setError('Erreur lors de la suppression du fichier');
-      console.error('Erreur de suppression:', err);
-    }
-  };
-  
-  const previewFile = (fileId) => {
-    window.open(`/files/download/${fileId}`, '_blank');
-  };
-  
-  const renderFileIcon = (fileType) => {
-    if (fileType.startsWith('image/')) {
-      return faImage;
-    }
-    return fileIcon;
-  };
-  
+  const { 
+    files, 
+    uploadedFiles, 
+    dropzoneProps, 
+    handleUpload, 
+    uploading, 
+    uploadProgress, 
+    error,
+    removeFile,
+    removeUploadedFile,
+    downloadFile,
+    previewState,
+    openPreviewModal,
+    closePreviewModal,
+    isImage,
+    renderThumbnail
+  } = fileUploader;
+
   return (
     <div className="file-uploader mb-4">
       {error && <Alert variant="danger">{error}</Alert>}
       
       {/* Zone de glisser-déposer */}
-      <div 
-        {...getRootProps()} 
-        className={`upload-dropzone ${isDragActive ? 'active' : ''}`}
+      <div
+        {...dropzoneProps.getRootProps()}
+        className={`upload-dropzone ${dropzoneProps.isDragActive ? 'active' : ''}`}
         style={{ height, width }}
       >
-        <input {...getInputProps()} />
+        <input {...dropzoneProps.getInputProps()} />
         <FontAwesomeIcon icon={fileIcon} size="3x" className="mb-3 text-secondary" />
         <span className="fw-bold">{title}</span>
         <div className="mt-2 text-muted small">
           <FontAwesomeIcon icon={faUpload} className="me-1" />
-          {isDragActive ? 'Déposez les fichiers ici' : 'Cliquez ou glissez-déposez vos fichiers'}
+          {dropzoneProps.isDragActive ? 'Déposez les fichiers ici' : 'Cliquez ou glissez-déposez vos fichiers'}
         </div>
       </div>
       
@@ -129,9 +72,14 @@ const FileUploader = ({
           <ul className="list-group">
             {files.map((file, index) => (
               <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <FontAwesomeIcon icon={renderFileIcon(file.type)} className="me-2" />
-                  {file.name} <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
+                <div className="d-flex align-items-center">
+                  <div className="thumbnail-wrapper">
+                    {renderThumbnail(file, () => openPreviewModal({...file, previewUrl: file.preview}))}
+                  </div>
+                  <div>
+                    <div>{file.name}</div>
+                    <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
+                  </div>
                 </div>
                 <Button variant="outline-danger" size="sm" onClick={() => removeFile(index)}>
                   <FontAwesomeIcon icon={faTrash} />
@@ -139,21 +87,19 @@ const FileUploader = ({
               </li>
             ))}
           </ul>
-          
-          <Button 
-            variant="primary" 
-            className="mt-2" 
-            onClick={handleUpload} 
+          <Button
+            variant="primary"
+            className="mt-2"
+            onClick={() => handleUpload(nodeId, category, subcategory)}
             disabled={uploading}
           >
             {uploading ? 'Téléchargement en cours...' : 'Télécharger les fichiers'}
           </Button>
-          
           {uploading && (
-            <ProgressBar 
-              now={uploadProgress} 
-              label={`${uploadProgress}%`} 
-              className="mt-2" 
+            <ProgressBar
+              now={uploadProgress}
+              label={`${uploadProgress}%`}
+              className="mt-2"
             />
           )}
         </div>
@@ -166,15 +112,39 @@ const FileUploader = ({
           <ul className="list-group">
             {uploadedFiles.map((file) => (
               <li key={file.id} className="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <FontAwesomeIcon icon={renderFileIcon(file.type)} className="me-2" />
-                  {file.name} <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
+                <div className="d-flex align-items-center">
+                  <div className="thumbnail-wrapper">
+                    {renderThumbnail(file, () => openPreviewModal({...file, previewUrl: fileUploader.getImageUrl(file.id)}))}
+                  </div>
+                  <div>
+                    <div>{file.name}</div>
+                    <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
+                  </div>
                 </div>
                 <div>
-                  <Button variant="outline-info" size="sm" className="me-2" onClick={() => previewFile(file.id)}>
-                    <FontAwesomeIcon icon={faEye} />
+                  {isImage(file.mimeType) && (
+                    <Button
+                      variant="outline-info"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => openPreviewModal({...file, previewUrl: fileUploader.getImageUrl(file.id)})}
+                    >
+                      <FontAwesomeIcon icon={faEye} />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="me-2"
+                    onClick={() => downloadFile(file.id)}
+                  >
+                    <FontAwesomeIcon icon={faDownload} />
                   </Button>
-                  <Button variant="outline-danger" size="sm" onClick={() => removeUploadedFile(file.id)}>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => removeUploadedFile(file.id)}
+                  >
                     <FontAwesomeIcon icon={faTrash} />
                   </Button>
                 </div>
@@ -183,6 +153,51 @@ const FileUploader = ({
           </ul>
         </div>
       )}
+      
+      {/* Modal pour prévisualiser les images en plein écran */}
+      <Modal
+        show={previewState.showPreviewModal}
+        onHide={closePreviewModal}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{previewState.previewFile?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center p-0">
+          {previewState.previewFile && isImage(previewState.previewFile.mimeType || previewState.previewFile.type) && (
+            <img
+              src={previewState.previewFile.previewUrl}
+              alt={previewState.previewFile.name}
+              className="preview-image"
+            />
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          {previewState.previewFile && (
+            <>
+              <div className="me-auto text-muted small">
+                {previewState.previewFile.size && `Taille: ${(previewState.previewFile.size / 1024).toFixed(1)} KB`}
+              </div>
+              <Button
+                variant="secondary"
+                onClick={closePreviewModal}
+              >
+                Fermer
+              </Button>
+              {previewState.previewFile.id && (
+                <Button
+                  variant="primary"
+                  onClick={() => downloadFile(previewState.previewFile.id)}
+                >
+                  <FontAwesomeIcon icon={faDownload} className="me-2" />
+                  Télécharger
+                </Button>
+              )}
+            </>
+          )}
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

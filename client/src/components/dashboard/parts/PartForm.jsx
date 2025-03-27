@@ -31,14 +31,14 @@ const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
     steelOptions,
     handleChange,
     handleSelectChange,
-    handleSubmit, // Utilisation directe de la fonction handleSubmit du hook
+    handleSubmit,
     getSelectedOption,
     getLengthUnitOptions,
     getWeightUnitOptions,
     getHardnessUnitOptions,
     selectStyles,
     refreshSteels,
-    setFileAssociationCallback // Assurez-vous que ce hook expose cette fonction
+    setFileAssociationCallback 
   } = usePartForm(part, onClose, onPartCreated, onPartUpdated);
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change

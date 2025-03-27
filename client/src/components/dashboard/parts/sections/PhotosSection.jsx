@@ -37,6 +37,8 @@ const PhotosSection = ({
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getFilesByNode(partNodeId, { category: 'photos' });
+
+      console.log('Réponse de récupération des fichiers', response.data);
       
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
@@ -130,6 +132,7 @@ const PhotosSection = ({
               height="150px"
               width="100%"
               showPreview={true}
+              existingFiles={uploadedFiles[view.id] || []}
             />
           </div>
         </CollapsibleSection>

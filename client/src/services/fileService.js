@@ -33,8 +33,16 @@ const fileService = {
     return api.delete(`/files/${fileId}`);
   },
   
-  downloadFile: (fileId) => {
-    window.open(`${api.defaults.baseURL}/files/download/${fileId}`, '_blank');
+  downloadFile: (fileId, preview = false) => {
+    const url = new URL(`${api.defaults.baseURL}/files/download/${fileId}`);
+    if (preview) {
+      url.searchParams.append('preview', 'true');
+    }
+    window.open(url.toString(), '_blank');
+  },
+  
+  getFilePreviewUrl: (fileId) => {
+    return `${api.defaults.baseURL}/files/download/${fileId}?preview=true`;
   },
   
   associateFiles: (nodeId, tempId, options = {}) => {

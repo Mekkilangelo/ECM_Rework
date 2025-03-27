@@ -16,7 +16,7 @@ router.get('/node/:nodeId', protect, fileController.getFilesByNode);
 router.delete('/:fileId', protect, fileController.deleteFile);
 
 // Route pour télécharger un fichier
-router.get('/download/:fileId', protect, fileController.downloadFile);
+router.get('/download/:fileId', fileController.downloadFile);
 
 // Route pour associer des fichiers temporaires à un node
 router.post('/associate', protect, fileController.associateFiles);

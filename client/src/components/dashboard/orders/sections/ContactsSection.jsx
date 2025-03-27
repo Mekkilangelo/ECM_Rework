@@ -10,7 +10,6 @@ const ContactsSection = ({
 }) => (
   <>
     <div className="d-flex justify-content-between align-items-center mb-2">
-      <Form.Label className="mb-0">Contacts</Form.Label>
       <Button variant="outline-secondary" size="sm" onClick={addContact}>
         Ajouter un contact
       </Button>

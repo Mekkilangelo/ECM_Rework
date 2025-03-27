@@ -1,9 +1,21 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
 import { Form, Button, Row, Col, Spinner, Modal } from 'react-bootstrap';
 import useOrderForm from './hooks/useOrderForm';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
 
+import ContactsSection from './sections/ContactsSection'
+import DocumentsSection from './sections/DocumentsSection'
+import GeneralInfoSection from './sections/GeneralInfoSection'
+import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
+
 const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }, ref) => {
+
+  const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
+
+  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    setFileAssociationMethod(() => associateFilesFunc);
+  }, []);
+
   const {
     formData,
     errors,
@@ -17,14 +29,21 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
     handleSubmit,
     tempFileId,
     setTempFileId,
-    // Propriétés pour la confirmation de fermeture
     showConfirmModal,
     pendingClose,
     handleCloseRequest,
     confirmClose,
     cancelClose,
-    saveAndClose
+    saveAndClose,
+    setFileAssociationCallback
   } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated);
+
+  // Mettre à jour le callback d'association de fichiers dans le hook quand il change
+  React.useEffect(() => {
+    if (setFileAssociationCallback) {
+      setFileAssociationCallback(fileAssociationMethod);
+    }
+  }, [fileAssociationMethod, setFileAssociationCallback]);  
 
   // Exposer handleCloseRequest à travers la référence
   useImperativeHandle(ref, () => ({
@@ -51,116 +70,45 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
       )}
       
       <Form onSubmit={handleSubmit} autoComplete="off">
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>Date de demande *</Form.Label>
-              <Form.Control
-                type="date"
-                name="order_date"
-                value={formData.order_date}
-                onChange={handleChange}
-                isInvalid={!!errors.order_date}
-              />
-              <Form.Control.Feedback type="invalid">
-                {errors.order_date}
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>Commercial</Form.Label>
-              <Form.Control
-                type="text"
-                name="commercial"
-                value={formData.commercial}
-                onChange={handleChange}
-                autoComplete="off"
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+        <CollapsibleSection 
+          title="Informations de base" 
+          isExpandedByDefault={true}
+          sectionId="order-general-info"
+          rememberState={true}
+          >
+            <GeneralInfoSection
+              formData={formData}
+              errors={errors}
+              handleChange={handleChange}
+            />
+          </CollapsibleSection>
+
         
-        <Row>
-          <Col md={12}>
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={3}
-                autoComplete="off"
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-        
-        <div className="mb-3">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <Form.Label className="mb-0">Contacts</Form.Label>
-            <Button variant="outline-secondary" size="sm" onClick={addContact}>
-              Ajouter un contact
-            </Button>
-          </div>
-          
-          {formData.contacts.map((contact, index) => (
-            <div key={index} className="mb-3 p-3 border rounded">
-              <div className="d-flex justify-content-between mb-2">
-                <h6>Contact {index + 1}</h6>
-                {formData.contacts.length > 1 && (
-                  <Button 
-                    variant="outline-danger" 
-                    size="sm" 
-                    onClick={() => removeContact(index)}
-                  >
-                    Supprimer
-                  </Button>
-                )}
-              </div>
-              
-              <Row>
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label>Nom</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="name"
-                      value={contact.name}
-                      onChange={(e) => handleContactChange(index, e)}
-                      autoComplete="off"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label>Téléphone</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="phone"
-                      value={contact.phone}
-                      onChange={(e) => handleContactChange(index, e)}
-                      autoComplete="off"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      name="email"
-                      value={contact.email}
-                      onChange={(e) => handleContactChange(index, e)}
-                      autoComplete="off"
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </div>
-          ))}
-        </div>
+          <CollapsibleSection 
+          title="Contacts" 
+          isExpandedByDefault={true}
+          sectionId="order-contacts"
+          rememberState={true}
+          >
+            <ContactsSection
+              formData = {formData}
+              handleContactChange = {handleContactChange}
+              addContact = {addContact}
+              removeContact = {removeContact}
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection 
+          title="Documents" 
+          isExpandedByDefault={true}
+          sectionId="order-documents"
+          rememberState={true}
+          >
+            <DocumentsSection
+              orderNodeId= {order ? order.id : null}
+              onFileAssociationNeeded={handleFileAssociationNeeded}
+            />
+          </CollapsibleSection>
 
         {/* Section pour les fichiers */}
         <div className="mt-4 mb-4">

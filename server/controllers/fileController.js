@@ -1,9 +1,10 @@
 // controllers/fileController.js
-const { Node, File } = require('../models');
+const { Node, File, sequelize } = require('../models');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { getMimeTypeFromExtension } = require('../middleware/mimeTypes');
+const { Op } = require('sequelize');
 
 const UPLOAD_BASE_DIR = path.join(__dirname, '../uploads');
 const TEMP_DIR = path.join(UPLOAD_BASE_DIR, 'temp');
@@ -222,7 +223,7 @@ exports.getFilesByNode = async (req, res) => {
     const { category, subcategory } = req.query;
     
     // Construire les conditions de recherche
-    let conditions = {
+    const conditions = {
       type: 'file',
       parent_id: nodeId
     };
@@ -238,7 +239,8 @@ exports.getFilesByNode = async (req, res) => {
       include: [
         {
           model: File,
-          where: Object.keys(fileConditions).length > 0 ? fileConditions : undefined
+          where: Object.keys(fileConditions).length > 0 ? fileConditions : undefined,
+          required: true // Changé à true car nous voulons seulement les nœuds qui ont des fichiers associés
         }
       ]
     });
@@ -252,7 +254,8 @@ exports.getFilesByNode = async (req, res) => {
       size: node.File ? node.File.size : null,
       mimeType: node.File ? node.File.mime_type : null,
       category: node.File ? node.File.category : null,
-      subcategory: node.File ? node.File.subcategory : null
+      subcategory: node.File ? node.File.subcategory : null,
+      type: node.File ? node.File.mime_type : 'application/octet-stream' // Ajout du type pour l'affichage des icônes
     }));
     
     return res.status(200).json({ files });
@@ -261,6 +264,7 @@ exports.getFilesByNode = async (req, res) => {
     return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
+
 
 // Supprimer un fichier
 exports.deleteFile = async (req, res) => {
@@ -296,41 +300,95 @@ exports.deleteFile = async (req, res) => {
   }
 };
 
-// Télécharger un fichier
+//Telecharger un fichier
 exports.downloadFile = async (req, res) => {
   try {
     const { fileId } = req.params;
     
     // Récupérer les données du fichier
-    const fileData = await File.findOne({ where: { node_id: fileId } });
+    const fileData = await File.findOne({ 
+      where: { node_id: fileId }
+    });
     
     if (!fileData) {
       return res.status(404).json({ message: 'Fichier non trouvé' });
     }
     
-    // Vérifier que le fichier existe physiquement
-    if (!fs.existsSync(fileData.file_path)) {
-      return res.status(404).json({ message: 'Fichier physique introuvable' });
+    // Utiliser findOne pour récupérer les données du nœud
+    const nodeData = await Node.findOne({ 
+      where: { id: fileId } 
+    });
+    
+    if (!nodeData) {
+      return res.status(404).json({ message: 'Nœud associé non trouvé' });
     }
     
-    // Déterminer le type MIME
-    const mimeType = fileData.mime_type || getMimeTypeFromExtension(fileData.original_name);
+    // Construire le chemin complet
+    // Utiliser le chemin du fichier temporaire, mais remplacer le chemin absolu par le chemin de base
+    const tempFilePath = fileData.file_path;
+    const relativePath = nodeData.path.replace(/^\//, '');
     
-    // Configurer les headers
-    res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileData.original_name)}"`);
+    // Extraire le nom de fichier du chemin temporaire
+    const tempFileName = path.basename(tempFilePath);
     
-    // Option pour prévisualiser au lieu de télécharger
-    if (req.query.preview === 'true' && mimeType.startsWith('image/')) {
-      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileData.original_name)}"`);
+    // Construire le chemin complet
+    const fullFilePath = path.resolve(UPLOAD_BASE_DIR, relativePath);
+    
+    // Journalisation détaillée
+    console.log('Informations de téléchargement:');
+    console.log('ID du fichier:', fileId);
+    console.log('Chemin temporaire:', tempFilePath);
+    console.log('Chemin relatif du nœud:', relativePath);
+    console.log('Chemin de base des uploads:', UPLOAD_BASE_DIR);
+    console.log('Chemin complet construit:', fullFilePath);
+    console.log('Nom de fichier temporaire:', tempFileName);
+    
+    // Vérifier si le fichier existe
+    try {
+      // Copier le fichier temporaire vers le chemin final si nécessaire
+      const finalFilePath = path.join(fullFilePath, tempFileName);
+      
+      // Créer le répertoire s'il n'existe pas
+      fs.mkdirSync(fullFilePath, { recursive: true });
+      
+      // Copier le fichier si ce n'est pas déjà au bon endroit
+      if (tempFilePath !== finalFilePath) {
+        fs.copyFileSync(tempFilePath, finalFilePath);
+        console.log('Fichier copié vers:', finalFilePath);
+      }
+      
+      // Vérifier l'accès au fichier final
+      fs.accessSync(finalFilePath, fs.constants.R_OK);
+      
+      // Téléchargement du fichier
+      return res.download(finalFilePath, fileData.original_name, (err) => {
+        if (err) {
+          console.error('Erreur de téléchargement:', err);
+          return res.status(500).json({ 
+            message: 'Erreur lors du téléchargement', 
+            erreur: err.message 
+          });
+        }
+      });
+      
+    } catch (accessError) {
+      console.error('Erreur d\'accès au fichier:', accessError);
+      return res.status(404).json({ 
+        message: 'Fichier physique introuvable',
+        details: {
+          fileId,
+          cheminConstruit: fullFilePath,
+          erreur: accessError.message
+        }
+      });
     }
     
-    // Créer un stream de lecture et le pipe vers la réponse
-    const fileStream = fs.createReadStream(fileData.file_path);
-    fileStream.pipe(res);
   } catch (error) {
     console.error('Erreur lors du téléchargement du fichier:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      erreur: error.message 
+    });
   }
 };
 

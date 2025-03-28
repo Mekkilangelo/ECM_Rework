@@ -1,12 +1,130 @@
-// src/components/dashboard/orders/sections/DocumentsSection.jsx
-import React from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
+import FileUploader from '../../../common/FileUploader/FileUploader';
+import fileService from '../../../../services/fileService';
+import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
 
 const DocumentsSection = ({ 
-  formData,
-  errors,
-  handleChange
-}) => (
-  <><h2>test</h2></>
-);
+  orderNodeId, 
+  onFileAssociationNeeded, 
+}) => {
+  const [uploadedFiles, setUploadedFiles] = useState({});
+  const [tempIds, setTempIds] = useState({});
+  
+  // Utilisez une référence pour stocker tempIds sans déclencher de re-renders
+  const tempIdsRef = useRef({});
+  
+  // Mettez à jour la référence quand tempIds change
+  useEffect(() => {
+    tempIdsRef.current = tempIds;
+  }, [tempIds]);
+
+  // Configuration des différentes vues
+  const views = [
+    { id: 'all_documents', name: 'Importer des Documents' },
+  ];
+
+  // Charger les fichiers existants
+  useEffect(() => {
+    if (orderNodeId) {
+      loadExistingFiles();
+    }
+  }, [orderNodeId]);
+
+  const loadExistingFiles = async () => {
+    try {
+      const response = await fileService.getFilesByNode(orderNodeId, { category: 'documents' });
+
+      console.log('Réponse de récupération des fichiers', response.data);
+      
+      // Organiser les fichiers par sous-catégorie
+      const filesBySubcategory = {};
+      
+      response.data.files.forEach(file => {
+        const subcategory = file.subcategory || 'other';
+        if (!filesBySubcategory[subcategory]) {
+          filesBySubcategory[subcategory] = [];
+        }
+        filesBySubcategory[subcategory].push(file);
+      });
+      
+      setUploadedFiles(filesBySubcategory);
+    } catch (error) {
+      console.error('Erreur lors du chargement des fichiers:', error);
+    }
+  };
+
+  const handleFilesUploaded = (files, newTempId, subcategory) => {
+    // Mettre à jour la liste des fichiers téléchargés
+    setUploadedFiles(prev => ({
+      ...prev,
+      [subcategory]: [...(prev[subcategory] || []), ...files]
+    }));
+    
+    // Stocker le tempId pour cette sous-catégorie
+    if (newTempId) {
+      setTempIds(prev => ({
+        ...prev,
+        [subcategory]: newTempId
+      }));
+    }
+  };
+
+  // Méthode pour associer les fichiers lors de la soumission du formulaire
+  // Utilisez useCallback pour mémoriser cette fonction
+  const associateFiles = useCallback(async (newOrderNodeId) => {
+    try {
+      // Utilisez la référence pour obtenir les tempIds les plus récents
+      const currentTempIds = tempIdsRef.current;
+      
+      // Parcourir tous les tempIds et les associer
+      for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
+        await fileService.associateFiles(newOrderNodeId, tempId, { 
+          category: 'photos', 
+          subcategory 
+        });
+      }
+      
+      // Réinitialiser les tempIds
+      setTempIds({});
+      
+      // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
+      if (newOrderNodeId === orderNodeId) {
+        loadExistingFiles();
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'association des fichiers:', error);
+    }
+  }, [orderNodeId]); // Ne dépend que de orderNodeId, pas de tempIds
+
+  // Exposer la méthode d'association via le prop onFileAssociationNeeded
+  // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
+  useEffect(() => {
+    if (onFileAssociationNeeded) {
+      onFileAssociationNeeded(associateFiles);
+    }
+  }, [onFileAssociationNeeded, associateFiles]);
+
+  return (
+    <>
+      <div className="p-2">
+        <FileUploader
+          category="documents"
+          subcategory={'all_documents'}
+          nodeId={orderNodeId}
+          onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, 'all_documents')}
+          maxFiles={5}
+          acceptedFileTypes="*"
+          title={`Importer un document`}
+          fileIcon={faFile}
+          height="150px"
+          width="100%"
+          showPreview={true}
+          existingFiles={uploadedFiles['all_documents'] || []}
+        />
+      </div>
+    </>
+  );
+};
 
 export default DocumentsSection;

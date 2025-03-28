@@ -43,7 +43,9 @@ const FileUploader = ({
     openPreviewModal,
     closePreviewModal,
     isImage,
-    renderThumbnail
+    getFileType,
+    renderThumbnail,
+    renderPreviewContent
   } = fileUploader;
 
   return (
@@ -114,7 +116,7 @@ const FileUploader = ({
               <li key={file.id} className="list-group-item d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center">
                   <div className="thumbnail-wrapper">
-                    {renderThumbnail(file, () => openPreviewModal({...file, previewUrl: fileUploader.getImageUrl(file.id)}))}
+                    {renderThumbnail(file)}
                   </div>
                   <div>
                     <div>{file.name}</div>
@@ -122,16 +124,14 @@ const FileUploader = ({
                   </div>
                 </div>
                 <div>
-                  {isImage(file.mimeType) && (
-                    <Button
-                      variant="outline-info"
-                      size="sm"
-                      className="me-2"
-                      onClick={() => openPreviewModal({...file, previewUrl: fileUploader.getImageUrl(file.id)})}
-                    >
-                      <FontAwesomeIcon icon={faEye} />
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline-info"
+                    size="sm"
+                    className="me-2"
+                    onClick={() => openPreviewModal(file)}
+                  >
+                    <FontAwesomeIcon icon={faEye} />
+                  </Button>
                   <Button
                     variant="outline-secondary"
                     size="sm"
@@ -154,24 +154,27 @@ const FileUploader = ({
         </div>
       )}
       
-      {/* Modal pour prévisualiser les images en plein écran */}
+      {/* Modal pour prévisualiser les fichiers */}
       <Modal
         show={previewState.showPreviewModal}
         onHide={closePreviewModal}
         size="lg"
         centered
+        className="file-preview-modal"
+        dialogClassName="modal-90w"
       >
         <Modal.Header closeButton>
-          <Modal.Title>{previewState.previewFile?.name}</Modal.Title>
+          <Modal.Title>
+            {previewState.previewFile?.name}
+            {previewState.previewFile?.mimeType && (
+              <small className="text-muted ms-2">
+                ({previewState.previewFile?.mimeType})
+              </small>
+            )}
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="text-center p-0">
-          {previewState.previewFile && isImage(previewState.previewFile.mimeType || previewState.previewFile.type) && (
-            <img
-              src={previewState.previewFile.previewUrl}
-              alt={previewState.previewFile.name}
-              className="preview-image"
-            />
-          )}
+        <Modal.Body className="p-0 preview-modal-body">
+          {previewState.previewFile && renderPreviewContent(previewState.previewFile)}
         </Modal.Body>
         <Modal.Footer>
           {previewState.previewFile && (

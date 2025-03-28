@@ -71,8 +71,11 @@ const useFileUploader = ({
     openPreviewModal: filePreview.openPreviewModal,
     closePreviewModal: filePreview.closePreviewModal,
     isImage: filePreview.isImage,
-    getImageUrl: filePreview.getImageUrl,
-    renderThumbnail: (file) => filePreview.renderThumbnail(file, filePreview.openPreviewModal)
+    getFileType: filePreview.getFileType,
+    getFileUrl: filePreview.getFileUrl,
+    getFileIcon: filePreview.getFileIcon,
+    renderThumbnail: filePreview.renderThumbnail,
+    renderPreviewContent: filePreview.renderPreviewContent
   };
 };
 

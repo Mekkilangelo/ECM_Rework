@@ -5,12 +5,19 @@ import useFormValidation from './modules/useFormValidation';
 import useApiSubmission from './modules/useApiSubmission';
 import useOrderData from './modules/useOrderData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
-import { useState, useEffect } from 'react';
-
+import { useState, useEffect, useCallback } from 'react';
 
 const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.clientId;
+  
+  // État pour stocker la fonction de rappel d'association de fichiers
+  const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
+  
+  // Fonction de rappel pour recevoir la méthode d'association de fichiers
+  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    setFileAssociationCallback(() => associateFilesFunc);
+  }, []);
   
   // État du formulaire et initialisation
   const { 
@@ -64,7 +71,8 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     setMessage, 
     onOrderCreated, 
     onOrderUpdated, 
-    onClose
+    onClose,
+    fileAssociationCallback
   );
   
   // Gestion de la confirmation de fermeture
@@ -101,6 +109,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     addContact,
     removeContact,
     handleSubmit,
+    handleFileAssociationNeeded,
     // Nouvelles propriétés pour la confirmation de fermeture
     tempFileId,
     setTempFileId,

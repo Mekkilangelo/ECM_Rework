@@ -12,7 +12,8 @@ const useApiSubmission = (
   setMessage, 
   onOrderCreated,
   onOrderUpdated, 
-  onClose
+  onClose,
+  fileAssociationCallback
 ) => {
   
   const handleSubmit = async (e) => {
@@ -42,6 +43,12 @@ const useApiSubmission = (
       if (order) {
         // Mode édition
         response = await axios.put(`${API_URL}/orders/${order.id}`, orderData);
+        
+        // Associer les fichiers à la commande existante si nécessaire
+        if (fileAssociationCallback) {
+          await fileAssociationCallback(order.id);
+        }
+        
         setMessage({
           type: 'success',
           text: 'Commande modifiée avec succès!'
@@ -53,6 +60,12 @@ const useApiSubmission = (
       } else {
         // Mode création
         response = await axios.post(`${API_URL}/orders`, orderData);
+        
+        // Associer les fichiers à la nouvelle commande si nécessaire
+        if (fileAssociationCallback) {
+          await fileAssociationCallback(response.data.id);
+        }
+        
         setMessage({
           type: 'success',
           text: 'Commande créée avec succès!'

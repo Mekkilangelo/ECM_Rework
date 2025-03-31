@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import useTestForm from './hooks/useTestForm';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
@@ -7,16 +7,33 @@ import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSecti
 import BasicInfoSection from './sections/BasicInfoSection';
 import BeforeTabContent from './sections/before/BeforeTabContent';
 import AfterTabContent from './sections/after/AfterTabContent';
+import ReportTabContent from './sections/report/ReportTabContent';
 
 const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
+
+  // État pour stocker la fonction d'association de fichiers
+  const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
+
+  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    setFileAssociationMethod(() => associateFilesFunc);
+  }, []);
+
   const {
     formData,
     errors,
     loading,
     fetchingTest,
     message,
+    setFileAssociationCallback,
     ...formHandlers
-  } = useTestForm(test, onClose, onTestCreated, onTestUpdated);
+  } = useTestForm( test, onClose, onTestCreated, onTestUpdated);
+
+  // Mettre à jour le callback d'association de fichiers dans le hook quand il change
+  React.useEffect(() => {
+    if (setFileAssociationCallback) {
+      setFileAssociationCallback(fileAssociationMethod);
+    }
+  }, [fileAssociationMethod, setFileAssociationCallback]);
 
   // État pour gérer l'onglet actif
   const [activeTab, setActiveTab] = useState('before');
@@ -83,6 +100,8 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
                 errors={errors}
                 loading={loading}
                 formHandlers={formHandlers}
+                test={test}
+                handleFileAssociationNeeded={handleFileAssociationNeeded}
               />
             </Tab>
             <Tab eventKey="after" title="After">
@@ -91,10 +110,14 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
                 errors={errors}
                 loading={loading}
                 formHandlers={formHandlers}
+                test={test}
+                handleFileAssociationNeeded={handleFileAssociationNeeded}
               />
             </Tab>
             <Tab eventKey="report" title="Report">
-              <ReportTabContent />
+              <ReportTabContent 
+                testId={test.id}
+              />
             </Tab>
           </Tabs>
         ) : (
@@ -105,6 +128,8 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
               errors={errors}
               loading={loading}
               formHandlers={formHandlers}
+              test={test}
+              handleFileAssociationNeeded={handleFileAssociationNeeded}
             />
           </div>
         )}
@@ -122,14 +147,5 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
     </div>
   );
 };
-
-// Composant pour l'onglet "Report" (à implémenter selon vos besoins)
-const ReportTabContent = () => (
-  <div className="p-3 text-muted">
-    {/* Remplacez ce contenu placeholder par vos sections d'onglet Report */}
-    <h4>Rapport de Test</h4>
-    <p>Contenu de l'onglet Report à implémenter</p>
-  </div>
-);
 
 export default TestForm;

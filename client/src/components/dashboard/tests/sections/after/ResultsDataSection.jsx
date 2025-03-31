@@ -3,6 +3,8 @@ import { Form, Row, Col, Button, Card, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import MicrographsSection from './MicrographsSection';
+import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 
 const ResultsDataSection = ({ 
     formData,
@@ -16,7 +18,9 @@ const ResultsDataSection = ({
     handleHardnessResultAdd,
     handleHardnessResultRemove,
     loading,
-    selectStyles
+    selectStyles,
+    test,
+    handleFileAssociationNeeded
 }) => {
   // Options pour les select pickers
   const hardnessLocationOptions = [
@@ -102,11 +106,6 @@ const ResultsDataSection = ({
   const results = formData.resultsData?.results || [];
   
   return (
-    <Card className="mb-4">
-      <Card.Header className="bg-light">
-        <h5 className="mb-0">Contrôle</h5>
-      </Card.Header>
-      <Card.Body>
         <div>
           <h6 className="mb-3 d-flex justify-content-between align-items-center">
             <span>Résultats</span>
@@ -121,8 +120,8 @@ const ResultsDataSection = ({
           </h6>
           
           {results.map((result, resultIndex) => (
-            <Card key={resultIndex} className={`mb-3 ${resultIndex > 0 ? 'border-primary' : ''}`}>
-              <Card.Header className={`d-flex justify-content-between align-items-center ${resultIndex > 0 ? 'bg-primary bg-opacity-10' : 'bg-light'}`}>
+            <Card key={resultIndex} className={`mb-3`}>
+              <Card.Header className="d-flex justify-content-between align-items-center bg-light">
                 <h6 className="mb-0">Résultat #{result.step}</h6>
                 {results.length > 1 && (
                   <Button 
@@ -293,12 +292,24 @@ const ResultsDataSection = ({
                     disabled={loading}
                   />
                 </Form.Group>
+
+                <CollapsibleSection 
+                  title="Micrographies" 
+                  isExpandedByDefault={false}
+                  sectionId="test-micrographs"
+                  rememberState={true}
+                >  
+                  <MicrographsSection 
+                    testNodeId={test ? test.id : null}
+                    resultIndex={resultIndex}
+                    onFileAssociationNeeded={handleFileAssociationNeeded}
+                  />
+                </CollapsibleSection>
+
               </Card.Body>
             </Card>
           ))}
         </div>
-      </Card.Body>
-    </Card>
   );
 };
 

@@ -11,5 +11,6 @@ router.get('/:testId', testController.getTestById);
 router.post('/', protect, testController.createTest);
 router.put('/:testId', protect, testController.updateTest);
 router.delete('/:testId', protect, testController.deleteTest);
+router.get('/:testId/report', testController.getTestReportData);
 
 module.exports = router;

@@ -110,11 +110,6 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
             />
           </CollapsibleSection>
 
-        {/* Section pour les fichiers */}
-        <div className="mt-4 mb-4">
-          <h5>Documents</h5>
-        </div>
-
         <div className="d-flex justify-content-end mt-3">
           <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
             Annuler

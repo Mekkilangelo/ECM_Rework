@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
@@ -6,13 +6,37 @@ import useFormValidation from './modules/useFormValidation';
 import useOptionsFetcher from './modules/useOptionsFetcher';
 import useApiSubmission from './modules/useApiSubmission';
 import useTestData from './modules/useTestData';
+import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
 const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.partId;
   
+  // État pour stocker la fonction de rappel d'association de fichiers
+  const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
+  
+  // Fonction de rappel pour recevoir la méthode d'association de fichiers
+  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    setFileAssociationCallback(() => associateFilesFunc);
+  }, []);
+  
   // État du formulaire et initialisation
-  const { formData, setFormData, errors, setErrors, loading, setLoading, message, setMessage } = useFormState();
+  const { 
+    formData, 
+    setFormData, 
+    errors, 
+    setErrors, 
+    loading, 
+    setLoading, 
+    message, 
+    setMessage 
+  } = useFormState();
+
+  // Stocker les données initiales pour comparer les changements
+  const [initialFormData, setInitialFormData] = useState(null);
+
+  // Gestion des fichiers temporaires
+  const [tempFileId, setTempFileId] = useState(null);
 
   // State for fetching test
   const [fetchingTest, setFetchingTest] = useState(false);
@@ -60,8 +84,31 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     setMessage, 
     onTestCreated,
     onTestUpdated,
+    onClose,
+    fileAssociationCallback
+  );
+  
+  // Gestion de la confirmation de fermeture
+  const { 
+    showConfirmModal, 
+    pendingClose, 
+    handleCloseRequest, 
+    confirmClose, 
+    cancelClose, 
+    saveAndClose 
+  } = useCloseConfirmation(
+    formData, 
+    initialFormData || formData, 
+    handleSubmit, 
     onClose
   );
+  
+  // Mettre à jour les données initiales une fois chargées
+  useEffect(() => {
+    if (!fetchingTest && formData && !initialFormData) {
+      setInitialFormData(JSON.parse(JSON.stringify(formData)));
+    }
+  }, [fetchingTest, formData, initialFormData]);
   
   return {
     formData,
@@ -94,6 +141,17 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     pressureUnitOptions,
     hardnessUnitOptions,
     selectStyles,
+    // Nouvelle gestion des fichiers
+    handleFileAssociationNeeded,
+    tempFileId,
+    setTempFileId,
+    // Gestion de la confirmation de fermeture
+    showConfirmModal, 
+    pendingClose, 
+    handleCloseRequest, 
+    confirmClose, 
+    cancelClose, 
+    saveAndClose,
     // Thermal cycle
     handleThermalCycleAdd,
     handleThermalCycleRemove,

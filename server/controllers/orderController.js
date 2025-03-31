@@ -249,7 +249,8 @@ exports.updateOrder = async (req, res) => {
         await node.update({
           name,
           path: newPath,
-          modified_at: new Date()
+          modified_at: new Date(),
+          description
         }, { transaction: t });
         
         // Si le nom a changé, mettre à jour les chemins des descendants
@@ -271,7 +272,8 @@ exports.updateOrder = async (req, res) => {
       } else {
         // Juste mettre à jour la date de modification
         await node.update({
-          modified_at: new Date()
+          modified_at: new Date(),
+          description
         }, { transaction: t });
       }
       

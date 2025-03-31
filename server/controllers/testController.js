@@ -1,5 +1,5 @@
 // server/controllers/testController.js
-const { Node, Test, Closure } = require('../models');
+const { Node, Test, Part, Client, Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
@@ -340,3 +340,93 @@ exports.deleteTest = async (req, res) => {
     return res.status(500).json({ message: 'Erreur lors de la suppression du test', error: error.message });
   }
 };
+
+exports.getTestReportData = async (req, res) => {
+  const { testId } = req.params;
+  
+  try {
+    // Récupérer le test avec son noeud
+    const test = await Test.findOne({
+      where: { node_id: testId },
+      include: [
+        { 
+          model: Node,
+          attributes: ['id', 'name', 'path', 'type']
+        }
+      ]
+    });
+
+    if (!test) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+
+    const testNodeId = test.node_id;
+
+    // Trouver tous les ancêtres du test
+    const ancestorRelations = await Closure.findAll({
+      where: { descendant_id: testNodeId }
+    });
+
+    const ancestorIds = ancestorRelations.map(relation => relation.ancestor_id);
+    
+    // Récupérer les informations de la pièce
+    const partData = await Node.findOne({
+      where: { 
+        id: { [Op.in]: ancestorIds },
+        type: 'part' 
+      },
+      include: [
+        { 
+          model: require('../models').Part
+        }
+      ]
+    });
+
+    // Récupérer les informations du client
+    const clientData = await Node.findOne({
+      where: { 
+        id: { [Op.in]: ancestorIds },
+        type: 'client' 
+      },
+      include: [
+        { 
+          model: require('../models').Client
+        }
+      ]
+    });
+
+    // Préparer les données structurées pour le rapport
+    const reportData = {
+      test: {
+        id: test.id,
+        name: test.Node.name,
+        testCode: test.test_code,
+        testDate: test.test_date,
+        status: test.status,
+        location: test.location,
+        loadData: test.load_data,
+        processType: test.process_type
+      },
+      part: partData ? {
+        designation: partData.Part.designation,
+        reference: partData.name,
+        steel: partData.Part.steel,
+        specifications: partData.Part.specifications,
+        dimensions: partData.Part.dimensions
+      } : null,
+      client: clientData ? {
+        name: clientData.name,
+        code: clientData.Client.client_code,
+        city: clientData.Client.city,
+        country: clientData.Client.country,
+        address: clientData.Client.address
+      } : null
+    };
+
+    res.json(reportData);
+  } catch (error) {
+    console.error('Error fetching report data:', error);
+    res.status(500).json({ message: 'Failed to fetch report data', error: error.message });
+  }
+};
+

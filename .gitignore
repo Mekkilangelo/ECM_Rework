@@ -24,3 +24,4 @@ yarn-error.log*
 
 # Fichiers volumineux
 server/scripts/out.txt
+server/upload

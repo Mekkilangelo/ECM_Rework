@@ -7,6 +7,7 @@ import PreoxidationSection from './recipe/PreoxidationSection';
 import ThermalCycleSection from './recipe/ThermalCycleSection';
 import ChemicalCycleSection from './recipe/ChemicalCycleSection';
 import QuenchDataSection from './recipe/QuenchDataSection';
+import RecipeGraphSection from './recipe/RecipeGraphSection';
 
 const RecipeDataSection = ({ 
   formData, 
@@ -27,7 +28,9 @@ const RecipeDataSection = ({
   handleOilQuenchSpeedAdd,
   handleOilQuenchSpeedRemove,
   loading,
-  selectStyles
+  selectStyles,
+  test,
+  handleFileAssociationNeeded
 }) => {
   return (
     <>    
@@ -96,6 +99,18 @@ const RecipeDataSection = ({
           handleChemicalCycleRemove={handleChemicalCycleRemove}
           loading={loading}
           selectStyles={selectStyles}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection 
+        title="Graphiques" 
+        isExpandedByDefault={true}
+        sectionId="test-recipe-graph"
+        rememberState={true}
+      >  
+        <RecipeGraphSection 
+          testNodeId={test ? test.id : null}
+          onFileAssociationNeeded={handleFileAssociationNeeded}
         />
       </CollapsibleSection>
       

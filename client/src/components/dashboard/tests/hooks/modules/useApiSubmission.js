@@ -12,7 +12,8 @@ const useApiSubmission = (
   setMessage, 
   onTestCreated,
   onTestUpdated, 
-  onClose
+  onClose,
+  fileAssociationCallback
 ) => {
   // Préparation des données pour l'API
   const formatDataForApi = () => {
@@ -213,7 +214,7 @@ const useApiSubmission = (
       load_data: loadData,
       recipe_data: recipeData,
       quench_data: quenchData,
-      results_data: resultsData // Ajout des données de résultats
+      results_data: resultsData
     };
   };
   
@@ -234,6 +235,12 @@ const useApiSubmission = (
       if (test) {
         // Mode édition
         response = await axios.put(`${API_URL}/tests/${test.id}`, testData);
+
+        // Associer les fichiers au test existant si nécessaire
+        if (fileAssociationCallback) {
+          await fileAssociationCallback(test.id);
+        }
+
         setMessage({
           type: 'success',
           text: 'Test mis à jour avec succès!'
@@ -245,6 +252,12 @@ const useApiSubmission = (
       } else {
         // Mode création
         response = await axios.post(`${API_URL}/tests`, testData);
+
+        // Associer les fichiers au nouveau test si nécessaire
+        if (fileAssociationCallback) {
+          await fileAssociationCallback(response.data.id);
+        }
+
         setMessage({
           type: 'success',
           text: 'Test créé avec succès!'

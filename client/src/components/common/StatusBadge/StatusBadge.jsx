@@ -1,22 +1,7 @@
-// client/src/components/common/StatusBadge.jsx
 import React from 'react';
-import { Badge } from 'react-bootstrap';
 
 const StatusBadge = ({ status }) => {
-  const getVariant = () => {
-    switch (status) {
-      case 'new':
-        return 'danger';
-      case 'opened':
-        return 'info';
-      case 'in_progress':
-        return 'warning';
-      case 'completed':
-        return 'success';
-      default:
-        return 'danger';
-    }
-  };
+  if (!status || status === 'opened') return null;
   
   const getLabel = () => {
     switch (status) {
@@ -33,15 +18,40 @@ const StatusBadge = ({ status }) => {
     }
   };
   
-  if (!status || status === 'opened') return null;
+  // Styles spécifiques basés sur le statut
+  const getBadgeStyle = () => {
+    switch (status) {
+      case 'new':
+        return { backgroundColor: '#dc3545', color: 'white' }; // Rouge
+      case 'opened':
+        return { backgroundColor: '#17a2b8', color: 'white' }; // Bleu
+      case 'in_progress':
+        return { backgroundColor: '#ffc107', color: '#212529' }; // Jaune
+      case 'completed':
+        return { backgroundColor: '#28a745', color: 'white' }; // Vert
+      default:
+        return { backgroundColor: '#6c757d', color: 'white' }; // Gris
+    }
+  };
+  
+  const badgeStyle = {
+    ...getBadgeStyle(),
+    padding: '0.25em 0.6em',
+    fontWeight: 'bold',
+    borderRadius: '0.25rem',
+    display: 'inline-block',
+    fontSize: '75%',
+    lineHeight: 1,
+    textAlign: 'center',
+    whiteSpace: 'nowrap',
+    verticalAlign: 'baseline',
+    margin: '0.5rem'
+  };
   
   return (
-    <Badge 
-      variant={getVariant()} 
-      className="m-2"
-    >
+    <span style={badgeStyle}>
       {getLabel()}
-    </Badge>
+    </span>
   );
 };
 

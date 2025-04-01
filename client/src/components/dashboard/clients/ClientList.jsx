@@ -23,6 +23,7 @@ const ClientList = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
+  const isUserRole = user && user.role === 'user';
   
   const handleClientClick = (client) => {
     if (client.data_status === 'new') {
@@ -83,7 +84,7 @@ const ClientList = () => {
                 <th className="text-center">Pays</th>
                 <th className="text-center">Ville</th>
                 <th className="text-center">Modifié le</th>
-                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
+                <th className="text-center" style={{ width: '150px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -109,18 +110,20 @@ const ClientList = () => {
                   <td className="text-center">{client.modified_at || "-"}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
-                      <Button 
-                        variant="outline-info" 
-                        size="sm" 
-                        className="mr-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(client);
-                        }}
-                        title="Détails"
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </Button>
+                      {isUserRole && (
+                        <Button 
+                          variant="outline-info" 
+                          size="sm" 
+                          className="mr-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(client);
+                          }}
+                          title="Détails"
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </Button>
+                      )}
                       
                       {hasEditRights && (
                         <>

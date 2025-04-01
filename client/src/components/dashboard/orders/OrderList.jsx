@@ -118,18 +118,20 @@ const OrderList = () => {
                   <td className="text-center">{order.modified_at || "-"}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
-                      <Button 
-                        variant="outline-info" 
-                        size="sm" 
-                        className="mr-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(order);
-                        }}
-                        title="Détails"
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </Button>
+                      {!hasEditRights && (
+                        <Button 
+                          variant="outline-info" 
+                          size="sm" 
+                          className="mr-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(order);
+                          }}
+                          title="Détails"
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </Button>
+                      )}
                       
                       {hasEditRights && (
                         <>

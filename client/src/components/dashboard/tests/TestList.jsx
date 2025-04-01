@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faEdit, faArrowLeft, faFlask } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEye, faEdit, faArrowLeft, faFlask, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
@@ -12,11 +12,12 @@ import '../../../styles/dataList.css';
 
 const TestList = ({ partId }) => {
   const { navigateBack } = useNavigation();
-  const { data, loading, error, updateItemStatus, totalItems } = useHierarchy('tests', partId);
+  const { data, loading, error, updateItemStatus, totalItems, deleteItem } = useHierarchy('tests', partId);
   const { user } = useContext(AuthContext);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [selectedTest, setSelectedTest] = useState(null);
 
   const nextTestNumber = data ? data.length + 1 : 1;
@@ -39,6 +40,20 @@ const TestList = ({ partId }) => {
   const handleEditTest = (test) => {
     setSelectedTest(test);
     setShowEditForm(true);
+  };
+  
+  const handleDeleteTest = (test) => {
+    setSelectedTest(test);
+    setShowDeleteConfirmation(true);
+  };
+  
+  const confirmDelete = async () => {
+    try {
+      await deleteItem(selectedTest.id);
+      setShowDeleteConfirmation(false);
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+    }
   };
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -81,7 +96,7 @@ const TestList = ({ partId }) => {
                 <th className="text-center">Date</th>
                 <th className="text-center">Lieu</th>
                 <th className="text-center">Modifié le</th>
-                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
+                <th className="text-center" style={{ width: hasEditRights ? '180px' : '80px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -106,31 +121,46 @@ const TestList = ({ partId }) => {
                   <td className="text-center">{test.modified_at || "Inconnu"}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
-                      <Button 
-                        variant="outline-info" 
-                        size="sm" 
-                        className="mr-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(test);
-                        }}
-                        title="Détails"
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </Button>
-                      
-                      {hasEditRights && (
+                      {!hasEditRights && (
                         <Button 
-                          variant="outline-primary" 
-                          size="sm"
+                          variant="outline-info" 
+                          size="sm" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditTest(test);
+                            handleViewDetails(test);
                           }}
-                          title="Modifier"
+                          title="Détails"
                         >
-                          <FontAwesomeIcon icon={faEdit} />
+                          <FontAwesomeIcon icon={faEye} />
                         </Button>
+                      )}
+                      
+                      {hasEditRights && (
+                        <>
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm"
+                            className="mr-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditTest(test);
+                            }}
+                            title="Modifier"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTest(test);
+                            }}
+                            title="Supprimer"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </td>
@@ -205,6 +235,29 @@ const TestList = ({ partId }) => {
             />
           )}
         </Modal.Body>
+      </Modal>
+      
+      {/* Modal de confirmation de suppression */}
+      <Modal
+        show={showDeleteConfirmation}
+        onHide={() => setShowDeleteConfirmation(false)}
+        centered
+      >
+        <Modal.Header closeButton className="bg-light">
+          <Modal.Title>Confirmer la suppression</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Êtes-vous sûr de vouloir supprimer l'essai {selectedTest?.name} ?
+          Cette action est irréversible.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteConfirmation(false)}>
+            Annuler
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Supprimer
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );

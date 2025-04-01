@@ -117,19 +117,20 @@ const PartList = ({ orderId }) => {
                   <td className="text-center">{part.modified_at || "Inconnu"}</td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
-                      <Button 
-                        variant="outline-info" 
-                        size="sm" 
-                        className="mr-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(part);
-                        }}
-                        title="Détails"
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </Button>
-                      
+                      {!hasEditRights && (
+                        <Button 
+                          variant="outline-info" 
+                          size="sm" 
+                          className="mr-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(part);
+                          }}
+                          title="Détails"
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </Button>
+                      )}
                       {hasEditRights && (
                         <>
                           <Button 

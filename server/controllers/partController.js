@@ -252,23 +252,69 @@ exports.updatePart = async (req, res) => {
  * Supprimer une pièce et tous ses descendants
  */
 exports.deletePart = async (req, res) => {
+  // Créer une transaction pour assurer l'intégrité des données
+  const t = await sequelize.transaction();
+  
   try {
     const { partId } = req.params;
     
+    // 1. Vérifier que la pièce existe
     const part = await Node.findOne({
-      where: { id: partId, type: 'part' }
+      where: { id: partId, type: 'part' },
+      transaction: t
     });
     
     if (!part) {
+      await t.rollback();
       return res.status(404).json({ message: 'Pièce non trouvée' });
     }
     
-    // La cascade de suppression s'occupera de supprimer tous les enregistrements associés
-    await part.destroy();
+    // 2. Trouver tous les descendants dans la table closure
+    const closureEntries = await Closure.findAll({
+      where: { ancestor_id: partId },
+      transaction: t
+    });
     
-    return res.status(200).json({ message: 'Pièce supprimée avec succès' });
+    // Récupérer tous les IDs des descendants (y compris le nœud lui-même)
+    const descendantIds = new Set(closureEntries.map(entry => entry.descendant_id));
+    descendantIds.add(parseInt(partId)); // Ajouter l'ID de la pièce elle-même
+    
+    // 3. Supprimer toutes les entrées de fermeture associées aux descendants
+    // Supprimer d'abord où ils sont descendants ou ancêtres
+    await Closure.destroy({
+      where: {
+        [Op.or]: [
+          { descendant_id: { [Op.in]: Array.from(descendantIds) } },
+          { ancestor_id: { [Op.in]: Array.from(descendantIds) } }
+        ]
+      },
+      transaction: t
+    });
+    
+    // 4. Maintenant, supprimer tous les nœuds descendants
+    await Node.destroy({
+      where: {
+        id: { [Op.in]: Array.from(descendantIds) }
+      },
+      transaction: t
+    });
+    
+    // 5. Valider toutes les modifications
+    await t.commit();
+    
+    return res.status(200).json({ 
+      message: 'Pièce supprimée avec succès',
+      deletedId: partId
+    });
+    
   } catch (error) {
+    // En cas d'erreur, annuler toutes les modifications
+    await t.rollback();
     console.error('Erreur lors de la suppression de la pièce:', error);
-    return res.status(500).json({ message: 'Erreur lors de la suppression de la pièce', error: error.message });
+    
+    return res.status(500).json({ 
+      message: 'Erreur lors de la suppression de la pièce', 
+      error: error.message 
+    });
   }
 };

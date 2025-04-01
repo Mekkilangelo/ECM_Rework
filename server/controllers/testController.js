@@ -320,24 +320,70 @@ exports.updateTest = async (req, res) => {
  * Supprimer un test
  */
 exports.deleteTest = async (req, res) => {
+  // Créer une transaction pour assurer l'intégrité des données
+  const t = await sequelize.transaction();
+  
   try {
     const { testId } = req.params;
     
+    // 1. Vérifier que le test existe
     const test = await Node.findOne({
-      where: { id: testId, type: 'test' }
+      where: { id: testId, type: 'test' },
+      transaction: t
     });
     
     if (!test) {
+      await t.rollback();
       return res.status(404).json({ message: 'Test non trouvé' });
     }
     
-    // La cascade de suppression s'occupera de supprimer tous les enregistrements associés
-    await test.destroy();
+    // 2. Trouver tous les descendants dans la table closure
+    const closureEntries = await Closure.findAll({
+      where: { ancestor_id: testId },
+      transaction: t
+    });
     
-    return res.status(200).json({ message: 'Test supprimé avec succès' });
+    // Récupérer tous les IDs des descendants (y compris le nœud lui-même)
+    const descendantIds = new Set(closureEntries.map(entry => entry.descendant_id));
+    descendantIds.add(parseInt(testId)); // Ajouter l'ID du test lui-même
+    
+    // 3. Supprimer toutes les entrées de fermeture associées aux descendants
+    // Supprimer d'abord où ils sont descendants ou ancêtres
+    await Closure.destroy({
+      where: {
+        [Op.or]: [
+          { descendant_id: { [Op.in]: Array.from(descendantIds) } },
+          { ancestor_id: { [Op.in]: Array.from(descendantIds) } }
+        ]
+      },
+      transaction: t
+    });
+    
+    // 4. Maintenant, supprimer tous les nœuds descendants
+    await Node.destroy({
+      where: {
+        id: { [Op.in]: Array.from(descendantIds) }
+      },
+      transaction: t
+    });
+    
+    // 5. Valider toutes les modifications
+    await t.commit();
+    
+    return res.status(200).json({ 
+      message: 'Test supprimé avec succès',
+      deletedId: testId
+    });
+    
   } catch (error) {
+    // En cas d'erreur, annuler toutes les modifications
+    await t.rollback();
     console.error('Erreur lors de la suppression du test:', error);
-    return res.status(500).json({ message: 'Erreur lors de la suppression du test', error: error.message });
+    
+    return res.status(500).json({ 
+      message: 'Erreur lors de la suppression du test', 
+      error: error.message 
+    });
   }
 };
 

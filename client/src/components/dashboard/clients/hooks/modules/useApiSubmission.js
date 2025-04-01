@@ -33,6 +33,7 @@ const useApiSubmission = (
         
         if (onClientUpdated) {
           onClientUpdated(response.data);
+          response.message = 'Client modifié avec succès!';
         }
       } else {
         // Mode création
@@ -54,6 +55,7 @@ const useApiSubmission = (
         
         if (onClientCreated) {
           onClientCreated(response.data);
+          response.message = 'Client créé avec succès!';
         }
       }
       

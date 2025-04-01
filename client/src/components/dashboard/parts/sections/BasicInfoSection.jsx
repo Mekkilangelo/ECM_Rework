@@ -16,7 +16,7 @@ const BasicInfoSection = ({
   <div className="row">
     <div className="col-md-6">
       <Form.Group className="mb-3">
-        <Form.Label>Nom <span className="text-danger">*</span></Form.Label>
+        <Form.Label>Référence <span className="text-danger">*</span></Form.Label>
         <Form.Control
           type="text"
           name="name"

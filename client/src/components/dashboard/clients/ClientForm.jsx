@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
 import useClientForm from './hooks/useClientForm';
+import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
 
-const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
+
+const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdated }, ref) => {
   const {
     formData,
     errors,
@@ -15,8 +17,18 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
     getSelectedOption,
     handleChange,
     handleSelectChange,
-    handleSubmit
+    handleSubmit,
+    showConfirmModal,
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
+    saveAndClose,
   } = useClientForm(client, onClose, onClientCreated, onClientUpdated);
+
+  // Exposer handleCloseRequest à travers la référence
+  useImperativeHandle(ref, () => ({
+    handleCloseRequest
+  }));
   
   if (fetchingClient) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
@@ -133,8 +145,20 @@ const ClientForm = ({ client, onClose, onClientCreated, onClientUpdated }) => {
           </Button>
         </div>
       </Form>
+
+      {/* Modal de confirmation pour la fermeture */}
+      <CloseConfirmationModal
+        show={showConfirmModal}
+        onHide={cancelClose}
+        onCancel={cancelClose}
+        onContinue={confirmClose}
+        onSave={saveAndClose}
+        title="Confirmer la fermeture"
+        message="Vous avez des modifications non enregistrées."
+      />
+
     </div>
   );
-};
+});
 
 export default ClientForm;

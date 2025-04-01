@@ -17,6 +17,39 @@ const ThermalCycleSection = ({
   loading, 
   selectStyles 
 }) => {
+
+  // Style compact pour les selects
+  const compactSelectStyles = {
+    ...selectStyles,
+    container: (provided) => ({
+      ...provided,
+      width: '100%',
+    }),
+    control: (provided) => ({
+      ...provided,
+      minHeight: '31px',
+      height: '31px',
+      fontSize: '0.875rem',
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: '31px',
+      padding: '0 6px',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      fontSize: '0.875rem',
+    }),
+    singleValue: (provided) => ({
+      ...provided, 
+      fontSize: '0.875rem',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: '31px',
+    }),
+  };
+
   const rampOptions = [
     { value: 'up', label: 'Montée', icon: faArrowUp },
     { value: 'down', label: 'Descente', icon: faArrowDown },
@@ -130,7 +163,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de temps</Form.Label>
+            <Form.Label>Unité</Form.Label>
             <Select
               name="recipeData.waitTimeUnit"
               value={getSelectedOption(timeUnitOptions, formData.recipeData?.waitTimeUnit)}
@@ -138,7 +171,7 @@ const ThermalCycleSection = ({
               options={timeUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder="Unité"
               isLoading={loading}
             />
           </Form.Group>
@@ -157,7 +190,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de durée</Form.Label>
+            <Form.Label>Unité</Form.Label>
             <Select
               name="recipeData.programDurationUnit"
               value={getSelectedOption(timeUnitOptions, formData.recipeData?.programDurationUnit)}
@@ -165,7 +198,7 @@ const ThermalCycleSection = ({
               options={timeUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder="Unité"
               isLoading={loading}
             />
           </Form.Group>
@@ -187,7 +220,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de température</Form.Label>
+            <Form.Label>Unité</Form.Label>
             <Select
               name="recipeData.cellTempUnit"
               value={getSelectedOption(temperatureUnitOptions, formData.recipeData?.cellTempUnit)}
@@ -195,7 +228,7 @@ const ThermalCycleSection = ({
               options={temperatureUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder="Unité"
               isLoading={loading}
             />
           </Form.Group>
@@ -214,7 +247,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de pression</Form.Label>
+            <Form.Label>Unité</Form.Label>
             <Select
               name="recipeData.waitPressureUnit"
               value={getSelectedOption(pressureUnitOptions, formData.recipeData?.waitPressureUnit)}
@@ -222,7 +255,7 @@ const ThermalCycleSection = ({
               options={pressureUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder="Unité"
               isLoading={loading}
             />
           </Form.Group>

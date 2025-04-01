@@ -48,6 +48,11 @@ const useApiSubmission = (
         max: formData.surfaceHardnessMax || null,
         unit: formData.surfaceHardnessUnit || null
       },
+      toothHardness: {
+        min: formData.toothHardnessMin || null,
+        max: formData.toothHardnessMax || null,
+        unit: formData.toothHardnessUnit || null
+      },
       ecd: {
         depthMin: formData.ecdDepthMin || null,
         depthMax: formData.ecdDepthMax || null,

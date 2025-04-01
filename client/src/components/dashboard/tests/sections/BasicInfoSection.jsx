@@ -17,7 +17,7 @@ const BasicInfoSection = ({
   return (
     <>
       <Row>
-        <Col md={4}>
+        {/* <Col md={4}>
           <Form.Group className="mb-3">
             <Form.Label>Nom <span className="text-danger">*</span></Form.Label>
             <Form.Control
@@ -31,8 +31,8 @@ const BasicInfoSection = ({
               {errors.name}
             </Form.Control.Feedback>
           </Form.Group>
-        </Col>
-        <Col md={4}>
+        </Col> */}
+        <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Localisation</Form.Label>
             <Select
@@ -49,7 +49,7 @@ const BasicInfoSection = ({
             />
           </Form.Group>
         </Col>
-        <Col md={4}>
+        <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Statut</Form.Label>
             <Select

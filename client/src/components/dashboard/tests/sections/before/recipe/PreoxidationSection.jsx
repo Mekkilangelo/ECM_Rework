@@ -30,7 +30,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de température</Form.Label>
+            <Form.Label>Unité</Form.Label>
             <Select
               name="recipeData.preoxTempUnit"
               value={getSelectedOption(temperatureUnitOptions, formData.recipeData?.preoxTempUnit)}
@@ -38,7 +38,7 @@ const PreoxidationSection = ({
               options={temperatureUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder="Unité"
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -59,7 +59,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de durée</Form.Label>
+            <Form.Label>Unité</Form.Label>
             <Select
               name="recipeData.preoxDurationUnit"
               value={getSelectedOption(timeUnitOptions, formData.recipeData?.preoxDurationUnit)}
@@ -67,7 +67,7 @@ const PreoxidationSection = ({
               options={timeUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder="Unité"
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}

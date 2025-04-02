@@ -87,7 +87,7 @@ exports.getTestById = async (req, res) => {
 exports.createTest = async (req, res) => {
   try {
     const { 
-      name,  
+       
       test_date, 
       status,
       location,
@@ -103,19 +103,12 @@ exports.createTest = async (req, res) => {
       description 
     } = req.body;
     
+    const name = 'TRIAL';
     // Validation des données
     if (!name || !parent_id) {
       return res.status(400).json({ message: 'Nom et ID parent requis' });
     }
     
-    // Vérifier si le code de test est déjà utilisé
-    // const existingTest = await Test.findOne({
-    //   where: { test_code }
-    // });
-    
-    // if (existingTest) {
-    //   return res.status(409).json({ message: 'Ce code de test existe déjà' });
-    // }
     
     // Vérifier si le parent existe
     const parentNode = await Node.findByPk(parent_id);
@@ -216,7 +209,8 @@ exports.updateTest = async (req, res) => {
       results_data,
       mounting_type,
       position_type,
-      process_type 
+      process_type,
+      description 
     } = req.body;
     
     const node = await Node.findOne({
@@ -251,7 +245,8 @@ exports.updateTest = async (req, res) => {
         await node.update({
           name,
           path: newPath,
-          modified_at: new Date()
+          modified_at: new Date(),
+          description
         }, { transaction: t });
         
         // Si le nom a changé, mettre à jour les chemins des descendants

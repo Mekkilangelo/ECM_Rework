@@ -5,7 +5,7 @@ import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
 import useFormValidation from './modules/useFormValidation';
-import useApiSubmission from './modules/useApiSubmission';
+import usePartSubmission from './modules/usePartSubmission';
 import useOptionsData from './modules/useOptionsData';
 import usePartData from './modules/usePartData';
 import useSelectHelpers from './modules/useSelectHelpers';
@@ -79,7 +79,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
   const { validate } = useFormValidation(formData, parentId, setErrors);
   
   // Soumission du formulaire au serveur
-  const { handleSubmit } = useApiSubmission(
+  const { handleSubmit } = usePartSubmission(
     formData, 
     parentId,
     setFormData, 

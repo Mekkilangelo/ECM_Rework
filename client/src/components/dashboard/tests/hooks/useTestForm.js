@@ -4,7 +4,7 @@ import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
 import useFormValidation from './modules/useFormValidation';
 import useOptionsFetcher from './modules/useOptionsFetcher';
-import useApiSubmission from './modules/useApiSubmission';
+import useTestSubmission from './modules/useTestSubmission';
 import useTestData from './modules/useTestData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
@@ -74,7 +74,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
   const { validate } = useFormValidation(formData, parentId, setErrors);
   
   // Soumission du formulaire au serveur
-  const { formatDataForApi, handleSubmit } = useApiSubmission(
+  const { handleSubmit } = useTestSubmission(
     formData, 
     setFormData, 
     validate, 

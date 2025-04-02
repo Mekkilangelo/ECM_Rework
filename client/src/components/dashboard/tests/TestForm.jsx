@@ -25,6 +25,7 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
     fetchingTest,
     message,
     setFileAssociationCallback,
+    handleSubmit,
     ...formHandlers
   } = useTestForm( test, onClose, onTestCreated, onTestUpdated);
 
@@ -64,7 +65,7 @@ const TestForm = ({ test, onClose, onTestCreated, onTestUpdated }) => {
         </div>
       )}
       
-      <Form onSubmit={formHandlers.handleSubmit}>
+      <Form onSubmit={handleSubmit}>
 
         <CollapsibleSection 
           title="Informations de base" 

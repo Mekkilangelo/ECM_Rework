@@ -1,13 +1,26 @@
-import axios from 'axios';
+import useApiSubmission from '../../../../../hooks/useApiSubmission';
+import testService from '../../../../../services/testService';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-
-const useApiSubmission = (
+/**
+ * Hook spécifique pour gérer les soumissions de tests
+ * @param {Object} formData - Données du formulaire de test
+ * @param {Function} setFormData - Fonction pour mettre à jour formData
+ * @param {Function} validate - Fonction de validation
+ * @param {string} parentId - ID de la commande parente
+ * @param {Object} test - Test existant (pour le mode édition)
+ * @param {Function} setLoading - Fonction pour définir l'état de chargement
+ * @param {Function} setMessage - Fonction pour définir les messages
+ * @param {Function} onTestCreated - Callback après création
+ * @param {Function} onTestUpdated - Callback après mise à jour
+ * @param {Function} onClose - Callback de fermeture
+ * @param {Function} fileAssociationCallback - Callback pour associer des fichiers
+ */
+const useTestSubmission = (
   formData, 
   setFormData, 
   validate, 
   parentId,
-  test, // Ajout du paramètre test pour gérer le mode mise à jour
+  test,
   setLoading, 
   setMessage, 
   onTestCreated,
@@ -15,9 +28,82 @@ const useApiSubmission = (
   onClose,
   fileAssociationCallback
 ) => {
-  // Préparation des données pour l'API
+  const initialFormState = {
+    name: '',
+    location: '',
+    status: '',
+    description: '',
+    mountingType: '',
+    positionType: '',
+    processType: '',
+    furnaceData: {
+      furnaceType: '',
+      heatingCell: '',
+      coolingMedia: '',
+      furnaceSize: '',
+      quenchCell: '',
+    },
+    loadData: {
+      length: '',
+      width: '',
+      height: '',
+      sizeUnit: '',
+      floorCount: '',
+      partCount: '',
+      weight: '',
+      weightUnit: '',
+      loadComments: '',
+    },
+    recipeData: {
+      recipeNumber: '',
+      preoxTemp: '',
+      preoxTempUnit: '',
+      preoxDuration: '',
+      preoxDurationUnit: '',
+      thermalCycle: [{ step: 1, ramp: 'up', setpoint: '', duration: '' }],
+      chemicalCycle: [{ step: 1, time: '', gas: '', debit: '', pressure: '' }],
+      waitTime: '',
+      waitTimeUnit: '',
+      programDuration: '',
+      programDurationUnit: '',
+      cellTemp: '',
+      cellTempUnit: '',
+      waitPressure: '',
+      waitPressureUnit: '',
+    },
+    quenchData: {
+      gasQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
+      gasQuenchPressure: [{ step: 1, duration: '', pressure: '' }],
+      gasToleranceMin: '',
+      gasToleranceMax: '',
+      oilQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
+      oilTemperature: '',
+      oilTempUnit: '',
+      oilToleranceMin: '',
+      oilToleranceMax: '',
+      oilPressure: '',
+      oilInertingDelay: '',
+      oilInertingDelayUnit: '',
+      oilDrippingTime: '',
+      oilDrippingTimeUnit: ''
+    },
+    resultsData: {
+      results: [{
+        step: 1,
+        description: '',
+        hardnessPoints: [{ location: '', value: '', unit: '' }],
+        ecd: {
+          toothFlank: { distance: '', unit: '' },
+          toothRoot: { distance: '', unit: '' }
+        },
+        comment: ''
+      }]
+    }
+  };
+  
+  // Formatage des données pour l'API
   const formatDataForApi = () => {
-    // Formatage des données pour l'API
+    // Formatage du four
     const furnaceData = {
       furnace_type: formData.furnaceData.furnaceType || null,
       heating_cell: formData.furnaceData.heatingCell || null,
@@ -26,6 +112,7 @@ const useApiSubmission = (
       quench_cell: formData.furnaceData.quenchCell || null
     };
     
+    // Formatage des données de charge
     const loadData = {
       size: {
         length: {
@@ -71,6 +158,7 @@ const useApiSubmission = (
       pressure: cycle.pressure || null
     })) : null;
     
+    // Formatage des données de recette
     const recipeData = {
       number: formData.recipeData.recipeNumber || null,
       preox: {
@@ -130,6 +218,7 @@ const useApiSubmission = (
       speed: speed.speed || null
     })) : null;
     
+    // Formatage des données de trempe
     const quenchData = {
       gas_quench: {
         speed_parameters: gasQuenchSpeedData,
@@ -218,149 +307,26 @@ const useApiSubmission = (
     };
   };
   
-  // Soumission du formulaire
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validate()) return;
-    
-    setLoading(true);
-    setMessage(null);
-    
-    try {
-      const testData = formatDataForApi();
-      
-      let response;
-      
-      if (test) {
-        // Mode édition
-        response = await axios.put(`${API_URL}/tests/${test.id}`, testData);
-
-        // Associer les fichiers au test existant si nécessaire
-        if (fileAssociationCallback) {
-          await fileAssociationCallback(test.id);
-        }
-
-        setMessage({
-          type: 'success',
-          text: 'Test mis à jour avec succès!'
-        });
-        
-        if (onTestUpdated) {
-          onTestUpdated(response.data);
-        }
-      } else {
-        // Mode création
-        response = await axios.post(`${API_URL}/tests`, testData);
-
-        // Associer les fichiers au nouveau test si nécessaire
-        if (fileAssociationCallback) {
-          await fileAssociationCallback(response.data.id);
-        }
-
-        setMessage({
-          type: 'success',
-          text: 'Test créé avec succès!'
-        });
-        
-        // Réinitialiser le formulaire
-        setFormData({
-          name: '',
-          location: '',
-          status: '',
-          description: '',
-          mountingType: '',
-          positionType: '',
-          processType: '',
-          furnaceData: {
-            furnaceType: '',
-            heatingCell: '',
-            coolingMedia: '',
-            furnaceSize: '',
-            quenchCell: '',
-          },
-          loadData: {
-            length: '',
-            width: '',
-            height: '',
-            sizeUnit: '',
-            floorCount: '',
-            partCount: '',
-            weight: '',
-            weightUnit: '',
-            loadComments: '',
-          },
-          recipeData: {
-            recipeNumber: '',
-            preoxTemp: '',
-            preoxTempUnit: '',
-            preoxDuration: '',
-            preoxDurationUnit: '',
-            thermalCycle: [{ step: 1, ramp: 'up', setpoint: '', duration: '' }],
-            chemicalCycle: [{ step: 1, time: '', gas: '', debit: '', pressure: '' }],
-            waitTime: '',
-            waitTimeUnit: '',
-            programDuration: '',
-            programDurationUnit: '',
-            cellTemp: '',
-            cellTempUnit: '',
-            waitPressure: '',
-            waitPressureUnit: '',
-          },
-          quenchData: {
-            gasQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
-            gasQuenchPressure: [{ step: 1, duration: '', pressure: '' }],
-            gasToleranceMin: '',
-            gasToleranceMax: '',
-            oilQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
-            oilTemperature: '',
-            oilTempUnit: '',
-            oilToleranceMin: '',
-            oilToleranceMax: '',
-            oilPressure: '',
-            oilInertingDelay: '',
-            oilInertingDelayUnit: '',
-            oilDrippingTime: '',
-            oilDrippingTimeUnit: ''
-          },
-          resultsData: {
-            results: [{
-              step: 1,
-              description: '',
-              hardnessPoints: [{ location: '', value: '', unit: '' }],
-              ecd: {
-                toothFlank: { distance: '', unit: '' },
-                toothRoot: { distance: '', unit: '' }
-              },
-              comment: ''
-            }]
-          }
-        });
-        
-        if (onTestCreated) {
-          onTestCreated(response.data);
-        }
-      }
-      
-      // Fermer le formulaire après un délai
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error('Erreur lors de l\'opération sur le test:', error);
-      setMessage({
-        type: 'danger',
-        text: error.response?.data?.message || 'Une erreur est survenue lors de l\'opération sur le test'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
+  return useApiSubmission({
+    formData,
+    setFormData,
+    validate,
+    entity: test,
+    setLoading,
+    setMessage,
+    onCreated: onTestCreated,
+    onUpdated: onTestUpdated,
+    onClose,
     formatDataForApi,
-    handleSubmit
-  };
+    customApiService: {
+      create: testService.createTest,
+      update: testService.updateTest
+    },
+    entityType: 'Test',
+    initialFormState,
+    fileAssociationCallback,
+    parentId
+  });
 };
 
-export default useApiSubmission;
+export default useTestSubmission;

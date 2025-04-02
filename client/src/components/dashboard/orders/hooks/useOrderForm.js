@@ -2,7 +2,7 @@ import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
 import useFormValidation from './modules/useFormValidation';
-import useApiSubmission from './modules/useApiSubmission';
+import useOrderSubmission from './modules/useOrderSubmission';
 import useOrderData from './modules/useOrderData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 import { useState, useEffect, useCallback } from 'react';
@@ -61,7 +61,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
   const { validate } = useFormValidation(formData, parentId, setErrors);
   
   // Soumission du formulaire au serveur
-  const { handleSubmit } = useApiSubmission(
+  const { handleSubmit } = useOrderSubmission(
     formData, 
     parentId,
     setFormData, 

@@ -12,7 +12,7 @@ import '../../../styles/dataList.css';
 
 const TestList = ({ partId }) => {
   const { navigateBack } = useNavigation();
-  const { data, loading, error, updateItemStatus, totalItems, deleteItem } = useHierarchy('tests', partId);
+  const { data, loading, error, updateItemStatus, refreshData, deleteItem } = useHierarchy('tests', partId);
   const { user } = useContext(AuthContext);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -193,6 +193,7 @@ const TestList = ({ partId }) => {
             partId={partId}
             nextTestName={nextTestName}
             onClose={() => setShowCreateForm(false)}
+            onTestCreated={() => refreshData()}
           />
         </Modal.Body>
       </Modal>
@@ -212,6 +213,7 @@ const TestList = ({ partId }) => {
               test={selectedTest}
               partId={partId}
               onClose={() => setShowEditForm(false)}
+              onTestUpdated={() => refreshData()}
             />
           )}
         </Modal.Body>

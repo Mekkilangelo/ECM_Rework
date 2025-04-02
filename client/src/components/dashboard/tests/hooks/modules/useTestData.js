@@ -52,7 +52,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             name: data.test_code || '',
             location: data.location || '',
             status: data.status || '',
-            description: data.description || '',
+            description: testData.description || '',
             
             // Test types
             mountingType: data.mounting_type || '',

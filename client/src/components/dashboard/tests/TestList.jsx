@@ -7,7 +7,7 @@ import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import TestForm from './TestForm';
-import TestDetails from './TestDetails';
+//import TestDetails from './TestDetails';
 import '../../../styles/dataList.css';
 
 const TestList = ({ partId }) => {
@@ -25,7 +25,7 @@ const TestList = ({ partId }) => {
 
   const handleTestClick = (test) => {
     setSelectedTest(test);
-    setShowDetailModal(true);
+    setShowEditForm(true);
 
     if (test.data_status === 'new') {
       updateItemStatus(test.id);
@@ -116,9 +116,19 @@ const TestList = ({ partId }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="text-center">{test.test_date || "Pas encore réalisé"}</td>
-                  <td className="text-center">{test.location || "-"}</td>
-                  <td className="text-center">{test.modified_at || "Inconnu"}</td>
+                  <td className="text-center">{test.Test?.test_date || "Pas encore réalisé"}</td>
+                  <td className="text-center">{test.Test?.location || "-"}</td>
+                  <td className="text-center">
+                    {test.modified_at 
+                      ? new Date(test.modified_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : "Inconnu"}
+                  </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       {!hasEditRights && (
@@ -220,7 +230,7 @@ const TestList = ({ partId }) => {
       </Modal>
 
       {/* Modal pour voir les détails */}
-      <Modal
+      {/* <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
         size="lg"
@@ -237,7 +247,7 @@ const TestList = ({ partId }) => {
             />
           )}
         </Modal.Body>
-      </Modal>
+      </Modal> */}
       
       {/* Modal de confirmation de suppression */}
       <Modal

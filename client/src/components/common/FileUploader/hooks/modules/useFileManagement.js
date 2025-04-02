@@ -1,32 +1,28 @@
-import { useEffect } from 'react';
 import fileService from '../../../../../services/fileService';
 
 /**
  * Hook gérant les fichiers déjà téléchargés
  */
-const useFileManagement = (existingFiles, internalUploadedFiles, setInternalUploadedFiles, onFilesUploaded, setError) => {
-  // Synchroniser les fichiers externes avec l'état interne
-  useEffect(() => {
-    // Comparaison simple des IDs pour savoir s'il faut mettre à jour
-    const currentIds = new Set(internalUploadedFiles.map(f => f.id));
-    const newIds = new Set(existingFiles.map(f => f.id));
-    
-    // Vérifier si les ensembles sont différents
-    if (currentIds.size !== newIds.size || 
-        existingFiles.some(f => !currentIds.has(f.id))) {
-      setInternalUploadedFiles([...existingFiles]);
-    }
-  }, [existingFiles, internalUploadedFiles, setInternalUploadedFiles]);
-
+const useFileManagement = (
+  internalUploadedFiles, 
+  setInternalUploadedFiles, 
+  onFilesUploaded, 
+  setError
+) => {
   // Supprimer un fichier déjà téléchargé
   const removeUploadedFile = async (fileId) => {
     try {
       await fileService.deleteFile(fileId);
-      setInternalUploadedFiles(prev => prev.filter(f => f.id !== fileId));
       
-      // Informer le parent de la suppression
+      // Important: Create the updated files array
+      const updatedFiles = internalUploadedFiles.filter(f => f.id !== fileId);
+      
+      // Update the internal state
+      setInternalUploadedFiles(updatedFiles);
+      
+      // Pass the updated files to the callback
       if (onFilesUploaded) {
-        onFilesUploaded(internalUploadedFiles.filter(f => f.id !== fileId), null);
+        onFilesUploaded(updatedFiles, null);
       }
     } catch (err) {
       setError('Erreur lors de la suppression du fichier');

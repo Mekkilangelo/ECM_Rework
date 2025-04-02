@@ -19,18 +19,6 @@ const PartsSection = () => {
       <Tab.Content>
         <Tab.Pane eventKey="designation">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Designations</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="parts" 
-                data-column="designation"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="parts" column="designation" />
             </Card.Body>

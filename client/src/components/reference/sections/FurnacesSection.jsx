@@ -34,18 +34,6 @@ const FurnacesSection = () => {
       <Tab.Content>
         <Tab.Pane eventKey="furnace_type">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Furnace Types</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="furnaces" 
-                data-column="furnace_type"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="furnaces" column="furnace_type" />
             </Card.Body>
@@ -54,18 +42,6 @@ const FurnacesSection = () => {
 
         <Tab.Pane eventKey="furnace_size">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Furnace Sizes</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="furnaces" 
-                data-column="furnace_size"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="furnaces" column="furnace_size" />
             </Card.Body>
@@ -74,18 +50,6 @@ const FurnacesSection = () => {
 
         <Tab.Pane eventKey="heating_cell_type">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Heating Cell Types</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="furnaces" 
-                data-column="heating_cell_type"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="furnaces" column="heating_cell_type" />
             </Card.Body>
@@ -94,18 +58,6 @@ const FurnacesSection = () => {
 
         <Tab.Pane eventKey="cooling_media">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Cooling Media</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="furnaces" 
-                data-column="cooling_media"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="furnaces" column="cooling_media" />
             </Card.Body>
@@ -114,38 +66,13 @@ const FurnacesSection = () => {
 
         <Tab.Pane eventKey="process_type">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Process Types</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="furnaces" 
-                data-column="process_type"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="furnaces" column="process_type" />
             </Card.Body>
           </Card>
         </Tab.Pane>
-
         <Tab.Pane eventKey="quench_cell">
           <Card>
-            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-              <h6 className="m-0 font-weight-bold text-danger">Quench Cells</h6>
-              <Button 
-                variant="danger" 
-                size="sm" 
-                className="add-button" 
-                data-table="furnaces" 
-                data-column="quench_cell"
-              >
-                <FontAwesomeIcon icon={faPlus} className="fa-sm" /> Add
-              </Button>
-            </Card.Header>
             <Card.Body>
               <EnumTableContent table="furnaces" column="quench_cell" />
             </Card.Body>

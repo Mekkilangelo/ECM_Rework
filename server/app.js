@@ -21,6 +21,7 @@ const userRoutes = require('./routes/users');
 const enumRoutes = require('./routes/enums');
 const hierarchyRoutes = require('./routes/hierarchy');
 const chatbotRoutes = require('./routes/chatbot');
+const archiveRoutes = require('./routes/archives');
 
 // Initialize express app
 const app = express();
@@ -56,6 +57,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/enums', enumRoutes);
 app.use('/api/nodes', hierarchyRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/archives', archiveRoutes);
 
 // Root route
 app.get('/', (req, res) => {

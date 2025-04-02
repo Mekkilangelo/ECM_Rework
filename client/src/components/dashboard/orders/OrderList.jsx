@@ -90,7 +90,7 @@ const OrderList = () => {
             <thead>
               <tr className="bg-light">
                 <th style={{ width: '30%' }}>Référence</th>
-                <th className="text-center">Contact</th>
+                <th className="text-center">Commercial</th>
                 <th className="text-center">Date</th>
                 <th className="text-center">Modifié le</th>
                 <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
@@ -113,9 +113,27 @@ const OrderList = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="text-center">{order.contact_name || "-"}</td>
-                  <td className="text-center">{order.order_date || "-"}</td>
-                  <td className="text-center">{order.modified_at || "-"}</td>
+                  <td className="text-center">{order.Order?.commercial || "-"}</td>
+                  <td className="text-center">
+                    {order.Order?.order_date 
+                      ? new Date(order.Order?.order_date ).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })
+                      : "Inconnu"}
+                  </td>
+                  <td className="text-center">
+                    {order.modified_at 
+                      ? new Date(order.modified_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : "Inconnu"}
+                  </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       {!hasEditRights && (

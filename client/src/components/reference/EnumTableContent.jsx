@@ -132,7 +132,7 @@ const EnumTableContent = ({ table, column }) => {
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       <Button 
-                        variant="outline-primary" 
+                        variant="outline-warning" 
                         size="sm" 
                         className="mr-2"
                         onClick={() => handleEdit(value)}

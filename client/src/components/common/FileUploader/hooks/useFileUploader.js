@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useFileSelection from './modules/useFileSelection';
 import useFileUpload from './modules/useFileUpload';
 import useFilePreview from './modules/useFilePreview';
@@ -18,6 +18,11 @@ const useFileUploader = ({
   // États
   const [files, setFiles] = useState([]);
   const [internalUploadedFiles, setInternalUploadedFiles] = useState([]);
+  
+  // Mise à jour de l'état interne lorsque existingFiles change
+  useEffect(() => {
+    setInternalUploadedFiles([...existingFiles]);
+  }, [existingFiles]);
 
   // Utilisation des hooks spécialisés
   const fileUpload = useFileUpload(files, setFiles, setInternalUploadedFiles, onFilesUploaded);
@@ -32,7 +37,6 @@ const useFileUploader = ({
   );
   
   const fileManagement = useFileManagement(
-    existingFiles, 
     internalUploadedFiles, 
     setInternalUploadedFiles, 
     onFilesUploaded, 

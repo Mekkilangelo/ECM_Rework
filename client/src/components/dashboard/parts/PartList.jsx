@@ -7,7 +7,7 @@ import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import PartForm from './PartForm';
-import PartDetails from './PartDetails';
+//import PartDetails from './PartDetails';
 import partService from '../../../services/partService';
 import '../../../styles/dataList.css';
 
@@ -99,7 +99,7 @@ const PartList = ({ orderId }) => {
               {data.map(part => (
                 <tr key={part.id}>
                   <td>
-                    <div 
+                    <div
                       onClick={() => handlePartClick(part)}
                       style={{ cursor: 'pointer' }}
                       className="d-flex align-items-center"
@@ -112,9 +112,20 @@ const PartList = ({ orderId }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="text-center">{part.designation || "-"}</td>
-                  <td className="text-center">{part.steel || "-"}</td>
-                  <td className="text-center">{part.modified_at || "Inconnu"}</td>
+                  {/* Accédez à part.Part pour les propriétés spécifiques */}
+                  <td className="text-center">{part.Part?.designation || "-"}</td>
+                  <td className="text-center">{part.Part?.steel || "-"}</td>
+                  <td className="text-center">
+                    {part.modified_at 
+                      ? new Date(part.modified_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : "Inconnu"}
+                  </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       {!hasEditRights && (
@@ -215,7 +226,7 @@ const PartList = ({ orderId }) => {
       </Modal>
       
       {/* Modal pour voir les détails */}
-      <Modal
+      {/* <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
         size="lg"
@@ -232,7 +243,7 @@ const PartList = ({ orderId }) => {
             />
           )}
         </Modal.Body>
-      </Modal>
+      </Modal> */}
     </>
   );
 };

@@ -104,10 +104,20 @@ const ClientList = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="text-center">{client.client_group || "-"}</td>
-                  <td className="text-center">{client.country || "-"}</td>
-                  <td className="text-center">{client.city || "-"}</td>
-                  <td className="text-center">{client.modified_at || "-"}</td>
+                  <td className="text-center">{client.Client?.client_group || "-"}</td>
+                  <td className="text-center">{client.Client?.city || "-"}</td>
+                  <td className="text-center">{client.Client?.country || "-"}</td>
+                  <td className="text-center">
+                    {client.modified_at 
+                      ? new Date(client.modified_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : "Inconnu"}
+                  </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       {isUserRole && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -10,13 +10,18 @@ import Select from 'react-select';
 import { cleanData } from '../../services/nodeService';
 import { toast } from 'react-toastify';
 import '../../styles/sidebar.css';
+import { AuthContext } from '../../context/AuthContext';
 
-const Sidebar = () => {
+const Sidebar = ({ userRole }) => {
     const location = useLocation();
     const [allClients, setAllClients] = useState([]);
     const [selectedClient, setSelectedClient] = useState(null);
     const [isToggled, setIsToggled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const { user } = useContext(AuthContext); 
+    
+    // Check if user is superuser
+    const isSuperUser = user.role === "superuser";
 
     // Fonction pour gérer le nettoyage des données
     const handleDataCleaning = async (e) => {
@@ -51,46 +56,10 @@ const Sidebar = () => {
         }
     };
 
-    // Fonction pour simuler le chargement des clients depuis l'API
-    useEffect(() => {
-        // À remplacer par votre appel API réel
-        const fetchClients = async () => {
-            try {
-                // Simule un appel API avec des données fictives
-                const mockClients = [
-                    { id: 1, name: 'Client 1', client_code: 'C001' },
-                    { id: 2, name: 'Client 2', client_code: 'C002' },
-                    { id: 3, name: 'Client 3', client_code: 'C003' },
-                    { id: 4, name: 'Client 4', client_code: 'C004' },
-                    { id: 5, name: 'Client 5', client_code: 'C005' }
-                ];
-                setAllClients(mockClients);
-            } catch (error) {
-                console.error('Erreur lors du chargement des clients:', error);
-            }
-        };
-
-        fetchClients();
-    }, []);
-
-    const handleClientChange = (selectedOption) => {
-        setSelectedClient(selectedOption);
-        // Logique pour filtrer les données en fonction du client sélectionné
-    };
-
     const handleToggleSidebar = () => {
         setIsToggled(!isToggled);
         document.body.classList.toggle('sidebar-toggled');
     };
-
-    // Créer les options pour React-Select
-    const clientOptions = [
-        { value: '', label: 'All clients' },
-        ...allClients.map(client => ({
-            value: client.id,
-            label: `${client.name} (${client.client_code})`
-        }))
-    ];
 
     // Style personnalisé pour React-Select
     const customSelectStyles = {
@@ -179,7 +148,7 @@ const Sidebar = () => {
 
             <hr className="border-secondary mx-3" />
 
-            {/* Dashboard */}
+            {/* Dashboard - visible to all users */}
             <li className="nav-item">
                 <Link 
                     className={`nav-link d-flex align-items-center px-3 ${isHomePage ? 'active' : ''}`}
@@ -190,77 +159,58 @@ const Sidebar = () => {
                 </Link>
             </li>
             
-            {/* Client Selection avec React-Select */}
-            <li className="nav-item p-3">
-                <div id="client-form">
-                    <label htmlFor="clients-en-cours-select" className="text-white small font-weight-bold mb-2 d-flex align-items-center">
-                        <FontAwesomeIcon icon={faUsers} className="fa-fw mr-2" />
-                        Client Selection
-                    </label>
-                    <Select
-                        id="clients-en-cours-select"
-                        options={clientOptions}
-                        value={selectedClient}
-                        onChange={handleClientChange}
-                        placeholder="Select a client"
-                        isClearable={false}
-                        isSearchable={true}
-                        styles={customSelectStyles}
-                        components={customComponents}
-                        classNamePrefix="react-select"
-                        aria-label="Client selection"
-                    />
-                </div>
-            </li>
-
             <hr className="border-secondary mx-3" />
 
-            {/* Data Management Section */}
-            <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-1 mb-2">Data Management</h6>
+            {/* Data Management Section - only visible for superuser */}
+            {isSuperUser && (
+                <>
+                    <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-1 mb-2">Data Management</h6>
 
-            <li className="nav-item">
-                <Link 
-                    className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/data-pump' ? 'active' : ''}`}
-                    to="/data-pump"
-                >
-                    <FontAwesomeIcon icon={faDatabase} className="fa-fw mr-2" />
-                    <span>Data Pump</span>
-                </Link>
-            </li>
+                    <li className="nav-item">
+                        <Link 
+                            className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/data-pump' ? 'active' : ''}`}
+                            to="/data-pump"
+                        >
+                            <FontAwesomeIcon icon={faDatabase} className="fa-fw mr-2" />
+                            <span>Data Pump</span>
+                        </Link>
+                    </li>
 
-            <li className="nav-item">
-                <Link 
-                    className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/indexing' ? 'active' : ''}`}
-                    to="/indexing"
-                >
-                    <FontAwesomeIcon icon={faLayerGroup} className="fa-fw mr-2" />
-                    <span>Indexing</span>
-                </Link>
-            </li>
-            
-            <li className="nav-item">
-                <a 
-                    className="nav-link d-flex align-items-center px-3"
-                    href="#"
-                    onClick={handleDataCleaning}
-                    style={{ cursor: isLoading ? 'wait' : 'pointer' }}
-                >
-                    <FontAwesomeIcon icon={faEraser} className="fa-fw mr-2" />
-                    <span>{isLoading ? 'Nettoyage en cours...' : 'Data Cleaning'}</span>
-                </a>
-            </li>
+                    <li className="nav-item">
+                        <Link 
+                            className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/indexing' ? 'active' : ''}`}
+                            to="/indexing"
+                        >
+                            <FontAwesomeIcon icon={faLayerGroup} className="fa-fw mr-2" />
+                            <span>Indexing</span>
+                        </Link>
+                    </li>
+                    
+                    <li className="nav-item">
+                        <a 
+                            className="nav-link d-flex align-items-center px-3"
+                            href="#"
+                            onClick={handleDataCleaning}
+                            style={{ cursor: isLoading ? 'wait' : 'pointer' }}
+                        >
+                            <FontAwesomeIcon icon={faEraser} className="fa-fw mr-2" />
+                            <span>{isLoading ? 'Nettoyage en cours...' : 'Data Cleaning'}</span>
+                        </a>
+                    </li>
 
-            <li className="nav-item">
-                <Link 
-                    className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/analysis' ? 'active' : ''}`}
-                    to="/analysis"
-                >
-                    <FontAwesomeIcon icon={faChartLine} className="fa-fw mr-2" />
-                    <span>Analysis</span>
-                </Link>
-            </li>
+                    <li className="nav-item">
+                        <Link 
+                            className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/analysis' ? 'active' : ''}`}
+                            to="/analysis"
+                        >
+                            <FontAwesomeIcon icon={faChartLine} className="fa-fw mr-2" />
+                            <span>Analysis</span>
+                        </Link>
+                    </li>
+                </>
+            )}
 
-            {/* Archives Section */}
+            {/* Archives Section - visible to all users */}
             <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">Archives & Reference</h6>
 
             <li className="nav-item">
@@ -283,18 +233,22 @@ const Sidebar = () => {
                 </Link>
             </li>
 
-            {/* Support Section */}
-            <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">Support</h6>
+            {/* Support Section - only visible for superuser */}
+            {isSuperUser && (
+                <>
+                    <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">Support</h6>
 
-            <li className="nav-item mb-3">
-                <Link 
-                    className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/ticket' ? 'active' : ''}`}
-                    to="/ticket"
-                >
-                    <FontAwesomeIcon icon={faTicketAlt} className="fa-fw mr-2" />
-                    <span>Create a ticket</span>
-                </Link>
-            </li>
+                    <li className="nav-item mb-3">
+                        <Link 
+                            className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/ticket' ? 'active' : ''}`}
+                            to="/ticket"
+                        >
+                            <FontAwesomeIcon icon={faTicketAlt} className="fa-fw mr-2" />
+                            <span>Create a ticket</span>
+                        </Link>
+                    </li>
+                </>
+            )}
 
             {/* Sidebar Toggler */}
             <div className="text-center d-none d-md-inline mt-3">

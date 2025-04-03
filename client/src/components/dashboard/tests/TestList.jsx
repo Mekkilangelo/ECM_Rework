@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faEdit, faArrowLeft, faFlask, faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -19,6 +19,8 @@ const TestList = ({ partId }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [selectedTest, setSelectedTest] = useState(null);
+
+  const testFormRef = useRef(null)
 
   const nextTestNumber = data ? data.length + 1 : 1;
   const nextTestName = `TRIAL - ${nextTestNumber}`;
@@ -192,7 +194,14 @@ const TestList = ({ partId }) => {
       {/* Modal pour créer un essai */}
       <Modal
         show={showCreateForm}
-        onHide={() => setShowCreateForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (testFormRef.current && testFormRef.current.handleCloseRequest) {
+            testFormRef.current.handleCloseRequest();
+          } else {
+            setShowCreateForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -200,6 +209,7 @@ const TestList = ({ partId }) => {
         </Modal.Header>
         <Modal.Body>
           <TestForm
+            ref={testFormRef}
             partId={partId}
             nextTestName={nextTestName}
             onClose={() => setShowCreateForm(false)}
@@ -211,7 +221,14 @@ const TestList = ({ partId }) => {
       {/* Modal pour éditer un essai */}
       <Modal
         show={showEditForm}
-        onHide={() => setShowEditForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (testFormRef.current && testFormRef.current.handleCloseRequest) {
+            testFormRef.current.handleCloseRequest();
+          } else {
+            setShowEditForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -220,6 +237,7 @@ const TestList = ({ partId }) => {
         <Modal.Body>
           {selectedTest && (
             <TestForm
+              ref={testFormRef}
               test={selectedTest}
               partId={partId}
               onClose={() => setShowEditForm(false)}

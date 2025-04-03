@@ -137,7 +137,7 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
         </Row>
         
         <div className="d-flex justify-content-end mt-3">
-          <Button variant="secondary" onClick={onClose} className="me-2">
+          <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
             Annuler
           </Button>
           <Button variant="danger" type="submit" disabled={loading}>

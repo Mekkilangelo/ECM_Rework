@@ -1,7 +1,9 @@
 // src/components/dashboard/parts/PartForm.jsx
-import React, { useState, useCallback } from 'react';
+import React, { forwardRef, useState, useCallback, useImperativeHandle } from 'react';
 import { Modal, Form, Button, Spinner, Alert, Tabs, Tab } from 'react-bootstrap';
 import SteelForm from '../steels/SteelForm';
+import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
+
 
 // Custom hooks
 import usePartForm from './hooks/usePartForm';
@@ -13,7 +15,7 @@ import SpecificationsSection from './sections/SpecificationsSection';
 import PhotosSection from './sections/PhotosSection';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 
-const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
+const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, ref) => {
   // État pour stocker la fonction d'association de fichiers
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
 
@@ -38,7 +40,12 @@ const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
     getHardnessUnitOptions,
     selectStyles,
     refreshSteels,
-    setFileAssociationCallback 
+    setFileAssociationCallback,
+    showConfirmModal,
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
+    saveAndClose,
   } = usePartForm(part, onClose, onPartCreated, onPartUpdated);
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
@@ -47,6 +54,11 @@ const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
       setFileAssociationCallback(fileAssociationMethod);
     }
   }, [fileAssociationMethod, setFileAssociationCallback]);
+
+  // Exposer handleCloseRequest à travers la référence
+  useImperativeHandle(ref, () => ({
+    handleCloseRequest
+  }));
 
   // État pour gérer la modal de création d'acier
   const [showSteelModal, setShowSteelModal] = useState(false);
@@ -169,7 +181,7 @@ const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
           </CollapsibleSection>
           
           <div className="d-flex justify-content-end mt-4">
-            <Button variant="secondary" onClick={onClose} className="me-2">
+            <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
               Annuler
             </Button>
             <Button 
@@ -185,6 +197,17 @@ const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
           </div>
         </Form>
       </div>
+
+      {/* Modal de confirmation pour la fermeture */}
+      <CloseConfirmationModal
+        show={showConfirmModal}
+        onHide={cancelClose}
+        onCancel={cancelClose}
+        onContinue={confirmClose}
+        onSave={saveAndClose}
+        title="Confirmer la fermeture"
+        message="Vous avez des modifications non enregistrées."
+      />
 
       {/* Modal de création d'acier */}
       <Modal 
@@ -205,6 +228,6 @@ const PartForm = ({ part, onClose, onPartCreated, onPartUpdated }) => {
       </Modal>
     </>
   );
-};
+});
 
 export default PartForm;

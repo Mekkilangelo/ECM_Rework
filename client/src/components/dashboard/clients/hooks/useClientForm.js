@@ -1,5 +1,5 @@
 // client\src\components\dashboard\clients\hooks\useClientForm.js
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
 import useFormValidation from './modules/useFormValidation';
@@ -38,6 +38,9 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
     setFetchingClient
   );
 
+  // Stocker les données initiales pour comparer les changements
+  const [initialFormData, setInitialFormData] = useState(null);
+
   // Handlers pour le formulaire
   const {
     handleChange,
@@ -70,11 +73,17 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
     saveAndClose 
   } = useCloseConfirmation(
     formData, 
-    //initialFormData || formData, 
+    initialFormData || formData, 
     handleSubmit, 
     onClose
   );
   
+  // Mettre à jour les données initiales une fois chargées
+  useEffect(() => {
+    if (!fetchingClient && formData && !initialFormData) {
+      setInitialFormData(JSON.parse(JSON.stringify(formData)));
+    }
+  }, [fetchingClient, formData, initialFormData]);
 
   return {
     formData,

@@ -1,6 +1,6 @@
 // usePartForm.js
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
 import useFormHandlers from './modules/useFormHandlers';
@@ -9,6 +9,7 @@ import usePartSubmission from './modules/usePartSubmission';
 import useOptionsData from './modules/useOptionsData';
 import usePartData from './modules/usePartData';
 import useSelectHelpers from './modules/useSelectHelpers';
+import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
 const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
   const { hierarchyState } = useNavigation();
@@ -74,6 +75,9 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     setFetchingPart,
     setParentId
   );
+
+  // Stocker les données initiales pour comparer les changements
+  const [initialFormData, setInitialFormData] = useState(null);
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
@@ -93,6 +97,27 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     fileAssociationCallback
   );
 
+  // Gestion de la confirmation de fermeture
+  const { 
+    showConfirmModal, 
+    pendingClose, 
+    handleCloseRequest, 
+    confirmClose, 
+    cancelClose, 
+    saveAndClose 
+  } = useCloseConfirmation(
+    formData, 
+    initialFormData || formData, 
+    handleSubmit, 
+    onClose
+  );
+
+  useEffect(() => {
+    if (!fetchingPart && formData && !initialFormData) {
+      setInitialFormData(JSON.parse(JSON.stringify(formData)));
+    }
+  }, [fetchingPart, formData, initialFormData]);
+
   return {
     formData,
     errors,
@@ -111,7 +136,15 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     getWeightUnitOptions,
     getHardnessUnitOptions,
     selectStyles,
-    refreshSteels: refreshSteelOptions // Exposer la fonction de rafraîchissement
+    refreshSteels: refreshSteelOptions,
+    setFileAssociationCallback,
+    showConfirmModal,
+    pendingClose,
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
+    saveAndClose,
+    
   };
 };
 

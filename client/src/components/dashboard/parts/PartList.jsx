@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faCog } from '@fortawesome/free-solid-svg-icons';
@@ -20,6 +20,8 @@ const PartList = ({ orderId }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPart, setSelectedPart] = useState(null);
+
+  const partFormRef = useRef(null);
   
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -189,7 +191,14 @@ const PartList = ({ orderId }) => {
       {/* Modal pour créer une pièce */}
       <Modal 
         show={showCreateForm} 
-        onHide={() => setShowCreateForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (partFormRef.current && partFormRef.current.handleCloseRequest) {
+            partFormRef.current.handleCloseRequest();
+          } else {
+            setShowCreateForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -197,6 +206,7 @@ const PartList = ({ orderId }) => {
         </Modal.Header>
         <Modal.Body>
           <PartForm 
+            ref={partFormRef}
             orderId={orderId} 
             onClose={() => setShowCreateForm(false)} 
             onPartCreated={() => refreshData()}
@@ -207,7 +217,14 @@ const PartList = ({ orderId }) => {
       {/* Modal pour éditer une pièce */}
       <Modal 
         show={showEditForm} 
-        onHide={() => setShowEditForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (partFormRef.current && partFormRef.current.handleCloseRequest) {
+            partFormRef.current.handleCloseRequest();
+          } else {
+            setShowCreateForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -216,6 +233,7 @@ const PartList = ({ orderId }) => {
         <Modal.Body>
           {selectedPart && (
             <PartForm
+              ref={partFormRef}
               part={selectedPart} 
               orderId={orderId} 
               onClose={() => setShowEditForm(false)} 

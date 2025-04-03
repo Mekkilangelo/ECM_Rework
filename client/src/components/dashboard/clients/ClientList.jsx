@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faTrash, faEdit, faBuilding } from '@fortawesome/free-solid-svg-icons';
@@ -22,6 +22,7 @@ const ClientList = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   
+  const clientFormRef = useRef(null);
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   const isUserRole = user && user.role === 'user';
   
@@ -182,14 +183,22 @@ const ClientList = () => {
       {/* Modal pour créer un client */}
       <Modal 
         show={showCreateForm} 
-        onHide={() => setShowCreateForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (clientFormRef.current && clientFormRef.current.handleCloseRequest) {
+            clientFormRef.current.handleCloseRequest();
+          } else {
+            setShowCreateForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>Nouveau client</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ClientForm 
+          <ClientForm
+            ref={clientFormRef} 
             onClose={() => setShowCreateForm(false)} 
             onClientCreated={() => refreshData()}
           />
@@ -199,7 +208,14 @@ const ClientList = () => {
       {/* Modal pour éditer un client */}
       <Modal 
         show={showEditForm} 
-        onHide={() => setShowEditForm(false)}
+        onHide={() => {
+          // On utilise maintenant handleCloseRequest au lieu de fermer directement
+          if (clientFormRef.current && clientFormRef.current.handleCloseRequest) {
+            clientFormRef.current.handleCloseRequest();
+          } else {
+            setShowCreateForm(false);
+          }
+        }}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -208,6 +224,7 @@ const ClientList = () => {
         <Modal.Body>
           {selectedClient && (
             <ClientForm 
+              ref={clientFormRef}
               client={selectedClient}
               onClose={() => setShowEditForm(false)} 
               onClientUpdated={() => refreshData()}

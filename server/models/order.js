@@ -13,7 +13,9 @@ module.exports = (sequelize) => {
     },
     order_number: {
       type: DataTypes.STRING(50),
-      unique: true,
+      unique: {
+        name: 'unique_order_number'
+      },
       allowNull: true
     },
     order_date: {
@@ -30,7 +32,14 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'orders',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ['order_number'],
+        name: 'unique_order_number'
+      }
+    ]
   });
 
   Order.associate = function(models) {

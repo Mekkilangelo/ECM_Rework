@@ -2,7 +2,7 @@ const useFormValidation = (formData, parentId, setErrors) => {
     const validate = () => {
       const newErrors = {};
       
-      if (!formData.name.trim()) newErrors.name = 'Le nom est requis';
+      if (!formData.designation.trim()) newErrors.designation = 'La désignation est requise';
       if (!parentId) newErrors.parent = 'Commande parente non identifiée';
       
       setErrors(newErrors);

@@ -31,6 +31,8 @@ const useTestSubmission = (
   const initialFormState = {
     name: '',
     location: '',
+    loadNumber: '',
+    testDate: '',
     status: '',
     description: '',
     mountingType: '',
@@ -74,14 +76,10 @@ const useTestSubmission = (
     quenchData: {
       gasQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
       gasQuenchPressure: [{ step: 1, duration: '', pressure: '' }],
-      gasToleranceMin: '',
-      gasToleranceMax: '',
       oilQuenchSpeed: [{ step: 1, duration: '', speed: '' }],
       oilTemperature: '',
       oilTempUnit: '',
-      oilToleranceMin: '',
-      oilToleranceMax: '',
-      oilPressure: '',
+      oilInertingPressure: '',
       oilInertingDelay: '',
       oilInertingDelayUnit: '',
       oilDrippingTime: '',
@@ -93,6 +91,8 @@ const useTestSubmission = (
         description: '',
         hardnessPoints: [{ location: '', value: '', unit: '' }],
         ecd: {
+          hardnessValue: '',
+          hardnessUnit: '',
           toothFlank: { distance: '', unit: '' },
           toothRoot: { distance: '', unit: '' }
         },
@@ -222,11 +222,7 @@ const useTestSubmission = (
     const quenchData = {
       gas_quench: {
         speed_parameters: gasQuenchSpeedData,
-        pressure_parameters: gasQuenchPressureData,
-        tolerance: {
-          min: formData.quenchData.gasToleranceMin || null,
-          max: formData.quenchData.gasToleranceMax || null
-        }
+        pressure_parameters: gasQuenchPressureData
       },
       oil_quench: {
         speed_parameters: oilQuenchSpeedData,
@@ -234,11 +230,7 @@ const useTestSubmission = (
           value: formData.quenchData.oilTemperature || null,
           unit: formData.quenchData.oilTempUnit || null
         },
-        tolerance: {
-          min: formData.quenchData.oilToleranceMin || null,
-          max: formData.quenchData.oilToleranceMax || null
-        },
-        pressure: formData.quenchData.oilPressure || null,
+        pressure: formData.quenchData.oilInertingPressure || null,
         inerting_delay: {
           value: formData.quenchData.oilInertingDelay || null,
           unit: formData.quenchData.oilInertingDelayUnit || null
@@ -270,6 +262,8 @@ const useTestSubmission = (
           
           // Formatage des données ECD
           const ecdData = result.ecd ? {
+            hardness_value: result.ecd.hardnessValue || null,
+            hardness_unit: result.ecd.hardnessUnit || null,
             tooth_flank: {
               distance: result.ecd.toothFlank?.distance || null,
               unit: result.ecd.toothFlank?.unit || null
@@ -295,6 +289,8 @@ const useTestSubmission = (
       name: formData.name,
       location: formData.location || null,
       status: formData.status || null,
+      load_number: formData.loadNumber || null,
+      test_date: formData.testDate || null,
       description: formData.description || null,
       mounting_type: formData.mountingType || null,
       position_type: formData.positionType || null,

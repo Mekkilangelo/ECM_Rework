@@ -95,8 +95,6 @@ const useFormState = () => {
           pressure: ''
         }
       ],
-      gasToleranceMin: '',
-      gasToleranceMax: '',
       
       // Trempe à l'huile (tableau dynamique)
       oilQuenchSpeed: [
@@ -108,9 +106,7 @@ const useFormState = () => {
       ],
       oilTemperature: '',
       oilTempUnit: '',
-      oilToleranceMin: '',
-      oilToleranceMax: '',
-      oilPressure: '',
+      oilInertingPressure: '',
       oilInertingDelay: '',
       oilInertingDelayUnit: '',
       oilDrippingTime: '',
@@ -131,6 +127,8 @@ const useFormState = () => {
             }
           ],
           ecd: {
+            hardnessValue: '',
+            hardnessUnit: '',
             toothFlank: {
               distance: '',
               unit: ''

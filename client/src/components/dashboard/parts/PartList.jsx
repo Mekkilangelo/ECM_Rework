@@ -90,8 +90,9 @@ const PartList = ({ orderId }) => {
           <Table hover responsive className="data-table border-bottom">
             <thead>
               <tr className="bg-light">
-                <th style={{ width: '25%' }}>Nom de la pièce</th>
-                <th className="text-center">Désignation</th>
+                <th style={{ width: '10%' }}>Désignation</th>
+                <th className="text-center">Désignation client</th>
+                <th className="text-center">Référence</th>
                 <th className="text-center">Acier</th>
                 <th className="text-center">Modifié le</th>
                 <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
@@ -115,7 +116,8 @@ const PartList = ({ orderId }) => {
                     </div>
                   </td>
                   {/* Accédez à part.Part pour les propriétés spécifiques */}
-                  <td className="text-center">{part.Part?.designation || "-"}</td>
+                  <td className="text-center">{part.Part?.client_designation || "-"}</td>
+                  <td className="text-center">{part.Part?.reference || "-"}</td>
                   <td className="text-center">{part.Part?.steel || "-"}</td>
                   <td className="text-center">
                     {part.modified_at 

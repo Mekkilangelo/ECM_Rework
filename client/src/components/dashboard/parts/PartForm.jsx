@@ -1,9 +1,7 @@
-// src/components/dashboard/parts/PartForm.jsx
 import React, { forwardRef, useState, useCallback, useImperativeHandle } from 'react';
-import { Modal, Form, Button, Spinner, Alert, Tabs, Tab } from 'react-bootstrap';
+import { Modal, Form, Button, Spinner } from 'react-bootstrap';
 import SteelForm from '../steels/SteelForm';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
-
 
 // Custom hooks
 import usePartForm from './hooks/usePartForm';
@@ -12,17 +10,17 @@ import usePartForm from './hooks/usePartForm';
 import BasicInfoSection from './sections/BasicInfoSection';
 import DimensionsSection from './sections/DimensionsSection';
 import SpecificationsSection from './sections/SpecificationsSection';
+import SteelSection from './sections/SteelSection';
 import PhotosSection from './sections/PhotosSection';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 
 const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, ref) => {
   // État pour stocker la fonction d'association de fichiers
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
-
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
     setFileAssociationMethod(() => associateFilesFunc);
   }, []);
-  
+
   const {
     formData,
     errors,
@@ -62,17 +60,17 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
 
   // État pour gérer la modal de création d'acier
   const [showSteelModal, setShowSteelModal] = useState(false);
-  
+
   // Fonction pour ouvrir la modal d'acier
   const handleOpenSteelModal = () => {
     setShowSteelModal(true);
   };
-  
+
   // Fonction pour fermer la modal d'acier
   const handleCloseSteelModal = () => {
     setShowSteelModal(false);
   };
-  
+
   // Fonction appelée lorsqu'un nouvel acier est créé
   const handleSteelCreated = async (newSteel) => {
     // Fermez la modal
@@ -86,7 +84,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
     // Sélectionner automatiquement le nouvel acier
     if (newSteel && newSteel.grade) {
       handleSelectChange(
-        { value: newSteel.grade, label: `${newSteel.grade} (${newSteel.standard || ''})` }, 
+        { value: newSteel.grade, label: `${newSteel.grade} (${newSteel.standard || ''})` },
         { name: 'steel' }
       );
     }
@@ -112,8 +110,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
         )}
         
         <Form onSubmit={handleSubmit} autoComplete="off">
-          <CollapsibleSection 
-            title="Informations de base" 
+          <CollapsibleSection
+            title="Informations de base"
             isExpandedByDefault={true}
             sectionId="part-basic-info"
             rememberState={true}
@@ -130,8 +128,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             />
           </CollapsibleSection>
           
-          <CollapsibleSection 
-            title="Dimensions" 
+          <CollapsibleSection
+            title="Dimensions"
             isExpandedByDefault={false}
             sectionId="part-dimensions"
             rememberState={true}
@@ -148,8 +146,26 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             />
           </CollapsibleSection>
           
-          <CollapsibleSection 
-            title="Spécifications" 
+          {/* Nouvelle section pour l'acier */}
+          <CollapsibleSection
+            title="Acier"
+            isExpandedByDefault={false}
+            sectionId="part-steel"
+            rememberState={true}
+          >
+            <SteelSection
+              formData={formData}
+              handleSelectChange={handleSelectChange}
+              getSelectedOption={getSelectedOption}
+              steelOptions={steelOptions}
+              loading={loading}
+              selectStyles={selectStyles}
+              onOpenSteelModal={handleOpenSteelModal}
+            />
+          </CollapsibleSection>
+          
+          <CollapsibleSection
+            title="Spécifications"
             isExpandedByDefault={false}
             sectionId="part-specifications"
             rememberState={true}
@@ -159,17 +175,15 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
               getSelectedOption={getSelectedOption}
-              steelOptions={steelOptions}
               getHardnessUnitOptions={getHardnessUnitOptions}
               loading={loading}
               selectStyles={selectStyles}
-              onOpenSteelModal={handleOpenSteelModal}
             />
           </CollapsibleSection>
           
           {/* Section de photos */}
-          <CollapsibleSection 
-            title="Photos de la pièce" 
+          <CollapsibleSection
+            title="Photos de la pièce"
             isExpandedByDefault={false}
             sectionId="part-photos"
             rememberState={true}
@@ -184,20 +198,20 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
               Annuler
             </Button>
-            <Button 
-              variant="primary" 
-              type="submit" 
+            <Button
+              variant="primary"
+              type="submit"
               disabled={loading}
             >
-              {loading 
-                ? (part ? 'Modification en cours...' : 'Création en cours...') 
+              {loading
+                ? (part ? 'Modification en cours...' : 'Création en cours...')
                 : (part ? 'Modifier' : 'Créer')
               }
             </Button>
           </div>
         </Form>
       </div>
-
+      
       {/* Modal de confirmation pour la fermeture */}
       <CloseConfirmationModal
         show={showConfirmModal}
@@ -208,19 +222,19 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
         title="Confirmer la fermeture"
         message="Vous avez des modifications non enregistrées."
       />
-
+      
       {/* Modal de création d'acier */}
-      <Modal 
-        show={showSteelModal} 
-        onHide={handleCloseSteelModal} 
-        size="lg" 
+      <Modal
+        show={showSteelModal}
+        onHide={handleCloseSteelModal}
+        size="lg"
         backdrop="static"
       >
         <Modal.Header closeButton>
           <Modal.Title>Ajouter un nouvel acier</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <SteelForm 
+          <SteelForm
             onClose={handleCloseSteelModal}
             onSteelCreated={handleSteelCreated}
           />

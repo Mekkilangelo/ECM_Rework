@@ -46,12 +46,18 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'nodes',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        fields: ['parent_id'],
+        name: 'idx_parent_id'
+      }
+    ]
   });
 
   Node.associate = function(models) {
     Node.hasMany(models.Node, { as: 'children', foreignKey: 'parent_id' });
-    Node.belongsTo(models.Node, { as: 'parent', foreignKey: 'parent_id' });
+    Node.belongsTo(models.Node, { as: 'parent', foreignKey: { name: 'parent_id', allowNull: true }, onDelete: 'SET NULL', onUpdate: 'CASCADE' });
     
     // Associations avec les tables spécifiques
     Node.hasOne(models.Client, { foreignKey: 'node_id' });

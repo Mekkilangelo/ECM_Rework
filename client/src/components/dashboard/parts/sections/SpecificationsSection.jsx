@@ -1,19 +1,15 @@
 import React from 'react';
-import { Form, Button, InputGroup } from 'react-bootstrap';
+import { Form, InputGroup } from 'react-bootstrap';
 import Select from 'react-select';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const SpecificationsSection = ({
   formData,
   handleChange,
   handleSelectChange,
   getSelectedOption,
-  steelOptions,
   getHardnessUnitOptions,
   loading,
-  selectStyles,
-  onOpenSteelModal
+  selectStyles
 }) => {
   // Style compact pour les Select
   const compactSelectStyles = {
@@ -38,7 +34,7 @@ const SpecificationsSection = ({
       fontSize: '0.9rem',
     }),
     singleValue: (provided) => ({
-      ...provided, 
+      ...provided,
       fontSize: '0.9rem',
     }),
     indicatorsContainer: (provided) => ({
@@ -51,7 +47,6 @@ const SpecificationsSection = ({
     <>
       {/* Section Duretés */}
       <h6 className="text-muted mb-2">Spécifications de dureté</h6>
-      
       {/* Dureté à cœur */}
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
@@ -100,7 +95,6 @@ const SpecificationsSection = ({
           />
         </div>
       </div>
-      
       {/* Dureté en surface */}
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
@@ -149,7 +143,6 @@ const SpecificationsSection = ({
           />
         </div>
       </div>
-      
       {/* Nouveau: Dureté PdD */}
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
@@ -198,7 +191,6 @@ const SpecificationsSection = ({
           />
         </div>
       </div>
-      
       {/* ECD */}
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
@@ -256,53 +248,6 @@ const SpecificationsSection = ({
               isLoading={loading}
             />
           </InputGroup>
-        </div>
-      </div>
-      
-      {/* Acier et Description */}
-      <div className="row g-2">
-        <div className="col-md-6">
-          <Form.Group>
-            <Form.Label className="small">Acier</Form.Label>
-            <div className="d-flex">
-              <div className="flex-grow-1 me-2">
-                <Select
-                  name="steel"
-                  value={getSelectedOption(steelOptions, formData.steel)}
-                  onChange={(option) => handleSelectChange(option, { name: 'steel' })}
-                  options={steelOptions}
-                  isClearable
-                  styles={compactSelectStyles}
-                  placeholder="Sélectionner un acier"
-                  className="react-select-container"
-                  classNamePrefix="react-select"
-                  isLoading={loading}
-                />
-              </div>
-              <Button 
-                variant="outline-primary"
-                onClick={onOpenSteelModal}
-                title="Ajouter un nouvel acier"
-                size="sm"
-                className="align-self-center"
-              >
-                <FontAwesomeIcon icon={faPlus} />
-              </Button>
-            </div>
-          </Form.Group>
-        </div>
-        <div className="col-md-6">
-          <Form.Group>
-            <Form.Label className="small">Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={2}
-              size="sm"
-            />
-          </Form.Group>
         </div>
       </div>
     </>

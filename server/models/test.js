@@ -15,6 +15,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    load_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
     test_date: {
       type: DataTypes.DATEONLY,
       allowNull: true

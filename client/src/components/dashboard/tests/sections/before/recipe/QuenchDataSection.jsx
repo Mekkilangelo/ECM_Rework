@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Form, Card } from 'react-bootstrap';
+import { Row, Col, Form, Card, Tabs, Tab } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWind, faOilCan } from '@fortawesome/free-solid-svg-icons';
 import GasQuenchSection from './quench/GasQuenchSection';
 import OilQuenchSection from './quench/OilQuenchSection';
-import './QuenchDataSection.css';
 
 const QuenchDataSection = ({ 
   formData, 
@@ -23,9 +22,9 @@ const QuenchDataSection = ({
   loading, 
   selectStyles 
 }) => {
-  const [quenchType, setQuenchType] = useState('gas'); // 'gas' or 'oil'
+  const [quenchType, setQuenchType] = useState('gas'); // 'gas' ou 'oil'
   
-  // Update quench type in the form data
+  // Mettre à jour le type de trempe dans les données du formulaire
   useEffect(() => {
     handleChange({
       target: {
@@ -35,35 +34,31 @@ const QuenchDataSection = ({
     });
   }, [quenchType]);
 
-  const handleToggleChange = (event) => {
-    setQuenchType(event.target.checked ? 'oil' : 'gas');
+  // Fonction pour gérer le changement d'onglet
+  const handleTabChange = (key) => {
+    setQuenchType(key);
   };
 
+  // Fonction pour rendre les titres d'onglets avec mise en gras pour l'onglet actif
+  const renderTabTitle = (title, icon, eventKey) => (
+    <span className={quenchType === eventKey ? 'font-weight-bold' : ''}>
+      <FontAwesomeIcon icon={icon} className="mr-2" /> {title}
+    </span>
+  );
+
   return (
-    <>
-      <div className="quench-toggle-container">
-        <span className={`toggle-label ${quenchType === 'gas' ? 'active' : ''}`}>
-          <FontAwesomeIcon icon={faWind} className="mr-2" />
-          Gaz
-        </span>
-        
-        <label className="toggle-switch">
-          <input
-            type="checkbox"
-            checked={quenchType === 'oil'}
-            onChange={handleToggleChange}
-          />
-          <span className="toggle-slider"></span>
-        </label>
-        
-        <span className={`toggle-label ${quenchType === 'oil' ? 'active' : ''}`}>
-          <FontAwesomeIcon icon={faOilCan} className="mr-2" />
-          Huile
-        </span>
-      </div>
-      <div className="quench-content-container">
-        {quenchType === 'gas' ? (
-          <div className="fade-in">
+    <div className="quench-data-container">
+      <Tabs
+        activeKey={quenchType}
+        onSelect={handleTabChange}
+        className="mb-4 mt-2"
+        id="quench-type-tabs"
+      >
+        <Tab 
+          eventKey="gas" 
+          title={renderTabTitle("Gaz", faWind, "gas")}
+        >
+          <div className="fade-in tab-content-container">
             <GasQuenchSection
               formData={formData}
               handleChange={handleChange}
@@ -77,8 +72,12 @@ const QuenchDataSection = ({
               selectStyles={selectStyles}
             />
           </div>
-        ) : (
-          <div className="fade-in">
+        </Tab>
+        <Tab 
+          eventKey="oil" 
+          title={renderTabTitle("Huile", faOilCan, "oil")}
+        >
+          <div className="fade-in tab-content-container">
             <OilQuenchSection
               formData={formData}
               handleChange={handleChange}
@@ -92,9 +91,9 @@ const QuenchDataSection = ({
               selectStyles={selectStyles}
             />
           </div>
-        )}
-      </div>
-    </>
+        </Tab>
+      </Tabs>
+    </div>
   );
 };
 

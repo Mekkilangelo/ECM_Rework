@@ -14,7 +14,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
   return (
     <>
       <CollapsibleSection 
-        title="Types de test" 
+        title="Type de test" 
         isExpandedByDefault={true}
         sectionId="test-type"
         rememberState={false}

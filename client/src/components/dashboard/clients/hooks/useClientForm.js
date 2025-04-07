@@ -1,7 +1,7 @@
 // client\src\components\dashboard\clients\hooks\useClientForm.js
 import { useState, useEffect } from 'react';
 import useFormState from './modules/useFormState';
-import useFormHandlers from './modules/useFormHandlers';
+import useClientHandlers from './modules/useClientHandlers';
 import useFormValidation from './modules/useFormValidation';
 import useOptionsFetcher from './modules/useOptionsFetcher';
 import useClientSubmission from './modules/useClientSubmission';
@@ -45,7 +45,7 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
   const {
     handleChange,
     handleSelectChange
-  } = useFormHandlers(formData, setFormData, errors, setErrors);
+  } = useClientHandlers(formData, setFormData, errors, setErrors);
 
   // Validation du formulaire
   const { validate } = useFormValidation(formData, setErrors);

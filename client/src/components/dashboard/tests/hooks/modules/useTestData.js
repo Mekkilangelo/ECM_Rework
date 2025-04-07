@@ -50,6 +50,8 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           setFormData({
             // Basic information
             name: data.test_code || '',
+            loadNumber: data.load_number || '',
+            testDate: data.test_date || '',
             location: data.location || '',
             status: data.status || '',
             description: testData.description || '',
@@ -142,9 +144,6 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                   }))
                 : [{ step: 1, duration: '', pressure: '' }],
               
-              gasToleranceMin: quenchData.gas_quench?.tolerance?.min || '',
-              gasToleranceMax: quenchData.gas_quench?.tolerance?.max || '',
-              
               // Oil quench (dynamic array)
               oilQuenchSpeed: Array.isArray(quenchData.oil_quench?.speed_parameters) && quenchData.oil_quench?.speed_parameters.length > 0
                 ? quenchData.oil_quench.speed_parameters.map((param, index) => ({
@@ -156,9 +155,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
               
               oilTemperature: quenchData.oil_quench?.temperature?.value || '',
               oilTempUnit: quenchData.oil_quench?.temperature?.unit || '',
-              oilToleranceMin: quenchData.oil_quench?.tolerance?.min || '',
-              oilToleranceMax: quenchData.oil_quench?.tolerance?.max || '',
-              oilPressure: quenchData.oil_quench?.pressure || '',
+              oilInertingPressure: quenchData.oil_quench?.inerting_pressure || '',
               oilInertingDelay: quenchData.oil_quench?.inerting_delay?.value || '',
               oilInertingDelayUnit: quenchData.oil_quench?.inerting_delay?.unit || '',
               oilDrippingTime: quenchData.oil_quench?.dripping_time?.value || '',
@@ -179,6 +176,8 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                         }))
                       : [{ location: '', value: '', unit: '' }],
                     ecd: {
+                      hardnessValue: result.ecd?.hardness_value || '',
+                      hardnessUnit: result.ecd?.hardness_unit || '',
                       toothFlank: { 
                         distance: result.ecd?.tooth_flank?.distance || '', 
                         unit: result.ecd?.tooth_flank?.unit || '' 
@@ -195,6 +194,8 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                     description: '',
                     hardnessPoints: [{ location: '', value: '', unit: '' }],
                     ecd: {
+                      hardnessValue: '',
+                      hardnessUnit: '',
                       toothFlank: { distance: '', unit: '' },
                       toothRoot: { distance: '', unit: '' }
                     },

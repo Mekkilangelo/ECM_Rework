@@ -158,36 +158,6 @@ const GasQuenchSection = ({
           <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter une étape
         </Button>
       </div>
-      
-      <h5 className="mt-4 mb-2">Autres paramètres de trempe au gaz</h5>
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Tolérance minimum</Form.Label>
-            <Form.Control
-              type="number"
-              name="quenchData.gasToleranceMin"
-              value={formData.quenchData?.gasToleranceMin || ''}
-              onChange={handleChange}
-              step="0.1"
-              disabled={loading}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Tolérance maximum</Form.Label>
-            <Form.Control
-              type="number"
-              name="quenchData.gasToleranceMax"
-              value={formData.quenchData?.gasToleranceMax || ''}
-              onChange={handleChange}
-              step="0.1"
-              disabled={loading}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
     </>
   );
 };

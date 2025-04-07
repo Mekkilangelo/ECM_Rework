@@ -87,7 +87,7 @@ exports.getTestById = async (req, res) => {
 exports.createTest = async (req, res) => {
   try {
     const { 
-       
+      load_number,
       test_date, 
       status,
       location,
@@ -137,7 +137,8 @@ exports.createTest = async (req, res) => {
       await Test.create({
         node_id: newNode.id,
         test_code,
-        test_date: test_date || new Date(),
+        test_date: test_date || null,
+        load_number: load_number || null,
         status: status || 'planned',
         location,
         is_mesured,
@@ -198,7 +199,8 @@ exports.updateTest = async (req, res) => {
     const { 
       name, 
       test_code, 
-      test_date, 
+      test_date,
+      load_number, 
       status,
       location,
       is_mesured,
@@ -275,7 +277,8 @@ exports.updateTest = async (req, res) => {
       // Mettre à jour les données du test
       const testData = {};
       if (test_code) testData.test_code = test_code;
-      if (test_date) testData.test_date = test_date;
+      testData.test_date = test_date;
+      if (load_number) testData.load_number = load_number;
       if (status) testData.status = status;
       if (location !== undefined) testData.location = location;
       if (is_mesured !== undefined) testData.is_mesured = is_mesured;

@@ -11,7 +11,9 @@ module.exports = (sequelize) => {
     username: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: true
+      unique: {
+        name: 'unique_username'
+      },
     },
     password_hash: {
       type: DataTypes.STRING(255),
@@ -41,7 +43,14 @@ module.exports = (sequelize) => {
           user.password_hash = await bcrypt.hash(user.password_hash, salt);
         }
       }
-    }
+    },
+    indexes: [
+      {
+        unique: true,
+        fields: ['username'],
+        name: 'unique_username'
+      }
+    ]
   });
 
   User.prototype.validatePassword = async function(password) {

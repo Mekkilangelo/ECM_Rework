@@ -15,6 +15,14 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('Pinion', 'InGear', 'OutGear', 'Ring'),
       allowNull: true
     },
+    client_designation: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    reference: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
     dimensions: {
       type: DataTypes.JSON,
       allowNull: true

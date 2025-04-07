@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Row, Col, Form } from 'react-bootstrap';
 import Select from 'react-select';
@@ -17,21 +16,31 @@ const BasicInfoSection = ({
   return (
     <>
       <Row>
-        {/* <Col md={4}>
+        <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Nom <span className="text-danger">*</span></Form.Label>
+            <Form.Label>Numéro de charge</Form.Label>
             <Form.Control
               type="text"
-              name="name"
-              value={formData.name}
+              name="loadNumber"
+              value={formData.loadNumber || ''}
               onChange={handleChange}
-              isInvalid={!!errors.name}
             />
-            <Form.Control.Feedback type="invalid">
-              {errors.name}
-            </Form.Control.Feedback>
           </Form.Group>
-        </Col> */}
+        </Col>
+        <Col md={6}>
+          <Form.Group className="mb-3">
+            <Form.Label>Date de l'essai</Form.Label>
+            <Form.Control
+              type="date"
+              name="testDate"
+              value={formData.testDate || ''}
+              onChange={handleChange}
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+      
+      <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>Localisation</Form.Label>
@@ -75,7 +84,7 @@ const BasicInfoSection = ({
             <Form.Control
               as="textarea"
               name="description"
-              value={formData.description}
+              value={formData.description || ''}
               onChange={handleChange}
               rows={3}
             />

@@ -1,0 +1,18 @@
+{
+    "common": {
+      "add": "Ajouter",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "loading": "Chargement..."
+    },
+    "clients": {
+      "title": "Clients",
+      "form": {
+        "name": "Nom",
+        "country": "Pays",
+        "code": "Code client"
+      }
+    }
+  }

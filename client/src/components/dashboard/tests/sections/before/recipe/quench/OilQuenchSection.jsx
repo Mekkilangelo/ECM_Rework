@@ -121,11 +121,11 @@ const OilQuenchSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Pression d'huile</Form.Label>
+            <Form.Label>Pression d'inertage</Form.Label>
             <Form.Control
               type="number"
-              name="quenchData.oilPressure"
-              value={formData.quenchData?.oilPressure || ''}
+              name="quenchData.oilInertingPressure"
+              value={formData.quenchData?.oilInertingPressure || ''}
               onChange={handleChange}
               step="0.1"
               disabled={loading}
@@ -133,36 +133,6 @@ const OilQuenchSection = ({
           </Form.Group>
         </Col>
       </Row>
-      
-      <Row>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Tolérance minimum</Form.Label>
-            <Form.Control
-              type="number"
-              name="quenchData.oilToleranceMin"
-              value={formData.quenchData?.oilToleranceMin || ''}
-              onChange={handleChange}
-              step="0.1"
-              disabled={loading}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>Tolérance maximum</Form.Label>
-            <Form.Control
-              type="number"
-              name="quenchData.oilToleranceMax"
-              value={formData.quenchData?.oilToleranceMax || ''}
-              onChange={handleChange}
-              step="0.1"
-              disabled={loading}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-      
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">

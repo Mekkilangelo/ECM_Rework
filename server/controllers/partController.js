@@ -29,7 +29,7 @@ exports.getParts = async (req, res) => {
       where: whereCondition,
       include: [{
         model: Part,
-        attributes: ['designation', 'dimensions', 'specifications', 'steel']
+        attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference']
       }],
       order: [['modified_at', 'DESC']],
       limit: parseInt(limit),
@@ -85,7 +85,9 @@ exports.getPartById = async (req, res) => {
  */
 exports.createPart = async (req, res) => {
   try {
-    const { name, parent_id, designation, dimensions, specifications, steel, description } = req.body;
+    const { parent_id, designation, dimensions, specifications, steel, description, clientDesignation, reference } = req.body;
+
+    const name = req.body.designation || null;
     
     // Validation des données
     if (!name || !parent_id) {
@@ -122,7 +124,9 @@ exports.createPart = async (req, res) => {
         designation,
         dimensions,
         specifications,
-        steel
+        steel,
+        client_designation: clientDesignation,
+        reference
       }, { transaction: t });
       
       // Créer l'entrée de fermeture (auto-relation)
@@ -170,7 +174,9 @@ exports.createPart = async (req, res) => {
 exports.updatePart = async (req, res) => {
   try {
     const { partId } = req.params;
-    const { name, designation, dimensions, specifications, steel } = req.body;
+    const { designation, dimensions, specifications, steel, description, clientDesignation, reference } = req.body;
+
+    const name = req.body.designation || null;
     
     const node = await Node.findOne({
       where: { id: partId, type: 'part' },
@@ -192,7 +198,8 @@ exports.updatePart = async (req, res) => {
         await node.update({
           name,
           path: newPath,
-          modified_at: new Date()
+          modified_at: new Date(),
+          description
         }, { transaction: t });
         
         // Si le nom a changé, mettre à jour les chemins des descendants
@@ -214,7 +221,8 @@ exports.updatePart = async (req, res) => {
       } else {
         // Juste mettre à jour la date de modification
         await node.update({
-          modified_at: new Date()
+          modified_at: new Date(),
+          description
         }, { transaction: t });
       }
       
@@ -224,6 +232,8 @@ exports.updatePart = async (req, res) => {
       if (dimensions) partData.dimensions = dimensions;
       if (specifications) partData.specifications = specifications;
       if (steel) partData.steel = steel;
+      if (clientDesignation) partData.client_designation = clientDesignation;
+      if (reference) partData.reference = reference;
       
       if (Object.keys(partData).length > 0) {
         await Part.update(partData, {

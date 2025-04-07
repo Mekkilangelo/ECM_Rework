@@ -31,6 +31,8 @@ const usePartSubmission = (
   const initialFormState = {
     name: '',
     designation: '',
+    clientDesignation: '',
+    reference: '',
     length: '',
     width: '',
     height: '',
@@ -98,6 +100,8 @@ const usePartSubmission = (
       parent_id: parentId,
       name: formData.name,
       designation: formData.designation,
+      clientDesignation: formData.clientDesignation,
+      reference: formData.reference,
       dimensions,
       specifications,
       steel: formData.steel,

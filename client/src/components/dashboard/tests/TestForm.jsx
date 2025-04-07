@@ -1,4 +1,4 @@
-import React, { useState, useCallback, forwardRef } from 'react';
+import React, { useState, useCallback, forwardRef, useEffect } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import useTestForm from './hooks/useTestForm';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
@@ -35,8 +35,15 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
     ...formHandlers
   } = useTestForm( test, onClose, onTestCreated, onTestUpdated);
 
+  // Fonction pour rendre les titres d'onglets avec mise en gras pour l'onglet actif
+  const renderTabTitle = (title, eventKey) => (
+    <span className={activeTab === eventKey ? 'font-weight-bold' : ''}>
+      {title}
+    </span>
+  );
+
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
-  React.useEffect(() => {
+  useEffect(() => {
     if (setFileAssociationCallback) {
       setFileAssociationCallback(fileAssociationMethod);
     }
@@ -102,7 +109,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
               className="mb-4 mt-4"
               id="test-form-tabs"
             >
-              <Tab eventKey="before" title="Before">
+              <Tab eventKey="before" title={renderTabTitle("Before", "before")}>
                 <BeforeTabContent 
                   formData={formData}
                   errors={errors}
@@ -112,7 +119,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   handleFileAssociationNeeded={handleFileAssociationNeeded}
                 />
               </Tab>
-              <Tab eventKey="after" title="After">
+              <Tab eventKey="after" title={renderTabTitle("After", "after")}>
                 <AfterTabContent 
                   formData={formData}
                   errors={errors}
@@ -122,7 +129,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   handleFileAssociationNeeded={handleFileAssociationNeeded}
                 />
               </Tab>
-              <Tab eventKey="report" title="Report">
+              <Tab eventKey="report" title={renderTabTitle("Report", "report")}>
                 <ReportTabContent 
                   testId={test.id}
                 />

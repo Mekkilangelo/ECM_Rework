@@ -13,7 +13,9 @@ module.exports = (sequelize) => {
     },
     client_code: {
       type: DataTypes.STRING(50),
-      unique: true,
+      unique: {
+        name: 'unique_client_code'
+      },
       allowNull: true
     },
     city: {
@@ -34,7 +36,14 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'clients',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ['client_code'],
+        name: 'unique_client_code'
+      }
+    ]
   });
 
   Client.associate = function(models) {

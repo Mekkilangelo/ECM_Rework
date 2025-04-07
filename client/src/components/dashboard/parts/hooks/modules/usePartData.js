@@ -31,6 +31,9 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
           setFormData({
             name: partData.name || '',
             designation: data.designation || '',
+            clientDesignation: data.client_designation || '',
+            reference: data.reference || '',
+            description: partData.description || '',
             // Dimensions
             length: dimensions.rectangular?.length || '',
             width: dimensions.rectangular?.width || '',
@@ -56,7 +59,6 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             ecdHardness: specifications.ecd?.hardness || '',
             ecdHardnessUnit: specifications.ecd?.unit || '',
             steel: data.steel || '',
-            description: partData.description || ''
           });
           
           // Conserver parentId pour permettre l'édition

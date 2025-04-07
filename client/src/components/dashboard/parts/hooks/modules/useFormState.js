@@ -5,6 +5,9 @@ const useFormState = () => {
   const [formData, setFormData] = useState({
     name: '',
     designation: '',
+    clientDesignation: '',
+    reference: '',
+    description: '',
     // Dimensions
     length: '',
     width: '',
@@ -29,8 +32,7 @@ const useFormState = () => {
     ecdDepthMax: '',
     ecdHardness: '',
     ecdHardnessUnit: '',
-    steel: '',
-    description: ''
+    steel: ''
   });
   
   // États pour les options des select

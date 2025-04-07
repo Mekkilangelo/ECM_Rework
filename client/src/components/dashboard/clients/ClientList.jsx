@@ -106,8 +106,8 @@ const ClientList = () => {
                     </div>
                   </td>
                   <td className="text-center">{client.Client?.client_group || "-"}</td>
-                  <td className="text-center">{client.Client?.city || "-"}</td>
                   <td className="text-center">{client.Client?.country || "-"}</td>
+                  <td className="text-center">{client.Client?.city || "-"}</td>
                   <td className="text-center">
                     {client.modified_at 
                       ? new Date(client.modified_at).toLocaleString('fr-FR', {

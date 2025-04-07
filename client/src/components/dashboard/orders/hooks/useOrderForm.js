@@ -1,6 +1,6 @@
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
-import useFormHandlers from './modules/useFormHandlers';
+import useOrderHandlers from './modules/useOrderHandlers';
 import useFormValidation from './modules/useFormValidation';
 import useOrderSubmission from './modules/useOrderSubmission';
 import useOrderData from './modules/useOrderData';
@@ -46,7 +46,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     handleContactChange, 
     addContact, 
     removeContact 
-  } = useFormHandlers(formData, setFormData, errors, setErrors);
+  } = useOrderHandlers(formData, setFormData, errors, setErrors);
 
   // Chargement des données de la commande en mode édition
   useOrderData(

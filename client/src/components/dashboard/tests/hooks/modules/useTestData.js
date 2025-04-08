@@ -165,17 +165,18 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             // Results data - improved handling based on the provided example format
             resultsData: {
               results: Array.isArray(resultsData?.results) 
-                ? resultsData.results.map(result => ({
-                    step: result.step || 1,
-                    description: result.description || '',
-                    hardnessPoints: Array.isArray(result.hardness_points) 
+                ? resultsData.results.map(result => {
+                    // Process hardness points
+                    const hardnessPoints = Array.isArray(result.hardness_points) 
                       ? result.hardness_points.map(point => ({
                           location: point.location || '',
                           value: point.value || '',
                           unit: point.unit || ''
                         }))
-                      : [{ location: '', value: '', unit: '' }],
-                    ecd: {
+                      : [{ location: '', value: '', unit: '' }];
+                      
+                    // Process ECD data
+                    const ecdData = {
                       hardnessValue: result.ecd?.hardness_value || '',
                       hardnessUnit: result.ecd?.hardness_unit || '',
                       toothFlank: { 
@@ -186,9 +187,27 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                         distance: result.ecd?.tooth_root?.distance || '', 
                         unit: result.ecd?.tooth_root?.unit || '' 
                       }
-                    },
-                    comment: result.comment || ''
-                  }))
+                    };
+                    
+                    // Nouveau: traiter les données de courbe
+                    const curvePoints = Array.isArray(result.curve_data?.points) 
+                      ? result.curve_data.points.map(point => ({
+                          distance: point.distance || '',
+                          flankHardness: point.flank_hardness || '',
+                          rootHardness: point.root_hardness || ''
+                        }))
+                      : [];
+                      
+                    return {
+                      step: result.step || 1,
+                      description: result.description || '',
+                      hardnessPoints: hardnessPoints,
+                      ecd: ecdData,
+                      hardnessUnit: result.hardness_unit || '',
+                      curveData: { points: curvePoints },
+                      comment: result.comment || ''
+                    };
+                  })
                 : [{
                     step: 1,
                     description: '',
@@ -199,6 +218,8 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                       toothFlank: { distance: '', unit: '' },
                       toothRoot: { distance: '', unit: '' }
                     },
+                    hardnessUnit: '',
+                    curveData: { points: [] },
                     comment: ''
                   }]
             }

@@ -474,3 +474,68 @@ exports.getTestReportData = async (req, res) => {
   }
 };
 
+/**
+ * Récupère les spécifications associées à un test
+ * @route GET /tests/:testId/specs
+ * @access Public
+ */
+exports.getTestSpecs = async (req, res) => {
+  try {
+    const { testId } = req.params;
+    const { parentId } = req.query;
+
+    // Vérifier si le test existe
+    const test = await Test.findOne({
+      where: { node_id: testId },
+      include: [{ model: Node }]
+    });
+
+    if (!test) {
+      return res.status(404).json({ message: 'Test non trouvé' });
+    }
+
+    // Si parentId est fourni, utiliser directement ce ID
+    const partNodeId = parentId ? parentId : null;
+
+    if (!partNodeId) {
+      return res.status(400).json({ message: 'ID de la pièce parente requis' });
+    }
+
+    // Récupérer la pièce et ses spécifications
+    const part = await Part.findOne({
+      where: { node_id: partNodeId },
+      include: [{ model: Node }]
+    });
+
+    if (!part) {
+      return res.status(404).json({ message: 'Pièce parente non trouvée' });
+    }
+
+    // Renvoyer les spécifications de la pièce
+    const specifications = part.specifications;
+    const response = { specifications };
+
+    // Traiter les spécifications ECD pour le graphique
+    if (specifications && specifications.ecd) {
+      const ecd = specifications.ecd;
+      
+      if (ecd.depthMin && ecd.depthMax && ecd.hardness) {
+        // S'assurer que les valeurs sont traitées comme des nombres
+        const depthMin = parseFloat(ecd.depthMin);
+        const depthMax = parseFloat(ecd.depthMax);
+        const hardnessValue = parseFloat(ecd.hardness);
+        
+        // Points pour tracer la droite horizontale dans la plage spécifiée
+        response.ecdPoints = [
+          { distance: depthMin, value: hardnessValue },
+          { distance: depthMax, value: hardnessValue }
+        ];
+      }
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des spécifications:', error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};

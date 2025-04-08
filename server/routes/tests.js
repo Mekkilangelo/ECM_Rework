@@ -6,6 +6,7 @@ const { protect } = require('../middleware/auth');
 // Routes pour la gestion des tests
 router.get('/', testController.getTests);
 router.get('/:testId', testController.getTestById);
+router.get('/:testId/specs', testController.getTestSpecs);
 
 // Protected routes
 router.post('/', protect, testController.createTest);

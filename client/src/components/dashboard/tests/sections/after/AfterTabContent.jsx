@@ -1,11 +1,24 @@
 import React from 'react';
 import ResultsDataSection from './ResultsDataSection';
-import FurnaceReportSection from './FurnaceReportSection'
+import FurnaceReportSection from './FurnaceReportSection';
+import SpecificationsSection from './SpecificationsSection';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 
 const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded }) => {
   return (
     <>
+      <CollapsibleSection 
+        title="Spécifications de la pièce" 
+        isExpandedByDefault={true}
+        sectionId="test-specifications"
+        rememberState={false}
+      >
+        <SpecificationsSection
+          testNodeId={test ? test.id : null}
+          parentId={formHandlers.parentId}
+        />
+      </CollapsibleSection>
+          
       <CollapsibleSection 
         title="Rapport du four" 
         isExpandedByDefault={true}
@@ -26,6 +39,7 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
       >
         <ResultsDataSection
           formData={formData}
+          parentId={formHandlers.parentId}
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
           getSelectedOption={formHandlers.getSelectedOption}

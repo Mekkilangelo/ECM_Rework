@@ -138,7 +138,12 @@ const useFormState = () => {
               unit: ''
             }
           },
-          comment: ''
+          comment: '',
+          
+          hardnessUnit: 'HV',
+          curveData: {
+            points: []
+          }
         }
       ]
     }

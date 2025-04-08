@@ -86,18 +86,16 @@ const useTestSubmission = (
       oilDrippingTimeUnit: ''
     },
     resultsData: {
-      results: [{
-        step: 1,
-        description: '',
-        hardnessPoints: [{ location: '', value: '', unit: '' }],
-        ecd: {
-          hardnessValue: '',
-          hardnessUnit: '',
-          toothFlank: { distance: '', unit: '' },
-          toothRoot: { distance: '', unit: '' }
-        },
-        comment: ''
-      }]
+      results: [
+        {
+          step: 1,
+          description: '',
+          hardnessPoints: [{ location: '', value: '', unit: ''}],
+          ecd: { hardnessValue: '', hardnessUnit: '', toothFlank: { distance: '', unit: '' }, toothRoot: { distance: '', unit: '' }},
+          comment: '',
+          hardnessUnit: 'HV', curveData: { points: [] }
+        }
+      ]
     }
   };
   
@@ -244,45 +242,57 @@ const useTestSubmission = (
     
     // Formatage des données de résultat
     const resultsData = formData.resultsData && formData.resultsData.results?.length > 0 && 
-      formData.resultsData.results.some(result => 
-        result.description || 
-        (result.hardnessPoints && result.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
-        (result.ecd && (result.ecd.toothFlank?.distance || result.ecd.toothRoot?.distance)) ||
-        result.comment
-      ) ? {
-        results: formData.resultsData.results.map(result => {
-          // Formatage des points de dureté
-          const hardnessPoints = result.hardnessPoints?.length > 0 && 
-            result.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
-            result.hardnessPoints.map(point => ({
-              location: point.location || null,
-              value: point.value || null,
-              unit: point.unit || null
-            })) : null;
-          
-          // Formatage des données ECD
-          const ecdData = result.ecd ? {
-            hardness_value: result.ecd.hardnessValue || null,
-            hardness_unit: result.ecd.hardnessUnit || null,
-            tooth_flank: {
-              distance: result.ecd.toothFlank?.distance || null,
-              unit: result.ecd.toothFlank?.unit || null
-            },
-            tooth_root: {
-              distance: result.ecd.toothRoot?.distance || null,
-              unit: result.ecd.toothRoot?.unit || null
-            }
-          } : null;
-          
-          return {
-            step: result.step,
-            description: result.description || null,
-            hardness_points: hardnessPoints,
-            ecd: ecdData,
-            comment: result.comment || null
-          };
-        })
-      } : null;
+    formData.resultsData.results.some(result => 
+      result.description || 
+      (result.hardnessPoints && result.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
+      (result.ecd && (result.ecd.toothFlank?.distance || result.ecd.toothRoot?.distance)) ||
+      (result.curveData && result.curveData.points && result.curveData.points.length > 0) ||
+      result.comment
+    ) ? {
+      results: formData.resultsData.results.map(result => {
+        // Formatage des points de dureté
+        const hardnessPoints = result.hardnessPoints?.length > 0 && 
+          result.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
+          result.hardnessPoints.map(point => ({
+            location: point.location || null,
+            value: point.value || null,
+            unit: point.unit || null
+          })) : null;
+        
+        // Formatage des données ECD
+        const ecdData = result.ecd ? {
+          hardness_value: result.ecd.hardnessValue || null,
+          hardness_unit: result.ecd.hardnessUnit || null,
+          tooth_flank: {
+            distance: result.ecd.toothFlank?.distance || null,
+            unit: result.ecd.toothFlank?.unit || null
+          },
+          tooth_root: {
+            distance: result.ecd.toothRoot?.distance || null,
+            unit: result.ecd.toothRoot?.unit || null
+          }
+        } : null;
+        
+        // Formatage des données de courbe
+        const curveData = result.curveData && result.curveData.points && result.curveData.points.length > 0 ? {
+          points: result.curveData.points.map(point => ({
+            distance: point.distance || null,
+            flank_hardness: point.flankHardness || null,
+            root_hardness: point.rootHardness || null
+          }))
+        } : null;
+        
+        return {
+          step: result.step,
+          description: result.description || null,
+          hardness_points: hardnessPoints,
+          ecd: ecdData,
+          curve_data: curveData,
+          hardness_unit: result.hardnessUnit || null,
+          comment: result.comment || null
+        };
+      })
+    } : null;
     
     return {
       parent_id: parentId,

@@ -14,7 +14,10 @@ export const testService = {
     api.put(`/tests/${id}`, data),
   
   deleteTest: (id) => 
-    api.delete(`/tests/${id}`)
+    api.delete(`/tests/${id}`),
+
+  getTestSpecs: (testId, parentId) => 
+    api.get(`/tests/${testId}/specs`, { params: { parentId } })
 };
 
 export default testService;

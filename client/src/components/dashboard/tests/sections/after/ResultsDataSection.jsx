@@ -4,10 +4,12 @@ import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import MicrographsSection from './MicrographsSection';
+import ResultCurveSection from './ResultCurveSection';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 
 const ResultsDataSection = ({
   formData,
+  parentId,
   handleChange,
   handleSelectChange,
   getSelectedOption,
@@ -324,6 +326,27 @@ const ResultsDataSection = ({
                 testNodeId={test ? test.id : null}
                 resultIndex={resultIndex}
                 onFileAssociationNeeded={handleFileAssociationNeeded}
+              />
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Courbes de dureté"
+              isExpandedByDefault={false}
+              sectionId={`test-hardness-curve-${resultIndex}`}
+              rememberState={true}
+            >
+              <ResultCurveSection
+                result={result}
+                resultIndex={resultIndex}
+                handleChange={handleChange}
+                handleSelectChange={handleSelectChange}
+                getSelectedOption={getSelectedOption}
+                hardnessUnitOptions={hardnessUnitOptions}
+                loading={loading}
+                selectStyles={selectStyles}
+                test={test}
+                formData={formData}
+                parentId={parentId}
               />
             </CollapsibleSection>
           </Card.Body>

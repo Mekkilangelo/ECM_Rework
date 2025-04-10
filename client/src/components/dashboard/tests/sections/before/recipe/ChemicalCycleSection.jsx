@@ -17,7 +17,9 @@ const ChemicalCycleSection = ({
   const gasOptions = [
     { value: 'N2', label: 'N2' },
     { value: 'NH3', label: 'NH3' },
-    { value: 'C2H2', label: 'C2H2' }
+    { value: 'C2H2', label: 'C2H2' },
+    { value: 'H2', label: 'H2' },
+    { value: 'Ar', label: 'Ar' }
   ];
 
   const handleChemicalCycleChange = (index, field, value) => {
@@ -31,20 +33,84 @@ const ChemicalCycleSection = ({
     });
   };
 
-  const handleGasChange = (option, index) => {
-    handleChemicalCycleChange(index, 'gas', option.value);
+  const handleTurbineChange = (index, checked) => {
+    const updatedChemicalCycle = [...formData.recipeData.chemicalCycle];
+    updatedChemicalCycle[index] = { ...updatedChemicalCycle[index], turbine: checked };
+    handleChange({ 
+      target: { 
+        name: 'recipeData.chemicalCycle', 
+        value: updatedChemicalCycle 
+      } 
+    });
+  };
+
+  const handleGlobalGasChange = (option, gasNumber) => {
+    handleChange({
+      target: {
+        name: `recipeData.selectedGas${gasNumber}`,
+        value: option ? option.value : ''
+      }
+    });
   };
 
   return (
-    <> 
+    <>
+      {/* Global gas selection section */}
+      <Row className="mb-3">
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label>Gaz 1</Form.Label>
+            <Select
+              value={getSelectedOption(gasOptions, formData.recipeData.selectedGas1)}
+              onChange={(option) => handleGlobalGasChange(option, 1)}
+              options={gasOptions}
+              styles={selectStyles}
+              isDisabled={loading}
+              placeholder="Sélectionner..."
+              isClearable
+            />
+          </Form.Group>
+        </Col>
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label>Gaz 2</Form.Label>
+            <Select
+              value={getSelectedOption(gasOptions, formData.recipeData.selectedGas2)}
+              onChange={(option) => handleGlobalGasChange(option, 2)}
+              options={gasOptions}
+              styles={selectStyles}
+              isDisabled={loading}
+              placeholder="Sélectionner..."
+              isClearable
+            />
+          </Form.Group>
+        </Col>
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label>Gaz 3</Form.Label>
+            <Select
+              value={getSelectedOption(gasOptions, formData.recipeData.selectedGas3)}
+              onChange={(option) => handleGlobalGasChange(option, 3)}
+              options={gasOptions}
+              styles={selectStyles}
+              isDisabled={loading}
+              placeholder="Sélectionner..."
+              isClearable
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+ 
       <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
         <thead className="bg-light">
           <tr>
             <th style={{ width: '60px' }}>Étape</th>
-            <th>Temps</th>
-            <th>Gaz</th>
-            <th>Débit</th>
-            <th>Pression</th>
+            <th>Temps (s)</th>
+            {formData.recipeData.selectedGas1 && <th className="text-center">Débit {formData.recipeData.selectedGas1} (Nl/h)</th>}
+            {formData.recipeData.selectedGas2 && <th className="text-center">Débit {formData.recipeData.selectedGas2} (Nl/h)</th>}
+            {formData.recipeData.selectedGas3 && <th className="text-center">Débit {formData.recipeData.selectedGas3} (Nl/h)</th>}
+            <th>Pression (mb)</th>
+            <th className="text-center">Turbine</th>
             <th style={{ width: '80px' }}>Actions</th>
           </tr>
         </thead>
@@ -61,28 +127,49 @@ const ChemicalCycleSection = ({
                   disabled={loading}
                 />
               </td>
-              <td>
-                <Select
-                  value={getSelectedOption(gasOptions, cycle.gas)}
-                  onChange={(option) => handleGasChange(option, index)}
-                  options={gasOptions}
-                  menuPortalTarget={document.body}
-                  styles={{
-                    ...selectStyles,
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
-                  }}
-                  isDisabled={loading}
-                />
-              </td>
-              <td>
-                <Form.Control
-                  type="number"
-                  value={cycle.debit || ''}
-                  onChange={(e) => handleChemicalCycleChange(index, 'debit', e.target.value)}
-                  step="0.1"
-                  disabled={loading}
-                />
-              </td>
+              
+              {/* Débit pour Gaz 1 */}
+              {formData.recipeData.selectedGas1 && (
+                <td>
+                  <Form.Control
+                    type="number"
+                    placeholder="Débit"
+                    value={cycle.debit1 || ''}
+                    onChange={(e) => handleChemicalCycleChange(index, 'debit1', e.target.value)}
+                    step="0.1"
+                    disabled={loading}
+                  />
+                </td>
+              )}
+              
+              {/* Débit pour Gaz 2 */}
+              {formData.recipeData.selectedGas2 && (
+                <td>
+                  <Form.Control
+                    type="number"
+                    placeholder="Débit"
+                    value={cycle.debit2 || ''}
+                    onChange={(e) => handleChemicalCycleChange(index, 'debit2', e.target.value)}
+                    step="0.1"
+                    disabled={loading}
+                  />
+                </td>
+              )}
+              
+              {/* Débit pour Gaz 3 */}
+              {formData.recipeData.selectedGas3 && (
+                <td>
+                  <Form.Control
+                    type="number"
+                    placeholder="Débit"
+                    value={cycle.debit3 || ''}
+                    onChange={(e) => handleChemicalCycleChange(index, 'debit3', e.target.value)}
+                    step="0.1"
+                    disabled={loading}
+                  />
+                </td>
+              )}
+              
               <td>
                 <Form.Control
                   type="number"
@@ -92,6 +179,24 @@ const ChemicalCycleSection = ({
                   disabled={loading}
                 />
               </td>
+              
+              {/* Colonne Turbine avec case à cocher */}
+              <td className="text-center align-middle">
+                <div className="form-group mb-0">
+                  <div className="custom-control custom-switch custom-control-lg mx-auto" style={{ width: 'fit-content' }}>
+                    <input
+                      type="checkbox"
+                      className="custom-control-input"
+                      id={`turbine-custom-switch-${index}`}
+                      checked={cycle.turbine || false}
+                      onChange={(e) => handleTurbineChange(index, e.target.checked)}
+                      disabled={loading}
+                    />
+                    <label className="custom-control-label" htmlFor={`turbine-custom-switch-${index}`}></label>
+                  </div>
+                </div>
+              </td>
+              
               <td className="text-center">
                 <Button
                   variant="outline-danger"

@@ -1,18 +1,183 @@
 {
-    "common": {
-      "add": "Add",
-      "edit": "Edit",
-      "delete": "Delete",
-      "cancel": "Cancel",
-      "save": "Save",
-      "loading": "Loading..."
-    },
-    "clients": {
-      "title": "Customers",
-      "form": {
-        "name": "Name",
-        "country": "Country",
-        "code": "Customer code"
-      }
-    }
+  "common": {
+    "loading": "Loading...",
+    "user": "User",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "view": "View",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "unknown": "Unknown",
+    "modifiedAt": "Modified on"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "sessionExpired": "Your session has expired. Please login again."
+  },
+  "search": {
+    "placeholder": "Search for data, clients, reports..."
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "reference": "Reference",
+    "archives": "Archives"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the dashboard"
+  },
+"clients": {
+  "title": "Clients",
+  "name": "Client name",
+  "list": "Clients list",
+  "details": "Client details",
+  "form": "Client form",
+  "add": "Add client",
+  "edit": "Edit client",
+  "group": "Group",
+  "country": "Country",
+  "city": "City",
+  "address": "Address",
+  "description": "Description",
+  "selectCountry": "Select a country",
+  "noCountryOptions": "No country available",
+  "modifying": "Modifying...",
+  "creating": "Creating...",
+  "noName": "No name",
+  "noClientsFound": "No clients found",
+  "clickToAddClient": "Click on \"Add client\" to create a new client",
+  "deleteSuccess": "Client successfully deleted",
+  "deleteError": "An error occurred while deleting the client",
+  "confirmDelete": "Are you sure you want to delete this client? This action is irreversible."
+},
+"closeModal": {
+  "title": "Confirm closure",
+  "unsavedChanges": "You have unsaved changes."
+},
+
+  "orders": {
+  "title": "Trial Requests",
+  "list": "Trial Requests List",
+  "details": "Trial Request Details",
+  "form": "Trial Request Form",
+  "add": "Add Trial Request",
+  "edit": "Edit Trial Request",
+  "reference": "Reference",
+  "commercial": "Commercial",
+  "date": "Date",
+  "noReference": "No reference",
+  "noOrdersFound": "No trial requests found for this client",
+  "clickToAddOrder": "Click on \"Add trial request\" to create one",
+  "deleteSuccess": "Trial request successfully deleted",
+  "deleteError": "An error occurred while deleting the trial request",
+  "confirmDelete": "Are you sure you want to delete this trial request? This action is irreversible.",
+  "modifying": "Modifying...",
+  "creating": "Creating...",
+  "sections": {
+    "basicInfo": "Basic Information",
+    "contacts": "Contacts",
+    "documents": "Documents"
+  },
+  "contacts": {
+    "add": "Add contact",
+    "contact": "Contact",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email"
+  },
+  "documents": {
+    "uploadTitle": "Upload document",
+    "loadError": "Error while loading files:"
+  },
+  "generalInfo": {
+    "requestDate": "Request Date",
+    "description": "Description"
   }
+  },
+
+  "parts": {
+    "title": "Parts",
+    "list": "Parts list",
+    "details": "Part details",
+    "form": "Part form",
+    "add": "Add part",
+    "edit": "Edit part",
+    "new": "New part",
+    "designation": "Designation",
+    "clientDesignation": "Client designation",
+    "reference": "Reference",
+    "steel": "Steel",
+    "noParts": "No parts found for this order",
+    "clickToAdd": "Click on \"New part\" to add one",
+    "deleteConfirmation": "Are you sure you want to delete this part? This action is irreversible.",
+    "deleteSuccess": "Part successfully deleted",
+    "deleteError": "An error occurred while deleting the part"
+  },
+
+  "steels": {
+    "title": "Steels",
+    "list": "Steel List",
+    "details": "Steel Details",
+    "form": "Steel Form",
+    "add": "Add Steel",
+    "edit": "Edit Steel"
+  },
+
+  "tests": {
+  "title": "Trial",
+  "list": "Trial list",
+  "details": "Trial details",
+  "form": "Trial form",
+  "add": "Add trial",
+  "edit": "Edit trial",
+  "new": "New trial",
+  "testCode": "Trial code",
+  "date": "Date",
+  "location": "Location",
+  "noName": "No name",
+  "notDoneYet": "Not done yet",
+  "noTests": "No trials found for this part",
+  "clickToAdd": "Click on \"New trial\" to add one",
+  "confirmDelete": "Confirm deletion",
+  "deleteMessage": "Are you sure you want to delete the trial {{name}}? This action is irreversible.",
+  "deleteConfirmation": "Are you sure you want to delete this trial? This action is irreversible.",
+  "deleteSuccess": "Test successfully deleted",
+  "deleteError": "An error occurred while deleting the trial"
+},
+
+"sidebar": {
+  "dashboard": "Dashboard",
+  "dataManagement": {
+    "title": "Data Management",
+    "dataPump": "Data Pump",
+    "indexing": "Indexing",
+    "dataCleaning": "Data Cleaning",
+    "cleaningInProgress": "Cleaning in progress...",
+    "analysis": "Analysis"
+  },
+  "archivesReference": {
+    "title": "Archives & Reference",
+    "archives": "Archives",
+    "reference": "Reference"
+  },
+  "support": {
+    "title": "Support",
+    "createTicket": "Create a ticket"
+  },
+  "dataCleaning": {
+    "confirmMessage": "Warning! This action will permanently delete all application data.\n\nAre you sure you want to continue?",
+    "success": "Data successfully deleted",
+    "error": "Error while deleting data"
+  }
+}
+
+
+}

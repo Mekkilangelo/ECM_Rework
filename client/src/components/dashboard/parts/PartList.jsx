@@ -5,6 +5,7 @@ import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faCog } from '@fortawesome
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import PartForm from './PartForm';
 //import PartDetails from './PartDetails';
@@ -12,59 +13,58 @@ import partService from '../../../services/partService';
 import '../../../styles/dataList.css';
 
 const PartList = ({ orderId }) => {
+  const { t } = useTranslation();
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
-  
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPart, setSelectedPart] = useState(null);
-
   const partFormRef = useRef(null);
-  
+
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
-  
+
   const handlePartClick = (part) => {
     if (part.data_status === 'new') {
       updateItemStatus(part.id);
     }
     navigateToLevel('test', part.id, part.name);
   };
-  
+
   const handleViewDetails = (part) => {
     setSelectedPart(part);
     setShowDetailModal(true);
   };
-  
+
   const handleEditPart = (part) => {
     setSelectedPart(part);
     setShowEditForm(true);
   };
-  
+
   const handleDeletePart = async (partId) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette pièce ? Cette action est irréversible.")) {
+    if (window.confirm(t('parts.deleteConfirmation'))) {
       try {
         await partService.deletePart(partId);
-        alert("Pièce supprimée avec succès");
+        alert(t('parts.deleteSuccess'));
         refreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression de la pièce:', err);
-        alert(err.response?.data?.message || "Une erreur est survenue lors de la suppression de la pièce");
+        alert(err.response?.data?.message || t('parts.deleteError'));
       }
     }
   };
-  
-  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
+
+  if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /><div>{t('common.loading')}</div></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
-  
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex align-items-center">
-          <Button 
-            variant="outline-secondary" 
+          <Button
+            variant="outline-secondary"
             className="mr-3"
             onClick={navigateBack}
             size="sm"
@@ -73,29 +73,29 @@ const PartList = ({ orderId }) => {
           </Button>
           <h2 className="mb-0">
             <FontAwesomeIcon icon={faCog} className="mr-2 text-danger" />
-            Pièces - {hierarchyState.orderName}
+            {t('parts.title')} - {hierarchyState.orderName}
           </h2>
         </div>
-        <Button 
-          variant="danger" 
+        <Button
+          variant="danger"
           onClick={() => setShowCreateForm(true)}
           className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouvelle pièce
+          <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('parts.new')}
         </Button>
       </div>
-      
+
       {data.length > 0 ? (
         <div className="data-list-container">
           <Table hover responsive className="data-table border-bottom">
             <thead>
               <tr className="bg-light">
-                <th style={{ width: '10%' }}>Désignation</th>
-                <th className="text-center">Désignation client</th>
-                <th className="text-center">Référence</th>
-                <th className="text-center">Acier</th>
-                <th className="text-center">Modifié le</th>
-                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
+                <th style={{ width: '10%' }}>{t('parts.designation')}</th>
+                <th className="text-center">{t('parts.clientDesignation')}</th>
+                <th className="text-center">{t('parts.reference')}</th>
+                <th className="text-center">{t('parts.steel')}</th>
+                <th className="text-center">{t('common.modifiedAt')}</th>
+                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -108,66 +108,66 @@ const PartList = ({ orderId }) => {
                       className="d-flex align-items-center"
                     >
                       <div className="item-name font-weight-bold text-primary">
-                        {part.name || "Référence Inconnue"}
+                        {part.name || t('common.unknown')}
                       </div>
                       <div className="ml-2">
                         <StatusBadge status={part.data_status} />
                       </div>
                     </div>
                   </td>
-                  {/* Accédez à part.Part pour les propriétés spécifiques */}
                   <td className="text-center">{part.Part?.client_designation || "-"}</td>
                   <td className="text-center">{part.Part?.reference || "-"}</td>
                   <td className="text-center">{part.Part?.steel || "-"}</td>
                   <td className="text-center">
-                    {part.modified_at 
+                    {part.modified_at
                       ? new Date(part.modified_at).toLocaleString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : "Inconnu"}
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                      : t('common.unknown')}
                   </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       {!hasEditRights && (
-                        <Button 
-                          variant="outline-info" 
-                          size="sm" 
+                        <Button
+                          variant="outline-info"
+                          size="sm"
                           className="mr-1"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleViewDetails(part);
                           }}
-                          title="Détails"
+                          title={t('common.view')}
                         >
                           <FontAwesomeIcon icon={faEye} />
                         </Button>
                       )}
+
                       {hasEditRights && (
                         <>
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
                             className="mr-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditPart(part);
                             }}
-                            title="Modifier"
+                            title={t('common.edit')}
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </Button>
-                          <Button 
-                            variant="outline-danger" 
+                          <Button
+                            variant="outline-danger"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeletePart(part.id);
                             }}
-                            title="Supprimer"
+                            title={t('common.delete')}
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </Button>
@@ -184,82 +184,80 @@ const PartList = ({ orderId }) => {
         <Card className="text-center p-5 bg-light">
           <Card.Body>
             <FontAwesomeIcon icon={faCog} size="3x" className="text-secondary mb-3" />
-            <h4>Aucune pièce trouvée pour cette commande</h4>
-            <p className="text-muted">Cliquez sur "Nouvelle pièce" pour en ajouter une</p>
+            <h4>{t('parts.noParts')}</h4>
+            <p className="text-muted">{t('parts.clickToAdd')}</p>
           </Card.Body>
         </Card>
       )}
-      
+
       {/* Modal pour créer une pièce */}
-      <Modal 
-        show={showCreateForm} 
+      <Modal
+        show={showCreateForm}
         onHide={() => {
-          // On utilise maintenant handleCloseRequest au lieu de fermer directement
           if (partFormRef.current && partFormRef.current.handleCloseRequest) {
             partFormRef.current.handleCloseRequest();
           } else {
             setShowCreateForm(false);
           }
         }}
-        size="lg"
+        size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Nouvelle pièce</Modal.Title>
+          <Modal.Title>{t('parts.new')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <PartForm 
+          <PartForm
             ref={partFormRef}
-            orderId={orderId} 
-            onClose={() => setShowCreateForm(false)} 
+            orderId={orderId}
+            onClose={() => setShowCreateForm(false)}
             onPartCreated={() => refreshData()}
           />
         </Modal.Body>
       </Modal>
-      
+
       {/* Modal pour éditer une pièce */}
-      <Modal 
-        show={showEditForm} 
+      <Modal
+        show={showEditForm}
         onHide={() => {
-          // On utilise maintenant handleCloseRequest au lieu de fermer directement
           if (partFormRef.current && partFormRef.current.handleCloseRequest) {
             partFormRef.current.handleCloseRequest();
           } else {
             setShowCreateForm(false);
           }
         }}
-        size="lg"
+        size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Modifier la pièce</Modal.Title>
+          <Modal.Title>{t('parts.edit')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedPart && (
             <PartForm
               ref={partFormRef}
-              part={selectedPart} 
-              orderId={orderId} 
-              onClose={() => setShowEditForm(false)} 
+              part={selectedPart}
+              orderId={orderId}
+              onClose={() => setShowEditForm(false)}
               onPartUpdated={() => refreshData()}
             />
           )}
         </Modal.Body>
       </Modal>
-      
+
       {/* Modal pour voir les détails */}
       {/* <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
-        size="lg"
+        size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Détails de la pièce</Modal.Title>
+          <Modal.Title>{t('parts.details')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedPart && (
-            <PartDetails 
-              partId={selectedPart.id} 
+            <PartDetails
+              partId={selectedPart.id}
               orderId={orderId}
-              onClose={() => setShowDetailModal(false)} 
+              onClose={() => setShowDetailModal(false)}
             />
           )}
         </Modal.Body>

@@ -4,7 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
-import { AuthContext } from '../../../context/AuthContext'; 
+import { useTranslation } from 'react-i18next';
+import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import OrderForm from './OrderForm';
 import OrderDetails from './OrderDetails';
@@ -12,16 +13,16 @@ import orderService from '../../../services/orderService';
 import '../../../styles/dataList.css';
 
 const OrderList = () => {
+  const { t } = useTranslation();
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
-
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const orderFormRef = useRef(null);
-  
+
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
@@ -31,7 +32,7 @@ const OrderList = () => {
     }
     navigateToLevel('part', order.id, order.name);
   };
-  
+
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setShowDetailModal(true);
@@ -43,27 +44,27 @@ const OrderList = () => {
   };
 
   const handleDeleteOrder = async (orderId) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette commande ? Cette action est irréversible.")) {
+    if (window.confirm(t('orders.confirmDelete'))) {
       try {
         await orderService.deleteOrder(orderId);
-        alert("Commande supprimée avec succès");
+        alert(t('orders.deleteSuccess'));
         refreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression de la commande:', err);
-        alert(err.response?.data?.message || "Une erreur est survenue lors de la suppression de la commande");
+        alert(err.response?.data?.message || t('orders.deleteError'));
       }
     }
-  };  
-  
+  };
+
   if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
-  
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex align-items-center">
-          <Button 
-            variant="outline-secondary" 
+          <Button
+            variant="outline-secondary"
             className="mr-3"
             onClick={navigateBack}
             size="sm"
@@ -72,41 +73,41 @@ const OrderList = () => {
           </Button>
           <h2 className="mb-0">
             <FontAwesomeIcon icon={faFileInvoice} className="mr-2 text-danger" />
-            Commandes - {hierarchyState.clientName}
+            {t('orders.title')} - {hierarchyState.clientName}
           </h2>
         </div>
-        <Button 
+        <Button
           variant="danger"
           onClick={() => setShowCreateForm(true)}
           className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouvelle commande
+          <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('orders.add')}
         </Button>
       </div>
-      
+
       {data.length > 0 ? (
         <div className="data-list-container">
           <Table hover responsive className="data-table border-bottom">
             <thead>
               <tr className="bg-light">
-                <th style={{ width: '30%' }}>Référence</th>
-                <th className="text-center">Commercial</th>
-                <th className="text-center">Date</th>
-                <th className="text-center">Modifié le</th>
-                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
+                <th style={{ width: '30%' }}>{t('orders.reference')}</th>
+                <th className="text-center">{t('orders.commercial')}</th>
+                <th className="text-center">{t('orders.date')}</th>
+                <th className="text-center">{t('common.modifiedAt')}</th>
+                <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {data.map(order => (
                 <tr key={order.id}>
                   <td>
-                    <div 
+                    <div
                       onClick={() => handleOrderClick(order)}
                       style={{ cursor: 'pointer' }}
                       className="d-flex align-items-center"
                     >
                       <div className="item-name font-weight-bold text-primary">
-                        {order.name || "Sans référence"}
+                        {order.name || t('orders.noReference')}
                       </div>
                       <div className="ml-2">
                         <StatusBadge status={order.data_status} />
@@ -115,64 +116,63 @@ const OrderList = () => {
                   </td>
                   <td className="text-center">{order.Order?.commercial || "-"}</td>
                   <td className="text-center">
-                    {order.Order?.order_date 
-                      ? new Date(order.Order?.order_date ).toLocaleString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })
-                      : "Inconnu"}
+                    {order.Order?.order_date
+                      ? new Date(order.Order?.order_date).toLocaleString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })
+                      : t('common.unknown')}
                   </td>
                   <td className="text-center">
-                    {order.modified_at 
+                    {order.modified_at
                       ? new Date(order.modified_at).toLocaleString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : "Inconnu"}
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                      : t('common.unknown')}
                   </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
                       {!hasEditRights && (
-                        <Button 
-                          variant="outline-info" 
-                          size="sm" 
+                        <Button
+                          variant="outline-info"
+                          size="sm"
                           className="mr-1"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleViewDetails(order);
                           }}
-                          title="Détails"
+                          title={t('common.view')}
                         >
                           <FontAwesomeIcon icon={faEye} />
                         </Button>
                       )}
-                      
                       {hasEditRights && (
                         <>
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
                             className="mr-1"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditOrder(order);
                             }}
-                            title="Modifier"
+                            title={t('common.edit')}
                           >
                             <FontAwesomeIcon icon={faEdit} />
                           </Button>
-                          <Button 
-                            variant="outline-danger" 
+                          <Button
+                            variant="outline-danger"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteOrder(order.id);
                             }}
-                            title="Supprimer"
+                            title={t('common.delete')}
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </Button>
@@ -189,82 +189,79 @@ const OrderList = () => {
         <Card className="text-center p-5 bg-light">
           <Card.Body>
             <FontAwesomeIcon icon={faFileInvoice} size="3x" className="text-secondary mb-3" />
-            <h4>Aucune commande trouvée pour ce client</h4>
-            <p className="text-muted">Cliquez sur "Nouvelle commande" pour en ajouter une</p>
+            <h4>{t('orders.noOrdersFound')}</h4>
+            <p className="text-muted">{t('orders.clickToAddOrder')}</p>
           </Card.Body>
         </Card>
       )}
-      
+
       {/* Modal pour créer une commande */}
-      <Modal 
-        show={showCreateForm} 
+      <Modal
+        show={showCreateForm}
         onHide={() => {
-          // On utilise maintenant handleCloseRequest au lieu de fermer directement
           if (orderFormRef.current && orderFormRef.current.handleCloseRequest) {
             orderFormRef.current.handleCloseRequest();
           } else {
             setShowCreateForm(false);
           }
         }}
-        size="lg"
+        size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Nouvelle commande</Modal.Title>
+          <Modal.Title>{t('orders.add')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <OrderForm
             ref={orderFormRef}
             clientId={hierarchyState.clientId}
             onClose={() => setShowCreateForm(false)}
-            onOrderCreated={() => refreshData()} 
+            onOrderCreated={() => refreshData()}
           />
         </Modal.Body>
       </Modal>
 
-
       {/* Modal pour éditer une commande */}
-      <Modal 
-        show={showEditForm} 
+      <Modal
+        show={showEditForm}
         onHide={() => {
-          // On utilise maintenant handleCloseRequest au lieu de fermer directement
           if (orderFormRef.current && orderFormRef.current.handleCloseRequest) {
             orderFormRef.current.handleCloseRequest();
           } else {
             setShowEditForm(false);
           }
         }}
-        size="lg"
+        size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Modifier la commande</Modal.Title>
+          <Modal.Title>{t('orders.edit')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedOrder && (
             <OrderForm
               ref={orderFormRef}
-              order={selectedOrder} 
-              clientId={hierarchyState.clientId} 
-              onClose={() => setShowEditForm(false)} 
+              order={selectedOrder}
+              clientId={hierarchyState.clientId}
+              onClose={() => setShowEditForm(false)}
               onOrderUpdated={() => refreshData()}
             />
           )}
         </Modal.Body>
       </Modal>
-      
+
       {/* Modal pour voir les détails */}
       <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
-        size="lg"
+        size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Détails de la commande</Modal.Title>
+          <Modal.Title>{t('orders.details')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedOrder && (
-            <OrderDetails 
-              orderId={selectedOrder.id} 
-              onClose={() => setShowDetailModal(false)} 
+            <OrderDetails
+              orderId={selectedOrder.id}
+              onClose={() => setShowDetailModal(false)}
             />
           )}
         </Modal.Body>

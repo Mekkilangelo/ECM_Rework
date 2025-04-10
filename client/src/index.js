@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './locales/i18n';
-
+import './locales/i18n'; // Importez i18n avant tout
 import App from './App';
 import axios from 'axios';
 import { AuthProvider } from './context/AuthContext';
@@ -34,8 +33,15 @@ const root = createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      <React.Suspense fallback={
+        <div className="d-flex justify-content-center mt-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        </div>
+      }>
+        <App />
+      </React.Suspense>
     </AuthProvider>
   </React.StrictMode>
 );
-

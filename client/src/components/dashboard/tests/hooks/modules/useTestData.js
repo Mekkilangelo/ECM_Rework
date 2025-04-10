@@ -29,6 +29,11 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           const recipeData = typeof data.recipe_data === 'string' 
             ? JSON.parse(data.recipe_data) 
             : (data.recipe_data || {});
+
+          // Extraire d'abord les gaz globaux sélectionnés
+          const selectedGas1 = recipeData.selected_gas1 || '';
+          const selectedGas2 = recipeData.selected_gas2 || '';
+          const selectedGas3 = recipeData.selected_gas3 || '';
             
           const quenchData = typeof data.quench_data === 'string' 
             ? JSON.parse(data.quench_data) 
@@ -105,15 +110,24 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                 : [{ step: 1, ramp: 'up', setpoint: '', duration: '' }],
               
               // Chemical cycle (dynamic array)
+
+
               chemicalCycle: Array.isArray(recipeData.chemical_cycle) && recipeData.chemical_cycle.length > 0
                 ? recipeData.chemical_cycle.map((cycle, index) => ({
                     step: index + 1,
                     time: cycle.time || '',
-                    gas: cycle.gas || '',
-                    debit: cycle.debit || '',
-                    pressure: cycle.pressure || ''
+                    debit1: cycle.gases && cycle.gases[0] ? cycle.gases[0].debit : '',
+                    debit2: cycle.gases && cycle.gases[1] ? cycle.gases[1].debit : '',
+                    debit3: cycle.gases && cycle.gases[2] ? cycle.gases[2].debit : '',
+                    pressure: cycle.pressure || '',
+                    turbine: cycle.turbine === true // Convertir en booléen explicite
                   }))
-                : [{ step: 1, time: '', gas: '', debit: '', pressure: '' }],
+                : [{ step: 1, time: '', debit1: '', debit2: '', debit3: '', pressure: '', turbine: false }],
+
+              // Ajouter les gaz globaux sélectionnés
+              selectedGas1: selectedGas1,
+              selectedGas2: selectedGas2,
+              selectedGas3: selectedGas3,
               
               // Other recipe parameters
               waitTime: recipeData.wait_time?.value || '',

@@ -147,18 +147,52 @@ const useTestSubmission = (
     
     // Formatage du cycle chimique
     const chemicalCycleData = formData.recipeData.chemicalCycle.length > 0 && formData.recipeData.chemicalCycle.some(
-      cycle => cycle.time || cycle.gas || cycle.debit || cycle.pressure
-    ) ? formData.recipeData.chemicalCycle.map((cycle, index) => ({
-      step: index + 1,
-      time: cycle.time || null,
-      gas: cycle.gas || null,
-      debit: cycle.debit || null,
-      pressure: cycle.pressure || null
-    })) : null;
+      cycle => cycle.time || cycle.debit1 || cycle.debit2 || cycle.debit3 || cycle.pressure || cycle.turbine === true
+    ) ? formData.recipeData.chemicalCycle.map((cycle, index) => {
+      // Préparer les gaz et débits pour chaque étape
+      const gases = [];
+      
+      // Ajouter gaz1 s'il y a un débit
+      if (cycle.debit1) {
+        gases.push({
+          gas: formData.recipeData.selectedGas1 || null,
+          debit: cycle.debit1 || null
+        });
+      }
+      
+      // Ajouter gaz2 s'il y a un débit
+      if (cycle.debit2) {
+        gases.push({
+          gas: formData.recipeData.selectedGas2 || null,
+          debit: cycle.debit2 || null
+        });
+      }
+      
+      // Ajouter gaz3 s'il y a un débit
+      if (cycle.debit3) {
+        gases.push({
+          gas: formData.recipeData.selectedGas3 || null,
+          debit: cycle.debit3 || null
+        });
+      }
+      
+      return {
+        step: index + 1,
+        time: cycle.time || null,
+        gases: gases.length > 0 ? gases : null,
+        pressure: cycle.pressure || null,
+        turbine: cycle.turbine === true // S'assurer que c'est un booléen
+      };
+    }) : null;
     
     // Formatage des données de recette
     const recipeData = {
       number: formData.recipeData.recipeNumber || null,
+      
+      selected_gas1: formData.recipeData.selectedGas1 || null,
+      selected_gas2: formData.recipeData.selectedGas2 || null,
+      selected_gas3: formData.recipeData.selectedGas3 || null,
+
       preox: {
         temperature: {
           value: formData.recipeData.preoxTemp || null,

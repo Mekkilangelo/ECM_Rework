@@ -4,18 +4,19 @@ import {
   faSearch, 
   faBars, 
   faSignOutAlt,
-  faUser
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher'; // Importez le composant personnalisé
 import '../../styles/header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useTranslation();
   
   const handleSearch = (e) => {
     e.preventDefault();
-    // Logique de recherche ici
     console.log('Searching for:', searchTerm);
   };
 
@@ -43,7 +44,7 @@ const Header = () => {
           <input 
             type="text" 
             className="form-control bg-light border-0 small" 
-            placeholder="Search for data, clients, reports..."
+            placeholder={t('search.placeholder')}
             aria-label="Search" 
             aria-describedby="basic-addon2"
             value={searchTerm}
@@ -66,9 +67,6 @@ const Header = () => {
             href="#" 
             id="searchDropdown" 
             role="button" 
-            data-toggle="dropdown" 
-            aria-haspopup="true" 
-            aria-expanded="false"
             onClick={(e) => {
               e.preventDefault();
               document.getElementById('mobileSearchForm').classList.toggle('d-none');
@@ -85,7 +83,7 @@ const Header = () => {
                 <input 
                   type="text" 
                   className="form-control bg-light border-0 small" 
-                  placeholder="Search for..." 
+                  placeholder={t('search.placeholder')}
                   aria-label="Search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -100,12 +98,15 @@ const Header = () => {
           </div>
         </li>
 
+        {/* Language Switcher - Utilisez le composant personnalisé */}
+        <LanguageSwitcher />
+
         <div className="topbar-divider d-none d-sm-block"></div>
 
         {/* User Info */}
         <li className="nav-item d-flex align-items-center">
           <span className="text-gray-600 small mr-3 username-display">
-            {user?.username || 'User'}
+            {user?.username || t('common.user')}
           </span>
           <div className="user-avatar mr-2">
             {user?.profileImage ? (
@@ -123,10 +124,10 @@ const Header = () => {
           <button
             className="btn btn-sm btn-outline-danger"
             onClick={logout}
-            title="Logout"
+            title={t('auth.logout')}
           >
             <FontAwesomeIcon icon={faSignOutAlt} className="mr-1" />
-            Logout
+            {t('auth.logout')}
           </button>
         </li>
       </ul>

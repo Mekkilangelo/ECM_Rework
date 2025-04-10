@@ -22,7 +22,6 @@ exports.resolveFilePath = async (req, res, next) => {
     // Analyser le chemin du nœud pour construire la structure de répertoires
     // Le chemin est dans le format '/client/order/part' dans la base
     const nodePath = node.path;
-    const nodeType = node.type;
     
     // Construire le chemin physique en fonction du type de nœud et de la catégorie
     let physicalPath = UPLOAD_BASE_DIR;

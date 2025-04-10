@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../common/FileUploader/FileUploader';
 import fileService from '../../../../services/fileService';
-import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
+import { faFile } from '@fortawesome/free-solid-svg-icons';
 
-const DocumentsSection = ({ 
-  orderNodeId, 
-  onFileAssociationNeeded, 
+const DocumentsSection = ({
+  orderNodeId
 }) => {
+  const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
   const [tempIds, setTempIds] = useState({});
   
@@ -18,28 +18,21 @@ const DocumentsSection = ({
   useEffect(() => {
     tempIdsRef.current = tempIds;
   }, [tempIds]);
-
-  // Configuration des différentes vues
-  const views = [
-    { id: 'all_documents', name: 'Importer des Documents' },
-  ];
-
+  
   // Charger les fichiers existants
   useEffect(() => {
     if (orderNodeId) {
       loadExistingFiles();
     }
   }, [orderNodeId]);
-
+  
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getFilesByNode(orderNodeId, { category: 'documents' });
-
       console.log('Réponse de récupération des fichiers', response.data);
       
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
-      
       response.data.files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
@@ -50,10 +43,10 @@ const DocumentsSection = ({
       
       setUploadedFiles(filesBySubcategory);
     } catch (error) {
-      console.error('Erreur lors du chargement des fichiers:', error);
+      console.error(t('orders.documents.loadError'), error);
     }
   };
-
+  
   const handleFilesUploaded = (files, newTempId, subcategory) => {
     // Mettre à jour la liste des fichiers téléchargés
     setUploadedFiles(prev => ({
@@ -69,42 +62,7 @@ const DocumentsSection = ({
       }));
     }
   };
-
-  // Méthode pour associer les fichiers lors de la soumission du formulaire
-  // Utilisez useCallback pour mémoriser cette fonction
-  const associateFiles = useCallback(async (newOrderNodeId) => {
-    try {
-      // Utilisez la référence pour obtenir les tempIds les plus récents
-      const currentTempIds = tempIdsRef.current;
-      
-      // Parcourir tous les tempIds et les associer
-      for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newOrderNodeId, tempId, { 
-          category: 'photos', 
-          subcategory 
-        });
-      }
-      
-      // Réinitialiser les tempIds
-      setTempIds({});
-      
-      // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
-      if (newOrderNodeId === orderNodeId) {
-        loadExistingFiles();
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'association des fichiers:', error);
-    }
-  }, [orderNodeId]); // Ne dépend que de orderNodeId, pas de tempIds
-
-  // Exposer la méthode d'association via le prop onFileAssociationNeeded
-  // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
-  useEffect(() => {
-    if (onFileAssociationNeeded) {
-      onFileAssociationNeeded(associateFiles);
-    }
-  }, [onFileAssociationNeeded, associateFiles]);
-
+  
   return (
     <>
       <div className="p-2">
@@ -122,7 +80,7 @@ const DocumentsSection = ({
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
             'image/*': ['.png', '.jpg', '.jpeg']
           }}
-          title={`Importer un document`}
+          title={t('orders.documents.uploadTitle')}
           fileIcon={faFile}
           height="150px"
           width="100%"

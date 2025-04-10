@@ -46,9 +46,9 @@ const ThermalCycleSection = ({
         <thead className="bg-light">
           <tr>
             <th style={{ width: '60px' }}>Étape</th>
-            <th style={{ width: '120px' }}>Rampe</th>
-            <th>Consigne</th>
-            <th>Durée</th>
+            <th style={{ width: '150px' }}>Rampe</th>
+            <th>Consigne (°C)</th>
+            <th>Durée (s)</th>
             <th style={{ width: '80px' }}>Actions</th>
           </tr>
         </thead>

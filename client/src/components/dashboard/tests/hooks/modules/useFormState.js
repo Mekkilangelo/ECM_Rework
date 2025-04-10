@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 
 const useFormState = () => {
@@ -57,14 +58,21 @@ const useFormState = () => {
         }
       ],
       
-      // Cycle chimique (tableau dynamique)
+      // Configuration globale des gaz (nouveaux champs)
+      selectedGas1: '',
+      selectedGas2: '',
+      selectedGas3: '',
+      
+      // Cycle chimique (tableau dynamique) - MODIFIÉ pour utiliser les gaz globaux + turbine
       chemicalCycle: [
         {
           step: 1,
           time: '',
-          gas: '',
-          debit: '',
-          pressure: ''
+          debit1: '',
+          debit2: '',
+          debit3: '',
+          pressure: '',
+          turbine: false  // Valeur par défaut pour la turbine (non/false)
         }
       ],
       

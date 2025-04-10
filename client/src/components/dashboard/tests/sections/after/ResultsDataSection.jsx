@@ -142,7 +142,7 @@ const ResultsDataSection = ({
               <Form.Label className="d-flex justify-content-between align-items-center">
                 <span>Dureté</span>
               </Form.Label>
-              <Table responsive bordered size="sm" className="mt-2">
+              <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
                 <thead className="bg-light">
                   <tr>
                     <th style={{ width: '40%' }}>Position</th>
@@ -161,7 +161,11 @@ const ResultsDataSection = ({
                           options={hardnessLocationOptions}
                           placeholder="Position"
                           isDisabled={loading}
-                          styles={selectStyles}
+                          menuPortalTarget={document.body}
+                          styles={{
+                            ...selectStyles,
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                          }}
                           isClearable
                         />
                       </td>
@@ -181,7 +185,11 @@ const ResultsDataSection = ({
                           options={hardnessUnitOptions}
                           placeholder="Unité"
                           isDisabled={loading}
-                          styles={selectStyles}
+                          menuPortalTarget={document.body}
+                          styles={{
+                            ...selectStyles,
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                          }}
                           isClearable
                         />
                       </td>
@@ -246,7 +254,7 @@ const ResultsDataSection = ({
                 </Col>
               </Row>
               
-              <Table responsive bordered size="sm" className="mt-2">
+              <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
                 <thead className="bg-light">
                   <tr>
                     <th style={{ width: '40%' }}>Position</th>
@@ -273,7 +281,11 @@ const ResultsDataSection = ({
                         options={lengthUnitOptions}
                         placeholder="Unité"
                         isDisabled={loading}
-                        styles={selectStyles}
+                        menuPortalTarget={document.body}
+                        styles={{
+                          ...selectStyles,
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                        }}
                         isClearable
                       />
                     </td>
@@ -296,7 +308,11 @@ const ResultsDataSection = ({
                         options={lengthUnitOptions}
                         placeholder="Unité"
                         isDisabled={loading}
-                        styles={selectStyles}
+                        menuPortalTarget={document.body}
+                        styles={{
+                          ...selectStyles,
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                        }}
                         isClearable
                       />
                     </td>

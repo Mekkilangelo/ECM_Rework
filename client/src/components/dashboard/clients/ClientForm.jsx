@@ -1,11 +1,12 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
+import { useTranslation } from 'react-i18next';
 import useClientForm from './hooks/useClientForm';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
 
-
 const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdated }, ref) => {
+  const { t } = useTranslation();
   const {
     formData,
     errors,
@@ -29,11 +30,11 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
   useImperativeHandle(ref, () => ({
     handleCloseRequest
   }));
-  
+
   if (fetchingClient) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
   }
-  
+
   return (
     <div>
       {message && (
@@ -41,12 +42,11 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
           {message.text}
         </div>
       )}
-      
       <Form onSubmit={handleSubmit} autoComplete="off">
         <Row>
           <Col md={12}>
             <Form.Group className="mb-3">
-              <Form.Label>Nom du client *</Form.Label>
+              <Form.Label>{t('clients.name')} *</Form.Label>
               <Form.Control
                 type="text"
                 name="name"
@@ -61,26 +61,25 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
             </Form.Group>
           </Col>
         </Row>
-        
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>Pays</Form.Label>
+              <Form.Label>{t('clients.country')}</Form.Label>
               <Select
                 styles={selectStyles}
                 options={countryOptions}
                 value={getSelectedOption(countryOptions, formData.country)}
                 onChange={(option) => handleSelectChange(option, 'country')}
                 isClearable
-                placeholder="Sélectionnez un pays"
+                placeholder={t('clients.selectCountry')}
                 isLoading={loading && countryOptions.length === 0}
-                noOptionsMessage={() => "Aucun pays disponible"}
+                noOptionsMessage={() => t('clients.noCountryOptions')}
               />
             </Form.Group>
           </Col>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>Ville</Form.Label>
+              <Form.Label>{t('clients.city')}</Form.Label>
               <Form.Control
                 type="text"
                 name="city"
@@ -91,11 +90,10 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
             </Form.Group>
           </Col>
         </Row>
-        
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>Groupe</Form.Label>
+              <Form.Label>{t('clients.group')}</Form.Label>
               <Form.Control
                 type="text"
                 name="client_group"
@@ -107,7 +105,7 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
           </Col>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>Adresse</Form.Label>
+              <Form.Label>{t('clients.address')}</Form.Label>
               <Form.Control
                 as="textarea"
                 name="address"
@@ -119,11 +117,10 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
             </Form.Group>
           </Col>
         </Row>
-        
         <Row>
           <Col md={12}>
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>{t('clients.description')}</Form.Label>
               <Form.Control
                 as="textarea"
                 name="description"
@@ -135,17 +132,18 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
             </Form.Group>
           </Col>
         </Row>
-        
         <div className="d-flex justify-content-end mt-3">
           <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" type="submit" disabled={loading}>
-            {loading ? (client ? 'Modification en cours...' : 'Création en cours...') : (client ? 'Modifier' : 'Créer')}
+            {loading 
+              ? (client ? t('clients.modifying') : t('clients.creating')) 
+              : (client ? t('common.edit') : t('common.create'))
+            }
           </Button>
         </div>
       </Form>
-
       {/* Modal de confirmation pour la fermeture */}
       <CloseConfirmationModal
         show={showConfirmModal}
@@ -153,10 +151,9 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
         onCancel={cancelClose}
         onContinue={confirmClose}
         onSave={saveAndClose}
-        title="Confirmer la fermeture"
-        message="Vous avez des modifications non enregistrées."
+        title={t('closeModal.title')}
+        message={t('closeModal.unsavedChanges')}
       />
-
     </div>
   );
 });

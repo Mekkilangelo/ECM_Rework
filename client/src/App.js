@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import { ToastContainer } from 'react-toastify';
@@ -10,6 +10,8 @@ import './styles/sb-admin-2.min.css';
 
 import './styles/chatbot.css';
 import './styles/sidebar.css';
+
+import { useTranslation } from 'react-i18next'; 
 
 // Pages/Composants
 import Login from './pages/Login';
@@ -48,13 +50,23 @@ const PrivateRouteWrapper = ({ children }) => {
   );
 };
 
+// Composant de chargement pour Suspense
+const LoadingFallback = () => (
+  <div className="d-flex justify-content-center mt-5">
+    <div className="spinner-border text-primary" role="status">
+      <span className="sr-only">Loading...</span>
+    </div>
+  </div>
+);
+
 const PrivateRouteComponent = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const { t } = useTranslation();
   
   if (loading) {
     return <div className="d-flex justify-content-center mt-5">
       <div className="spinner-border" role="status">
-        <span className="sr-only">Chargement...</span>
+        <span className="sr-only">{t('common.loading')}</span>
       </div>
     </div>;
   }
@@ -69,60 +81,62 @@ const PrivateRouteComponent = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Routes publiques */}
-          <Route path="/login" element={<Login />} />
+      <Suspense fallback={<LoadingFallback />}>
+        <BrowserRouter>
+          <Routes>
+            {/* Routes publiques */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Routes protégées */}
+            <Route 
+              path="/" 
+              element={
+                <PrivateRouteComponent>
+                  <Dashboard />
+                </PrivateRouteComponent>
+              } 
+            />
+
+            <Route 
+              path="/reference" 
+              element={
+                <PrivateRouteComponent>
+                  <Reference />
+                </PrivateRouteComponent>
+              } 
+            />
+
+            <Route 
+              path="/archives" 
+              element={
+                <PrivateRouteComponent>
+                  <Archives />
+                </PrivateRouteComponent>
+              } 
+            />
+            
+            {/* Route par défaut - redirection vers login si non authentifié */}
+            <Route 
+              path="*" 
+              element={<Navigate to="/login" replace />} 
+            />
+          </Routes>
+
+          {/* ToastContainer pour afficher les notifications */}
+          <ToastContainer 
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
           
-          {/* Routes protégées */}
-          <Route 
-            path="/" 
-            element={
-              <PrivateRouteComponent>
-                <Dashboard />
-              </PrivateRouteComponent>
-            } 
-          />
-
-          <Route 
-            path="/reference" 
-            element={
-              <PrivateRouteComponent>
-                <Reference />
-              </PrivateRouteComponent>
-            } 
-          />
-
-          <Route 
-            path="/archives" 
-            element={
-              <PrivateRouteComponent>
-                <Archives />
-              </PrivateRouteComponent>
-            } 
-          />
-          
-          {/* Route par défaut - redirection vers login si non authentifié */}
-          <Route 
-            path="*" 
-            element={<Navigate to="/login" replace />} 
-          />
-        </Routes>
-
-        {/* ToastContainer pour afficher les notifications */}
-        <ToastContainer 
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-        
-      </BrowserRouter>
+        </BrowserRouter>
+      </Suspense>
     </AuthProvider>
   );
 }

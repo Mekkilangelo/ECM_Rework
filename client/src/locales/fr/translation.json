@@ -1,18 +1,184 @@
 {
-    "common": {
-      "add": "Ajouter",
-      "edit": "Modifier",
-      "delete": "Supprimer",
-      "cancel": "Annuler",
-      "save": "Enregistrer",
-      "loading": "Chargement..."
-    },
-    "clients": {
-      "title": "Clients",
-      "form": {
-        "name": "Nom",
-        "country": "Pays",
-        "code": "Code client"
-      }
-    }
+  "common": {
+    "loading": "Chargement...",
+    "user": "Utilisateur",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "view": "Voir",
+    "yes": "Oui",
+    "no": "Non",
+    "actions": "Actions",
+    "unknown": "Inconnu",
+    "modifiedAt": "Modifié le"
+  },
+
+  "closeModal": {
+  "title": "Confirmer la fermeture",
+  "unsavedChanges": "Vous avez des modifications non enregistrées."
+  },
+
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter."
+  },
+  "search": {
+    "placeholder": "Rechercher des données, clients, rapports..."
+  },
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "reference": "Référentiel",
+    "archives": "Archives"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue sur le tableau de bord"
+  },
+
+  "clients": {
+  "title": "Clients",
+  "name": "Nom du client",
+  "list": "Liste des clients",
+  "details": "Détails du client",
+  "form": "Formulaire client",
+  "add": "Ajouter un client",
+  "edit": "Modifier le client",
+  "group": "Groupe",
+  "country": "Pays",
+  "city": "Ville",
+  "address": "Adresse",
+  "description": "Description",
+  "selectCountry": "Sélectionnez un pays",
+  "noCountryOptions": "Aucun pays disponible",
+  "modifying": "Modification en cours...",
+  "creating": "Création en cours...",
+  "noName": "Sans nom",
+  "noClientsFound": "Aucun client trouvé",
+  "clickToAddClient": "Cliquez sur \"Ajouter un client\" pour créer un nouveau client",
+  "deleteSuccess": "Client supprimé avec succès",
+  "deleteError": "Une erreur est survenue lors de la suppression du client",
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
+  },
+
+  "orders": {
+  "title": "Demandes d'essai",
+  "list": "Liste des demandes d'essai",
+  "details": "Détails de la demande d'essai",
+  "form": "Formulaire de demande d'essai",
+  "add": "Ajouter une demande d'essai",
+  "edit": "Modifier la demande d'essai",
+  "reference": "Référence",
+  "commercial": "Commercial",
+  "date": "Date",
+  "noReference": "Sans référence",
+  "noOrdersFound": "Aucune demande d'essai trouvée pour ce client",
+  "clickToAddOrder": "Cliquez sur \"Ajouter une demande d'essai\" pour en créer une",
+  "deleteSuccess": "Demande d'essai supprimée avec succès",
+  "deleteError": "Une erreur est survenue lors de la suppression de la demande d'essai",
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette demande d'essai ? Cette action est irréversible.",
+  "modifying": "Modification en cours...",
+  "creating": "Création en cours...",
+  "sections": {
+    "basicInfo": "Informations de base",
+    "contacts": "Contacts",
+    "documents": "Documents"
+  },
+  "contacts": {
+    "add": "Ajouter un contact",
+    "contact": "Contact",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "email": "Email"
+  },
+  "documents": {
+    "uploadTitle": "Importer un document",
+    "loadError": "Erreur lors du chargement des fichiers:"
+  },
+  "generalInfo": {
+    "requestDate": "Date de demande",
+    "description": "Description"
   }
+},
+
+  "parts": {
+    "title": "Pièces",
+    "list": "Liste des pièces",
+    "details": "Détails de la pièce",
+    "form": "Formulaire de pièce",
+    "add": "Ajouter une pièce",
+    "edit": "Modifier la pièce",
+    "new": "Nouvelle pièce",
+    "designation": "Désignation",
+    "clientDesignation": "Désignation client",
+    "reference": "Référence",
+    "steel": "Acier",
+    "noParts": "Aucune pièce trouvée pour cette commande",
+    "clickToAdd": "Cliquez sur \"Nouvelle pièce\" pour en ajouter une",
+    "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer cette pièce ? Cette action est irréversible.",
+    "deleteSuccess": "Pièce supprimée avec succès",
+    "deleteError": "Une erreur est survenue lors de la suppression de la pièce"
+  },
+  "steels": {
+    "title": "Aciers",
+    "list": "Liste des aciers",
+    "details": "Détails de l'acier",
+    "form": "Formulaire d'acier",
+    "add": "Ajouter un acier",
+    "edit": "Modifier l'acier"
+  },
+  "tests": {
+    "title": "Essais",
+    "list": "Liste des essais",
+    "details": "Détails de l'essai",
+    "form": "Formulaire d'essai'",
+    "add": "Ajouter un essai",
+    "edit": "Modifier l'essai",
+    "new": "Nouvel essai",
+    "testCode": "Code d'essai",
+    "date": "Date",
+    "location": "Lieu",
+    "noName": "Sans nom",
+    "notDoneYet": "Pas encore réalisé",
+    "noTests": "Aucun essai trouvé pour cette pièce",
+    "clickToAdd": "Cliquez sur \"Nouvel essai\" pour en ajouter un",
+    "confirmDelete": "Confirmer la suppression",
+    "deleteMessage": "Êtes-vous sûr de vouloir supprimer l'essai {{name}} ? Cette action est irréversible.",
+    "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer ce test ? Cette action est irréversible.",
+    "deleteSuccess": "Essai supprimé avec succès",
+    "deleteError": "Une erreur est survenue lors de la suppression du test"
+  },
+
+  "sidebar": {
+  "dashboard": "Tableau de bord",
+  "dataManagement": {
+    "title": "Gestion des Données",
+    "dataPump": "Importation de Données",
+    "indexing": "Indexation",
+    "dataCleaning": "Nettoyage des Données",
+    "cleaningInProgress": "Nettoyage en cours...",
+    "analysis": "Analyse"
+  },
+  "archivesReference": {
+    "title": "Archives & Références",
+    "archives": "Archives",
+    "reference": "Référence"
+  },
+  "support": {
+    "title": "Support",
+    "createTicket": "Créer un ticket"
+  },
+  "dataCleaning": {
+    "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
+    "success": "Données supprimées avec succès",
+    "error": "Erreur lors de la suppression des données"
+  }
+}
+
+
+}

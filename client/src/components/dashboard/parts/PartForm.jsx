@@ -167,7 +167,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
           </CollapsibleSection>
           
           <CollapsibleSection
-            title="Spécifications"
+            title="Spécifications LPC"
             isExpandedByDefault={false}
             sectionId="part-specifications"
             rememberState={true}

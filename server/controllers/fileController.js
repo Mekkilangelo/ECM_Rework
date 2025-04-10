@@ -310,79 +310,33 @@ exports.downloadFile = async (req, res) => {
       where: { node_id: fileId }
     });
     
-    if (!fileData) {
-      return res.status(404).json({ message: 'Fichier non trouvé' });
-    }
-    
-    // Utiliser findOne pour récupérer les données du nœud
     const nodeData = await Node.findOne({ 
       where: { id: fileId } 
     });
     
-    if (!nodeData) {
-      return res.status(404).json({ message: 'Nœud associé non trouvé' });
+    if (!fileData || !nodeData) {
+      return res.status(404).json({ message: 'Fichier non trouvé' });
     }
     
-    // Construire le chemin complet
-    // Utiliser le chemin du fichier temporaire, mais remplacer le chemin absolu par le chemin de base
-    const tempFilePath = fileData.file_path;
-    const relativePath = nodeData.path.replace(/^\//, '');
+    // Extraire juste le chemin du dossier parent, sans le nom du fichier
+    const nodePath = path.dirname(nodeData.path);
+    const relativePath = nodePath.replace(/^\//, '');
     
-    // Extraire le nom de fichier du chemin temporaire
-    const tempFileName = path.basename(tempFilePath);
+    // Construire le chemin du dossier parent
+    const directoryPath = path.resolve(UPLOAD_BASE_DIR, relativePath);
     
-    // Construire le chemin complet
-    const fullFilePath = path.resolve(UPLOAD_BASE_DIR, relativePath);
-    
-    // Journalisation détaillée
-    console.log('Informations de téléchargement:');
-    console.log('ID du fichier:', fileId);
-    console.log('Chemin temporaire:', tempFilePath);
-    console.log('Chemin relatif du nœud:', relativePath);
-    console.log('Chemin de base des uploads:', UPLOAD_BASE_DIR);
-    console.log('Chemin complet construit:', fullFilePath);
-    console.log('Nom de fichier temporaire:', tempFileName);
+    // Construire le chemin complet du fichier
+    const finalFilePath = path.join(directoryPath, path.basename(fileData.file_path));
     
     // Vérifier si le fichier existe
-    try {
-      // Copier le fichier temporaire vers le chemin final si nécessaire
-      const finalFilePath = path.join(fullFilePath, tempFileName);
-      
-      // Créer le répertoire s'il n'existe pas
-      fs.mkdirSync(fullFilePath, { recursive: true });
-      
-      // Copier le fichier si ce n'est pas déjà au bon endroit
-      if (tempFilePath !== finalFilePath) {
-        fs.copyFileSync(tempFilePath, finalFilePath);
-        console.log('Fichier copié vers:', finalFilePath);
-      }
-      
-      // Vérifier l'accès au fichier final
-      fs.accessSync(finalFilePath, fs.constants.R_OK);
-      
-      // Téléchargement du fichier
-      return res.download(finalFilePath, fileData.original_name, (err) => {
-        if (err) {
-          console.error('Erreur de téléchargement:', err);
-          return res.status(500).json({ 
-            message: 'Erreur lors du téléchargement', 
-            erreur: err.message 
-          });
-        }
-      });
-      
-    } catch (accessError) {
-      console.error('Erreur d\'accès au fichier:', accessError);
+    if (!fs.existsSync(finalFilePath)) {
       return res.status(404).json({ 
-        message: 'Fichier physique introuvable',
-        details: {
-          fileId,
-          cheminConstruit: fullFilePath,
-          erreur: accessError.message
-        }
+        message: 'Fichier physique introuvable'
       });
     }
     
+    // Téléchargement du fichier
+    return res.download(finalFilePath, fileData.original_name);
   } catch (error) {
     console.error('Erreur lors du téléchargement du fichier:', error);
     return res.status(500).json({ 

@@ -16,15 +16,15 @@ const FurnaceDataSection = ({
   selectStyles,
 }) => {
   const handleCreateFurnaceType = (inputValue) => 
-    handleCreateOption(inputValue, 'furnaceData.furnaceType', 'furnaces', 'furnace_type');
+    handleCreateOption(inputValue, 'furnaceType', 'furnaces', 'furnace_type');
   const handleCreateHeatingCell = (inputValue) => 
-    handleCreateOption(inputValue, 'furnaceData.heatingCell', 'furnaces', 'heating_cell_type');
+    handleCreateOption(inputValue, 'heatingCell', 'furnaces', 'heating_cell_type');
   const handleCreateCoolingMedia = (inputValue) => 
-    handleCreateOption(inputValue, 'furnaceData.coolingMedia', 'furnaces', 'cooling_media');
+    handleCreateOption(inputValue, 'coolingMedia', 'furnaces', 'cooling_media');
   const handleCreateFurnaceSize = (inputValue) => 
-    handleCreateOption(inputValue, 'furnaceData.furnaceSize', 'furnaces', 'furnace_size');
+    handleCreateOption(inputValue, 'furnaceSize', 'furnaces', 'furnace_size');
   const handleCreateQuenchCell = (inputValue) => 
-    handleCreateOption(inputValue, 'furnaceData.quenchCell', 'furnaces', 'quench_cell');
+    handleCreateOption(inputValue, 'quenchCell', 'furnaces', 'quench_cell');
 
   return (
     <>
@@ -33,9 +33,9 @@ const FurnaceDataSection = ({
           <Form.Group className="mb-3">
             <Form.Label>Type de four</Form.Label>
             <CreatableSelect
-              name="furnaceData.furnaceType"
-              value={getSelectedOption(furnaceTypeOptions, formData.furnaceData?.furnaceType)}
-              onChange={(option) => handleSelectChange(option, { name: 'furnaceData.furnaceType' })}
+              name="furnaceType"
+              value={getSelectedOption(furnaceTypeOptions, formData.furnaceType)}
+              onChange={(option) => handleSelectChange(option, { name: 'furnaceType' })}
               onCreateOption={handleCreateFurnaceType}
               options={furnaceTypeOptions}
               isClearable
@@ -51,9 +51,9 @@ const FurnaceDataSection = ({
           <Form.Group className="mb-3">
             <Form.Label>Cellule de chauffage</Form.Label>
             <CreatableSelect
-              name="furnaceData.heatingCell"
-              value={getSelectedOption(heatingCellOptions, formData.furnaceData?.heatingCell)}
-              onChange={(option) => handleSelectChange(option, { name: 'furnaceData.heatingCell' })}
+              name="heatingCell"
+              value={getSelectedOption(heatingCellOptions, formData.heatingCell)}
+              onChange={(option) => handleSelectChange(option, { name: 'heatingCell' })}
               onCreateOption={handleCreateHeatingCell}
               options={heatingCellOptions}
               isClearable
@@ -69,9 +69,9 @@ const FurnaceDataSection = ({
           <Form.Group className="mb-3">
             <Form.Label>Média de refroidissement</Form.Label>
             <CreatableSelect
-              name="furnaceData.coolingMedia"
-              value={getSelectedOption(coolingMediaOptions, formData.furnaceData?.coolingMedia)}
-              onChange={(option) => handleSelectChange(option, { name: 'furnaceData.coolingMedia' })}
+              name="coolingMedia"
+              value={getSelectedOption(coolingMediaOptions, formData.coolingMedia)}
+              onChange={(option) => handleSelectChange(option, { name: 'coolingMedia' })}
               onCreateOption={handleCreateCoolingMedia}
               options={coolingMediaOptions}
               isClearable
@@ -89,9 +89,9 @@ const FurnaceDataSection = ({
           <Form.Group className="mb-3">
             <Form.Label>Taille du four</Form.Label>
             <CreatableSelect
-              name="furnaceData.furnaceSize"
-              value={getSelectedOption(furnaceSizeOptions, formData.furnaceData?.furnaceSize)}
-              onChange={(option) => handleSelectChange(option, { name: 'furnaceData.furnaceSize' })}
+              name="furnaceSize"
+              value={getSelectedOption(furnaceSizeOptions, formData.furnaceSize)}
+              onChange={(option) => handleSelectChange(option, { name: 'furnaceSize' })}
               onCreateOption={handleCreateFurnaceSize}
               options={furnaceSizeOptions}
               isClearable
@@ -107,9 +107,9 @@ const FurnaceDataSection = ({
           <Form.Group className="mb-3">
             <Form.Label>Cellule de trempe</Form.Label>
             <CreatableSelect
-              name="furnaceData.quenchCell"
-              value={getSelectedOption(quenchCellOptions, formData.furnaceData?.quenchCell)}
-              onChange={(option) => handleSelectChange(option, { name: 'furnaceData.quenchCell' })}
+              name="quenchCell"
+              value={getSelectedOption(quenchCellOptions, formData.quenchCell)}
+              onChange={(option) => handleSelectChange(option, { name: 'quenchCell' })}
               onCreateOption={handleCreateQuenchCell}
               options={quenchCellOptions}
               isClearable

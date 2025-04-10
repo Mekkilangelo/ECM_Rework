@@ -14,11 +14,11 @@ const TestTypeSection = ({
   selectStyles,
 }) => {
   const handleCreateMountingType = (inputValue) => 
-    handleCreateOption(inputValue, 'mountingType', 'tests', 'mountingType');
+    handleCreateOption(inputValue, 'mountingType', 'tests', 'mounting_type');
   const handleCreatePositionType = (inputValue) => 
-    handleCreateOption(inputValue, 'positionType', 'tests', 'positionType');
+    handleCreateOption(inputValue, 'positionType', 'tests', 'position_type');
   const handleCreateProcessType = (inputValue) => 
-    handleCreateOption(inputValue, 'processType', 'tests', 'processType');
+    handleCreateOption(inputValue, 'processType', 'tests', 'process_type');
 
   return (
     <>

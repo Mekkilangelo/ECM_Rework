@@ -104,6 +104,7 @@ const MicrographsSection = ({
           sectionId={`test-micrographs-${resultIndex}-${view.id}`}
           rememberState={true}
           className="mb-3"
+          level={2}
         >
           <div className="p-2">
             <FileUploader

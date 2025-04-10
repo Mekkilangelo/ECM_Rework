@@ -6,7 +6,8 @@ const PreoxidationSection = ({
   formData, 
   handleChange, 
   handleSelectChange, 
-  getSelectedOption, 
+  getSelectedOption,
+  coolingMediaOptions, 
   temperatureUnitOptions, 
   timeUnitOptions, 
   loading, 
@@ -18,6 +19,23 @@ const PreoxidationSection = ({
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
+            <Form.Label>Média</Form.Label>
+            <Select
+              name="recipeData.preoxMedia"
+              value={getSelectedOption(coolingMediaOptions, formData.recipeData?.preoxMedia)}
+              onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxMedia' })}
+              options={coolingMediaOptions}
+              isClearable
+              styles={selectStyles}
+              placeholder="Média"
+              className="react-select-container"
+              classNamePrefix="react-select"
+              isDisabled={loading}
+            />
+          </Form.Group>
+        </Col>
+        <Col md={3}>
+          <Form.Group className="mb-3">
             <Form.Label>Température</Form.Label>
             <Form.Control
               type="number"
@@ -25,10 +43,11 @@ const PreoxidationSection = ({
               value={formData.recipeData?.preoxTemp}
               onChange={handleChange}
               step="0.1"
+              disabled={loading}
             />
           </Form.Group>
         </Col>
-        <Col md={3}>
+        <Col md={2}>
           <Form.Group className="mb-3">
             <Form.Label>Unité</Form.Label>
             <Select
@@ -41,11 +60,11 @@ const PreoxidationSection = ({
               placeholder="Unité"
               className="react-select-container"
               classNamePrefix="react-select"
-              isLoading={loading}
+              isDisabled={loading}
             />
           </Form.Group>
         </Col>
-        <Col md={3}>
+        <Col md={2}>
           <Form.Group className="mb-3">
             <Form.Label>Durée</Form.Label>
             <Form.Control
@@ -54,10 +73,11 @@ const PreoxidationSection = ({
               value={formData.recipeData?.preoxDuration}
               onChange={handleChange}
               step="0.1"
+              disabled={loading}
             />
           </Form.Group>
         </Col>
-        <Col md={3}>
+        <Col md={2}>
           <Form.Group className="mb-3">
             <Form.Label>Unité</Form.Label>
             <Select
@@ -70,7 +90,7 @@ const PreoxidationSection = ({
               placeholder="Unité"
               className="react-select-container"
               classNamePrefix="react-select"
-              isLoading={loading}
+              isDisabled={loading}
             />
           </Form.Group>
         </Col>

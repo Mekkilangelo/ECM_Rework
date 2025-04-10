@@ -118,6 +118,7 @@ const PhotosSection = ({
           sectionId={`part-photo-${view.id}`}
           rememberState={true}
           className="mb-3"
+          level={1}
         >
           <div className="p-2">
             <FileUploader

@@ -92,6 +92,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
               preoxTempUnit: recipeData.preox?.temperature?.unit || '',
               preoxDuration: recipeData.preox?.duration?.value || '',
               preoxDurationUnit: recipeData.preox?.duration?.unit || '',
+              preoxMedia: recipeData.preox?.media || '',
               
               // Thermal cycle (dynamic array)
               thermalCycle: Array.isArray(recipeData.thermal_cycle) && recipeData.thermal_cycle.length > 0

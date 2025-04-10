@@ -45,6 +45,7 @@ const useFormState = () => {
       preoxTempUnit: '',
       preoxDuration: '',
       preoxDurationUnit: '',
+      preoxMedia: '',
       
       // Cycle thermique (tableau dynamique)
       thermalCycle: [

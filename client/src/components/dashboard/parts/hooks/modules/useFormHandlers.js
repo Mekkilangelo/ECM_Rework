@@ -1,26 +1,57 @@
-const useFormHandlers = (formData, setFormData, errors, setErrors) => {
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-      
-      if (errors[name]) {
-        setErrors(prev => ({ ...prev, [name]: null }));
-      }
-    };
+// useFormHandlers.js
+
+import { useCallback } from 'react';
+import enumService from '../../../../../services/enumService';
+
+const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions) => {
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
     
-    const handleSelectChange = (selectedOption, { name }) => {
-      setFormData(prev => ({ ...prev, [name]: selectedOption ? selectedOption.value : '' }));
-      
-      if (errors[name]) {
-        setErrors(prev => ({ ...prev, [name]: null }));
-      }
-    };
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+  }, [setFormData, errors, setErrors]);
+  
+  const handleSelectChange = useCallback((selectedOption, { name }) => {
+    setFormData(prev => ({ ...prev, [name]: selectedOption ? selectedOption.value : '' }));
     
-    return {
-      handleChange,
-      handleSelectChange
-    };
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+  }, [setFormData, errors, setErrors]);
+  
+  const handleCreateOption = useCallback(async (inputValue, fieldName, tableName, columnName) => {
+    try {
+      const refreshFunction = refreshOptionsFunctions[`refresh${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}Options`];
+      
+      const response = await enumService.addEnumValue(tableName, columnName, inputValue);
+      
+      if (response && response.success) {
+        // Mettre à jour le formulaire avec la nouvelle valeur
+        setFormData(prev => ({ ...prev, [fieldName]: inputValue }));
+        
+        // Rafraîchir les options si une fonction est disponible
+        if (refreshFunction && typeof refreshFunction === 'function') {
+          await refreshFunction();
+        }
+        
+        return { value: inputValue, label: inputValue };
+      } else {
+        console.error(`Erreur lors de l'ajout de ${fieldName}:`, response);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Erreur lors de l'ajout de ${fieldName}:`, error);
+      return null;
+    }
+  }, [setFormData, refreshOptionsFunctions]);
+  
+  return {
+    handleChange,
+    handleSelectChange,
+    handleCreateOption
   };
-  
-  export default useFormHandlers;
-  
+};
+
+export default useFormHandlers;

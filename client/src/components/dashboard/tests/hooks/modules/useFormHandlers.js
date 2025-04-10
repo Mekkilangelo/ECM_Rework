@@ -1,4 +1,7 @@
-const useFormHandlers = (formData, setFormData, errors, setErrors) => {
+import { useCallback } from 'react';
+import enumService from '../../../../../services/enumService';
+
+const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions) => {
   // Gestionnaire d'événements pour les champs de formulaire
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -340,6 +343,33 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
     }
   };
 
+  // Fonction pour créer une nouvelle option dans un select
+  const handleCreateOption = useCallback(async (inputValue, fieldName, tableName, columnName) => {
+    try {
+      const refreshFunction = refreshOptionsFunctions[`refresh${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}Options`];
+      
+      const response = await enumService.addEnumValue(tableName, columnName, inputValue);
+      
+      if (response && response.success) {
+        // Mettre à jour le formulaire avec la nouvelle valeur
+        setFormData(prev => ({ ...prev, [fieldName]: inputValue }));
+        
+        // Rafraîchir les options si une fonction est disponible
+        if (refreshFunction && typeof refreshFunction === 'function') {
+          await refreshFunction();
+        }
+        
+        return { value: inputValue, label: inputValue };
+      } else {
+        console.error(`Erreur lors de l'ajout de ${fieldName}:`, response);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Erreur lors de l'ajout de ${fieldName}:`, error);
+      return null;
+    }
+  }, [setFormData, refreshOptionsFunctions]);
+
   return {
     handleChange,
     handleSelectChange,
@@ -356,7 +386,8 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
     handleHardnessResultAdd,
     handleHardnessResultRemove,
     handleResultBlocAdd,
-    handleResultBlocRemove
+    handleResultBlocRemove,
+    handleCreateOption
   };
 };
 

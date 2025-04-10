@@ -24,6 +24,7 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
         isExpandedByDefault={true}
         sectionId="test-furnace-report"
         rememberState={false}
+        level={0}
       >
         <FurnaceReportSection
           testNodeId={test ? test.id : null}
@@ -36,6 +37,7 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
         isExpandedByDefault={true}
         sectionId="test-results"
         rememberState={false}
+        level={0}
       >
         <ResultsDataSection
           formData={formData}

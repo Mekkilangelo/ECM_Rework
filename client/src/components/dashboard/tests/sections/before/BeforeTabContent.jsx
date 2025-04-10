@@ -22,6 +22,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
         <TestTypeSection
           formData={formData}
           handleSelectChange={formHandlers.handleSelectChange}
+          handleCreateOption={formHandlers.handleCreateOption}
           getSelectedOption={formHandlers.getSelectedOption}
           mountingTypeOptions={formHandlers.mountingTypeOptions}
           positionTypeOptions={formHandlers.positionTypeOptions}
@@ -40,6 +41,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
         <FurnaceDataSection
           formData={formData}
           handleSelectChange={formHandlers.handleSelectChange}
+          handleCreateOption={formHandlers.handleCreateOption}
           getSelectedOption={formHandlers.getSelectedOption}
           furnaceTypeOptions={formHandlers.furnaceTypeOptions}
           heatingCellOptions={formHandlers.heatingCellOptions}
@@ -92,6 +94,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
           getSelectedOption={formHandlers.getSelectedOption}
+          coolingMediaOptions={formHandlers.coolingMediaOptions}
           temperatureUnitOptions={formHandlers.temperatureUnitOptions}
           timeUnitOptions={formHandlers.timeUnitOptions}
           pressureUnitOptions={formHandlers.pressureUnitOptions}

@@ -37,7 +37,7 @@ const ChemicalCycleSection = ({
 
   return (
     <> 
-      <Table responsive bordered size="sm" className="mt-2">
+      <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
         <thead className="bg-light">
           <tr>
             <th style={{ width: '60px' }}>Étape</th>
@@ -66,7 +66,11 @@ const ChemicalCycleSection = ({
                   value={getSelectedOption(gasOptions, cycle.gas)}
                   onChange={(option) => handleGasChange(option, index)}
                   options={gasOptions}
-                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  styles={{
+                    ...selectStyles,
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                  }}
                   isDisabled={loading}
                 />
               </td>

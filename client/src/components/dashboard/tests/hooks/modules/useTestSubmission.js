@@ -167,7 +167,8 @@ const useTestSubmission = (
         duration: {
           value: formData.recipeData.preoxDuration || null,
           unit: formData.recipeData.preoxDurationUnit || null
-        }
+        },
+        media: formData.recipeData.preoxMedia || null
       },
       thermal_cycle: thermalCycleData,
       chemical_cycle: chemicalCycleData,

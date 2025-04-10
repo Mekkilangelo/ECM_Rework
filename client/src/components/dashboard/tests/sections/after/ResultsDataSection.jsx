@@ -321,6 +321,7 @@ const ResultsDataSection = ({
               isExpandedByDefault={false}
               sectionId="test-micrographs"
               rememberState={true}
+              level={1}
             >  
               <MicrographsSection
                 testNodeId={test ? test.id : null}
@@ -334,6 +335,7 @@ const ResultsDataSection = ({
               isExpandedByDefault={false}
               sectionId={`test-hardness-curve-${resultIndex}`}
               rememberState={true}
+              level={1}
             >
               <ResultCurveSection
                 result={result}

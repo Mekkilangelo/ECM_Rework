@@ -118,6 +118,7 @@ const FurnaceReportSection = ({
           sectionId={`test-furnace-report-${view.id}`}
           rememberState={false}
           className="mb-3"
+          level={1}
         >
           <div className="p-2">
             <FileUploader

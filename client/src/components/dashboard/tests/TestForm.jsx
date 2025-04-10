@@ -1,4 +1,4 @@
-import React, { useState, useCallback, forwardRef, useEffect } from 'react';
+import React, { useState, useCallback, forwardRef, useEffect, useImperativeHandle } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import useTestForm from './hooks/useTestForm';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
@@ -18,6 +18,11 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
     setFileAssociationMethod(() => associateFilesFunc);
   }, []);
+
+  // Exposer handleCloseRequest à travers la référence
+  useImperativeHandle(ref, () => ({
+    handleCloseRequest
+  }));
 
   const {
     formData,
@@ -86,6 +91,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
             isExpandedByDefault={true}
             sectionId="test-basic-info"
             rememberState={true}
+            nestingLevel={0}
           >
             {/* Section BasicInfo toujours visible */}
             <BasicInfoSection

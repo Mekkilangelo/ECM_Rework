@@ -4,6 +4,45 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Génère un nom séquentiel pour un nouveau test basé sur les tests existants avec le même parent
+ * @param {string} parentId - ID du nœud parent
+ * @returns {Promise<string>} - Nom généré (TRIAL_X)
+ */
+async function generateSequentialTestName(parentId) {
+  try {
+    // Récupérer tous les tests qui ont le même parent
+    const testsWithSameParent = await Node.findAll({
+      where: {
+        parent_id: parentId,
+        type: 'test'
+      }
+    });
+    
+    // S'il n'y a pas de tests existants, commencer à 1
+    if (testsWithSameParent.length === 0) {
+      return 'TRIAL_1';
+    }
+    
+    // Extraire les numéros des noms existants
+    const existingNumbers = testsWithSameParent
+      .map(node => {
+        const match = node.name.match(/TRIAL_(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(num => !isNaN(num));
+    
+    // Trouver le plus grand nombre
+    const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+    
+    // Créer le nouveau nom avec le numéro suivant
+    return `TRIAL_${maxNumber + 1}`;
+  } catch (error) {
+    console.error('Erreur lors de la génération du nom de test:', error);
+    throw error;
+  }
+}
+
+/**
  * Récupérer tous les tests avec pagination
  */
 exports.getTests = async (req, res) => {
@@ -103,18 +142,19 @@ exports.createTest = async (req, res) => {
       description 
     } = req.body;
     
-    const name = 'TRIAL';
     // Validation des données
-    if (!name || !parent_id) {
-      return res.status(400).json({ message: 'Nom et ID parent requis' });
+    if (!parent_id) {
+      return res.status(400).json({ message: 'ID parent requis' });
     }
-    
     
     // Vérifier si le parent existe
     const parentNode = await Node.findByPk(parent_id);
     if (!parentNode) {
       return res.status(404).json({ message: 'Nœud parent non trouvé' });
     }
+    
+    // Générer un nom séquentiel basé sur les tests existants avec le même parent
+    const name = await generateSequentialTestName(parent_id);
     
     // Créer le test dans une transaction
     const result = await sequelize.transaction(async (t) => {
@@ -197,7 +237,6 @@ exports.updateTest = async (req, res) => {
   try {
     const { testId } = req.params;
     const { 
-      name, 
       test_code, 
       test_date,
       load_number, 
@@ -238,41 +277,12 @@ exports.updateTest = async (req, res) => {
     }
     
     await sequelize.transaction(async (t) => {
-      // Mettre à jour le nœud
-      if (name) {
-        const oldPath = node.path;
-        const parentPath = (await Node.findByPk(node.parent_id, { transaction: t })).path;
-        const newPath = `${parentPath}/${name}`;
-        
-        await node.update({
-          name,
-          path: newPath,
-          modified_at: new Date(),
-          description
-        }, { transaction: t });
-        
-        // Si le nom a changé, mettre à jour les chemins des descendants
-        if (name !== node.name) {
-          const descendants = await Closure.findAll({
-            where: { 
-              ancestor_id: testId,
-              depth: { [Op.gt]: 0 }
-            },
-            transaction: t
-          });
-          
-          for (const relation of descendants) {
-            const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
-            const descendantPath = descendant.path.replace(oldPath, newPath);
-            await descendant.update({ path: descendantPath }, { transaction: t });
-          }
-        }
-      } else {
-        // Juste mettre à jour la date de modification
-        await node.update({
-          modified_at: new Date()
-        }, { transaction: t });
-      }
+      // Mettre à jour uniquement la description et la date de modification du nœud
+      // Le nom reste inchangé après la création
+      await node.update({
+        modified_at: new Date(),
+        description: description !== undefined ? description : node.description
+      }, { transaction: t });
       
       // Mettre à jour les données du test
       const testData = {};

@@ -18,37 +18,6 @@ const ThermalCycleSection = ({
   selectStyles 
 }) => {
 
-  // Style compact pour les selects
-  const compactSelectStyles = {
-    ...selectStyles,
-    container: (provided) => ({
-      ...provided,
-      width: '100%',
-    }),
-    control: (provided) => ({
-      ...provided,
-      minHeight: '31px',
-      height: '31px',
-      fontSize: '0.875rem',
-    }),
-    valueContainer: (provided) => ({
-      ...provided,
-      height: '31px',
-      padding: '0 6px',
-    }),
-    placeholder: (provided) => ({
-      ...provided,
-      fontSize: '0.875rem',
-    }),
-    singleValue: (provided) => ({
-      ...provided, 
-      fontSize: '0.875rem',
-    }),
-    indicatorsContainer: (provided) => ({
-      ...provided,
-      height: '31px',
-    }),
-  };
 
   const rampOptions = [
     { value: 'up', label: 'Montée', icon: faArrowUp },
@@ -73,7 +42,7 @@ const ThermalCycleSection = ({
 
   return (
     <>
-      <Table responsive bordered size="sm" className="mt-2">
+      <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
         <thead className="bg-light">
           <tr>
             <th style={{ width: '60px' }}>Étape</th>
@@ -92,7 +61,11 @@ const ThermalCycleSection = ({
                   value={getSelectedOption(rampOptions, cycle.ramp)}
                   onChange={(option) => handleRampChange(option, index)}
                   options={rampOptions}
-                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  styles={{
+                    ...selectStyles,
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                  }}
                   isDisabled={loading}
                   formatOptionLabel={option => (
                     <div className="d-flex align-items-center">

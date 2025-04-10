@@ -1,11 +1,56 @@
 // useOptionsData.js
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import enumService from '../../../../../services/enumService';
 import steelService from '../../../../../services/steelService';
 
 const useOptionsData = (setLoading, setDesignationOptions, setUnitOptions, setSteelOptions) => {
-  // Fonction pour récupérer les aciers
+  // État pour suivre le dernier rafraîchissement
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  
+  // Fonction pour récupérer les désignations
+  const fetchDesignationOptions = useCallback(async () => {
+    try {
+      const designationsResponse = await enumService.getDesignations();
+      if (designationsResponse.data && designationsResponse.data.values) {
+        const designations = designationsResponse.data.values || [];
+        setDesignationOptions(designations.map(designation => ({ 
+          value: designation, 
+          label: designation 
+        })));
+      } else {
+        console.warn('Format de réponse des désignations inattendu:', designationsResponse);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des désignations:', error);
+    }
+  }, [setDesignationOptions]);
+
+  // Fonction pour récupérer les unités
+  const fetchUnitOptions = useCallback(async () => {
+    try {
+      const unitsResponse = await enumService.getUnits();
+      
+      if (unitsResponse && unitsResponse.data) {
+        const units = unitsResponse.data;
+        setUnitOptions(units.map(unit => ({ 
+          value: unit.id || unit.value, 
+          label: unit.name || unit.label,
+          type: unit.type 
+        })));
+      } else if (Array.isArray(unitsResponse)) {
+        setUnitOptions(unitsResponse.map(unit => ({ 
+          value: unit.id || unit.value, 
+          label: unit.name || unit.label,
+          type: unit.type 
+        })));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des unités:', error);
+    }
+  }, [setUnitOptions]);
+
+  // Fonction pour récupérer les aciers (inchangée)
   const fetchSteelOptions = useCallback(async () => {
     try {
       console.log("Récupération des aciers en cours...");
@@ -54,48 +99,21 @@ const useOptionsData = (setLoading, setDesignationOptions, setUnitOptions, setSt
     }
   }, [setSteelOptions]);
 
+  // Fonction de rafraîchissement général des options
+  const refreshAllOptions = useCallback(() => {
+    setRefreshCounter(prev => prev + 1);
+  }, []);
+
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         setLoading(true);
         
         // Récupérer les désignations de pièces
-        try {
-          const designationsResponse = await enumService.getDesignations();
-          if (designationsResponse.data && designationsResponse.data.values) {
-            const designations = designationsResponse.data.values || [];
-            setDesignationOptions(designations.map(designation => ({ 
-              value: designation, 
-              label: designation 
-            })));
-          } else {
-            console.warn('Format de réponse des désignations inattendu:', designationsResponse);
-          }
-        } catch (error) {
-          console.error('Erreur lors de la récupération des désignations:', error);
-        }
+        await fetchDesignationOptions();
         
         // Récupérer les unités
-        try {
-          const unitsResponse = await enumService.getUnits();
-          
-          if (unitsResponse && unitsResponse.data) {
-            const units = unitsResponse.data;
-            setUnitOptions(units.map(unit => ({ 
-              value: unit.id || unit.value, 
-              label: unit.name || unit.label,
-              type: unit.type 
-            })));
-          } else if (Array.isArray(unitsResponse)) {
-            setUnitOptions(unitsResponse.map(unit => ({ 
-              value: unit.id || unit.value, 
-              label: unit.name || unit.label,
-              type: unit.type 
-            })));
-          }
-        } catch (error) {
-          console.error('Erreur lors de la récupération des unités:', error);
-        }
+        await fetchUnitOptions();
         
         // Récupérer les aciers
         await fetchSteelOptions();
@@ -108,10 +126,15 @@ const useOptionsData = (setLoading, setDesignationOptions, setUnitOptions, setSt
     };
     
     fetchOptions();
-  }, [setLoading, setDesignationOptions, setUnitOptions, fetchSteelOptions]);
+  }, [setLoading, fetchDesignationOptions, fetchUnitOptions, fetchSteelOptions, refreshCounter]);
   
-  // Retourner la fonction de rafraîchissement des aciers
-  return { refreshSteelOptions: fetchSteelOptions };
+  // Retourner les fonctions de rafraîchissement
+  return { 
+    refreshSteelOptions: fetchSteelOptions,
+    refreshDesignationOptions: fetchDesignationOptions,
+    refreshUnitOptions: fetchUnitOptions,
+    refreshAllOptions
+  };
 };
 
 export default useOptionsData;

@@ -14,6 +14,7 @@ const RecipeDataSection = ({
   handleChange,
   handleSelectChange,
   getSelectedOption,
+  coolingMediaOptions,
   temperatureUnitOptions,
   timeUnitOptions,
   pressureUnitOptions,
@@ -55,6 +56,7 @@ const RecipeDataSection = ({
         handleChange={handleChange}
         handleSelectChange={handleSelectChange}
         getSelectedOption={getSelectedOption}
+        coolingMediaOptions={coolingMediaOptions}
         temperatureUnitOptions={temperatureUnitOptions}
         timeUnitOptions={timeUnitOptions}
         loading={loading}
@@ -66,6 +68,7 @@ const RecipeDataSection = ({
         isExpandedByDefault={true}
         sectionId="test-thermal-cycle"
         rememberState={true}
+        level={1}
       >
         {/* Thermal Cycle Section */}
         <ThermalCycleSection 
@@ -88,6 +91,7 @@ const RecipeDataSection = ({
         isExpandedByDefault={true}
         sectionId="test-chemical-cycle"
         rememberState={true}
+        level={1}
       >  
         {/* Chemical Cycle Section */}
         <ChemicalCycleSection 
@@ -107,6 +111,7 @@ const RecipeDataSection = ({
         isExpandedByDefault={true}
         sectionId="test-recipe-graph"
         rememberState={true}
+        level={1}
       >  
         <RecipeGraphSection 
           testNodeId={test ? test.id : null}
@@ -119,6 +124,7 @@ const RecipeDataSection = ({
         isExpandedByDefault={true}
         sectionId="test-quench-data"
         rememberState={true}
+        level={1}
       >
         {/* Quench Data Section - Imported from external component */}
         <QuenchDataSection

@@ -52,11 +52,42 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
   // Chargement des options pour les selects
   const { 
     locationOptions, statusOptions, mountingTypeOptions, positionTypeOptions, 
-    processTypeOptions, furnaceTypeOptions, heatingCellOptions, coolingMediaOptions, 
-    furnaceSizeOptions, quenchCellOptions, gasOptions, rampOptions,
+    processTypeOptions, preoxMediaOptions, furnaceTypeOptions, heatingCellOptions, 
+    coolingMediaOptions, furnaceSizeOptions, quenchCellOptions, gasOptions, rampOptions,
     selectStyles, getSelectedOption, lengthUnitOptions, weightUnitOptions, 
-    timeUnitOptions, temperatureUnitOptions, pressureUnitOptions, hardnessUnitOptions 
+    timeUnitOptions, temperatureUnitOptions, pressureUnitOptions, hardnessUnitOptions,
+    // Fonctions de rafraîchissement
+    refreshLocationOptions,
+    refreshStatusOptions,
+    refreshMountingTypeOptions,
+    refreshPositionTypeOptions,
+    refreshProcessTypeOptions,
+    refreshPreoxMediaOptions,
+    refreshFurnaceTypeOptions,
+    refreshHeatingCellOptions,
+    refreshCoolingMediaOptions,
+    refreshFurnaceSizeOptions,
+    refreshQuenchCellOptions,
+    refreshUnitOptions,
+    refreshAllOptions
   } = useOptionsFetcher(setLoading);
+  
+  // Regrouper les fonctions de rafraîchissement pour les passer à useFormHandlers
+  const refreshFunctions = {
+    refreshLocationOptions,
+    refreshStatusOptions,
+    refreshMountingTypeOptions,
+    refreshPositionTypeOptions,
+    refreshProcessTypeOptions,
+    refreshPreoxMediaOptions,
+    refreshFurnaceTypeOptions,
+    refreshHeatingCellOptions,
+    refreshCoolingMediaOptions,
+    refreshFurnaceSizeOptions,
+    refreshQuenchCellOptions,
+    refreshUnitOptions,
+    refreshAllOptions
+  };
   
   // Handlers pour le formulaire
   const { 
@@ -67,8 +98,9 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,
     handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
     handleResultBlocAdd, handleResultBlocRemove,
-    handleHardnessResultAdd, handleHardnessResultRemove
-  } = useFormHandlers(formData, setFormData, errors, setErrors);
+    handleHardnessResultAdd, handleHardnessResultRemove,
+    handleCreateOption // Ajouter le handler pour la création d'options
+  } = useFormHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
@@ -122,6 +154,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     mountingTypeOptions,
     positionTypeOptions,
     processTypeOptions,
+    preoxMediaOptions,
     furnaceTypeOptions,
     heatingCellOptions,
     coolingMediaOptions,
@@ -133,7 +166,6 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     handleSelectChange,
     handleSubmit,
     getSelectedOption,
-    pressureUnitOptions,
     lengthUnitOptions,
     weightUnitOptions,
     timeUnitOptions,
@@ -167,7 +199,23 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     handleResultBlocAdd,
     handleResultBlocRemove,
     handleHardnessResultAdd,
-    handleHardnessResultRemove
+    handleHardnessResultRemove,
+    // Ajout du handler pour créer de nouvelles options
+    handleCreateOption,
+    // Fonctions de rafraîchissement
+    refreshLocationOptions,
+    refreshStatusOptions,
+    refreshMountingTypeOptions,
+    refreshPositionTypeOptions,
+    refreshProcessTypeOptions,
+    refreshPreoxMediaOptions,
+    refreshFurnaceTypeOptions,
+    refreshHeatingCellOptions,
+    refreshCoolingMediaOptions,
+    refreshFurnaceSizeOptions,
+    refreshQuenchCellOptions,
+    refreshUnitOptions,
+    refreshAllOptions
   };
 };
 

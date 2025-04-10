@@ -31,6 +31,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
     steelOptions,
     handleChange,
     handleSelectChange,
+    handleCreateOption,
     handleSubmit,
     getSelectedOption,
     getLengthUnitOptions,
@@ -121,6 +122,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               errors={errors}
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
+              handleCreateOption={handleCreateOption}
               getSelectedOption={getSelectedOption}
               designationOptions={designationOptions}
               loading={loading}

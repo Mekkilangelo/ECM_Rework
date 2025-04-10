@@ -52,19 +52,38 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     getHardnessUnitOptions,
     selectStyles
   } = useSelectHelpers(unitOptions);
-  
-  // Handlers pour le formulaire
-  const { 
-    handleChange, 
-    handleSelectChange 
-  } = useFormHandlers(formData, setFormData, errors, setErrors);
-  
+
   // Chargement des options pour les selects et récupération de la fonction de rafraîchissement
-  const { refreshSteelOptions } = useOptionsData(
+  const { 
+    refreshSteelOptions,
+    refreshDesignationOptions,
+    refreshUnitOptions,
+    refreshAllOptions
+  } = useOptionsData(
     setLoading,
     setDesignationOptions,
     setUnitOptions,
     setSteelOptions
+  );
+
+  const refreshFunctions = {
+    refreshDesignationOptions,
+    refreshSteelOptions,
+    refreshUnitOptions,
+    refreshAllOptions
+  };
+  
+  // Handlers pour le formulaire
+  const { 
+    handleChange, 
+    handleSelectChange,
+    handleCreateOption
+  } = useFormHandlers(
+    formData, 
+    setFormData, 
+    errors, 
+    setErrors,
+    refreshFunctions
   );
   
   // Chargement des données de la pièce en mode édition
@@ -129,6 +148,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     steelOptions,
     handleChange,
     handleSelectChange,
+    handleCreateOption,
     handleSubmit,
     handleFileAssociationNeeded,
     getSelectedOption,

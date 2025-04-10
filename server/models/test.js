@@ -66,6 +66,10 @@ module.exports = (sequelize) => {
     process_type: {
       type: DataTypes.ENUM('Annealing', 'Quenching', 'Tempering', 'Carburizing', 'Nitriding'),
       allowNull: true
+    },
+    preox_media: {
+      type: DataTypes.ENUM('Water', 'Air', 'N2'),
+      allowNull: true
     }
   }, {
     tableName: 'tests',

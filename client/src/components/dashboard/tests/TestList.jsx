@@ -12,7 +12,7 @@ import '../../../styles/dataList.css';
 
 const TestList = ({ partId }) => {
   const { navigateBack } = useNavigation();
-  const { data, loading, error, updateItemStatus, refreshData, deleteItem } = useHierarchy('tests', partId);
+  const { data, loading, error, updateItemStatus, refreshData, deleteItem } = useHierarchy();
   const { user } = useContext(AuthContext);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -21,9 +21,6 @@ const TestList = ({ partId }) => {
   const [selectedTest, setSelectedTest] = useState(null);
 
   const testFormRef = useRef(null)
-
-  const nextTestNumber = data ? data.length + 1 : 1;
-  const nextTestName = `TRIAL - ${nextTestNumber}`;
 
   const handleTestClick = (test) => {
     setSelectedTest(test);
@@ -211,7 +208,6 @@ const TestList = ({ partId }) => {
           <TestForm
             ref={testFormRef}
             partId={partId}
-            nextTestName={nextTestName}
             onClose={() => setShowCreateForm(false)}
             onTestCreated={() => refreshData()}
           />

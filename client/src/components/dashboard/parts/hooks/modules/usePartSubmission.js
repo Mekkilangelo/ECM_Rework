@@ -126,7 +126,7 @@ const usePartSubmission = (
     },
     entityType: 'Pièce',
     initialFormState,
-    fileAssociationCallback,
+    //fileAssociationCallback,
     parentId
   });
 };

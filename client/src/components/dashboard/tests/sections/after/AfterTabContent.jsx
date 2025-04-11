@@ -1,14 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ResultsDataSection from './ResultsDataSection';
 import FurnaceReportSection from './FurnaceReportSection';
 import SpecificationsSection from './SpecificationsSection';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 
 const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded }) => {
+  const { t } = useTranslation();
+  
   return (
     <>
-      <CollapsibleSection 
-        title="Spécifications de la pièce" 
+      <CollapsibleSection
+        title={t('tests.after.specifications.title')}
         isExpandedByDefault={true}
         sectionId="test-specifications"
         rememberState={false}
@@ -18,10 +21,9 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
           parentId={formHandlers.parentId}
         />
       </CollapsibleSection>
-          
-      <CollapsibleSection 
-        title="Rapport du four" 
-        isExpandedByDefault={true}
+      <CollapsibleSection
+        title={t('tests.after.furnaceReport.title')}
+        isExpandedByDefault={false}
         sectionId="test-furnace-report"
         rememberState={false}
         level={0}
@@ -31,9 +33,8 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
           onFileAssociationNeeded={handleFileAssociationNeeded}
         />
       </CollapsibleSection>
-
-      <CollapsibleSection 
-        title="Controle" 
+      <CollapsibleSection
+        title={t('tests.after.results.title')}
         isExpandedByDefault={true}
         sectionId="test-results"
         rememberState={false}

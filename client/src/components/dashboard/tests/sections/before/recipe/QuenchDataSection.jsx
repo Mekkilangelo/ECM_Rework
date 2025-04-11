@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form, Card, Tabs, Tab } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWind, faOilCan } from '@fortawesome/free-solid-svg-icons';
 import GasQuenchSection from './quench/GasQuenchSection';
 import OilQuenchSection from './quench/OilQuenchSection';
 
-const QuenchDataSection = ({ 
-  formData, 
-  handleChange, 
-  handleSelectChange, 
-  getSelectedOption, 
-  temperatureUnitOptions, 
-  timeUnitOptions, 
+const QuenchDataSection = ({
+  formData,
+  handleChange,
+  handleSelectChange,
+  getSelectedOption,
+  temperatureUnitOptions,
+  timeUnitOptions,
   pressureUnitOptions,
   handleGasQuenchSpeedAdd,
   handleGasQuenchSpeedRemove,
@@ -19,9 +20,10 @@ const QuenchDataSection = ({
   handleGasQuenchPressureRemove,
   handleOilQuenchSpeedAdd,
   handleOilQuenchSpeedRemove,
-  loading, 
-  selectStyles 
+  loading,
+  selectStyles
 }) => {
+  const { t } = useTranslation();
   const [quenchType, setQuenchType] = useState('gas'); // 'gas' ou 'oil'
   
   // Mettre à jour le type de trempe dans les données du formulaire
@@ -33,19 +35,19 @@ const QuenchDataSection = ({
       }
     });
   }, [quenchType]);
-
+  
   // Fonction pour gérer le changement d'onglet
   const handleTabChange = (key) => {
     setQuenchType(key);
   };
-
+  
   // Fonction pour rendre les titres d'onglets avec mise en gras pour l'onglet actif
   const renderTabTitle = (title, icon, eventKey) => (
     <span className={quenchType === eventKey ? 'font-weight-bold' : ''}>
       <FontAwesomeIcon icon={icon} className="mr-2" /> {title}
     </span>
   );
-
+  
   return (
     <div className="quench-data-container">
       <Tabs
@@ -54,9 +56,9 @@ const QuenchDataSection = ({
         className="mb-4 mt-2"
         id="quench-type-tabs"
       >
-        <Tab 
-          eventKey="gas" 
-          title={renderTabTitle("Gaz", faWind, "gas")}
+        <Tab
+          eventKey="gas"
+          title={renderTabTitle(t('tests.before.recipeData.quenchData.gas.title'), faWind, "gas")}
         >
           <div className="fade-in tab-content-container">
             <GasQuenchSection
@@ -73,9 +75,9 @@ const QuenchDataSection = ({
             />
           </div>
         </Tab>
-        <Tab 
-          eventKey="oil" 
-          title={renderTabTitle("Huile", faOilCan, "oil")}
+        <Tab
+          eventKey="oil"
+          title={renderTabTitle(t('tests.before.recipeData.quenchData.oil.title'), faOilCan, "oil")}
         >
           <div className="fade-in tab-content-container">
             <OilQuenchSection

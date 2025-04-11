@@ -1,44 +1,44 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 import FileUploader from '../../../../common/FileUploader/FileUploader';
 import fileService from '../../../../../services/fileService';
 import { faImage } from '@fortawesome/free-solid-svg-icons';
 
-const MicrographsSection = ({ 
-  testNodeId, 
+const MicrographsSection = ({
+  testNodeId,
   resultIndex = 0,  // Ajout d'un index par défaut
-  onFileAssociationNeeded, 
+  onFileAssociationNeeded,
 }) => {
+  const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
   const [tempIds, setTempIds] = useState({});
-  
   const tempIdsRef = useRef({});
   
   useEffect(() => {
     tempIdsRef.current = tempIds;
   }, [tempIds]);
-
+  
   const views = [
-    { id: 'x50', name: 'Zoom x50' },
-    { id: 'x500', name: 'Zoom x500' },
-    { id: 'x1000', name: 'Zoom x1000' },
-    { id: 'other', name: 'Autre Zoom' },
+    { id: 'x50', name: t('tests.after.results.micrographs.zoomX50') },
+    { id: 'x500', name: t('tests.after.results.micrographs.zoomX500') },
+    { id: 'x1000', name: t('tests.after.results.micrographs.zoomX1000') },
+    { id: 'other', name: t('tests.after.results.micrographs.otherZoom') },
   ];
-
+  
   useEffect(() => {
     if (testNodeId) {
       loadExistingFiles();
     }
   }, [testNodeId, resultIndex]);
-
+  
   const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(testNodeId, { 
+      const response = await fileService.getFilesByNode(testNodeId, {
         category: `micrographs-result-${resultIndex}`,  // Modification ici
       });
       
       const filesBySubcategory = {};
-      
       response.data.files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
@@ -49,10 +49,10 @@ const MicrographsSection = ({
       
       setUploadedFiles(filesBySubcategory);
     } catch (error) {
-      console.error('Erreur lors du chargement des fichiers:', error);
+      console.error(t('tests.after.results.micrographs.loadError'), error);
     }
   };
-
+  
   const handleFilesUploaded = (files, newTempId, subcategory) => {
     setUploadedFiles(prev => ({
       ...prev,
@@ -66,15 +66,15 @@ const MicrographsSection = ({
       }));
     }
   };
-
+  
   const associateFiles = useCallback(async (newTestNodeId) => {
     try {
       const currentTempIds = tempIdsRef.current;
       
       for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newTestNodeId, tempId, { 
+        await fileService.associateFiles(newTestNodeId, tempId, {
           category: `micrographs-result-${resultIndex}`,  // Modification ici
-          subcategory 
+          subcategory
         });
       }
       
@@ -84,16 +84,16 @@ const MicrographsSection = ({
         loadExistingFiles();
       }
     } catch (error) {
-      console.error('Erreur lors de l\'association des fichiers:', error);
+      console.error(t('tests.after.results.micrographs.associateError'), error);
     }
   }, [testNodeId, resultIndex]);
-
+  
   useEffect(() => {
     if (onFileAssociationNeeded) {
       onFileAssociationNeeded(associateFiles);
     }
   }, [onFileAssociationNeeded, associateFiles]);
-
+  
   return (
     <>
       {views.map((view) => (
@@ -121,7 +121,7 @@ const MicrographsSection = ({
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
                 'image/*': ['.png', '.jpg', '.jpeg']
               }}
-              title={`Importer un ${view.name.toLowerCase()}`}
+              title={t('tests.after.results.micrographs.import', { name: view.name.toLowerCase() })}
               fileIcon={faImage}
               height="150px"
               width="100%"

@@ -1,24 +1,30 @@
 import React from 'react';
 import { Row, Col, Form } from 'react-bootstrap';
 import Select from 'react-select';
+import { useTranslation } from 'react-i18next';
 
-const BasicInfoSection = ({ 
-  formData, 
-  errors, 
-  handleChange, 
-  handleSelectChange, 
-  getSelectedOption, 
-  locationOptions, 
-  statusOptions, 
-  loading, 
-  selectStyles 
+const BasicInfoSection = ({
+  formData,
+  errors,
+  handleChange,
+  handleSelectChange,
+  getSelectedOption,
+  locationOptions,
+  statusOptions,
+  loading,
+  selectStyles
 }) => {
+  const { t, i18n } = useTranslation();
+  
+  // Définir le format de date en fonction de la langue
+  const dateFormat = i18n.language === 'fr' ? 'JJ/MM/AAAA' : 'DD/MM/YYYY';
+
   return (
     <>
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Numéro de charge</Form.Label>
+            <Form.Label>{t('tests.basicInfo.loadNumber')}</Form.Label>
             <Form.Control
               type="text"
               name="loadNumber"
@@ -29,21 +35,22 @@ const BasicInfoSection = ({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Date de l'essai</Form.Label>
+            <Form.Label>{t('tests.basicInfo.testDate')}</Form.Label>
             <Form.Control
               type="date"
               name="testDate"
               value={formData.testDate || ''}
               onChange={handleChange}
+              data-date-format={dateFormat}
+              title={dateFormat}
             />
           </Form.Group>
         </Col>
       </Row>
-      
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Localisation</Form.Label>
+            <Form.Label>{t('tests.basicInfo.location')}</Form.Label>
             <Select
               name="location"
               value={getSelectedOption(locationOptions, formData.location)}
@@ -51,7 +58,7 @@ const BasicInfoSection = ({
               options={locationOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une localisation"
+              placeholder={t('tests.basicInfo.selectLocation')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -60,7 +67,7 @@ const BasicInfoSection = ({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Statut</Form.Label>
+            <Form.Label>{t('tests.basicInfo.status')}</Form.Label>
             <Select
               name="status"
               value={getSelectedOption(statusOptions, formData.status)}
@@ -68,7 +75,7 @@ const BasicInfoSection = ({
               options={statusOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner un statut"
+              placeholder={t('tests.basicInfo.selectStatus')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -76,11 +83,10 @@ const BasicInfoSection = ({
           </Form.Group>
         </Col>
       </Row>
-      
       <Row>
         <Col md={12}>
           <Form.Group className="mb-3">
-            <Form.Label>Description</Form.Label>
+            <Form.Label>{t('tests.basicInfo.description')}</Form.Label>
             <Form.Control
               as="textarea"
               name="description"

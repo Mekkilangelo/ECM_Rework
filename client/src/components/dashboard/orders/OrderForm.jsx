@@ -112,7 +112,7 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
           </Button>
           <Button variant="danger" type="submit" disabled={loading}>
             {loading 
-              ? (order ? t('orders.modifying') : t('orders.creating')) 
+              ? (order ? t('common.modifying') : t('common.creating')) 
               : (order ? t('common.edit') : t('common.create'))}
           </Button>
         </div>

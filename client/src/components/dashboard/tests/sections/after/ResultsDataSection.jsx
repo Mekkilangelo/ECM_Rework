@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Form, Row, Col, Button, Card, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -24,11 +25,13 @@ const ResultsDataSection = ({
   test,
   handleFileAssociationNeeded
 }) => {
+  const { t } = useTranslation();
+  
   // Options pour les select pickers
   const hardnessLocationOptions = [
-    { value: 'surface', label: 'Surface' },
-    { value: 'pdd', label: 'PdD' },
-    { value: 'coeur', label: 'Coeur' }
+    { value: 'surface', label: t('tests.after.results.locations.surface') },
+    { value: 'pdd', label: t('tests.after.results.locations.pdd') },
+    { value: 'coeur', label: t('tests.after.results.locations.core') }
   ];
 
   // Fonctions de gestion des résultats internes au composant
@@ -102,20 +105,20 @@ const ResultsDataSection = ({
   return (
     <div>
       <h6 className="mb-3 d-flex justify-content-between align-items-center">
-        <span>Résultats</span>
+        <span>{t('tests.after.results.resultsLabel')}</span>
         <Button
           variant="outline-primary"
           size="sm"
           onClick={handleResultBlocAdd}
           disabled={loading}
         >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter un résultat
+          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addResult')}
         </Button>
       </h6>
       {results.map((result, resultIndex) => (
         <Card key={resultIndex} className={`mb-3`}>
           <Card.Header className="d-flex justify-content-between align-items-center bg-light">
-            <h6 className="mb-0">Résultat #{result.step}</h6>
+            <h6 className="mb-0">{t('tests.after.results.resultNumber', { number: result.step })}</h6>
             {results.length > 1 && (
               <Button
                 variant="outline-danger"
@@ -123,13 +126,13 @@ const ResultsDataSection = ({
                 onClick={() => handleResultBlocRemove(resultIndex)}
                 disabled={loading}
               >
-                <FontAwesomeIcon icon={faTrash} className="me-1" /> Supprimer
+                <FontAwesomeIcon icon={faTrash} className="me-1" /> {t('common.delete')}
               </Button>
             )}
           </Card.Header>
           <Card.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>{t('tests.after.results.description')}</Form.Label>
               <Form.Control
                 type="text"
                 value={result.description || ''}
@@ -137,18 +140,17 @@ const ResultsDataSection = ({
                 disabled={loading}
               />
             </Form.Group>
-            
             <Form.Group className="mb-3">
               <Form.Label className="d-flex justify-content-between align-items-center">
-                <span>Dureté</span>
+                <span>{t('tests.after.results.hardness')}</span>
               </Form.Label>
               <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
                 <thead className="bg-light">
                   <tr>
-                    <th style={{ width: '40%' }}>Position</th>
-                    <th style={{ width: '25%' }}>Valeur</th>
-                    <th style={{ width: '25%' }}>Unité</th>
-                    <th style={{ width: '10%' }}>Actions</th>
+                    <th style={{ width: '40%' }}>{t('tests.after.results.position')}</th>
+                    <th style={{ width: '25%' }}>{t('tests.after.results.value')}</th>
+                    <th style={{ width: '25%' }}>{t('common.unit')}</th>
+                    <th style={{ width: '10%' }}>{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -159,7 +161,7 @@ const ResultsDataSection = ({
                           value={getSelectedOption(hardnessLocationOptions, point.location)}
                           onChange={(option) => handleHardnessChange(resultIndex, hardnessIndex, 'location', option)}
                           options={hardnessLocationOptions}
-                          placeholder="Position"
+                          placeholder={t('tests.after.results.selectPosition')}
                           isDisabled={loading}
                           menuPortalTarget={document.body}
                           styles={{
@@ -174,7 +176,7 @@ const ResultsDataSection = ({
                           type="number"
                           value={point.value || ''}
                           onChange={(e) => handleHardnessChange(resultIndex, hardnessIndex, 'value', e.target.value)}
-                          placeholder="Valeur"
+                          placeholder={t('tests.after.results.enterValue')}
                           disabled={loading}
                         />
                       </td>
@@ -183,7 +185,7 @@ const ResultsDataSection = ({
                           value={getSelectedOption(hardnessUnitOptions, point.unit || formData.resultsData?.hardnessResultUnit)}
                           onChange={(option) => handleHardnessChange(resultIndex, hardnessIndex, 'unit', option)}
                           options={hardnessUnitOptions}
-                          placeholder="Unité"
+                          placeholder={t('common.selectUnit')}
                           isDisabled={loading}
                           menuPortalTarget={document.body}
                           styles={{
@@ -216,36 +218,34 @@ const ResultsDataSection = ({
                   onClick={() => handleHardnessResultAdd(resultIndex)}
                   disabled={loading}
                 >
-                  <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter un point
+                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addPoint')}
                 </Button>
               </div>
             </Form.Group>
-
             <Form.Group className="mb-3">
-              <Form.Label>ECD (Profondeur effective de cémentation)</Form.Label>
-              
+              <Form.Label>{t('tests.after.results.ecd')}</Form.Label>
               {/* Nouveaux champs Dureté et Unité pour l'ECD */}
               <Row className="mb-3">
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>Dureté</Form.Label>
+                    <Form.Label>{t('tests.after.results.hardness')}</Form.Label>
                     <Form.Control
                       type="number"
                       value={result.ecd?.hardnessValue || ''}
                       onChange={(e) => handleEcdChange(resultIndex, null, 'hardnessValue', e.target.value)}
-                      placeholder="Valeur de dureté"
+                      placeholder={t('tests.after.results.hardnessValue')}
                       disabled={loading}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>Unité</Form.Label>
+                    <Form.Label>{t('common.unit')}</Form.Label>
                     <Select
                       value={getSelectedOption(hardnessUnitOptions, result.ecd?.hardnessUnit)}
                       onChange={(option) => handleEcdChange(resultIndex, null, 'hardnessUnit', option)}
                       options={hardnessUnitOptions}
-                      placeholder="Unité de dureté"
+                      placeholder={t('tests.after.results.hardnessUnit')}
                       isDisabled={loading}
                       styles={selectStyles}
                       isClearable
@@ -253,24 +253,23 @@ const ResultsDataSection = ({
                   </Form.Group>
                 </Col>
               </Row>
-              
               <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
                 <thead className="bg-light">
                   <tr>
-                    <th style={{ width: '40%' }}>Position</th>
-                    <th style={{ width: '30%' }}>Distance</th>
-                    <th style={{ width: '30%' }}>Unité</th>
+                    <th style={{ width: '40%' }}>{t('tests.after.results.position')}</th>
+                    <th style={{ width: '30%' }}>{t('tests.after.results.distance')}</th>
+                    <th style={{ width: '30%' }}>{t('common.unit')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Flanc de dent</td>
+                    <td>{t('tests.after.results.toothFlank')}</td>
                     <td>
                       <Form.Control
                         type="number"
                         value={result.ecd?.toothFlank?.distance || ''}
                         onChange={(e) => handleEcdChange(resultIndex, 'toothFlank', 'distance', e.target.value)}
-                        placeholder="Distance"
+                        placeholder={t('tests.after.results.enterDistance')}
                         disabled={loading}
                       />
                     </td>
@@ -279,7 +278,7 @@ const ResultsDataSection = ({
                         value={getSelectedOption(lengthUnitOptions, result.ecd?.toothFlank?.unit)}
                         onChange={(option) => handleEcdChange(resultIndex, 'toothFlank', 'unit', option)}
                         options={lengthUnitOptions}
-                        placeholder="Unité"
+                        placeholder={t('common.selectUnit')}
                         isDisabled={loading}
                         menuPortalTarget={document.body}
                         styles={{
@@ -291,13 +290,13 @@ const ResultsDataSection = ({
                     </td>
                   </tr>
                   <tr>
-                    <td>Pied de dent</td>
+                    <td>{t('tests.after.results.toothRoot')}</td>
                     <td>
                       <Form.Control
                         type="number"
                         value={result.ecd?.toothRoot?.distance || ''}
                         onChange={(e) => handleEcdChange(resultIndex, 'toothRoot', 'distance', e.target.value)}
-                        placeholder="Distance"
+                        placeholder={t('tests.after.results.enterDistance')}
                         disabled={loading}
                       />
                     </td>
@@ -306,7 +305,7 @@ const ResultsDataSection = ({
                         value={getSelectedOption(lengthUnitOptions, result.ecd?.toothRoot?.unit)}
                         onChange={(option) => handleEcdChange(resultIndex, 'toothRoot', 'unit', option)}
                         options={lengthUnitOptions}
-                        placeholder="Unité"
+                        placeholder={t('common.selectUnit')}
                         isDisabled={loading}
                         menuPortalTarget={document.body}
                         styles={{
@@ -320,9 +319,8 @@ const ResultsDataSection = ({
                 </tbody>
               </Table>
             </Form.Group>
-            
             <Form.Group className="mb-3">
-              <Form.Label>Commentaire</Form.Label>
+              <Form.Label>{t('tests.after.results.comment')}</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
@@ -331,9 +329,8 @@ const ResultsDataSection = ({
                 disabled={loading}
               />
             </Form.Group>
-            
             <CollapsibleSection
-              title="Micrographies"
+              title={t('tests.after.results.micrographs.title')}
               isExpandedByDefault={false}
               sectionId="test-micrographs"
               rememberState={true}
@@ -345,9 +342,8 @@ const ResultsDataSection = ({
                 onFileAssociationNeeded={handleFileAssociationNeeded}
               />
             </CollapsibleSection>
-
             <CollapsibleSection
-              title="Courbes de dureté"
+              title={t('tests.after.results.resultCurve.title')}
               isExpandedByDefault={false}
               sectionId={`test-hardness-curve-${resultIndex}`}
               rememberState={true}

@@ -1,11 +1,10 @@
 import React, { forwardRef, useState, useCallback, useImperativeHandle } from 'react';
 import { Modal, Form, Button, Spinner } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import SteelForm from '../steels/SteelForm';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
-
 // Custom hooks
 import usePartForm from './hooks/usePartForm';
-
 // Section components
 import BasicInfoSection from './sections/BasicInfoSection';
 import DimensionsSection from './sections/DimensionsSection';
@@ -15,6 +14,8 @@ import PhotosSection from './sections/PhotosSection';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 
 const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, ref) => {
+  const { t } = useTranslation();
+  
   // État pour stocker la fonction d'association de fichiers
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
@@ -76,12 +77,10 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
   const handleSteelCreated = async (newSteel) => {
     // Fermez la modal
     setShowSteelModal(false);
-    
     // Rafraîchir la liste des aciers si la fonction existe
     if (refreshSteels) {
       await refreshSteels();
     }
-    
     // Sélectionner automatiquement le nouvel acier
     if (newSteel && newSteel.grade) {
       handleSelectChange(
@@ -103,16 +102,14 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             {message.text}
           </div>
         )}
-        
         {errors.parent && (
           <div className="alert alert-danger mb-3">
             {errors.parent}
           </div>
         )}
-        
         <Form onSubmit={handleSubmit} autoComplete="off">
           <CollapsibleSection
-            title="Informations de base"
+            title={t('parts.sections.basicInfo')}
             isExpandedByDefault={true}
             sectionId="part-basic-info"
             rememberState={true}
@@ -131,7 +128,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
           </CollapsibleSection>
           
           <CollapsibleSection
-            title="Dimensions"
+            title={t('parts.sections.dimensions')}
             isExpandedByDefault={false}
             sectionId="part-dimensions"
             rememberState={true}
@@ -148,9 +145,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             />
           </CollapsibleSection>
           
-          {/* Nouvelle section pour l'acier */}
           <CollapsibleSection
-            title="Acier"
+            title={t('parts.sections.steel')}
             isExpandedByDefault={false}
             sectionId="part-steel"
             rememberState={true}
@@ -167,7 +163,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
           </CollapsibleSection>
           
           <CollapsibleSection
-            title="Spécifications LPC"
+            title={t('parts.sections.specifications')}
             isExpandedByDefault={false}
             sectionId="part-specifications"
             rememberState={true}
@@ -183,9 +179,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             />
           </CollapsibleSection>
           
-          {/* Section de photos */}
           <CollapsibleSection
-            title="Photos de la pièce"
+            title={t('parts.sections.photos')}
             isExpandedByDefault={false}
             sectionId="part-photos"
             rememberState={true}
@@ -198,7 +193,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
           
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -206,8 +201,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               disabled={loading}
             >
               {loading
-                ? (part ? 'Modification en cours...' : 'Création en cours...')
-                : (part ? 'Modifier' : 'Créer')
+                ? (part ? t('common.modifying') : t('common.creating'))
+                : (part ? t('common.edit') : t('common.create'))
               }
             </Button>
           </div>
@@ -221,8 +216,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
         onCancel={cancelClose}
         onContinue={confirmClose}
         onSave={saveAndClose}
-        title="Confirmer la fermeture"
-        message="Vous avez des modifications non enregistrées."
+        title={t('closeModal.title')}
+        message={t('closeModal.unsavedChanges')}
       />
       
       {/* Modal de création d'acier */}
@@ -233,7 +228,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
         backdrop="static"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Ajouter un nouvel acier</Modal.Title>
+          <Modal.Title>{t('steels.add')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <SteelForm

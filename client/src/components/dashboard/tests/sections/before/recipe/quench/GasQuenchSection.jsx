@@ -1,55 +1,56 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form, Button, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const GasQuenchSection = ({ 
-  formData, 
-  handleChange, 
-  handleSelectChange, 
-  getSelectedOption, 
+const GasQuenchSection = ({
+  formData,
+  handleChange,
+  handleSelectChange,
+  getSelectedOption,
   handleGasQuenchSpeedAdd,
   handleGasQuenchSpeedRemove,
   handleGasQuenchPressureAdd,
   handleGasQuenchPressureRemove,
-  loading, 
-  selectStyles 
+  loading,
+  selectStyles
 }) => {
-  
+  const { t } = useTranslation();
+
   const handleGasQuenchSpeedChange = (index, field, value) => {
     const updatedGasQuenchSpeed = [...formData.quenchData.gasQuenchSpeed];
     updatedGasQuenchSpeed[index] = { ...updatedGasQuenchSpeed[index], [field]: value };
-    handleChange({ 
-      target: { 
-        name: 'quenchData.gasQuenchSpeed', 
-        value: updatedGasQuenchSpeed 
-      } 
+    handleChange({
+      target: {
+        name: 'quenchData.gasQuenchSpeed',
+        value: updatedGasQuenchSpeed
+      }
     });
   };
-  
+
   const handleGasQuenchPressureChange = (index, field, value) => {
     const updatedGasQuenchPressure = [...formData.quenchData.gasQuenchPressure];
     updatedGasQuenchPressure[index] = { ...updatedGasQuenchPressure[index], [field]: value };
-    handleChange({ 
-      target: { 
-        name: 'quenchData.gasQuenchPressure', 
-        value: updatedGasQuenchPressure 
-      } 
+    handleChange({
+      target: {
+        name: 'quenchData.gasQuenchPressure',
+        value: updatedGasQuenchPressure
+      }
     });
   };
 
   return (
     <>
-      <h5 className="mt-4 mb-2">Paramètres de Vitesse</h5>
-      
+      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.gas.speedParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>Étape</th>
-            <th>Durée</th>
-            <th>Vitesse</th>
-            <th style={{ width: '80px' }}>Actions</th>
+            <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
+            <th>{t('tests.before.recipeData.quenchData.common.duration')}</th>
+            <th>{t('tests.before.recipeData.quenchData.gas.speed')}</th>
+            <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -88,27 +89,25 @@ const GasQuenchSection = ({
           ))}
         </tbody>
       </Table>
-      
       <div className="text-end mb-3">
-        <Button 
-          variant="outline-primary" 
-          size="sm" 
+        <Button
+          variant="outline-primary"
+          size="sm"
           onClick={handleGasQuenchSpeedAdd}
           disabled={loading}
         >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter une étape
+          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
         </Button>
       </div>
-      
-      <h5 className="mt-4 mb-2">Paramètres de Pression</h5>
-      
+
+      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.gas.pressureParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>Étape</th>
-            <th>Durée</th>
-            <th>Pression</th>
-            <th style={{ width: '80px' }}>Actions</th>
+            <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
+            <th>{t('tests.before.recipeData.quenchData.common.duration')}</th>
+            <th>{t('tests.before.recipeData.quenchData.gas.pressure')}</th>
+            <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -147,15 +146,14 @@ const GasQuenchSection = ({
           ))}
         </tbody>
       </Table>
-      
       <div className="text-end mb-3">
-        <Button 
-          variant="outline-primary" 
-          size="sm" 
+        <Button
+          variant="outline-primary"
+          size="sm"
           onClick={handleGasQuenchPressureAdd}
           disabled={loading}
         >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter une étape
+          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
         </Button>
       </div>
     </>

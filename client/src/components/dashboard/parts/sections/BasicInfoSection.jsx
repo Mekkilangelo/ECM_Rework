@@ -1,8 +1,7 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
-import Select, { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
-import enumService from '../../../../services/enumService';
+import { useTranslation } from 'react-i18next';
 
 const BasicInfoSection = ({
   formData,
@@ -13,10 +12,10 @@ const BasicInfoSection = ({
   getSelectedOption,
   designationOptions,
   loading,
-  selectStyles,
-  refreshOptions
+  selectStyles
 }) => {
-  
+  const { t } = useTranslation();
+
   const handleCreateDesignation = (inputValue) => {
     return handleCreateOption(inputValue, 'designation', 'parts', 'designation');
   };
@@ -25,7 +24,7 @@ const BasicInfoSection = ({
     <div className="row">
       <div className="col-md-6">
         <Form.Group className="mb-3">
-          <Form.Label>Désignation <span className="text-danger">*</span></Form.Label>
+          <Form.Label>{t('parts.basicInfo.designation')} <span className="text-danger">*</span></Form.Label>
           <CreatableSelect
             name="designation"
             value={getSelectedOption(designationOptions, formData.designation)}
@@ -33,18 +32,18 @@ const BasicInfoSection = ({
             options={designationOptions}
             isClearable
             styles={selectStyles}
-            placeholder="Sélectionner ou ajouter une désignation"
+            placeholder={t('parts.basicInfo.selectDesignation')}
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
-            formatCreateLabel={(inputValue) => `Ajouter "${inputValue}"`}
+            formatCreateLabel={(inputValue) => `${t('common.addOption', { option: inputValue })}`}
             onCreateOption={handleCreateDesignation}
           />
         </Form.Group>
       </div>
       <div className="col-md-6">
         <Form.Group className="mb-3">
-          <Form.Label>Désignation client</Form.Label>
+          <Form.Label>{t('parts.basicInfo.clientDesignation')}</Form.Label>
           <Form.Control
             type="text"
             name="clientDesignation"
@@ -60,7 +59,7 @@ const BasicInfoSection = ({
       </div>
       <div className="col-md-6">
         <Form.Group className="mb-3">
-          <Form.Label>Référence</Form.Label>
+          <Form.Label>{t('parts.basicInfo.reference')}</Form.Label>
           <Form.Control
             type="text"
             name="reference"
@@ -70,13 +69,13 @@ const BasicInfoSection = ({
             autoComplete="off"
           />
           <Form.Control.Feedback type="invalid">
-            {errors.name}
+            {errors.reference}
           </Form.Control.Feedback>
         </Form.Group>
       </div>
       <div className="col-md-6">
         <Form.Group className="mb-3">
-          <Form.Label>Description</Form.Label>
+          <Form.Label>{t('parts.basicInfo.description')}</Form.Label>
           <Form.Control
             as="textarea"
             rows={3}

@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 import FileUploader from '../../../../common/FileUploader/FileUploader';
 import fileService from '../../../../../services/fileService';
 import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
 
-const FurnaceReportSection = ({ 
-  testNodeId, 
-  onFileAssociationNeeded, 
+const FurnaceReportSection = ({
+  testNodeId,
+  onFileAssociationNeeded,
 }) => {
+  const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
   const [tempIds, setTempIds] = useState({});
-  
   // Utilisez une référence pour stocker tempIds sans déclencher de re-renders
   const tempIdsRef = useRef({});
   
@@ -18,31 +19,29 @@ const FurnaceReportSection = ({
   useEffect(() => {
     tempIdsRef.current = tempIds;
   }, [tempIds]);
-
+  
   // Configuration des différentes vues
   const views = [
-    { id: 'heating', name: 'Rapport de chauffe' },
-    { id: 'cooling', name: 'Rapport de trempe' },
-    { id: 'alarms', name: 'Rapport d\'alarme' },
-    { id: 'datapaq', name: 'DATAPAQ' },
+    { id: 'heating', name: t('tests.after.furnaceReport.heating') },
+    { id: 'cooling', name: t('tests.after.furnaceReport.cooling') },
+    { id: 'alarms', name: t('tests.after.furnaceReport.alarms') },
+    { id: 'datapaq', name: t('tests.after.furnaceReport.datapaq') },
   ];
-
+  
   // Charger les fichiers existants
   useEffect(() => {
     if (testNodeId) {
       loadExistingFiles();
     }
   }, [testNodeId]);
-
+  
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getFilesByNode(testNodeId, { category: 'furnace_report' });
-
-      console.log('Réponse de récupération des fichiers', response.data);
+      console.log(t('tests.after.furnaceReport.filesResponse'), response.data);
       
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
-      
       response.data.files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
@@ -50,13 +49,12 @@ const FurnaceReportSection = ({
         }
         filesBySubcategory[subcategory].push(file);
       });
-      
       setUploadedFiles(filesBySubcategory);
     } catch (error) {
-      console.error('Erreur lors du chargement des fichiers:', error);
+      console.error(t('tests.after.furnaceReport.loadError'), error);
     }
   };
-
+  
   const handleFilesUploaded = (files, newTempId, subcategory) => {
     // Mettre à jour la liste des fichiers téléchargés
     setUploadedFiles(prev => ({
@@ -72,7 +70,7 @@ const FurnaceReportSection = ({
       }));
     }
   };
-
+  
   // Méthode pour associer les fichiers lors de la soumission du formulaire
   // Utilisez useCallback pour mémoriser cette fonction
   const associateFiles = useCallback(async (newTestNodeId) => {
@@ -82,9 +80,9 @@ const FurnaceReportSection = ({
       
       // Parcourir tous les tempIds et les associer
       for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newTestNodeId, tempId, { 
-          category: 'furnace_report', 
-          subcategory 
+        await fileService.associateFiles(newTestNodeId, tempId, {
+          category: 'furnace_report',
+          subcategory
         });
       }
       
@@ -96,10 +94,10 @@ const FurnaceReportSection = ({
         loadExistingFiles();
       }
     } catch (error) {
-      console.error('Erreur lors de l\'association des fichiers:', error);
+      console.error(t('tests.after.furnaceReport.associateError'), error);
     }
   }, [testNodeId]); // Ne dépend que de testNodeId, pas de tempIds
-
+  
   // Exposer la méthode d'association via le prop onFileAssociationNeeded
   // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
   useEffect(() => {
@@ -107,14 +105,14 @@ const FurnaceReportSection = ({
       onFileAssociationNeeded(associateFiles);
     }
   }, [onFileAssociationNeeded, associateFiles]);
-
+  
   return (
     <>
       {views.map((view) => (
         <CollapsibleSection
           key={view.id}
           title={view.name}
-          isExpandedByDefault={view.id === 'heating'}
+          isExpandedByDefault={false}
           sectionId={`test-furnace-report-${view.id}`}
           rememberState={false}
           className="mb-3"
@@ -135,7 +133,7 @@ const FurnaceReportSection = ({
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
                 'image/*': ['.png', '.jpg', '.jpeg']
               }}
-              title={`Importer une ${view.name.toLowerCase()}`}
+              title={t('tests.after.furnaceReport.import', { name: view.name.toLowerCase() })}
               fileIcon={faFile}
               height="150px"
               width="100%"

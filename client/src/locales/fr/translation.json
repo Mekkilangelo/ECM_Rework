@@ -12,14 +12,20 @@
     "no": "Non",
     "actions": "Actions",
     "unknown": "Inconnu",
-    "modifiedAt": "Modifié le"
+    "modifiedAt": "Modifié le",
+    "selectUnit": "Sélectionner une unité",
+    "unit": "Unité",
+    "modifying": "Modification en cours...",
+    "creating": "Création en cours...",
+    "min": "Min",
+    "max": "Max"
   },
-
+  
   "closeModal": {
-  "title": "Confirmer la fermeture",
-  "unsavedChanges": "Vous avez des modifications non enregistrées."
+    "title": "Confirmer la fermeture",
+    "unsavedChanges": "Vous avez des modifications non enregistrées."
   },
-
+  
   "auth": {
     "login": "Connexion",
     "logout": "Déconnexion",
@@ -28,84 +34,87 @@
     "forgotPassword": "Mot de passe oublié ?",
     "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter."
   },
+  
   "search": {
     "placeholder": "Rechercher des données, clients, rapports..."
   },
+  
   "navigation": {
     "dashboard": "Tableau de bord",
     "reference": "Référentiel",
     "archives": "Archives"
   },
+  
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue sur le tableau de bord"
   },
-
+  
   "clients": {
-  "title": "Clients",
-  "name": "Nom du client",
-  "list": "Liste des clients",
-  "details": "Détails du client",
-  "form": "Formulaire client",
-  "add": "Ajouter un client",
-  "edit": "Modifier le client",
-  "group": "Groupe",
-  "country": "Pays",
-  "city": "Ville",
-  "address": "Adresse",
-  "description": "Description",
-  "selectCountry": "Sélectionnez un pays",
-  "noCountryOptions": "Aucun pays disponible",
-  "modifying": "Modification en cours...",
-  "creating": "Création en cours...",
-  "noName": "Sans nom",
-  "noClientsFound": "Aucun client trouvé",
-  "clickToAddClient": "Cliquez sur \"Ajouter un client\" pour créer un nouveau client",
-  "deleteSuccess": "Client supprimé avec succès",
-  "deleteError": "Une erreur est survenue lors de la suppression du client",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
+    "title": "Clients",
+    "name": "Nom du client",
+    "list": "Liste des clients",
+    "details": "Détails du client",
+    "form": "Formulaire client",
+    "add": "Ajouter un client",
+    "edit": "Modifier le client",
+    "group": "Groupe",
+    "country": "Pays",
+    "city": "Ville",
+    "address": "Adresse",
+    "description": "Description",
+    "selectCountry": "Sélectionnez un pays",
+    "noCountryOptions": "Aucun pays disponible",
+    "modifying": "Modification en cours...",
+    "creating": "Création en cours...",
+    "noName": "Sans nom",
+    "noClientsFound": "Aucun client trouvé",
+    "clickToAddClient": "Cliquez sur \"Ajouter un client\" pour créer un nouveau client",
+    "deleteSuccess": "Client supprimé avec succès",
+    "deleteError": "Une erreur est survenue lors de la suppression du client",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
   },
-
+  
   "orders": {
-  "title": "Demandes d'essai",
-  "list": "Liste des demandes d'essai",
-  "details": "Détails de la demande d'essai",
-  "form": "Formulaire de demande d'essai",
-  "add": "Ajouter une demande d'essai",
-  "edit": "Modifier la demande d'essai",
-  "reference": "Référence",
-  "commercial": "Commercial",
-  "date": "Date",
-  "noReference": "Sans référence",
-  "noOrdersFound": "Aucune demande d'essai trouvée pour ce client",
-  "clickToAddOrder": "Cliquez sur \"Ajouter une demande d'essai\" pour en créer une",
-  "deleteSuccess": "Demande d'essai supprimée avec succès",
-  "deleteError": "Une erreur est survenue lors de la suppression de la demande d'essai",
-  "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette demande d'essai ? Cette action est irréversible.",
-  "modifying": "Modification en cours...",
-  "creating": "Création en cours...",
-  "sections": {
-    "basicInfo": "Informations de base",
-    "contacts": "Contacts",
-    "documents": "Documents"
+    "title": "Demandes d'essai",
+    "list": "Liste des demandes d'essai",
+    "details": "Détails de la demande d'essai",
+    "form": "Formulaire de demande d'essai",
+    "add": "Ajouter une demande d'essai",
+    "edit": "Modifier la demande d'essai",
+    "reference": "Référence",
+    "commercial": "Commercial",
+    "date": "Date",
+    "noReference": "Sans référence",
+    "noOrdersFound": "Aucune demande d'essai trouvée pour ce client",
+    "clickToAddOrder": "Cliquez sur \"Ajouter une demande d'essai\" pour en créer une",
+    "deleteSuccess": "Demande d'essai supprimée avec succès",
+    "deleteError": "Une erreur est survenue lors de la suppression de la demande d'essai",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette demande d'essai ? Cette action est irréversible.",
+    "modifying": "Modification en cours...",
+    "creating": "Création en cours...",
+    "sections": {
+      "basicInfo": "Informations de base",
+      "contacts": "Contacts",
+      "documents": "Documents"
+    },
+    "contacts": {
+      "add": "Ajouter un contact",
+      "contact": "Contact",
+      "name": "Nom",
+      "phone": "Téléphone",
+      "email": "Email"
+    },
+    "documents": {
+      "uploadTitle": "Importer un document",
+      "loadError": "Erreur lors du chargement des fichiers:"
+    },
+    "generalInfo": {
+      "requestDate": "Date de demande",
+      "description": "Description"
+    }
   },
-  "contacts": {
-    "add": "Ajouter un contact",
-    "contact": "Contact",
-    "name": "Nom",
-    "phone": "Téléphone",
-    "email": "Email"
-  },
-  "documents": {
-    "uploadTitle": "Importer un document",
-    "loadError": "Erreur lors du chargement des fichiers:"
-  },
-  "generalInfo": {
-    "requestDate": "Date de demande",
-    "description": "Description"
-  }
-},
-
+  
   "parts": {
     "title": "Pièces",
     "list": "Liste des pièces",
@@ -117,13 +126,82 @@
     "designation": "Désignation",
     "clientDesignation": "Désignation client",
     "reference": "Référence",
-    "steel": "Acier",
     "noParts": "Aucune pièce trouvée pour cette commande",
     "clickToAdd": "Cliquez sur \"Nouvelle pièce\" pour en ajouter une",
     "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer cette pièce ? Cette action est irréversible.",
     "deleteSuccess": "Pièce supprimée avec succès",
-    "deleteError": "Une erreur est survenue lors de la suppression de la pièce"
+    "deleteError": "Une erreur est survenue lors de la suppression de la pièce",
+    "sections": {
+      "basicInfo": "Informations de base",
+      "specifications": "Spécifications",
+      "documents": "Documents",
+      "dimensions": "Dimensions",
+      "steel": "Acier",
+      "photos": "Photos"
+    },
+    "basicInfo": {
+      "designation": "Désignation",
+      "clientDesignation": "Désignation client",
+      "reference": "Référence",
+      "description": "Description",
+      "selectDesignation": "Sélectionner ou ajouter une désignation"
+    },
+    "dimensions": {
+      "mainDimensions": "Dimensions principales",
+      "length": "Longueur",
+      "width": "Largeur",
+      "height": "Hauteur",
+      "diameters": "Diamètres",
+      "diameterIn": "Diamètre int.",
+      "diameterOut": "Diamètre ext.",
+      "weight": "Poids"
+    },
+    "photos": {
+      "views": {
+        "front": "Vue de face",
+        "profile": "Vue de profil",
+        "quarter": "Vue de 3/4",
+        "other": "Autre Vue"
+      },
+      "upload": "Importer une {{view}}",
+      "loadError": "Erreur lors du chargement des fichiers:",
+      "associationError": "Erreur lors de l'association des fichiers:"
+    },
+    "specifications": {
+      "hardnessSpecs": "Spécifications de dureté",
+      "coreHardness": "Dureté à cœur",
+      "surfaceHardness": "Dureté en surface",
+      "toothHardness": "Dureté PdD",
+      "ecdDepth": "Profondeur ECD",
+      "hardness": "Dureté"
+    },
+    "steel": {
+      "title": "Acier",
+      "specifications": "Spécifications de l'acier",
+      "steelType": "Acier",
+      "steelName": "Nom de l'acier",
+      "selectOrAddSteel": "Sélectionner un acier",
+      "noSteelsFound": "Aucun acier trouvé",
+      "clickToAddSteel": "Cliquez sur \"Ajouter un acier\" pour en créer un",
+      "addNewSteel": "Ajouter un nouvel acier",
+      "family": "Famille",
+      "standard": "Norme",
+      "chemicalComposition": "Composition chimique",
+      "equivalents": "Équivalents",
+      "noEquivalents": "Aucun équivalent spécifié",
+      "notSpecified": "Non spécifié",
+      "loadingInfo": "Chargement des informations...",
+      "unableToLoad": "Impossible de charger les informations détaillées pour cet acier.",
+      "fetchError": "Erreur lors de la récupération des détails de l'acier:",
+      "families": {
+        "stainlessSteel": "Acier inoxydable",
+        "carbonSteel": "Acier au carbone",
+        "toolSteel": "Acier à outils",
+        "alloySteel": "Acier allié"
+      }
+    }
   },
+  
   "steels": {
     "title": "Aciers",
     "list": "Liste des aciers",
@@ -132,11 +210,12 @@
     "add": "Ajouter un acier",
     "edit": "Modifier l'acier"
   },
+  
   "tests": {
     "title": "Essais",
     "list": "Liste des essais",
     "details": "Détails de l'essai",
-    "form": "Formulaire d'essai'",
+    "form": "Formulaire d'essai",
     "add": "Ajouter un essai",
     "edit": "Modifier l'essai",
     "new": "Nouvel essai",
@@ -151,34 +230,264 @@
     "deleteMessage": "Êtes-vous sûr de vouloir supprimer l'essai {{name}} ? Cette action est irréversible.",
     "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer ce test ? Cette action est irréversible.",
     "deleteSuccess": "Essai supprimé avec succès",
-    "deleteError": "Une erreur est survenue lors de la suppression du test"
-  },
+    "deleteError": "Une erreur est survenue lors de la suppression du test",
+    "creating": "Création en cours...",
+    "modifying": "Modification en cours...",
+    
+    "sections": {
+      "basicInfo": "Informations de base"
+    },
+    
+    "tabs": {
+      "before": "Avant",
+      "after": "Après",
+      "report": "Rapport"
+    },
+    
+    "basicInfo": {
+      "title": "Informations de base",
+      "loadNumber": "Numéro de charge",
+      "testDate": "Date de l'essai",
+      "location": "Localisation",
+      "status": "Statut",
+      "description": "Description",
+      "selectLocation": "Sélectionner une localisation",
+      "selectStatus": "Sélectionner un statut"
+    },
+    
+    "before": {
 
+      "testType": {
+        "title": "Type de test",
+        "mountingType": "Type de montage",
+        "positionType": "Type de position",
+        "processType": "Type de processus",
+        "selectOrAddMountingType": "Sélectionner ou ajouter un type de montage",
+        "selectOrAddPositionType": "Sélectionner ou ajouter un type de position",
+        "selectOrAddProcessType": "Sélectionner ou ajouter un type de processus"
+      },
+      
+      "loadData": {
+        "title": "Données de charge",
+        "loadDimensions": "Dimensions de charge",
+        "length": "Longueur",
+        "width": "Largeur",
+        "height": "Hauteur",
+        "unit": "Unité",
+        "loadInformation": "Informations de charge",
+        "floorCount": "Nombre d'étages",
+        "partCount": "Nombre de pièces",
+        "weight": "Poids",
+        "loadComments": "Commentaires sur la charge"
+      },
+      
+      "loadDesign": {
+        "title": "Conception de la charge",
+        "importLoadDesign": "Importer le load design",
+        "responseFilesMessage": "Réponse de récupération des fichiers",
+        "loadFilesError": "Erreur lors du chargement des fichiers:",
+        "associateFilesError": "Erreur lors de l'association des fichiers:"
+      },
+
+      "furnaceData": {
+        "title": "Données du four",
+        "furnaceType": "Type de four",
+        "heatingCell": "Cellule de chauffage",
+        "coolingMedia": "Média de refroidissement",
+        "furnaceSize": "Taille du four",
+        "quenchCell": "Cellule de trempe",
+        "selectOrAddFurnaceType": "Sélectionner ou ajouter un type de four",
+        "selectOrAddHeatingCell": "Sélectionner ou ajouter une cellule de chauffage",
+        "selectOrAddCoolingMedia": "Sélectionner ou ajouter un média de refroidissement",
+        "selectOrAddFurnaceSize": "Sélectionner ou ajouter une taille de four",
+        "selectOrAddQuenchCell": "Sélectionner ou ajouter une cellule de trempe"
+      },
+
+      "recipeData": {
+        "title": "Données de recette",
+        "recipeNumber": "Numéro de recette",
+        
+        "preoxidation": {
+          "title": "Préoxydation",
+          "media": "Média",
+          "temperature": "Température",
+          "duration": "Durée",
+          "unit": "Unité"
+        },
+        
+        "thermalCycle": {
+        "title": "Cycle Thermique",
+        "step": "Étape",
+        "ramp": "Rampe",
+        "rampUp": "Montée",
+        "rampDown": "Descente",
+        "rampContinue": "Maintien",
+        "setpoint": "Consigne",
+        "duration": "Durée",
+        "addStep": "Ajouter une étape",
+        "otherParameters": "Autres paramètres du programme",
+        "waitTime": "Temps d'attente",
+        "unit": "Unité",
+        "programDuration": "Durée du programme",
+        "cellTemp": "Température cellule",
+        "waitPressure": "Pression d'attente"
+        },
+        
+        "chemicalCycle": {
+        "title": "Cycle Chimique",
+        "gas": "Gaz",
+        "selectGas": "Sélectionner...",
+        "step": "Étape",
+        "time": "Temps",
+        "flowRate": "Débit",
+        "pressure": "Pression",
+        "turbine": "Turbine",
+        "addStep": "Ajouter une étape"
+        },
+        
+        "graphs": {
+        "title": "Graphiques",
+        "importGraph": "Importer un graphique",
+        "responseFilesMessage": "Réponse de récupération des fichiers",
+        "loadFilesError": "Erreur lors du chargement des fichiers:",
+        "associateFilesError": "Erreur lors de l'association des fichiers:"
+        },
+        
+        "quenchData": {
+          "title": "Données de trempe",
+          "common": {
+            "step": "Étape",
+            "duration": "Durée",
+            "addStep": "Ajouter une étape",
+            "selectUnit": "Sélectionner une unité"
+          },
+          "gas": {
+            "title": "Gaz",
+            "speed": "Vitesse",
+            "pressure": "Pression",
+            "speedParameters": "Paramètres de Vitesse",
+            "pressureParameters": "Paramètres de Pression"
+          },
+          "oil": {
+            "title": "Huile",
+            "speed": "Vitesse",
+            "speedParameters": "Paramètres de Vitesse",
+            "parameters": "Paramètres de l'huile",
+            "temperature": "Température",
+            "tempUnit": "Unité de température",
+            "inertingPressure": "Pression d'inertage",
+            "inertingDelay": "Délai d'inertage",
+            "delayUnit": "Unité de délai",
+            "drippingTime": "Temps d'égouttage",
+            "drippingUnit": "Unité d'égouttage"
+          }
+        }
+      }
+    },
+    "after": {
+      "specifications": {
+        "title": "Spécifications de la pièce",
+        "fetchError": "Erreur lors de la récupération des spécifications:",
+        "loadError": "Impossible de charger les spécifications",
+        "noSpecifications": "Aucune spécification disponible",
+        "formatMin": "Min: {{value}}",
+        "formatMax": "Max: {{value}}",
+        "notAvailable": "N/A",
+        "ecd": "ECD {{hardness}} {{unit}}:",
+        "surfaceHardness": "Dureté en Surface:",
+        "coreHardness": "Dureté à Coeur:"
+      },
+      "furnaceReport": {
+        "title": "Rapport du four",
+        "heating": "Rapport de chauffe",
+        "cooling": "Rapport de trempe",
+        "alarms": "Rapport d'alarme",
+        "datapaq": "DATAPAQ",
+        "filesResponse": "Réponse de récupération des fichiers",
+        "loadError": "Erreur lors du chargement des fichiers:",
+        "associateError": "Erreur lors de l'association des fichiers:",
+        "import": "Importer une {{name}}"
+      },
+      "results": {
+        "title": "Résultats",
+        "resultsLabel": "Résultats",
+        "addResult": "Ajouter un résultat",
+        "resultNumber": "Résultat #{{number}}",
+        "description": "Description",
+        "hardness": "Dureté",
+        "position": "Position",
+        "value": "Valeur",
+        "addPoint": "Ajouter un point",
+        "ecd": "ECD (Profondeur effective de cémentation)",
+        "hardnessValue": "Valeur de dureté",
+        "hardnessUnit": "Unité de dureté",
+        "distance": "Distance",
+        "toothFlank": "Flanc de dent",
+        "toothRoot": "Pied de dent",
+        "comment": "Commentaire",
+        "selectPosition": "Position",
+        "enterValue": "Valeur",
+        "enterDistance": "Distance",
+        "locations": {
+          "surface": "Surface",
+          "pdd": "PdD",
+          "core": "Coeur"
+        },
+        "micrographs": {
+          "title": "Micrographies",
+          "zoomX50": "Zoom x50",
+          "zoomX500": "Zoom x500",
+          "zoomX1000": "Zoom x1000",
+          "otherZoom": "Autre Zoom",
+          "loadError": "Erreur lors du chargement des fichiers:",
+          "associateError": "Erreur lors de l'association des fichiers:",
+          "import": "Importer un {{name}}"
+        },
+        "resultCurve": {
+          "title": "Courbe de dureté",
+          "curve": "Courbe",
+          "data": "Données",
+          "hardnessUnit": "Unité de dureté",
+          "selectUnit": "Sélectionnez une unité",
+          "incrementStep": "Pas d'incrémentation (mm)",
+          "distanceMm": "Distance (mm)",
+          "distance": "Distance",
+          "flankHardness": "Dureté du flanc",
+          "flankHardnessValue": "Dureté flanc",
+          "rootHardness": "Dureté du pied",
+          "rootHardnessValue": "Dureté pied",
+          "specification": "Spécification",
+          "addPoint": "Ajouter un point",
+          "hardnessWithUnit": "Dureté ({{unit}})",
+          "specError": "Erreur lors de la récupération des spécifications ECD:"
+        }
+      }
+    }
+  },
+  
   "sidebar": {
-  "dashboard": "Tableau de bord",
-  "dataManagement": {
-    "title": "Gestion des Données",
-    "dataPump": "Importation de Données",
-    "indexing": "Indexation",
-    "dataCleaning": "Nettoyage des Données",
-    "cleaningInProgress": "Nettoyage en cours...",
-    "analysis": "Analyse"
-  },
-  "archivesReference": {
-    "title": "Archives & Références",
-    "archives": "Archives",
-    "reference": "Référence"
-  },
-  "support": {
-    "title": "Support",
-    "createTicket": "Créer un ticket"
-  },
-  "dataCleaning": {
-    "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
-    "success": "Données supprimées avec succès",
-    "error": "Erreur lors de la suppression des données"
+    "dashboard": "Tableau de bord",
+    "dataManagement": {
+      "title": "Gestion des Données",
+      "dataPump": "Importation de Données",
+      "indexing": "Indexation",
+      "dataCleaning": "Nettoyage des Données",
+      "cleaningInProgress": "Nettoyage en cours...",
+      "analysis": "Analyse"
+    },
+    "archivesReference": {
+      "title": "Archives & Références",
+      "archives": "Archives",
+      "reference": "Référence"
+    },
+    "support": {
+      "title": "Support",
+      "createTicket": "Créer un ticket"
+    },
+    "dataCleaning": {
+      "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
+      "success": "Données supprimées avec succès",
+      "error": "Erreur lors de la suppression des données"
+    }
   }
-}
-
-
 }

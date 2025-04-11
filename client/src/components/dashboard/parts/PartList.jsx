@@ -93,7 +93,7 @@ const PartList = ({ orderId }) => {
                 <th style={{ width: '10%' }}>{t('parts.designation')}</th>
                 <th className="text-center">{t('parts.clientDesignation')}</th>
                 <th className="text-center">{t('parts.reference')}</th>
-                <th className="text-center">{t('parts.steel')}</th>
+                <th className="text-center">{t('parts.steel.title')}</th>
                 <th className="text-center">{t('common.modifiedAt')}</th>
                 <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>{t('common.actions')}</th>
               </tr>

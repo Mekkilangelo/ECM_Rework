@@ -1,44 +1,45 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form, Button, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const OilQuenchSection = ({ 
-  formData, 
-  handleChange, 
-  handleSelectChange, 
-  getSelectedOption, 
+const OilQuenchSection = ({
+  formData,
+  handleChange,
+  handleSelectChange,
+  getSelectedOption,
   temperatureUnitOptions,
   timeUnitOptions,
   handleOilQuenchSpeedAdd,
   handleOilQuenchSpeedRemove,
-  loading, 
-  selectStyles 
+  loading,
+  selectStyles
 }) => {
-  
+  const { t } = useTranslation();
+
   const handleOilQuenchSpeedChange = (index, field, value) => {
     const updatedOilQuenchSpeed = [...formData.quenchData.oilQuenchSpeed];
     updatedOilQuenchSpeed[index] = { ...updatedOilQuenchSpeed[index], [field]: value };
-    handleChange({ 
-      target: { 
-        name: 'quenchData.oilQuenchSpeed', 
-        value: updatedOilQuenchSpeed 
-      } 
+    handleChange({
+      target: {
+        name: 'quenchData.oilQuenchSpeed',
+        value: updatedOilQuenchSpeed
+      }
     });
   };
 
   return (
     <>
-      <h5 className="mt-4 mb-2">Paramètres de Vitesse</h5>
-      
+      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.oil.speedParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>Étape</th>
-            <th>Durée</th>
-            <th>Vitesse</th>
-            <th style={{ width: '80px' }}>Actions</th>
+            <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
+            <th>{t('tests.before.recipeData.quenchData.common.duration')}</th>
+            <th>{t('tests.before.recipeData.quenchData.oil.speed')}</th>
+            <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -77,23 +78,22 @@ const OilQuenchSection = ({
           ))}
         </tbody>
       </Table>
-      
       <div className="text-end mb-3">
-        <Button 
-          variant="outline-primary" 
-          size="sm" 
+        <Button
+          variant="outline-primary"
+          size="sm"
           onClick={handleOilQuenchSpeedAdd}
           disabled={loading}
         >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter une étape
+          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
         </Button>
       </div>
-      
-      <h5 className="mt-4 mb-2">Paramètres de l'huile</h5>
+
+      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.oil.parameters')}</h5>
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Température</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.temperature')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilTemperature"
@@ -106,7 +106,7 @@ const OilQuenchSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de température</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.tempUnit')}</Form.Label>
             <Select
               name="quenchData.oilTempUnit"
               value={getSelectedOption(temperatureUnitOptions, formData.quenchData?.oilTempUnit)}
@@ -114,14 +114,14 @@ const OilQuenchSection = ({
               options={temperatureUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
               isDisabled={loading}
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Pression d'inertage</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.inertingPressure')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilInertingPressure"
@@ -136,7 +136,7 @@ const OilQuenchSection = ({
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Délai d'inertage</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.inertingDelay')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilInertingDelay"
@@ -149,7 +149,7 @@ const OilQuenchSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité de délai</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.delayUnit')}</Form.Label>
             <Select
               name="quenchData.oilInertingDelayUnit"
               value={getSelectedOption(timeUnitOptions, formData.quenchData?.oilInertingDelayUnit)}
@@ -157,14 +157,14 @@ const OilQuenchSection = ({
               options={timeUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
               isDisabled={loading}
             />
           </Form.Group>
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Temps d'égouttage</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.drippingTime')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilDrippingTime"
@@ -177,7 +177,7 @@ const OilQuenchSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité d'égouttage</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.quenchData.oil.drippingUnit')}</Form.Label>
             <Select
               name="quenchData.oilDrippingTimeUnit"
               value={getSelectedOption(timeUnitOptions, formData.quenchData?.oilDrippingTimeUnit)}
@@ -185,7 +185,7 @@ const OilQuenchSection = ({
               options={timeUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner une unité"
+              placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
               isDisabled={loading}
             />
           </Form.Group>

@@ -1,25 +1,28 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form } from 'react-bootstrap';
 import Select from 'react-select';
 
-const PreoxidationSection = ({ 
-  formData, 
-  handleChange, 
-  handleSelectChange, 
+const PreoxidationSection = ({
+  formData,
+  handleChange,
+  handleSelectChange,
   getSelectedOption,
-  coolingMediaOptions, 
-  temperatureUnitOptions, 
-  timeUnitOptions, 
-  loading, 
-  selectStyles 
+  coolingMediaOptions,
+  temperatureUnitOptions,
+  timeUnitOptions,
+  loading,
+  selectStyles
 }) => {
+  const { t } = useTranslation();
+
   return (
     <>
-      <h5 className="mt-3 mb-2">Préoxydation</h5>
+      <h5 className="mt-3 mb-2">{t('tests.before.recipeData.preoxidation.title')}</h5>
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Média</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.preoxidation.media')}</Form.Label>
             <Select
               name="recipeData.preoxMedia"
               value={getSelectedOption(coolingMediaOptions, formData.recipeData?.preoxMedia)}
@@ -27,7 +30,7 @@ const PreoxidationSection = ({
               options={coolingMediaOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Média"
+              placeholder={t('tests.before.recipeData.preoxidation.media')}
               className="react-select-container"
               classNamePrefix="react-select"
               isDisabled={loading}
@@ -36,7 +39,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>Température</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.preoxidation.temperature')}</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.preoxTemp"
@@ -49,7 +52,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={2}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxTempUnit"
               value={getSelectedOption(temperatureUnitOptions, formData.recipeData?.preoxTempUnit)}
@@ -57,7 +60,7 @@ const PreoxidationSection = ({
               options={temperatureUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Unité"
+              placeholder={t('tests.before.recipeData.preoxidation.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isDisabled={loading}
@@ -66,7 +69,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={2}>
           <Form.Group className="mb-3">
-            <Form.Label>Durée</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.preoxidation.duration')}</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.preoxDuration"
@@ -79,7 +82,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={2}>
           <Form.Group className="mb-3">
-            <Form.Label>Unité</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxDurationUnit"
               value={getSelectedOption(timeUnitOptions, formData.recipeData?.preoxDurationUnit)}
@@ -87,7 +90,7 @@ const PreoxidationSection = ({
               options={timeUnitOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Unité"
+              placeholder={t('tests.before.recipeData.preoxidation.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isDisabled={loading}

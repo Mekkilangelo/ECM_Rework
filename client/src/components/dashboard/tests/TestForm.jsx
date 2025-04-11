@@ -1,5 +1,6 @@
 import React, { useState, useCallback, forwardRef, useEffect, useImperativeHandle } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import useTestForm from './hooks/useTestForm';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
@@ -11,6 +12,7 @@ import AfterTabContent from './sections/after/AfterTabContent';
 import ReportTabContent from './sections/report/ReportTabContent';
 
 const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, ref) => {
+  const { t } = useTranslation();
 
   // État pour stocker la fonction d'association de fichiers
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
@@ -38,7 +40,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
     cancelClose,
     saveAndClose,
     ...formHandlers
-  } = useTestForm( test, onClose, onTestCreated, onTestUpdated);
+  } = useTestForm(test, onClose, onTestCreated, onTestUpdated);
 
   // Fonction pour rendre les titres d'onglets avec mise en gras pour l'onglet actif
   const renderTabTitle = (title, eventKey) => (
@@ -87,7 +89,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
         <Form onSubmit={handleSubmit}>
 
           <CollapsibleSection 
-            title="Informations de base" 
+            title={t('tests.sections.basicInfo')}
             isExpandedByDefault={true}
             sectionId="test-basic-info"
             rememberState={true}
@@ -115,7 +117,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
               className="mb-4 mt-4"
               id="test-form-tabs"
             >
-              <Tab eventKey="before" title={renderTabTitle("Before", "before")}>
+              <Tab eventKey="before" title={renderTabTitle(t('tests.tabs.before'), "before")}>
                 <BeforeTabContent 
                   formData={formData}
                   errors={errors}
@@ -125,7 +127,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   handleFileAssociationNeeded={handleFileAssociationNeeded}
                 />
               </Tab>
-              <Tab eventKey="after" title={renderTabTitle("After", "after")}>
+              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
                 <AfterTabContent 
                   formData={formData}
                   errors={errors}
@@ -135,7 +137,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   handleFileAssociationNeeded={handleFileAssociationNeeded}
                 />
               </Tab>
-              <Tab eventKey="report" title={renderTabTitle("Report", "report")}>
+              <Tab eventKey="report" title={renderTabTitle(t('tests.tabs.report'), "report")}>
                 <ReportTabContent 
                   testId={test.id}
                 />
@@ -158,10 +160,12 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
           {/* Boutons de soumission */}
           <div className="d-flex justify-content-end mt-4">
             <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? (isEditMode ? 'Modification en cours...' : 'Création en cours...') : (isEditMode ? 'Modifier' : 'Créer')}
+              {loading 
+                ? (isEditMode ? t('tests.modifying') : t('tests.creating')) 
+                : (isEditMode ? t('common.edit') : t('common.create'))}
             </Button>
           </div>
         </Form>
@@ -169,15 +173,15 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
 
       {/* Modal de confirmation pour la fermeture */}
       <CloseConfirmationModal
-      show={showConfirmModal}
-      onHide={cancelClose}
-      onCancel={cancelClose}
-      onContinue={confirmClose}
-      onSave={saveAndClose}
-      title="Confirmer la fermeture"
-      message="Vous avez des modifications non enregistrées."
-    />
-  </>
+        show={showConfirmModal}
+        onHide={cancelClose}
+        onCancel={cancelClose}
+        onContinue={confirmClose}
+        onSave={saveAndClose}
+        title={t('closeModal.title')}
+        message={t('closeModal.unsavedChanges')}
+      />
+    </>
   );
 });
 

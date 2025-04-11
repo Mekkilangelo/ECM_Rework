@@ -1,6 +1,7 @@
 import React from 'react';
 import { Row, Col, Form } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
+import { useTranslation } from 'react-i18next';
 
 const FurnaceDataSection = ({
   formData,
@@ -15,15 +16,17 @@ const FurnaceDataSection = ({
   loading,
   selectStyles,
 }) => {
-  const handleCreateFurnaceType = (inputValue) => 
+  const { t } = useTranslation();
+
+  const handleCreateFurnaceType = (inputValue) =>
     handleCreateOption(inputValue, 'furnaceType', 'furnaces', 'furnace_type');
-  const handleCreateHeatingCell = (inputValue) => 
+  const handleCreateHeatingCell = (inputValue) =>
     handleCreateOption(inputValue, 'heatingCell', 'furnaces', 'heating_cell_type');
-  const handleCreateCoolingMedia = (inputValue) => 
+  const handleCreateCoolingMedia = (inputValue) =>
     handleCreateOption(inputValue, 'coolingMedia', 'furnaces', 'cooling_media');
-  const handleCreateFurnaceSize = (inputValue) => 
+  const handleCreateFurnaceSize = (inputValue) =>
     handleCreateOption(inputValue, 'furnaceSize', 'furnaces', 'furnace_size');
-  const handleCreateQuenchCell = (inputValue) => 
+  const handleCreateQuenchCell = (inputValue) =>
     handleCreateOption(inputValue, 'quenchCell', 'furnaces', 'quench_cell');
 
   return (
@@ -31,7 +34,7 @@ const FurnaceDataSection = ({
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Type de four</Form.Label>
+            <Form.Label>{t('tests.before.furnaceData.furnaceType')}</Form.Label>
             <CreatableSelect
               name="furnaceType"
               value={getSelectedOption(furnaceTypeOptions, formData.furnaceType)}
@@ -40,7 +43,7 @@ const FurnaceDataSection = ({
               options={furnaceTypeOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter un type de four"
+              placeholder={t('tests.before.furnaceData.selectOrAddFurnaceType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -49,7 +52,7 @@ const FurnaceDataSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Cellule de chauffage</Form.Label>
+            <Form.Label>{t('tests.before.furnaceData.heatingCell')}</Form.Label>
             <CreatableSelect
               name="heatingCell"
               value={getSelectedOption(heatingCellOptions, formData.heatingCell)}
@@ -58,7 +61,7 @@ const FurnaceDataSection = ({
               options={heatingCellOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter une cellule de chauffage"
+              placeholder={t('tests.before.furnaceData.selectOrAddHeatingCell')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -67,7 +70,7 @@ const FurnaceDataSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Média de refroidissement</Form.Label>
+            <Form.Label>{t('tests.before.furnaceData.coolingMedia')}</Form.Label>
             <CreatableSelect
               name="coolingMedia"
               value={getSelectedOption(coolingMediaOptions, formData.coolingMedia)}
@@ -76,7 +79,7 @@ const FurnaceDataSection = ({
               options={coolingMediaOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter un média de refroidissement"
+              placeholder={t('tests.before.furnaceData.selectOrAddCoolingMedia')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -87,7 +90,7 @@ const FurnaceDataSection = ({
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Taille du four</Form.Label>
+            <Form.Label>{t('tests.before.furnaceData.furnaceSize')}</Form.Label>
             <CreatableSelect
               name="furnaceSize"
               value={getSelectedOption(furnaceSizeOptions, formData.furnaceSize)}
@@ -96,7 +99,7 @@ const FurnaceDataSection = ({
               options={furnaceSizeOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter une taille de four"
+              placeholder={t('tests.before.furnaceData.selectOrAddFurnaceSize')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -105,7 +108,7 @@ const FurnaceDataSection = ({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Cellule de trempe</Form.Label>
+            <Form.Label>{t('tests.before.furnaceData.quenchCell')}</Form.Label>
             <CreatableSelect
               name="quenchCell"
               value={getSelectedOption(quenchCellOptions, formData.quenchCell)}
@@ -114,7 +117,7 @@ const FurnaceDataSection = ({
               options={quenchCellOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter une cellule de trempe"
+              placeholder={t('tests.before.furnaceData.selectOrAddQuenchCell')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}

@@ -1,17 +1,20 @@
 import React from 'react';
 import { Row, Col, Form, InputGroup } from 'react-bootstrap';
 import Select from 'react-select';
+import { useTranslation } from 'react-i18next';
 
-const LoadDataSection = ({ 
-  formData, 
-  handleChange, 
-  handleSelectChange, 
-  getSelectedOption, 
-  lengthUnitOptions, 
-  weightUnitOptions, 
-  loading, 
-  selectStyles 
+const LoadDataSection = ({
+  formData,
+  handleChange,
+  handleSelectChange,
+  getSelectedOption,
+  lengthUnitOptions,
+  weightUnitOptions,
+  loading,
+  selectStyles
 }) => {
+  const { t } = useTranslation();
+
   // Style compact pour les Select
   const compactSelectStyles = {
     ...selectStyles,
@@ -35,7 +38,7 @@ const LoadDataSection = ({
       fontSize: '0.9rem',
     }),
     singleValue: (provided) => ({
-      ...provided, 
+      ...provided,
       fontSize: '0.9rem',
     }),
     indicatorsContainer: (provided) => ({
@@ -46,13 +49,13 @@ const LoadDataSection = ({
 
   return (
     <>
-      <h6 className="text-muted mb-2">Dimensions de charge</h6>
+      <h6 className="text-muted mb-2">{t('tests.before.loadData.loadDimensions')}</h6>
       <Row className="g-2 mb-3 align-items-end">
         <Col md={8}>
           <Row className="g-2">
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small">Longueur</Form.Label>
+                <Form.Label className="small">{t('tests.before.loadData.length')}</Form.Label>
                 <Form.Control
                   type="number"
                   name="loadData.length"
@@ -65,7 +68,7 @@ const LoadDataSection = ({
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small">Largeur</Form.Label>
+                <Form.Label className="small">{t('tests.before.loadData.width')}</Form.Label>
                 <Form.Control
                   type="number"
                   name="loadData.width"
@@ -78,7 +81,7 @@ const LoadDataSection = ({
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small">Hauteur</Form.Label>
+                <Form.Label className="small">{t('tests.before.loadData.height')}</Form.Label>
                 <Form.Control
                   type="number"
                   name="loadData.height"
@@ -93,7 +96,7 @@ const LoadDataSection = ({
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label className="small">Unité</Form.Label>
+            <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>
             <Select
               name="loadData.sizeUnit"
               value={getSelectedOption(lengthUnitOptions, formData.loadData?.sizeUnit)}
@@ -101,7 +104,7 @@ const LoadDataSection = ({
               options={lengthUnitOptions}
               isClearable
               styles={compactSelectStyles}
-              placeholder="Unité"
+              placeholder={t('tests.before.loadData.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -109,12 +112,11 @@ const LoadDataSection = ({
           </Form.Group>
         </Col>
       </Row>
-      
-      <h6 className="text-muted mb-2">Informations de charge</h6>
+      <h6 className="text-muted mb-2">{t('tests.before.loadData.loadInformation')}</h6>
       <Row className="g-2 mb-3">
         <Col md={3}>
           <Form.Group>
-            <Form.Label className="small">Nombre d'étages</Form.Label>
+            <Form.Label className="small">{t('tests.before.loadData.floorCount')}</Form.Label>
             <Form.Control
               type="number"
               name="loadData.floorCount"
@@ -127,7 +129,7 @@ const LoadDataSection = ({
         </Col>
         <Col md={3}>
           <Form.Group>
-            <Form.Label className="small">Nombre de pièces</Form.Label>
+            <Form.Label className="small">{t('tests.before.loadData.partCount')}</Form.Label>
             <Form.Control
               type="number"
               name="loadData.partCount"
@@ -141,7 +143,7 @@ const LoadDataSection = ({
         <Col md={3}>
           <InputGroup size="sm">
             <Form.Group className="w-100">
-              <Form.Label className="small">Poids</Form.Label>
+              <Form.Label className="small">{t('tests.before.loadData.weight')}</Form.Label>
               <InputGroup size="sm">
                 <Form.Control
                   type="number"
@@ -157,7 +159,7 @@ const LoadDataSection = ({
         </Col>
         <Col md={3}>
           <Form.Group>
-            <Form.Label className="small">Unité</Form.Label>
+            <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>
             <Select
               name="loadData.weightUnit"
               value={getSelectedOption(weightUnitOptions, formData.loadData?.weightUnit)}
@@ -165,7 +167,7 @@ const LoadDataSection = ({
               options={weightUnitOptions}
               isClearable
               styles={compactSelectStyles}
-              placeholder="Unité"
+              placeholder={t('tests.before.loadData.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -173,9 +175,8 @@ const LoadDataSection = ({
           </Form.Group>
         </Col>
       </Row>
-      
       <Form.Group className="mb-3">
-        <Form.Label className="small">Commentaires sur la charge</Form.Label>
+        <Form.Label className="small">{t('tests.before.loadData.loadComments')}</Form.Label>
         <Form.Control
           as="textarea"
           name="loadData.loadComments"

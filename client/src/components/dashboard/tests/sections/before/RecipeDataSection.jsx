@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form, Button, Nav } from 'react-bootstrap';
 import Select from 'react-select';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
-
 import PreoxidationSection from './recipe/PreoxidationSection';
 import ThermalCycleSection from './recipe/ThermalCycleSection';
 import ChemicalCycleSection from './recipe/ChemicalCycleSection';
 import QuenchDataSection from './recipe/QuenchDataSection';
 import RecipeGraphSection from './recipe/RecipeGraphSection';
 
-const RecipeDataSection = ({ 
-  formData, 
+const RecipeDataSection = ({
+  formData,
   handleChange,
   handleSelectChange,
   getSelectedOption,
@@ -33,13 +33,15 @@ const RecipeDataSection = ({
   test,
   handleFileAssociationNeeded
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <>    
       {/* Recipe Number */}
       <Row>
         <Col md={12}>
           <Form.Group className="mb-3">
-            <Form.Label>Numéro de recette</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.recipeNumber')}</Form.Label>
             <Form.Control
               type="text"
               name="recipeData.recipeNumber"
@@ -51,7 +53,7 @@ const RecipeDataSection = ({
       </Row>
       
       {/* Preoxidation Section */}
-      <PreoxidationSection 
+      <PreoxidationSection
         formData={formData}
         handleChange={handleChange}
         handleSelectChange={handleSelectChange}
@@ -63,15 +65,15 @@ const RecipeDataSection = ({
         selectStyles={selectStyles}
       />
       
-      <CollapsibleSection 
-        title="Cycle Thermique" 
+      <CollapsibleSection
+        title={t('tests.before.recipeData.thermalCycle.title')}
         isExpandedByDefault={true}
         sectionId="test-thermal-cycle"
         rememberState={true}
         level={1}
       >
         {/* Thermal Cycle Section */}
-        <ThermalCycleSection 
+        <ThermalCycleSection
           formData={formData}
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
@@ -86,15 +88,15 @@ const RecipeDataSection = ({
         />
       </CollapsibleSection>
       
-      <CollapsibleSection 
-        title="Cycle Chimique" 
+      <CollapsibleSection
+        title={t('tests.before.recipeData.chemicalCycle.title')}
         isExpandedByDefault={true}
         sectionId="test-chemical-cycle"
         rememberState={true}
         level={1}
       >  
         {/* Chemical Cycle Section */}
-        <ChemicalCycleSection 
+        <ChemicalCycleSection
           formData={formData}
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
@@ -105,22 +107,22 @@ const RecipeDataSection = ({
           selectStyles={selectStyles}
         />
       </CollapsibleSection>
-
-      <CollapsibleSection 
-        title="Graphiques" 
+      
+      <CollapsibleSection
+        title={t('tests.before.recipeData.graphs.title')}
         isExpandedByDefault={true}
         sectionId="test-recipe-graph"
         rememberState={true}
         level={1}
       >  
-        <RecipeGraphSection 
+        <RecipeGraphSection
           testNodeId={test ? test.id : null}
           onFileAssociationNeeded={handleFileAssociationNeeded}
         />
       </CollapsibleSection>
       
-      <CollapsibleSection 
-        title="Données de trempe" 
+      <CollapsibleSection
+        title={t('tests.before.recipeData.quenchData.title')}
         isExpandedByDefault={true}
         sectionId="test-quench-data"
         rememberState={true}

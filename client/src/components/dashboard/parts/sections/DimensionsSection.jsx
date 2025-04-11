@@ -1,7 +1,7 @@
-// src/components/dashboard/parts/sections/DimensionsSection.jsx
 import React from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import Select from 'react-select';
+import { useTranslation } from 'react-i18next';
 
 const DimensionsSection = ({
   formData,
@@ -13,6 +13,8 @@ const DimensionsSection = ({
   loading,
   selectStyles
 }) => {
+  const { t } = useTranslation();
+
   // Styles compact pour les selects d'unités
   const unitSelectStyles = {
     ...selectStyles,
@@ -36,7 +38,7 @@ const DimensionsSection = ({
       fontSize: '0.9rem',
     }),
     singleValue: (provided) => ({
-      ...provided, 
+      ...provided,
       fontSize: '0.9rem',
     }),
     indicatorsContainer: (provided) => ({
@@ -44,14 +46,14 @@ const DimensionsSection = ({
       height: '38px',
     }),
   };
-  
+
   return (
     <>
-      <h6 className="text-muted mb-2">Dimensions principales</h6>
+      <h6 className="text-muted mb-2">{t('parts.dimensions.mainDimensions')}</h6>
       <div className="row mb-3 g-2 align-items-end">
         <div className="col">
           <Form.Group>
-            <Form.Label className="small">Longueur</Form.Label>
+            <Form.Label className="small">{t('parts.dimensions.length')}</Form.Label>
             <Form.Control
               type="number"
               name="length"
@@ -64,7 +66,7 @@ const DimensionsSection = ({
         </div>
         <div className="col">
           <Form.Group>
-            <Form.Label className="small">Largeur</Form.Label>
+            <Form.Label className="small">{t('parts.dimensions.width')}</Form.Label>
             <Form.Control
               type="number"
               name="width"
@@ -77,7 +79,7 @@ const DimensionsSection = ({
         </div>
         <div className="col">
           <Form.Group>
-            <Form.Label className="small">Hauteur</Form.Label>
+            <Form.Label className="small">{t('parts.dimensions.height')}</Form.Label>
             <Form.Control
               type="number"
               name="height"
@@ -90,7 +92,7 @@ const DimensionsSection = ({
         </div>
         <div className="col-auto">
           <Form.Group>
-            <Form.Label className="small">Unité</Form.Label>
+            <Form.Label className="small">{t('common.unit')}</Form.Label>
             <Select
               name="dimensionsUnit"
               value={getSelectedOption(getLengthUnitOptions(), formData.dimensionsUnit)}
@@ -98,7 +100,7 @@ const DimensionsSection = ({
               options={getLengthUnitOptions()}
               isClearable
               styles={unitSelectStyles}
-              placeholder="Unité"
+              placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -107,11 +109,11 @@ const DimensionsSection = ({
         </div>
       </div>
 
-      <h6 className="text-muted mb-2">Diamètres</h6>
+      <h6 className="text-muted mb-2">{t('parts.dimensions.diameters')}</h6>
       <div className="row mb-3 g-2 align-items-end">
         <div className="col">
           <Form.Group>
-            <Form.Label className="small">Diamètre int.</Form.Label>
+            <Form.Label className="small">{t('parts.dimensions.diameterIn')}</Form.Label>
             <Form.Control
               type="number"
               name="diameterIn"
@@ -124,7 +126,7 @@ const DimensionsSection = ({
         </div>
         <div className="col">
           <Form.Group>
-            <Form.Label className="small">Diamètre ext.</Form.Label>
+            <Form.Label className="small">{t('parts.dimensions.diameterOut')}</Form.Label>
             <Form.Control
               type="number"
               name="diameterOut"
@@ -137,7 +139,7 @@ const DimensionsSection = ({
         </div>
         <div className="col-auto">
           <Form.Group>
-            <Form.Label className="small">Unité</Form.Label>
+            <Form.Label className="small">{t('common.unit')}</Form.Label>
             <Select
               name="diameterUnit"
               value={getSelectedOption(getLengthUnitOptions(), formData.diameterUnit)}
@@ -145,7 +147,7 @@ const DimensionsSection = ({
               options={getLengthUnitOptions()}
               isClearable
               styles={unitSelectStyles}
-              placeholder="Unité"
+              placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -154,11 +156,11 @@ const DimensionsSection = ({
         </div>
       </div>
 
-      <h6 className="text-muted mb-2">Poids</h6>
+      <h6 className="text-muted mb-2">{t('parts.dimensions.weight')}</h6>
       <div className="row g-2 align-items-end">
         <div className="col">
           <Form.Group>
-            <Form.Label className="small">Poids</Form.Label>
+            <Form.Label className="small">{t('parts.dimensions.weight')}</Form.Label>
             <Form.Control
               type="number"
               name="weight"
@@ -171,7 +173,7 @@ const DimensionsSection = ({
         </div>
         <div className="col-auto">
           <Form.Group>
-            <Form.Label className="small">Unité</Form.Label>
+            <Form.Label className="small">{t('common.unit')}</Form.Label>
             <Select
               name="weightUnit"
               value={getSelectedOption(getWeightUnitOptions(), formData.weightUnit)}
@@ -179,7 +181,7 @@ const DimensionsSection = ({
               options={getWeightUnitOptions()}
               isClearable
               styles={unitSelectStyles}
-              placeholder="Unité"
+              placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}

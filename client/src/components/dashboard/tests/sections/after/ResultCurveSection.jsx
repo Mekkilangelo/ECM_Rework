@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tab, Nav, Table, Form, Button } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -31,6 +32,7 @@ const ResultCurveSection = ({
   formData,
   parentId,
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('curve');
   
   // Structure de données pour les points de mesure
@@ -56,9 +58,8 @@ const ResultCurveSection = ({
   
   // Ajout du state pour le pas d'incrémentation
   const [stepValue, setStepValue] = useState(0.1);
-  
   const [specData, setSpecData] = useState(null);
-
+  
   // Effet pour charger les spécifications ECD depuis l'API
   useEffect(() => {
     const fetchSpecData = async () => {
@@ -66,20 +67,19 @@ const ResultCurveSection = ({
         try {
           // Appeler la nouvelle méthode du service pour récupérer les spécifications
           const response = await testService.getTestSpecs(test.id, parentId);
-          
           if (response.data && response.data.ecdPoints) {
             // Utiliser directement les points formatés par le backend
             setSpecData(response.data.ecdPoints);
           }
         } catch (error) {
-          console.error("Erreur lors de la récupération des spécifications ECD:", error);
+          console.error(t('tests.after.results.resultCurve.specError'), error);
         }
       }
     };
     
     fetchSpecData();
-  }, [test, parentId]);
-
+  }, [test, parentId, t]);
+  
   // Mettre à jour le formData parent avec les nouvelles données
   const updateParentFormData = (newPoints) => {
     const updatedResults = [...formData.resultsData.results];
@@ -91,7 +91,7 @@ const ResultCurveSection = ({
       }
     });
   };
-
+  
   // Mise à jour d'un point de données (pendant la saisie)
   const handlePointChange = (index, field, value) => {
     const newPoints = [...dataPoints];
@@ -99,12 +99,12 @@ const ResultCurveSection = ({
     setDataPoints(newPoints);
     updateParentFormData(newPoints);
   };
-
+  
   // Gestion du changement de la valeur du pas
   const handleStepChange = (e) => {
     setStepValue(parseFloat(e.target.value) || 0.1);
   };
-
+  
   // Trier les données après la fin de la saisie
   const handleBlur = () => {
     // Trier les points par distance
@@ -113,19 +113,16 @@ const ResultCurveSection = ({
       const distB = parseFloat(b.distance) || 0;
       return distA - distB;
     });
-    
     // Mettre à jour l'affichage
     setDisplayPoints(sorted);
-    
     // Mettre à jour les données
     setDataPoints(sorted);
     updateParentFormData(sorted);
   };
-
+  
   // Ajouter un nouveau point de données avec incrémentation automatique
   const addDataPoint = () => {
     let nextDistance = '';
-    
     // Calculer la prochaine distance en ajoutant le pas à la dernière valeur
     if (dataPoints.length > 0) {
       const sortedPoints = [...dataPoints].sort((a, b) => {
@@ -133,7 +130,6 @@ const ResultCurveSection = ({
         const distB = parseFloat(b.distance) || 0;
         return distB - distA; // Tri décroissant pour avoir la plus grande valeur en premier
       });
-      
       const lastDistance = parseFloat(sortedPoints[0].distance) || 0;
       nextDistance = (lastDistance + stepValue).toFixed(2); // Arrondir à 2 décimales
     }
@@ -149,7 +145,7 @@ const ResultCurveSection = ({
     setDisplayPoints(newPoints);
     updateParentFormData(newPoints);
   };
-
+  
   // Supprimer un point de données
   const removeDataPoint = (index) => {
     const newPoints = dataPoints.filter((_, i) => i !== index);
@@ -157,7 +153,7 @@ const ResultCurveSection = ({
     setDisplayPoints(newPoints);
     updateParentFormData(newPoints);
   };
-
+  
   // Préparer les données pour le graphique
   const prepareChartData = () => {
     // Utiliser des points triés pour le graphique
@@ -166,7 +162,7 @@ const ResultCurveSection = ({
       const distB = parseFloat(b.distance) || 0;
       return distA - distB;
     });
-
+    
     // Filtrer les points valides pour les courbes
     const flankPoints = sortedPoints.filter(p => p.distance && p.flankHardness);
     const rootPoints = sortedPoints.filter(p => p.distance && p.rootHardness);
@@ -174,25 +170,25 @@ const ResultCurveSection = ({
     // Créer les datasets pour les mesures
     const datasets = [
       {
-        label: 'Dureté du flanc',
+        label: t('tests.after.results.resultCurve.flankHardness'),
         data: flankPoints.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.flankHardness)})),
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
         tension: 0.1
       },
       {
-        label: 'Dureté du pied',
+        label: t('tests.after.results.resultCurve.rootHardness'),
         data: rootPoints.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.rootHardness)})),
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
         tension: 0.1
       }
     ];
-
+    
     // Ajouter la courbe de spécification si disponible
     if (specData) {
       datasets.push({
-        label: 'Spécification',
+        label: t('tests.after.results.resultCurve.specification'),
         data: specData.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.value)})),
         borderColor: 'rgb(0, 0, 0)',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -200,12 +196,12 @@ const ResultCurveSection = ({
         tension: 0
       });
     }
-
+    
     return {
       datasets
     };
   };
-
+  
   // Options pour le graphique
   const chartOptions = {
     responsive: true,
@@ -215,31 +211,30 @@ const ResultCurveSection = ({
         position: 'bottom',
         title: {
           display: true,
-          text: 'Distance (mm)'
+          text: t('tests.after.results.resultCurve.distanceMm')
         }
       },
       y: {
         title: {
           display: true,
-          text: `Dureté (${result.hardnessUnit || 'HV'})`
+          text: t('tests.after.results.resultCurve.hardnessWithUnit', { unit: result.hardnessUnit || 'HV' })
         }
       }
     }
   };
-
+  
   return (
     <Tab.Container id="result-curve-tabs" activeKey={activeTab} onSelect={k => setActiveTab(k)}>
       <Nav variant="tabs" className="mb-3">
         <Nav.Item>
-          <Nav.Link eventKey="curve">Courbe</Nav.Link>
+          <Nav.Link eventKey="curve">{t('tests.after.results.resultCurve.curve')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="data">Données</Nav.Link>
+          <Nav.Link eventKey="data">{t('tests.after.results.resultCurve.data')}</Nav.Link>
         </Nav.Item>
       </Nav>
       <Tab.Content>
         <Tab.Pane eventKey="curve">
-
           <div style={{ height: '400px' }}>
             {dataPoints.length > 0 && (
               <Line data={prepareChartData()} options={chartOptions} />
@@ -248,7 +243,7 @@ const ResultCurveSection = ({
         </Tab.Pane>
         <Tab.Pane eventKey="data">
           <Form.Group className="mb-3">
-            <Form.Label>Unité de dureté</Form.Label>
+            <Form.Label>{t('tests.after.results.resultCurve.hardnessUnit')}</Form.Label>
             <Select
               name={`resultsData.results[${resultIndex}].hardnessUnit`}
               value={getSelectedOption(hardnessUnitOptions, result.hardnessUnit)}
@@ -256,30 +251,28 @@ const ResultCurveSection = ({
               options={hardnessUnitOptions}
               isDisabled={loading}
               styles={selectStyles}
-              placeholder="Sélectionnez une unité"
+              placeholder={t('tests.after.results.resultCurve.selectUnit')}
             />
           </Form.Group>
-          
           {/* Nouveau champ pour le pas d'incrémentation */}
           <div className="mb-3">
-            <div><label>Pas d'incrémentation (mm)</label></div>
+            <div><label>{t('tests.after.results.resultCurve.incrementStep')}</label></div>
             <input
               type="number"
               className="form-control"
               style={{ width: '150px' }}
               value={stepValue}
-              onChange={(e) => setStepValue(parseFloat(e.target.value) || 0.1)}
+              onChange={handleStepChange}
               disabled={loading}
             />
           </div>
-          
           <Table responsive bordered size="sm" className="mt-2 mb-3">
             <thead className="bg-light">
               <tr>
-                <th style={{ width: '25%' }}>Distance (mm)</th>
-                <th style={{ width: '30%' }}>Dureté du flanc</th>
-                <th style={{ width: '30%' }}>Dureté du pied</th>
-                <th style={{ width: '15%' }}>Actions</th>
+                <th style={{ width: '25%' }}>{t('tests.after.results.resultCurve.distanceMm')}</th>
+                <th style={{ width: '30%' }}>{t('tests.after.results.resultCurve.flankHardness')}</th>
+                <th style={{ width: '30%' }}>{t('tests.after.results.resultCurve.rootHardness')}</th>
+                <th style={{ width: '15%' }}>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -292,7 +285,7 @@ const ResultCurveSection = ({
                       value={point.distance}
                       onChange={(e) => handlePointChange(index, 'distance', e.target.value)}
                       onBlur={handleBlur}
-                      placeholder="Distance"
+                      placeholder={t('tests.after.results.resultCurve.distance')}
                       disabled={loading}
                     />
                   </td>
@@ -303,7 +296,7 @@ const ResultCurveSection = ({
                       value={point.flankHardness || ''}
                       onChange={(e) => handlePointChange(index, 'flankHardness', e.target.value)}
                       onBlur={handleBlur}
-                      placeholder="Dureté flanc"
+                      placeholder={t('tests.after.results.resultCurve.flankHardnessValue')}
                       disabled={loading}
                     />
                   </td>
@@ -314,7 +307,7 @@ const ResultCurveSection = ({
                       name={`resultsData.results[${resultIndex}].curveData.points[${index}].rootHardness`}
                       onChange={(e) => handlePointChange(index, 'rootHardness', e.target.value)}
                       onBlur={handleBlur}
-                      placeholder="Dureté pied"
+                      placeholder={t('tests.after.results.resultCurve.rootHardnessValue')}
                       disabled={loading}
                     />
                   </td>
@@ -339,7 +332,7 @@ const ResultCurveSection = ({
               onClick={addDataPoint}
               disabled={loading}
             >
-              <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter un point
+              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.resultCurve.addPoint')}
             </Button>
           </div>
         </Tab.Pane>

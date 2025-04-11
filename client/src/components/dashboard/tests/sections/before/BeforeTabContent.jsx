@@ -1,6 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
-
 // Sections importées
 import TestTypeSection from './TestTypeSection';
 import FurnaceDataSection from './FurnaceDataSection';
@@ -8,13 +8,13 @@ import LoadDataSection from './LoadDataSection';
 import RecipeDataSection from './RecipeDataSection';
 import LoadDesignSection from './LoadDesignSection';
 
-
 const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded }) => {
-
+  const { t } = useTranslation();
+  
   return (
     <>
-      <CollapsibleSection 
-        title="Type de test" 
+      <CollapsibleSection
+        title={t('tests.before.testType.title')}
         isExpandedByDefault={true}
         sectionId="test-type"
         rememberState={false}
@@ -31,9 +31,9 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           selectStyles={formHandlers.selectStyles}
         />
       </CollapsibleSection>
-
-      <CollapsibleSection 
-        title="Données du four" 
+      
+      <CollapsibleSection
+        title={t('tests.before.furnaceData.title')}
         isExpandedByDefault={true}
         sectionId="test-furnace-data"
         rememberState={true}
@@ -52,9 +52,9 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           selectStyles={formHandlers.selectStyles}
         />
       </CollapsibleSection>
-
-      <CollapsibleSection 
-        title="Données de charge" 
+      
+      <CollapsibleSection
+        title={t('tests.before.loadData.title')}
         isExpandedByDefault={true}
         sectionId="test-load-data"
         rememberState={true}
@@ -70,21 +70,21 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           selectStyles={formHandlers.selectStyles}
         />
       </CollapsibleSection>
-
-      <CollapsibleSection 
-          title="Conception de la charge" 
-          isExpandedByDefault={false}
-          sectionId="test-load-design"
-          rememberState={true}
-        >
-          <LoadDesignSection
-            testNodeId={test ? test.id : null}
-            onFileAssociationNeeded={handleFileAssociationNeeded}
-          />
-        </CollapsibleSection>
-
-      <CollapsibleSection 
-        title="Données de recette" 
+      
+      <CollapsibleSection
+        title={t('tests.before.loadDesign.title')}
+        isExpandedByDefault={false}
+        sectionId="test-load-design"
+        rememberState={true}
+      >
+        <LoadDesignSection
+          testNodeId={test ? test.id : null}
+          onFileAssociationNeeded={handleFileAssociationNeeded}
+        />
+      </CollapsibleSection>
+      
+      <CollapsibleSection
+        title={t('tests.before.recipeData.title')}
         isExpandedByDefault={true}
         sectionId="test-recipe-data"
         rememberState={true}
@@ -112,13 +112,10 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           selectStyles={formHandlers.selectStyles}
           test={test}
           handleFileAssociationNeeded={handleFileAssociationNeeded}
-
         />
       </CollapsibleSection>
     </>
   );
 };
-
-
 
 export default BeforeTabContent;

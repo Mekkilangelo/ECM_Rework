@@ -1,19 +1,22 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form, Button, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-const ChemicalCycleSection = ({ 
-  formData, 
-  handleChange, 
-  handleSelectChange, 
-  getSelectedOption, 
+const ChemicalCycleSection = ({
+  formData,
+  handleChange,
+  handleSelectChange,
+  getSelectedOption,
   handleChemicalCycleAdd,
   handleChemicalCycleRemove,
-  loading, 
-  selectStyles 
+  loading,
+  selectStyles
 }) => {
+  const { t } = useTranslation();
+  
   const gasOptions = [
     { value: 'N2', label: 'N2' },
     { value: 'NH3', label: 'NH3' },
@@ -21,29 +24,29 @@ const ChemicalCycleSection = ({
     { value: 'H2', label: 'H2' },
     { value: 'Ar', label: 'Ar' }
   ];
-
+  
   const handleChemicalCycleChange = (index, field, value) => {
     const updatedChemicalCycle = [...formData.recipeData.chemicalCycle];
     updatedChemicalCycle[index] = { ...updatedChemicalCycle[index], [field]: value };
-    handleChange({ 
-      target: { 
-        name: 'recipeData.chemicalCycle', 
-        value: updatedChemicalCycle 
-      } 
+    handleChange({
+      target: {
+        name: 'recipeData.chemicalCycle',
+        value: updatedChemicalCycle
+      }
     });
   };
-
+  
   const handleTurbineChange = (index, checked) => {
     const updatedChemicalCycle = [...formData.recipeData.chemicalCycle];
     updatedChemicalCycle[index] = { ...updatedChemicalCycle[index], turbine: checked };
-    handleChange({ 
-      target: { 
-        name: 'recipeData.chemicalCycle', 
-        value: updatedChemicalCycle 
-      } 
+    handleChange({
+      target: {
+        name: 'recipeData.chemicalCycle',
+        value: updatedChemicalCycle
+      }
     });
   };
-
+  
   const handleGlobalGasChange = (option, gasNumber) => {
     handleChange({
       target: {
@@ -52,66 +55,77 @@ const ChemicalCycleSection = ({
       }
     });
   };
-
+  
   return (
     <>
       {/* Global gas selection section */}
       <Row className="mb-3">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Gaz 1</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.chemicalCycle.gas')} 1</Form.Label>
             <Select
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas1)}
               onChange={(option) => handleGlobalGasChange(option, 1)}
               options={gasOptions}
               styles={selectStyles}
               isDisabled={loading}
-              placeholder="Sélectionner..."
+              placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
               isClearable
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Gaz 2</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.chemicalCycle.gas')} 2</Form.Label>
             <Select
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas2)}
               onChange={(option) => handleGlobalGasChange(option, 2)}
               options={gasOptions}
               styles={selectStyles}
               isDisabled={loading}
-              placeholder="Sélectionner..."
+              placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
               isClearable
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>Gaz 3</Form.Label>
+            <Form.Label>{t('tests.before.recipeData.chemicalCycle.gas')} 3</Form.Label>
             <Select
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas3)}
               onChange={(option) => handleGlobalGasChange(option, 3)}
               options={gasOptions}
               styles={selectStyles}
               isDisabled={loading}
-              placeholder="Sélectionner..."
+              placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
               isClearable
             />
           </Form.Group>
         </Col>
       </Row>
- 
       <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>Étape</th>
-            <th>Temps (s)</th>
-            {formData.recipeData.selectedGas1 && <th className="text-center">Débit {formData.recipeData.selectedGas1} (Nl/h)</th>}
-            {formData.recipeData.selectedGas2 && <th className="text-center">Débit {formData.recipeData.selectedGas2} (Nl/h)</th>}
-            {formData.recipeData.selectedGas3 && <th className="text-center">Débit {formData.recipeData.selectedGas3} (Nl/h)</th>}
-            <th>Pression (mb)</th>
-            <th className="text-center">Turbine</th>
-            <th style={{ width: '80px' }}>Actions</th>
+            <th style={{ width: '60px' }}>{t('tests.before.recipeData.chemicalCycle.step')}</th>
+            <th>{t('tests.before.recipeData.chemicalCycle.time')} (s)</th>
+            {formData.recipeData.selectedGas1 && (
+              <th className="text-center">
+                {t('tests.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas1} (Nl/h)
+              </th>
+            )}
+            {formData.recipeData.selectedGas2 && (
+              <th className="text-center">
+                {t('tests.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas2} (Nl/h)
+              </th>
+            )}
+            {formData.recipeData.selectedGas3 && (
+              <th className="text-center">
+                {t('tests.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas3} (Nl/h)
+              </th>
+            )}
+            <th>{t('tests.before.recipeData.chemicalCycle.pressure')} (mb)</th>
+            <th className="text-center">{t('tests.before.recipeData.chemicalCycle.turbine')}</th>
+            <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -127,13 +141,12 @@ const ChemicalCycleSection = ({
                   disabled={loading}
                 />
               </td>
-              
               {/* Débit pour Gaz 1 */}
               {formData.recipeData.selectedGas1 && (
                 <td>
                   <Form.Control
                     type="number"
-                    placeholder="Débit"
+                    placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit1 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit1', e.target.value)}
                     step="0.1"
@@ -141,13 +154,12 @@ const ChemicalCycleSection = ({
                   />
                 </td>
               )}
-              
               {/* Débit pour Gaz 2 */}
               {formData.recipeData.selectedGas2 && (
                 <td>
                   <Form.Control
                     type="number"
-                    placeholder="Débit"
+                    placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit2 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit2', e.target.value)}
                     step="0.1"
@@ -155,13 +167,12 @@ const ChemicalCycleSection = ({
                   />
                 </td>
               )}
-              
               {/* Débit pour Gaz 3 */}
               {formData.recipeData.selectedGas3 && (
                 <td>
                   <Form.Control
                     type="number"
-                    placeholder="Débit"
+                    placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit3 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit3', e.target.value)}
                     step="0.1"
@@ -169,7 +180,6 @@ const ChemicalCycleSection = ({
                   />
                 </td>
               )}
-              
               <td>
                 <Form.Control
                   type="number"
@@ -179,7 +189,6 @@ const ChemicalCycleSection = ({
                   disabled={loading}
                 />
               </td>
-              
               {/* Colonne Turbine avec case à cocher */}
               <td className="text-center align-middle">
                 <div className="form-group mb-0">
@@ -196,7 +205,6 @@ const ChemicalCycleSection = ({
                   </div>
                 </div>
               </td>
-              
               <td className="text-center">
                 <Button
                   variant="outline-danger"
@@ -211,15 +219,14 @@ const ChemicalCycleSection = ({
           ))}
         </tbody>
       </Table>
-      
       <div className="text-end mb-3">
-        <Button 
-          variant="outline-primary" 
-          size="sm" 
+        <Button
+          variant="outline-primary"
+          size="sm"
           onClick={handleChemicalCycleAdd}
           disabled={loading}
         >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> Ajouter une étape
+          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.chemicalCycle.addStep')}
         </Button>
       </div>
     </>

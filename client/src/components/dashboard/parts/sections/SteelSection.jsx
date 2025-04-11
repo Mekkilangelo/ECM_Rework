@@ -4,6 +4,7 @@ import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import steelService from '../../../../services/steelService';
+import { useTranslation } from 'react-i18next';
 
 const SteelSection = ({
   formData,
@@ -14,6 +15,7 @@ const SteelSection = ({
   selectStyles,
   onOpenSteelModal
 }) => {
+  const { t } = useTranslation();
   const [selectedSteelInfo, setSelectedSteelInfo] = useState(null);
   const [fetchingSteelInfo, setFetchingSteelInfo] = useState(false);
 
@@ -67,10 +69,10 @@ const SteelSection = ({
       try {
         setFetchingSteelInfo(true);
         const response = await steelService.getSteelById(selectedOption.nodeId);
-        
+
         if (response && response.data) {
           const steelData = response.data.Steel || response.data;
-          
+
           // Formatter la composition chimique
           let composition = '';
           if (steelData.elements && Array.isArray(steelData.elements)) {
@@ -79,7 +81,7 @@ const SteelSection = ({
                 const element = elem.element.split(' - ')[0]; // Prendre seulement le symbole chimique
                 const min = elem.min_value !== null ? elem.min_value : '?';
                 const max = elem.max_value !== null ? elem.max_value : '?';
-                
+
                 if (min === max) {
                   return `${element}: ${min}%`;
                 } else {
@@ -94,17 +96,17 @@ const SteelSection = ({
           if (steelData.equivalents && Array.isArray(steelData.equivalents) && steelData.equivalents.length > 0) {
             equivalents = steelData.equivalents.join(', ');
           } else {
-            equivalents = 'Aucun équivalent spécifié';
+            equivalents = t('parts.steel.noEquivalents');
           }
 
           // Traiter la famille
           let family = steelData.family || '';
           // Convertir Stainless_steel en Acier inoxydable, etc.
           family = family
-            .replace('Stainless_steel', 'Acier inoxydable')
-            .replace('Carbon_steel', 'Acier au carbone')
-            .replace('Tool_steel', 'Acier à outils')
-            .replace('Alloy_steel', 'Acier allié')
+            .replace('Stainless_steel', t('parts.steel.families.stainlessSteel'))
+            .replace('Carbon_steel', t('parts.steel.families.carbonSteel'))
+            .replace('Tool_steel', t('parts.steel.families.toolSteel'))
+            .replace('Alloy_steel', t('parts.steel.families.alloySteel'))
             .replace('_', ' ');
 
           // Traiter le standard
@@ -115,12 +117,12 @@ const SteelSection = ({
             grade: steelData.grade || '',
             family: family,
             standard: standard,
-            composition: composition || 'Non spécifié',
+            composition: composition || t('parts.steel.notSpecified'),
             equivalents: equivalents
           });
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération des détails de l\'acier:', error);
+        console.error(t('parts.steel.fetchError'), error);
         setSelectedSteelInfo(null);
       } finally {
         setFetchingSteelInfo(false);
@@ -128,15 +130,15 @@ const SteelSection = ({
     };
 
     fetchSteelDetails();
-  }, [formData.steel, steelOptions]);
+  }, [formData.steel, steelOptions, t]);
 
   return (
     <>
-      <h6 className="text-muted mb-3">Spécifications de l'acier</h6>
+      <h6 className="text-muted mb-3">{t('parts.steel.specifications')}</h6>
       <div className="row g-2 mb-3">
         <div className="col-md-6">
           <Form.Group>
-            <Form.Label className="small">Acier</Form.Label>
+            <Form.Label className="small">{t('parts.steel.steelType')}</Form.Label>
             <div className="d-flex">
               <div className="flex-grow-1 me-2">
                 <Select
@@ -146,7 +148,7 @@ const SteelSection = ({
                   options={steelOptions}
                   isClearable
                   styles={compactSelectStyles}
-                  placeholder="Sélectionner un acier"
+                  placeholder={t('parts.steel.selectOrAddSteel')}
                   className="react-select-container"
                   classNamePrefix="react-select"
                   isLoading={loading}
@@ -155,7 +157,7 @@ const SteelSection = ({
               <Button
                 variant="outline-primary"
                 onClick={onOpenSteelModal}
-                title="Ajouter un nouvel acier"
+                title={t('parts.steel.addNewSteel')}
                 size="sm"
                 className="align-self-center"
               >
@@ -172,35 +174,35 @@ const SteelSection = ({
           {fetchingSteelInfo ? (
             <div className="text-center py-3">
               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              Chargement des informations...
+              {t('parts.steel.loadingInfo')}
             </div>
           ) : selectedSteelInfo ? (
             <div className="row g-2">
               <div className="col-md-6">
                 <Form.Group className="mb-2">
-                  <Form.Label className="small fw-bold">Famille</Form.Label>
+                  <Form.Label className="small fw-bold">{t('parts.steel.family')}</Form.Label>
                   <Form.Control
                     plaintext
                     readOnly
-                    value={selectedSteelInfo.family || 'Non spécifié'}
+                    value={selectedSteelInfo.family || t('parts.steel.notSpecified')}
                     className="py-0"
                   />
                 </Form.Group>
               </div>
               <div className="col-md-6">
                 <Form.Group className="mb-2">
-                  <Form.Label className="small fw-bold">Norme</Form.Label>
+                  <Form.Label className="small fw-bold">{t('parts.steel.standard')}</Form.Label>
                   <Form.Control
                     plaintext
                     readOnly
-                    value={selectedSteelInfo.standard || 'Non spécifié'}
+                    value={selectedSteelInfo.standard || t('parts.steel.notSpecified')}
                     className="py-0"
                   />
                 </Form.Group>
               </div>
               <div className="col-12">
                 <Form.Group className="mb-2">
-                  <Form.Label className="small fw-bold">Composition chimique</Form.Label>
+                  <Form.Label className="small fw-bold">{t('parts.steel.chemicalComposition')}</Form.Label>
                   <Form.Control
                     plaintext
                     readOnly
@@ -211,7 +213,7 @@ const SteelSection = ({
               </div>
               <div className="col-12">
                 <Form.Group>
-                  <Form.Label className="small fw-bold">Équivalents</Form.Label>
+                  <Form.Label className="small fw-bold">{t('parts.steel.equivalents')}</Form.Label>
                   <Form.Control
                     plaintext
                     readOnly
@@ -223,7 +225,7 @@ const SteelSection = ({
             </div>
           ) : (
             <div className="text-center py-2 text-muted">
-              Impossible de charger les informations détaillées pour cet acier.
+              {t('parts.steel.unableToLoad')}
             </div>
           )}
         </div>

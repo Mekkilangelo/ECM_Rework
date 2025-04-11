@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import Select from 'react-select';
+import { useTranslation } from 'react-i18next';
 
 const SpecificationsSection = ({
   formData,
@@ -11,6 +12,8 @@ const SpecificationsSection = ({
   loading,
   selectStyles
 }) => {
+  const { t } = useTranslation();
+
   // Style compact pour les Select
   const compactSelectStyles = {
     ...selectStyles,
@@ -46,17 +49,17 @@ const SpecificationsSection = ({
   return (
     <>
       {/* Section Duretés */}
-      <h6 className="text-muted mb-2">Spécifications de dureté</h6>
+      <h6 className="text-muted mb-2">{t('parts.specifications.hardnessSpecs')}</h6>
       {/* Dureté à cœur */}
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
           <Form.Group>
-            <Form.Label className="small">Dureté à cœur</Form.Label>
+            <Form.Label className="small">{t('parts.specifications.coreHardness')}</Form.Label>
           </Form.Group>
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Min</InputGroup.Text>
+            <InputGroup.Text>{t('common.min')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="coreHardnessMin"
@@ -69,7 +72,7 @@ const SpecificationsSection = ({
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Max</InputGroup.Text>
+            <InputGroup.Text>{t('common.max')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="coreHardnessMax"
@@ -88,7 +91,7 @@ const SpecificationsSection = ({
             options={getHardnessUnitOptions()}
             isClearable
             styles={compactSelectStyles}
-            placeholder="Unité"
+            placeholder={t('common.unit')}
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
@@ -99,12 +102,12 @@ const SpecificationsSection = ({
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
           <Form.Group>
-            <Form.Label className="small">Dureté en surface</Form.Label>
+            <Form.Label className="small">{t('parts.specifications.surfaceHardness')}</Form.Label>
           </Form.Group>
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Min</InputGroup.Text>
+            <InputGroup.Text>{t('common.min')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="surfaceHardnessMin"
@@ -117,7 +120,7 @@ const SpecificationsSection = ({
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Max</InputGroup.Text>
+            <InputGroup.Text>{t('common.max')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="surfaceHardnessMax"
@@ -136,7 +139,7 @@ const SpecificationsSection = ({
             options={getHardnessUnitOptions()}
             isClearable
             styles={compactSelectStyles}
-            placeholder="Unité"
+            placeholder={t('common.unit')}
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
@@ -147,12 +150,12 @@ const SpecificationsSection = ({
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
           <Form.Group>
-            <Form.Label className="small">Dureté PdD</Form.Label>
+            <Form.Label className="small">{t('parts.specifications.toothHardness')}</Form.Label>
           </Form.Group>
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Min</InputGroup.Text>
+            <InputGroup.Text>{t('common.min')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="toothHardnessMin"
@@ -165,7 +168,7 @@ const SpecificationsSection = ({
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Max</InputGroup.Text>
+            <InputGroup.Text>{t('common.max')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="toothHardnessMax"
@@ -184,7 +187,7 @@ const SpecificationsSection = ({
             options={getHardnessUnitOptions()}
             isClearable
             styles={compactSelectStyles}
-            placeholder="Unité"
+            placeholder={t('common.unit')}
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
@@ -195,12 +198,12 @@ const SpecificationsSection = ({
       <div className="row mb-3 g-2 align-items-end">
         <div className="col-md-2">
           <Form.Group>
-            <Form.Label className="small">Profondeur ECD</Form.Label>
+            <Form.Label className="small">{t('parts.specifications.ecdDepth')}</Form.Label>
           </Form.Group>
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Min</InputGroup.Text>
+            <InputGroup.Text>{t('common.min')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="ecdDepthMin"
@@ -213,7 +216,7 @@ const SpecificationsSection = ({
         </div>
         <div className="col-md-3">
           <InputGroup size="sm">
-            <InputGroup.Text>Max</InputGroup.Text>
+            <InputGroup.Text>{t('common.max')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="ecdDepthMax"
@@ -226,7 +229,7 @@ const SpecificationsSection = ({
         </div>
         <div className="col-md-4">
           <InputGroup size="sm">
-            <InputGroup.Text>Dureté</InputGroup.Text>
+            <InputGroup.Text>{t('parts.specifications.hardness')}</InputGroup.Text>
             <Form.Control
               type="number"
               name="ecdHardness"
@@ -242,7 +245,7 @@ const SpecificationsSection = ({
               options={getHardnessUnitOptions()}
               isClearable
               styles={compactSelectStyles}
-              placeholder="Unité"
+              placeholder={t('common.unit')}
               className="react-select-container flex-grow-1"
               classNamePrefix="react-select"
               isLoading={loading}

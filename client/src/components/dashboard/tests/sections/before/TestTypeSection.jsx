@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Row, Col, Form } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
 
@@ -13,19 +14,23 @@ const TestTypeSection = ({
   loading,
   selectStyles,
 }) => {
-  const handleCreateMountingType = (inputValue) => 
-    handleCreateOption(inputValue, 'mountingType', 'tests', 'mounting_type');
-  const handleCreatePositionType = (inputValue) => 
-    handleCreateOption(inputValue, 'positionType', 'tests', 'position_type');
-  const handleCreateProcessType = (inputValue) => 
-    handleCreateOption(inputValue, 'processType', 'tests', 'process_type');
+  const { t } = useTranslation();
 
+  const handleCreateMountingType = (inputValue) =>
+    handleCreateOption(inputValue, 'mountingType', 'tests', 'mounting_type');
+  
+  const handleCreatePositionType = (inputValue) =>
+    handleCreateOption(inputValue, 'positionType', 'tests', 'position_type');
+  
+  const handleCreateProcessType = (inputValue) =>
+    handleCreateOption(inputValue, 'processType', 'tests', 'process_type');
+  
   return (
     <>
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Type de montage</Form.Label>
+            <Form.Label>{t('tests.before.testType.mountingType')}</Form.Label>
             <CreatableSelect
               name="mountingType"
               value={getSelectedOption(mountingTypeOptions, formData.mountingType)}
@@ -34,7 +39,7 @@ const TestTypeSection = ({
               options={mountingTypeOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter un type de montage"
+              placeholder={t('tests.before.testType.selectOrAddMountingType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -43,7 +48,7 @@ const TestTypeSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Type de position</Form.Label>
+            <Form.Label>{t('tests.before.testType.positionType')}</Form.Label>
             <CreatableSelect
               name="positionType"
               value={getSelectedOption(positionTypeOptions, formData.positionType)}
@@ -52,7 +57,7 @@ const TestTypeSection = ({
               options={positionTypeOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter un type de position"
+              placeholder={t('tests.before.testType.selectOrAddPositionType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -61,7 +66,7 @@ const TestTypeSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>Type de processus</Form.Label>
+            <Form.Label>{t('tests.before.testType.processType')}</Form.Label>
             <CreatableSelect
               name="processType"
               value={getSelectedOption(processTypeOptions, formData.processType)}
@@ -70,7 +75,7 @@ const TestTypeSection = ({
               options={processTypeOptions}
               isClearable
               styles={selectStyles}
-              placeholder="Sélectionner ou ajouter un type de processus"
+              placeholder={t('tests.before.testType.selectOrAddProcessType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}

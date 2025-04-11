@@ -12,8 +12,18 @@
     "no": "No",
     "actions": "Actions",
     "unknown": "Unknown",
-    "modifiedAt": "Modified on"
+    "modifiedAt": "Modified on",
+    "selectUnit": "Select a unit",
+    "unit": "Unit",
+    "min": "Min",
+    "max": "Max"
   },
+  
+  "closeModal": {
+    "title": "Confirm closure",
+    "unsavedChanges": "You have unsaved changes."
+  },
+  
   "auth": {
     "login": "Login",
     "logout": "Logout",
@@ -22,87 +32,87 @@
     "forgotPassword": "Forgot password?",
     "sessionExpired": "Your session has expired. Please login again."
   },
+  
   "search": {
-    "placeholder": "Search for data, clients, reports..."
+    "placeholder": "Search data, clients, reports..."
   },
+  
   "navigation": {
     "dashboard": "Dashboard",
     "reference": "Reference",
     "archives": "Archives"
   },
+  
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome to the dashboard"
   },
-"clients": {
-  "title": "Clients",
-  "name": "Client name",
-  "list": "Clients list",
-  "details": "Client details",
-  "form": "Client form",
-  "add": "Add client",
-  "edit": "Edit client",
-  "group": "Group",
-  "country": "Country",
-  "city": "City",
-  "address": "Address",
-  "description": "Description",
-  "selectCountry": "Select a country",
-  "noCountryOptions": "No country available",
-  "modifying": "Modifying...",
-  "creating": "Creating...",
-  "noName": "No name",
-  "noClientsFound": "No clients found",
-  "clickToAddClient": "Click on \"Add client\" to create a new client",
-  "deleteSuccess": "Client successfully deleted",
-  "deleteError": "An error occurred while deleting the client",
-  "confirmDelete": "Are you sure you want to delete this client? This action is irreversible."
-},
-"closeModal": {
-  "title": "Confirm closure",
-  "unsavedChanges": "You have unsaved changes."
-},
-
+  
+  "clients": {
+    "title": "Clients",
+    "name": "Client name",
+    "list": "Clients list",
+    "details": "Client details",
+    "form": "Client form",
+    "add": "Add client",
+    "edit": "Edit client",
+    "group": "Group",
+    "country": "Country",
+    "city": "City",
+    "address": "Address",
+    "description": "Description",
+    "selectCountry": "Select a country",
+    "noCountryOptions": "No country available",
+    "modifying": "Modifying...",
+    "creating": "Creating...",
+    "noName": "No name",
+    "noClientsFound": "No clients found",
+    "clickToAddClient": "Click on \"Add client\" to create a new client",
+    "deleteSuccess": "Client successfully deleted",
+    "deleteError": "An error occurred while deleting the client",
+    "confirmDelete": "Are you sure you want to delete this client? This action is irreversible."
+  },
+  
   "orders": {
-  "title": "Trial Requests",
-  "list": "Trial Requests List",
-  "details": "Trial Request Details",
-  "form": "Trial Request Form",
-  "add": "Add Trial Request",
-  "edit": "Edit Trial Request",
-  "reference": "Reference",
-  "commercial": "Commercial",
-  "date": "Date",
-  "noReference": "No reference",
-  "noOrdersFound": "No trial requests found for this client",
-  "clickToAddOrder": "Click on \"Add trial request\" to create one",
-  "deleteSuccess": "Trial request successfully deleted",
-  "deleteError": "An error occurred while deleting the trial request",
-  "confirmDelete": "Are you sure you want to delete this trial request? This action is irreversible.",
-  "modifying": "Modifying...",
-  "creating": "Creating...",
-  "sections": {
-    "basicInfo": "Basic Information",
-    "contacts": "Contacts",
-    "documents": "Documents"
+    "title": "Test Requests",
+    "list": "Test requests list",
+    "details": "Test request details",
+    "form": "Test request form",
+    "add": "Add test request",
+    "edit": "Edit test request",
+    "reference": "Reference",
+    "commercial": "Commercial",
+    "date": "Date",
+    "noReference": "No reference",
+    "noOrdersFound": "No test requests found for this client",
+    "clickToAddOrder": "Click on \"Add test request\" to create one",
+    "deleteSuccess": "Test request successfully deleted",
+    "deleteError": "An error occurred while deleting the test request",
+    "confirmDelete": "Are you sure you want to delete this test request? This action is irreversible.",
+    "modifying": "Modifying...",
+    "creating": "Creating...",
+    "sections": {
+      "basicInfo": "Basic information",
+      "contacts": "Contacts",
+      "documents": "Documents"
+    },
+    "contacts": {
+      "add": "Add contact",
+      "contact": "Contact",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "documents": {
+      "uploadTitle": "Upload document",
+      "loadError": "Error while loading files:"
+    },
+    "generalInfo": {
+      "requestDate": "Request date",
+      "description": "Description"
+    }
   },
-  "contacts": {
-    "add": "Add contact",
-    "contact": "Contact",
-    "name": "Name",
-    "phone": "Phone",
-    "email": "Email"
-  },
-  "documents": {
-    "uploadTitle": "Upload document",
-    "loadError": "Error while loading files:"
-  },
-  "generalInfo": {
-    "requestDate": "Request Date",
-    "description": "Description"
-  }
-  },
-
+  
   "parts": {
     "title": "Parts",
     "list": "Parts list",
@@ -114,70 +124,369 @@
     "designation": "Designation",
     "clientDesignation": "Client designation",
     "reference": "Reference",
-    "steel": "Steel",
     "noParts": "No parts found for this order",
     "clickToAdd": "Click on \"New part\" to add one",
     "deleteConfirmation": "Are you sure you want to delete this part? This action is irreversible.",
     "deleteSuccess": "Part successfully deleted",
-    "deleteError": "An error occurred while deleting the part"
-  },
+    "deleteError": "An error occurred while deleting the part",
+    "sections": {
+      "basicInfo": "Basic information",
+      "specifications": "Specifications",
+      "documents": "Documents",
+      "dimensions": "Dimensions",
+      "steel": "Steel",
+      "photos": "Photos"
+    },
+    "dimensions": {
+      "mainDimensions": "Main Dimensions",
+      "length": "Length",
+      "width": "Width",
+      "height": "Height",
+      "diameters": "Diameters",
+      "diameterIn": "Inner diameter",
+      "diameterOut": "Outer diameter",
+      "weight": "Weight"
+    },
 
+    "photos": {
+      "views": {
+        "front": "Front view",
+        "profile": "Side view",
+        "quarter": "Three-quarter view",
+        "other": "Other view"
+      },
+      "upload": "Upload {{view}}",
+      "loadError": "Error loading files:",
+      "associationError": "Error associating files:"
+    },
+    "steel": {
+      "title": "Steel",
+      "specifications": "Steel specifications",
+      "steelType": "Steel",
+      "steelName": "Steel name",
+      "selectOrAddSteel": "Select a steel",
+      "noSteelsFound": "No steels found",
+      "clickToAddSteel": "Click on \"Add steel\" to create one",
+      "addNewSteel": "Add new steel",
+      "family": "Family",
+      "standard": "Standard",
+      "chemicalComposition": "Chemical composition",
+      "equivalents": "Equivalents",
+      "noEquivalents": "No equivalents specified",
+      "notSpecified": "Not specified",
+      "loadingInfo": "Loading information...",
+      "unableToLoad": "Unable to load detailed information for this steel.",
+      "fetchError": "Error fetching steel details:",
+      "families": {
+        "stainlessSteel": "Stainless steel",
+        "carbonSteel": "Carbon steel",
+        "toolSteel": "Tool steel",
+        "alloySteel": "Alloy steel"
+      }
+    },
+    "basicInfo": {
+      "designation": "Designation",
+      "clientDesignation": "Client designation",
+      "reference": "Reference",
+      "description": "Description",
+      "selectDesignation": "Select or add a designation"
+    },
+    "specifications": {
+      "hardnessSpecs": "Hardness Specifications",
+      "coreHardness": "Core Hardness",
+      "surfaceHardness": "Surface Hardness",
+      "toothHardness": "Tooth Hardness",
+      "ecdDepth": "ECD Depth",
+      "hardness": "Hardness"
+    }
+  },
+  
   "steels": {
     "title": "Steels",
-    "list": "Steel List",
-    "details": "Steel Details",
-    "form": "Steel Form",
-    "add": "Add Steel",
-    "edit": "Edit Steel"
+    "list": "Steels list",
+    "details": "Steel details",
+    "form": "Steel form",
+    "add": "Add steel",
+    "edit": "Edit steel"
   },
-
+  
   "tests": {
-  "title": "Trial",
-  "list": "Trial list",
-  "details": "Trial details",
-  "form": "Trial form",
-  "add": "Add trial",
-  "edit": "Edit trial",
-  "new": "New trial",
-  "testCode": "Trial code",
-  "date": "Date",
-  "location": "Location",
-  "noName": "No name",
-  "notDoneYet": "Not done yet",
-  "noTests": "No trials found for this part",
-  "clickToAdd": "Click on \"New trial\" to add one",
-  "confirmDelete": "Confirm deletion",
-  "deleteMessage": "Are you sure you want to delete the trial {{name}}? This action is irreversible.",
-  "deleteConfirmation": "Are you sure you want to delete this trial? This action is irreversible.",
-  "deleteSuccess": "Test successfully deleted",
-  "deleteError": "An error occurred while deleting the trial"
-},
+    "title": "Tests",
+    "list": "Tests list",
+    "details": "Test details",
+    "form": "Test form",
+    "add": "Add test",
+    "edit": "Edit test",
+    "new": "New test",
+    "testCode": "Test code",
+    "date": "Date",
+    "location": "Location",
+    "noName": "No name",
+    "notDoneYet": "Not done yet",
+    "noTests": "No tests found for this part",
+    "clickToAdd": "Click on \"New test\" to add one",
+    "confirmDelete": "Confirm deletion",
+    "deleteMessage": "Are you sure you want to delete the test {{name}}? This action is irreversible.",
+    "deleteConfirmation": "Are you sure you want to delete this test? This action is irreversible.",
+    "deleteSuccess": "Test successfully deleted",
+    "deleteError": "An error occurred while deleting the test",
+    "creating": "Creating...",
+    "modifying": "Modifying...",
+    
+    "sections": {
+      "basicInfo": "Basic information"
+    },
+    
+    "tabs": {
+      "before": "Before",
+      "after": "After",
+      "report": "Report"
+    },
+    
+    "basicInfo": {
+      "title": "Basic Information",
+      "loadNumber": "Load Number",
+      "testDate": "Test Date",
+      "location": "Location",
+      "status": "Status",
+      "description": "Description",
+      "selectLocation": "Select a location",
+      "selectStatus": "Select a status"
+    },
+    
+    "before": {
 
-"sidebar": {
-  "dashboard": "Dashboard",
-  "dataManagement": {
-    "title": "Data Management",
-    "dataPump": "Data Pump",
-    "indexing": "Indexing",
-    "dataCleaning": "Data Cleaning",
-    "cleaningInProgress": "Cleaning in progress...",
-    "analysis": "Analysis"
+      "furnaceData": {
+        "title": "Furnace Data",
+        "furnaceType": "Furnace Type",
+        "heatingCell": "Heating Cell",
+        "coolingMedia": "Cooling Media",
+        "furnaceSize": "Furnace Size",
+        "quenchCell": "Quench Cell",
+        "selectOrAddFurnaceType": "Select or add a furnace type",
+        "selectOrAddHeatingCell": "Select or add a heating cell",
+        "selectOrAddCoolingMedia": "Select or add cooling media",
+        "selectOrAddFurnaceSize": "Select or add a furnace size",
+        "selectOrAddQuenchCell": "Select or add a quench cell"
+      },
+
+      "testType": {
+        "title": "Test Type",
+        "mountingType": "Mounting Type",
+        "positionType": "Position Type",
+        "processType": "Process Type",
+        "selectOrAddMountingType": "Select or add a mounting type",
+        "selectOrAddPositionType": "Select or add a position type",
+        "selectOrAddProcessType": "Select or add a process type"
+      },
+      
+      "loadData": {
+        "title": "Load Data",
+        "loadDimensions": "Load Dimensions",
+        "length": "Length",
+        "width": "Width",
+        "height": "Height",
+        "unit": "Unit",
+        "loadInformation": "Load Information",
+        "floorCount": "Floor Count",
+        "partCount": "Part Count",
+        "weight": "Weight",
+        "loadComments": "Load Comments"
+      },
+      
+      "loadDesign": {
+        "title": "Load Design",
+        "importLoadDesign": "Import Load Design",
+        "responseFilesMessage": "Files retrieval response",
+        "loadFilesError": "Error while loading files:",
+        "associateFilesError": "Error while associating files:"
+      },
+
+      "recipeData": {
+        "title": "Recipe Data",
+        "recipeNumber": "Recipe Number",
+        
+        "preoxidation": {
+          "title": "Preoxidation",
+          "media": "Media",
+          "temperature": "Temperature",
+          "duration": "Duration",
+          "unit": "Unit"
+        },
+        
+        "thermalCycle": {
+        "title": "Thermal Cycle",
+        "step": "Step",
+        "ramp": "Ramp",
+        "rampUp": "Ramp Up",
+        "rampDown": "Ramp Down",
+        "rampContinue": "Continue",
+        "setpoint": "Setpoint",
+        "duration": "Duration",
+        "addStep": "Add step",
+        "otherParameters": "Other program parameters",
+        "waitTime": "Wait time",
+        "unit": "Unit",
+        "programDuration": "Program duration",
+        "cellTemp": "Cell temperature",
+        "waitPressure": "Wait pressure"
+        },
+        
+        "chemicalCycle": {
+        "title": "Chemical Cycle",
+        "gas": "Gas",
+        "selectGas": "Select...",
+        "step": "Step",
+        "time": "Time",
+        "flowRate": "Flow Rate",
+        "pressure": "Pressure",
+        "turbine": "Turbine",
+        "addStep": "Add step"
+        },
+        
+        "graphs": {
+        "title": "Graphs",
+        "importGraph": "Import graph",
+        "responseFilesMessage": "Files retrieval response",
+        "loadFilesError": "Error while loading files:",
+        "associateFilesError": "Error while associating files:"
+        },
+
+        "quenchData": {
+          "title": "Quench Data",
+          "common": {
+            "step": "Step",
+            "duration": "Duration",
+            "addStep": "Add step",
+            "selectUnit": "Select a unit"
+          },
+          "gas": {
+            "title": "Gas",
+            "speed": "Speed",
+            "pressure": "Pressure",
+            "speedParameters": "Speed Parameters",
+            "pressureParameters": "Pressure Parameters"
+          },
+          "oil": {
+            "title": "Oil",
+            "speed": "Speed",
+            "speedParameters": "Speed Parameters",
+            "parameters": "Oil Parameters",
+            "temperature": "Temperature",
+            "tempUnit": "Temperature Unit",
+            "inertingPressure": "Inerting Pressure",
+            "inertingDelay": "Inerting Delay",
+            "delayUnit": "Delay Unit",
+            "drippingTime": "Dripping Time",
+            "drippingUnit": "Dripping Unit"
+          }
+        }
+      }
+    },
+
+    "after": {
+      "specifications": {
+        "title": "Part Specifications",
+        "fetchError": "Error fetching specifications:",
+        "loadError": "Unable to load specifications",
+        "noSpecifications": "No specifications available",
+        "formatMin": "Min: {{value}}",
+        "formatMax": "Max: {{value}}",
+        "notAvailable": "N/A",
+        "ecd": "ECD {{hardness}} {{unit}}:",
+        "surfaceHardness": "Surface Hardness:",
+        "coreHardness": "Core Hardness:"
+      },
+      "furnaceReport": {
+        "title": "Furnace Report",
+        "heating": "Heating Report",
+        "cooling": "Quenching Report",
+        "alarms": "Alarm Report",
+        "datapaq": "DATAPAQ",
+        "filesResponse": "Files retrieval response",
+        "loadError": "Error while loading files:",
+        "associateError": "Error while associating files:",
+        "import": "Import {{name}}"
+      },
+      "results": {
+      "resultsLabel": "Results",
+      "addResult": "Add result",
+      "resultNumber": "Result #{{number}}",
+      "description": "Description",
+      "hardness": "Hardness",
+      "position": "Position",
+      "value": "Value",
+      "addPoint": "Add point",
+      "ecd": "ECD (Effective Case Depth)",
+      "hardnessValue": "Hardness value",
+      "hardnessUnit": "Hardness unit",
+      "distance": "Distance",
+      "toothFlank": "Tooth flank",
+      "toothRoot": "Tooth root",
+      "comment": "Comment",
+      "selectPosition": "Position",
+      "enterValue": "Value",
+      "enterDistance": "Distance",
+      "locations": {
+        "surface": "Surface",
+        "pdd": "PdD",
+        "core": "Core"
+        },
+        "micrographs": {
+          "title": "Micrographs",
+          "zoomX50": "Zoom x50",
+          "zoomX500": "Zoom x500",
+          "zoomX1000": "Zoom x1000",
+          "otherZoom": "Other Zoom",
+          "loadError": "Error while loading files:",
+          "associateError": "Error while associating files:",
+          "import": "Import {{name}}"
+        },
+        "resultCurve": {
+          "title": "Hardness Curve",
+          "curve": "Curve",
+          "data": "Data",
+          "hardnessUnit": "Hardness Unit",
+          "selectUnit": "Select a unit",
+          "incrementStep": "Increment Step (mm)",
+          "distanceMm": "Distance (mm)",
+          "distance": "Distance",
+          "flankHardness": "Flank Hardness",
+          "flankHardnessValue": "Flank hardness",
+          "rootHardness": "Root Hardness",
+          "rootHardnessValue": "Root hardness",
+          "specification": "Specification",
+          "addPoint": "Add a point",
+          "hardnessWithUnit": "Hardness ({{unit}})",
+          "specError": "Error retrieving ECD specifications:"
+        }
+      }
+    }
   },
-  "archivesReference": {
-    "title": "Archives & Reference",
-    "archives": "Archives",
-    "reference": "Reference"
-  },
-  "support": {
-    "title": "Support",
-    "createTicket": "Create a ticket"
-  },
-  "dataCleaning": {
-    "confirmMessage": "Warning! This action will permanently delete all application data.\n\nAre you sure you want to continue?",
-    "success": "Data successfully deleted",
-    "error": "Error while deleting data"
+  
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "dataManagement": {
+      "title": "Data Management",
+      "dataPump": "Data Import",
+      "indexing": "Indexing",
+      "dataCleaning": "Data Cleaning",
+      "cleaningInProgress": "Cleaning in progress...",
+      "analysis": "Analysis"
+    },
+    "archivesReference": {
+      "title": "Archives & References",
+      "archives": "Archives",
+      "reference": "Reference"
+    },
+    "support": {
+      "title": "Support",
+      "createTicket": "Create ticket"
+    },
+    "dataCleaning": {
+      "confirmMessage": "Warning! This action will permanently delete all data from the application.\n\nAre you sure you want to continue?",
+      "success": "Data successfully deleted",
+      "error": "Error while deleting data"
+    }
   }
-}
-
-
 }

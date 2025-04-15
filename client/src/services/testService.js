@@ -17,7 +17,15 @@ export const testService = {
     api.delete(`/tests/${id}`),
 
   getTestSpecs: (testId, parentId) => 
-    api.get(`/tests/${testId}/specs`, { params: { parentId } })
+    api.get(`/tests/${testId}/specs`, { params: { parentId } }),
+    
+  // Nouvelle méthode pour récupérer les données du rapport
+  getTestReportData: (testId, selectedSections) => 
+    api.get(`/tests/${testId}/report`, { 
+      params: { 
+        sections: JSON.stringify(selectedSections) 
+      } 
+    })
 };
 
 export default testService;

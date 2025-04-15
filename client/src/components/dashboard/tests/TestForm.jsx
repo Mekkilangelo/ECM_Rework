@@ -140,6 +140,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
               <Tab eventKey="report" title={renderTabTitle(t('tests.tabs.report'), "report")}>
                 <ReportTabContent 
                   testId={test.id}
+                  partId={test.parent_id}  // Ajoutez directement l'ID de la pièce
                 />
               </Tab>
             </Tabs>

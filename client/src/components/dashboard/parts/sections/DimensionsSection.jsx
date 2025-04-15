@@ -1,12 +1,13 @@
 import React from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
-import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
 
 const DimensionsSection = ({
   formData,
   handleChange,
   handleSelectChange,
+  handleCreateOption,
   getSelectedOption,
   getLengthUnitOptions,
   getWeightUnitOptions,
@@ -45,6 +46,18 @@ const DimensionsSection = ({
       ...provided,
       height: '38px',
     }),
+  };
+  
+  const handleCreateDimensionsUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'dimensionsUnit', 'units', 'length_units');
+  };
+  
+  const handleCreateDiameterUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'diameterUnit', 'units', 'length_units');
+  };
+  
+  const handleCreateWeightUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'weightUnit', 'units', 'weight_units');
   };
 
   return (
@@ -93,7 +106,7 @@ const DimensionsSection = ({
         <div className="col-auto">
           <Form.Group>
             <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <Select
+            <CreatableSelect
               name="dimensionsUnit"
               value={getSelectedOption(getLengthUnitOptions(), formData.dimensionsUnit)}
               onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
@@ -104,6 +117,8 @@ const DimensionsSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+              onCreateOption={handleCreateDimensionsUnit}
             />
           </Form.Group>
         </div>
@@ -140,7 +155,7 @@ const DimensionsSection = ({
         <div className="col-auto">
           <Form.Group>
             <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <Select
+            <CreatableSelect
               name="diameterUnit"
               value={getSelectedOption(getLengthUnitOptions(), formData.diameterUnit)}
               onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
@@ -151,6 +166,8 @@ const DimensionsSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+              onCreateOption={handleCreateDiameterUnit}
             />
           </Form.Group>
         </div>
@@ -174,7 +191,7 @@ const DimensionsSection = ({
         <div className="col-auto">
           <Form.Group>
             <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <Select
+            <CreatableSelect
               name="weightUnit"
               value={getSelectedOption(getWeightUnitOptions(), formData.weightUnit)}
               onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
@@ -185,6 +202,8 @@ const DimensionsSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+              onCreateOption={handleCreateWeightUnit}
             />
           </Form.Group>
         </div>

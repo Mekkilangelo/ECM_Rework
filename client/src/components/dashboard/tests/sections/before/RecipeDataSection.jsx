@@ -47,6 +47,7 @@ const RecipeDataSection = ({
               name="recipeData.recipeNumber"
               value={formData.recipeData?.recipeNumber}
               onChange={handleChange}
+              autoComplete="off"
             />
           </Form.Group>
         </Col>

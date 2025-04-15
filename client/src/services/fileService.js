@@ -45,6 +45,18 @@ const fileService = {
     return `${api.defaults.baseURL}/files/download/${fileId}?preview=true`;
   },
   
+  // Nouvelle méthode pour récupérer un fichier par ID
+  getFileById: (fileId) => {
+    return `${api.defaults.baseURL}/files/${fileId}`;
+  },
+  
+  // Nouvelle méthode pour récupérer le contenu d'un fichier en blob
+  getFileBlob: (fileId) => {
+    return api.get(`/files/${fileId}`, {
+      responseType: 'blob'
+    });
+  },
+  
   associateFiles: (nodeId, tempId, options = {}) => {
     const { category, subcategory } = options;
     return api.post(`/files/associate`, { 

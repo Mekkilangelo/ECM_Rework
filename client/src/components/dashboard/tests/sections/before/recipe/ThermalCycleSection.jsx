@@ -49,7 +49,7 @@ const ThermalCycleSection = ({
             <th style={{ width: '60px' }}>{t('tests.before.recipeData.thermalCycle.step')}</th>
             <th style={{ width: '150px' }}>{t('tests.before.recipeData.thermalCycle.ramp')}</th>
             <th>{t('tests.before.recipeData.thermalCycle.setpoint')} (°C)</th>
-            <th>{t('tests.before.recipeData.thermalCycle.duration')} (s)</th>
+            <th>{t('tests.before.recipeData.thermalCycle.duration')} (min)</th>
             <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>

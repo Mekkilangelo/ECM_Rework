@@ -36,7 +36,7 @@ const BasicInfoSection = ({
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
-            formatCreateLabel={(inputValue) => `${t('common.addOption', { option: inputValue })}`}
+            formatCreateLabel={(inputValue) =>  `${t('common.addOption')} "${inputValue}"`}
             onCreateOption={handleCreateDesignation}
           />
         </Form.Group>
@@ -74,6 +74,22 @@ const BasicInfoSection = ({
         </Form.Group>
       </div>
       <div className="col-md-6">
+        <Form.Group className="mb-3">
+          <Form.Label>{t('parts.quantity')}</Form.Label>
+          <Form.Control
+            type="number"
+            name="quantity"
+            value={formData.quantity || ''}
+            onChange={handleChange}
+            isInvalid={!!errors.quantity}
+            autoComplete="off"
+          />
+          <Form.Control.Feedback type="invalid">
+            {errors.quantity}
+          </Form.Control.Feedback>
+        </Form.Group>
+      </div>
+      <div className="col-md-12">
         <Form.Group className="mb-3">
           <Form.Label>{t('parts.basicInfo.description')}</Form.Label>
           <Form.Control

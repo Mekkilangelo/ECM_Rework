@@ -4,8 +4,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome, faUsers, faDatabase, faLayerGroup,
   faEraser, faChartLine, faUniversity, faBook,
-  faTicketAlt, faAngleLeft, faAngleRight, faSearch
+  faTicketAlt, faSearch
 } from '@fortawesome/free-solid-svg-icons';
+// Ne pas importer les icônes qui causent des problèmes
+// import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
+
+// Importer les styles de FontAwesome dans le CSS global
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
 import { cleanData } from '../../services/nodeService';
@@ -51,9 +56,17 @@ const Sidebar = ({ userRole }) => {
     }
   };
 
+  // Correction du toggle pour réduire complètement la sidebar
   const handleToggleSidebar = () => {
-    setIsToggled(!isToggled);
-    document.body.classList.toggle('sidebar-toggled');
+    const newState = !isToggled;
+    setIsToggled(newState);
+    
+    // Ajouter/supprimer la classe sur le body pour les transitions CSS
+    if (newState) {
+      document.body.classList.add('sidebar-toggled');
+    } else {
+      document.body.classList.remove('sidebar-toggled');
+    }
   };
 
   // Style personnalisé pour React-Select
@@ -236,14 +249,20 @@ const Sidebar = ({ userRole }) => {
         </>
       )}
 
-      {/* Sidebar Toggler */}
-      <div className="text-center d-none d-md-inline mt-3">
+      {/* Sidebar Toggler - version avec HTML classique */}
+      <div className="sidebar-toggler-wrapper">
         <button
-          className="btn btn-link text-white-50 rounded-circle"
+          type="button"
           id="sidebarToggle"
+          className="sidebar-toggle-btn"
           onClick={handleToggleSidebar}
+          aria-label="Toggle Sidebar"
+          style={{
+            backgroundColor: '#2c3e50', // Couleur explicite
+            color: 'white' // Texte blanc
+          }}
         >
-          <FontAwesomeIcon icon={isToggled ? faAngleRight : faAngleLeft} />
+          <i className={isToggled ? "fas fa-angle-right" : "fas fa-angle-left"}></i>
         </button>
       </div>
     </ul>

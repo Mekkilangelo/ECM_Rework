@@ -410,3 +410,42 @@ exports.getFileStats = async (req, res) => {
     return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
+
+// Ajouter cette méthode à votre fileController.js
+exports.getFileById = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    console.log(`======= GET FILE BY ID =======`);
+    console.log(`Request for file ID: ${fileId}`);
+    console.log(`Request URL: ${req.originalUrl}`);
+    console.log(`Request headers:`, req.headers);
+    
+    // Récupérer les données du fichier
+    const fileData = await File.findOne({ 
+      where: { node_id: fileId }
+    });
+    
+    if (!fileData) {
+      return res.status(404).json({ message: 'Fichier non trouvé' });
+    }
+    
+    // Vérifier si le fichier existe
+    if (!fs.existsSync(fileData.file_path)) {
+      return res.status(404).json({ 
+        message: 'Fichier physique introuvable',
+        path: fileData.file_path
+      });
+    }
+    
+    // Servir le fichier
+    res.setHeader('Content-Type', fileData.mime_type);
+    fs.createReadStream(fileData.file_path).pipe(res);
+    
+  } catch (error) {
+    console.error('Erreur lors de la récupération du fichier:', error);
+    return res.status(500).json({ 
+      message: 'Erreur serveur', 
+      erreur: error.message 
+    });
+  }
+};

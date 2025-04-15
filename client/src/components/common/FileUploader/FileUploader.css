@@ -52,8 +52,8 @@
 
 /* Styles pour les vignettes et prévisualisations */
 .thumbnail-container {
-  width: 150px;           /* Augmenté de 60px à 80px */
-  height: 150px;          /* Augmenté de 60px à 80px */
+  width: 150px;           
+  height: 150px;          
   border-radius: 4px;
   overflow: hidden;
   position: relative;
@@ -64,6 +64,17 @@
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid #e0e0e0;
+}
+
+/* Styles spécifiques pour les vignettes de fichiers non-images */
+.thumbnail-container.non-image {
+  width: 80px;
+  height: 80px;
+  color: #6c757d;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .thumbnail-container:hover {
@@ -77,11 +88,7 @@
   object-fit: cover;
 }
 
-.thumbnail-container.non-image {
-  color: #6c757d;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
+/* Style standard pour thumbnail-fallback utilisé avec des images */
 .thumbnail-fallback {
   position: absolute;
   width: 100%;
@@ -90,6 +97,19 @@
   justify-content: center;
   align-items: center;
   color: #6c757d;
+}
+
+/* Style pour les icônes de fichiers non-image */
+.non-image .thumbnail-fallback {
+  position: static; /* Pour éviter la troncature */
+  font-size: 2rem; /* Taille d'icône appropriée */
+  width: auto;
+  height: auto;
+}
+
+.non-image .thumbnail-fallback i {
+  display: block;
+  line-height: 1;
 }
 
 .modal-fallback {
@@ -127,4 +147,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 140px;
+}
+
+/* Ajuster la largeur maximale pour les noms de fichiers non-image */
+.non-image ~ .text-truncate, /* Pour cibler le texte adjacent au thumbnail */
+.non-image .text-truncate {
+  max-width: 75px;
+}
+
+/* Styles pour le nom du fichier sous la vignette */
+.file-info-container {
+  text-align: center;
+  margin-top: 5px;
+  width: 100%;
+  font-size: 0.8rem;
 }

@@ -1,91 +1,277 @@
-/* styles/sidebar.css */
-/* Augmenter la spécificité en précisant l'ID et forcer les styles avec !important */
+/* styles/sidebar.css - Style amélioré */
+
+/* Base de la sidebar */
 #accordionSidebar.navbar-nav.bg-dark.sidebar {
     min-height: 100vh !important;
-    width: 225px !important;
-    transition: all 0.3s !important;
-    z-index: 1 !important;
-    background-color: #343a40 !important; /* bg-dark de Bootstrap */
+    width: 250px !important; /* Légèrement plus large */
+    transition: all 0.3s ease-in-out !important;
+    z-index: 1030 !important; /* Plus haut pour être au dessus des autres éléments */
+    background: linear-gradient(180deg, #2c3e50 0%, #1e2b38 100%) !important; /* Dégradé de couleur moderne */
+    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.15) !important; /* Ombre plus subtile */
+    position: relative !important;
 }
 
+/* Gestion du toggle */
 #accordionSidebar.sidebar.toggled {
     width: 0 !important;
     overflow: hidden !important;
+    margin-left: -250px !important; /* Force le déplacement complet hors écran */
+    padding: 0 !important;
 }
 
+/* Logo container */
+.sidebar-brand-container {
+    padding: 1.5rem 1rem !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-bottom: 0.5rem !important;
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Titres de section */
 #accordionSidebar .sidebar-heading {
-    padding: 0.75rem 1rem !important;
-    font-weight: 800 !important;
-    font-size: 0.65rem !important;
+    padding: 0.85rem 1.5rem !important;
+    margin-top: 1rem !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.05rem !important;
     text-transform: uppercase !important;
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: #ffc107 !important; /* Couleur d'accent jaune */
+    border-left: 3px solid #ffc107 !important; /* Barre verticale pour accent visuel */
+    background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
-/* Override pour les liens - augmenter la spécificité */
+/* Style des liens améliorés */
 #accordionSidebar.sidebar .nav-item .nav-link {
     color: rgba(255, 255, 255, 0.8) !important;
-    padding: 0.5rem 1rem !important;
+    padding: 0.9rem 1.5rem !important; /* Plus grand pour être plus visible */
+    display: flex !important;
+    align-items: center !important;
+    transition: all 0.2s ease-in-out !important;
+    font-size: 0.95rem !important; /* Police plus grande */
+    font-weight: 500 !important;
+    margin: 0.1rem 0.5rem !important;
+    border-radius: 0.5rem !important;
+}
+
+/* Hover et état actif des liens */
+#accordionSidebar.sidebar .nav-item .nav-link:hover {
+    color: #fff !important;
+    background-color: rgba(255, 193, 7, 0.15) !important;
+    transform: translateX(3px) !important;
+}
+
+#accordionSidebar.sidebar .nav-item .nav-link.active {
+    color: #fff !important;
+    background: linear-gradient(90deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0) 100%) !important;
+    border-left: 3px solid #ffc107 !important;
+    font-weight: 600 !important;
+}
+
+/* Icônes plus grandes et mieux positionnées */
+#accordionSidebar.sidebar .nav-link svg.svg-inline--fa,
+#accordionSidebar.sidebar .nav-link i.fas {
+    margin-right: 0.75rem !important;
+    width: 1.5em !important;
+    font-size: 1.15rem !important; /* Icônes plus grandes */
+    text-align: center !important;
+    transition: all 0.2s !important;
+}
+
+/* Animation sur hover pour les icônes */
+#accordionSidebar.sidebar .nav-link:hover svg.svg-inline--fa,
+#accordionSidebar.sidebar .nav-link:hover i.fas {
+    transform: scale(1.1) !important;
+    color: #ffc107 !important;
+}
+
+/* Séparateurs améliorés */
+#accordionSidebar.sidebar hr.border-secondary {
+    margin: 0.75rem 1.25rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    opacity: 0.5 !important;
+}
+
+/* Bouton toggle du sidebar */
+#accordionSidebar #sidebarToggle {
+    background-color: rgba(255, 255, 255, 0.1);
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    margin: 1rem auto;
+    border: none;
+    padding: 0; /* Enlever le padding qui pourrait causer l'espace vide */
+    outline: none; /* Supprime le contour qui pourrait causer des problèmes */
+}
+
+#accordionSidebar #sidebarToggle:hover {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    transform: rotate(180deg) !important;
+}
+
+/* S'assurer que l'icône est bien centrée sans espaces */
+#accordionSidebar #sidebarToggle svg {
+    margin: 0 !important; /* Supprimer les marges de l'icône */
+    padding: 0 !important; /* Supprimer les paddings de l'icône */
+    display: block !important; /* Le block assure un meilleur centrage */
+    width: 1em !important; /* Taille fixe pour l'icône */
+    height: 1em !important;
+}
+
+/* Badges pour notifications ou indicateurs */
+.sidebar-badge {
+    background-color: #ffc107 !important;
+    color: #343a40 !important;
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 20px !important;
+    margin-left: auto !important;
+    font-weight: 600 !important;
+}
+
+/* Ajouter un espace supérieur et inférieur pour plus d'air */
+.sidebar-spacer {
+    height: 1rem !important;
+}
+
+/* Section bas de page avec infos utilisateur */
+.sidebar-user-info {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 1rem !important;
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
     display: flex !important;
     align-items: center !important;
 }
 
-#accordionSidebar.sidebar .nav-item .nav-link:hover,
-#accordionSidebar.sidebar .nav-item .nav-link.active {
-    color: #ffc107 !important; /* Bootstrap warning color */
-    background-color: rgba(255, 193, 7, 0.1) !important;
-    border-radius: 0.35rem !important;
+.sidebar-user-avatar {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    border-radius: 50% !important;
+    background-color: #ffc107 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #343a40 !important;
+    font-weight: 600 !important;
+    margin-right: 0.75rem !important;
 }
 
-/* Style spécifique pour les icônes */
-#accordionSidebar.sidebar .nav-link svg.svg-inline--fa,
-#accordionSidebar.sidebar .nav-link i.fas {
-    margin-right: 0.5rem !important;
-    width: 1.25em !important;
+.sidebar-user-info .user-name {
+    font-size: 0.85rem !important;
+    color: #fff !important;
+    font-weight: 500 !important;
 }
 
-/* Style pour le lien actif avec fond jaune */
-#accordionSidebar.sidebar .nav-link.active.bg-warning {
-    background-color: #ffc107 !important; 
-    color: #212529 !important;
+.sidebar-user-info .user-role {
+    font-size: 0.7rem !important;
+    color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* Styling for mobile responsive */
+/* Réponsivité mobile améliorée */
 @media (max-width: 768px) {
     #accordionSidebar.sidebar {
         width: 0 !important;
         overflow: hidden !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100% !important;
     }
 
     #accordionSidebar.sidebar.toggled {
-        width: 225px !important;
+        width: 0 !important;
+        margin-left: 0 !important; /* Sur mobile, utiliser une approche différente */
+        transform: translateX(-100%) !important; /* Animation de déplacement */
     }
 }
 
-/* Dividers avec spécificité accrue */
-#accordionSidebar.sidebar hr.border-secondary {
-    margin: 0.5rem 1rem !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+/* Ajout d'un conteneur au body pour gérer la transition */
+body.sidebar-toggled .content-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
 }
 
-/* Sidebar toggle button avec spécificité accrue */
-#accordionSidebar #sidebarToggle {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    width: 2.5rem !important;
-    height: 2.5rem !important;
+/* Ajoutez ces règles pour corriger le toggle et le rectangle */
+
+/* Position fixe pour le toggler pour qu'il reste accessible */
+.sidebar-toggler-wrapper {
+  position: relative;
+  text-align: center;
+  padding: 1rem 0;
+  width: 100%;
 }
 
-#accordionSidebar #sidebarToggle:hover {
-    background-color: rgba(255, 255, 255, 0.2) !important;
+/* Style du bouton toggle */
+.sidebar-toggle-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+  padding: 0;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+  margin: 0 auto;
+  font-size: 1rem; /* Taille de la police ajustée */
+  line-height: 1;
 }
 
-/* Client selection form styling avec spécificité accrue */
-#accordionSidebar.sidebar #client-form {
-    padding: 0 0.75rem !important;
+.sidebar-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
-#accordionSidebar.sidebar #client-form label {
-    display: block !important;
-    color: rgba(255, 255, 255, 0.8) !important;
-    margin-bottom: 0.5rem !important;
-    font-size: 0.85rem !important;
+.sidebar-toggle-btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Positionnement du toggle quand la sidebar est réduite */
+.sidebar.toggled .sidebar-toggler-wrapper {
+  position: fixed;
+  left: 0;
+  bottom: 20px;
+  width: auto;
+  z-index: 1050;
+  padding: 0;
+}
+
+.sidebar.toggled .sidebar-toggle-btn {
+  margin: 0;
+  margin-left: 10px;
+  background-color: #2c3e50;
+  border: 1px solid #1e2b38;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Force le style du SVG pour éviter le rectangle */
+.sidebar-toggle-btn svg {
+  width: 1em !important;
+  height: 1em !important;
+  display: block !important; 
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+}
+
+/* Style de l'icône i classique */
+.sidebar-toggle-btn i {
+  font-size: 1rem;
 }

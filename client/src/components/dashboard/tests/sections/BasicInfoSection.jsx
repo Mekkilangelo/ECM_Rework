@@ -30,6 +30,7 @@ const BasicInfoSection = ({
               name="loadNumber"
               value={formData.loadNumber || ''}
               onChange={handleChange}
+              autocomplete="off"
             />
           </Form.Group>
         </Col>

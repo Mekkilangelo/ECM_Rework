@@ -395,92 +395,403 @@ exports.deleteTest = async (req, res) => {
   }
 };
 
+// Ajouter cette fonction à votre contrôleur pour récupérer les photos de pièce et de test
+async function getNodePhotos(nodeId) {
+  try {
+    if (!nodeId) return [];
+    
+    const { File } = require('../models');
+    const { Op } = require('sequelize');
+    
+    const files = await File.findAll({
+      include: [{
+        model: require('../models').Node,
+        where: {
+          parent_id: nodeId,
+          type: 'file'
+        },
+        required: true
+      }]
+    });
+    
+    return files.map(file => {
+      const viewPath = `/uploads${file.Node.path}`;
+      
+      return {
+        id: file.node_id,
+        name: file.Node.name || file.original_name,
+        path: file.Node.path,
+        category: file.category,
+        subcategory: file.subcategory,
+        viewPath,
+        size: file.size,
+        type: file.mime_type
+      };
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des photos:", error);
+    return [];
+  }
+}
+
+// Compléter la fonction getTestReportData
 exports.getTestReportData = async (req, res) => {
   const { testId } = req.params;
+  const { sections } = req.query;
   
   try {
-    // Récupérer le test avec son noeud
-    const test = await Test.findOne({
-      where: { node_id: testId },
-      include: [
-        { 
-          model: Node,
-          attributes: ['id', 'name', 'path', 'type']
-        }
-      ]
-    });
-
-    if (!test) {
-      return res.status(404).json({ message: 'Test not found' });
+    // Valider les paramètres
+    if (!testId) {
+      return res.status(400).json({ error: 'ID de test requis' });
+    }
+    
+    // Analyser les sections demandées
+    let selectedSections;
+    try {
+      selectedSections = typeof sections === 'string' ? JSON.parse(sections) : sections;
+    } catch (parseError) {
+      console.error("Erreur lors de l'analyse des sections:", parseError);
+      return res.status(400).json({ error: 'Format de sections invalide' });
     }
 
-    const testNodeId = test.node_id;
-
-    // Trouver tous les ancêtres du test
-    const ancestorRelations = await Closure.findAll({
-      where: { descendant_id: testNodeId }
-    });
-
-    const ancestorIds = ancestorRelations.map(relation => relation.ancestor_id);
+    // Récupérer les informations du test
+    const { Node, Test, Part, Client } = require('../models');
+    const { Op } = require('sequelize');
     
-    // Récupérer les informations de la pièce
-    const partData = await Node.findOne({
-      where: { 
-        id: { [Op.in]: ancestorIds },
-        type: 'part' 
+    const test = await Test.findOne({
+      where: {
+        node_id: testId
       },
-      include: [
-        { 
-          model: require('../models').Part
-        }
-      ]
+      include: [{
+        model: Node,
+        required: true
+      }]
     });
-
-    // Récupérer les informations du client
-    const clientData = await Node.findOne({
-      where: { 
-        id: { [Op.in]: ancestorIds },
-        type: 'client' 
-      },
-      include: [
-        { 
-          model: require('../models').Client
-        }
-      ]
+    
+    if (!test) {
+      return res.status(404).json({ error: 'Test non trouvé' });
+    }
+    
+    // Récupérer les ancêtres du nœud de test
+    const closure = await require('../models').Closure.findAll({
+      where: {
+        descendant_id: testId
+      }
     });
-
-    // Préparer les données structurées pour le rapport
+    
+    const ancestorIds = closure.map(c => c.ancestor_id);
+    console.log(`Executing (default): SELECT \`ancestor_id\`, \`descendant_id\`, \`depth\` FROM \`closure\` AS \`Closure\` WHERE \`Closure\`.\`descendant_id\` = ${testId};`);
+    console.log("Ancestor IDs:", ancestorIds);
+    
+    // Structure de données pour le rapport
     const reportData = {
       test: {
-        id: test.id,
-        name: test.Node.name,
+        id: test.node_id,
         testCode: test.test_code,
+        loadNumber: test.load_number,
         testDate: test.test_date,
         status: test.status,
         location: test.location,
+        furnaceData: test.furnace_data,
         loadData: test.load_data,
-        processType: test.process_type
+        recipeData: test.recipe_data,
+        quenchData: test.quench_data,
+        resultsData: test.results_data,
+        mountingType: test.mounting_type,
+        positionType: test.position_type,
+        processType: test.process_type,
+        preoxMedia: test.preox_media,
+        name: test.Node.name,
       },
-      part: partData ? {
-        designation: partData.Part.designation,
-        reference: partData.name,
-        steel: partData.Part.steel,
-        specifications: partData.Part.specifications,
-        dimensions: partData.Part.dimensions
-      } : null,
-      client: clientData ? {
-        name: clientData.name,
-        code: clientData.Client.client_code,
-        city: clientData.Client.city,
-        country: clientData.Client.country,
-        address: clientData.Client.address
-      } : null
+      part: null,
+      client: null
     };
+    
+    // IDENTIFICATION: récupérer les infos de la pièce et du client
+    let partNode = null;
+    let partNodeId = null;  // Déclaration explicite de partNodeId
 
-    res.json(reportData);
+    if (selectedSections.identification) {
+      console.log("Retrieving identification data");
+      
+      // Trouver le nœud parent de type "part"
+      partNode = await Node.findOne({
+        where: { 
+          id: { [Op.in]: ancestorIds },
+          type: 'part' 
+        },
+        include: [{ model: Part }]
+      });
+      
+      if (partNode) {
+        partNodeId = partNode.id;  // Assigner la valeur à partNodeId
+        console.log("Part node found:", partNodeId);
+        
+        // Extraire les dimensions si disponibles
+        let dimensions = null;
+        try {
+          dimensions = partNode.Part.dimensions && typeof partNode.Part.dimensions === 'string' 
+            ? JSON.parse(partNode.Part.dimensions) 
+            : partNode.Part.dimensions;
+        } catch (error) {
+          console.error("Error parsing dimensions:", error);
+          dimensions = null;
+        }
+        
+        // Récupérer les photos associées à la pièce
+        let partPhotos = [];
+        
+        // Récupérer les spécifications de la pièce
+        let specifications = null;
+        try {
+          specifications = partNode.Part.specifications && typeof partNode.Part.specifications === 'string' 
+            ? JSON.parse(partNode.Part.specifications) 
+            : partNode.Part.specifications;
+        } catch (error) {
+          console.error("Error parsing specifications:", error);
+          specifications = null;
+        }
+        
+        // Construire l'objet part pour le rapport
+        reportData.part = {
+          id: partNode.id,
+          designation: partNode.Part.designation,
+          clientDesignation: partNode.Part.client_designation || '',
+          reference: partNode.Part.reference || '',
+          steel: partNode.Part.steel,
+          quantity: partNode.Part.quantity || '',
+          specifications: specifications,
+          dimensions: dimensions,
+          weight: dimensions?.weight || '',
+          comments: dimensions?.comments || '',
+          photos: [] // Sera rempli plus tard
+        };
+      }
+      
+      // Trouver le nœud client
+      const clientNode = await Node.findOne({
+        where: { 
+          id: { [Op.in]: ancestorIds },
+          type: 'client' 
+        },
+        include: [{ model: Client }]
+      });
+      
+      if (clientNode) {
+        reportData.client = {
+          name: clientNode.name,
+          code: clientNode.Client.client_code,
+          city: clientNode.Client.city,
+          country: clientNode.Client.country,
+          address: clientNode.Client.address
+        };
+      }
+    }
+    
+    // Récupérer les photos associées à la pièce, si on a l'ID
+    if (partNodeId) {
+      try {
+        console.log("Searching photos for part:", partNodeId);
+        
+        // Rechercher les nœuds de type 'file' associés à la pièce
+        const photoNodes = await Node.findAll({
+          where: {
+            parent_id: partNodeId,
+            type: 'file'
+          },
+          include: [{
+            model: require('../models').File,
+            where: {
+              category: 'photos'
+            },
+            required: true
+          }]
+        });
+        
+        if (photoNodes && photoNodes.length > 0) {
+          const partPhotos = photoNodes.map(node => {
+            return {
+              id: node.id,
+              name: node.name || node.File.original_name,
+              path: node.path,
+              viewPath: `/api/files/${node.id}`,
+              downloadPath: `/api/files/download/${node.id}`,
+              subcategory: node.File.subcategory || 'other',
+              description: node.description || `File uploaded as photos/${node.File.subcategory || 'other'}`,
+              category: node.File.category,
+              mimeType: node.File.mime_type,
+              size: node.File.size,
+              createdAt: node.created_at
+            };
+          });
+          
+          console.log(`Found ${partPhotos.length} photos for part`);
+          console.log("Processed photos:", partPhotos);
+          
+          if (reportData.part) {
+            reportData.part.photos = partPhotos;
+          }
+        } else {
+          console.log("No photos found for part");
+        }
+      } catch (photoError) {
+        console.error("Error retrieving part photos:", photoError);
+      }
+    }
+    
+    // Récupérer les photos associées au test
+    try {
+      // Rechercher les nœuds de type 'file' associés au test
+      const testPhotoNodes = await Node.findAll({
+        where: {
+          parent_id: testId,
+          type: 'file'
+        },
+        include: [{
+          model: require('../models').File,
+          required: true
+        }]
+      });
+      
+      if (testPhotoNodes && testPhotoNodes.length > 0) {
+        const testPhotos = testPhotoNodes.map(node => {
+          return {
+            id: node.id,
+            name: node.name || node.File.original_name,
+            path: node.path,
+            viewPath: `/api/files/${node.id}`,
+            downloadPath: `/api/files/download/${node.id}`,
+            subcategory: node.File.subcategory || 'other',
+            description: node.description,
+            category: node.File.category || 'documentation',
+            mimeType: node.File.mime_type,
+            size: node.File.size,
+            createdAt: node.created_at
+          };
+        });
+        
+        console.log(`Found ${testPhotos.length} photos for test`);
+        reportData.test.photos = testPhotos;
+      } else {
+        console.log("No photos found for test");
+        reportData.test.photos = [];
+      }
+    } catch (photoError) {
+      console.error("Error retrieving test photos:", photoError);
+      reportData.test.photos = [];
+    }
+
+    // RECIPE: données de la recette
+    if (selectedSections.recipe) {
+      console.log("Retrieving recipe data");
+      
+      // Récupérer les données de recette directement du test
+      if (test.recipe_data) {
+        try {
+          // Si c'est une chaîne JSON, la parser
+          reportData.test.recipe_data = typeof test.recipe_data === 'string' 
+            ? JSON.parse(test.recipe_data) 
+            : test.recipe_data;
+          
+          console.log("Recipe data retrieved successfully");
+        } catch (error) {
+          console.error("Error parsing recipe data:", error);
+          reportData.test.recipe_data = null;
+        }
+      }
+      
+      // Récupérer les données de trempe (quench data)
+      if (test.quench_data) {
+        try {
+          // Si c'est une chaîne JSON, la parser
+          reportData.test.quench_data = typeof test.quench_data === 'string' 
+            ? JSON.parse(test.quench_data) 
+            : test.quench_data;
+          
+          console.log("Quench data retrieved successfully");
+        } catch (error) {
+          console.error("Error parsing quench data:", error);
+          reportData.test.quench_data = null;
+        }
+      }
+    }
+
+    // CONTROL: données de contrôle et résultats
+    if (selectedSections.control && partNodeId) {  // Utiliser partNodeId ici aussi
+      console.log("Retrieving control and results data");
+      
+      // Récupérer les données de résultats du test
+      if (test.results_data) {
+        try {
+          // Si c'est une chaîne JSON, la parser
+          const parsedResultsData = typeof test.results_data === 'string' 
+            ? JSON.parse(test.results_data) 
+            : test.results_data;
+          
+          reportData.test.results_data = parsedResultsData;
+          
+          // Extraire les résultats pour faciliter l'accès
+          if (parsedResultsData && parsedResultsData.results) {
+            reportData.test.results = parsedResultsData.results;
+            console.log("Results found:", reportData.test.results.length);
+          }
+          
+          console.log("Results data retrieved successfully");
+        } catch (error) {
+          console.error("Error parsing results data:", error);
+          reportData.test.results_data = null;
+        }
+      }
+      
+      // Récupérer les spécifications de la pièce parente pour les résultats
+      if (partNode && partNode.Part && partNode.Part.specifications) {
+        console.log("Found part specifications:", partNode.Part.specifications);
+        
+        // Parser les spécifications si elles sont stockées sous forme de chaîne
+        let specifications;
+        try {
+          specifications = typeof partNode.Part.specifications === 'string'
+            ? JSON.parse(partNode.Part.specifications)
+            : partNode.Part.specifications;
+        } catch (err) {
+          console.error("Error parsing specifications:", err);
+          specifications = partNode.Part.specifications || {};
+        }
+        
+        // S'assurer que reportData.part existe
+        if (!reportData.part) {
+          reportData.part = {};
+        }
+        
+        // Ajouter les spécifications au rapport
+        reportData.part.specifications = specifications;
+        console.log("Added specifications to report");
+        
+        // Créer les points ECD pour le graphique si disponibles
+        if (specifications && specifications.ecd) {
+          const depthMin = parseFloat(specifications.ecd.depthMin);
+          const depthMax = parseFloat(specifications.ecd.depthMax);
+          const hardness = parseFloat(specifications.ecd.hardness);
+          
+          if (!isNaN(depthMin) && !isNaN(depthMax) && !isNaN(hardness)) {
+            reportData.part.ecdPoints = [
+              { distance: depthMin, value: hardness },
+              { distance: depthMax, value: hardness }
+            ];
+            console.log("Created ECD points for graph:", reportData.part.ecdPoints);
+          }
+        }
+      }
+    }
+
+    // Autres sections de rapport selon les besoins...
+
+    // Envoyer les données complètes du rapport
+    return res.json(reportData);
+    
   } catch (error) {
-    console.error('Error fetching report data:', error);
-    res.status(500).json({ message: 'Failed to fetch report data', error: error.message });
+    console.error("Error fetching report data:", error);
+    return res.status(500).json({ error: 'Erreur lors de la récupération des données du rapport' });
   }
 };
 

@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
       }
     },
     designation: {
-      type: DataTypes.ENUM('Pinion', 'InGear', 'OutGear', 'Ring'),
+      type: DataTypes.ENUM('InGear', 'OutGear', 'Ring', 'Shaft', 'Gear', 'Other'),
       allowNull: true
     },
     client_designation: {
@@ -21,6 +21,10 @@ module.exports = (sequelize) => {
     },
     reference: {
       type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    quantity: {
+      type: DataTypes.INTEGER,
       allowNull: true
     },
     dimensions: {

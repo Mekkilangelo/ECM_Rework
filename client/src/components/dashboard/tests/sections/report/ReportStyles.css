@@ -1,0 +1,138 @@
+@media print {
+  .report-page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+    min-height: 100vh;
+  }
+  
+  .report-page:last-child {
+    page-break-after: avoid;
+  }
+  
+  .report-page-header {
+    position: relative;
+    top: 0;
+    width: 100%;
+  }
+}
+
+.report-page {
+  width: 210mm; /* Largeur A4 */
+  min-height: 297mm; /* Hauteur minimum A4 */
+  padding: 20mm 15mm; /* Marges */
+  box-sizing: border-box;
+  position: relative;
+  background-color: white;
+  margin: 0 auto 10mm auto; /* Espace entre les pages dans la prévisualisation */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.report-page:last-child {
+  min-height: auto; /* Hauteur adaptative */
+  padding-bottom: 30mm; /* Espace pour le pied de page */
+}
+
+/* Nouvelles classes pour l'en-tête de rapport élégant */
+.report-header-container {
+  margin-bottom: 25px;
+  padding: 15px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fff8f8 0%, #fffcf0 100%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.report-header-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #ffdddd;
+  padding-bottom: 10px;
+}
+
+.report-title-badge {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  color: #d32f2f;
+  letter-spacing: 0.5px;
+  background-color: #fff0f0;
+  border-radius: 4px;
+  padding: 2px 10px;
+  border: 1px solid #ffe0e0;
+}
+
+.report-info-columns {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.info-column {
+  flex: 1;
+  padding: 10px 15px;
+  border-radius: 6px;
+}
+
+.client-info {
+  background-color: #fffbeb;
+  border: 1px solid #fff0c0;
+  color: #664d00;
+}
+
+.process-info {
+  background-color: #ffefef;
+  border: 1px solid #ffdddd;
+  color: #7d2121;
+}
+
+.load-info {
+  background-color: #f5f5ff;
+  border: 1px solid #e0e0ff;
+  color: #3a3a7a;
+}
+
+.info-content {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-separator {
+  margin: 0 4px;
+}
+
+.client-separator {
+  color: #9a7400;
+}
+
+.load-separator {
+  color: #5d5d9a;
+}
+
+/* Améliore la gestion des graphiques et tableaux pour éviter les débordements */
+.report-section table,
+.report-section canvas {
+  max-width: 100%;
+  page-break-inside: avoid;
+}
+
+/* Styles pour les sections qui risquent d'être trop grandes */
+.recipe-section .chart-container,
+.curves-section .chart-container {
+  max-height: 400px;
+  margin-bottom: 20px;
+}
+
+/* Prévoir des sauts de page pour les grandes sections */
+.micrography-section .photos-grid {
+  page-break-inside: auto;
+}
+
+.micrography-section .photo-container {
+  page-break-inside: avoid;
+  margin-bottom: 20px;
+}

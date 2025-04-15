@@ -23,19 +23,27 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
   
   const handleCreateOption = useCallback(async (inputValue, fieldName, tableName, columnName) => {
     try {
-      const refreshFunction = refreshOptionsFunctions[`refresh${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}Options`];
-      
       const response = await enumService.addEnumValue(tableName, columnName, inputValue);
-      
+  
       if (response && response.success) {
         // Mettre à jour le formulaire avec la nouvelle valeur
         setFormData(prev => ({ ...prev, [fieldName]: inputValue }));
-        
-        // Rafraîchir les options si une fonction est disponible
+  
+        // Trouver et appeler la fonction de rafraîchissement appropriée
+        let refreshFunction;
+        if (tableName === 'units') {
+          refreshFunction = refreshOptionsFunctions.refreshUnitOptions;
+        } else if (tableName === 'parts' && columnName === 'designation') {
+          refreshFunction = refreshOptionsFunctions.refreshDesignationOptions;
+        } else {
+          refreshFunction = refreshOptionsFunctions[`refresh${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}Options`];
+        }
+  
         if (refreshFunction && typeof refreshFunction === 'function') {
+          // Attendre le rafraîchissement des options
           await refreshFunction();
         }
-        
+  
         return { value: inputValue, label: inputValue };
       } else {
         console.error(`Erreur lors de l'ajout de ${fieldName}:`, response);
@@ -46,6 +54,7 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
       return null;
     }
   }, [setFormData, refreshOptionsFunctions]);
+  
   
   return {
     handleChange,

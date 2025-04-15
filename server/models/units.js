@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       defaultValue: null
     },
     weight_units: {
-      type: DataTypes.ENUM('kg', 'pound'),
+      type: DataTypes.ENUM('g', 'pound'),
       allowNull: true,
       defaultValue: null
     },

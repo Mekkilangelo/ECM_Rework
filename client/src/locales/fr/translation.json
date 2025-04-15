@@ -18,7 +18,8 @@
     "modifying": "Modification en cours...",
     "creating": "Création en cours...",
     "min": "Min",
-    "max": "Max"
+    "max": "Max",
+    "addOption": "Ajouter une option"
   },
   
   "closeModal": {
@@ -131,6 +132,7 @@
     "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer cette pièce ? Cette action est irréversible.",
     "deleteSuccess": "Pièce supprimée avec succès",
     "deleteError": "Une erreur est survenue lors de la suppression de la pièce",
+    "quantity": "Quantité",
     "sections": {
       "basicInfo": "Informations de base",
       "specifications": "Spécifications",

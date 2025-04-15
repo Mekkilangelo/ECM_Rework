@@ -24,15 +24,11 @@ module.exports = (sequelize) => {
       allowNull: true
     },
     status: {
-      type: DataTypes.ENUM('passe', 'echoue', 'en_cours', 'planned'),
+      type: DataTypes.ENUM('OK', 'NOK', 'Pending'),
       allowNull: true
     },
     location: {
-      type: DataTypes.ENUM('ECM', 'site'),
-      allowNull: true
-    },
-    is_mesured: {
-      type: DataTypes.ENUM('Oui', 'Non'),
+      type: DataTypes.ENUM('ECM', 'Client site'),
       allowNull: true
     },
     furnace_data: {

@@ -94,6 +94,7 @@ const PartList = ({ orderId }) => {
                 <th className="text-center">{t('parts.clientDesignation')}</th>
                 <th className="text-center">{t('parts.reference')}</th>
                 <th className="text-center">{t('parts.steel.title')}</th>
+                <th className="text-center">{t('parts.quantity')}</th>
                 <th className="text-center">{t('common.modifiedAt')}</th>
                 <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>{t('common.actions')}</th>
               </tr>
@@ -118,6 +119,7 @@ const PartList = ({ orderId }) => {
                   <td className="text-center">{part.Part?.client_designation || "-"}</td>
                   <td className="text-center">{part.Part?.reference || "-"}</td>
                   <td className="text-center">{part.Part?.steel || "-"}</td>
+                  <td className="text-center">{part.Part?.quantity || "-"}</td>
                   <td className="text-center">
                     {part.modified_at
                       ? new Date(part.modified_at).toLocaleString('fr-FR', {

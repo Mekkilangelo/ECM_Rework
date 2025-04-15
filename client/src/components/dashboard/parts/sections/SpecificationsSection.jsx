@@ -1,12 +1,13 @@
 import React from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
-import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
 
 const SpecificationsSection = ({
   formData,
   handleChange,
   handleSelectChange,
+  handleCreateOption,
   getSelectedOption,
   getHardnessUnitOptions,
   loading,
@@ -44,6 +45,22 @@ const SpecificationsSection = ({
       ...provided,
       height: '38px',
     }),
+  };
+
+  const handleCreateCoreHardnessUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'coreHardnessUnit', 'units', 'hardness_units');
+  };
+
+  const handleCreateSurfaceHardnessUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'surfaceHardnessUnit', 'units', 'hardness_units');
+  };
+
+  const handleCreateToothHardnessUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'toothHardnessUnit', 'units', 'hardness_units');;
+  };
+
+  const handleCreateEcdHardnessUnit = (inputValue) => {
+    return handleCreateOption(inputValue, 'ecdHardnessUnit', 'units', 'hardness_units');
   };
 
   return (
@@ -84,7 +101,7 @@ const SpecificationsSection = ({
           </InputGroup>
         </div>
         <div className="col-md-4">
-          <Select
+          <CreatableSelect
             name="coreHardnessUnit"
             value={getSelectedOption(getHardnessUnitOptions(), formData.coreHardnessUnit)}
             onChange={(option) => handleSelectChange(option, { name: 'coreHardnessUnit' })}
@@ -95,6 +112,8 @@ const SpecificationsSection = ({
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
+            formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+            onCreateOption={handleCreateCoreHardnessUnit}
           />
         </div>
       </div>
@@ -132,7 +151,7 @@ const SpecificationsSection = ({
           </InputGroup>
         </div>
         <div className="col-md-4">
-          <Select
+          <CreatableSelect
             name="surfaceHardnessUnit"
             value={getSelectedOption(getHardnessUnitOptions(), formData.surfaceHardnessUnit)}
             onChange={(option) => handleSelectChange(option, { name: 'surfaceHardnessUnit' })}
@@ -143,6 +162,8 @@ const SpecificationsSection = ({
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
+            formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+            onCreateOption={handleCreateSurfaceHardnessUnit}
           />
         </div>
       </div>
@@ -180,7 +201,7 @@ const SpecificationsSection = ({
           </InputGroup>
         </div>
         <div className="col-md-4">
-          <Select
+          <CreatableSelect
             name="toothHardnessUnit"
             value={getSelectedOption(getHardnessUnitOptions(), formData.toothHardnessUnit)}
             onChange={(option) => handleSelectChange(option, { name: 'toothHardnessUnit' })}
@@ -191,6 +212,8 @@ const SpecificationsSection = ({
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
+            formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+            onCreateOption={handleCreateToothHardnessUnit}
           />
         </div>
       </div>
@@ -238,7 +261,7 @@ const SpecificationsSection = ({
               step="0.1"
               size="sm"
             />
-            <Select
+            <CreatableSelect
               name="ecdHardnessUnit"
               value={getSelectedOption(getHardnessUnitOptions(), formData.ecdHardnessUnit)}
               onChange={(option) => handleSelectChange(option, { name: 'ecdHardnessUnit' })}
@@ -249,6 +272,8 @@ const SpecificationsSection = ({
               className="react-select-container flex-grow-1"
               classNamePrefix="react-select"
               isLoading={loading}
+              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+              onCreateOption={handleCreateEcdHardnessUnit}
             />
           </InputGroup>
         </div>

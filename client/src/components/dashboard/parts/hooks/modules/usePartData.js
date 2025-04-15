@@ -33,6 +33,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             designation: data.designation || '',
             clientDesignation: data.client_designation || '',
             reference: data.reference || '',
+            quantity: data.quantity || '',
             description: partData.description || '',
             // Dimensions
             length: dimensions.rectangular?.length || '',

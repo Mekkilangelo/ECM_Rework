@@ -7,6 +7,7 @@ const useFormState = () => {
     designation: '',
     clientDesignation: '',
     reference: '',
+    quantity: '',
     description: '',
     // Dimensions
     length: '',

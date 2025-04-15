@@ -29,7 +29,7 @@ exports.getParts = async (req, res) => {
       where: whereCondition,
       include: [{
         model: Part,
-        attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference']
+        attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference','quantity']
       }],
       order: [['modified_at', 'DESC']],
       limit: parseInt(limit),
@@ -85,7 +85,7 @@ exports.getPartById = async (req, res) => {
  */
 exports.createPart = async (req, res) => {
   try {
-    const { parent_id, designation, dimensions, specifications, steel, description, clientDesignation, reference } = req.body;
+    const { parent_id, designation, dimensions, specifications, steel, description, clientDesignation, reference, quantity } = req.body;
 
     const name = req.body.designation || null;
     
@@ -126,7 +126,8 @@ exports.createPart = async (req, res) => {
         specifications,
         steel,
         client_designation: clientDesignation,
-        reference
+        reference,
+        quantity
       }, { transaction: t });
       
       // Créer l'entrée de fermeture (auto-relation)
@@ -174,7 +175,7 @@ exports.createPart = async (req, res) => {
 exports.updatePart = async (req, res) => {
   try {
     const { partId } = req.params;
-    const { designation, dimensions, specifications, steel, description, clientDesignation, reference } = req.body;
+    const { designation, dimensions, specifications, steel, description, clientDesignation, reference, quantity } = req.body;
 
     const name = req.body.designation || null;
     
@@ -228,12 +229,13 @@ exports.updatePart = async (req, res) => {
       
       // Mettre à jour les données de la pièce
       const partData = {};
-      if (designation) partData.designation = designation;
-      if (dimensions) partData.dimensions = dimensions;
-      if (specifications) partData.specifications = specifications;
-      if (steel) partData.steel = steel;
-      if (clientDesignation) partData.client_designation = clientDesignation;
-      if (reference) partData.reference = reference;
+      partData.designation = designation;
+      partData.dimensions = dimensions;
+      partData.specifications = specifications;
+      partData.steel = steel;
+      partData.client_designation = clientDesignation;
+      partData.reference = reference;
+      partData.quantity = quantity;
       
       if (Object.keys(partData).length > 0) {
         await Part.update(partData, {

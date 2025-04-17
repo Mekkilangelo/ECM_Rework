@@ -15,11 +15,61 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
   const { t } = useTranslation();
 
   // État pour stocker la fonction d'association de fichiers
-  const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
+  const [fileAssociationMethods, setFileAssociationMethods] = useState({
+    before: null,
+    after: null
+  });
 
-  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
-    setFileAssociationMethod(() => associateFilesFunc);
+  // Gestionnaires pour recevoir les fonctions d'association des fichiers
+  const handleBeforeFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    console.log("Before tab file association function received in TestForm");
+    setFileAssociationMethods(prev => ({
+      ...prev,
+      before: associateFilesFunc
+    }));
   }, []);
+  
+  const handleAfterFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    console.log("After tab file association function received in TestForm");
+    setFileAssociationMethods(prev => ({
+      ...prev,
+      after: associateFilesFunc
+    }));
+  }, []);
+
+  // Combiner toutes les fonctions d'association de fichiers
+  const combineFileAssociations = React.useCallback(async (nodeId) => {
+    console.log("Combining all file associations for nodeId:", nodeId);
+    const promises = [];
+    let results = { success: true };
+    
+    // Parcourir toutes les méthodes d'association disponibles
+    Object.entries(fileAssociationMethods).forEach(([tab, method]) => {
+      if (method) {
+        console.log(`Calling file association method for tab: ${tab}`);
+        promises.push(method(nodeId));
+      }
+    });
+    
+    if (promises.length > 0) {
+      try {
+        const associationResults = await Promise.all(promises);
+        console.log("All association results:", associationResults);
+        // Si l'un des résultats est false, on considère que l'opération a échoué
+        if (associationResults.some(result => result === false)) {
+          results.success = false;
+        }
+      } catch (error) {
+        console.error("Error in file associations:", error);
+        results.success = false;
+        results.error = error;
+      }
+    } else {
+      console.log("No file associations to process");
+    }
+    
+    return results.success;
+  }, [fileAssociationMethods]);
 
   // Exposer handleCloseRequest à travers la référence
   useImperativeHandle(ref, () => ({
@@ -52,9 +102,10 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   useEffect(() => {
     if (setFileAssociationCallback) {
-      setFileAssociationCallback(fileAssociationMethod);
+      console.log("Setting combined file association callback in TestForm");
+      setFileAssociationCallback(() => combineFileAssociations); // Utiliser une fonction qui retourne combineFileAssociations
     }
-  }, [fileAssociationMethod, setFileAssociationCallback]);
+  }, [combineFileAssociations, setFileAssociationCallback]);
 
   // État pour gérer l'onglet actif
   const [activeTab, setActiveTab] = useState('before');
@@ -124,7 +175,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   loading={loading}
                   formHandlers={formHandlers}
                   test={test}
-                  handleFileAssociationNeeded={handleFileAssociationNeeded}
+                  handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
                 />
               </Tab>
               <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
@@ -134,7 +185,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   loading={loading}
                   formHandlers={formHandlers}
                   test={test}
-                  handleFileAssociationNeeded={handleFileAssociationNeeded}
+                  handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
                 />
               </Tab>
               <Tab eventKey="report" title={renderTabTitle(t('tests.tabs.report'), "report")}>
@@ -153,7 +204,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                 loading={loading}
                 formHandlers={formHandlers}
                 test={test}
-                handleFileAssociationNeeded={handleFileAssociationNeeded}
+                handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
               />
             </div>
           )}

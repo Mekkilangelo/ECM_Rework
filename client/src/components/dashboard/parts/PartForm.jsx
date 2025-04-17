@@ -18,7 +18,9 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
   
   // État pour stocker la fonction d'association de fichiers
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
+  
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
+    console.log("File association function received in PartForm");
     setFileAssociationMethod(() => associateFilesFunc);
   }, []);
 
@@ -50,8 +52,9 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   React.useEffect(() => {
-    if (setFileAssociationCallback) {
-      setFileAssociationCallback(fileAssociationMethod);
+    if (setFileAssociationCallback && fileAssociationMethod) {
+      console.log("Setting file association callback in PartForm");
+      setFileAssociationCallback(() => fileAssociationMethod);
     }
   }, [fileAssociationMethod, setFileAssociationCallback]);
 

@@ -19,6 +19,7 @@ const PhotosSection = ({
   // Mettez à jour la référence quand tempIds change
   useEffect(() => {
     tempIdsRef.current = tempIds;
+    console.log("PhotosSection tempIdsRef updated:", tempIdsRef.current);
   }, [tempIds]);
 
   // Configuration des différentes vues
@@ -60,55 +61,80 @@ const PhotosSection = ({
   };
 
   const handleFilesUploaded = (files, newTempId, subcategory) => {
+    console.log(`Files uploaded for subcategory ${subcategory}:`, files);
+    console.log(`Received tempId: ${newTempId}`);
+    
     // Mettre à jour la liste des fichiers téléchargés
     setUploadedFiles(prev => ({
       ...prev,
       [subcategory]: [...(prev[subcategory] || []), ...files]
     }));
 
-    // Stocker le tempId pour cette sous-catégorie
+    // Stocker le tempId pour cette sous-catégorie UNIQUEMENT s'il est défini
     if (newTempId) {
+      console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
       setTempIds(prev => ({
         ...prev,
         [subcategory]: newTempId
       }));
+      
+      // Mettre à jour directement la référence aussi pour plus de sécurité
+      tempIdsRef.current = {
+        ...tempIdsRef.current,
+        [subcategory]: newTempId
+      };
+      console.log("Updated tempIdsRef directly:", tempIdsRef.current);
     }
   };
 
-  // Méthode pour associer les fichiers lors de la soumission du formulaire
-  // Utilisez useCallback pour mémoriser cette fonction
-  const associateFiles = useCallback(async (newPartNodeId) => {
+  // Fonction pour associer les fichiers temporaires au nouvelle pièce créée
+  const associateFiles = useCallback(async (newNodeId) => {
+    console.log("associateFiles called with nodeId:", newNodeId);
+    console.log("Current tempIds in ref:", tempIdsRef.current);
+    
     try {
-      // Utilisez la référence pour obtenir les tempIds les plus récents
-      const currentTempIds = tempIdsRef.current;
-
-      // Parcourir tous les tempIds et les associer
-      for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newPartNodeId, tempId, {
-          category: 'photos',
-          subcategory
-        });
+      const promises = [];
+      
+      // Parcourir tous les tempIds enregistrés et lancer les requêtes d'association
+      Object.entries(tempIdsRef.current).forEach(([subcategory, tempId]) => {
+        if (tempId) {
+          console.log(`Associating files for subcategory ${subcategory} with tempId ${tempId}`);
+          // Créer une promesse pour chaque tempId
+          const promise = fileService.associateFiles(newNodeId, tempId, {
+            category: 'photos',
+            subcategory: subcategory
+          });
+          promises.push(promise);
+        }
+      });
+      
+      // Attendre que toutes les requêtes soient terminées
+      if (promises.length > 0) {
+        console.log(`Starting ${promises.length} file association requests`);
+        const results = await Promise.all(promises);
+        console.log("File association results:", results);
+        console.log(`${promises.length} groupes de fichiers associés au nœud ${newNodeId}`);
+        
+        // Réinitialiser les tempIds après association réussie
+        setTempIds({});
+      } else {
+        console.log("No files to associate");
       }
-
-      // Réinitialiser les tempIds
-      setTempIds({});
-
-      // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
-      if (newPartNodeId === partNodeId) {
-        loadExistingFiles();
-      }
+      
+      return true;
     } catch (error) {
-      console.error(t('parts.photos.associationError'), error);
+      console.error('Erreur lors de l\'association des fichiers:', error);
+      return false;
     }
-  }, [partNodeId, t]); // Ajout de t comme dépendance
+  }, []);
 
-  // Exposer la méthode d'association via le prop onFileAssociationNeeded
-  // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
+  // Expose la méthode d'association au composant parent
   useEffect(() => {
     if (onFileAssociationNeeded) {
+      console.log("Registering file association function in PhotosSection");
       onFileAssociationNeeded(associateFiles);
     }
-  }, [onFileAssociationNeeded, associateFiles]);
+  }, [associateFiles, onFileAssociationNeeded]);
 
   return (
     <>

@@ -40,8 +40,9 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   React.useEffect(() => {
-    if (setFileAssociationCallback) {
-      setFileAssociationCallback(fileAssociationMethod);
+    if (setFileAssociationCallback && fileAssociationMethod) {
+      console.log("Setting file association callback in OrderForm");
+      setFileAssociationCallback(() => fileAssociationMethod);
     }
   }, [fileAssociationMethod, setFileAssociationCallback]);  
 
@@ -102,7 +103,7 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
         >
           <DocumentsSection
             orderNodeId={order ? order.id : null}
-            //onFileAssociationNeeded={handleFileAssociationNeeded}
+            onFileAssociationNeeded={handleFileAssociationNeeded}
           />
         </CollapsibleSection>
 

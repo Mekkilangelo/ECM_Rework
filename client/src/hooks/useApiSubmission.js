@@ -46,18 +46,17 @@ const useApiSubmission = ({
     e.preventDefault();
 
     if (typeof validate !== 'function') {
-        console.error('La fonction de validation est manquante ou invalide');
-        return;
-      }
-    
+      console.error('La fonction de validation est manquante ou invalide');
+      return;
+    }
+
     if (!validate()) return;
-    
+
     setLoading(true);
     setMessage(null);
-    
+
     try {
-      // Prépare les données pour l'API en utilisant la fonction de formatage si fournie,
-      // sinon utilise formData directement
+      // Prépare les données pour l'API
       const apiData = formatDataForApi ? formatDataForApi() : formData;
       
       // Ajoute parentId aux données si fourni et pas déjà inclus
@@ -96,15 +95,32 @@ const useApiSubmission = ({
         }
       } else {
         // Mode création
+        console.log("Creating new entity with data:", apiData);
+        
         if (customApiService && customApiService.create) {
           response = await customApiService.create(apiData);
         } else {
-          response = await api.post(`/${endpoint}`, apiData);
+          response = await fetch(`${API_URL}/${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(apiData)
+          });
+          response = await response.json();
         }
         
-        // Associer les fichiers à la nouvelle entité si nécessaire
-        if (fileAssociationCallback) {
-          await fileAssociationCallback(response.data.id);
+        console.log("Entity created successfully:", response.data || response);
+        
+        // Extraire l'ID du nœud créé
+        const newNodeId = response.data?.id || response.id;
+        console.log("New node ID:", newNodeId);
+        
+        // Associer les fichiers au nouvel ID de nœud
+        if (fileAssociationCallback && newNodeId) {
+          console.log("Calling file association callback with nodeId:", newNodeId);
+          await fileAssociationCallback(newNodeId);
+        } else {
+          console.warn("File association skipped:", 
+            !fileAssociationCallback ? "No callback" : "No nodeId");
         }
         
         setMessage({
@@ -118,7 +134,7 @@ const useApiSubmission = ({
         }
         
         if (onCreated) {
-          onCreated(response.data);
+          onCreated(response.data || response);
         }
         
         // Si un toast est disponible, l'afficher

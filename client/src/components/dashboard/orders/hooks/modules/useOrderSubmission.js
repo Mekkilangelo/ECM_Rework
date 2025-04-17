@@ -3,7 +3,7 @@ import orderService from '../../../../../services/orderService';
 
 /**
  * Hook spécifique pour gérer les soumissions de commandes
- * @param {Object} formData - Données du formulaire de commande
+* @param {Object} formData - Données du formulaire de commande
  * @param {string} parentId - ID du client parent
  * @param {Function} setFormData - Fonction pour mettre à jour formData
  * @param {Function} validate - Fonction de validation
@@ -50,6 +50,16 @@ const useOrderSubmission = (
     };
   };
   
+  // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
+  const wrappedFileAssociationCallback = fileAssociationCallback ? 
+    async (nodeId) => {
+      if (typeof fileAssociationCallback === 'function') {
+        console.log(`Associant les fichiers au nœud ${nodeId}...`);
+        return await fileAssociationCallback(nodeId);
+      }
+      return true;
+    } : null;
+  
   return useApiSubmission({
     formData,
     setFormData,
@@ -62,12 +72,12 @@ const useOrderSubmission = (
     onClose,
     formatDataForApi,
     customApiService: {
-        create: orderService.createOrder,
-        update: orderService.updateOrder
+      create: orderService.createOrder,
+      update: orderService.updateOrder
     },
     entityType: 'Commande',
     initialFormState,
-    fileAssociationCallback,
+    fileAssociationCallback: wrappedFileAssociationCallback,
     parentId
   });
 };

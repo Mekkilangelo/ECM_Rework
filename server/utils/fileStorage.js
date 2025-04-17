@@ -5,44 +5,64 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 
-// Configuration des chemins de stockage
-const UPLOAD_BASE_DIR = path.join(__dirname, '../uploads');
-const TEMP_DIR = path.join(UPLOAD_BASE_DIR, 'temp');
+// Utilisez les variables d'environnement pour les chemins
+const UPLOAD_BASE_DIR = path.join(__dirname, '..', process.env.UPLOAD_PATH || 'uploads');
+const TEMP_DIR = path.join(__dirname, '..', process.env.TEMP_PATH || 'uploads/temp');
+
+console.log('UPLOAD_BASE_DIR:', UPLOAD_BASE_DIR);
+console.log('TEMP_DIR:', TEMP_DIR);
 
 // Assurer que les répertoires existent
 if (!fs.existsSync(UPLOAD_BASE_DIR)) {
+  console.log('Creating upload directory:', UPLOAD_BASE_DIR);
   fs.mkdirSync(UPLOAD_BASE_DIR, { recursive: true });
 }
+
 if (!fs.existsSync(TEMP_DIR)) {
+  console.log('Creating temp directory:', TEMP_DIR);
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }
 
 // Configuration du stockage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, TEMP_DIR);
+    // Si un nodeId est fourni et que le chemin est résolu, utiliser ce chemin
+    if (req.body.nodeId && req.resolvedPath) {
+      cb(null, req.resolvedPath);
+    } else {
+      // Sinon, stocker dans le dossier temporaire
+      const tempId = `temp-${uuidv4()}`;
+      req.tempId = tempId;
+      
+      const tempUploadDir = path.join(TEMP_DIR, tempId);
+      if (!fs.existsSync(tempUploadDir)) {
+        fs.mkdirSync(tempUploadDir, { recursive: true });
+      }
+      
+      cb(null, tempUploadDir);
+    }
   },
   filename: function (req, file, cb) {
-    const uniquePrefix = uuidv4();
-    const fileExt = path.extname(file.originalname);
-    cb(null, `${uniquePrefix}${fileExt}`);
+    // Générer un nom unique pour le fichier
+    const uniqueSuffix = crypto.randomBytes(8).toString('hex');
+    const safeFileName = file.originalname.replace(/\s+/g, '_');
+    cb(null, `${uniqueSuffix}-${safeFileName}`);
   }
 });
 
 // Configuration des limites et filtres
 const fileFilter = (req, file, cb) => {
-  // Accepte tous les types de fichiers pour l'instant
+  // Accepter tous les fichiers pour l'instant
   cb(null, true);
 };
 
-// CORRECTION ICI : exportez directement l'instance multer configurée
-// Plutôt qu'un objet contenant l'instance
+// Créer l'instance multer configurée
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50 Mo par défaut
-    files: 10 // Max 10 fichiers par requête
+    fileSize: 50 * 1024 * 1024,
+    files: 10
   }
 });
 
@@ -78,7 +98,7 @@ const cleanupTempDir = async (olderThan = 24 * 60 * 60 * 1000) => {
   }
 };
 
-// Exportez l'instance multer et les autres utilitaires
+// Exportez l'instance multer et les autres utilitaires UNE SEULE FOIS
 module.exports = {
   upload,
   generateFileChecksum,

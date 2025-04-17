@@ -37,9 +37,6 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
   // Stocker les données initiales pour comparer les changements
   const [initialFormData, setInitialFormData] = useState(null);
   
-  // Gestion des fichiers temporaires
-  const [tempFileId, setTempFileId] = useState(null);
-  
   // Handlers pour le formulaire
   const { 
     handleChange, 
@@ -110,9 +107,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     removeContact,
     handleSubmit,
     handleFileAssociationNeeded,
-    // Nouvelles propriétés pour la confirmation de fermeture
-    tempFileId,
-    setTempFileId,
+    setFileAssociationCallback,
     showConfirmModal,
     pendingClose,
     handleCloseRequest,

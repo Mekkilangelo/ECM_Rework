@@ -5,6 +5,7 @@ const logger = require('./utils/logger');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { UPLOAD_BASE_DIR, TEMP_DIR } = require('./utils/fileStorage');
 
 // Port configuration
 const PORT = process.env.PORT || 5001;
@@ -42,6 +43,39 @@ app.use('/uploads', (req, res, next) => {
   console.log(`Static file request: ${req.path}`);
   express.static(uploadsPath)(req, res, next);
 });
+
+// Après avoir chargé les configurations
+console.log('=== DIRECTORY CONFIGURATION ===');
+console.log(`UPLOAD_BASE_DIR: ${UPLOAD_BASE_DIR}`);
+console.log(`Directory exists: ${fs.existsSync(UPLOAD_BASE_DIR)}`);
+console.log(`TEMP_DIR: ${TEMP_DIR}`);
+console.log(`Directory exists: ${fs.existsSync(TEMP_DIR)}`);
+
+// Créer les répertoires s'ils n'existent pas
+if (!fs.existsSync(UPLOAD_BASE_DIR)) {
+  console.log(`Creating upload directory: ${UPLOAD_BASE_DIR}`);
+  fs.mkdirSync(UPLOAD_BASE_DIR, { recursive: true });
+}
+
+if (!fs.existsSync(TEMP_DIR)) {
+  console.log(`Creating temp directory: ${TEMP_DIR}`);
+  fs.mkdirSync(TEMP_DIR, { recursive: true });
+}
+
+// Liste le contenu des dossiers pour le débogage
+if (fs.existsSync(UPLOAD_BASE_DIR)) {
+  console.log('Upload directory content:');
+  fs.readdirSync(UPLOAD_BASE_DIR).forEach(item => {
+    console.log(`- ${item}`);
+  });
+}
+
+if (fs.existsSync(TEMP_DIR)) {
+  console.log('Temp directory content:');
+  fs.readdirSync(TEMP_DIR).forEach(item => {
+    console.log(`- ${item}`);
+  });
+}
 
 // Test database connection before starting server
 async function startServer() {

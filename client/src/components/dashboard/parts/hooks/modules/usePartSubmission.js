@@ -3,17 +3,6 @@ import partService from '../../../../../services/partService';
 
 /**
  * Hook spécifique pour gérer les soumissions de pièces
- * @param {Object} formData - Données du formulaire de pièce
- * @param {string} parentId - ID de la commande parente
- * @param {Function} setFormData - Fonction pour mettre à jour formData
- * @param {Function} validate - Fonction de validation
- * @param {Object} part - Pièce existante (pour le mode édition)
- * @param {Function} setLoading - Fonction pour définir l'état de chargement
- * @param {Function} setMessage - Fonction pour définir les messages
- * @param {Function} onPartCreated - Callback après création
- * @param {Function} onPartUpdated - Callback après mise à jour
- * @param {Function} onClose - Callback de fermeture
- * @param {Function} fileAssociationCallback - Callback pour associer des fichiers
  */
 const usePartSubmission = (
   formData, 
@@ -103,13 +92,23 @@ const usePartSubmission = (
       designation: formData.designation,
       clientDesignation: formData.clientDesignation,
       reference: formData.reference,
-      quantity: formData.quantity,
+      quantity: formData.quantity || null,
       dimensions,
       specifications,
       steel: formData.steel,
       description: formData.description || null
     };
   };
+  
+  // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
+  const wrappedFileAssociationCallback = fileAssociationCallback ? 
+    async (nodeId) => {
+      if (typeof fileAssociationCallback === 'function') {
+        console.log(`Associant les fichiers au nœud ${nodeId}...`);
+        return await fileAssociationCallback(nodeId);
+      }
+      return true;
+    } : null;
   
   return useApiSubmission({
     formData,
@@ -128,7 +127,7 @@ const usePartSubmission = (
     },
     entityType: 'Pièce',
     initialFormState,
-    //fileAssociationCallback,
+    fileAssociationCallback: wrappedFileAssociationCallback,  // Décommentez cette ligne et utilisez le wrapper
     parentId
   });
 };

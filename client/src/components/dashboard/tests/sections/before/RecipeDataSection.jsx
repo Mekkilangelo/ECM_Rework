@@ -35,6 +35,22 @@ const RecipeDataSection = ({
 }) => {
   const { t } = useTranslation();
   
+  // Fonction pour collecter les méthodes d'association des fichiers des sous-composants
+  const [recipeGraphFileAssociation, setRecipeGraphFileAssociation] = useState(null);
+  
+  // Gestionnaire pour recevoir la fonction d'association des fichiers des graphes
+  const handleRecipeGraphFileAssociationNeeded = (associateFunc) => {
+    console.log("Recipe graph file association function received in RecipeDataSection");
+    setRecipeGraphFileAssociation(() => associateFunc);
+  };
+  
+  // Transmettre les méthodes d'association au parent
+  React.useEffect(() => {
+    if (handleFileAssociationNeeded && recipeGraphFileAssociation) {
+      handleFileAssociationNeeded(recipeGraphFileAssociation);
+    }
+  }, [handleFileAssociationNeeded, recipeGraphFileAssociation]);
+  
   return (
     <>    
       {/* Recipe Number */}
@@ -118,7 +134,7 @@ const RecipeDataSection = ({
       >  
         <RecipeGraphSection
           testNodeId={test ? test.id : null}
-          onFileAssociationNeeded={handleFileAssociationNeeded}
+          onFileAssociationNeeded={handleRecipeGraphFileAssociationNeeded}
         />
       </CollapsibleSection>
       

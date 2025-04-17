@@ -17,6 +17,7 @@ const RecipeGraphSection = ({
   // Mettez à jour la référence quand tempIds change
   useEffect(() => {
     tempIdsRef.current = tempIds;
+    console.log("RecipeGraphSection tempIdsRef updated:", tempIdsRef.current);
   }, [tempIds]);
   
   // Charger les fichiers existants
@@ -46,6 +47,9 @@ const RecipeGraphSection = ({
   };
   
   const handleFilesUploaded = (files, newTempId, subcategory) => {
+    console.log(`Files uploaded for subcategory ${subcategory}:`, files);
+    console.log(`Received tempId: ${newTempId}`);
+    
     // Mettre à jour la liste des fichiers téléchargés
     setUploadedFiles(prev => ({
       ...prev,
@@ -53,41 +57,70 @@ const RecipeGraphSection = ({
     }));
     // Stocker le tempId pour cette sous-catégorie
     if (newTempId) {
+      console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
       setTempIds(prev => ({
         ...prev,
         [subcategory]: newTempId
       }));
+      
+      // Mettre à jour directement la référence aussi pour plus de sécurité
+      tempIdsRef.current = {
+        ...tempIdsRef.current,
+        [subcategory]: newTempId
+      };
+      console.log("Updated tempIdsRef directly:", tempIdsRef.current);
     }
   };
   
   // Méthode pour associer les fichiers lors de la soumission du formulaire
   // Utilisez useCallback pour mémoriser cette fonction
   const associateFiles = useCallback(async (newTestNodeId) => {
+    console.log("associateFiles called with nodeId:", newTestNodeId);
+    console.log("Current tempIds in ref:", tempIdsRef.current);
+    
     try {
-      // Utilisez la référence pour obtenir les tempIds les plus récents
-      const currentTempIds = tempIdsRef.current;
+      const promises = [];
+      
       // Parcourir tous les tempIds et les associer
-      for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newTestNodeId, tempId, {
-          category: 'recipe_graph',
-          subcategory
-        });
+      Object.entries(tempIdsRef.current).forEach(([subcategory, tempId]) => {
+        if (tempId) {
+          console.log(`Associating files for subcategory ${subcategory} with tempId ${tempId}`);
+          const promise = fileService.associateFiles(newTestNodeId, tempId, {
+            category: 'recipe_graph',
+            subcategory
+          });
+          promises.push(promise);
+        }
+      });
+      
+      // Attendre que toutes les requêtes soient terminées
+      if (promises.length > 0) {
+        console.log(`Starting ${promises.length} file association requests`);
+        const results = await Promise.all(promises);
+        console.log("File association results:", results);
+        
+        // Réinitialiser les tempIds
+        setTempIds({});
+      } else {
+        console.log("No files to associate");
       }
-      // Réinitialiser les tempIds
-      setTempIds({});
-      // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
+      
+      // Recharger les fichiers pour mettre à jour l'affichage si on met à jour le test existant
       if (newTestNodeId === testNodeId) {
         loadExistingFiles();
       }
+      
+      return true;
     } catch (error) {
-      console.error(t('tests.before.recipeData.graphs.associateFilesError'), error);
+      console.error('Erreur lors de l\'association des fichiers:', error);
+      return false;
     }
-  }, [testNodeId, t]); // Ajout de t dans les dépendances
+  }, [testNodeId, t]);
   
   // Exposer la méthode d'association via le prop onFileAssociationNeeded
-  // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
   useEffect(() => {
     if (onFileAssociationNeeded) {
+      console.log("Registering file association function in RecipeGraphSection");
       onFileAssociationNeeded(associateFiles);
     }
   }, [onFileAssociationNeeded, associateFiles]);

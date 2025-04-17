@@ -34,13 +34,19 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
       });
       
       const newFiles = response.data.files;
+      const tempId = response.data.tempId; // S'assurer que cette valeur est correctement extraite
+      
+      console.log("Upload response:", response.data);
+      console.log("New files:", newFiles);
+      console.log("Temp ID from server:", tempId);
+      
       setInternalUploadedFiles(prev => [...prev, ...newFiles]);
       setFiles([]);
       setUploadProgress(0);
       
-      // Appeler le callback avec les fichiers uploadés
+      // Appeler le callback avec les fichiers uploadés ET le tempId
       if (onFilesUploaded) {
-        onFilesUploaded(newFiles, response.data.tempId);
+        onFilesUploaded(newFiles, tempId);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors de l\'upload des fichiers');

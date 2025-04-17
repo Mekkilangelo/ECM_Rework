@@ -5,9 +5,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { getMimeTypeFromExtension } = require('../middleware/mimeTypes');
 const { Op } = require('sequelize');
-
-const UPLOAD_BASE_DIR = path.join(__dirname, '../uploads');
-const TEMP_DIR = path.join(UPLOAD_BASE_DIR, 'temp');
+const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 
 exports.uploadFiles = async (req, res) => {
   try {
@@ -21,6 +19,7 @@ exports.uploadFiles = async (req, res) => {
     // Si nodeId n'est pas fourni, nous stockons temporairement
     // Les fichiers seront associés plus tard via l'API associateFiles
     const tempId = nodeId || `temp-${uuidv4()}`;
+    console.log(`Using tempId: ${tempId}`);
     const fileRecords = [];
     
     for (const file of files) {
@@ -75,7 +74,7 @@ exports.uploadFiles = async (req, res) => {
     return res.status(201).json({
       message: 'Fichiers téléchargés avec succès',
       files: fileRecords,
-      tempId: !nodeId ? tempId : null
+      tempId: tempId // Très important!
     });
   } catch (error) {
     console.error('Erreur lors de l\'upload:', error);
@@ -106,6 +105,11 @@ exports.associateFiles = async (req, res) => {
   try {
     const { nodeId, tempId, category, subcategory } = req.body;
     
+    console.log("=== ASSOCIATE FILES ===");
+    console.log("Request body:", req.body);
+    console.log(`nodeId: ${nodeId}, tempId: ${tempId}, category: ${category}, subcategory: ${subcategory}`);
+    console.log("TEMP_DIR:", TEMP_DIR);
+    
     if (!nodeId || !tempId) {
       return res.status(400).json({ message: 'nodeId et tempId sont requis' });
     }
@@ -116,89 +120,125 @@ exports.associateFiles = async (req, res) => {
       return res.status(404).json({ message: 'Nœud parent introuvable' });
     }
     
-    // Récupérer tous les fichiers avec ce tempId
+    // Vérifier si le dossier temporaire existe directement
+    const tempFolderPath = path.join(TEMP_DIR, tempId);
+    console.log(`Checking temp folder path: ${tempFolderPath}`);
+    console.log(`Temp folder exists: ${fs.existsSync(tempFolderPath)}`);
+    
+    if (fs.existsSync(tempFolderPath)) {
+      // Lister tous les fichiers dans ce dossier
+      const filesInFolder = fs.readdirSync(tempFolderPath);
+      console.log(`Files in temp folder (${filesInFolder.length}):`, filesInFolder);
+    }
+    
+    // Rechercher les fichiers avec ce tempId dans la base de données
     const fileNodes = await Node.findAll({
       where: {
         path: {
           [Op.like]: `/temp/${tempId}/%`
         },
         type: 'file'
-      }
+      },
+      include: [{ model: File }]
     });
     
+    console.log(`Found ${fileNodes.length} files with tempId ${tempId} in database`);
+    
+    // IMPORTANT: Si aucun fichier trouvé, essayer d'autres méthodes
     if (fileNodes.length === 0) {
-      return res.status(404).json({ message: 'Aucun fichier temporaire trouvé' });
+      return res.status(404).json({
+        message: 'Aucun fichier temporaire trouvé dans la base de données',
+        tempId,
+        tempFolder: tempFolderPath
+      });
     }
     
-    // Déterminer le chemin physique du nœud parent
-    const parentPath = buildPhysicalPath(parentNode.path);
-    
-    // Créer les dossiers de catégorie et sous-catégorie si nécessaire
-    let targetDir = parentPath;
-    
-    if (category) {
-      targetDir = path.join(targetDir, category);
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
-      }
-      
-      if (subcategory) {
-        targetDir = path.join(targetDir, subcategory);
-        if (!fs.existsSync(targetDir)) {
-          fs.mkdirSync(targetDir, { recursive: true });
-        }
-      }
-    }
-    
-    // Mettre à jour chaque fichier et le déplacer
-    const updatedFiles = [];
-    
+    // Pour chaque fichier trouvé
     for (const fileNode of fileNodes) {
-      // Récupérer les données du fichier
-      const fileData = await File.findOne({ where: { node_id: fileNode.id } });
-      
-      if (!fileData) continue;
-      
-      // Construire le nouveau chemin du nœud
-      const newNodePath = await buildNodePath(nodeId, category, subcategory, fileNode.name);
-      
-      // Mettre à jour le nœud du fichier
-      await fileNode.update({
-        path: newNodePath,
-        parent_id: parseInt(nodeId)
-      });
-      
-      // Déplacer le fichier physique
-      const oldPath = fileData.file_path;
-      const newPath = path.join(targetDir, path.basename(oldPath));
-      
-      fs.renameSync(oldPath, newPath);
-      
-      // Mettre à jour l'enregistrement du fichier
-      const additionalInfo = fileData.additional_info || {};
-      delete additionalInfo.temp_id;
-      
-      await fileData.update({
-        file_path: newPath,
-        category: category || fileData.category,
-        subcategory: subcategory || fileData.subcategory,
-        additional_info: additionalInfo
-      });
-      
-      updatedFiles.push({
-        id: fileNode.id,
-        name: fileNode.name,
-        path: newPath
-      });
+      try {
+        // Construire le nouveau chemin logique
+        let newLogicalPath = parentNode.path;
+        if (category) newLogicalPath += `/${category}`;
+        if (subcategory) newLogicalPath += `/${subcategory}`;
+        newLogicalPath += `/${fileNode.name}`;
+        
+        // CORRECTION IMPORTANTE: Utiliser le chemin physique stocké dans File.file_path
+        // au lieu de reconstruire le chemin à partir du chemin logique
+        const oldPhysicalPath = fileNode.File?.file_path || path.join(UPLOAD_BASE_DIR, fileNode.path);
+        
+        // Créer le nouveau chemin physique
+        const newPhysicalPath = path.join(UPLOAD_BASE_DIR, newLogicalPath.replace(/^\//, ''));
+        const newDir = path.dirname(newPhysicalPath);
+        
+        console.log(`Moving file:`);
+        console.log(`- From: ${oldPhysicalPath}`);
+        console.log(`- To: ${newPhysicalPath}`);
+        console.log(`- File exists at source: ${fs.existsSync(oldPhysicalPath)}`);
+        
+        // Vérifier si le fichier source existe
+        if (!fs.existsSync(oldPhysicalPath)) {
+          // Essayer une seconde méthode: vérifier directement dans le dossier temp
+          const alternativePath = path.join(tempFolderPath, path.basename(fileNode.path));
+          console.log(`Trying alternative path: ${alternativePath}`);
+          
+          if (fs.existsSync(alternativePath)) {
+            console.log(`File found at alternative path!`);
+            // Utiliser ce chemin à la place
+            oldPhysicalPath = alternativePath;
+          } else {
+            console.error(`Source file not found at any location`);
+            return res.status(404).json({
+              message: 'Fichier source introuvable',
+              path: oldPhysicalPath,
+              alternativePath: alternativePath
+            });
+          }
+        }
+        
+        // Créer le répertoire cible s'il n'existe pas
+        if (!fs.existsSync(newDir)) {
+          fs.mkdirSync(newDir, { recursive: true });
+        }
+        
+        // Déplacer le fichier
+        fs.renameSync(oldPhysicalPath, newPhysicalPath);
+        console.log(`File successfully moved to ${newPhysicalPath}`);
+        
+        // Mettre à jour le chemin dans Node
+        await fileNode.update({
+          path: newLogicalPath,
+          parent_id: nodeId
+        });
+        
+        // Mettre à jour les infos dans File si disponible
+        if (fileNode.File) {
+          await fileNode.File.update({
+            file_path: newPhysicalPath,  // IMPORTANT: Mettre à jour aussi le chemin physique
+            category: category || fileNode.File.category,
+            subcategory: subcategory || fileNode.File.subcategory
+          });
+        }
+      } catch (err) {
+        console.error(`Error processing file ${fileNode.id}:`, err);
+        return res.status(500).json({
+          message: 'Erreur lors du traitement d\'un fichier',
+          error: err.message,
+          fileId: fileNode.id
+        });
+      }
     }
     
     return res.status(200).json({
-      message: `${updatedFiles.length} fichiers associés au node ${nodeId}`,
-      files: updatedFiles
+      message: 'Fichiers associés avec succès',
+      count: fileNodes.length
     });
   } catch (error) {
-    console.error('Erreur lors de l\'association des fichiers:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    console.error('Erreur lors de l\'association de fichiers:', error);
+    return res.status(500).json({
+      message: 'Erreur lors de l\'association de fichiers',
+      error: error.message,
+      stack: error.stack
+    });
   }
 };
 

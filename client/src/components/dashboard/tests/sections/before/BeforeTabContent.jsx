@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 // Sections importées
@@ -10,6 +10,65 @@ import LoadDesignSection from './LoadDesignSection';
 
 const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded }) => {
   const { t } = useTranslation();
+  
+  // États pour stocker les fonctions d'association de fichiers des sous-sections
+  const [loadDesignFileAssociation, setLoadDesignFileAssociation] = useState(null);
+  const [recipeDataFileAssociation, setRecipeDataFileAssociation] = useState(null);
+  
+  // Gestionnaires pour recevoir les fonctions d'association des fichiers
+  const handleLoadDesignFileAssociationNeeded = (associateFunc) => {
+    console.log("Load design file association function received in BeforeTabContent");
+    setLoadDesignFileAssociation(() => associateFunc);
+  };
+  
+  const handleRecipeDataFileAssociationNeeded = (associateFunc) => {
+    console.log("Recipe data file association function received in BeforeTabContent");
+    setRecipeDataFileAssociation(() => associateFunc);
+  };
+  
+  // Créer une fonction d'association qui appeelra toutes les fonctions d'association
+  const combineFileAssociations = React.useCallback(async (nodeId) => {
+    console.log("Combining file associations for nodeId:", nodeId);
+    const promises = [];
+    let results = { success: true };
+    
+    if (loadDesignFileAssociation) {
+      console.log("Calling loadDesignFileAssociation");
+      promises.push(loadDesignFileAssociation(nodeId));
+    }
+    
+    if (recipeDataFileAssociation) {
+      console.log("Calling recipeDataFileAssociation");
+      promises.push(recipeDataFileAssociation(nodeId));
+    }
+    
+    if (promises.length > 0) {
+      try {
+        const associationResults = await Promise.all(promises);
+        console.log("Association results:", associationResults);
+        // Si l'un des résultats est false, on considère que l'opération a échoué
+        if (associationResults.some(result => result === false)) {
+          results.success = false;
+        }
+      } catch (error) {
+        console.error("Error in file associations:", error);
+        results.success = false;
+        results.error = error;
+      }
+    } else {
+      console.log("No file associations to process");
+    }
+    
+    return results.success;
+  }, [loadDesignFileAssociation, recipeDataFileAssociation]);
+  
+  // Transmettre la fonction combinée au parent
+  useEffect(() => {
+    if (handleFileAssociationNeeded) {
+      console.log("Setting combined file association in BeforeTabContent");
+      handleFileAssociationNeeded(combineFileAssociations);
+    }
+  }, [handleFileAssociationNeeded, combineFileAssociations]);
   
   return (
     <>
@@ -79,7 +138,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
       >
         <LoadDesignSection
           testNodeId={test ? test.id : null}
-          onFileAssociationNeeded={handleFileAssociationNeeded}
+          onFileAssociationNeeded={handleLoadDesignFileAssociationNeeded}
         />
       </CollapsibleSection>
       
@@ -111,7 +170,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           loading={loading}
           selectStyles={formHandlers.selectStyles}
           test={test}
-          handleFileAssociationNeeded={handleFileAssociationNeeded}
+          handleFileAssociationNeeded={handleRecipeDataFileAssociationNeeded}
         />
       </CollapsibleSection>
     </>

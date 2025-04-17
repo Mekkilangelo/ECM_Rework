@@ -59,8 +59,8 @@ const fileService = {
   
   associateFiles: (nodeId, tempId, options = {}) => {
     const { category, subcategory } = options;
-    return api.post(`/files/associate`, { 
-      nodeId, 
+    return api.post(`/files/associate`, {
+      nodeId,
       tempId,
       category,
       subcategory

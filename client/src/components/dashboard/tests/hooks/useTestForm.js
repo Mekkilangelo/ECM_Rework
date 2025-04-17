@@ -15,11 +15,6 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
   // État pour stocker la fonction de rappel d'association de fichiers
   const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
   
-  // Fonction de rappel pour recevoir la méthode d'association de fichiers
-  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
-    setFileAssociationCallback(() => associateFilesFunc);
-  }, []);
-  
   // État du formulaire et initialisation
   const { 
     formData, 
@@ -174,7 +169,6 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     hardnessUnitOptions,
     selectStyles,
     // Nouvelle gestion des fichiers
-    handleFileAssociationNeeded,
     tempFileId,
     setTempFileId,
     // Gestion de la confirmation de fermeture
@@ -215,7 +209,9 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     refreshFurnaceSizeOptions,
     refreshQuenchCellOptions,
     refreshUnitOptions,
-    refreshAllOptions
+    refreshAllOptions,
+    // Ajouter setFileAssociationCallback à ce qui est retourné
+    setFileAssociationCallback
   };
 };
 

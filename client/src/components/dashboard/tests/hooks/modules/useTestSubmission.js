@@ -348,6 +348,23 @@ const useTestSubmission = (
     };
   };
   
+  // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
+  const wrappedFileAssociationCallback = fileAssociationCallback ? 
+    async (nodeId) => {
+      if (typeof fileAssociationCallback === 'function') {
+        console.log(`Associant les fichiers au test ${nodeId}...`);
+        try {
+          const result = await fileAssociationCallback(nodeId);
+          console.log(`Résultat de l'association de fichiers:`, result);
+          return result;
+        } catch (error) {
+          console.error(`Erreur lors de l'association de fichiers:`, error);
+          return false;
+        }
+      }
+      return true;
+    } : null;
+  
   return useApiSubmission({
     formData,
     setFormData,
@@ -365,7 +382,7 @@ const useTestSubmission = (
     },
     entityType: 'Test',
     initialFormState,
-    fileAssociationCallback,
+    fileAssociationCallback: wrappedFileAssociationCallback,  // Utiliser le wrapper ici
     parentId
   });
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../../../common/FileUploader/FileUploader';
 import fileService from '../../../../../../services/fileService';
-import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
+import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const RecipeGraphSection = ({
   testNodeId,

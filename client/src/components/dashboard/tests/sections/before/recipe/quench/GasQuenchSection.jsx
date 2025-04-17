@@ -1,21 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Row, Col, Form, Button, Table } from 'react-bootstrap';
-import Select from 'react-select';
+import { Form, Button, Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const GasQuenchSection = ({
   formData,
   handleChange,
-  handleSelectChange,
-  getSelectedOption,
   handleGasQuenchSpeedAdd,
   handleGasQuenchSpeedRemove,
   handleGasQuenchPressureAdd,
   handleGasQuenchPressureRemove,
-  loading,
-  selectStyles
+  loading
 }) => {
   const { t } = useTranslation();
 

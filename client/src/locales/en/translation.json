@@ -397,7 +397,8 @@
         "notAvailable": "N/A",
         "ecd": "ECD {{hardness}} {{unit}}:",
         "surfaceHardness": "Surface Hardness:",
-        "coreHardness": "Core Hardness:"
+        "coreHardness": "Core Hardness:",
+        "toothHardness": "Tooth Hardness:"
       },
       "furnaceReport": {
         "title": "Furnace Report",
@@ -431,7 +432,7 @@
       "enterDistance": "Distance",
       "locations": {
         "surface": "Surface",
-        "pdd": "PdD",
+        "tooth": "Tooth",
         "core": "Core"
         },
         "micrographs": {

@@ -108,7 +108,9 @@ const DimensionsSection = ({
             <Form.Label className="small">{t('common.unit')}</Form.Label>
             <CreatableSelect
               name="dimensionsUnit"
-              value={getSelectedOption(getLengthUnitOptions(), formData.dimensionsUnit)}
+              value={formData.dimensionsUnit 
+                ? getSelectedOption(getLengthUnitOptions(), formData.dimensionsUnit) 
+                : getLengthUnitOptions()[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
               options={getLengthUnitOptions()}
               isClearable
@@ -157,7 +159,9 @@ const DimensionsSection = ({
             <Form.Label className="small">{t('common.unit')}</Form.Label>
             <CreatableSelect
               name="diameterUnit"
-              value={getSelectedOption(getLengthUnitOptions(), formData.diameterUnit)}
+              value={formData.diameterUnit 
+                ? getSelectedOption(getLengthUnitOptions(), formData.diameterUnit) 
+                : getLengthUnitOptions()[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
               options={getLengthUnitOptions()}
               isClearable
@@ -193,7 +197,9 @@ const DimensionsSection = ({
             <Form.Label className="small">{t('common.unit')}</Form.Label>
             <CreatableSelect
               name="weightUnit"
-              value={getSelectedOption(getWeightUnitOptions(), formData.weightUnit)}
+              value={formData.weightUnit 
+                ? getSelectedOption(getWeightUnitOptions(), formData.weightUnit) 
+                : getWeightUnitOptions()[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
               options={getWeightUnitOptions()}
               isClearable

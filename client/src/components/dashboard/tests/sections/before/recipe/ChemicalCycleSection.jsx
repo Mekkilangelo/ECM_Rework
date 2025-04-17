@@ -21,8 +21,8 @@ const ChemicalCycleSection = ({
     { value: 'N2', label: 'N2' },
     { value: 'NH3', label: 'NH3' },
     { value: 'C2H2', label: 'C2H2' },
-    { value: 'H2', label: 'H2' },
-    { value: 'Ar', label: 'Ar' }
+    { value: 'N2O', label: 'N2O' },
+    { value: 'CO2', label: 'CO2' }
   ];
   
   const handleChemicalCycleChange = (index, field, value) => {

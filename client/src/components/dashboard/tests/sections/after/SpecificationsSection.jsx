@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { testService } from '../../../../../services/testService';
-import { Card, Spinner, ListGroup } from 'react-bootstrap';
+import { Spinner, ListGroup } from 'react-bootstrap';
 
 const SpecificationsSection = ({ testNodeId, parentId }) => {
   const { t } = useTranslation();
@@ -77,6 +77,16 @@ const SpecificationsSection = ({ testNodeId, parentId }) => {
             <span>{t('tests.after.specifications.coreHardness')}</span>
             <span className="text-primary">
               {formatRange(specifications.coreHardness.min, specifications.coreHardness.max)} {specifications.coreHardness.unit}
+            </span>
+          </span>
+        </ListGroup.Item>
+      )}
+      {specifications.toothHardness && (
+        <ListGroup.Item className="py-2">
+          <span className="d-flex justify-content-between">
+            <span>{t('tests.after.specifications.toothHardness')}</span>
+            <span className="text-primary">
+              {formatRange(specifications.toothHardness.min, specifications.toothHardness.max)} {specifications.toothHardness.unit}
             </span>
           </span>
         </ListGroup.Item>

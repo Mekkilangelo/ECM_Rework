@@ -149,30 +149,31 @@ const useTestSubmission = (
     const chemicalCycleData = formData.recipeData.chemicalCycle.length > 0 && formData.recipeData.chemicalCycle.some(
       cycle => cycle.time || cycle.debit1 || cycle.debit2 || cycle.debit3 || cycle.pressure || cycle.turbine === true
     ) ? formData.recipeData.chemicalCycle.map((cycle, index) => {
-      // Préparer les gaz et débits pour chaque étape
+      // Préparer les gaz pour chaque étape, mais maintenir la structure exacte
       const gases = [];
       
-      // Ajouter gaz1 s'il y a un débit
-      if (cycle.debit1) {
+      // Important: préserver les indices exacts des gaz, ne pas réorganiser
+      if (formData.recipeData.selectedGas1) {
         gases.push({
-          gas: formData.recipeData.selectedGas1 || null,
-          debit: cycle.debit1 || null
+          gas: formData.recipeData.selectedGas1,
+          debit: cycle.debit1 || null,
+          index: 1 // On ajoute un indice pour pouvoir reconstruire correctement
         });
       }
       
-      // Ajouter gaz2 s'il y a un débit
-      if (cycle.debit2) {
+      if (formData.recipeData.selectedGas2) {
         gases.push({
-          gas: formData.recipeData.selectedGas2 || null,
-          debit: cycle.debit2 || null
+          gas: formData.recipeData.selectedGas2,
+          debit: cycle.debit2 || null,
+          index: 2 // On ajoute un indice pour pouvoir reconstruire correctement
         });
       }
       
-      // Ajouter gaz3 s'il y a un débit
-      if (cycle.debit3) {
+      if (formData.recipeData.selectedGas3) {
         gases.push({
-          gas: formData.recipeData.selectedGas3 || null,
-          debit: cycle.debit3 || null
+          gas: formData.recipeData.selectedGas3,
+          debit: cycle.debit3 || null,
+          index: 3 // On ajoute un indice pour pouvoir reconstruire correctement
         });
       }
       
@@ -181,7 +182,7 @@ const useTestSubmission = (
         time: cycle.time || null,
         gases: gases.length > 0 ? gases : null,
         pressure: cycle.pressure || null,
-        turbine: cycle.turbine === true // S'assurer que c'est un booléen
+        turbine: cycle.turbine === true
       };
     }) : null;
     

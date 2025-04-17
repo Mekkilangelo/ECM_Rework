@@ -110,18 +110,41 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                 : [{ step: 1, ramp: 'up', setpoint: '', duration: '' }],
               
               // Chemical cycle (dynamic array)
-
-
               chemicalCycle: Array.isArray(recipeData.chemical_cycle) && recipeData.chemical_cycle.length > 0
-                ? recipeData.chemical_cycle.map((cycle, index) => ({
-                    step: index + 1,
-                    time: cycle.time || '',
-                    debit1: cycle.gases && cycle.gases[0] ? cycle.gases[0].debit : '',
-                    debit2: cycle.gases && cycle.gases[1] ? cycle.gases[1].debit : '',
-                    debit3: cycle.gases && cycle.gases[2] ? cycle.gases[2].debit : '',
-                    pressure: cycle.pressure || '',
-                    turbine: cycle.turbine === true // Convertir en booléen explicite
-                  }))
+                ? recipeData.chemical_cycle.map((cycle, index) => {
+                    // Initialiser avec des valeurs vides
+                    const cycleData = {
+                      step: index + 1,
+                      time: cycle.time || '',
+                      debit1: '',
+                      debit2: '',
+                      debit3: '',
+                      pressure: cycle.pressure || '',
+                      turbine: cycle.turbine === true
+                    };
+                    
+                    // Remplir les débits aux bonnes positions
+                    if (Array.isArray(cycle.gases)) {
+                      cycle.gases.forEach(gasItem => {
+                        // Si nous avons l'indice stocké
+                        if (gasItem.index) {
+                          cycleData[`debit${gasItem.index}`] = gasItem.debit || '';
+                        } else {
+                          // Pour la rétrocompatibilité avec les anciens formats de données
+                          // On vérifie à quel gaz sélectionné correspond ce gaz
+                          if (gasItem.gas === selectedGas1) {
+                            cycleData.debit1 = gasItem.debit || '';
+                          } else if (gasItem.gas === selectedGas2) {
+                            cycleData.debit2 = gasItem.debit || '';
+                          } else if (gasItem.gas === selectedGas3) {
+                            cycleData.debit3 = gasItem.debit || '';
+                          }
+                        }
+                      });
+                    }
+                    
+                    return cycleData;
+                  })
                 : [{ step: 1, time: '', debit1: '', debit2: '', debit3: '', pressure: '', turbine: false }],
 
               // Ajouter les gaz globaux sélectionnés

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Row, Col, Form, Button, Nav } from 'react-bootstrap';
-import Select from 'react-select';
+import { Row, Col, Form } from 'react-bootstrap';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 import PreoxidationSection from './recipe/PreoxidationSection';
 import ThermalCycleSection from './recipe/ThermalCycleSection';

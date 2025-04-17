@@ -38,6 +38,9 @@ const usePartSubmission = (
     surfaceHardnessMin: '',
     surfaceHardnessMax: '',
     surfaceHardnessUnit: '',
+    toothHardnessMin: '',
+    toothHardnessMax: '',
+    toothHardnessUnit: '',
     ecdDepthMin: '',
     ecdDepthMax: '',
     ecdHardness: '',
@@ -77,6 +80,11 @@ const usePartSubmission = (
         min: formData.surfaceHardnessMin || null,
         max: formData.surfaceHardnessMax || null,
         unit: formData.surfaceHardnessUnit || null
+      },
+      toothHardness: {
+        min: formData.toothHardnessMin || null,
+        max: formData.toothHardnessMax || null,
+        unit: formData.toothHardnessUnit || null
       },
       ecd: {
         depthMin: formData.ecdDepthMin || null,
@@ -127,7 +135,7 @@ const usePartSubmission = (
     },
     entityType: 'Pièce',
     initialFormState,
-    fileAssociationCallback: wrappedFileAssociationCallback,  // Décommentez cette ligne et utilisez le wrapper
+    fileAssociationCallback: wrappedFileAssociationCallback,
     parentId
   });
 };

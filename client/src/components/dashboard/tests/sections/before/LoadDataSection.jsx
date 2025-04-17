@@ -99,7 +99,9 @@ const LoadDataSection = ({
             <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>
             <Select
               name="loadData.sizeUnit"
-              value={getSelectedOption(lengthUnitOptions, formData.loadData?.sizeUnit)}
+              value={formData.loadData?.sizeUnit 
+                ? getSelectedOption(lengthUnitOptions, formData.loadData?.sizeUnit) 
+                : lengthUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.sizeUnit' })}
               options={lengthUnitOptions}
               isClearable
@@ -162,7 +164,9 @@ const LoadDataSection = ({
             <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>
             <Select
               name="loadData.weightUnit"
-              value={getSelectedOption(weightUnitOptions, formData.loadData?.weightUnit)}
+              value={formData.loadData?.weightUnit 
+                ? getSelectedOption(weightUnitOptions, formData.loadData?.weightUnit) 
+                : lengthUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.weightUnit' })}
               options={weightUnitOptions}
               isClearable

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tab, Nav, Table, Form, Button } from 'react-bootstrap';
-import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Line } from 'react-chartjs-2';
@@ -59,6 +58,9 @@ const ResultCurveSection = ({
   // Ajout du state pour le pas d'incrémentation
   const [stepValue, setStepValue] = useState(0.1);
   const [specData, setSpecData] = useState(null);
+  
+  // Récupérer l'unité de dureté à partir des données ECD
+  const hardnessUnit = result.ecd?.hardnessUnit || "HV";
   
   // Effet pour charger les spécifications ECD depuis l'API
   useEffect(() => {
@@ -217,7 +219,7 @@ const ResultCurveSection = ({
       y: {
         title: {
           display: true,
-          text: t('tests.after.results.resultCurve.hardnessWithUnit', { unit: result.hardnessUnit || 'HV' })
+          text: t('tests.after.results.resultCurve.hardnessWithUnit', { unit: hardnessUnit })
         }
       }
     }
@@ -242,18 +244,8 @@ const ResultCurveSection = ({
           </div>
         </Tab.Pane>
         <Tab.Pane eventKey="data">
-          <Form.Group className="mb-3">
-            <Form.Label>{t('tests.after.results.resultCurve.hardnessUnit')}</Form.Label>
-            <Select
-              name={`resultsData.results[${resultIndex}].hardnessUnit`}
-              value={getSelectedOption(hardnessUnitOptions, result.hardnessUnit)}
-              onChange={(option) => handleSelectChange(`resultsData.results[${resultIndex}].hardnessUnit`, option)}
-              options={hardnessUnitOptions}
-              isDisabled={loading}
-              styles={selectStyles}
-              placeholder={t('tests.after.results.resultCurve.selectUnit')}
-            />
-          </Form.Group>
+          {/* Champ d'unité de dureté supprimé ici */}
+          
           {/* Nouveau champ pour le pas d'incrémentation */}
           <div className="mb-3">
             <div><label>{t('tests.after.results.resultCurve.incrementStep')}</label></div>

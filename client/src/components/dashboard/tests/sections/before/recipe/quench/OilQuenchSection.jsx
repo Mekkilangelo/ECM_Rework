@@ -109,7 +109,9 @@ const OilQuenchSection = ({
             <Form.Label>{t('tests.before.recipeData.quenchData.oil.tempUnit')}</Form.Label>
             <Select
               name="quenchData.oilTempUnit"
-              value={getSelectedOption(temperatureUnitOptions, formData.quenchData?.oilTempUnit)}
+              value={formData.quenchData?.oilTempUnit 
+                ? getSelectedOption(temperatureUnitOptions, formData.quenchData?.oilTempUnit) 
+                : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'quenchData.oilTempUnit' })}
               options={temperatureUnitOptions}
               isClearable
@@ -152,7 +154,9 @@ const OilQuenchSection = ({
             <Form.Label>{t('tests.before.recipeData.quenchData.oil.delayUnit')}</Form.Label>
             <Select
               name="quenchData.oilInertingDelayUnit"
-              value={getSelectedOption(timeUnitOptions, formData.quenchData?.oilInertingDelayUnit)}
+              value={formData.quenchData?.oilInertingDelayUnit 
+                ? getSelectedOption(timeUnitOptions, formData.quenchData?.oilInertingDelayUnit) 
+                : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'quenchData.oilInertingDelayUnit' })}
               options={timeUnitOptions}
               isClearable
@@ -180,7 +184,9 @@ const OilQuenchSection = ({
             <Form.Label>{t('tests.before.recipeData.quenchData.oil.drippingUnit')}</Form.Label>
             <Select
               name="quenchData.oilDrippingTimeUnit"
-              value={getSelectedOption(timeUnitOptions, formData.quenchData?.oilDrippingTimeUnit)}
+              value={formData.quenchData?.oilDrippingTimeUnit
+                ? getSelectedOption(timeUnitOptions, formData.quenchData?.oilDrippingTimeUnit) 
+                : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'quenchData.oilDrippingTimeUnit' })}
               options={timeUnitOptions}
               isClearable

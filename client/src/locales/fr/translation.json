@@ -397,7 +397,8 @@
         "notAvailable": "N/A",
         "ecd": "ECD {{hardness}} {{unit}}:",
         "surfaceHardness": "Dureté en Surface:",
-        "coreHardness": "Dureté à Coeur:"
+        "coreHardness": "Dureté à Coeur:",
+        "toothHardness": "Dureté PdD:"
       },
       "furnaceReport": {
         "title": "Rapport du four",
@@ -432,7 +433,7 @@
         "enterDistance": "Distance",
         "locations": {
           "surface": "Surface",
-          "pdd": "PdD",
+          "tooth": "PdD",
           "core": "Coeur"
         },
         "micrographs": {

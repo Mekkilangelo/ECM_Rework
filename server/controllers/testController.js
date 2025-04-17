@@ -395,44 +395,6 @@ exports.deleteTest = async (req, res) => {
   }
 };
 
-// Ajouter cette fonction à votre contrôleur pour récupérer les photos de pièce et de test
-async function getNodePhotos(nodeId) {
-  try {
-    if (!nodeId) return [];
-    
-    const { File } = require('../models');
-    const { Op } = require('sequelize');
-    
-    const files = await File.findAll({
-      include: [{
-        model: require('../models').Node,
-        where: {
-          parent_id: nodeId,
-          type: 'file'
-        },
-        required: true
-      }]
-    });
-    
-    return files.map(file => {
-      const viewPath = `/uploads${file.Node.path}`;
-      
-      return {
-        id: file.node_id,
-        name: file.Node.name || file.original_name,
-        path: file.Node.path,
-        category: file.category,
-        subcategory: file.subcategory,
-        viewPath,
-        size: file.size,
-        type: file.mime_type
-      };
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des photos:", error);
-    return [];
-  }
-}
 
 // Compléter la fonction getTestReportData
 exports.getTestReportData = async (req, res) => {

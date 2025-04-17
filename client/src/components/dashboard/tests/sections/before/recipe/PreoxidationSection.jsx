@@ -55,7 +55,9 @@ const PreoxidationSection = ({
             <Form.Label>{t('tests.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxTempUnit"
-              value={getSelectedOption(temperatureUnitOptions, formData.recipeData?.preoxTempUnit)}
+              value={formData.recipeData?.preoxTempUnit 
+                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.preoxTempUnit) 
+                : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxTempUnit' })}
               options={temperatureUnitOptions}
               isClearable
@@ -85,7 +87,9 @@ const PreoxidationSection = ({
             <Form.Label>{t('tests.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxDurationUnit"
-              value={getSelectedOption(timeUnitOptions, formData.recipeData?.preoxDurationUnit)}
+              value={formData.recipeData?.preoxDurationUnit 
+                ? getSelectedOption(timeUnitOptions, formData.recipeData?.preoxDurationUnit) 
+                : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxDurationUnit' })}
               options={timeUnitOptions}
               isClearable

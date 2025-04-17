@@ -139,7 +139,9 @@ const ThermalCycleSection = ({
             <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.waitTimeUnit"
-              value={getSelectedOption(timeUnitOptions, formData.recipeData?.waitTimeUnit)}
+              value={formData.recipeData?.waitTimeUnit 
+                ? getSelectedOption(timeUnitOptions, formData.recipeData?.waitTimeUnit) 
+                : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitTimeUnit' })}
               options={timeUnitOptions}
               isClearable
@@ -166,7 +168,9 @@ const ThermalCycleSection = ({
             <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.programDurationUnit"
-              value={getSelectedOption(timeUnitOptions, formData.recipeData?.programDurationUnit)}
+              value={formData.recipeData?.programDurationUnit 
+                ? getSelectedOption(timeUnitOptions, formData.recipeData?.programDurationUnit) 
+                : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.programDurationUnit' })}
               options={timeUnitOptions}
               isClearable
@@ -195,7 +199,9 @@ const ThermalCycleSection = ({
             <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.cellTempUnit"
-              value={getSelectedOption(temperatureUnitOptions, formData.recipeData?.cellTempUnit)}
+              value={formData.recipeData?.cellTempUnit 
+                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.cellTempUnit) 
+                : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.cellTempUnit' })}
               options={temperatureUnitOptions}
               isClearable
@@ -222,7 +228,9 @@ const ThermalCycleSection = ({
             <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.waitPressureUnit"
-              value={getSelectedOption(pressureUnitOptions, formData.recipeData?.waitPressureUnit)}
+              value={formData.recipeData?.waitPressureUnit 
+                ? getSelectedOption(pressureUnitOptions, formData.recipeData?.waitPressureUnit) 
+                : pressureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitPressureUnit' })}
               options={pressureUnitOptions}
               isClearable

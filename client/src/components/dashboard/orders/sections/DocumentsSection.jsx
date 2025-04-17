@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../common/FileUploader/FileUploader';
 import fileService from '../../../../services/fileService';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const DocumentsSection = ({
-  orderNodeId,
-  onFileAssociationNeeded
+  orderNodeId
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
@@ -18,10 +17,9 @@ const DocumentsSection = ({
   // Mettez à jour la référence quand tempIds change
   useEffect(() => {
     tempIdsRef.current = tempIds;
-    console.log("tempIdsRef updated:", tempIdsRef.current);
   }, [tempIds]);
   
-  // Charger les fichiers existants pour le mode édition
+  // Charger les fichiers existants
   useEffect(() => {
     if (orderNodeId) {
       loadExistingFiles();
@@ -31,6 +29,7 @@ const DocumentsSection = ({
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getFilesByNode(orderNodeId, { category: 'documents' });
+      console.log('Réponse de récupération des fichiers', response.data);
       
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
@@ -48,79 +47,19 @@ const DocumentsSection = ({
     }
   };
   
-  // Fonction pour associer les fichiers temporaires au nouvel ordre créé
-  const associateFiles = useCallback(async (newNodeId) => {
-    console.log("associateFiles called with nodeId:", newNodeId);
-    console.log("Current tempIds in ref:", tempIdsRef.current);
-    
-    try {
-      const promises = [];
-      
-      // Parcourir tous les tempIds enregistrés et lancer les requêtes d'association
-      Object.entries(tempIdsRef.current).forEach(([subcategory, tempId]) => {
-        if (tempId) {
-          console.log(`Associating files for subcategory ${subcategory} with tempId ${tempId}`);
-          // Créer une promesse pour chaque tempId
-          const promise = fileService.associateFiles(newNodeId, tempId, {
-            category: 'documents',
-            subcategory: subcategory
-          });
-          promises.push(promise);
-        }
-      });
-      
-      // Attendre que toutes les requêtes soient terminées
-      if (promises.length > 0) {
-        console.log(`Starting ${promises.length} file association requests`);
-        const results = await Promise.all(promises);
-        console.log("File association results:", results);
-        console.log(`${promises.length} groupes de fichiers associés au nœud ${newNodeId}`);
-        
-        // Réinitialiser les tempIds après association réussie
-        setTempIds({});
-      } else {
-        console.log("No files to associate");
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Erreur lors de l\'association des fichiers:', error);
-      return false;
-    }
-  }, []);
-  
-  // Expose la méthode d'association au composant parent
-  useEffect(() => {
-    if (onFileAssociationNeeded) {
-      console.log("Registering file association function");
-      onFileAssociationNeeded(associateFiles);
-    }
-  }, [associateFiles, onFileAssociationNeeded]);
-  
   const handleFilesUploaded = (files, newTempId, subcategory) => {
-    console.log(`Files uploaded for subcategory ${subcategory}:`, files);
-    console.log(`Received tempId: ${newTempId}`);
-    
     // Mettre à jour la liste des fichiers téléchargés
     setUploadedFiles(prev => ({
       ...prev,
       [subcategory]: [...(prev[subcategory] || []), ...files]
     }));
     
-    // Stocker le tempId pour cette sous-catégorie UNIQUEMENT s'il est défini
+    // Stocker le tempId pour cette sous-catégorie
     if (newTempId) {
-      console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
       setTempIds(prev => ({
         ...prev,
         [subcategory]: newTempId
       }));
-      
-      // Mettre à jour directement la référence aussi pour plus de sécurité
-      tempIdsRef.current = {
-        ...tempIdsRef.current,
-        [subcategory]: newTempId
-      };
-      console.log("Updated tempIdsRef directly:", tempIdsRef.current);
     }
   };
   
@@ -129,7 +68,7 @@ const DocumentsSection = ({
       <div className="p-2">
         <FileUploader
           category="documents"
-          subcategory="all_documents"
+          subcategory={'all_documents'}
           nodeId={orderNodeId}
           onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, 'all_documents')}
           maxFiles={5}

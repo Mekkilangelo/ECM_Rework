@@ -37,8 +37,8 @@ const OilQuenchSection = ({
         <thead className="bg-light">
           <tr>
             <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
-            <th>{t('tests.before.recipeData.quenchData.common.duration')}</th>
-            <th>{t('tests.before.recipeData.quenchData.oil.speed')}</th>
+            <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
+            <th>{t('tests.before.recipeData.quenchData.oil.speed')} (rpm)</th>
             <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>

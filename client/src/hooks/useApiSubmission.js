@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
@@ -41,6 +42,8 @@ const useApiSubmission = ({
   parentId,
   customApiService
 }) => {
+  const { t } = useTranslation();
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -81,7 +84,7 @@ const useApiSubmission = ({
         
         setMessage({
           type: 'success',
-          text: `${entityType} modifié avec succès!`
+          text: t('api.success.updated', { entityType })
         });
         
         if (onUpdated) {
@@ -90,7 +93,7 @@ const useApiSubmission = ({
         
         // Si un toast est disponible, l'afficher
         if (toast && toast.success) {
-          toast.success(response.message || `${entityType} modifié avec succès!`);
+          toast.success(response.message || t('api.success.updated', { entityType }));
         }
       } else {
         // Mode création
@@ -124,7 +127,7 @@ const useApiSubmission = ({
         
         setMessage({
           type: 'success',
-          text: `${entityType} créé avec succès!`
+          text: t('api.success.created', { entityType })
         });
         
         // Réinitialiser le formulaire
@@ -138,7 +141,7 @@ const useApiSubmission = ({
         
         // Si un toast est disponible, l'afficher
         if (toast && toast.success) {
-          toast.success(response.message || `${entityType} créé avec succès!`);
+          toast.success(response.message || t('api.success.created', { entityType }));
         }
       }
       
@@ -153,8 +156,14 @@ const useApiSubmission = ({
       setMessage({
         type: 'danger',
         text: error.response?.data?.message || 
-          `Une erreur est survenue lors de ${entity ? 'la modification' : 'la création'} de ${entityType}`
+          t('api.error.' + (entity ? 'update' : 'create'), { entityType })
       });
+      
+      // Afficher l'erreur dans un toast
+      if (toast && toast.error) {
+        toast.error(error.response?.data?.message || 
+          t('api.error.' + (entity ? 'update' : 'create'), { entityType }));
+      }
     } finally {
       setLoading(false);
     }

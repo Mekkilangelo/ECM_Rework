@@ -42,11 +42,17 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
           {message.text}
         </div>
       )}
+      
+      {/* Légende pour les champs obligatoires */}
+      <div className="text-muted small mb-3">
+        <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+      </div>
+      
       <Form onSubmit={handleSubmit} autoComplete="off">
         <Row>
           <Col md={12}>
             <Form.Group className="mb-3">
-              <Form.Label>{t('clients.name')} *</Form.Label>
+              <Form.Label>{t('clients.name')} <span className="text-danger fw-bold">*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="name"
@@ -56,7 +62,7 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
                 autoComplete="off"
               />
               <Form.Control.Feedback type="invalid">
-                {errors.name}
+                {errors.name && t(errors.name)}
               </Form.Control.Feedback>
             </Form.Group>
           </Col>
@@ -64,7 +70,7 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>{t('clients.country')}</Form.Label>
+              <Form.Label>{t('clients.country')} <span className="text-danger fw-bold">*</span></Form.Label>
               <Select
                 styles={selectStyles}
                 options={countryOptions}
@@ -74,7 +80,13 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
                 placeholder={t('clients.selectCountry')}
                 isLoading={loading && countryOptions.length === 0}
                 noOptionsMessage={() => t('clients.noCountryOptions')}
+                isInvalid={!!errors.country}
               />
+              {errors.country && (
+                <div className="text-danger mt-1 small">
+                  {t(errors.country)}
+                </div>
+              )}
             </Form.Group>
           </Col>
           <Col md={6}>
@@ -133,10 +145,10 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
           </Col>
         </Row>
         <div className="d-flex justify-content-end mt-3">
-          <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
+          <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
             {t('common.cancel')}
           </Button>
-          <Button variant="danger" type="submit" disabled={loading}>
+          <Button variant="warning" type="submit" disabled={loading}>
             {loading 
               ? (client ? t('clients.modifying') : t('clients.creating')) 
               : (client ? t('common.edit') : t('common.create'))

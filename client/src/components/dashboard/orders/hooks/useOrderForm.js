@@ -34,9 +34,6 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     setParentId
   } = useFormState();
   
-  // Stocker les données initiales pour comparer les changements
-  const [initialFormData, setInitialFormData] = useState(null);
-  
   // Handlers pour le formulaire
   const { 
     handleChange, 
@@ -72,27 +69,31 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     fileAssociationCallback
   );
   
-  // Gestion de la confirmation de fermeture
+  // Gestion de la confirmation de fermeture avec notre hook amélioré
   const { 
     showConfirmModal, 
     pendingClose, 
+    isModified,
+    setModified,
+    resetInitialState,
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
     saveAndClose 
   } = useCloseConfirmation(
-    formData, 
-    initialFormData || formData, 
-    handleSubmit, 
+    formData,
+    loading,
+    fetchingOrder,
+    handleSubmit,
     onClose
   );
-  
-  // Mettre à jour les données initiales une fois chargées
+
+  // Réinitialiser l'état initial après une sauvegarde réussie
   useEffect(() => {
-    if (!fetchingOrder && formData && !initialFormData) {
-      setInitialFormData(JSON.parse(JSON.stringify(formData)));
+    if (message && message.type === 'success') {
+      resetInitialState();
     }
-  }, [fetchingOrder, formData, initialFormData]);
+  }, [message, resetInitialState]);
 
   return {
     formData,
@@ -108,6 +109,8 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     handleSubmit,
     handleFileAssociationNeeded,
     setFileAssociationCallback,
+    isModified,
+    setModified,
     showConfirmModal,
     pendingClose,
     handleCloseRequest,

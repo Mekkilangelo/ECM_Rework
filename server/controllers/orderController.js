@@ -3,6 +3,29 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction utilitaire pour valider les données de la commande
+ * @param {Object} data - Données de la commande à valider
+ * @returns {Object} - Objet contenant les erreurs de validation
+ */
+const validateOrderData = (data) => {
+  const errors = {};
+  
+  // Validation des champs obligatoires
+  if (!data.parent_id) {
+    errors.parent = 'ID parent est requis';
+  }
+  
+  if (!data.order_date || !data.order_date.trim()) {
+    errors.order_date = 'La date est requise';
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+/**
  * Récupérer toutes les commandes avec pagination
  */
 exports.getOrders = async (req, res) => {
@@ -86,8 +109,9 @@ exports.createOrder = async (req, res) => {
     } = req.body;
     
     // Validation des données
-    if (!parent_id) {
-      return res.status(400).json({ message: 'ID parent est requis' });
+    const { isValid, errors } = validateOrderData(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: 'Données invalides', errors });
     }
     
     // Vérifier si le parent existe et est un client

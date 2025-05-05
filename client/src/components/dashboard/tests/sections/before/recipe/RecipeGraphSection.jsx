@@ -46,29 +46,44 @@ const RecipeGraphSection = ({
     }
   };
   
-  const handleFilesUploaded = (files, newTempId, subcategory) => {
-    console.log(`Files uploaded for subcategory ${subcategory}:`, files);
-    console.log(`Received tempId: ${newTempId}`);
-    
-    // Mettre à jour la liste des fichiers téléchargés
-    setUploadedFiles(prev => ({
-      ...prev,
-      [subcategory]: [...(prev[subcategory] || []), ...files]
-    }));
-    // Stocker le tempId pour cette sous-catégorie
-    if (newTempId) {
-      console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
-      setTempIds(prev => ({
+  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+    if (operation === 'delete') {
+      // Pour une suppression, mettre à jour toutes les sous-catégories
+      setUploadedFiles(prev => {
+        const updatedFiles = { ...prev };
+        
+        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
+        Object.keys(updatedFiles).forEach(subcategory => {
+          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
+        });
+        
+        return updatedFiles;
+      });
+    } else {
+      console.log(`Files uploaded for subcategory recipe_graph:`, files);
+      console.log(`Received tempId: ${newTempId}`);
+      
+      // Mettre à jour la liste des fichiers téléchargés
+      setUploadedFiles(prev => ({
         ...prev,
-        [subcategory]: newTempId
+        'recipe_graph': [...(prev['recipe_graph'] || []), ...files]
       }));
       
-      // Mettre à jour directement la référence aussi pour plus de sécurité
-      tempIdsRef.current = {
-        ...tempIdsRef.current,
-        [subcategory]: newTempId
-      };
-      console.log("Updated tempIdsRef directly:", tempIdsRef.current);
+      // Stocker le tempId pour cette sous-catégorie
+      if (newTempId) {
+        console.log(`Storing tempId ${newTempId} for subcategory recipe_graph`);
+        setTempIds(prev => ({
+          ...prev,
+          'recipe_graph': newTempId
+        }));
+        
+        // Mettre à jour directement la référence aussi pour plus de sécurité
+        tempIdsRef.current = {
+          ...tempIdsRef.current,
+          'recipe_graph': newTempId
+        };
+        console.log("Updated tempIdsRef directly:", tempIdsRef.current);
+      }
     }
   };
   
@@ -132,7 +147,7 @@ const RecipeGraphSection = ({
           category="recipe_graph"
           subcategory={'recipe_graph'}
           nodeId={testNodeId}
-          onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, 'recipe_graph')}
+          onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
           maxFiles={5}
           acceptedFileTypes={{
             'application/pdf': ['.pdf'],

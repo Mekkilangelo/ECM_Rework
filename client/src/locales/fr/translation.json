@@ -19,7 +19,79 @@
     "creating": "Création en cours...",
     "min": "Min",
     "max": "Max",
-    "addOption": "Ajouter une option"
+    "addOption": "Ajouter une option",
+    "back": "Retour"
+  },
+  
+  "form": {
+    "requiredFields": "Champs obligatoires"
+  },
+  
+  "api": {
+    "success": {
+      "created": "{{entityType}} créé avec succès !",
+      "updated": "{{entityType}} modifié avec succès !"
+    },
+    "error": {
+      "create": "Erreur lors de la création du {{entityType}}",
+      "update": "Erreur lors de la modification du {{entityType}}"
+    }
+  },
+  
+  "validation": {
+    "required": {
+      "name": "Le nom est requis",
+      "country": "Le pays est requis",
+      "clientName": "Le nom du client est requis",
+      "orderDate": "La date de commande est requise",
+      "parentClient": "Un client parent est requis",
+      "designation": "La désignation est requise",
+      "parentOrder": "Une commande parente est requise",
+      "parentPart": "Une pièce parente est requise",
+      "testDate": "La date du test est requise",
+      "grade": "Le grade est requis",
+      "element": "L'élément est requis",
+      "value": "La valeur est requise",
+      "minValue": "La valeur minimale est requise",
+      "maxValue": "La valeur maximale est requise",
+      "equivalentSteel": "Un acier équivalent doit être sélectionné"
+    },
+    "invalid": {
+      "data": "Données invalides"
+    },
+    "duplicate": {
+      "clientName": "Un client avec ce nom existe déjà",
+      "clientCode": "Ce code client existe déjà",
+      "steelGrade": "Un acier avec ce grade existe déjà"
+    },
+    "range": {
+      "minLessThanMax": "La valeur minimum doit être inférieure à la valeur maximum"
+    }
+  },
+  
+  "errors": {
+    "notFound": {
+      "client": "Client non trouvé"
+    },
+    "fetch": {
+      "clients": "Erreur lors de la récupération des clients",
+      "client": "Erreur lors de la récupération du client"
+    },
+    "create": {
+      "client": "Erreur lors de la création du client"
+    },
+    "update": {
+      "client": "Erreur lors de la mise à jour du client"
+    },
+    "delete": {
+      "client": "Erreur lors de la suppression du client"
+    }
+  },
+  
+  "success": {
+    "delete": {
+      "client": "Client supprimé avec succès"
+    }
   },
   
   "closeModal": {
@@ -175,7 +247,8 @@
       "surfaceHardness": "Dureté en surface",
       "toothHardness": "Dureté PdD",
       "ecdDepth": "Profondeur ECD",
-      "hardness": "Dureté"
+      "hardness": "Dureté",
+      "ecdHardness": "Dureté ECD"
     },
     "steel": {
       "title": "Acier",
@@ -210,7 +283,30 @@
     "details": "Détails de l'acier",
     "form": "Formulaire d'acier",
     "add": "Ajouter un acier",
-    "edit": "Modifier l'acier"
+    "edit": "Modifier un acier",
+    "steelInformation": "Informations sur l'acier",
+    "grade": "Grade",
+    "family": "Famille",
+    "selectFamily": "Sélectionnez une famille",
+    "noFamilyAvailable": "Aucune famille disponible",
+    "standard": "Standard",
+    "selectStandard": "Sélectionnez un standard",
+    "noStandardAvailable": "Aucun standard disponible",
+    "equivalents": "Equivalents",
+    "selectEquivalentSteel": "Sélectionnez un acier équivalent",
+    "noSteelAvailable": "Aucun acier disponible",
+    "addEquivalent": "Ajouter un équivalent",
+    "chemicalComposition": "Composition chimique",
+    "element": "Élément",
+    "noElementAvailable": "Aucun élément disponible",
+    "rate": "Taux",
+    "value": "Valeur",
+    "type": "Type",
+    "min": "Min",
+    "max": "Max",
+    "addElement": "Ajouter un élément",
+    "modifying": "Modification en cours...",
+    "creating": "Création en cours..."
   },
   
   "tests": {

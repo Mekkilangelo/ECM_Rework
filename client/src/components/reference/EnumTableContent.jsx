@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faList } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faPlus, faList, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import enumService from '../../services/enumService';
 import '../../styles/dataList.css';
 
@@ -10,9 +10,12 @@ const EnumTableContent = ({ table, column }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', 'delete'
   const [currentValue, setCurrentValue] = useState('');
   const [originalValue, setOriginalValue] = useState('');
+  const [usageCount, setUsageCount] = useState(0);
+  const [replacementValue, setReplacementValue] = useState('');
+  const [showUsageWarning, setShowUsageWarning] = useState(false);
 
   useEffect(() => {
     fetchEnumValues();
@@ -37,7 +40,22 @@ const EnumTableContent = ({ table, column }) => {
     }
   };
 
-  const handleEdit = (value) => {
+  const checkValueUsage = async (value) => {
+    try {
+      // Cette fonction sera à implémenter côté serveur
+      const response = await enumService.checkEnumValueUsage(table, column, value);
+      return response.count || 0;
+    } catch (err) {
+      console.error('Error checking enum value usage:', err);
+      return 0;
+    }
+  };
+
+  const handleEdit = async (value) => {
+    const count = await checkValueUsage(value);
+    setUsageCount(count);
+    setShowUsageWarning(count > 0);
+    
     setModalMode('edit');
     setCurrentValue(value);
     setOriginalValue(value);
@@ -45,13 +63,26 @@ const EnumTableContent = ({ table, column }) => {
   };
 
   const handleDelete = async (value) => {
-    if (window.confirm(`Are you sure you want to delete this value: ${value}?`)) {
-      try {
-        await enumService.deleteEnumValue(table, column, value);
-        setValues(values.filter(v => v !== value));
-      } catch (err) {
-        console.error('Error deleting enum value:', err);
-        alert('Failed to delete value. Please try again.');
+    const count = await checkValueUsage(value);
+    setUsageCount(count);
+    
+    if (count > 0) {
+      // Si la valeur est utilisée, demander à l'utilisateur de choisir une valeur de remplacement
+      setModalMode('delete');
+      setOriginalValue(value);
+      setCurrentValue(value);
+      setReplacementValue('');
+      setShowModal(true);
+    } else {
+      // Si la valeur n'est pas utilisée, confirmer la suppression simple
+      if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette valeur : ${value} ?`)) {
+        try {
+          await enumService.deleteEnumValue(table, column, value);
+          setValues(values.filter(v => v !== value));
+        } catch (err) {
+          console.error('Error deleting enum value:', err);
+          alert('Échec de la suppression. Veuillez réessayer.');
+        }
       }
     }
   };
@@ -60,12 +91,13 @@ const EnumTableContent = ({ table, column }) => {
     setModalMode('add');
     setCurrentValue('');
     setOriginalValue('');
+    setShowUsageWarning(false);
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (!currentValue.trim()) {
-      alert('Value cannot be empty');
+      alert('La valeur ne peut pas être vide');
       return;
     }
 
@@ -76,15 +108,23 @@ const EnumTableContent = ({ table, column }) => {
         if (!values.includes(currentValue)) {
           setValues([...values, currentValue]);
         }
-      } else {
+      } else if (modalMode === 'edit') {
         await enumService.updateEnumValue(table, column, originalValue, currentValue);
         setValues(values.map(v => v === originalValue ? currentValue : v));
+      } else if (modalMode === 'delete') {
+        if (!replacementValue) {
+          alert('Veuillez sélectionner une valeur de remplacement');
+          return;
+        }
+        
+        await enumService.replaceAndDeleteEnumValue(table, column, originalValue, replacementValue);
+        setValues(values.filter(v => v !== originalValue));
       }
       
       setShowModal(false);
     } catch (err) {
       console.error('Error saving enum value:', err);
-      alert('Failed to save value. Please try again.');
+      alert('Échec de l\'enregistrement. Veuillez réessayer.');
     }
   };
 
@@ -108,7 +148,7 @@ const EnumTableContent = ({ table, column }) => {
           onClick={handleAdd}
           className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Add New Value
+          <FontAwesomeIcon icon={faPlus} className="me-2" /> Ajouter une nouvelle valeur
         </Button>
       </div>
 
@@ -117,7 +157,7 @@ const EnumTableContent = ({ table, column }) => {
           <Table hover responsive className="data-table border-bottom">
             <thead>
               <tr className="bg-light">
-                <th style={{ width: '70%' }}>Value</th>
+                <th style={{ width: '70%' }}>Valeur</th>
                 <th className="text-center" style={{ width: '30%' }}>Actions</th>
               </tr>
             </thead>
@@ -134,9 +174,9 @@ const EnumTableContent = ({ table, column }) => {
                       <Button 
                         variant="outline-warning" 
                         size="sm" 
-                        className="mr-2"
+                        className="me-2"
                         onClick={() => handleEdit(value)}
-                        title="Edit"
+                        title="Modifier"
                       >
                         <FontAwesomeIcon icon={faEdit} />
                       </Button>
@@ -144,7 +184,7 @@ const EnumTableContent = ({ table, column }) => {
                         variant="outline-danger" 
                         size="sm"
                         onClick={() => handleDelete(value)}
-                        title="Delete"
+                        title="Supprimer"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </Button>
@@ -159,13 +199,13 @@ const EnumTableContent = ({ table, column }) => {
         <Card className="text-center p-5 bg-light empty-state">
           <Card.Body>
             <FontAwesomeIcon icon={faList} size="3x" className="text-secondary mb-3 empty-state-icon" />
-            <h4>No values found</h4>
-            <p className="text-muted">Click "Add New Value" to add values to this enum</p>
+            <h4>Aucune valeur trouvée</h4>
+            <p className="text-muted">Cliquez sur "Ajouter une nouvelle valeur" pour ajouter des valeurs à cette énumération</p>
           </Card.Body>
         </Card>
       )}
 
-      {/* Modal for Add/Edit */}
+      {/* Modal for Add/Edit/Delete with Replacement */}
       <Modal 
         show={showModal} 
         onHide={() => setShowModal(false)}
@@ -173,28 +213,75 @@ const EnumTableContent = ({ table, column }) => {
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>
-            {modalMode === 'add' ? 'Add New Value' : 'Edit Value'}
+            {modalMode === 'add' 
+              ? 'Ajouter une nouvelle valeur' 
+              : modalMode === 'edit' 
+                ? 'Modifier la valeur' 
+                : 'Supprimer et remplacer la valeur'
+            }
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {showUsageWarning && modalMode === 'edit' && (
+            <Alert variant="warning">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+              Cette valeur est utilisée dans {usageCount} enregistrement(s). La modification mettra à jour tous ces enregistrements.
+            </Alert>
+          )}
+          
           <Form>
-            <Form.Group>
-              <Form.Label>{`${column} Value`}</Form.Label>
-              <Form.Control 
-                type="text" 
-                value={currentValue} 
-                onChange={(e) => setCurrentValue(e.target.value)}
-                placeholder={`Enter ${column} value`}
-              />
-            </Form.Group>
+            {modalMode === 'delete' ? (
+              <>
+                <Alert variant="warning">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+                  La valeur <strong>{originalValue}</strong> est utilisée dans {usageCount} enregistrement(s). 
+                  Veuillez sélectionner une valeur de remplacement.
+                </Alert>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label>Valeur à supprimer</Form.Label>
+                  <Form.Control 
+                    type="text" 
+                    value={originalValue} 
+                    disabled
+                  />
+                </Form.Group>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label>Remplacer par</Form.Label>
+                  <Form.Select 
+                    value={replacementValue} 
+                    onChange={(e) => setReplacementValue(e.target.value)}
+                  >
+                    <option value="">Sélectionnez une valeur de remplacement</option>
+                    {values
+                      .filter(v => v !== originalValue)
+                      .map((v, i) => (
+                        <option key={i} value={v}>{v}</option>
+                      ))
+                    }
+                  </Form.Select>
+                </Form.Group>
+              </>
+            ) : (
+              <Form.Group className="mb-3">
+                <Form.Label>{`Valeur ${column}`}</Form.Label>
+                <Form.Control 
+                  type="text" 
+                  value={currentValue} 
+                  onChange={(e) => setCurrentValue(e.target.value)}
+                  placeholder={`Entrez la valeur ${column}`}
+                />
+              </Form.Group>
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="outline-secondary" onClick={() => setShowModal(false)}>
-            Cancel
+            Annuler
           </Button>
           <Button variant="danger" onClick={handleSave}>
-            Save
+            {modalMode === 'delete' ? 'Supprimer et remplacer' : 'Enregistrer'}
           </Button>
         </Modal.Footer>
       </Modal>

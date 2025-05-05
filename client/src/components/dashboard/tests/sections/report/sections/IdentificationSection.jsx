@@ -55,8 +55,18 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
   // Format pour le poids
   const formatWeight = () => {
     const dimensions = part.dimensions || {};
-    if (dimensions.weight && dimensions.weight.value) {
-      return `${dimensions.weight.value} ${dimensions.weight.unit || 'kg'}`;
+    if (dimensions.weight && dimensions.weight.value !== undefined) {
+      // Vérifier si l'unité est en grammes et convertir en kg si nécessaire
+      let value = dimensions.weight.value;
+      let unit = dimensions.weight.unit || 'kg';
+      
+      // Si l'unité est en grammes, convertir en kg
+      if (unit.toLowerCase() === 'g') {
+        value = value / 1000;
+        unit = 'kg';
+      }
+      
+      return `${value} ${unit}`;
     }
     return 'Non spécifié';
   };
@@ -171,6 +181,29 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
             )}
           </tbody>
         </table>
+        
+        {/* Section des commentaires de la charge */}
+        {test.loadData && test.loadData.comments && (
+          <div style={{ 
+            margin: '20px 0', 
+            padding: '15px', 
+            backgroundColor: '#f8f9fa', 
+            border: '1px solid #dee2e6',
+            borderRadius: '5px'
+          }}>
+            <h4 style={{ 
+              marginBottom: '10px',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#555'
+            }}>
+              Commentaires
+            </h4>
+            <p style={{ margin: 0, color: '#333' }}>
+              {test.loadData.comments}
+            </p>
+          </div>
+        )}
         
         {/* Section des photos */}
         {identificationPhotos.length > 0 && (

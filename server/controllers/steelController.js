@@ -4,6 +4,77 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction utilitaire pour valider les données d'un acier
+ * @param {Object} data - Données de l'acier à valider
+ * @returns {Object} - Objet contenant les erreurs de validation et un boolean indiquant si les données sont valides
+ */
+const validateSteelData = (data) => {
+  const errors = {};
+
+  // Validation des champs obligatoires
+  if (!data.grade) {
+    errors.grade = 'Grade de l\'acier requis';
+  }
+
+  // Vérifier si les équivalents sont bien remplis
+  if (data.equivalents && data.equivalents.length > 0) {
+    const invalidEquivalents = data.equivalents.filter(eq => !eq.steel_id);
+    if (invalidEquivalents.length > 0) {
+      errors.equivalents = 'Tous les équivalents doivent avoir un acier sélectionné';
+    }
+  }
+
+  // Vérifier si les éléments chimiques sont bien remplis
+  if (data.elements && data.elements.length > 0) {
+    const elementErrors = [];
+    let hasErrors = false;
+
+    data.elements.forEach((element, index) => {
+      const elementError = {};
+
+      if (!element.element) {
+        elementError.element = 'Élément chimique requis';
+        hasErrors = true;
+      }
+
+      if (element.rate_type === 'exact' && element.value === undefined) {
+        elementError.value = 'Valeur requise pour le type exact';
+        hasErrors = true;
+      }
+
+      if (element.rate_type === 'range') {
+        if (element.min_value === undefined) {
+          elementError.min_value = 'Valeur minimum requise';
+          hasErrors = true;
+        }
+        if (element.max_value === undefined) {
+          elementError.max_value = 'Valeur maximum requise';
+          hasErrors = true;
+        }
+        if (element.min_value !== undefined && element.max_value !== undefined && 
+            parseFloat(element.min_value) >= parseFloat(element.max_value)) {
+          elementError.range = 'La valeur minimum doit être inférieure à la valeur maximum';
+          hasErrors = true;
+        }
+      }
+
+      if (Object.keys(elementError).length > 0) {
+        elementErrors[index] = elementError;
+      }
+    });
+
+    if (hasErrors) {
+      errors.elements = elementErrors;
+    }
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+/**
  * Récupérer tous les aciers avec pagination
  */
 exports.getSteels = async (req, res) => {
@@ -99,11 +170,23 @@ exports.getSteelById = async (req, res) => {
  */
 exports.createSteel = async (req, res) => {
   try {
-    const { name, grade, family, standard, equivalents, chemistery } = req.body;
+    const { 
+      name, 
+      grade, 
+      family, 
+      standard, 
+      equivalents, 
+      chemistery,
+      elements 
+    } = req.body;
     
     // Validation des données
-    if (!name || !grade) {
-      return res.status(400).json({ message: 'Nom et grade requis' });
+    const { isValid, errors } = validateSteelData(req.body);
+    if (!isValid) {
+      return res.status(400).json({ 
+        message: 'Données invalides', 
+        errors 
+      });
     }
     
     // Vérifier si le grade est déjà utilisé
@@ -137,7 +220,8 @@ exports.createSteel = async (req, res) => {
         family,
         standard,
         equivalents,
-        chemistery
+        chemistery,
+        elements
       }, { transaction: t });
       
       // Créer l'entrée de fermeture (auto-relation)
@@ -173,6 +257,15 @@ exports.updateSteel = async (req, res) => {
     const { steelId } = req.params;
     const { name, grade, family, standard, equivalents, chemistery, elements } = req.body;
     
+    // Validation des données
+    const { isValid, errors } = validateSteelData(req.body);
+    if (!isValid) {
+      return res.status(400).json({ 
+        message: 'Données invalides', 
+        errors 
+      });
+    }
+    
     const node = await Node.findOne({
       where: { id: steelId, type: 'steel' },
       include: [{
@@ -187,7 +280,10 @@ exports.updateSteel = async (req, res) => {
     // Si le grade change, vérifier s'il est déjà utilisé
     if (grade && grade !== node.Steel.grade) {
       const existingSteel = await Steel.findOne({
-        where: { grade }
+        where: { 
+          grade,
+          node_id: { [Op.ne]: steelId } // Exclure l'acier actuel
+        }
       });
       
       if (existingSteel) {

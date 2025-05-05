@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import ReportPageHeader from './sections/ReportPageHeader';
+import CoverPageSection from './sections/CoverPageSection';
 
 const ReportPreviewModal = ({ 
   show, 
@@ -94,6 +95,20 @@ const ReportPreviewModal = ({
       </Modal.Header>
       <Modal.Body>
         <div className="report-container" ref={reportRef}>
+          {/* Page de garde (toujours affichée en première page) */}
+          <div className="report-page" style={{ 
+            padding: '20px', 
+            minHeight: '297mm', 
+            position: 'relative',
+            pageBreakAfter: 'always' 
+          }}>
+            <CoverPageSection 
+              testData={reportData.test} 
+              partData={reportData.part} 
+              clientData={clientData}
+            />
+          </div>
+          
           {/* Première page avec identification ou première section sélectionnée */}
           {selectedSections.identification ? (
             <div className="report-page" style={{ 

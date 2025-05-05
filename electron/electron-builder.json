@@ -1,0 +1,52 @@
+{
+  "appId": "com.customia.ecm-monitoring",
+  "productName": "ECM Monitoring",
+  "directories": {
+    "output": "dist-installers",
+    "buildResources": "icons"
+  },
+  "files": [
+    "dist/**/*",
+    "icons/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "resources/client/build",
+      "to": "client/build"
+    },
+    {
+      "from": "resources/server",
+      "to": "server"
+    }
+  ],
+  "win": {
+    "target": [
+      "nsis"
+    ],
+    "icon": "icons/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "icons/installer.ico",
+    "uninstallerIcon": "icons/installer.ico",
+    "installerHeaderIcon": "icons/installer.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  },
+  "mac": {
+    "target": [
+      "dmg"
+    ],
+    "icon": "icons/icon.icns"
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "icon": "icons"
+  }
+}

@@ -366,6 +366,89 @@ const useTestSubmission = (
       return true;
     } : null;
   
+  const handleSubmit = async (e, isCloseAfterSave = false) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    // Empêcher les soumissions multiples
+    if (loading) return;
+    
+    // Valider le formulaire
+    const validationResults = validate(formData);
+    
+    if (!validationResults.isValid) {
+      console.log("Validation errors:", validationResults.errors);
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Préparer les données pour l'API
+      const testData = prepareTestData(formData);
+      
+      let response;
+      
+      if (test) {
+        // Mode édition
+        response = await testService.updateTest(test.id, testData);
+        console.log("Test updated:", response);
+        
+        // Associer les fichiers temporaires au nœud
+        if (fileAssociationCallback) {
+          const associationResult = await fileAssociationCallback(test.id);
+          console.log("File association result:", associationResult);
+        }
+        
+        setMessage({
+          type: 'success',
+          text: i18next.t('api.success.updated', { entityType: i18next.t('tests.title') })
+        });
+        
+        // Appeler le callback de mise à jour si fourni
+        if (onTestUpdated) {
+          onTestUpdated(response.data);
+        }
+        
+        // Si c'est une sauvegarde avant fermeture, fermer le formulaire
+        if (isCloseAfterSave && onClose) {
+          onClose();
+        }
+      } else {
+        // Mode création
+        response = await testService.createTest(parentId, testData);
+        console.log("Test created:", response);
+        
+        // Réinitialiser le formulaire
+        setFormData(defaultFormState);
+        
+        setMessage({
+          type: 'success',
+          text: i18next.t('api.success.created', { entityType: i18next.t('tests.title') })
+        });
+        
+        // Associer les fichiers temporaires au nœud nouvellement créé
+        if (fileAssociationCallback && response.data && response.data.id) {
+          const associationResult = await fileAssociationCallback(response.data.id);
+          console.log("File association result:", associationResult);
+        }
+        
+        // Appeler le callback de création si fourni
+        if (onTestCreated) {
+          onTestCreated(response.data);
+        }
+        
+        // Fermer le formulaire après création réussie même sans isCloseAfterSave
+        if (onClose) {
+          onClose();
+        }
+      }
+    } catch (error) {
+      // ...existing code for error handling...
+    }
+  };
+
   return useApiSubmission({
     formData,
     setFormData,

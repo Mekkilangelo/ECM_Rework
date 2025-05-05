@@ -4,6 +4,29 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction utilitaire pour valider les données du client
+ * @param {Object} data - Données du client à valider
+ * @returns {Object} - Objet contenant les erreurs de validation
+ */
+const validateClientData = (data) => {
+  const errors = {};
+  
+  // Validation des champs obligatoires
+  if (!data.name || !data.name.trim()) {
+    errors.name = 'Le nom du client est requis';
+  }
+  
+  if (!data.country) {
+    errors.country = 'Le pays est requis';
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+/**
  * Récupérer tous les clients avec pagination
  */
 exports.getClients = async (req, res) => {
@@ -73,8 +96,9 @@ exports.createClient = async (req, res) => {
     const { name, group, country, city, client_group, description, address } = req.body;
     
     // Validation des données
-    if (!name) {
-      return res.status(400).json({ message: 'Nom du client requis' });
+    const { isValid, errors } = validateClientData({ name, country });
+    if (!isValid) {
+      return res.status(400).json({ message: 'Données invalides', errors });
     }
     
     // Vérifier si un client avec ce nom existe déjà
@@ -147,7 +171,15 @@ exports.createClient = async (req, res) => {
 exports.updateClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const { name, client_code, country, city, client_group, address } = req.body;
+    const { name, client_code, country, city, client_group, address, description } = req.body;
+    
+    // Validation des données si country est fourni
+    if (country !== undefined) {
+      const { isValid, errors } = validateClientData({ name: name || 'nom-temporaire', country });
+      if (!isValid) {
+        return res.status(400).json({ message: 'Données invalides', errors });
+      }
+    }
     
     const node = await Node.findOne({
       where: { id: clientId, type: 'client' },
@@ -173,43 +205,45 @@ exports.updateClient = async (req, res) => {
     
     await sequelize.transaction(async (t) => {
       // Mettre à jour le nœud
+      const nodeUpdateData = {};
+      
       if (name) {
-        await node.update({
-          name,
-          path: `/${name}`,
-          modified_at: new Date()
-        }, { transaction: t });
+        nodeUpdateData.name = name;
+        nodeUpdateData.path = `/${name}`;
+      }
+      
+      if (description !== undefined) {
+        nodeUpdateData.description = description;
+      }
+      
+      nodeUpdateData.modified_at = new Date();
+      
+      await node.update(nodeUpdateData, { transaction: t });
+      
+      // Si le nom a changé, mettre à jour les chemins des descendants
+      if (name && name !== node.name) {
+        const descendants = await Closure.findAll({
+          where: { 
+            ancestor_id: clientId,
+            depth: { [Op.gt]: 0 }
+          },
+          transaction: t
+        });
         
-        // Si le nom a changé, mettre à jour les chemins des descendants
-        if (name !== node.name) {
-          const descendants = await Closure.findAll({
-            where: { 
-              ancestor_id: clientId,
-              depth: { [Op.gt]: 0 }
-            },
-            transaction: t
-          });
-          
-          for (const relation of descendants) {
-            const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
-            const descendantPath = descendant.path.replace(node.path, `/${name}`);
-            await descendant.update({ path: descendantPath }, { transaction: t });
-          }
+        for (const relation of descendants) {
+          const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
+          const descendantPath = descendant.path.replace(node.path, `/${name}`);
+          await descendant.update({ path: descendantPath }, { transaction: t });
         }
-      } else {
-        // Juste mettre à jour la date de modification
-        await node.update({
-          modified_at: new Date()
-        }, { transaction: t });
       }
       
       // Mettre à jour les données du client
       const clientData = {};
-      if (client_code) clientData.client_code = client_code;
-      if (country) clientData.country = country;
-      if (city) clientData.city = city;
-      if (client_group) clientData.client_group = client_group;
-      if (address) clientData.address = address;
+      if (client_code !== undefined) clientData.client_code = client_code;
+      if (country !== undefined) clientData.country = country;
+      if (city !== undefined) clientData.city = city;
+      if (client_group !== undefined) clientData.client_group = client_group;
+      if (address !== undefined) clientData.address = address;
       
       if (Object.keys(clientData).length > 0) {
         await Client.update(clientData, {

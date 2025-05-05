@@ -113,7 +113,7 @@ const FileUploader = ({
           <h6>Fichiers téléchargés ({uploadedFiles.length})</h6>
           <ul className="list-group">
             {uploadedFiles.map((file) => (
-              <li key={file.id} className="list-group-item d-flex justify-content-between align-items-center">
+              <li key={`file-${file.id}-${file.name}`} className="list-group-item d-flex justify-content-between align-items-center">
                 <div className="d-flex align-items-center">
                   <div className="thumbnail-wrapper">
                     {renderThumbnail(file)}

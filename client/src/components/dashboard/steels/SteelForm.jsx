@@ -1,9 +1,14 @@
 import React from 'react';
 import { Form, Button, Row, Col, Spinner, Table } from 'react-bootstrap';
 import Select from 'react-select';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import useSteelForm from './hooks/useSteelForm';
+import { useTranslation } from 'react-i18next';
 
 const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
+  const { t } = useTranslation();
+  
   const {
     formData,
     errors,
@@ -24,7 +29,8 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
     handleAddChemicalElement,
     handleRemoveChemicalElement,
     handleChemicalElementChange,
-    handleRateTypeChange
+    handleRateTypeChange,
+    handleEquivalentChange
   } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated);
   
   if (fetchingSteel) {
@@ -39,12 +45,17 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
         </div>
       )}
       
+      {/* Légende pour les champs obligatoires */}
+      <div className="text-muted small mb-3">
+        <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+      </div>
+      
       <Form onSubmit={handleSubmit} autoComplete="off">
-        <h5>Informations sur l'acier</h5>
+        <h5>{t('steels.steelInformation')}</h5>
         <Row>
           <Col md={4}>
             <Form.Group className="mb-3">
-              <Form.Label>Grade *</Form.Label>
+              <Form.Label>{t('steels.grade')} <span className="text-danger fw-bold">*</span></Form.Label>
               <Form.Control
                 type="text"
                 name="grade"
@@ -60,50 +71,64 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
           </Col>
           <Col md={4}>
             <Form.Group className="mb-3">
-              <Form.Label>Famille</Form.Label>
+              <Form.Label>{t('steels.family')}</Form.Label>
               <Select
-                styles={selectStyles}
+                styles={{
+                  ...selectStyles,
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({ ...base, marginBottom: '5px' })
+                }}
+                menuPortalTarget={document.body}
                 options={steelFamilyOptions}
                 value={getSelectedOption(steelFamilyOptions, formData.family)}
                 onChange={(option) => handleSelectChange(option, 'family')}
                 isClearable
-                placeholder="Sélectionnez une famille"
+                placeholder={t('steels.selectFamily')}
                 isLoading={loading && steelFamilyOptions.length === 0}
-                noOptionsMessage={() => "Aucune famille disponible"}
+                noOptionsMessage={() => t('steels.noFamilyAvailable')}
               />
             </Form.Group>
           </Col>
           <Col md={4}>
             <Form.Group className="mb-3">
-              <Form.Label>Standard</Form.Label>
+              <Form.Label>{t('steels.standard')}</Form.Label>
               <Select
-                styles={selectStyles}
+                styles={{
+                  ...selectStyles,
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({ ...base, marginBottom: '5px' })
+                }}
+                menuPortalTarget={document.body}
                 options={steelStandardOptions}
                 value={getSelectedOption(steelStandardOptions, formData.standard)}
                 onChange={(option) => handleSelectChange(option, 'standard')}
                 isClearable
-                placeholder="Sélectionnez un standard"
+                placeholder={t('steels.selectStandard')}
                 isLoading={loading && steelStandardOptions.length === 0}
-                noOptionsMessage={() => "Aucun standard disponible"}
+                noOptionsMessage={() => t('steels.noStandardAvailable')}
               />
             </Form.Group>
           </Col>
         </Row>
         
-        <h5 className="mt-4">Equivalents</h5>
+        <h5 className="mt-4">{t('steels.equivalents')}</h5>
         <Row>
           <Col md={12}>
             {formData.equivalents.map((equivalent, index) => (
               <div key={index} className="d-flex mb-2 align-items-center">
-                <div className="flex-grow-1">
+                <div className="flex-grow-1" style={{ paddingRight: '10px' }}>
                   <Select
-                    styles={selectStyles}
+                    styles={{
+                      ...selectStyles,
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                    }}
+                    menuPortalTarget={document.body}
                     options={steelGradeOptions}
                     value={getSelectedOption(steelGradeOptions, equivalent.steel_id)}
-                    onChange={(option) => handleSelectChange(option, 'equivalents', index, 'steel_id')}
-                    placeholder="Sélectionnez un acier équivalent"
+                    onChange={(option) => handleEquivalentChange(index, 'steel_id', option?.value)}
+                    placeholder={t('steels.selectEquivalentSteel')}
                     isLoading={loading && steelGradeOptions.length === 0}
-                    noOptionsMessage={() => "Aucun acier disponible"}
+                    noOptionsMessage={() => t('steels.noSteelAvailable')}
                   />
                 </div>
                 <Button 
@@ -112,7 +137,7 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                   className="ms-2"
                   onClick={() => handleRemoveEquivalent(index)}
                 >
-                  <i className="bi bi-trash"></i>
+                  <FontAwesomeIcon icon={faTrash} />
                 </Button>
               </div>
             ))}
@@ -122,40 +147,50 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
               onClick={handleAddEquivalent}
               disabled={loading}
             >
-              <i className="bi bi-plus-circle me-1"></i> Ajouter un équivalent
+              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('steels.addEquivalent')}
             </Button>
           </Col>
         </Row>
         
-        <h5 className="mt-4">Composition chimique</h5>
+        <h5 className="mt-4">{t('steels.chemicalComposition')}</h5>
         <Row>
           <Col md={12}>
-            <Table striped bordered hover responsive>
+            <Table striped bordered hover responsive style={{ overflow: 'visible' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '35%' }}>Élément</th>
-                  <th style={{ width: '20%' }}>Taux</th>
-                  <th style={{ width: '35%' }}>Valeur (%)</th>
-                  <th style={{ width: '10%' }}>Actions</th>
+                  <th style={{ width: '5%' }}>#</th>
+                  <th style={{ width: '30%' }}>{t('steels.element')}</th>
+                  <th style={{ width: '20%' }}>{t('steels.rate')}</th>
+                  <th style={{ width: '35%' }}>{t('steels.value')} (%)</th>
+                  <th style={{ width: '10%' }}>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {formData.chemical_elements.map((element, index) => (
-                  <tr key={index}>
-                    <td>
+                  <tr key={`chemical-element-${index}`}>
+                    <td className="text-center align-middle">{index + 1}</td>
+                    <td style={{ paddingRight: '10px' }}>
                       <Select
-                        styles={selectStyles}
+                        styles={{
+                          ...selectStyles,
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                        }}
+                        menuPortalTarget={document.body}
                         options={elementOptions}
                         value={getSelectedOption(elementOptions, element.element)}
                         onChange={(option) => handleChemicalElementChange(index, 'element', option?.value)}
-                        placeholder="Élément"
+                        placeholder={t('steels.element')}
                         isLoading={loading && elementOptions.length === 0}
-                        noOptionsMessage={() => "Aucun élément disponible"}
+                        noOptionsMessage={() => t('steels.noElementAvailable')}
                       />
                     </td>
-                    <td>
+                    <td style={{ paddingRight: '10px' }}>
                       <Select
-                        styles={selectStyles}
+                        styles={{
+                          ...selectStyles,
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                        }}
+                        menuPortalTarget={document.body}
                         options={[
                           { value: 'exact', label: '=' },
                           { value: 'range', label: 'min - max' },
@@ -168,7 +203,7 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                           element.rate_type
                         )}
                         onChange={(option) => handleRateTypeChange(index, option?.value)}
-                        placeholder="Type"
+                        placeholder={t('steels.type')}
                       />
                     </td>
                     <td>
@@ -178,7 +213,7 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                           step="0.01"
                           value={element.value || ''}
                           onChange={(e) => handleChemicalElementChange(index, 'value', e.target.value)}
-                          placeholder="Valeur"
+                          placeholder={t('steels.value')}
                         />
                       ) : (
                         <div className="d-flex">
@@ -187,7 +222,7 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                             step="0.01"
                             value={element.min_value || ''}
                             onChange={(e) => handleChemicalElementChange(index, 'min_value', e.target.value)}
-                            placeholder="Min"
+                            placeholder={t('steels.min')}
                             className="me-1"
                           />
                           <Form.Control
@@ -195,18 +230,18 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                             step="0.01"
                             value={element.max_value || ''}
                             onChange={(e) => handleChemicalElementChange(index, 'max_value', e.target.value)}
-                            placeholder="Max"
+                            placeholder={t('steels.max')}
                           />
                         </div>
                       )}
                     </td>
-                    <td>
+                    <td className="text-center">
                       <Button 
                         variant="outline-danger" 
                         size="sm" 
                         onClick={() => handleRemoveChemicalElement(index)}
                       >
-                        <i className="bi bi-trash"></i>
+                        <FontAwesomeIcon icon={faTrash} />
                       </Button>
                     </td>
                   </tr>
@@ -219,17 +254,19 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
               onClick={handleAddChemicalElement}
               disabled={loading}
             >
-              <i className="bi bi-plus-circle me-1"></i> Ajouter un élément
+              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('steels.addElement')}
             </Button>
           </Col>
         </Row>
         
         <div className="d-flex justify-content-end mt-4">
           <Button variant="secondary" onClick={onClose} className="me-2">
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" type="submit" disabled={loading}>
-            {loading ? (steel ? 'Modification en cours...' : 'Création en cours...') : (steel ? 'Modifier' : 'Créer')}
+            {loading 
+              ? (steel ? t('steels.modifying') : t('steels.creating')) 
+              : (steel ? t('common.edit') : t('common.create'))}
           </Button>
         </div>
       </Form>

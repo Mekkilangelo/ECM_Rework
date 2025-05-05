@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
-import useFormHandlers from './modules/useFormHandlers';
+import useTestHandlers from './modules/useTestHandlers';
 import useFormValidation from './modules/useFormValidation';
-import useOptionsFetcher from './modules/useOptionsFetcher';
+import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import useTestSubmission from './modules/useTestSubmission';
 import useTestData from './modules/useTestData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
@@ -27,14 +27,22 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     setMessage 
   } = useFormState();
 
-  // Stocker les données initiales pour comparer les changements
-  const [initialFormData, setInitialFormData] = useState(null);
-
   // Gestion des fichiers temporaires
   const [tempFileId, setTempFileId] = useState(null);
 
   // State for fetching test
   const [fetchingTest, setFetchingTest] = useState(false);
+
+  // Utiliser useRef pour éviter la recréation des options à chaque rendu
+  const optionsConfig = useRef({
+    // Activer uniquement les options nécessaires pour les tests
+    fetchClientOptions: false,
+    fetchSteelOptions: false,
+    fetchPartOptions: false,
+    fetchTestOptions: true,      // Activer les options de test
+    fetchFurnaceOptions: true,   // Activer les options de four
+    fetchUnitOptions: true       // Activer les options d'unité
+  }).current;
 
   // Load test data in edit mode
   useTestData(
@@ -44,13 +52,20 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     setFetchingTest
   );
   
-  // Chargement des options pour les selects
+  // Chargement des options pour les selects en utilisant le hook unifié
   const { 
     locationOptions, statusOptions, mountingTypeOptions, positionTypeOptions, 
     processTypeOptions, preoxMediaOptions, furnaceTypeOptions, heatingCellOptions, 
     coolingMediaOptions, furnaceSizeOptions, quenchCellOptions, gasOptions, rampOptions,
     selectStyles, getSelectedOption, lengthUnitOptions, weightUnitOptions, 
     timeUnitOptions, temperatureUnitOptions, pressureUnitOptions, hardnessUnitOptions,
+    // Fonctions d'accès aux unités
+    getLengthUnitOptions, 
+    getWeightUnitOptions, 
+    getTimeUnitOptions, 
+    getTemperatureUnitOptions, 
+    getPressureUnitOptions, 
+    getHardnessUnitOptions,
     // Fonctions de rafraîchissement
     refreshLocationOptions,
     refreshStatusOptions,
@@ -65,7 +80,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     refreshQuenchCellOptions,
     refreshUnitOptions,
     refreshAllOptions
-  } = useOptionsFetcher(setLoading);
+  } = useOptionsFetcher(setLoading, optionsConfig);
   
   // Regrouper les fonctions de rafraîchissement pour les passer à useFormHandlers
   const refreshFunctions = {
@@ -95,7 +110,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     handleResultBlocAdd, handleResultBlocRemove,
     handleHardnessResultAdd, handleHardnessResultRemove,
     handleCreateOption // Ajouter le handler pour la création d'options
-  } = useFormHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
+  } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
@@ -115,27 +130,31 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     fileAssociationCallback
   );
   
-  // Gestion de la confirmation de fermeture
+  // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
   const { 
     showConfirmModal, 
     pendingClose, 
+    isModified,
+    setModified,
+    resetInitialState,
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
     saveAndClose 
   } = useCloseConfirmation(
-    formData, 
-    initialFormData || formData, 
-    handleSubmit, 
-    onClose
+    formData,        // État actuel du formulaire 
+    loading,         // État de chargement
+    fetchingTest,    // État de récupération des données
+    handleSubmit,    // Fonction de soumission
+    onClose          // Fonction de fermeture
   );
-  
-  // Mettre à jour les données initiales une fois chargées
+
+  // Réinitialiser l'état initial après une sauvegarde réussie
   useEffect(() => {
-    if (!fetchingTest && formData && !initialFormData) {
-      setInitialFormData(JSON.parse(JSON.stringify(formData)));
+    if (message && message.type === 'success') {
+      resetInitialState();
     }
-  }, [fetchingTest, formData, initialFormData]);
+  }, [message, resetInitialState]);
   
   return {
     formData,
@@ -167,13 +186,22 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     temperatureUnitOptions,
     pressureUnitOptions,
     hardnessUnitOptions,
+    // Fonctions d'accès aux unités
+    getLengthUnitOptions, 
+    getWeightUnitOptions, 
+    getTimeUnitOptions, 
+    getTemperatureUnitOptions, 
+    getPressureUnitOptions, 
+    getHardnessUnitOptions,
     selectStyles,
     // Nouvelle gestion des fichiers
     tempFileId,
     setTempFileId,
-    // Gestion de la confirmation de fermeture
+    // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
     showConfirmModal, 
-    pendingClose, 
+    pendingClose,
+    isModified,       // Nouveau! Exposer l'état modifié
+    setModified,      // Nouveau! Exposer la fonction pour définir manuellement l'état modifié
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 

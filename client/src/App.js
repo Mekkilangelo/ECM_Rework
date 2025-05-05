@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import './styles/sb-admin-2.min.css';
+import './styles/custom-overrides.css'; // Ajouté pour corriger l'avertissement color-adjust
 
 import './styles/chatbot.css';
 import './styles/sidebar.css';
@@ -19,36 +20,6 @@ import Dashboard from './pages/Dashboard';
 import Reference from './pages/Reference';
 import Archives from './pages/Archives';  
 import { AuthProvider, useAuth } from './context/AuthContext';
-
-// Composant pour protéger les routes privées
-const PrivateRoute = ({ children }) => {
-  // Utilisez le hook useAuth au lieu de vérifier directement localStorage
-  const { isAuthenticated, loading } = useAuth();
-  
-  // Afficher un loader pendant la vérification de l'authentification
-  if (loading) {
-    return <div className="d-flex justify-content-center mt-5">
-      <div className="spinner-border" role="status">
-        <span className="sr-only">Chargement...</span>
-      </div>
-    </div>;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login?error=session_expired" replace />;
-  }
-  
-  return children;
-};
-
-// Wrapper pour utiliser useAuth dans les routes
-const PrivateRouteWrapper = ({ children }) => {
-  return (
-    <AuthProvider>
-      <PrivateRouteComponent>{children}</PrivateRouteComponent>
-    </AuthProvider>
-  );
-};
 
 // Composant de chargement pour Suspense
 const LoadingFallback = () => (

@@ -1,0 +1,6 @@
+/* Override pour la propriété color-adjust dépréciée */
+@media print {
+  * {
+    print-color-adjust: exact;
+  }
+}

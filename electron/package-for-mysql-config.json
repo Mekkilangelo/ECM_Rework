@@ -1,0 +1,21 @@
+{
+  "name": "mysql-config",
+  "version": "1.0.0",
+  "description": "Configuration MySQL pour ECM Monitoring",
+  "main": "mysql-config.js",
+  "scripts": {
+    "start": "node mysql-config.js",
+    "build": "pkg ."
+  },
+  "bin": "mysql-config.js",
+  "pkg": {
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "dist/",
+    "assets": [
+      "database.sql"
+    ]
+  },
+  "dependencies": {}
+}

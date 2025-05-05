@@ -2,8 +2,8 @@ const useFormValidation = (formData, parentId, setErrors) => {
     const validate = () => {
       const newErrors = {};
       
-      if (!formData.designation.trim()) newErrors.designation = 'La désignation est requise';
-      if (!parentId) newErrors.parent = 'Commande parente non identifiée';
+      if (!formData.designation.trim()) newErrors.designation = 'validation.required.designation';
+      if (!parentId) newErrors.parent = 'validation.required.parentOrder';
       
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
@@ -13,4 +13,3 @@ const useFormValidation = (formData, parentId, setErrors) => {
   };
   
   export default useFormValidation;
-  

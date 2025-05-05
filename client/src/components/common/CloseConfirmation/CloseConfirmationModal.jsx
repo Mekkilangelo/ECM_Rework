@@ -15,6 +15,13 @@ import './CloseConfirmationModal.css';
  * @param {string} [props.cancelText="Annuler"] - Texte du bouton d'annulation
  * @param {string} [props.continueText="Ne pas enregistrer"] - Texte du bouton de continuation sans sauvegarde
  * @param {string} [props.saveText="Enregistrer"] - Texte du bouton de sauvegarde
+ * @param {boolean} [props.showSaveButton=true] - Affiche ou masque le bouton de sauvegarde
+ * @param {string} [props.size="sm"] - Taille du modal (sm, lg, xl)
+ * @param {string} [props.modalClassName=""] - Classes CSS additionnelles pour le modal
+ * @param {string} [props.saveButtonVariant="primary"] - Variante de style pour le bouton de sauvegarde
+ * @param {string} [props.continueButtonVariant="outline-danger"] - Variante de style pour le bouton de continuation
+ * @param {string} [props.cancelButtonVariant="outline-secondary"] - Variante de style pour le bouton d'annulation
+ * @param {React.ReactNode} [props.icon] - Icône optionnelle à afficher dans le modal
  */
 const CloseConfirmationModal = ({
   show,
@@ -26,7 +33,14 @@ const CloseConfirmationModal = ({
   message = "Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?",
   cancelText = "Rester",
   continueText = "Ne pas enregistrer",
-  saveText = "Enregistrer"
+  saveText = "Enregistrer",
+  showSaveButton = true,
+  size = "sm",
+  modalClassName = "",
+  saveButtonVariant = "primary",
+  continueButtonVariant = "outline-danger",
+  cancelButtonVariant = "outline-secondary",
+  icon = null
 }) => {
   return (
     <Modal 
@@ -35,11 +49,15 @@ const CloseConfirmationModal = ({
       backdrop="static"
       keyboard={false}
       centered
-      dialogClassName="confirmation-modal"
+      size={size}
+      dialogClassName={`confirmation-modal ${modalClassName}`}
       contentClassName="confirmation-modal-content"
     >
       <Modal.Header className="border-0 pb-0">
-        <Modal.Title className="modal-title">{title}</Modal.Title>
+        <Modal.Title className="modal-title">
+          {icon && <span className="modal-icon me-2">{icon}</span>}
+          {title}
+        </Modal.Title>
         <button 
           type="button" 
           className="btn-close" 
@@ -52,26 +70,28 @@ const CloseConfirmationModal = ({
       </Modal.Body>
       <Modal.Footer className="border-0 pt-0 d-flex justify-content-between w-100">
         <Button 
-          variant="outline-secondary" 
+          variant={cancelButtonVariant}
           onClick={onCancel}
           className="btn-cancel flex-grow-1 mx-1"
         >
           {cancelText}
         </Button>
         <Button 
-          variant="outline-danger" 
+          variant={continueButtonVariant}
           onClick={onContinue}
           className="btn-continue flex-grow-1 mx-1"
         >
           {continueText}
         </Button>
-        <Button 
-          variant="primary" 
-          onClick={onSave}
-          className="btn-save flex-grow-1 mx-1"
-        >
-          {saveText}
-        </Button>
+        {showSaveButton && (
+          <Button 
+            variant={saveButtonVariant}
+            onClick={onSave}
+            className="btn-save flex-grow-1 mx-1"
+          >
+            {saveText}
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );

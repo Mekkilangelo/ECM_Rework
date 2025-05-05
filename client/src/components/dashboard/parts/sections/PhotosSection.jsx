@@ -60,30 +60,46 @@ const PhotosSection = ({
     }
   };
 
-  const handleFilesUploaded = (files, newTempId, subcategory) => {
-    console.log(`Files uploaded for subcategory ${subcategory}:`, files);
-    console.log(`Received tempId: ${newTempId}`);
-    
-    // Mettre à jour la liste des fichiers téléchargés
-    setUploadedFiles(prev => ({
-      ...prev,
-      [subcategory]: [...(prev[subcategory] || []), ...files]
-    }));
-
-    // Stocker le tempId pour cette sous-catégorie UNIQUEMENT s'il est défini
-    if (newTempId) {
-      console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
-      setTempIds(prev => ({
-        ...prev,
-        [subcategory]: newTempId
-      }));
+  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+    if (operation === 'delete') {
+      // Pour une suppression, mettre à jour toutes les sous-catégories
+      setUploadedFiles(prev => {
+        const updatedFiles = { ...prev };
+        
+        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
+        Object.keys(updatedFiles).forEach(subcategory => {
+          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
+        });
+        
+        return updatedFiles;
+      });
+    } else {
+      console.log(`Files uploaded for subcategory ${files[0]?.subcategory}:`, files);
+      console.log(`Received tempId: ${newTempId}`);
       
-      // Mettre à jour directement la référence aussi pour plus de sécurité
-      tempIdsRef.current = {
-        ...tempIdsRef.current,
-        [subcategory]: newTempId
-      };
-      console.log("Updated tempIdsRef directly:", tempIdsRef.current);
+      const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'front';
+      
+      // Mettre à jour la liste des fichiers téléchargés
+      setUploadedFiles(prev => ({
+        ...prev,
+        [subcategory]: [...(prev[subcategory] || []), ...files]
+      }));
+
+      // Stocker le tempId pour cette sous-catégorie UNIQUEMENT s'il est défini
+      if (newTempId) {
+        console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
+        setTempIds(prev => ({
+          ...prev,
+          [subcategory]: newTempId
+        }));
+        
+        // Mettre à jour directement la référence aussi pour plus de sécurité
+        tempIdsRef.current = {
+          ...tempIdsRef.current,
+          [subcategory]: newTempId
+        };
+        console.log("Updated tempIdsRef directly:", tempIdsRef.current);
+      }
     }
   };
 
@@ -153,7 +169,7 @@ const PhotosSection = ({
               category="photos"
               subcategory={view.id}
               nodeId={partNodeId}
-              onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, view.id)}
+              onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
               maxFiles={5}
               acceptedFileTypes="image/*"
               title={t('parts.photos.upload', { view: view.name.toLowerCase() })}

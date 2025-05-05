@@ -1,27 +1,88 @@
 # Dépendances
 node_modules/
 **/node_modules/
+package-lock.json
+yarn.lock
 
 # Fichiers d'environnement
 .env
 **/.env
+.env.local
+.env.development
+.env.test
+.env.production
 
 # Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
-# Build
-/build
-/dist
-**/build
-**/dist
+# Build et distribution
+/build/
+/dist/
+**/build/
+**/dist/
+**/dist-*/
+*.tsbuildinfo
 
-# Divers
-.DS_Store
-.vscode/
+# Dossier electron partiel
+# Le dossier electron n'est plus complètement ignoré
+/electron/dist-*/
+/electron/node_modules/
+/electron/*.exe
+
+# Fichiers d'exécution et binaires
+*.exe
+*.msi
+*.dll
+*.so
+*.dylib
+*.rar
+*.zip
+*.tar.gz
+*.blockmap
+*.dmg
+*.pkg
+
+# Uploads et fichiers générés
+/server/uploads/
+/server/scripts/out.txt
+/server/scripts/utils_/generated/
+
+# Fichiers temporaires
+.tmp/
+.temp/
+.cache/
+temp/
+tmp/
+
+# IDEs et éditeurs
 .idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.directory
+*.sublime-*
+*.code-workspace
+.history/
+.project
+.classpath
+.factorypath
+.settings/
 
-# Fichiers volumineux
-server/scripts/out.txt
-server/upload
+# Tests et couverture
+/coverage/
+/.nyc_output/
+/cypress/videos/
+/cypress/screenshots/
+
+# Fichiers spécifiques à l'OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

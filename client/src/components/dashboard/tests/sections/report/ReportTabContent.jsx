@@ -11,6 +11,7 @@ import './ReportStyles.css';
 
 // Importer les sections de rapport
 import ReportHeader from './sections/ReportPageHeader';
+import CoverPageSection from './sections/CoverPageSection';
 import IdentificationSection from './sections/IdentificationSection';
 import RecipeSection from './sections/RecipeSection';
 import LoadSection from './sections/LoadSection';

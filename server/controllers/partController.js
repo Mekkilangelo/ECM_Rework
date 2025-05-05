@@ -3,6 +3,33 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction utilitaire pour valider les données de la pièce
+ * @param {Object} data - Données de la pièce à valider
+ * @returns {Object} - Objet contenant les erreurs de validation
+ */
+const validatePartData = (data) => {
+  const errors = {};
+  
+  // Validation des champs obligatoires
+  if (!data.name || !data.name.trim()) {
+    errors.name = 'Le nom est requis';
+  }
+  
+  if (!data.designation || !data.designation.trim()) {
+    errors.designation = 'La désignation est requise';
+  }
+  
+  if (!data.parent_id) {
+    errors.parent = 'ID parent est requis';
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+/**
  * Récupérer toutes les pièces avec pagination
  */
 exports.getParts = async (req, res) => {
@@ -90,8 +117,9 @@ exports.createPart = async (req, res) => {
     const name = req.body.designation || null;
     
     // Validation des données
-    if (!name || !parent_id) {
-      return res.status(400).json({ message: 'Nom et ID parent sont requis' });
+    const { isValid, errors } = validatePartData({ name, designation, parent_id });
+    if (!isValid) {
+      return res.status(400).json({ message: 'Données invalides', errors });
     }
     
     // Vérifier si le parent existe et est une commande

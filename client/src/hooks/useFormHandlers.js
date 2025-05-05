@@ -1,9 +1,10 @@
 // src/hooks/useFormHandlers.js
-import { useState } from 'react';
+import { useCallback } from 'react';
+import enumService from '../services/enumService';
 
-const useFormHandlers = (formData, setFormData, errors, setErrors) => {
+const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}) => {
   // Gestionnaire de base pour les champs simples
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     
     // Gestion des propriétés imbriquées (avec notation par point)
@@ -34,14 +35,14 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
     if (errors && errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
-  };
+  }, [setFormData, errors, setErrors]);
 
   // Gestionnaire pour les sélecteurs (Select components)
-  const handleSelectChange = (selectedOption, fieldInfo) => {
+  const handleSelectChange = useCallback((selectedOption, fieldInfo) => {
     // Support pour différentes API de composants Select (React-Select, etc.)
     const name = typeof fieldInfo === 'string' 
       ? fieldInfo 
-      : fieldInfo.name || (fieldInfo.field || null);
+      : (fieldInfo.name || fieldInfo.field || null);
       
     if (!name) return;
     
@@ -72,10 +73,28 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
     if (errors && errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
-  };
+  }, [setFormData, errors, setErrors]);
+
+  // Gestionnaire pour les tableaux d'objets imbriqués (structure plus complexe)
+  const handleNestedArraySelectChange = useCallback((option, field, index, subField) => {
+    const value = option ? option.value : '';
+    
+    // Pour les tableaux d'objets imbriqués (e.g., equivalents ou chemical_elements)
+    const items = [...formData[field]];
+    items[index] = {
+      ...items[index],
+      [subField]: value
+    };
+    
+    setFormData({
+      ...formData,
+      [field]: items
+    });
+    
+  }, [formData, setFormData]);
 
   // Gestionnaire générique pour les tableaux d'éléments
-  const handleArrayAdd = (arrayPath, newItemTemplate) => {
+  const handleArrayAdd = useCallback((arrayPath, newItemTemplate) => {
     setFormData(prev => {
       // Gestion des chemins imbriqués
       if (arrayPath.includes('.')) {
@@ -103,10 +122,10 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
       const array = prev[arrayPath] || [];
       return { ...prev, [arrayPath]: [...array, newItemTemplate(array.length)] };
     });
-  };
+  }, [setFormData]);
 
   // Gestionnaire générique pour supprimer un élément d'un tableau
-  const handleArrayRemove = (arrayPath, index, minItems = 1) => {
+  const handleArrayRemove = useCallback((arrayPath, index, minItems = 1) => {
     setFormData(prev => {
       // Obtenir le tableau actuel (gérer les chemins imbriqués)
       let array;
@@ -119,6 +138,9 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
         
         // Navigation jusqu'à l'avant-dernier niveau
         for (let i = 0; i < parts.length - 1; i++) {
+          if (!current[parts[i]]) {
+            current[parts[i]] = {};
+          }
           current = current[parts[i]];
         }
         
@@ -153,13 +175,73 @@ const useFormHandlers = (formData, setFormData, errors, setErrors) => {
       
       return prev;
     });
-  };
+  }, [setFormData]);
+
+  // Fonction pour créer une nouvelle option dans un select
+  const handleCreateOption = useCallback(async (inputValue, fieldName, tableName, columnName) => {
+    try {
+      console.log('Creating new option for', fieldName, 'in', tableName, columnName);
+      console.log('Available refresh functions:', Object.keys(refreshOptionsFunctions));
+      
+      // Préparer la fonction de rafraîchissement basée sur le nom du champ
+      let refreshFunction;
+      
+      if (refreshOptionsFunctions) {
+        // Essayer différentes conventions de nommage pour trouver la fonction appropriée
+        if (tableName === 'units') {
+          refreshFunction = refreshOptionsFunctions.refreshUnitOptions;
+        } else if (tableName === 'parts' && columnName === 'designation') {
+          refreshFunction = refreshOptionsFunctions.refreshDesignationOptions;
+        } else if (refreshOptionsFunctions[`refresh${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}Options`]) {
+          refreshFunction = refreshOptionsFunctions[`refresh${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}Options`];
+        } else if (refreshOptionsFunctions[`refresh${tableName.charAt(0).toUpperCase() + tableName.slice(1)}Options`]) {
+          refreshFunction = refreshOptionsFunctions[`refresh${tableName.charAt(0).toUpperCase() + tableName.slice(1)}Options`];
+        } else if (refreshOptionsFunctions.refreshAllOptions) {
+          refreshFunction = refreshOptionsFunctions.refreshAllOptions;
+        }
+      }
+      
+      // Appeler l'API pour ajouter la nouvelle valeur d'énumération
+      const response = await enumService.addEnumValue(tableName, columnName, inputValue);
+      
+      if (response && response.success) {
+        // Mettre à jour le formulaire avec la nouvelle valeur
+        setFormData(prev => ({ ...prev, [fieldName]: inputValue }));
+        
+        // Rafraîchir les options si une fonction est disponible
+        if (refreshFunction && typeof refreshFunction === 'function') {
+          console.log(`Refreshing options with function:`, refreshFunction.name || 'anonymous');
+          await refreshFunction();
+        } else {
+          console.warn(`No refresh function found for field ${fieldName}, table ${tableName}, column ${columnName}`);
+          
+          // Essayer de rafraîchir toutes les options disponibles si aucune fonction spécifique n'est trouvée
+          const refreshFnKeys = Object.keys(refreshOptionsFunctions).filter(key => key.startsWith('refresh') && typeof refreshOptionsFunctions[key] === 'function');
+          
+          if (refreshFnKeys.length > 0) {
+            console.log('Trying fallback refresh with:', refreshFnKeys[0]);
+            await refreshOptionsFunctions[refreshFnKeys[0]]();
+          }
+        }
+        
+        return { value: inputValue, label: inputValue };
+      } else {
+        console.error(`Erreur lors de l'ajout de ${fieldName}:`, response);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Erreur lors de l'ajout de ${fieldName}:`, error);
+      return null;
+    }
+  }, [setFormData, refreshOptionsFunctions]);
 
   return {
     handleChange,
     handleSelectChange,
+    handleNestedArraySelectChange,
     handleArrayAdd,
-    handleArrayRemove
+    handleArrayRemove,
+    handleCreateOption
   };
 };
 

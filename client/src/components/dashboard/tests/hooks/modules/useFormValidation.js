@@ -1,16 +1,20 @@
 const useFormValidation = (formData, parentId, setErrors) => {
-    // Validation du formulaire
-    const validate = () => {
-      const newErrors = {};
-      
-      //if (!formData.name.trim()) newErrors.name = 'Le nom est requis';
-      if (!parentId) newErrors.parent = 'Commande parente non identifiée';
-      
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    };
+  const validate = () => {
+    const newErrors = {};
     
-    return { validate };
+    if (!parentId) newErrors.parent = 'validation.required.parentPart';
+    
+    // Rendre la date de test obligatoire
+    if (!formData.testDate) newErrors.testDate = 'validation.required.testDate';
+    
+    setErrors(newErrors);
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors
+    };
   };
   
-  export default useFormValidation;
+  return { validate };
+};
+
+export default useFormValidation;

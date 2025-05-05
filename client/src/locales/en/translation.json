@@ -17,7 +17,69 @@
     "unit": "Unit",
     "min": "Min",
     "max": "Max",
-    "addOption": "Add option"
+    "addOption": "Add option",
+    "back": "Back"
+  },
+  
+  "form": {
+    "requiredFields": "Required fields"
+  },
+  
+  "api": {
+    "success": {
+      "created": "{{entityType}} successfully created",
+      "updated": "{{entityType}} successfully updated"
+    },
+    "error": {
+      "create": "Error creating {{entityType}}",
+      "update": "Error updating {{entityType}}"
+    }
+  },
+  
+  "validation": {
+    "required": {
+      "name": "Name is required",
+      "country": "Country is required",
+      "clientName": "Client name is required",
+      "orderDate": "Order date is required",
+      "parentClient": "Parent client is required",
+      "designation": "Designation is required",
+      "parentOrder": "Parent order is required",
+      "parentPart": "Parent part is required",
+      "testDate": "Test date is required"
+    },
+    "invalid": {
+      "data": "Invalid data"
+    },
+    "duplicate": {
+      "clientName": "A client with this name already exists",
+      "clientCode": "This client code already exists"
+    }
+  },
+  
+  "errors": {
+    "notFound": {
+      "client": "Client not found"
+    },
+    "fetch": {
+      "clients": "Error fetching clients",
+      "client": "Error fetching client"
+    },
+    "create": {
+      "client": "Error creating client"
+    },
+    "update": {
+      "client": "Error updating client"
+    },
+    "delete": {
+      "client": "Error deleting client"
+    }
+  },
+  
+  "success": {
+    "delete": {
+      "client": "Client successfully deleted"
+    }
   },
   
   "closeModal": {
@@ -199,7 +261,8 @@
       "surfaceHardness": "Surface Hardness",
       "toothHardness": "Tooth Hardness",
       "ecdDepth": "ECD Depth",
-      "hardness": "Hardness"
+      "hardness": "Hardness",
+      "ecdHardness": "ECD Hardness"
     }
   },
   
@@ -209,7 +272,30 @@
     "details": "Steel details",
     "form": "Steel form",
     "add": "Add steel",
-    "edit": "Edit steel"
+    "edit": "Edit steel",
+    "steelInformation": "Steel Information",
+    "grade": "Grade",
+    "family": "Family",
+    "selectFamily": "Select a family",
+    "noFamilyAvailable": "No family available",
+    "standard": "Standard",
+    "selectStandard": "Select a standard",
+    "noStandardAvailable": "No standard available",
+    "equivalents": "Equivalents",
+    "selectEquivalentSteel": "Select an equivalent steel",
+    "noSteelAvailable": "No steel available",
+    "addEquivalent": "Add equivalent",
+    "chemicalComposition": "Chemical Composition",
+    "element": "Element",
+    "noElementAvailable": "No element available",
+    "rate": "Rate",
+    "value": "Value",
+    "type": "Type",
+    "min": "Min",
+    "max": "Max",
+    "addElement": "Add element",
+    "modifying": "Modifying...",
+    "creating": "Creating..."
   },
   
   "tests": {

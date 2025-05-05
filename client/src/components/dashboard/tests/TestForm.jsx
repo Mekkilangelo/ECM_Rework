@@ -92,12 +92,20 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
     ...formHandlers
   } = useTestForm(test, onClose, onTestCreated, onTestUpdated);
 
-  // Fonction pour rendre les titres d'onglets avec mise en gras pour l'onglet actif
-  const renderTabTitle = (title, eventKey) => (
-    <span className={activeTab === eventKey ? 'font-weight-bold' : ''}>
-      {title}
-    </span>
-  );
+  // Fonction pour rendre les titres d'onglets avec mise en gras et rouge pour l'onglet actif
+  const renderTabTitle = (title, eventKey) => {
+    // Style de l'onglet actif : gras et rouge (utilisant la même couleur que Bootstrap danger)
+    const activeStyle = {
+      fontWeight: 'bold',
+      color: '#dc3545' // Rouge Bootstrap danger, même couleur que pour les sections étendues
+    };
+    
+    return (
+      <span style={activeTab === eventKey ? activeStyle : {}}>
+        {title}
+      </span>
+    );
+  };
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   useEffect(() => {
@@ -133,9 +141,14 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
         
         {errors.parent && (
           <div className="alert alert-danger mb-3">
-            {errors.parent}
+            {t(errors.parent)}
           </div>
         )}
+        
+        {/* Légende pour les champs obligatoires */}
+        <div className="text-muted small mb-3">
+          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+        </div>
         
         <Form onSubmit={handleSubmit}>
 
@@ -211,10 +224,10 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
 
           {/* Boutons de soumission */}
           <div className="d-flex justify-content-end mt-4">
-            <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
+            <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
               {t('common.cancel')}
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button variant="warning" type="submit" disabled={loading}>
               {loading 
                 ? (isEditMode ? t('tests.modifying') : t('tests.creating')) 
                 : (isEditMode ? t('common.edit') : t('common.create'))}

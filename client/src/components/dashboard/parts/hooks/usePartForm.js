@@ -1,14 +1,13 @@
 // usePartForm.js
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
-import useFormHandlers from './modules/useFormHandlers';
+import usePartHandlers from './modules/usePartHandlers';
 import useFormValidation from './modules/useFormValidation';
 import usePartSubmission from './modules/usePartSubmission';
-import useOptionsData from './modules/useOptionsData';
+import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import usePartData from './modules/usePartData';
-import useSelectHelpers from './modules/useSelectHelpers';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
 const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
@@ -23,7 +22,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     setFileAssociationCallback(() => associateFilesFunc);
   }, []);
   
-  // État du formulaire et initialisation
+  // État du formulaire et initialisation (sans les options de select)
   const { 
     formData, 
     setFormData, 
@@ -35,37 +34,51 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     setMessage,
     fetchingPart,
     setFetchingPart,
-    designationOptions,
-    setDesignationOptions,
-    unitOptions,
-    setUnitOptions,
-    steelOptions,
-    setSteelOptions,
     setParentId
   } = useFormState();
-  
-  // Utilitaires pour les options de Select
-  const {
-    getSelectedOption,
-    getLengthUnitOptions,
-    getWeightUnitOptions,
-    getHardnessUnitOptions,
-    selectStyles
-  } = useSelectHelpers(unitOptions);
 
-  // Chargement des options pour les selects et récupération de la fonction de rafraîchissement
-  const { 
+  // Définir les options à charger avec useRef pour éviter les recréations
+  const optionsConfig = useRef({
+    fetchClientOptions: false,
+    fetchSteelOptions: true,     // Activer les options acier
+    fetchPartOptions: true,      // Activer les options pièces (désignations)
+    fetchTestOptions: false,
+    fetchFurnaceOptions: false,
+    fetchUnitOptions: true       // Activer les options unités
+  }).current;
+
+  // Utiliser le hook unifié pour charger les options
+  const {
+    // Options que nous allons utiliser
+    designationOptions,
+    steelOptions,
+    // Options d'unités
+    lengthUnitOptions,
+    weightUnitOptions,
+    timeUnitOptions,
+    temperatureUnitOptions,
+    pressureUnitOptions,
+    hardnessUnitOptions,
+    
+    // Fonctions utilitaires générales
+    selectStyles,
+    getSelectedOption,
+    
+    // Fonctions de rafraîchissement
     refreshSteelOptions,
     refreshDesignationOptions,
     refreshUnitOptions,
     refreshAllOptions
-  } = useOptionsData(
-    setLoading,
-    setDesignationOptions,
-    setUnitOptions,
-    setSteelOptions
-  );
+  } = useOptionsFetcher(setLoading, optionsConfig);
 
+  // Fonction pour filtrer les options d'unités par type
+  // eslint-disable-next-line no-unused-vars
+  const filterUnitsByType = useCallback((units, type) => {
+    if (!units || !Array.isArray(units)) return [];
+    return units.filter(unit => unit.type === type);
+  }, []);
+
+  // Regrouper les fonctions de rafraîchissement pour les passer à useFormHandlers
   const refreshFunctions = {
     refreshDesignationOptions,
     refreshSteelOptions,
@@ -78,7 +91,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     handleChange, 
     handleSelectChange,
     handleCreateOption
-  } = useFormHandlers(
+  } = usePartHandlers(
     formData, 
     setFormData, 
     errors, 
@@ -94,9 +107,6 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     setFetchingPart,
     setParentId
   );
-
-  // Stocker les données initiales pour comparer les changements
-  const [initialFormData, setInitialFormData] = useState(null);
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
@@ -116,26 +126,31 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     fileAssociationCallback
   );
 
-  // Gestion de la confirmation de fermeture
+  // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
   const { 
     showConfirmModal, 
     pendingClose, 
+    isModified,
+    setModified,
+    resetInitialState,
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
     saveAndClose 
   } = useCloseConfirmation(
-    formData, 
-    initialFormData || formData, 
-    handleSubmit, 
+    formData,
+    loading,
+    fetchingPart,
+    handleSubmit,
     onClose
   );
 
+  // Réinitialiser l'état initial après une sauvegarde réussie
   useEffect(() => {
-    if (!fetchingPart && formData && !initialFormData) {
-      setInitialFormData(JSON.parse(JSON.stringify(formData)));
+    if (message && message.type === 'success') {
+      resetInitialState();
     }
-  }, [fetchingPart, formData, initialFormData]);
+  }, [message, resetInitialState]);
 
   return {
     formData,
@@ -146,25 +161,30 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     parentId,
     designationOptions,
     steelOptions,
+    // Ajouter les options d'unités qui manquent
+    lengthUnitOptions,
+    weightUnitOptions,
+    timeUnitOptions,
+    temperatureUnitOptions,
+    pressureUnitOptions,
+    hardnessUnitOptions,
     handleChange,
     handleSelectChange,
     handleCreateOption,
     handleSubmit,
     handleFileAssociationNeeded,
     getSelectedOption,
-    getLengthUnitOptions,
-    getWeightUnitOptions,
-    getHardnessUnitOptions,
     selectStyles,
     refreshSteels: refreshSteelOptions,
     setFileAssociationCallback,
+    isModified,
+    setModified,
     showConfirmModal,
     pendingClose,
     handleCloseRequest,
     confirmClose,
     cancelClose,
     saveAndClose,
-    
   };
 };
 

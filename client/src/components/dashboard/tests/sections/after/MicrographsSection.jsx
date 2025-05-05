@@ -53,17 +53,34 @@ const MicrographsSection = ({
     }
   };
   
-  const handleFilesUploaded = (files, newTempId, subcategory) => {
-    setUploadedFiles(prev => ({
-      ...prev,
-      [subcategory]: [...(prev[subcategory] || []), ...files]
-    }));
-    
-    if (newTempId) {
-      setTempIds(prev => ({
+  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+    if (operation === 'delete') {
+      // Pour une suppression, mettre à jour toutes les sous-catégories
+      setUploadedFiles(prev => {
+        const updatedFiles = { ...prev };
+        
+        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
+        Object.keys(updatedFiles).forEach(subcategory => {
+          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
+        });
+        
+        return updatedFiles;
+      });
+    } else {
+      // Pour l'ajout, mettre à jour la sous-catégorie spécifique
+      const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'x50';
+      
+      setUploadedFiles(prev => ({
         ...prev,
-        [subcategory]: newTempId
+        [subcategory]: [...(prev[subcategory] || []), ...files]
       }));
+      
+      if (newTempId) {
+        setTempIds(prev => ({
+          ...prev,
+          [subcategory]: newTempId
+        }));
+      }
     }
   };
   
@@ -111,7 +128,7 @@ const MicrographsSection = ({
               category={`micrographs-result-${resultIndex}`}  // Modification ici
               subcategory={view.id}
               nodeId={testNodeId}
-              onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, view.id)}
+              onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
               maxFiles={5}
               acceptedFileTypes={{
                 'application/pdf': ['.pdf'],

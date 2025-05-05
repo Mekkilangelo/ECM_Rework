@@ -74,90 +74,97 @@ const CollapsibleSection = ({
       transition: 'background-color 0.2s ease'
     };
 
+    // Couleur danger de Bootstrap pour le niveau 0 (rouge de base)
+    const dangerRed = '#dc3545';
+    
     // Variations selon le niveau
     const levelVariations = [
       { // Niveau 0 - Principal
         card: {
           ...baseCardStyle,
-          borderColor: isExpanded ? '#d1d9e6' : '#e9ecef',
-          boxShadow: isExpanded ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+          borderColor: dangerRed,
+          boxShadow: isExpanded ? '0 2px 4px rgba(220,53,69,0.2)' : 'none'
         },
         header: {
           ...baseHeaderStyle,
-          backgroundColor: isExpanded ? '#f8f9fa' : '#ffffff',
-          borderBottom: isExpanded ? '1px solid #ced4da' : 'none',
+          backgroundColor: isExpanded ? dangerRed : '#ffffff',
+          borderBottom: isExpanded ? `1px solid ${dangerRed}` : 'none',
           padding: '0.9rem 1.2rem'
         },
         body: {
-          padding: '1.2rem'
+          padding: '1.2rem',
+          backgroundColor: isExpanded ? '#fff8f8' : '#ffffff',
         },
         title: {
           fontSize: '1.1rem',
           fontWeight: '600',
-          color: isExpanded ? '#495057' : '#6c757d'
+          color: isExpanded ? '#ffffff' : dangerRed
         }
       },
       { // Niveau 1
         card: {
           ...baseCardStyle,
-          borderColor: isExpanded ? '#d8dee9' : '#e9ecef',
+          borderColor: '#e35d6a',
           marginLeft: '0.25rem'
         },
         header: {
           ...baseHeaderStyle,
-          backgroundColor: isExpanded ? '#f5f6f8' : '#fafafa',
-          borderBottom: isExpanded ? '1px solid #e4e7ed' : 'none',
+          backgroundColor: isExpanded ? '#e35d6a' : '#ffffff',
+          borderBottom: isExpanded ? '1px solid #e35d6a' : 'none',
           padding: '0.8rem 1.1rem'
         },
         body: {
-          padding: '1.1rem'
+          padding: '1.1rem',
+          backgroundColor: isExpanded ? '#fff9f9' : '#ffffff',
         },
         title: {
           fontSize: '1rem',
           fontWeight: '500',
-          color: isExpanded ? '#495057' : '#6c757d'
+          color: isExpanded ? '#ffffff' : '#e35d6a'
         }
       },
       { // Niveau 2
         card: {
           ...baseCardStyle,
-          borderColor: isExpanded ? '#dee2e6' : '#efefef',
+          borderColor: '#ea858f',
           marginLeft: '0.5rem'
         },
         header: {
           ...baseHeaderStyle,
-          backgroundColor: isExpanded ? '#f2f4f6' : '#f8f8f8',
-          borderBottom: isExpanded ? '1px solid #e2e6ea' : 'none',
+          backgroundColor: isExpanded ? '#ea858f' : '#ffffff',
+          borderBottom: isExpanded ? '1px solid #ea858f' : 'none',
           padding: '0.7rem 1rem'
         },
         body: {
-          padding: '1rem'
+          padding: '1rem',
+          backgroundColor: isExpanded ? '#fffafa' : '#ffffff',
         },
         title: {
           fontSize: '0.95rem',
           fontWeight: '500',
-          color: isExpanded ? '#495057' : '#6c757d'
+          color: isExpanded ? '#ffffff' : '#ea858f'
         }
       },
       { // Niveau 3
         card: {
           ...baseCardStyle,
-          borderColor: isExpanded ? '#e2e6ea' : '#efefef',
+          borderColor: '#f1adb4',
           marginLeft: '0.75rem'
         },
         header: {
           ...baseHeaderStyle,
-          backgroundColor: isExpanded ? '#f0f2f4' : '#f6f6f6',
-          borderBottom: isExpanded ? '1px solid #dde2e6' : 'none',
+          backgroundColor: isExpanded ? '#f1adb4' : '#ffffff',
+          borderBottom: isExpanded ? '1px solid #f1adb4' : 'none',
           padding: '0.6rem 0.9rem'
         },
         body: {
-          padding: '0.9rem'
+          padding: '0.9rem',
+          backgroundColor: isExpanded ? '#fffbfb' : '#ffffff',
         },
         title: {
           fontSize: '0.9rem',
           fontWeight: '500',
-          color: isExpanded ? '#495057' : '#6c757d'
+          color: isExpanded ? '#ffffff' : '#f1adb4'
         }
       }
     ];
@@ -169,7 +176,7 @@ const CollapsibleSection = ({
 
   // Styles spécifiques pour l'icône
   const iconStyle = {
-    color: isExpanded ? '#4a89dc' : '#adb5bd',
+    color: isExpanded ? '#ffffff' : '#dc3545',
     transition: 'color 0.2s ease, transform 0.2s ease',
     transform: isExpanded ? 'scale(1.1)' : 'scale(1)'
   };

@@ -32,14 +32,14 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
     message,
     designationOptions,
     steelOptions,
+    lengthUnitOptions,
+    weightUnitOptions, 
+    hardnessUnitOptions,
     handleChange,
     handleSelectChange,
     handleCreateOption,
     handleSubmit,
     getSelectedOption,
-    getLengthUnitOptions,
-    getWeightUnitOptions,
-    getHardnessUnitOptions,
     selectStyles,
     refreshSteels,
     setFileAssociationCallback,
@@ -93,6 +93,10 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
     }
   };
 
+  console.log("PartForm - lengthUnitOptions:", lengthUnitOptions);
+  console.log("PartForm - weightUnitOptions:", weightUnitOptions);
+  console.log("PartForm - hardnessUnitOptions:", hardnessUnitOptions);
+
   if (fetchingPart) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
   }
@@ -110,6 +114,12 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             {errors.parent}
           </div>
         )}
+        
+        {/* Légende pour les champs obligatoires */}
+        <div className="text-muted small mb-3">
+          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+        </div>
+        
         <Form onSubmit={handleSubmit} autoComplete="off">
           <CollapsibleSection
             title={t('parts.sections.basicInfo')}
@@ -142,8 +152,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               handleSelectChange={handleSelectChange}
               handleCreateOption={handleCreateOption}
               getSelectedOption={getSelectedOption}
-              getLengthUnitOptions={getLengthUnitOptions}
-              getWeightUnitOptions={getWeightUnitOptions}
+              lengthUnitOptions={lengthUnitOptions} // Passer directement les options d'unités
+              weightUnitOptions={weightUnitOptions} // Passer directement les options d'unités
               loading={loading}
               selectStyles={selectStyles}
             />
@@ -178,7 +188,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               handleSelectChange={handleSelectChange}
               handleCreateOption={handleCreateOption}
               getSelectedOption={getSelectedOption}
-              getHardnessUnitOptions={getHardnessUnitOptions}
+              hardnessUnitOptions={hardnessUnitOptions} // Passer directement les options d'unités
               loading={loading}
               selectStyles={selectStyles}
             />
@@ -197,11 +207,11 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
           </CollapsibleSection>
           
           <div className="d-flex justify-content-end mt-4">
-            <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
+            <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
               {t('common.cancel')}
             </Button>
             <Button
-              variant="primary"
+              variant="warning"
               type="submit"
               disabled={loading}
             >

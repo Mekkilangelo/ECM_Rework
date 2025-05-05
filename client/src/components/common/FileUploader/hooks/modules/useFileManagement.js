@@ -20,9 +20,9 @@ const useFileManagement = (
       // Update the internal state
       setInternalUploadedFiles(updatedFiles);
       
-      // Pass the updated files to the callback
+      // Pass the updated files to the callback with a 'delete' operation flag
       if (onFilesUploaded) {
-        onFilesUploaded(updatedFiles, null);
+        onFilesUploaded(updatedFiles, null, 'delete', fileId);
       }
     } catch (err) {
       setError('Erreur lors de la suppression du fichier');

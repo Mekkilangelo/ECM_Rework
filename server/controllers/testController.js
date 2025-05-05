@@ -4,6 +4,31 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * Fonction utilitaire pour valider les données du test
+ * @param {Object} data - Données du test à valider
+ * @returns {Object} - Objet contenant les erreurs de validation
+ */
+const validateTestData = (data) => {
+  const errors = {};
+  
+  // Validation des champs obligatoires
+  if (!data.parent_id) {
+    errors.parent = 'ID parent est requis';
+  }
+  
+  // Vous pouvez ajouter d'autres validations si nécessaire
+  // Par exemple, si test_date devient obligatoire:
+  // if (!data.test_date) {
+  //   errors.test_date = 'La date du test est requise';
+  // }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+};
+
+/**
  * Génère un nom séquentiel pour un nouveau test basé sur les tests existants avec le même parent
  * @param {string} parentId - ID du nœud parent
  * @returns {Promise<string>} - Nom généré (TRIAL_X)
@@ -143,8 +168,9 @@ exports.createTest = async (req, res) => {
     } = req.body;
     
     // Validation des données
-    if (!parent_id) {
-      return res.status(400).json({ message: 'ID parent requis' });
+    const { isValid, errors } = validateTestData(req.body);
+    if (!isValid) {
+      return res.status(400).json({ message: 'Données invalides', errors });
     }
     
     // Vérifier si le parent existe
@@ -173,13 +199,14 @@ exports.createTest = async (req, res) => {
       // Générer le numéro de commande basé sur l'ID du nœud
       const test_code = `TRIAL_${newNode.id}`;
 
-      // Créer les données du test
+      // Créer les données du test - Utiliser 'Pending' comme valeur par défaut pour le statut si non spécifié
+      // Les valeurs acceptées sont 'OK', 'NOK', 'Pending'
       await Test.create({
         node_id: newNode.id,
         test_code,
         test_date: test_date || null,
         load_number: load_number || null,
-        status: status || 'planned',
+        status: status || 'Pending',
         location,
         is_mesured,
         furnace_data,

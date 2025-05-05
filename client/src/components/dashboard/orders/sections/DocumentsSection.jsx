@@ -47,19 +47,42 @@ const DocumentsSection = ({
     }
   };
   
-  const handleFilesUploaded = (files, newTempId, subcategory) => {
-    // Mettre à jour la liste des fichiers téléchargés
-    setUploadedFiles(prev => ({
-      ...prev,
-      [subcategory]: [...(prev[subcategory] || []), ...files]
-    }));
-    
-    // Stocker le tempId pour cette sous-catégorie
-    if (newTempId) {
-      setTempIds(prev => ({
-        ...prev,
-        [subcategory]: newTempId
-      }));
+  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+    if (operation === 'delete') {
+      // Pour une suppression, mettre à jour uniquement la sous-catégorie concernée
+      setUploadedFiles(prev => {
+        // Trouver la sous-catégorie qui contient ce fichier
+        const updatedFiles = { ...prev };
+        
+        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
+        Object.keys(updatedFiles).forEach(subcategory => {
+          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
+        });
+        
+        return updatedFiles;
+      });
+    } else {
+      // Pour l'ajout, mettre à jour la sous-catégorie spécifique
+      const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'all_documents';
+      
+      setUploadedFiles(prev => {
+        const updatedFiles = { ...prev };
+        // Garantir que la sous-catégorie existe
+        if (!updatedFiles[subcategory]) {
+          updatedFiles[subcategory] = [];
+        }
+        // Ajouter les nouveaux fichiers
+        updatedFiles[subcategory] = [...updatedFiles[subcategory], ...files];
+        return updatedFiles;
+      });
+      
+      // Stocker le tempId pour cette sous-catégorie si fourni
+      if (newTempId) {
+        setTempIds(prev => ({
+          ...prev,
+          [subcategory]: newTempId
+        }));
+      }
     }
   };
   
@@ -70,7 +93,7 @@ const DocumentsSection = ({
           category="documents"
           subcategory={'all_documents'}
           nodeId={orderNodeId}
-          onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, 'all_documents')}
+          onFilesUploaded={handleFilesUploaded}
           maxFiles={5}
           acceptedFileTypes={{
             'application/pdf': ['.pdf'],

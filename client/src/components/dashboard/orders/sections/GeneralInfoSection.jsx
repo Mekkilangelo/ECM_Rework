@@ -11,7 +11,7 @@ const GeneralInfoSection = ({ formData, errors, handleChange }) => {
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('orders.generalInfo.requestDate')} *</Form.Label>
+            <Form.Label>{t('orders.generalInfo.requestDate')} <span className="text-danger fw-bold">*</span></Form.Label>
             <Form.Control
               type="date"
               name="order_date"
@@ -20,7 +20,7 @@ const GeneralInfoSection = ({ formData, errors, handleChange }) => {
               isInvalid={!!errors.order_date}
             />
             <Form.Control.Feedback type="invalid">
-              {errors.order_date}
+              {errors.order_date && t(errors.order_date)}
             </Form.Control.Feedback>
           </Form.Group>
         </Col>

@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
-import { Form, Button, Row, Col, Spinner, Modal } from 'react-bootstrap';
+import { Form, Button, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import useOrderForm from './hooks/useOrderForm';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
@@ -27,10 +27,7 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
     addContact,
     removeContact,
     handleSubmit,
-    tempFileId,
-    setTempFileId,
     showConfirmModal,
-    pendingClose,
     handleCloseRequest,
     confirmClose,
     cancelClose,
@@ -67,6 +64,12 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
           {errors.parent}
         </div>
       )}
+      
+      {/* Légende pour les champs obligatoires */}
+      <div className="text-muted small mb-3">
+        <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+      </div>
+      
       <Form onSubmit={handleSubmit} autoComplete="off">
         <CollapsibleSection
           title={t('orders.sections.basicInfo')}
@@ -108,10 +111,10 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
         </CollapsibleSection>
 
         <div className="d-flex justify-content-end mt-3">
-          <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
+          <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
             {t('common.cancel')}
           </Button>
-          <Button variant="danger" type="submit" disabled={loading}>
+          <Button variant="warning" type="submit" disabled={loading}>
             {loading 
               ? (order ? t('common.modifying') : t('common.creating')) 
               : (order ? t('common.edit') : t('common.create'))}

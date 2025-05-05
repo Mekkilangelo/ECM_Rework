@@ -104,10 +104,20 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.part_count}</td>
                   </tr>
                 )}
-                {loadData.weight && (
+                {loadData.floor_count && (
                   <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Nombre d'étages</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.floor_count}</td>
+                  </tr>
+                )}
+                {loadData.weight && (
+                  <tr>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Poids total</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.weight.value} {loadData.weight.unit}</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>
+                      {loadData.weight.unit && loadData.weight.unit.toLowerCase() === 'g' 
+                        ? `${(loadData.weight.value / 1000).toFixed(2)} kg`
+                        : `${loadData.weight.value} ${loadData.weight.unit}`}
+                    </td>
                   </tr>
                 )}
                 {loadData.dimensions && (
@@ -195,6 +205,63 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
             </div>
           )}
         </div>
+
+        {/* Section Dimensions avec tableau détaillé */}
+        {loadData.size && (
+          <div style={{ 
+            padding: '20px',
+            borderTop: '1px solid #eee',
+            backgroundColor: '#f9f9f9'
+          }}>
+            <h4 style={{ 
+              fontSize: '16px', 
+              marginBottom: '15px',
+              fontWeight: '600',
+              color: '#555'
+            }}>
+              Dimensions détaillées
+            </h4>
+            <table style={{ 
+              width: '100%', 
+              borderCollapse: 'collapse', 
+              border: '1px solid #dee2e6',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8f9fa' }}>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Dimension</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Valeur</th>
+                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Unité</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadData.size.length && (
+                  <tr>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Longueur</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.value || 'Non spécifié'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.unit || 'mm'}</td>
+                  </tr>
+                )}
+                {loadData.size.width && (
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Largeur</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.value || 'Non spécifié'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.unit || 'mm'}</td>
+                  </tr>
+                )}
+                {loadData.size.height && (
+                  <tr>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Hauteur</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.value || 'Non spécifié'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.unit || 'mm'}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Section 2: Photos supplémentaires avec présentation améliorée */}
         {loadPhotos.length > 1 && (

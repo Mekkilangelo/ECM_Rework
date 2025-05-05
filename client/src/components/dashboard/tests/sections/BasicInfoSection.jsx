@@ -36,7 +36,7 @@ const BasicInfoSection = ({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.basicInfo.testDate')}</Form.Label>
+            <Form.Label>{t('tests.basicInfo.testDate')} <span className="text-danger fw-bold">*</span></Form.Label>
             <Form.Control
               type="date"
               name="testDate"
@@ -44,7 +44,13 @@ const BasicInfoSection = ({
               onChange={handleChange}
               data-date-format={dateFormat}
               title={dateFormat}
+              isInvalid={!!errors.testDate}
             />
+            {errors.testDate && (
+              <Form.Control.Feedback type="invalid">
+                {t(errors.testDate)}
+              </Form.Control.Feedback>
+            )}
           </Form.Group>
         </Col>
       </Row>

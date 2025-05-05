@@ -4,9 +4,11 @@ import { Container, Row, Col, Button } from 'react-bootstrap';
 import { NavigationProvider, useNavigation } from '../context/NavigationContext';
 import HierarchyManager from '../components/dashboard/HierarchyManager';
 import { useHierarchy } from '../hooks/useHierarchy';
+import { useTranslation } from 'react-i18next';
 
 // Composant Dashboard qui utilise les hooks
 const DashboardContent = () => {
+  const { t } = useTranslation();
   const { currentLevel, hierarchyState, currentPage, itemsPerPage, setItemsPerPage, setCurrentPage, navigateBack } = useNavigation();
   const { totalItems } = useHierarchy();
   
@@ -88,7 +90,7 @@ const DashboardContent = () => {
                 className="btn btn-secondary me-6 mb-3 mt-3"
                 onClick={handleBackClick}
               >
-                Retour
+                {t('common.back')}
               </Button>
             )}
           </Col>

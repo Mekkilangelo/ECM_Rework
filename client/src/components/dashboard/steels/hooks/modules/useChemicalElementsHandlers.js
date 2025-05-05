@@ -1,10 +1,13 @@
 const useChemicalElementsHandlers = (formData, setFormData) => {
     // Ajouter un élément chimique
     const handleAddChemicalElement = () => {
+      // S'assurer que chemical_elements est un tableau
+      const currentElements = Array.isArray(formData.chemical_elements) ? formData.chemical_elements : [];
+      
       setFormData({
         ...formData,
         chemical_elements: [
-          ...formData.chemical_elements,
+          ...currentElements,
           { 
             element: '',
             rate_type: 'exact',
@@ -18,7 +21,13 @@ const useChemicalElementsHandlers = (formData, setFormData) => {
     
     // Supprimer un élément chimique
     const handleRemoveChemicalElement = (index) => {
-      const updatedElements = [...formData.chemical_elements];
+      // S'assurer que chemical_elements est un tableau
+      const currentElements = Array.isArray(formData.chemical_elements) ? formData.chemical_elements : [];
+      if (currentElements.length <= index) {
+        return; // Ne rien faire si l'index est hors limites
+      }
+      
+      const updatedElements = [...currentElements];
       updatedElements.splice(index, 1);
       
       setFormData({
@@ -29,7 +38,13 @@ const useChemicalElementsHandlers = (formData, setFormData) => {
     
     // Modifier un élément chimique
     const handleChemicalElementChange = (index, field, value) => {
-      const updatedElements = [...formData.chemical_elements];
+      // S'assurer que chemical_elements est un tableau
+      const currentElements = Array.isArray(formData.chemical_elements) ? formData.chemical_elements : [];
+      if (currentElements.length <= index) {
+        return; // Ne rien faire si l'index est hors limites
+      }
+      
+      const updatedElements = [...currentElements];
       updatedElements[index] = {
         ...updatedElements[index],
         [field]: value
@@ -43,7 +58,13 @@ const useChemicalElementsHandlers = (formData, setFormData) => {
     
     // Changer le type de taux (exact ou plage)
     const handleRateTypeChange = (index, rateType) => {
-      const updatedElements = [...formData.chemical_elements];
+      // S'assurer que chemical_elements est un tableau
+      const currentElements = Array.isArray(formData.chemical_elements) ? formData.chemical_elements : [];
+      if (currentElements.length <= index) {
+        return; // Ne rien faire si l'index est hors limites
+      }
+      
+      const updatedElements = [...currentElements];
       updatedElements[index] = {
         ...updatedElements[index],
         rate_type: rateType
@@ -64,4 +85,3 @@ const useChemicalElementsHandlers = (formData, setFormData) => {
   };
   
   export default useChemicalElementsHandlers;
-  

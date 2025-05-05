@@ -48,30 +48,44 @@ const LoadDesignSection = ({
     }
   };
   
-  const handleFilesUploaded = (files, newTempId, subcategory) => {
-    console.log(`Files uploaded for subcategory ${subcategory}:`, files);
-    console.log(`Received tempId: ${newTempId}`);
-    
-    // Mettre à jour la liste des fichiers téléchargés
-    setUploadedFiles(prev => ({
-      ...prev,
-      [subcategory]: [...(prev[subcategory] || []), ...files]
-    }));
-    
-    // Stocker le tempId pour cette sous-catégorie
-    if (newTempId) {
-      console.log(`Storing tempId ${newTempId} for subcategory ${subcategory}`);
-      setTempIds(prev => ({
+  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+    if (operation === 'delete') {
+      // Pour une suppression, mettre à jour toutes les sous-catégories
+      setUploadedFiles(prev => {
+        const updatedFiles = { ...prev };
+        
+        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
+        Object.keys(updatedFiles).forEach(subcategory => {
+          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
+        });
+        
+        return updatedFiles;
+      });
+    } else {
+      console.log(`Files uploaded for subcategory load_design:`, files);
+      console.log(`Received tempId: ${newTempId}`);
+      
+      // Mettre à jour la liste des fichiers téléchargés
+      setUploadedFiles(prev => ({
         ...prev,
-        [subcategory]: newTempId
+        'load_design': [...(prev['load_design'] || []), ...files]
       }));
       
-      // Mettre à jour directement la référence aussi pour plus de sécurité
-      tempIdsRef.current = {
-        ...tempIdsRef.current,
-        [subcategory]: newTempId
-      };
-      console.log("Updated tempIdsRef directly:", tempIdsRef.current);
+      // Stocker le tempId pour cette sous-catégorie
+      if (newTempId) {
+        console.log(`Storing tempId ${newTempId} for subcategory load_design`);
+        setTempIds(prev => ({
+          ...prev,
+          'load_design': newTempId
+        }));
+        
+        // Mettre à jour directement la référence aussi pour plus de sécurité
+        tempIdsRef.current = {
+          ...tempIdsRef.current,
+          'load_design': newTempId
+        };
+        console.log("Updated tempIdsRef directly:", tempIdsRef.current);
+      }
     }
   };
   
@@ -136,7 +150,7 @@ const LoadDesignSection = ({
           category="load_design"
           subcategory={'load_design'}
           nodeId={testNodeId}
-          onFilesUploaded={(files, newTempId) => handleFilesUploaded(files, newTempId, 'load_design')}
+          onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
           maxFiles={5}
           acceptedFileTypes={{
             'application/pdf': ['.pdf'],

@@ -2,7 +2,8 @@ const useFormValidation = (formData, setErrors) => {
     const validate = () => {
       const newErrors = {};
       
-      if (!formData.name.trim()) newErrors.name = 'Le nom est requis';
+      if (!formData.name.trim()) newErrors.name = 'validation.required.clientName';
+      if (!formData.country) newErrors.country = 'validation.required.country';
       
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;

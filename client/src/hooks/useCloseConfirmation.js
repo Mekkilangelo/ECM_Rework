@@ -1,89 +1,77 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import useModifiedState from './useModifiedState';
 
 /**
- * Hook générique pour gérer la confirmation de fermeture d'un formulaire
+ * Hook générique amélioré pour gérer la confirmation de fermeture d'un formulaire
  * @param {Object} formData - Données actuelles du formulaire
- * @param {Object} initialFormData - Données initiales du formulaire
- * @param {Function} handleSubmit - Fonction pour soumettre le formulaire
+ * @param {boolean} isLoading - État de chargement du formulaire
+ * @param {boolean} isFetching - État de récupération des données
+ * @param {Function} onSubmit - Fonction pour soumettre le formulaire
  * @param {Function} onClose - Fonction de fermeture fournie par le composant parent
- * @param {Function} [isModified] - Fonction optionnelle personnalisée pour déterminer si le formulaire a été modifié
+ * @param {Function} [customIsModifiedCheck] - Fonction optionnelle personnalisée pour déterminer si le formulaire a été modifié
  * @returns {Object} - Fonctions et états pour gérer la confirmation de fermeture
  */
 const useCloseConfirmation = (
   formData, 
-  initialFormData, 
-  handleSubmit, 
+  isLoading = false, 
+  isFetching = false, 
+  onSubmit,
   onClose,
-  isModified = null
+  customIsModifiedCheck = null
 ) => {
+  // État pour contrôler l'affichage du modal de confirmation
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // État pour indiquer qu'une fermeture est en attente
   const [pendingClose, setPendingClose] = useState(false);
-  
-  // Vérifier si le formulaire a été modifié (avec logique par défaut)
-  const defaultIsFormModified = () => {
-    // Si formData ou initialFormData n'est pas disponible, on présume qu'il n'y a pas de modifications
-    if (!formData || !initialFormData) return false;
-    
-    // Comparer les valeurs de base
-    const basicFieldsChanged = Object.keys(initialFormData).some(key => {
-      // Ignorer les tableaux pour ce test de premier niveau
-      if (Array.isArray(initialFormData[key])) return false;
-      return initialFormData[key] !== formData[key];
-    });
-    
-    // Comparer les tableaux si présents
-    let arraysChanged = false;
-    Object.keys(initialFormData).forEach(key => {
-      if (Array.isArray(initialFormData[key])) {
-        if (JSON.stringify(initialFormData[key]) !== JSON.stringify(formData[key])) {
-          arraysChanged = true;
-        }
-      }
-    });
-    
-    return basicFieldsChanged || arraysChanged;
-  };
-  
-  // Utiliser la fonction personnalisée si fournie, sinon utiliser la fonction par défaut
-  const checkIsModified = isModified || defaultIsFormModified;
+
+  // Utiliser le hook useModifiedState pour suivre les modifications du formulaire
+  const { isModified, setModified, resetInitialState } = useModifiedState(
+    formData,
+    isLoading,
+    isFetching,
+    customIsModifiedCheck
+  );
   
   // Gérer la tentative de fermeture
-  const handleCloseRequest = () => {
-    if (checkIsModified()) {
+  const handleCloseRequest = useCallback(() => {
+    if (isModified) {
       setShowConfirmModal(true);
       setPendingClose(true);
     } else {
       // Si aucune modification, fermer directement
       onClose();
     }
-  };
+  }, [isModified, onClose]);
   
   // Confirmer la fermeture sans sauvegarder
-  const confirmClose = () => {
+  const confirmClose = useCallback(() => {
     setShowConfirmModal(false);
     setPendingClose(false);
     onClose();
-  };
+  }, [onClose]);
   
   // Annuler la fermeture
-  const cancelClose = () => {
+  const cancelClose = useCallback(() => {
     setShowConfirmModal(false);
     setPendingClose(false);
-  };
+  }, []);
   
   // Sauvegarder et fermer
-  const saveAndClose = (e) => {
+  const saveAndClose = useCallback((e) => {
     if (e) {
       e.preventDefault();
     }
     setShowConfirmModal(false);
     setPendingClose(false);
-    handleSubmit(e, true); // true indique que c'est une fermeture après sauvegarde
-  };
-  
+    onSubmit(e, true); // true indique que c'est une fermeture après sauvegarde
+  }, [onSubmit]);
+
   return {
     showConfirmModal,
     pendingClose,
+    isModified,
+    setModified,
+    resetInitialState,
     handleCloseRequest,
     confirmClose,
     cancelClose,

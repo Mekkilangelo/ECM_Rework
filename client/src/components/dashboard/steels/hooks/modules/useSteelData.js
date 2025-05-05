@@ -34,22 +34,32 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel) => {
               // Transformer les données de chimie en éléments chimiques pour le formulaire
               if (Array.isArray(steelData.chemistery)) {
                 formattedData.chemical_elements = steelData.chemistery.map(chem => ({
-                  element: chem.element,
+                  element: chem.element || '',
                   rate_type: (chem.min_value !== null && chem.min_value !== undefined && 
                               chem.max_value !== null && chem.max_value !== undefined) ? 'range' : 'exact',
-                  value: chem.value !== null ? chem.value.toString() : '',
-                  min_value: chem.min_value !== null ? chem.min_value.toString() : '',
-                  max_value: chem.max_value !== null ? chem.max_value.toString() : '',
+                  value: chem.value !== null && chem.value !== undefined ? chem.value.toString() : '',
+                  min_value: chem.min_value !== null && chem.min_value !== undefined ? chem.min_value.toString() : '',
+                  max_value: chem.max_value !== null && chem.max_value !== undefined ? chem.max_value.toString() : '',
                 }));
               } else if (Array.isArray(steelData.elements)) {
                 // Alternative si les éléments sont dans un autre champ
                 formattedData.chemical_elements = steelData.elements.map(elem => ({
-                  element: elem.element,
-                  rate_type: (elem.min_value !== null && elem.max_value !== null) ? 'range' : 'exact',
-                  value: elem.value !== null ? elem.value.toString() : '',
-                  min_value: elem.min_value !== null ? elem.min_value.toString() : '',
-                  max_value: elem.max_value !== null ? elem.max_value.toString() : '',
+                  element: elem.element || '',
+                  rate_type: (elem.min_value !== null && elem.min_value !== undefined && 
+                             elem.max_value !== null && elem.max_value !== undefined) ? 'range' : 'exact',
+                  value: elem.value !== null && elem.value !== undefined ? elem.value.toString() : '',
+                  min_value: elem.min_value !== null && elem.min_value !== undefined ? elem.min_value.toString() : '',
+                  max_value: elem.max_value !== null && elem.max_value !== undefined ? elem.max_value.toString() : '',
                 }));
+              }
+              
+              // S'assurer que les équivalents et chemical_elements sont toujours des tableaux
+              if (!Array.isArray(formattedData.equivalents)) {
+                formattedData.equivalents = [];
+              }
+              
+              if (!Array.isArray(formattedData.chemical_elements)) {
+                formattedData.chemical_elements = [];
               }
               
               console.log('Formatted data for form:', formattedData);

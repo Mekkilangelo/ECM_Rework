@@ -24,7 +24,7 @@ const BasicInfoSection = ({
     <div className="row">
       <div className="col-md-6">
         <Form.Group className="mb-3">
-          <Form.Label>{t('parts.basicInfo.designation')} <span className="text-danger">*</span></Form.Label>
+          <Form.Label>{t('parts.basicInfo.designation')} <span className="text-danger fw-bold">*</span></Form.Label>
           <CreatableSelect
             name="designation"
             value={getSelectedOption(designationOptions, formData.designation)}
@@ -39,6 +39,11 @@ const BasicInfoSection = ({
             formatCreateLabel={(inputValue) =>  `${t('common.addOption')} "${inputValue}"`}
             onCreateOption={handleCreateDesignation}
           />
+          {errors.designation && (
+            <div className="text-danger mt-1 small">
+              {t(errors.designation)}
+            </div>
+          )}
         </Form.Group>
       </div>
       <div className="col-md-6">

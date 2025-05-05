@@ -36,11 +36,6 @@ const useFormState = () => {
     steel: ''
   });
   
-  // États pour les options des select
-  const [designationOptions, setDesignationOptions] = useState([]);
-  const [unitOptions, setUnitOptions] = useState([]);
-  const [steelOptions, setSteelOptions] = useState([]);
-  
   // États pour la gestion des erreurs, du chargement et des messages
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -59,12 +54,6 @@ const useFormState = () => {
     setMessage,
     fetchingPart,
     setFetchingPart,
-    designationOptions,
-    setDesignationOptions,
-    unitOptions,
-    setUnitOptions,
-    steelOptions,
-    setSteelOptions,
     parentId,
     setParentId
   };

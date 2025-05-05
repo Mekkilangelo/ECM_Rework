@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { useRef, useEffect } from 'react';
 import useFormState from './modules/useFormState';
-import useFormHandlers from './modules/useFormHandlers';
+import useSteelHandlers from './modules/useSteelHandlers';
 import useFormValidation from './modules/useFormValidation';
-import useOptionsFetcher from './modules/useOptionsFetcher';
-import useApiSubmission from './modules/useApiSubmission';
+import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
+import useSteelSubmission from './modules/useSteelSubmission';
 import useSteelData from './modules/useSteelData';
-import useEquivalentsHandlers from './modules/useEquivalentsHandlers';
-import useChemicalElementsHandlers from './modules/useChemicalElementsHandlers';
+import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
 const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
   // État du formulaire et initialisation
@@ -23,15 +22,26 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     setFetchingSteel 
   } = useFormState();
   
-  // Chargement des options pour les selects
+  // Utiliser useRef pour éviter la recréation des options à chaque rendu
+  const optionsConfig = useRef({
+    // Activer uniquement les options nécessaires pour les aciers
+    fetchClientOptions: false,
+    fetchSteelOptions: true,     // Activer les options acier
+    fetchPartOptions: false,
+    fetchTestOptions: false,
+    fetchFurnaceOptions: false,
+    fetchUnitOptions: false
+  }).current;
+  
+  // Chargement des options pour les selects avec le hook unifié
   const { 
     steelFamilyOptions, 
     steelStandardOptions,
     steelGradeOptions,
     elementOptions,
     selectStyles, 
-    getSelectedOption 
-  } = useOptionsFetcher(setLoading);
+    getSelectedOption
+  } = useOptionsFetcher(setLoading, optionsConfig);
 
   // Chargement des données de l'acier en mode édition
   useSteelData(
@@ -41,41 +51,60 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     setFetchingSteel
   );
   
-  // Handlers pour le formulaire
+  // Handlers pour le formulaire, les équivalents et les éléments chimiques
   const { 
     handleChange, 
-    handleSelectChange 
-  } = useFormHandlers(formData, setFormData, errors, setErrors);
-  
-  // Handlers pour les équivalents
-  const {
+    handleSelectChange,
     handleAddEquivalent,
-    handleRemoveEquivalent
-  } = useEquivalentsHandlers(formData, setFormData);
-  
-  // Handlers pour les éléments chimiques
-  const {
+    handleRemoveEquivalent,
     handleAddChemicalElement,
     handleRemoveChemicalElement,
     handleChemicalElementChange,
-    handleRateTypeChange
-  } = useChemicalElementsHandlers(formData, setFormData);
+    handleRateTypeChange,
+    handleEquivalentChange
+  } = useSteelHandlers(formData, setFormData, errors, setErrors);
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, setErrors);
   
-  // Soumission du formulaire au serveur
-  const { handleSubmit } = useApiSubmission(
+  // Soumission du formulaire au serveur en utilisant le hook factorisé
+  const { handleSubmit } = useSteelSubmission({
     formData, 
     setFormData, 
     validate, 
-    steel,
+    entity: steel,
     setLoading, 
     setMessage, 
-    onSteelCreated,
-    onSteelUpdated, 
+    onCreated: onSteelCreated,
+    onUpdated: onSteelUpdated, 
     onClose
+  });
+  
+  // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
+  const { 
+    showConfirmModal, 
+    pendingClose, 
+    isModified,
+    setModified,
+    resetInitialState,
+    handleCloseRequest, 
+    confirmClose, 
+    cancelClose, 
+    saveAndClose 
+  } = useCloseConfirmation(
+    formData,        // État actuel du formulaire 
+    loading,         // État de chargement
+    fetchingSteel,   // État de récupération des données
+    handleSubmit,    // Fonction de soumission
+    onClose          // Fonction de fermeture
   );
+
+  // Réinitialiser l'état initial après une sauvegarde réussie
+  useEffect(() => {
+    if (message && message.type === 'success') {
+      resetInitialState();
+    }
+  }, [message, resetInitialState]);
   
   return {
     formData,
@@ -97,7 +126,17 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     handleAddChemicalElement,
     handleRemoveChemicalElement,
     handleChemicalElementChange,
-    handleRateTypeChange
+    handleRateTypeChange,
+    handleEquivalentChange,
+    // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
+    showConfirmModal, 
+    pendingClose,
+    isModified,       // Nouveau! Exposer l'état modifié
+    setModified,      // Nouveau! Exposer la fonction pour définir manuellement l'état modifié
+    handleCloseRequest, 
+    confirmClose, 
+    cancelClose, 
+    saveAndClose
   };
 };
 

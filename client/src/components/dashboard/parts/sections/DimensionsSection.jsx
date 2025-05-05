@@ -9,8 +9,8 @@ const DimensionsSection = ({
   handleSelectChange,
   handleCreateOption,
   getSelectedOption,
-  getLengthUnitOptions,
-  getWeightUnitOptions,
+  lengthUnitOptions, // Recevoir directement les tableaux d'options
+  weightUnitOptions, // Recevoir directement les tableaux d'options
   loading,
   selectStyles
 }) => {
@@ -60,6 +60,10 @@ const DimensionsSection = ({
     return handleCreateOption(inputValue, 'weightUnit', 'units', 'weight_units');
   };
 
+  // Utiliser directement les options passées en props
+  console.log("DimensionsSection - lengthUnitOptions:", lengthUnitOptions);
+  console.log("DimensionsSection - weightUnitOptions:", weightUnitOptions);
+
   return (
     <>
       <h6 className="text-muted mb-2">{t('parts.dimensions.mainDimensions')}</h6>
@@ -70,7 +74,7 @@ const DimensionsSection = ({
             <Form.Control
               type="number"
               name="length"
-              value={formData.length}
+              value={formData.length || ''}
               onChange={handleChange}
               step="0.01"
               size="sm"
@@ -83,7 +87,7 @@ const DimensionsSection = ({
             <Form.Control
               type="number"
               name="width"
-              value={formData.width}
+              value={formData.width || ''}
               onChange={handleChange}
               step="0.01"
               size="sm"
@@ -96,7 +100,7 @@ const DimensionsSection = ({
             <Form.Control
               type="number"
               name="height"
-              value={formData.height}
+              value={formData.height || ''}
               onChange={handleChange}
               step="0.01"
               size="sm"
@@ -109,16 +113,16 @@ const DimensionsSection = ({
             <CreatableSelect
               name="dimensionsUnit"
               value={formData.dimensionsUnit 
-                ? getSelectedOption(getLengthUnitOptions(), formData.dimensionsUnit) 
-                : getLengthUnitOptions()[0] || null}
+                ? getSelectedOption(lengthUnitOptions, formData.dimensionsUnit) 
+                : (Array.isArray(lengthUnitOptions) && lengthUnitOptions.length > 0) ? lengthUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
-              options={getLengthUnitOptions()}
+              options={lengthUnitOptions || []}
               isClearable
               styles={unitSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
-              isLoading={loading}
+              isLoading={loading && (!lengthUnitOptions || !lengthUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateDimensionsUnit}
             />
@@ -134,7 +138,7 @@ const DimensionsSection = ({
             <Form.Control
               type="number"
               name="diameterIn"
-              value={formData.diameterIn}
+              value={formData.diameterIn || ''}
               onChange={handleChange}
               step="0.01"
               size="sm"
@@ -147,7 +151,7 @@ const DimensionsSection = ({
             <Form.Control
               type="number"
               name="diameterOut"
-              value={formData.diameterOut}
+              value={formData.diameterOut || ''}
               onChange={handleChange}
               step="0.01"
               size="sm"
@@ -160,16 +164,16 @@ const DimensionsSection = ({
             <CreatableSelect
               name="diameterUnit"
               value={formData.diameterUnit 
-                ? getSelectedOption(getLengthUnitOptions(), formData.diameterUnit) 
-                : getLengthUnitOptions()[0] || null}
+                ? getSelectedOption(lengthUnitOptions, formData.diameterUnit) 
+                : (Array.isArray(lengthUnitOptions) && lengthUnitOptions.length > 0) ? lengthUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
-              options={getLengthUnitOptions()}
+              options={lengthUnitOptions || []}
               isClearable
               styles={unitSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
-              isLoading={loading}
+              isLoading={loading && (!lengthUnitOptions || !lengthUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateDiameterUnit}
             />
@@ -185,7 +189,7 @@ const DimensionsSection = ({
             <Form.Control
               type="number"
               name="weight"
-              value={formData.weight}
+              value={formData.weight || ''}
               onChange={handleChange}
               step="0.01"
               size="sm"
@@ -198,16 +202,16 @@ const DimensionsSection = ({
             <CreatableSelect
               name="weightUnit"
               value={formData.weightUnit 
-                ? getSelectedOption(getWeightUnitOptions(), formData.weightUnit) 
-                : getWeightUnitOptions()[0] || null}
+                ? getSelectedOption(weightUnitOptions, formData.weightUnit) 
+                : (Array.isArray(weightUnitOptions) && weightUnitOptions.length > 0) ? weightUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
-              options={getWeightUnitOptions()}
+              options={weightUnitOptions || []}
               isClearable
               styles={unitSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
-              isLoading={loading}
+              isLoading={loading && (!weightUnitOptions || !weightUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateWeightUnit}
             />

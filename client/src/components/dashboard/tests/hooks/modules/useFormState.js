@@ -1,11 +1,14 @@
-
 import { useState } from 'react';
 
 const useFormState = () => {
+  // Obtenir la date du jour au format YYYY-MM-DD pour le champ de type date
+  const today = new Date().toISOString().split('T')[0];
+
   // État du formulaire
   const [formData, setFormData] = useState({
     // Informations de base
     name: '',
+    testDate: today, // Préremplir avec la date du jour
     location: '',
     status: '',
     description: '',

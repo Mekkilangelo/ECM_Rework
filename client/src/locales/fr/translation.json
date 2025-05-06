@@ -115,7 +115,13 @@
   "navigation": {
     "dashboard": "Tableau de bord",
     "reference": "Référentiel",
-    "archives": "Archives"
+    "archives": "Archives",
+    "hierarchy": {
+      "clients": "Clients",
+      "requests": "Demandes d'essai",
+      "parts": "Pièces",
+      "trials": "Essais"
+    }
   },
   
   "dashboard": {

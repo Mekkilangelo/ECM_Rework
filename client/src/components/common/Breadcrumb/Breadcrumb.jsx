@@ -2,9 +2,11 @@
 import React from 'react';
 import { Breadcrumb as BootstrapBreadcrumb } from 'react-bootstrap';
 import { useNavigation } from '../../../context/NavigationContext';
+import { useTranslation } from 'react-i18next';
 
 const Breadcrumb = () => {
   const { currentLevel, hierarchyState, navigateToLevel } = useNavigation();
+  const { t } = useTranslation();
   
   const getBreadcrumbItems = () => {
     const items = [];
@@ -12,7 +14,7 @@ const Breadcrumb = () => {
     // Toujours ajouter le niveau client
     items.push({
       level: 'client',
-      name: 'Clients',
+      name: t('navigation.hierarchy.clients'),
       active: currentLevel === 'client'
     });
     
@@ -20,7 +22,7 @@ const Breadcrumb = () => {
     if (hierarchyState.clientId && (currentLevel === 'order' || currentLevel === 'part' || currentLevel === 'test')) {
       items.push({
         level: 'order',
-        name: `${hierarchyState.clientName} > Commandes`,
+        name: `${hierarchyState.clientName} > ${t('navigation.hierarchy.requests')}`,
         active: currentLevel === 'order'
       });
     }
@@ -28,7 +30,7 @@ const Breadcrumb = () => {
     if (hierarchyState.orderId && (currentLevel === 'part' || currentLevel === 'test')) {
       items.push({
         level: 'part',
-        name: `${hierarchyState.orderName} > Pièces`,
+        name: `${hierarchyState.orderName} > ${t('navigation.hierarchy.parts')}`,
         active: currentLevel === 'part'
       });
     }
@@ -36,7 +38,7 @@ const Breadcrumb = () => {
     if (hierarchyState.partId && currentLevel === 'test') {
       items.push({
         level: 'test',
-        name: `${hierarchyState.partName} > Tests`,
+        name: `${hierarchyState.partName} > ${t('navigation.hierarchy.trials')}`,
         active: currentLevel === 'test'
       });
     }

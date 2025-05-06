@@ -103,7 +103,13 @@
   "navigation": {
     "dashboard": "Dashboard",
     "reference": "Reference",
-    "archives": "Archives"
+    "archives": "Archives",
+    "hierarchy": {
+      "clients": "Clients",
+      "requests": "Trial Requests",
+      "parts": "Parts",
+      "trials": "Trials"
+    }
   },
   
   "dashboard": {

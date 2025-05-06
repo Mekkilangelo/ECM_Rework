@@ -110,7 +110,6 @@ const TestList = ({ partId }) => {
             <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
           <h2 className="mb-0">
-            <FontAwesomeIcon icon={faFlask} className="mr-2 text-danger" />
             {t('tests.title')}
           </h2>
         </div>

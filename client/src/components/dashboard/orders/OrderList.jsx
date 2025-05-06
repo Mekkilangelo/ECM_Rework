@@ -72,7 +72,6 @@ const OrderList = () => {
             <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
           <h2 className="mb-0">
-            <FontAwesomeIcon icon={faFileInvoice} className="mr-2 text-danger" />
             {t('orders.title')} - {hierarchyState.clientName}
           </h2>
         </div>

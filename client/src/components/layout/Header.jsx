@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher'; // Importez le composant personnalisé
+import ThemeToggle from '../common/ThemeToggle'; // Import du composant ThemeToggle
 import '../../styles/header.css';
 
 const Header = () => {
@@ -100,6 +101,11 @@ const Header = () => {
 
         {/* Language Switcher - Utilisez le composant personnalisé */}
         <LanguageSwitcher />
+
+        {/* Theme Toggle Button */}
+        <li className="nav-item">
+          <ThemeToggle />
+        </li>
 
         <div className="topbar-divider d-none d-sm-block"></div>
 

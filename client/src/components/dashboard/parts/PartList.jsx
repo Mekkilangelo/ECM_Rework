@@ -72,7 +72,6 @@ const PartList = ({ orderId }) => {
             <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
           <h2 className="mb-0">
-            <FontAwesomeIcon icon={faCog} className="mr-2 text-danger" />
             {t('parts.title')} - {hierarchyState.orderName}
           </h2>
         </div>

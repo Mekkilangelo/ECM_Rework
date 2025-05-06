@@ -167,7 +167,7 @@ const SteelList = () => {
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
-          <FontAwesomeIcon icon={faCodeBranch} className="mr-2 text-danger" />
+          <FontAwesomeIcon className="mr-2 text-danger" />
           Aciers
         </h2>
         <div className="d-flex">

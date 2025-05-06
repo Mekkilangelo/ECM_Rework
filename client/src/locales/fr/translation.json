@@ -23,6 +23,16 @@
     "back": "Retour"
   },
   
+  "pagination": {
+    "show": "Afficher",
+    "itemsPerPage": "Éléments par page",
+    "total": "Total",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page",
+    "of": "sur"
+  },
+  
   "form": {
     "requiredFields": "Champs obligatoires"
   },

@@ -63,7 +63,6 @@ const ClientList = () => {
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
-          <FontAwesomeIcon icon={faBuilding} className="mr-2 text-danger" />
           {t('clients.title')}
         </h2>
         <Button

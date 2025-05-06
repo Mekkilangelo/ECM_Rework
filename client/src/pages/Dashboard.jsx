@@ -1,10 +1,14 @@
 import React from 'react';
 import Layout from '../components/layout/Layout';
 import { Container, Row, Col, Button } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { NavigationProvider, useNavigation } from '../context/NavigationContext';
 import HierarchyManager from '../components/dashboard/HierarchyManager';
 import { useHierarchy } from '../hooks/useHierarchy';
 import { useTranslation } from 'react-i18next';
+import LimitSelector from '../components/common/LimitSelector';
+import Pagination from '../components/common/Pagination';
 
 // Composant Dashboard qui utilise les hooks
 const DashboardContent = () => {
@@ -19,8 +23,7 @@ const DashboardContent = () => {
   const showBackButton = currentLevel !== 'client';
   
   // Gérer le changement de limite d'éléments par page
-  const handleLimitChange = (e) => {
-    const newLimit = parseInt(e.target.value, 10);
+  const handleLimitChange = (newLimit) => {
     setItemsPerPage(newLimit);
     setCurrentPage(1); // Réinitialiser à la première page lors du changement de limite
   };
@@ -37,47 +40,17 @@ const DashboardContent = () => {
           <Col>
             {/* Contrôles de pagination */}
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <p style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>
-                  Afficher par:
-                </p>
-                <select 
-                  id="limit-value" 
-                  className="form-select" 
-                  style={{ width: 'auto', display: 'inline-block' }}
-                  value={itemsPerPage}
-                  onChange={handleLimitChange}
-                >
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
+              <LimitSelector 
+                itemsPerPage={itemsPerPage} 
+                onLimitChange={handleLimitChange} 
+                totalItems={totalItems}
+              />
               
-              <div>
-                {totalPages > 1 && (
-                  <div className="d-flex align-items-center">
-                    <button 
-                      className="btn btn-sm btn-outline-secondary mr-2" 
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                    >
-                      Précédent
-                    </button>
-                    <span className="mx-2">
-                      Page {currentPage} / {totalPages}
-                    </span>
-                    <button 
-                      className="btn btn-sm btn-outline-secondary ml-2" 
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                    >
-                      Suivant
-                    </button>
-                  </div>
-                )}
-              </div>
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
 
             {/* Gestionnaire de hiérarchie */}
@@ -87,9 +60,11 @@ const DashboardContent = () => {
             {showBackButton && (
               <Button 
                 id="back-button" 
-                className="btn btn-secondary me-6 mb-3 mt-3"
+                variant="secondary"
+                className="me-6 mb-3 mt-3"
                 onClick={handleBackClick}
               >
+                <FontAwesomeIcon icon={faChevronLeft} className="me-2" />
                 {t('common.back')}
               </Button>
             )}

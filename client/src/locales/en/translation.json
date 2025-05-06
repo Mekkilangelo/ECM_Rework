@@ -21,6 +21,16 @@
     "back": "Back"
   },
   
+  "pagination": {
+    "show": "Show",
+    "itemsPerPage": "Items per page",
+    "total": "Total",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of"
+  },
+  
   "form": {
     "requiredFields": "Required fields"
   },

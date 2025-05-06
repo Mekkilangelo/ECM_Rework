@@ -213,27 +213,80 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                         }))
                       : [{ location: '', value: '', unit: '' }];
                       
-                    // Process ECD data
+                    // Process ECD data - Adapter pour le nouveau format avec positions variables
                     const ecdData = {
                       hardnessValue: result.ecd?.hardness_value || '',
                       hardnessUnit: result.ecd?.hardness_unit || '',
-                      toothFlank: { 
-                        distance: result.ecd?.tooth_flank?.distance || '', 
-                        unit: result.ecd?.tooth_flank?.unit || '' 
-                      },
-                      toothRoot: { 
-                        distance: result.ecd?.tooth_root?.distance || '', 
-                        unit: result.ecd?.tooth_root?.unit || '' 
-                      }
+                      ecdPoints: []
                     };
                     
-                    // Nouveau: traiter les données de courbe
+                    // Traiter les positions ECD
+                    if (result.ecd?.positions && Array.isArray(result.ecd.positions)) {
+                      // Nouveau format avec tableau de positions
+                      ecdData.ecdPoints = result.ecd.positions.map(pos => ({
+                        name: pos.name || '',
+                        distance: pos.distance || '',
+                        unit: pos.unit || ''
+                      }));
+                    } else if (result.ecd?.tooth_flank || result.ecd?.tooth_root) {
+                      // Ancien format avec positions fixes - conversion pour retrocompatibilité
+                      if (result.ecd?.tooth_flank) {
+                        ecdData.ecdPoints.push({
+                          name: 'Flanc de dent',
+                          distance: result.ecd.tooth_flank.distance || '',
+                          unit: result.ecd.tooth_flank.unit || ''
+                        });
+                      }
+                      
+                      if (result.ecd?.tooth_root) {
+                        ecdData.ecdPoints.push({
+                          name: 'Pied de dent',
+                          distance: result.ecd.tooth_root.distance || '',
+                          unit: result.ecd.tooth_root.unit || ''
+                        });
+                      }
+                    }
+                    
+                    // Si aucun point n'existe, créer au moins un point vide
+                    if (ecdData.ecdPoints.length === 0) {
+                      ecdData.ecdPoints.push({
+                        name: '',
+                        distance: '',
+                        unit: ''
+                      });
+                    }
+                    
+                    // Nouveau: traiter les données de courbe avec prise en compte des positions dynamiques
                     const curvePoints = Array.isArray(result.curve_data?.points) 
-                      ? result.curve_data.points.map(point => ({
-                          distance: point.distance || '',
-                          flankHardness: point.flank_hardness || '',
-                          rootHardness: point.root_hardness || ''
-                        }))
+                      ? result.curve_data.points.map(point => {
+                          // Créer un objet de base avec la distance
+                          const curvePoint = {
+                            distance: point.distance || ''
+                          };
+                          
+                          // Ajouter les valeurs de dureté pour les positions ECD dynamiques
+                          if (result.ecd?.positions && Array.isArray(result.ecd.positions)) {
+                            result.ecd.positions.forEach(pos => {
+                              if (pos.name) {
+                                // Générer le nom du champ en snake_case comme stocké dans l'API
+                                const fieldKey = pos.name.toLowerCase().replace(/\s+/g, '_');
+                                // Générer le nom du champ en camelCase comme utilisé dans le frontend
+                                const fieldName = `hardness_${fieldKey.replace(/[^a-zA-Z0-9_]/g, '')}`;
+                                
+                                // Ajouter au point de courbe si la valeur existe dans les données
+                                if (point[fieldKey] !== undefined) {
+                                  curvePoint[fieldName] = point[fieldKey] || '';
+                                }
+                              }
+                            });
+                          }
+                          
+                          // Conserver l'ancien format pour la rétrocompatibilité
+                          curvePoint.flankHardness = point.flank_hardness || '';
+                          curvePoint.rootHardness = point.root_hardness || '';
+                          
+                          return curvePoint;
+                        })
                       : [];
                       
                     return {
@@ -253,8 +306,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                     ecd: {
                       hardnessValue: '',
                       hardnessUnit: '',
-                      toothFlank: { distance: '', unit: '' },
-                      toothRoot: { distance: '', unit: '' }
+                      ecdPoints: [{ name: '', distance: '', unit: '' }]
                     },
                     hardnessUnit: '',
                     curveData: { points: [] },

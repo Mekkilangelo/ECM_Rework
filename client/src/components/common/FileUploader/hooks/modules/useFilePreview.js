@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { renderAsync } from 'docx-preview';
+import fileService from '../../../../../services/fileService';
 
 const useFilePreview = (defaultFileIcon = faFileAlt) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -158,8 +159,9 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
   };
 
   // Obtenir l'URL du fichier
-  const getFileUrl = (fileId) => {
-    return `${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/files/download/${fileId}`;
+  const getFileUrl = (fileId, preview = false) => {
+    // Utiliser directement les services corrects pour éviter les erreurs de construction d'URL
+    return preview ? fileService.getFilePreviewUrl(fileId) : fileService.getFileById(fileId);
   };
 
   // Obtenir l'icône du fichier
@@ -195,9 +197,18 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
       return (
         <div className="thumbnail-container" onClick={handleClick}>
           <img
-            src={file.preview || getFileUrl(file.id) + '?preview=true'}
+            src={file.preview || getFileUrl(file.id, true)}
             alt={file.name}
             className="file-thumbnail"
+            onError={(e) => {
+              console.error(`Erreur de chargement d'image: ${e.target.src}`);
+              // Tentative avec une URL alternative sans preview
+              const alternateUrl = getFileUrl(file.id, false);
+              if (e.target.src !== alternateUrl) {
+                console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                e.target.src = alternateUrl;
+              }
+            }}
           />
         </div>
       );
@@ -225,7 +236,20 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
       case 'image':
         return (
           <div className="preview-image-container">
-            <img src={fileUrl} alt={file.name} className="preview-image" />
+            <img 
+              src={fileUrl} 
+              alt={file.name} 
+              className="preview-image"
+              onError={(e) => {
+                console.error(`Erreur de chargement de la prévisualisation: ${e.target.src}`);
+                // Tentative avec une URL alternative sans paramètre preview
+                if (fileUrl.includes('?preview=true')) {
+                  const alternateUrl = fileUrl.replace('?preview=true', '');
+                  console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                  e.target.src = alternateUrl;
+                }
+              }}
+            />
           </div>
         );
 

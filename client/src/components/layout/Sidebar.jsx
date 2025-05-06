@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome, faUsers, faDatabase, faLayerGroup,
   faEraser, faChartLine, faUniversity, faBook,
-  faTicketAlt, faSearch
+  faTicketAlt, faSearch, faUserCog
 } from '@fortawesome/free-solid-svg-icons';
 // Ne pas importer les icônes qui causent des problèmes
 // import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
@@ -27,8 +27,10 @@ const Sidebar = ({ userRole }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useContext(AuthContext);
 
-  // Check if user is superuser
+  // Check if user is superuser or admin
   const isSuperUser = user.role === "superuser";
+  const isAdmin = user.role === "admin";
+  const canManageUsers = isSuperUser || isAdmin;
 
   // Fonction pour gérer le nettoyage des données
   const handleDataCleaning = async (e) => {
@@ -207,6 +209,22 @@ const Sidebar = ({ userRole }) => {
             >
               <FontAwesomeIcon icon={faChartLine} className="fa-fw mr-2" />
               <span>{t('sidebar.dataManagement.analysis')}</span>
+            </Link>
+          </li>
+        </>
+      )}
+
+      {/* User Management Section - only visible for admin and superuser */}
+      {canManageUsers && (
+        <>
+          <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.userManagement.title') || "Gestion des utilisateurs"}</h6>
+          <li className="nav-item">
+            <Link
+              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/users' ? 'active' : ''}`}
+              to="/users"
+            >
+              <FontAwesomeIcon icon={faUserCog} className="fa-fw mr-2" />
+              <span>{t('sidebar.userManagement.manageUsers') || "Gérer les utilisateurs"}</span>
             </Link>
           </li>
         </>

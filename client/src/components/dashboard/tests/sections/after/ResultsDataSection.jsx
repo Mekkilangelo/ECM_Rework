@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import MicrographsSection from './MicrographsSection';
 import ResultCurveSection from './ResultCurveSection';
+import ControlLocationSection from './ControlLocationSection';
 import CollapsibleSection from '../../../../common/CollapsibleSection/CollapsibleSection';
 
 const ResultsDataSection = ({
@@ -20,6 +21,9 @@ const ResultsDataSection = ({
   handleResultBlocRemove,
   handleHardnessResultAdd,
   handleHardnessResultRemove,
+  handleEcdPositionAdd,
+  handleEcdPositionRemove,
+  handleEcdPositionChange,
   loading,
   selectStyles,
   test,
@@ -27,13 +31,6 @@ const ResultsDataSection = ({
 }) => {
   const { t } = useTranslation();
   
-  // Options pour les select pickers
-  const hardnessLocationOptions = [
-    { value: 'surface', label: t('tests.after.results.locations.surface') },
-    { value: 'tooth', label: t('tests.after.results.locations.tooth') },
-    { value: 'core', label: t('tests.after.results.locations.core') }
-  ];
-
   // Fonctions de gestion des résultats internes au composant
   const handleResultChange = (resultIndex, field, value) => {
     const updatedResults = [...formData.resultsData.results];
@@ -49,7 +46,7 @@ const ResultsDataSection = ({
   const handleHardnessChange = (resultIndex, hardnessIndex, field, value) => {
     const updatedResults = [...formData.resultsData.results];
     const updatedHardnessPoints = [...updatedResults[resultIndex].hardnessPoints];
-    if (field === 'location' || field === 'unit') {
+    if (field === 'unit') {
       // Pour les champs select
       updatedHardnessPoints[hardnessIndex] = {
         ...updatedHardnessPoints[hardnessIndex],
@@ -71,7 +68,7 @@ const ResultsDataSection = ({
     });
   };
 
-  const handleEcdChange = (resultIndex, location, field, value) => {
+  const handleEcdChange = (resultIndex, field, value) => {
     const updatedResults = [...formData.resultsData.results];
     
     // S'assurer que l'objet ecd existe avec toutes ses propriétés
@@ -79,23 +76,14 @@ const ResultsDataSection = ({
       updatedResults[resultIndex].ecd = {
         hardnessValue: '',
         hardnessUnit: '',
-        toothFlank: { distance: '', unit: '' },
-        toothRoot: { distance: '', unit: '' }
+        ecdPoints: [{ name: '', distance: '', unit: '' }]
       };
     }
     
-    if (field === 'unit') {
-      // Correction ici: accéder correctement à la propriété unit dans l'objet location
-      updatedResults[resultIndex].ecd[location][field] = value ? value.value : '';
-    } else if (field === 'hardnessUnit') {
-      // Pour le champ hardnessUnit global
+    if (field === 'hardnessUnit') {
       updatedResults[resultIndex].ecd[field] = value ? value.value : '';
     } else if (field === 'hardnessValue') {
-      // Pour le champ de dureté global
       updatedResults[resultIndex].ecd[field] = value;
-    } else {
-      // Pour les autres champs directs (comme distance)
-      updatedResults[resultIndex].ecd[location][field] = value;
     }
     
     handleChange({
@@ -173,18 +161,12 @@ const ResultsDataSection = ({
                 {result.hardnessPoints.map((point, hardnessIndex) => (
                   <tr key={`hardness-${resultIndex}-${hardnessIndex}`}>
                     <td>
-                      <Select
-                        value={getSelectedOption(hardnessLocationOptions, point.location)}
-                        onChange={(option) => handleHardnessChange(resultIndex, hardnessIndex, 'location', option)}
-                        options={hardnessLocationOptions}
-                        placeholder={t('tests.after.results.selectPosition')}
-                        isDisabled={loading}
-                        menuPortalTarget={document.body}
-                        styles={{
-                          ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
-                        }}
-                        isClearable
+                      <Form.Control
+                        type="text"
+                        value={point.location || ''}
+                        onChange={(e) => handleHardnessChange(resultIndex, hardnessIndex, 'location', e.target.value)}
+                        placeholder={t('tests.after.results.enterPosition')}
+                        disabled={loading}
                       />
                     </td>
                     <td>
@@ -248,7 +230,7 @@ const ResultsDataSection = ({
                   <Form.Control
                     type="number"
                     value={result.ecd?.hardnessValue || ''}
-                    onChange={(e) => handleEcdChange(resultIndex, null, 'hardnessValue', e.target.value)}
+                    onChange={(e) => handleEcdChange(resultIndex, 'hardnessValue', e.target.value)}
                     placeholder={t('tests.after.results.hardnessValue')}
                     disabled={loading}
                   />
@@ -259,7 +241,7 @@ const ResultsDataSection = ({
                   <Form.Label>{t('common.unit')}</Form.Label>
                   <Select
                     value={getSelectedOption(hardnessUnitOptions, result.ecd?.hardnessUnit)}
-                    onChange={(option) => handleEcdChange(resultIndex, null, 'hardnessUnit', option)}
+                    onChange={(option) => handleEcdChange(resultIndex, 'hardnessUnit', option)}
                     options={hardnessUnitOptions}
                     placeholder={t('tests.after.results.hardnessUnit')}
                     isDisabled={loading}
@@ -272,105 +254,85 @@ const ResultsDataSection = ({
             <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
               <thead className="bg-light">
                 <tr>
-                  <th style={{ width: '40%' }}>{t('tests.after.results.position')}</th>
-                  <th style={{ width: '30%' }}>{t('tests.after.results.distance')}</th>
-                  <th style={{ width: '30%' }}>{t('common.unit')}</th>
+                  <th style={{ width: '35%' }}>{t('tests.after.results.position')}</th>
+                  <th style={{ width: '25%' }}>{t('tests.after.results.distance')}</th>
+                  <th style={{ width: '25%' }}>{t('common.unit')}</th>
+                  <th style={{ width: '15%' }}>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>{t('tests.after.results.toothFlank')}</td>
-                  <td>
-                    <Form.Control
-                      type="number"
-                      value={result.ecd?.toothFlank?.distance || ''}
-                      onChange={(e) => handleEcdChange(resultIndex, 'toothFlank', 'distance', e.target.value)}
-                      placeholder={t('tests.after.results.enterDistance')}
-                      disabled={loading}
-                    />
-                  </td>
-                  <td>
-                    <Select
-                      value={result.ecd?.toothFlank?.unit 
-                        ? getSelectedOption(lengthUnitOptions, result.ecd?.toothFlank?.unit) 
-                        : lengthUnitOptions[0] || null}
-                      onChange={(option) => handleEcdChange(resultIndex, 'toothFlank', 'unit', option)}
-                      options={lengthUnitOptions}
-                      placeholder={t('common.selectUnit')}
-                      isDisabled={loading}
-                      menuPortalTarget={document.body}
-                      styles={{
-                        ...selectStyles,
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 })
-                      }}
-                      isClearable
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>{t('tests.after.results.toothRoot')}</td>
-                  <td>
-                    <Form.Control
-                      type="number"
-                      value={result.ecd?.toothRoot?.distance || ''}
-                      onChange={(e) => handleEcdChange(resultIndex, 'toothRoot', 'distance', e.target.value)}
-                      placeholder={t('tests.after.results.enterDistance')}
-                      disabled={loading}
-                    />
-                  </td>
-                  <td>
-                    <Select
-                      value={result.ecd?.toothRoot?.unit 
-                        ? getSelectedOption(lengthUnitOptions, result.ecd?.toothRoot?.unit) 
-                        : lengthUnitOptions[0] || null}
-                      onChange={(option) => handleEcdChange(resultIndex, 'toothRoot', 'unit', option)}
-                      options={lengthUnitOptions}
-                      placeholder={t('common.selectUnit')}
-                      isDisabled={loading}
-                      menuPortalTarget={document.body}
-                      styles={{
-                        ...selectStyles,
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 })
-                      }}
-                      isClearable
-                    />
-                  </td>
-                </tr>
+                {result.ecd?.ecdPoints?.map((point, positionIndex) => (
+                  <tr key={`ecd-position-${resultIndex}-${positionIndex}`}>
+                    <td>
+                      <Form.Control
+                        type="text"
+                        value={point.name || ''}
+                        onChange={(e) => handleEcdPositionChange(resultIndex, positionIndex, 'name', e.target.value)}
+                        placeholder={t('tests.after.results.enterPosition')}
+                        disabled={loading}
+                      />
+                    </td>
+                    <td>
+                      <Form.Control
+                        type="number"
+                        value={point.distance || ''}
+                        onChange={(e) => handleEcdPositionChange(resultIndex, positionIndex, 'distance', e.target.value)}
+                        placeholder={t('tests.after.results.enterDistance')}
+                        disabled={loading}
+                      />
+                    </td>
+                    <td>
+                      <Select
+                        value={point.unit 
+                          ? getSelectedOption(lengthUnitOptions, point.unit) 
+                          : lengthUnitOptions[0] || null}
+                        onChange={(option) => handleEcdPositionChange(resultIndex, positionIndex, 'unit', option)}
+                        options={lengthUnitOptions}
+                        placeholder={t('common.selectUnit')}
+                        isDisabled={loading}
+                        menuPortalTarget={document.body}
+                        styles={{
+                          ...selectStyles,
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                        }}
+                        isClearable
+                      />
+                    </td>
+                    <td className="text-center">
+                      {result.ecd?.ecdPoints?.length > 1 ? (
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleEcdPositionRemove(resultIndex, positionIndex)}
+                          disabled={loading}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
+            <div className="text-end mt-2">
+              <Button
+                variant="outline-primary"
+                size="sm"
+                onClick={() => handleEcdPositionAdd(resultIndex)}
+                disabled={loading}
+              >
+                <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addPoint')}
+              </Button>
+            </div>
           </Form.Group>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>{t('tests.after.results.comment')}</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={result.comment || ''}
-              onChange={(e) => handleResultChange(resultIndex, 'comment', e.target.value)}
-              disabled={loading}
-            />
-          </Form.Group>
-          
-          <CollapsibleSection
-            title={t('tests.after.results.micrographs.title')}
-            isExpandedByDefault={false}
-            sectionId={`test-micrographs-${resultIndex}`}
-            rememberState={true}
-            level={1}
-          >  
-            <MicrographsSection
-              testNodeId={test ? test.id : null}
-              resultIndex={resultIndex}
-              onFileAssociationNeeded={handleFileAssociationNeeded}
-            />
-          </CollapsibleSection>
-          
+
           <CollapsibleSection
             title={t('tests.after.results.resultCurve.title')}
             isExpandedByDefault={false}
             sectionId={`test-hardness-curve-${resultIndex}`}
             rememberState={true}
             level={1}
+            className="mb-3"
           >
             <ResultCurveSection
               result={result}
@@ -384,6 +346,46 @@ const ResultsDataSection = ({
               test={test}
               formData={formData}
               parentId={parentId}
+            />
+          </CollapsibleSection>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>{t('tests.after.results.comment')}</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={result.comment || ''}
+              onChange={(e) => handleResultChange(resultIndex, 'comment', e.target.value)}
+              disabled={loading}
+            />
+          </Form.Group>
+          
+          <CollapsibleSection
+            title={t('tests.after.results.controlLocation.title')}
+            isExpandedByDefault={false}
+            sectionId={`test-control-location-${resultIndex}`}
+            rememberState={true}
+            level={1}
+            className="mb-3"
+          >
+            <ControlLocationSection
+              testNodeId={test ? test.id : null}
+              resultIndex={resultIndex}
+              onFileAssociationNeeded={handleFileAssociationNeeded}
+            />
+          </CollapsibleSection>
+          
+          <CollapsibleSection
+            title={t('tests.after.results.micrographs.title')}
+            isExpandedByDefault={false}
+            sectionId={`test-micrographs-${resultIndex}`}
+            rememberState={true}
+            level={1}
+          >  
+            <MicrographsSection
+              testNodeId={test ? test.id : null}
+              resultIndex={resultIndex}
+              onFileAssociationNeeded={handleFileAssociationNeeded}
             />
           </CollapsibleSection>
         </CollapsibleSection>

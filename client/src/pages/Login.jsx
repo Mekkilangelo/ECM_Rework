@@ -14,15 +14,26 @@ const LoginSchema = Yup.object().shape({
 
 const Login = () => {
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useContext(AuthContext);
+  const { login, isAuthenticated } = useContext(AuthContext);
+
+  // Rediriger si déjà connecté
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.state]);
 
   useEffect(() => {
-    // Récupérer le paramètre d'erreur de l'URL, similaire à $_GET['error'] en PHP
+    // Récupérer les paramètres d'URL
     const params = new URLSearchParams(location.search);
     const errorParam = params.get('error');
+    const successParam = params.get('success');
     
+    // Gérer les messages d'erreur
     if (errorParam) {
       switch (errorParam) {
         case 'invalid_credentials':
@@ -37,6 +48,23 @@ const Login = () => {
         default:
           setError('');
       }
+      // Effacer tout message de succès si on a une erreur
+      setSuccessMessage('');
+    } else if (successParam) {
+      // Gérer les messages de succès
+      switch (successParam) {
+        case 'logout':
+          setSuccessMessage('Vous avez été déconnecté avec succès.');
+          break;
+        default:
+          setSuccessMessage('');
+      }
+      // Effacer tout message d'erreur si on a un succès
+      setError('');
+    } else {
+      // Réinitialiser les messages s'il n'y a pas de paramètres
+      setError('');
+      setSuccessMessage('');
     }
   }, [location]);
 
@@ -49,9 +77,10 @@ const Login = () => {
       login(result.token, result.user);
       
       // Rediriger vers la page d'accueil ou la page demandée précédemment
-      const from = location.state?.from?.pathname || '/';
+      const from = location.state?.from?.pathname || '/dashboard';
       navigate(from, { replace: true });
     } catch (error) {
+      console.error('Erreur de connexion:', error);
       setError(error.response?.data?.message || 'Erreur d\'authentification');
     } finally {
       setSubmitting(false);
@@ -107,6 +136,16 @@ const Login = () => {
                     onClose={() => setError('')}
                   >
                     {error}
+                  </Alert>
+                )}
+
+                {successMessage && (
+                  <Alert 
+                    variant="success" 
+                    dismissible 
+                    onClose={() => setSuccessMessage('')}
+                  >
+                    {successMessage}
                   </Alert>
                 )}
 

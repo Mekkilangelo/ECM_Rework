@@ -3,8 +3,14 @@
  * Gère les opérations d'authentification (login, logout, etc.)
  */
 
+const jwt = require('jsonwebtoken');
 const { User } = require('../models');
-const { generateToken, verifyPassword, hashPassword } = require('../config/auth');
+const { generateToken, verifyPassword, hashPassword, refreshToken } = require('../config/auth');
+const config = require('../config/config');
+
+// Accès aux constantes JWT
+const JWT_SECRET = config.JWT.SECRET;
+const JWT_INACTIVITY_EXPIRE = config.JWT.INACTIVITY_EXPIRE;
 
 /**
  * Authentification d'un utilisateur
@@ -86,7 +92,60 @@ const getMe = async (req, res) => {
   }
 };
 
+/**
+ * Rafraîchissement du token JWT
+ * @route POST /api/auth/refresh-token
+ */
+const refreshUserToken = async (req, res) => {
+  try {
+    const tokenHeader = req.headers.authorization;
+    
+    if (!tokenHeader || !tokenHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token non fourni'
+      });
+    }
+    
+    const oldToken = tokenHeader.split(' ')[1];
+    
+    // Utiliser les informations déjà décodées par le middleware refreshTokenValidator
+    // Le token peut être légèrement expiré, mais le middleware l'a déjà validé
+    // avec des règles plus souples pour permettre le rafraîchissement
+    
+    // Générer un nouveau token avec la date d'activité mise à jour
+    const newToken = jwt.sign(
+      { 
+        id: req.user.id, 
+        username: req.user.username, 
+        role: req.user.role,
+        lastActivity: Date.now() // Mettre à jour le timestamp d'activité
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_INACTIVITY_EXPIRE }
+    );
+    
+    // Renvoyer le nouveau token
+    res.status(200).json({
+      success: true,
+      token: newToken,
+      user: {
+        id: req.user.id,
+        username: req.user.username,
+        role: req.user.role
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors du rafraîchissement du token:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors du rafraîchissement du token'
+    });
+  }
+};
+
 module.exports = {
   login,
-  getMe
+  getMe,
+  refreshUserToken
 };

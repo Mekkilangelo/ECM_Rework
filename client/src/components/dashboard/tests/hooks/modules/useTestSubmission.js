@@ -299,23 +299,41 @@ const useTestSubmission = (
         const ecdData = result.ecd ? {
           hardness_value: result.ecd.hardnessValue || null,
           hardness_unit: result.ecd.hardnessUnit || null,
-          tooth_flank: {
-            distance: result.ecd.toothFlank?.distance || null,
-            unit: result.ecd.toothFlank?.unit || null
-          },
-          tooth_root: {
-            distance: result.ecd.toothRoot?.distance || null,
-            unit: result.ecd.toothRoot?.unit || null
-          }
+          positions: Array.isArray(result.ecd.ecdPoints) && result.ecd.ecdPoints.length > 0 ? 
+            result.ecd.ecdPoints.map(point => ({
+              name: point.name || null,
+              distance: point.distance || null,
+              unit: point.unit || null
+            })) : null
         } : null;
         
         // Formatage des données de courbe
         const curveData = result.curveData && result.curveData.points && result.curveData.points.length > 0 ? {
-          points: result.curveData.points.map(point => ({
-            distance: point.distance || null,
-            flank_hardness: point.flankHardness || null,
-            root_hardness: point.rootHardness || null
-          }))
+          points: result.curveData.points.map(point => {
+            // Structure de base avec la distance
+            const formattedPoint = {
+              distance: point.distance || null
+            };
+            
+            // Ajouter les valeurs des positions ECD dynamiques si elles existent
+            if (result.ecd && Array.isArray(result.ecd.ecdPoints)) {
+              result.ecd.ecdPoints.forEach(ecdPosition => {
+                if (ecdPosition.name) {
+                  // Convertir le nom de position en clé valide pour l'API (snake_case)
+                  const positionKey = ecdPosition.name.toLowerCase().replace(/\s+/g, '_');
+                  // Récupérer la valeur depuis le point de la courbe
+                  const fieldName = `hardness_${positionKey}`;
+                  formattedPoint[positionKey] = point[fieldName] || null;
+                }
+              });
+            }
+            
+            // Conserver les champs historiques pour la compatibilité
+            formattedPoint.flank_hardness = point.flankHardness || null;
+            formattedPoint.root_hardness = point.rootHardness || null;
+            
+            return formattedPoint;
+          })
         } : null;
         
         return {

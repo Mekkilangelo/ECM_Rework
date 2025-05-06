@@ -15,6 +15,7 @@ const ThermalCycleSection = ({
   pressureUnitOptions,
   handleThermalCycleAdd,
   handleThermalCycleRemove,
+  handleThermalCycleChange,
   loading,
   selectStyles
 }) => {
@@ -25,21 +26,6 @@ const ThermalCycleSection = ({
     { value: 'down', label: t('tests.before.recipeData.thermalCycle.rampDown'), icon: faArrowDown },
     { value: 'continue', label: t('tests.before.recipeData.thermalCycle.rampContinue'), icon: faArrowRight }
   ];
-  
-  const handleThermalCycleChange = (index, field, value) => {
-    const updatedThermalCycle = [...formData.recipeData.thermalCycle];
-    updatedThermalCycle[index] = { ...updatedThermalCycle[index], [field]: value };
-    handleChange({
-      target: {
-        name: 'recipeData.thermalCycle',
-        value: updatedThermalCycle
-      }
-    });
-  };
-  
-  const handleRampChange = (option, index) => {
-    handleThermalCycleChange(index, 'ramp', option.value);
-  };
   
   return (
     <>
@@ -60,7 +46,7 @@ const ThermalCycleSection = ({
               <td>
                 <Select
                   value={getSelectedOption(rampOptions, cycle.ramp)}
-                  onChange={(option) => handleRampChange(option, index)}
+                  onChange={(option) => handleThermalCycleChange(index, 'ramp', option.value)}
                   options={rampOptions}
                   menuPortalTarget={document.body}
                   styles={{

@@ -3,18 +3,37 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Routes pour l'authentification
-// router.post('/login', userController.login);
-router.post('/register', userController.register);
+// Route pour l'utilisateur actuel (tous les utilisateurs authentifiés)
+router.get('/me', protect, (req, res) => {
+  userController.getCurrentUser(req, res);
+});
 
-// Routes protégées pour la gestion des utilisateurs (admin uniquement)
-// router.get('/', protect, adminOnly, userController.getUsers);
-// router.get('/:userId', protect, adminOnly, userController.getUserById);
-// router.put('/:userId', protect, adminOnly, userController.updateUser);
-// router.delete('/:userId', protect, adminOnly, userController.deleteUser);
+// Route pour enregistrer un utilisateur (accessible aux admins et superusers)
+router.post('/register', protect, adminOnly, (req, res) => {
+  userController.register(req, res);
+});
 
-// Route pour l'utilisateur actuel
-// router.get('/me', protect, userController.getCurrentUser);
-// router.put('/me', protect, userController.updateCurrentUser);
+// Route pour régénérer un mot de passe utilisateur
+router.post('/:userId/reset-password', protect, adminOnly, (req, res) => {
+  userController.resetPassword(req, res);
+});
+
+// Route pour mettre à jour les rôles des utilisateurs
+router.put('/roles', protect, adminOnly, (req, res) => {
+  userController.updateUsersRoles(req, res);
+});
+
+// Routes protégées pour la gestion des utilisateurs (admin et superuser uniquement)
+router.get('/', protect, adminOnly, (req, res) => {
+  userController.getUsers(req, res);
+});
+
+router.delete('/:userId', protect, adminOnly, (req, res) => {
+  userController.deleteUser(req, res);
+});
+
+router.get('/:userId', protect, adminOnly, (req, res) => {
+  userController.getUserById(req, res);
+});
 
 module.exports = router;

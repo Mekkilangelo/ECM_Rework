@@ -18,6 +18,16 @@ ChartJS.register(
   Legend
 );
 
+// Palette de 6 couleurs distinctes pour les courbes
+const colorPalette = [
+  { borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.5)' },   // Rose
+  { borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.5)' },   // Turquoise
+  { borderColor: 'rgb(54, 162, 235)', backgroundColor: 'rgba(54, 162, 235, 0.5)' },   // Bleu
+  { borderColor: 'rgb(255, 159, 64)', backgroundColor: 'rgba(255, 159, 64, 0.5)' },   // Orange
+  { borderColor: 'rgb(153, 102, 255)', backgroundColor: 'rgba(153, 102, 255, 0.5)' }, // Violet
+  { borderColor: 'rgb(255, 205, 86)', backgroundColor: 'rgba(255, 205, 86, 0.5)' }    // Jaune
+];
+
 const ResultCurveSection = ({
   result,
   resultIndex,
@@ -61,6 +71,9 @@ const ResultCurveSection = ({
   
   // Récupérer l'unité de dureté à partir des données ECD
   const hardnessUnit = result.ecd?.hardnessUnit || "HV";
+  
+  // Positions ECD disponibles pour les colonnes
+  const ecdPositions = result.ecd?.ecdPoints || [];
   
   // Effet pour charger les spécifications ECD depuis l'API
   useEffect(() => {
@@ -136,16 +149,28 @@ const ResultCurveSection = ({
       nextDistance = (lastDistance + stepValue).toFixed(2); // Arrondir à 2 décimales
     }
     
+    // Créer un nouveau point avec champs pour toutes les positions ECD
     const newPoint = {
-      distance: nextDistance,
-      flankHardness: '',
-      rootHardness: ''
+      distance: nextDistance
     };
     
-    const newPoints = [...dataPoints, newPoint];
-    setDataPoints(newPoints);
-    setDisplayPoints(newPoints);
-    updateParentFormData(newPoints);
+    // Ajouter un champ pour chaque position ECD
+    ecdPositions.forEach(position => {
+      const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
+      newPoint[fieldName] = '';
+    });
+    
+    // Pour la compatibilité avec le format existant, conserver les champs flankHardness et rootHardness
+    newPoint.flankHardness = '';
+    newPoint.rootHardness = '';
+    
+    // Utiliser le callback de setState pour éviter des mises à jour multiples
+    setDataPoints(prevPoints => {
+      const newPoints = [...prevPoints, newPoint];
+      setDisplayPoints(newPoints);
+      updateParentFormData(newPoints);
+      return newPoints;
+    });
   };
   
   // Supprimer un point de données
@@ -154,6 +179,44 @@ const ResultCurveSection = ({
     setDataPoints(newPoints);
     setDisplayPoints(newPoints);
     updateParentFormData(newPoints);
+  };
+  
+  // Génère un nom de champ unique pour chaque position ECD
+  const getFieldNameForPosition = (positionName) => {
+    return `hardness_${positionName.replace(/\s+/g, '_').toLowerCase()}`;
+  };
+  
+  // Obtenir la valeur de dureté pour une position et un point donné
+  const getHardnessForPosition = (point, positionName) => {
+    const fieldName = getFieldNameForPosition(positionName);
+    // Si le champ existe, utiliser cette valeur
+    if (point[fieldName] !== undefined) {
+      return point[fieldName];
+    }
+    
+    // Compatibilité avec l'ancien format - vérifier les cas spéciaux
+    if (positionName.toLowerCase().includes('flanc') && point.flankHardness !== undefined) {
+      return point.flankHardness;
+    }
+    if (positionName.toLowerCase().includes('pied') && point.rootHardness !== undefined) {
+      return point.rootHardness;
+    }
+    
+    return '';
+  };
+  
+  // Mettre à jour la valeur de dureté pour une position et un point donné
+  const setHardnessForPosition = (index, positionName, value) => {
+    const fieldName = getFieldNameForPosition(positionName);
+    handlePointChange(index, fieldName, value);
+    
+    // Compatibilité avec l'ancien format - mettre à jour les champs spéciaux
+    if (positionName.toLowerCase().includes('flanc')) {
+      handlePointChange(index, 'flankHardness', value);
+    }
+    if (positionName.toLowerCase().includes('pied')) {
+      handlePointChange(index, 'rootHardness', value);
+    }
   };
   
   // Préparer les données pour le graphique
@@ -165,27 +228,57 @@ const ResultCurveSection = ({
       return distA - distB;
     });
     
-    // Filtrer les points valides pour les courbes
-    const flankPoints = sortedPoints.filter(p => p.distance && p.flankHardness);
-    const rootPoints = sortedPoints.filter(p => p.distance && p.rootHardness);
+    // Créer un dataset pour chaque position ECD
+    const datasets = ecdPositions.map((position, index) => {
+      const positionName = position.name;
+      const colorIndex = index % colorPalette.length; // Utiliser l'opérateur modulo pour recycler les couleurs si plus de 6 positions
+      
+      // Filtrer les points valides pour cette position
+      const validPoints = sortedPoints.filter(p => 
+        p.distance && getHardnessForPosition(p, positionName)
+      );
+      
+      return {
+        label: positionName,
+        data: validPoints.map(p => ({
+          x: parseFloat(p.distance), 
+          y: parseFloat(getHardnessForPosition(p, positionName))
+        })),
+        borderColor: colorPalette[colorIndex].borderColor,
+        backgroundColor: colorPalette[colorIndex].backgroundColor,
+        tension: 0.1
+      };
+    });
     
-    // Créer les datasets pour les mesures
-    const datasets = [
-      {
-        label: t('tests.after.results.resultCurve.flankHardness'),
-        data: flankPoints.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.flankHardness)})),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        tension: 0.1
-      },
-      {
-        label: t('tests.after.results.resultCurve.rootHardness'),
-        data: rootPoints.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.rootHardness)})),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        tension: 0.1
+    // Pour maintenir la compatibilité avec le format d'affichage précédent
+    if (datasets.length === 0 && (
+      sortedPoints.some(p => p.flankHardness) || 
+      sortedPoints.some(p => p.rootHardness)
+    )) {
+      // Ajouter les anciens datasets si aucun nouveau n'a été créé
+      const flankPoints = sortedPoints.filter(p => p.distance && p.flankHardness);
+      const rootPoints = sortedPoints.filter(p => p.distance && p.rootHardness);
+      
+      if (flankPoints.length > 0) {
+        datasets.push({
+          label: t('tests.after.results.resultCurve.flankHardness'),
+          data: flankPoints.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.flankHardness)})),
+          borderColor: colorPalette[0].borderColor,
+          backgroundColor: colorPalette[0].backgroundColor,
+          tension: 0.1
+        });
       }
-    ];
+      
+      if (rootPoints.length > 0) {
+        datasets.push({
+          label: t('tests.after.results.resultCurve.rootHardness'),
+          data: rootPoints.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.rootHardness)})),
+          borderColor: colorPalette[1].borderColor,
+          backgroundColor: colorPalette[1].backgroundColor,
+          tension: 0.1
+        });
+      }
+    }
     
     // Ajouter la courbe de spécification si disponible
     if (specData) {
@@ -225,6 +318,88 @@ const ResultCurveSection = ({
     }
   };
   
+  // Générer les en-têtes dynamiques pour le tableau
+  const renderTableHeaders = () => {
+    const headers = [
+      <th key="distance" style={{ width: `${25}%` }}>{t('tests.after.results.resultCurve.distanceMm')}</th>
+    ];
+    
+    // Ajouter un en-tête pour chaque position ECD
+    ecdPositions.forEach((position, index) => {
+      const widthPercentage = ecdPositions.length <= 3 ? 
+        Math.floor(60 / ecdPositions.length) : 
+        Math.floor(75 / ecdPositions.length);
+      
+      headers.push(
+        <th key={`hardness-${index}`} style={{ width: `${widthPercentage}%` }}>
+          {position.name}
+        </th>
+      );
+    });
+    
+    headers.push(
+      <th key="actions" style={{ width: '15%' }}>{t('common.actions')}</th>
+    );
+    
+    return headers;
+  };
+  
+  // Générer les cellules de données pour chaque position
+  const renderDataCells = (point, index) => {
+    const cells = [
+      <td key={`distance-${index}`}>
+        <Form.Control
+          type="number"
+          value={point.distance}
+          onChange={(e) => handlePointChange(index, 'distance', e.target.value)}
+          onBlur={handleBlur}
+          placeholder={t('tests.after.results.resultCurve.distance')}
+          disabled={loading}
+        />
+      </td>
+    ];
+    
+    // Ajouter une cellule pour chaque position ECD
+    ecdPositions.forEach((position, posIndex) => {
+      const positionName = position.name;
+      cells.push(
+        <td key={`hardness-${index}-${posIndex}`}>
+          <Form.Control
+            type="number"
+            value={getHardnessForPosition(point, positionName) || ''}
+            onChange={(e) => setHardnessForPosition(index, positionName, e.target.value)}
+            onBlur={handleBlur}
+            placeholder={`${positionName}`}
+            disabled={loading}
+          />
+        </td>
+      );
+    });
+    
+    // Ajouter la cellule pour les actions
+    cells.push(
+      <td key={`actions-${index}`} className="text-center">
+        <Button
+          variant="outline-danger"
+          size="sm"
+          onClick={() => removeDataPoint(index)}
+          disabled={loading}
+        >
+          <FontAwesomeIcon icon={faTrash} />
+        </Button>
+      </td>
+    );
+    
+    return cells;
+  };
+  
+  // Si aucune position ECD n'est définie, afficher un message
+  const noPositionsAlert = () => (
+    <div className="alert alert-info mt-3">
+      {t('tests.after.results.resultCurve.noPositions', 'Please define ECD positions in the previous section to generate curve data')}
+    </div>
+  );
+  
   return (
     <Tab.Container id="result-curve-tabs" activeKey={activeTab} onSelect={k => setActiveTab(k)}>
       <Nav variant="tabs" className="mb-3">
@@ -244,89 +419,45 @@ const ResultCurveSection = ({
           </div>
         </Tab.Pane>
         <Tab.Pane eventKey="data">
-          {/* Champ d'unité de dureté supprimé ici */}
-          
-          {/* Nouveau champ pour le pas d'incrémentation */}
-          <div className="mb-3">
-            <div><label>{t('tests.after.results.resultCurve.incrementStep')}</label></div>
-            <input
-              type="number"
-              className="form-control"
-              style={{ width: '150px' }}
-              value={stepValue}
-              onChange={handleStepChange}
-              disabled={loading}
-            />
-          </div>
-          <Table responsive bordered size="sm" className="mt-2 mb-3">
-            <thead className="bg-light">
-              <tr>
-                <th style={{ width: '25%' }}>{t('tests.after.results.resultCurve.distanceMm')}</th>
-                <th style={{ width: '30%' }}>{t('tests.after.results.resultCurve.flankHardness')}</th>
-                <th style={{ width: '30%' }}>{t('tests.after.results.resultCurve.rootHardness')}</th>
-                <th style={{ width: '15%' }}>{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dataPoints.map((point, index) => (
-                <tr key={`point-${index}`}>
-                  <td>
-                    <Form.Control
-                      type="number"
-                      name={`resultsData.results[${resultIndex}].curveData.points[${index}].distance`}
-                      value={point.distance}
-                      onChange={(e) => handlePointChange(index, 'distance', e.target.value)}
-                      onBlur={handleBlur}
-                      placeholder={t('tests.after.results.resultCurve.distance')}
-                      disabled={loading}
-                    />
-                  </td>
-                  <td>
-                    <Form.Control
-                      type="number"
-                      name={`resultsData.results[${resultIndex}].curveData.points[${index}].flankHardness`}
-                      value={point.flankHardness || ''}
-                      onChange={(e) => handlePointChange(index, 'flankHardness', e.target.value)}
-                      onBlur={handleBlur}
-                      placeholder={t('tests.after.results.resultCurve.flankHardnessValue')}
-                      disabled={loading}
-                    />
-                  </td>
-                  <td>
-                    <Form.Control
-                      type="number"
-                      value={point.rootHardness || ''}
-                      name={`resultsData.results[${resultIndex}].curveData.points[${index}].rootHardness`}
-                      onChange={(e) => handlePointChange(index, 'rootHardness', e.target.value)}
-                      onBlur={handleBlur}
-                      placeholder={t('tests.after.results.resultCurve.rootHardnessValue')}
-                      disabled={loading}
-                    />
-                  </td>
-                  <td className="text-center">
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() => removeDataPoint(index)}
-                      disabled={loading}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          <div className="text-end">
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={addDataPoint}
-              disabled={loading}
-            >
-              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.resultCurve.addPoint')}
-            </Button>
-          </div>
+          {ecdPositions.length === 0 ? noPositionsAlert() : (
+            <>
+              <div className="mb-3">
+                <div><label>{t('tests.after.results.resultCurve.incrementStep')}</label></div>
+                <input
+                  type="number"
+                  className="form-control"
+                  style={{ width: '150px' }}
+                  value={stepValue}
+                  onChange={handleStepChange}
+                  disabled={loading}
+                />
+              </div>
+              <Table responsive bordered size="sm" className="mt-2 mb-3">
+                <thead className="bg-light">
+                  <tr>
+                    {renderTableHeaders()}
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataPoints.map((point, index) => (
+                    <tr key={`point-${index}`}>
+                      {renderDataCells(point, index)}
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <div className="text-end">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={addDataPoint}
+                  disabled={loading}
+                >
+                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.resultCurve.addPoint')}
+                </Button>
+              </div>
+            </>
+          )}
         </Tab.Pane>
       </Tab.Content>
     </Tab.Container>

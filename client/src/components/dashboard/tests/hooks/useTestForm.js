@@ -102,14 +102,17 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
   // Handlers pour le formulaire
   const { 
     handleChange, handleSelectChange, 
-    handleThermalCycleAdd, handleThermalCycleRemove,
+    handleThermalCycleAdd, handleThermalCycleRemove, handleThermalCycleChange,
     handleChemicalCycleAdd, handleChemicalCycleRemove,
     handleGasQuenchSpeedAdd, handleGasQuenchSpeedRemove,
     handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,
     handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
     handleResultBlocAdd, handleResultBlocRemove,
     handleHardnessResultAdd, handleHardnessResultRemove,
-    handleCreateOption // Ajouter le handler pour la création d'options
+    handleCreateOption, // Ajouter le handler pour la création d'options
+    handleEcdPositionAdd, // Nouvelles fonctions pour la gestion des positions ECD
+    handleEcdPositionRemove,
+    handleEcdPositionChange
   } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
   
   // Validation du formulaire
@@ -200,8 +203,8 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
     showConfirmModal, 
     pendingClose,
-    isModified,       // Nouveau! Exposer l'état modifié
-    setModified,      // Nouveau! Exposer la fonction pour définir manuellement l'état modifié
+    isModified,      
+    setModified,     
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
@@ -209,6 +212,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     // Thermal cycle
     handleThermalCycleAdd,
     handleThermalCycleRemove,
+    handleThermalCycleChange, // Ajout de la fonction pour gérer la logique de rampe automatique
     // Chemical cycle
     handleChemicalCycleAdd,
     handleChemicalCycleRemove,
@@ -222,6 +226,10 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     handleResultBlocRemove,
     handleHardnessResultAdd,
     handleHardnessResultRemove,
+    // Nouvelles fonctions pour la gestion des positions ECD
+    handleEcdPositionAdd,
+    handleEcdPositionRemove,
+    handleEcdPositionChange,
     // Ajout du handler pour créer de nouvelles options
     handleCreateOption,
     // Fonctions de rafraîchissement

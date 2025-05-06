@@ -42,7 +42,7 @@ const fileService = {
   },
   
   getFilePreviewUrl: (fileId) => {
-    return `${api.defaults.baseURL}/files/download/${fileId}?preview=true`;
+    return `${api.defaults.baseURL}/files/${fileId}`;
   },
   
   // Nouvelle méthode pour récupérer un fichier par ID

@@ -525,6 +525,7 @@
         "toothRoot": "Pied de dent",
         "comment": "Commentaire",
         "selectPosition": "Position",
+        "enterPosition": "Saisir une position",
         "enterValue": "Valeur",
         "enterDistance": "Distance",
         "locations": {
@@ -542,6 +543,12 @@
           "associateError": "Erreur lors de l'association des fichiers:",
           "import": "Importer un {{name}}"
         },
+        "controlLocation": {
+          "title": "Zones de contrôle",
+          "loadError": "Erreur lors du chargement des fichiers:",
+          "associateError": "Erreur lors de l'association des fichiers:",
+          "import": "Importer une zone de contrôle"
+        },
         "resultCurve": {
           "title": "Courbe de dureté",
           "curve": "Courbe",
@@ -558,7 +565,8 @@
           "specification": "Spécification",
           "addPoint": "Ajouter un point",
           "hardnessWithUnit": "Dureté ({{unit}})",
-          "specError": "Erreur lors de la récupération des spécifications ECD:"
+          "specError": "Erreur lors de la récupération des spécifications ECD:",
+          "noPositions": "Veuillez définir des positions ECD dans la section précédente pour générer les données de courbe"
         }
       }
     }
@@ -574,6 +582,10 @@
       "cleaningInProgress": "Nettoyage en cours...",
       "analysis": "Analyse"
     },
+    "userManagement": {
+      "title": "Gestion des Utilisateurs",
+      "manageUsers": "Gérer les utilisateurs"
+    },
     "archivesReference": {
       "title": "Archives & Références",
       "archives": "Archives",
@@ -587,6 +599,52 @@
       "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
       "success": "Données supprimées avec succès",
       "error": "Erreur lors de la suppression des données"
+    }
+  },
+  
+  "userManagement": {
+    "title": "Gestion des Utilisateurs",
+    "users": "Utilisateurs",
+    "userList": "Liste des utilisateurs",
+    "addUser": "Ajouter un utilisateur",
+    "editUser": "Modifier l'utilisateur",
+    "deleteUser": "Supprimer l'utilisateur",
+    "createUser": "Créer un utilisateur",
+    "userId": "ID",
+    "username": "Nom d'utilisateur",
+    "role": "Rôle",
+    "password": "Mot de passe",
+    "createdAt": "Date de création",
+    "actions": "Actions",
+    "saveChanges": "Enregistrer",
+    "cancel": "Annuler",
+    "generatePassword": "Générer un mot de passe",
+    "copyPassword": "Copier le mot de passe",
+    "passwordCopied": "Mot de passe copié dans le presse-papier",
+    "passwordNotCopied": "Impossible de copier le mot de passe",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+    "roles": {
+      "user": "Utilisateur",
+      "admin": "Administrateur",
+      "superuser": "Super Administrateur"
+    },
+    "tooltips": {
+      "delete": "Supprimer l'utilisateur",
+      "edit": "Modifier le rôle"
+    },
+    "messages": {
+      "noChanges": "Aucune modification à enregistrer",
+      "changesSaved": "Rôles des utilisateurs mis à jour avec succès",
+      "changesReset": "Modifications annulées",
+      "userCreated": "Utilisateur créé avec succès",
+      "userDeleted": "Utilisateur supprimé avec succès",
+      "error": {
+        "loadingUsers": "Erreur lors du chargement des utilisateurs",
+        "updatingRoles": "Erreur lors de la mise à jour des rôles",
+        "createUser": "Erreur lors de la création de l'utilisateur",
+        "deleteUser": "Erreur lors de la suppression de l'utilisateur",
+        "missingFields": "Nom d'utilisateur et mot de passe sont requis"
+      }
     }
   }
 }

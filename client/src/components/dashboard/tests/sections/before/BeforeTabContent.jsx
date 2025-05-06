@@ -159,6 +159,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           pressureUnitOptions={formHandlers.pressureUnitOptions}
           handleThermalCycleAdd={formHandlers.handleThermalCycleAdd}
           handleThermalCycleRemove={formHandlers.handleThermalCycleRemove}
+          handleThermalCycleChange={formHandlers.handleThermalCycleChange}
           handleChemicalCycleAdd={formHandlers.handleChemicalCycleAdd}
           handleChemicalCycleRemove={formHandlers.handleChemicalCycleRemove}
           handleGasQuenchSpeedAdd={formHandlers.handleGasQuenchSpeedAdd}

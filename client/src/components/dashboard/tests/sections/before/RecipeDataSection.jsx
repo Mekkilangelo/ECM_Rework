@@ -6,7 +6,7 @@ import PreoxidationSection from './recipe/PreoxidationSection';
 import ThermalCycleSection from './recipe/ThermalCycleSection';
 import ChemicalCycleSection from './recipe/ChemicalCycleSection';
 import QuenchDataSection from './recipe/QuenchDataSection';
-import RecipeGraphSection from './recipe/RecipeGraphSection';
+import RecipePreviewChart from './recipe/RecipePreviewChart';
 
 const RecipeDataSection = ({
   formData,
@@ -19,6 +19,7 @@ const RecipeDataSection = ({
   pressureUnitOptions,
   handleThermalCycleAdd,
   handleThermalCycleRemove,
+  handleThermalCycleChange,
   handleChemicalCycleAdd,
   handleChemicalCycleRemove,
   handleGasQuenchSpeedAdd,
@@ -29,26 +30,9 @@ const RecipeDataSection = ({
   handleOilQuenchSpeedRemove,
   loading,
   selectStyles,
-  test,
-  handleFileAssociationNeeded
+  test
 }) => {
   const { t } = useTranslation();
-  
-  // Fonction pour collecter les méthodes d'association des fichiers des sous-composants
-  const [recipeGraphFileAssociation, setRecipeGraphFileAssociation] = useState(null);
-  
-  // Gestionnaire pour recevoir la fonction d'association des fichiers des graphes
-  const handleRecipeGraphFileAssociationNeeded = (associateFunc) => {
-    console.log("Recipe graph file association function received in RecipeDataSection");
-    setRecipeGraphFileAssociation(() => associateFunc);
-  };
-  
-  // Transmettre les méthodes d'association au parent
-  React.useEffect(() => {
-    if (handleFileAssociationNeeded && recipeGraphFileAssociation) {
-      handleFileAssociationNeeded(recipeGraphFileAssociation);
-    }
-  }, [handleFileAssociationNeeded, recipeGraphFileAssociation]);
   
   return (
     <>    
@@ -99,6 +83,7 @@ const RecipeDataSection = ({
           pressureUnitOptions={pressureUnitOptions}
           handleThermalCycleAdd={handleThermalCycleAdd}
           handleThermalCycleRemove={handleThermalCycleRemove}
+          handleThermalCycleChange={handleThermalCycleChange}
           loading={loading}
           selectStyles={selectStyles}
         />
@@ -124,17 +109,15 @@ const RecipeDataSection = ({
         />
       </CollapsibleSection>
       
+      {/* Ajout de la nouvelle section pour la prévisualisation du graphique */}
       <CollapsibleSection
-        title={t('tests.before.recipeData.graphs.title')}
-        isExpandedByDefault={true}
-        sectionId="test-recipe-graph"
+        title={t('tests.before.recipeData.previewChart.title', 'Prévisualisation du graphique')}
+        isExpandedByDefault={false}
+        sectionId="test-recipe-preview"
         rememberState={true}
         level={1}
-      >  
-        <RecipeGraphSection
-          testNodeId={test ? test.id : null}
-          onFileAssociationNeeded={handleRecipeGraphFileAssociationNeeded}
-        />
+      >
+        <RecipePreviewChart formData={formData} />
       </CollapsibleSection>
       
       <CollapsibleSection

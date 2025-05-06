@@ -6,6 +6,22 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
   // Récupérer les gestionnaires de formulaire globaux
   const globalHandlers = useGlobalFormHandlers(formData, setFormData, errors, setErrors, refreshOptionsFunctions);
   
+  // Extraire la fonction handleChange de globalHandlers
+  const { handleChange } = globalHandlers;
+  
+  // Fonction pour déterminer automatiquement la direction de la rampe en fonction des températures
+  const determineRampDirection = (currentTemp, previousTemp) => {
+    if (!previousTemp) return 'up'; // Par défaut, commencer avec une rampe montante
+    
+    if (currentTemp > previousTemp) {
+      return 'up'; // Température qui augmente = rampe montante
+    } else if (currentTemp < previousTemp) {
+      return 'down'; // Température qui diminue = rampe descendante
+    } else {
+      return 'continue'; // Température identique = maintien
+    }
+  };
+  
   // Gestion du cycle thermique
   const handleThermalCycleAdd = useCallback(() => {
     const newStep = {
@@ -44,6 +60,58 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
       }));
     }
   }, [formData, setFormData]);
+  
+  // Nouvelle fonction pour mettre à jour une valeur dans le cycle thermique et 
+  // recalculer automatiquement les rampes si besoin
+  const handleThermalCycleChange = useCallback((index, field, value) => {
+    setFormData(prev => {
+      const updatedThermalCycle = [...(prev.recipeData?.thermalCycle || [])];
+      
+      // Mettre à jour la valeur spécifique
+      updatedThermalCycle[index] = { 
+        ...updatedThermalCycle[index], 
+        [field]: value 
+      };
+      
+      // Si on modifie un point de consigne (setpoint), recalculer les directions de rampe
+      if (field === 'setpoint') {
+        // Convertir à un nombre pour les comparaisons
+        const newTemp = parseFloat(value);
+        
+        // Recalculer les rampes pour toutes les étapes
+        updatedThermalCycle.forEach((cycle, idx) => {
+          // Pour la première étape ou si la température n'est pas définie, on laisse la rampe telle quelle
+          if (idx === 0 || isNaN(newTemp)) {
+            return;
+          }
+          
+          // Pour l'étape qui vient d'être modifiée, on recalcule sa rampe en fonction de l'étape précédente
+          if (idx === index) {
+            const prevTemp = parseFloat(updatedThermalCycle[idx - 1].setpoint);
+            if (!isNaN(prevTemp)) {
+              cycle.ramp = determineRampDirection(newTemp, prevTemp);
+            }
+          } 
+          // Pour l'étape suivante (si elle existe), on recalcule sa rampe car l'étape précédente a changé
+          else if (idx === index + 1) {
+            const prevTemp = parseFloat(updatedThermalCycle[idx - 1].setpoint);
+            const currentTemp = parseFloat(cycle.setpoint);
+            if (!isNaN(prevTemp) && !isNaN(currentTemp)) {
+              cycle.ramp = determineRampDirection(currentTemp, prevTemp);
+            }
+          }
+        });
+      }
+      
+      return {
+        ...prev,
+        recipeData: {
+          ...prev.recipeData,
+          thermalCycle: updatedThermalCycle
+        }
+      };
+    });
+  }, [setFormData]);
   
   // Gestion du cycle chimique
   const handleChemicalCycleAdd = useCallback(() => {
@@ -244,11 +312,13 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
   
   // Gestion des résultats de dureté
   const handleHardnessResultAdd = useCallback((resultIndex) => {
+    // Utiliser le callback de setState pour être sûr de travailler avec les données les plus récentes
     setFormData(prev => {
       const updatedResults = [...(prev.resultsData?.results || [])];
       
       // Ajouter un nouveau point de dureté
       if (updatedResults[resultIndex]) {
+        // Créer un nouveau tableau de points de dureté pour éviter les problèmes de référence
         updatedResults[resultIndex].hardnessPoints = [
           ...(updatedResults[resultIndex].hardnessPoints || []),
           {
@@ -288,10 +358,91 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     });
   }, [setFormData]);
 
+  // Nouvelle fonction pour gérer les positions ECD
+  const handleEcdPositionAdd = useCallback((resultIndex) => {
+    const updatedResults = [...formData.resultsData.results];
+    
+    // S'assurer que l'objet ecd et son tableau de positions existent
+    if (!updatedResults[resultIndex].ecd) {
+      updatedResults[resultIndex].ecd = {
+        hardnessValue: '',
+        hardnessUnit: '',
+        ecdPoints: []
+      };
+    }
+    
+    if (!updatedResults[resultIndex].ecd.ecdPoints) {
+      updatedResults[resultIndex].ecd.ecdPoints = [];
+    }
+    
+    // Ajouter une nouvelle position
+    updatedResults[resultIndex].ecd.ecdPoints.push({
+      name: '',
+      distance: '',
+      unit: ''
+    });
+    
+    handleChange({
+      target: {
+        name: 'resultsData.results',
+        value: updatedResults
+      }
+    });
+  }, [formData, handleChange]);
+  
+  const handleEcdPositionRemove = useCallback((resultIndex, positionIndex) => {
+    const updatedResults = [...formData.resultsData.results];
+    
+    if (updatedResults[resultIndex].ecd?.ecdPoints && 
+        updatedResults[resultIndex].ecd.ecdPoints.length > 1) {
+      updatedResults[resultIndex].ecd.ecdPoints = 
+        updatedResults[resultIndex].ecd.ecdPoints.filter((_, i) => i !== positionIndex);
+      
+      handleChange({
+        target: {
+          name: 'resultsData.results',
+          value: updatedResults
+        }
+      });
+    }
+  }, [formData, handleChange]);
+
+  const handleEcdPositionChange = (resultIndex, positionIndex, field, value) => {
+    const updatedResults = [...formData.resultsData.results];
+    
+    // S'assurer que l'objet ecd et son tableau de positions existent
+    if (!updatedResults[resultIndex].ecd) {
+      updatedResults[resultIndex].ecd = {
+        hardnessValue: '',
+        hardnessUnit: '',
+        ecdPoints: []
+      };
+    }
+    
+    if (!updatedResults[resultIndex].ecd.ecdPoints) {
+      updatedResults[resultIndex].ecd.ecdPoints = [{ name: '', distance: '', unit: '' }];
+    }
+    
+    // Mettre à jour le champ spécifique
+    if (field === 'unit') {
+      updatedResults[resultIndex].ecd.ecdPoints[positionIndex][field] = value ? value.value : '';
+    } else {
+      updatedResults[resultIndex].ecd.ecdPoints[positionIndex][field] = value;
+    }
+    
+    handleChange({
+      target: {
+        name: 'resultsData.results',
+        value: updatedResults
+      }
+    });
+  };
+
   return {
     ...globalHandlers,
     handleThermalCycleAdd,
     handleThermalCycleRemove,
+    handleThermalCycleChange,
     handleChemicalCycleAdd,
     handleChemicalCycleRemove,
     handleGasQuenchSpeedAdd,
@@ -303,7 +454,10 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     handleResultBlocAdd,
     handleResultBlocRemove,
     handleHardnessResultAdd,
-    handleHardnessResultRemove
+    handleHardnessResultRemove,
+    handleEcdPositionAdd,
+    handleEcdPositionRemove,
+    handleEcdPositionChange
   };
 };
 

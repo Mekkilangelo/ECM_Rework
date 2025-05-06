@@ -19,6 +19,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Reference from './pages/Reference';
 import Archives from './pages/Archives';  
+import UserManagement from './pages/UserManagement';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Composant de chargement pour Suspense
@@ -43,7 +44,7 @@ const PrivateRouteComponent = ({ children }) => {
   }
   
   if (!isAuthenticated) {
-    return <Navigate to="/login?error=session_expired" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   return children;
@@ -60,7 +61,7 @@ function App() {
             
             {/* Routes protégées */}
             <Route 
-              path="/" 
+              path="/dashboard" 
               element={
                 <PrivateRouteComponent>
                   <Dashboard />
@@ -86,7 +87,23 @@ function App() {
               } 
             />
             
-            {/* Route par défaut - redirection vers login si non authentifié */}
+            {/* Route pour la gestion des utilisateurs */}
+            <Route 
+              path="/users" 
+              element={
+                <PrivateRouteComponent>
+                  <UserManagement />
+                </PrivateRouteComponent>
+              } 
+            />
+            
+            {/* Route par défaut - redirection vers login */}
+            <Route 
+              path="/" 
+              element={<Navigate to="/login" replace />} 
+            />
+            
+            {/* Toute autre route non définie */}
             <Route 
               path="*" 
               element={<Navigate to="/login" replace />} 

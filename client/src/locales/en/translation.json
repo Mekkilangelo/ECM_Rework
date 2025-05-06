@@ -498,28 +498,34 @@
         "import": "Import {{name}}"
       },
       "results": {
-      "resultsLabel": "Results",
-      "addResult": "Add result",
-      "resultNumber": "Result #{{number}}",
-      "description": "Description",
-      "hardness": "Hardness",
-      "position": "Position",
-      "value": "Value",
-      "addPoint": "Add point",
-      "ecd": "ECD (Effective Case Depth)",
-      "hardnessValue": "Hardness value",
-      "hardnessUnit": "Hardness unit",
-      "distance": "Distance",
-      "toothFlank": "Tooth flank",
-      "toothRoot": "Tooth root",
-      "comment": "Comment",
-      "selectPosition": "Position",
-      "enterValue": "Value",
-      "enterDistance": "Distance",
-      "locations": {
-        "surface": "Surface",
-        "tooth": "Tooth",
-        "core": "Core"
+        "resultsLabel": "Results",
+        "addResult": "Add result",
+        "resultNumber": "Result #{{number}}",
+        "description": "Description",
+        "hardness": "Hardness",
+        "position": "Position",
+        "value": "Value",
+        "addPoint": "Add point",
+        "ecd": "ECD (Effective Case Depth)",
+        "hardnessValue": "Hardness value",
+        "hardnessUnit": "Hardness unit",
+        "distance": "Distance",
+        "toothFlank": "Tooth flank",
+        "toothRoot": "Tooth root",
+        "comment": "Comment",
+        "selectPosition": "Position",
+        "enterValue": "Value",
+        "enterDistance": "Distance",
+        "locations": {
+          "surface": "Surface",
+          "tooth": "Tooth",
+          "core": "Core"
+        },
+        "controlLocation": {
+          "title": "Control Locations",
+          "loadError": "Error while loading files:",
+          "associateError": "Error while associating files:",
+          "import": "Import control location"
         },
         "micrographs": {
           "title": "Micrographs",
@@ -563,6 +569,10 @@
       "cleaningInProgress": "Cleaning in progress...",
       "analysis": "Analysis"
     },
+    "userManagement": {
+      "title": "User Management",
+      "manageUsers": "Manage users"
+    },
     "archivesReference": {
       "title": "Archives & References",
       "archives": "Archives",
@@ -576,6 +586,52 @@
       "confirmMessage": "Warning! This action will permanently delete all data from the application.\n\nAre you sure you want to continue?",
       "success": "Data successfully deleted",
       "error": "Error while deleting data"
+    }
+  },
+  
+  "userManagement": {
+    "title": "User Management",
+    "users": "Users",
+    "userList": "Users List",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "createUser": "Create User",
+    "userId": "ID",
+    "username": "Username",
+    "role": "Role",
+    "password": "Password",
+    "createdAt": "Created At",
+    "actions": "Actions",
+    "saveChanges": "Save",
+    "cancel": "Cancel",
+    "generatePassword": "Generate Password",
+    "copyPassword": "Copy Password",
+    "passwordCopied": "Password copied to clipboard",
+    "passwordNotCopied": "Unable to copy password",
+    "confirmDelete": "Are you sure you want to delete this user?",
+    "roles": {
+      "user": "User",
+      "admin": "Administrator",
+      "superuser": "Super Administrator"
+    },
+    "tooltips": {
+      "delete": "Delete User",
+      "edit": "Edit Role"
+    },
+    "messages": {
+      "noChanges": "No changes to save",
+      "changesSaved": "User roles updated successfully",
+      "changesReset": "Changes cancelled",
+      "userCreated": "User created successfully",
+      "userDeleted": "User deleted successfully",
+      "error": {
+        "loadingUsers": "Error loading users",
+        "updatingRoles": "Error updating roles",
+        "createUser": "Error creating user",
+        "deleteUser": "Error deleting user",
+        "missingFields": "Username and password are required"
+      }
     }
   }
 }

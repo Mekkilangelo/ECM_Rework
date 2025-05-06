@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
+import { setInitialLoadComplete } from '../services/api';
 
 // Création du contexte
 export const AuthContext = createContext();
@@ -15,16 +16,40 @@ export const AuthProvider = ({ children }) => {
     const checkAuthStatus = async () => {
       try {
         const token = authService.getToken();
-        if (token) {
-          const storedUser = authService.getUser();
+        
+        // Si aucun token n'est présent, terminer le chargement immédiatement
+        if (!token) {
+          setLoading(false);
+          // Indiquer que le chargement initial est terminé
+          setInitialLoadComplete();
+          return;
+        }
+        
+        const storedUser = authService.getUser();
+        
+        // Démarrer le suivi d'activité uniquement si un token est présent
+        authService.setupActivityTracking();
+        
+        // Essayer de rafraîchir le token silencieusement
+        try {
+          await authService.refreshToken(true);
           setUser(storedUser);
           setIsAuthenticated(true);
+        } catch (refreshError) {
+          console.log('Le token a expiré ou est invalide');
+          // Nettoyage silencieux des données d'authentification
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       } catch (error) {
         console.error('Erreur de vérification d\'authentification:', error);
-        authService.logout();
+        // Déconnexion silencieuse en cas d'erreur
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       } finally {
         setLoading(false);
+        // Indiquer que le chargement initial est terminé
+        setInitialLoadComplete();
       }
     };
 
@@ -37,6 +62,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
+    
+    // Démarrer le suivi d'activité lors de la connexion
+    authService.setupActivityTracking();
   };
 
   // Fonction de déconnexion

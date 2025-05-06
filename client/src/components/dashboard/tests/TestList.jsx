@@ -64,6 +64,34 @@ const TestList = ({ partId }) => {
     }
   };
 
+  const handleCloseEditForm = () => {
+    if (testFormRef.current && testFormRef.current.handleCloseRequest) {
+      testFormRef.current.handleCloseRequest();
+    } else {
+      setShowEditForm(false);
+    }
+  };
+
+  const handleCloseCreateForm = () => {
+    if (testFormRef.current && testFormRef.current.handleCloseRequest) {
+      testFormRef.current.handleCloseRequest();
+    } else {
+      setShowCreateForm(false);
+    }
+  };
+
+  // Fonction appelée après une mise à jour réussie
+  const handleTestUpdated = () => {
+    refreshData();
+    setShowEditForm(false); // S'assurer que le modal se ferme
+  };
+
+  // Fonction appelée après une création réussie
+  const handleTestCreated = () => {
+    refreshData();
+    setShowCreateForm(false); // S'assurer que le modal se ferme
+  };
+
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
   if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /><div>{t('common.loading')}</div></div>;
@@ -200,14 +228,7 @@ const TestList = ({ partId }) => {
       {/* Modal pour créer un essai */}
       <Modal
         show={showCreateForm}
-        onHide={() => {
-          // On utilise maintenant handleCloseRequest au lieu de fermer directement
-          if (testFormRef.current && testFormRef.current.handleCloseRequest) {
-            testFormRef.current.handleCloseRequest();
-          } else {
-            setShowCreateForm(false);
-          }
-        }}
+        onHide={handleCloseCreateForm}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -218,7 +239,7 @@ const TestList = ({ partId }) => {
             ref={testFormRef}
             partId={partId}
             onClose={() => setShowCreateForm(false)}
-            onTestCreated={() => refreshData()}
+            onTestCreated={handleTestCreated}
           />
         </Modal.Body>
       </Modal>
@@ -226,13 +247,7 @@ const TestList = ({ partId }) => {
       {/* Modal pour éditer un essai */}
       <Modal
         show={showEditForm}
-        onHide={() => {
-          if (testFormRef.current && testFormRef.current.handleCloseRequest) {
-            testFormRef.current.handleCloseRequest();
-          } else {
-            setShowEditForm(false);
-          }
-        }}
+        onHide={handleCloseEditForm}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -245,31 +260,11 @@ const TestList = ({ partId }) => {
               test={selectedTest}
               partId={partId}
               onClose={() => setShowEditForm(false)}
-              onTestUpdated={() => refreshData()}
+              onTestUpdated={handleTestUpdated}
             />
           )}
         </Modal.Body>
       </Modal>
-
-      {/* Modal pour voir les détails */}
-      {/* <Modal
-        show={showDetailModal}
-        onHide={() => setShowDetailModal(false)}
-        size="lg"
-      >
-        <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('tests.details')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedTest && (
-            <TestDetails
-              testId={selectedTest.id}
-              partId={partId}
-              onClose={() => setShowDetailModal(false)}
-            />
-          )}
-        </Modal.Body>
-      </Modal> */}
 
       {/* Modal de confirmation de suppression */}
       <Modal

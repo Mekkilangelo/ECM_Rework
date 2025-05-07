@@ -1,0 +1,298 @@
+/* Styles pour la page de recherche */
+
+/* Importation des modules CSS refactorisés */
+@import './variables.css';
+@import './search-base.css';
+@import './search-filters.css';
+@import './search-tabs.css';
+@import './search-responsive.css';
+
+/* Style pour les cartes de résultats */
+.search-card {
+  box-shadow: var(--shadow-sm);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--spacing-4);
+}
+
+.search-card .card-header {
+  background-color: var(--light-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--spacing-3);
+}
+
+/* Style pour l'input de recherche */
+.search-input-group {
+  border-radius: 30px !important;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.search-input-group:focus-within {
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15);
+  border-color: var(--danger-color);
+}
+
+.search-input-group .form-control {
+  border: none;
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: transparent;
+}
+
+.search-input-group .form-control:focus {
+  box-shadow: none;
+}
+
+.search-input-group .input-group-text {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  color: var(--gray-500);
+  transition: color 0.2s ease;
+}
+
+.search-input-group .input-group-text:hover {
+  color: var(--danger-color);
+}
+
+.search-button {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: 0 30px 30px 0 !important;
+}
+
+/* Style pour les onglets de recherche */
+.nav-tabs-modern {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-tabs-modern .nav-link {
+  border: none;
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-tabs-modern .nav-link:hover {
+  color: var(--danger-color);
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.nav-tabs-modern .nav-link.active {
+  color: var(--danger-color);
+  background-color: transparent;
+  font-weight: var(--font-weight-semibold);
+}
+
+.nav-tabs-modern .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--danger-color);
+}
+
+/* Style pour les résultats par type */
+.entity-type-heading {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 2px solid var(--danger-color);
+  margin-bottom: var(--spacing-3);
+}
+
+/* Style pour le bouton de filtre */
+.filter-toggle-btn {
+  border-radius: 30px;
+  padding: var(--spacing-2) var(--spacing-3);
+  transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Style pour les filtres actifs */
+.active-filters {
+  margin-top: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-3);
+  background-color: rgba(220, 53, 69, 0.05);
+  border-radius: var(--border-radius-md);
+  border: 1px solid rgba(220, 53, 69, 0.1);
+}
+
+.active-filter-item {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-2);
+  background-color: white;
+  border-radius: var(--border-radius-pill);
+  border: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  transition: all 0.2s ease;
+}
+
+.active-filter-item:hover {
+  border-color: var(--danger-color);
+}
+
+.active-filter-item .filter-remove {
+  margin-left: var(--spacing-2);
+  color: var(--gray-500);
+  cursor: pointer;
+}
+
+.active-filter-item .filter-remove:hover {
+  color: var(--danger-color);
+}
+
+/* Style pour le sélecteur de date */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.date-picker-container .react-datepicker-wrapper {
+  width: 100%;
+}
+
+/* Style pour les sélecteurs d'entités */
+.entity-type-checkbox {
+  margin-right: var(--spacing-3);
+}
+
+.entity-type-checkbox label {
+  cursor: pointer;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+}
+
+.entity-type-checkbox input:checked + label {
+  background-color: rgba(220, 53, 69, 0.1);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Style pour les animations */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Style pour les tables de résultats */
+.results-table {
+  margin-bottom: 0;
+}
+
+.results-table th {
+  border-top: none;
+  background-color: var(--light-color);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.results-table td {
+  vertical-align: middle;
+  padding: var(--spacing-2) var(--spacing-3);
+  font-size: var(--font-size-base);
+  border-color: var(--border-color-light);
+}
+
+.results-table tr:hover {
+  background-color: rgba(220, 53, 69, 0.03);
+}
+
+/* Style pour la pagination des résultats */
+.search-pagination {
+  margin-top: var(--spacing-4);
+}
+
+.search-pagination .page-item.active .page-link {
+  background-color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.search-pagination .page-link {
+  color: var(--danger-color);
+}
+
+.search-pagination .page-link:hover {
+  color: #fff;
+  background-color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+/* Style pour les sliders de plage */
+.range-slider-container {
+  padding: 0 10px;
+  margin-bottom: var(--spacing-3);
+}
+
+/* Style pour les tooltips */
+.filter-tooltip {
+  cursor: help;
+}
+
+/* Style pour les suggestions de recherche */
+.search-suggestions {
+  position: absolute;
+  width: 100%;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-suggestion-item {
+  padding: var(--spacing-2) var(--spacing-3);
+  cursor: pointer;
+}
+
+.search-suggestion-item:hover {
+  background-color: var(--light-color);
+}
+
+.search-suggestion-category {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-left: var(--spacing-2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .search-input-group .form-control {
+    padding: var(--spacing-2);
+  }
+  
+  .search-button {
+    padding: var(--spacing-2);
+  }
+  
+  .filter-toggle-btn {
+    margin-top: var(--spacing-3);
+    width: 100%;
+  }
+  
+  .nav-tabs-modern .nav-link {
+    padding: var(--spacing-2);
+    font-size: var(--font-size-sm);
+  }
+}

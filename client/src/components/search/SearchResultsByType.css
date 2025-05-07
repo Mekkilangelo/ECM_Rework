@@ -1,0 +1,272 @@
+/* Styles pour les résultats de recherche par type */
+@import '../../styles/variables.css';
+
+.search-results-card {
+  transition: var(--transition-base);
+  margin-bottom: var(--spacing-4);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-results-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.search-results-card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.search-results-tabs {
+  background-color: #f8f9fa;
+}
+
+.search-results-tabs .nav-item .nav-link {
+  padding: 1rem 1.5rem;
+  color: #495057;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.search-results-tabs .nav-item .nav-link.active {
+  color: #dc3545;
+  background-color: white;
+  font-weight: bold;
+  box-shadow: inset 0 -3px 0 #dc3545;
+}
+
+.search-results-tabs .nav-item .nav-link:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.search-results-card .card-header {
+  background-color: #fff;
+  border-bottom: 1px solid var(--border-color-light);
+  padding: var(--spacing-3) var(--spacing-3);
+}
+
+.search-results-card .card-header h4 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.search-result-item {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.search-result-item:hover {
+  background-color: rgba(220, 53, 69, 0.05);
+  border-left-color: #dc3545;
+}
+
+.search-result-item h5 {
+  font-weight: var(--font-weight-medium);
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.search-result-item p {
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.search-result-item .text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* Badges colorés pour chaque type d'entité */
+.entity-badge {
+  padding: 0.4em 0.8em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 2rem;
+}
+
+.badge-entity-clients {
+  background-color: #6f42c1;
+  color: white;
+}
+
+.badge-entity-orders {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.badge-entity-parts {
+  background-color: #20c997;
+  color: white;
+}
+
+.badge-entity-tests {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.badge-entity-steels {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Style pour le modal large */
+.modal-90w {
+  max-width: 90%;
+}
+
+@media (max-width: 576px) {
+  .search-results-tabs .nav-item .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.btn-outline-primary {
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  transition: var(--transition-fast);
+}
+
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+/* SearchResultsByType.css */
+.results-card {
+  margin-top: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.results-tabs {
+  padding: 0.5rem 1rem 0;
+  background-color: #f8f9fa;
+  border-bottom: none;
+}
+
+.results-tabs .nav-item .nav-link {
+  color: #495057;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  transition: all 0.2s;
+}
+
+.results-tabs .nav-item .nav-link:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.results-tabs .nav-item .nav-link.active {
+  color: #dc3545;
+  background-color: transparent;
+  box-shadow: inset 0 -3px 0 #dc3545;
+}
+
+.results-tabs .nav-item .nav-link:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.results-table {
+  margin-bottom: 0;
+}
+
+.results-table th {
+  background-color: #f8f9fa;
+  border-top: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #495057;
+  padding: 0.75rem 1rem;
+}
+
+.results-table td {
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.results-table tr:hover {
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.table-responsive {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Style pour les badges de résultats */
+.tab-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 50px;
+}
+
+/* Animation pour les transitions d'onglets */
+.tab-content > .tab-pane {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-content > .active {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Styles pour les messages d'alertes */
+.results-alert {
+  margin: 1.5rem;
+  border-radius: 0.5rem;
+  background-color: rgba(13, 202, 240, 0.1);
+  border-left: 4px solid #0dcaf0;
+}
+
+/* Styles pour les boutons d'actions */
+.action-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Style pour les données vides */
+.empty-cell {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .results-tabs .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .results-table th,
+  .results-table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}

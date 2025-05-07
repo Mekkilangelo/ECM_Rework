@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Badge, Dropdown, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
  * @param {string} variant - Variante de couleur ('primary', 'secondary', 'danger', etc.) (optionnel)
  * @param {string} size - Taille du composant ('sm', 'md', 'lg') (optionnel)
  * @param {Object} style - Styles CSS additionnels (optionnel)
+ * @param {function} refreshTotal - Fonction pour rafraîchir le total (optionnel)
  */
 const LimitSelector = ({ 
   itemsPerPage, 
@@ -23,9 +24,27 @@ const LimitSelector = ({
   options = [10, 25, 50, 100],
   variant = 'danger',
   size = 'sm',
-  style = {}
+  style = {},
+  refreshTotal = null
 }) => {
   const { t } = useTranslation();
+  const [displayTotal, setDisplayTotal] = useState(totalItems);
+
+  // Mettre à jour le total affiché lorsque totalItems change
+  useEffect(() => {
+    setDisplayTotal(totalItems);
+  }, [totalItems]);
+
+  // Force un rafraîchissement du total si une fonction refreshTotal est fournie
+  useEffect(() => {
+    if (refreshTotal) {
+      const interval = setInterval(() => {
+        refreshTotal();
+      }, 5000); // Rafraîchir toutes les 5 secondes
+      
+      return () => clearInterval(interval);
+    }
+  }, [refreshTotal]);
 
   const handleSelect = (value) => {
     const newLimit = parseInt(value, 10);
@@ -59,7 +78,7 @@ const LimitSelector = ({
         </Dropdown>
       </div>
 
-      {totalItems !== null && (
+      {displayTotal !== null && (
         <Badge 
           bg={variant}
           text="white" 
@@ -68,7 +87,7 @@ const LimitSelector = ({
           style={{ fontWeight: '500', fontSize: '0.85em' }}
         >
           <span className="me-1">{t('pagination.total', 'Total')}:</span>
-          <span className="fw-bold ms-1">{totalItems}</span>
+          <span className="fw-bold ms-1">{displayTotal}</span>
         </Badge>
       )}
     </div>
@@ -82,7 +101,8 @@ LimitSelector.propTypes = {
   options: PropTypes.arrayOf(PropTypes.number),
   variant: PropTypes.string,
   size: PropTypes.string,
-  style: PropTypes.object
+  style: PropTypes.object,
+  refreshTotal: PropTypes.func
 };
 
 export default LimitSelector;

@@ -36,6 +36,7 @@
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-chartjs-2": "^5.3.0",
+    "react-datepicker": "^8.3.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",
     "react-i18next": "^13.2.2",

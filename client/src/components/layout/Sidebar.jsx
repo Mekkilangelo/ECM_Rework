@@ -152,7 +152,7 @@ const Sidebar = ({ userRole }) => {
   return (
     <ul className={`navbar-nav bg-dark sidebar ${isToggled ? 'toggled' : ''} accordion shadow`} id="accordionSidebar">
       {/* Logo */}
-      <a className="navbar-brand d-flex justify-content-center align-items-center py-4" href="/">
+      <a className="navbar-brand d-flex justify-content-center align-items-center py-4" href="/dashboard">
         <img className="img-fluid" src="/images/logoECM.png" alt="Logo ECM GROUP" width="140" height="60" />
       </a>
       <hr className="border-secondary mx-3" />
@@ -161,10 +161,21 @@ const Sidebar = ({ userRole }) => {
       <li className="nav-item">
         <Link
           className={`nav-link d-flex align-items-center px-3 ${isHomePage ? 'active' : ''}`}
-          to="/"
+          to="/dashboard"
         >
           <FontAwesomeIcon icon={faHome} className="fa-fw mr-2" />
           <span>{t('sidebar.dashboard')}</span>
+        </Link>
+      </li>
+      
+      {/* Search - visible to all users */}
+      <li className="nav-item">
+        <Link
+          className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/search' ? 'active' : ''}`}
+          to="/search"
+        >
+          <FontAwesomeIcon icon={faSearch} className="fa-fw mr-2" />
+          <span>{t('sidebar.search')}</span>
         </Link>
       </li>
       <hr className="border-secondary mx-3" />

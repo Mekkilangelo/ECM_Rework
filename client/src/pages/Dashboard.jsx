@@ -14,7 +14,7 @@ import Pagination from '../components/common/Pagination';
 const DashboardContent = () => {
   const { t } = useTranslation();
   const { currentLevel, hierarchyState, currentPage, itemsPerPage, setItemsPerPage, setCurrentPage, navigateBack } = useNavigation();
-  const { totalItems } = useHierarchy();
+  const { totalItems, refreshData } = useHierarchy();
   
   // Calculer le nombre de pages
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -44,6 +44,7 @@ const DashboardContent = () => {
                 itemsPerPage={itemsPerPage} 
                 onLimitChange={handleLimitChange} 
                 totalItems={totalItems}
+                refreshTotal={refreshData}
               />
               
               <Pagination 

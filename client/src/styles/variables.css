@@ -1,0 +1,93 @@
+/* Variables globales pour l'application */
+:root {
+  /* Couleurs principales */
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  
+  /* Couleurs de texte */
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-muted: #6c757d;
+  
+  /* Couleurs de bordure */
+  --border-color: #dee2e6;
+  --border-color-light: rgba(0, 0, 0, 0.05);
+  
+  /* Ombres */
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  
+  /* Espacements */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 1rem;
+  --spacing-4: 1.5rem;
+  --spacing-5: 3rem;
+  
+  /* Arrondis */
+  --border-radius-sm: 0.25rem;
+  --border-radius: 0.375rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-xl: 1rem;
+  
+  /* Transitions */
+  --transition-base: all 0.2s ease;
+  --transition-slow: all 0.3s ease;
+  --transition-fast: all 0.15s ease;
+  
+  /* Typographie */
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Couleurs des entités */
+  --color-entity-clients: var(--primary-color);
+  --color-entity-orders: var(--success-color);
+  --color-entity-parts: var(--warning-color);
+  --color-entity-tests: var(--danger-color);
+  --color-entity-steels: var(--info-color);
+  
+  /* Couleurs du texte des entités */
+  --color-entity-text-clients: #fff;
+  --color-entity-text-orders: #fff;
+  --color-entity-text-parts: var(--dark-color);
+  --color-entity-text-tests: #fff;
+  --color-entity-text-steels: var(--dark-color);
+}
+
+/* Styles des badges d'entité */
+.badge-entity-clients {
+  background-color: var(--color-entity-clients);
+  color: var(--color-entity-text-clients);
+}
+
+.badge-entity-orders {
+  background-color: var(--color-entity-orders);
+  color: var(--color-entity-text-orders);
+}
+
+.badge-entity-parts {
+  background-color: var(--color-entity-parts);
+  color: var(--color-entity-text-parts);
+}
+
+.badge-entity-tests {
+  background-color: var(--color-entity-tests);
+  color: var(--color-entity-text-tests);
+}
+
+.badge-entity-steels {
+  background-color: var(--color-entity-steels);
+  color: var(--color-entity-text-steels);
+}

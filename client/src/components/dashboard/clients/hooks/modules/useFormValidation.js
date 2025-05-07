@@ -1,17 +1,22 @@
 const useFormValidation = (formData, setErrors) => {
-    const validate = () => {
-      const newErrors = {};
-      
-      if (!formData.name.trim()) newErrors.name = 'validation.required.clientName';
-      if (!formData.country) newErrors.country = 'validation.required.country';
-      
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    };
   
+  const validate = () => {
+    const newErrors = {};
+    
+    // Validation du nom du client
+    if (!formData.name?.trim()) newErrors.name = 'validation.required.clientName';
+    
+    // Vous pouvez ajouter d'autres validations ici, par exemple pour le pays
+    if (formData.Client?.country === '') newErrors.country = 'validation.required.country';
+    
+    setErrors(newErrors);
     return {
-      validate
+      isValid: Object.keys(newErrors).length === 0,
+      errors: newErrors
     };
   };
   
-  export default useFormValidation;
+  return { validate };
+};
+
+export default useFormValidation;

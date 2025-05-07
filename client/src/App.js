@@ -21,8 +21,10 @@ import Dashboard from './pages/Dashboard';
 import Reference from './pages/Reference';
 import Archives from './pages/Archives';  
 import UserManagement from './pages/UserManagement';
+import Search from './pages/Search'; // Import de la nouvelle page de recherche
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { NavigationProvider } from './context/NavigationContext'; // Import du NavigationProvider
 
 // Composant de chargement pour Suspense
 const LoadingFallback = () => (
@@ -56,78 +58,90 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Suspense fallback={<LoadingFallback />}>
-          <BrowserRouter>
-            <Routes>
-              {/* Routes publiques */}
-              <Route path="/login" element={<Login />} />
-              
-              {/* Routes protégées */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <PrivateRouteComponent>
-                    <Dashboard />
-                  </PrivateRouteComponent>
-                } 
-              />
+        <NavigationProvider> {/* Ajout du NavigationProvider */}
+          <Suspense fallback={<LoadingFallback />}>
+            <BrowserRouter>
+              <Routes>
+                {/* Routes publiques */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Routes protégées */}
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <PrivateRouteComponent>
+                      <Dashboard />
+                    </PrivateRouteComponent>
+                  } 
+                />
 
-              <Route 
-                path="/reference" 
-                element={
-                  <PrivateRouteComponent>
-                    <Reference />
-                  </PrivateRouteComponent>
-                } 
-              />
+                <Route 
+                  path="/reference" 
+                  element={
+                    <PrivateRouteComponent>
+                      <Reference />
+                    </PrivateRouteComponent>
+                  } 
+                />
 
-              <Route 
-                path="/archives" 
-                element={
-                  <PrivateRouteComponent>
-                    <Archives />
-                  </PrivateRouteComponent>
-                } 
-              />
-              
-              {/* Route pour la gestion des utilisateurs */}
-              <Route 
-                path="/users" 
-                element={
-                  <PrivateRouteComponent>
-                    <UserManagement />
-                  </PrivateRouteComponent>
-                } 
-              />
-              
-              {/* Route par défaut - redirection vers login */}
-              <Route 
-                path="/" 
-                element={<Navigate to="/login" replace />} 
-              />
-              
-              {/* Toute autre route non définie */}
-              <Route 
-                path="*" 
-                element={<Navigate to="/login" replace />} 
-              />
-            </Routes>
+                <Route 
+                  path="/archives" 
+                  element={
+                    <PrivateRouteComponent>
+                      <Archives />
+                    </PrivateRouteComponent>
+                  } 
+                />
+                
+                {/* Route pour la gestion des utilisateurs */}
+                <Route 
+                  path="/users" 
+                  element={
+                    <PrivateRouteComponent>
+                      <UserManagement />
+                    </PrivateRouteComponent>
+                  } 
+                />
+                
+                {/* Route pour la page de recherche */}
+                <Route 
+                  path="/search" 
+                  element={
+                    <PrivateRouteComponent>
+                      <Search />
+                    </PrivateRouteComponent>
+                  } 
+                />
+                
+                {/* Route par défaut - redirection vers login */}
+                <Route 
+                  path="/" 
+                  element={<Navigate to="/login" replace />} 
+                />
+                
+                {/* Toute autre route non définie */}
+                <Route 
+                  path="*" 
+                  element={<Navigate to="/login" replace />} 
+                />
+              </Routes>
 
-            {/* ToastContainer pour afficher les notifications */}
-            <ToastContainer 
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-            
-          </BrowserRouter>
-        </Suspense>
+              {/* ToastContainer pour afficher les notifications */}
+              <ToastContainer 
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+              />
+              
+            </BrowserRouter>
+          </Suspense>
+        </NavigationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

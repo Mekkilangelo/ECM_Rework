@@ -1,0 +1,143 @@
+/* Styles pour les filtres de recherche */
+@import './variables.css';
+
+/* Style pour les accordéons de filtres */
+.filter-accordion .accordion-button:focus {
+  box-shadow: none;
+  border-color: rgba(220, 53, 69, 0.25);
+}
+
+.filter-accordion .accordion-button:not(.collapsed) {
+  background-color: var(--light-color);
+  color: var(--primary-color);
+  box-shadow: none;
+}
+
+.filter-accordion .accordion-item {
+  margin-bottom: var(--spacing-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.filter-accordion .accordion-button {
+  background-color: var(--light-color);
+  font-weight: var(--font-weight-medium);
+  padding: 0.75rem 1.25rem;
+  box-shadow: none;
+}
+
+.filter-accordion .accordion-body {
+  background-color: #fff;
+  padding: 1.25rem;
+}
+
+/* Style pour les filtres actifs */
+.active-filters {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-2) var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  border-left: 3px solid var(--danger-color);
+}
+
+.active-filters-container {
+  background-color: var(--light-color);
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-3);
+}
+
+.active-filters-title {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-2);
+}
+
+/* Style pour les badges de filtre */
+.filter-badge {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: var(--font-weight-normal);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 50rem;
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+  transition: var(--transition-fast);
+}
+
+.filter-badge:hover {
+  background-color: #0b5ed7;
+}
+
+.filter-badge-close {
+  margin-left: var(--spacing-2);
+  opacity: 0.8;
+  transition: opacity var(--transition-fast);
+  color: white !important;
+}
+
+.filter-badge-close:hover {
+  opacity: 1;
+  color: white !important;
+}
+
+.filter-category {
+  margin-bottom: var(--spacing-4);
+}
+
+.filter-category-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-3);
+  display: flex;
+  align-items: center;
+}
+
+.filter-category-title .icon {
+  margin-right: var(--spacing-2);
+  color: var(--danger-color);
+}
+
+.clear-filters-btn {
+  font-size: 0.85rem;
+  border-radius: 50rem;
+}
+
+.entity-type-checkbox label {
+  font-weight: var(--font-weight-medium);
+}
+
+/* Style pour les conteneurs de filtres */
+.filter-container {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  transition: var(--transition-slow);
+  margin-top: var(--spacing-3);
+}
+
+.filter-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Style pour les sélecteurs de filtre */
+.filter-select {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius-sm);
+}
+
+/* Style pour les formulaires de filtrage */
+.filter-form-group label {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faSearch, 
@@ -15,10 +16,20 @@ const Header = () => {
   const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const { t } = useTranslation();
+  const navigate = useNavigate();
   
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchTerm);
+    if (!searchTerm.trim()) return;
+
+    // Rediriger vers la page de recherche avec le terme de recherche
+    navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    
+    // Réinitialiser le formulaire mobile si ouvert
+    const mobileForm = document.getElementById('mobileSearchForm');
+    if (mobileForm && !mobileForm.classList.contains('d-none')) {
+      mobileForm.classList.add('d-none');
+    }
   };
 
   // Format the user initials for the avatar if no profile image

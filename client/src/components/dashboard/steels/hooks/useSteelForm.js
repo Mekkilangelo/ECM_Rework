@@ -7,7 +7,7 @@ import useSteelSubmission from './modules/useSteelSubmission';
 import useSteelData from './modules/useSteelData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
-const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
+const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false) => {
   // État du formulaire et initialisation
   const { 
     formData, 
@@ -52,6 +52,7 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
   );
   
   // Handlers pour le formulaire, les équivalents et les éléments chimiques
+  // En mode lecture seule, ces handlers ne devraient pas modifier les données
   const { 
     handleChange, 
     handleSelectChange,
@@ -62,12 +63,13 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     handleChemicalElementChange,
     handleRateTypeChange,
     handleEquivalentChange
-  } = useSteelHandlers(formData, setFormData, errors, setErrors);
+  } = useSteelHandlers(formData, setFormData, errors, setErrors, viewMode);
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, setErrors);
   
   // Soumission du formulaire au serveur en utilisant le hook factorisé
+  // En mode lecture seule, la soumission est désactivée
   const { handleSubmit } = useSteelSubmission({
     formData, 
     setFormData, 
@@ -77,10 +79,12 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     setMessage, 
     onCreated: onSteelCreated,
     onUpdated: onSteelUpdated, 
-    onClose
+    onClose,
+    viewMode // Transmettre le mode lecture seule
   });
   
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
+  // En mode lecture seule, on n'a pas besoin de confirmation pour fermer
   const { 
     showConfirmModal, 
     pendingClose, 
@@ -96,7 +100,8 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     loading,         // État de chargement
     fetchingSteel,   // État de récupération des données
     handleSubmit,    // Fonction de soumission
-    onClose          // Fonction de fermeture
+    onClose,         // Fonction de fermeture
+    viewMode         // Mode lecture seule - pour désactiver la vérification des modifications
   );
 
   // Réinitialiser l'état initial après une sauvegarde réussie
@@ -131,8 +136,8 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated) => {
     // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
     showConfirmModal, 
     pendingClose,
-    isModified,       // Nouveau! Exposer l'état modifié
-    setModified,      // Nouveau! Exposer la fonction pour définir manuellement l'état modifié
+    isModified,
+    setModified,
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 

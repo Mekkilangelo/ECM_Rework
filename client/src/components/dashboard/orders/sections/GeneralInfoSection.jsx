@@ -3,7 +3,7 @@ import React from 'react';
 import { Form, Row, Col } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 
-const GeneralInfoSection = ({ formData, errors, handleChange }) => {
+const GeneralInfoSection = ({ formData, errors, handleChange, viewMode = false, readOnlyFieldStyle = {} }) => {
   const { t } = useTranslation();
   
   return (
@@ -11,17 +11,22 @@ const GeneralInfoSection = ({ formData, errors, handleChange }) => {
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('orders.generalInfo.requestDate')} <span className="text-danger fw-bold">*</span></Form.Label>
+            <Form.Label>{t('orders.generalInfo.requestDate')} {!viewMode && <span className="text-danger fw-bold">*</span>}</Form.Label>
             <Form.Control
               type="date"
               name="order_date"
               value={formData.order_date}
               onChange={handleChange}
-              isInvalid={!!errors.order_date}
+              isInvalid={!viewMode && !!errors.order_date}
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
-            <Form.Control.Feedback type="invalid">
-              {errors.order_date && t(errors.order_date)}
-            </Form.Control.Feedback>
+            {!viewMode && (
+              <Form.Control.Feedback type="invalid">
+                {errors.order_date && t(errors.order_date)}
+              </Form.Control.Feedback>
+            )}
           </Form.Group>
         </Col>
         <Col md={6}>
@@ -33,6 +38,9 @@ const GeneralInfoSection = ({ formData, errors, handleChange }) => {
               value={formData.commercial}
               onChange={handleChange}
               autoComplete="off"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -48,6 +56,9 @@ const GeneralInfoSection = ({ formData, errors, handleChange }) => {
               onChange={handleChange}
               rows={3}
               autoComplete="off"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>

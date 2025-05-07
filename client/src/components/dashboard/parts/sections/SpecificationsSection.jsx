@@ -11,7 +11,9 @@ const SpecificationsSection = ({
   getSelectedOption,
   hardnessUnitOptions, // Recevoir directement le tableau d'options d'unités de dureté
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -47,6 +49,18 @@ const SpecificationsSection = ({
     }),
   };
 
+  // Styles modifiés pour le mode lecture seule
+  const customSelectStyles = viewMode ? {
+    ...unitSelectStyles,
+    control: (provided) => ({
+      ...provided,
+      ...readOnlyFieldStyle,
+      cursor: 'default'
+    }),
+    dropdownIndicator: () => ({ display: 'none' }),
+    indicatorSeparator: () => ({ display: 'none' })
+  } : unitSelectStyles;
+
   const handleCreateCoreHardnessUnit = (inputValue) => {
     return handleCreateOption(inputValue, 'coreHardnessUnit', 'units', 'hardness_units');
   };
@@ -80,6 +94,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -93,6 +110,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -106,14 +126,15 @@ const SpecificationsSection = ({
                 : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'coreHardnessUnit' })}
               options={hardnessUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateCoreHardnessUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>
@@ -131,6 +152,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -144,6 +168,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -157,14 +184,15 @@ const SpecificationsSection = ({
                 : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'surfaceHardnessUnit' })}
               options={hardnessUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateSurfaceHardnessUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>
@@ -182,6 +210,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -195,6 +226,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -208,14 +242,15 @@ const SpecificationsSection = ({
                 : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'toothHardnessUnit' })}
               options={hardnessUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateToothHardnessUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>
@@ -233,6 +268,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -246,6 +284,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -259,6 +300,9 @@ const SpecificationsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -272,14 +316,15 @@ const SpecificationsSection = ({
                 : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'ecdHardnessUnit' })}
               options={hardnessUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateEcdHardnessUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>

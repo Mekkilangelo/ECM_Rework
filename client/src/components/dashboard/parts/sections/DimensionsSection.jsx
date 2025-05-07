@@ -12,7 +12,9 @@ const DimensionsSection = ({
   lengthUnitOptions, // Recevoir directement les tableaux d'options
   weightUnitOptions, // Recevoir directement les tableaux d'options
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -48,6 +50,18 @@ const DimensionsSection = ({
     }),
   };
   
+  // Styles modifiés pour le mode lecture seule
+  const customSelectStyles = viewMode ? {
+    ...unitSelectStyles,
+    control: (provided) => ({
+      ...provided,
+      ...readOnlyFieldStyle,
+      cursor: 'default'
+    }),
+    dropdownIndicator: () => ({ display: 'none' }),
+    indicatorSeparator: () => ({ display: 'none' })
+  } : unitSelectStyles;
+  
   const handleCreateDimensionsUnit = (inputValue) => {
     return handleCreateOption(inputValue, 'dimensionsUnit', 'units', 'length_units');
   };
@@ -78,6 +92,9 @@ const DimensionsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -91,6 +108,9 @@ const DimensionsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -104,6 +124,9 @@ const DimensionsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -117,14 +140,15 @@ const DimensionsSection = ({
                 : (Array.isArray(lengthUnitOptions) && lengthUnitOptions.length > 0) ? lengthUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
               options={lengthUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!lengthUnitOptions || !lengthUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateDimensionsUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>
@@ -142,6 +166,9 @@ const DimensionsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -155,6 +182,9 @@ const DimensionsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -168,14 +198,15 @@ const DimensionsSection = ({
                 : (Array.isArray(lengthUnitOptions) && lengthUnitOptions.length > 0) ? lengthUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
               options={lengthUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!lengthUnitOptions || !lengthUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateDiameterUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>
@@ -193,6 +224,9 @@ const DimensionsSection = ({
               onChange={handleChange}
               step="0.01"
               size="sm"
+              disabled={viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </div>
@@ -206,14 +240,15 @@ const DimensionsSection = ({
                 : (Array.isArray(weightUnitOptions) && weightUnitOptions.length > 0) ? weightUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
               options={weightUnitOptions || []}
-              isClearable
-              styles={unitSelectStyles}
+              isClearable={!viewMode}
+              styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading && (!weightUnitOptions || !weightUnitOptions.length)}
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateWeightUnit}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </div>

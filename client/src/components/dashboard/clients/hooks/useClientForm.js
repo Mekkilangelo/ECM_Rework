@@ -8,7 +8,7 @@ import useClientSubmission from './modules/useClientSubmission';
 import useClientData from './modules/useClientData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
-const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
+const useClientForm = (client, onClose, onClientCreated, onClientUpdated, viewMode = false) => {
   // État du formulaire et initialisation
   const {
     formData,
@@ -49,11 +49,17 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
     setFetchingClient
   );
 
-  // Handlers pour le formulaire
+  // Handlers pour le formulaire - désactivés en mode lecture seule
   const {
     handleChange,
     handleSelectChange
-  } = useClientHandlers(formData, setFormData, errors, setErrors);
+  } = useClientHandlers(
+    formData, 
+    setFormData, 
+    errors, 
+    setErrors, 
+    viewMode // Passer le mode lecture seule aux handlers
+  );
 
   // Validation du formulaire
   const { validate } = useFormValidation(formData, setErrors);
@@ -68,16 +74,18 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
     setMessage,
     onCreated: onClientCreated,
     onUpdated: onClientUpdated,
-    onClose
+    onClose,
+    viewMode // Passer le mode lecture seule à la soumission
   });
 
   // Gestion de la confirmation de fermeture avec notre hook amélioré
+  // En mode lecture seule, on désactive la vérification des modifications
   const { 
     showConfirmModal, 
     pendingClose, 
-    isModified,      // Nouveau! État qui indique si le formulaire a été modifié
-    setModified,     // Nouveau! Fonction pour définir manuellement l'état modifié si nécessaire
-    resetInitialState, // Nouveau! Fonction pour réinitialiser l'état initial
+    isModified,      // État qui indique si le formulaire a été modifié
+    setModified,     // Fonction pour définir manuellement l'état modifié si nécessaire
+    resetInitialState, // Fonction pour réinitialiser l'état initial
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
@@ -87,7 +95,8 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
     loading,         // État de chargement
     fetchingClient,  // État de récupération des données
     handleSubmit,    // Fonction de soumission
-    onClose          // Fonction de fermeture
+    onClose,         // Fonction de fermeture
+    viewMode         // Mode lecture seule - pour désactiver la vérification des modifications
   );
 
   // Lorsqu'une sauvegarde réussit, réinitialiser l'état initial
@@ -112,8 +121,8 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated) => {
     // États et fonctions liés à la confirmation de fermeture
     showConfirmModal,
     pendingClose,
-    isModified,       // Nouveau! Exposer l'état modifié
-    setModified,      // Nouveau! Exposer la fonction pour définir manuellement l'état modifié
+    isModified,
+    setModified,
     handleCloseRequest,
     confirmClose,
     cancelClose,

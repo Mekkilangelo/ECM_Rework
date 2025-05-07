@@ -183,7 +183,7 @@ const TestList = ({ partId }) => {
                       {hasEditRights && (
                         <>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-warning"
                             size="sm"
                             className="mr-1"
                             onClick={(e) => {

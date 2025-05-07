@@ -8,7 +8,6 @@ import { AuthContext } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import PartForm from './PartForm';
-//import PartDetails from './PartDetails';
 import partService from '../../../services/partService';
 import '../../../styles/dataList.css';
 
@@ -150,7 +149,19 @@ const PartList = ({ orderId }) => {
                       {hasEditRights && (
                         <>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-info"
+                            size="sm"
+                            className="mr-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDetails(part);
+                            }}
+                            title={t('common.view')}
+                          >
+                            <FontAwesomeIcon icon={faEye} />
+                          </Button>
+                          <Button
+                            variant="outline-warning"
                             size="sm"
                             className="mr-1"
                             onClick={(e) => {
@@ -223,7 +234,7 @@ const PartList = ({ orderId }) => {
           if (partFormRef.current && partFormRef.current.handleCloseRequest) {
             partFormRef.current.handleCloseRequest();
           } else {
-            setShowCreateForm(false);
+            setShowEditForm(false);
           }
         }}
         size="xl"
@@ -244,8 +255,8 @@ const PartList = ({ orderId }) => {
         </Modal.Body>
       </Modal>
 
-      {/* Modal pour voir les détails */}
-      {/* <Modal
+      {/* Modal pour voir les détails - utilise PartForm en mode lecture seule */}
+      <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
         size="xl"
@@ -255,14 +266,15 @@ const PartList = ({ orderId }) => {
         </Modal.Header>
         <Modal.Body>
           {selectedPart && (
-            <PartDetails
-              partId={selectedPart.id}
+            <PartForm
+              part={selectedPart}
               orderId={orderId}
               onClose={() => setShowDetailModal(false)}
+              viewMode={true} // Active le mode lecture seule
             />
           )}
         </Modal.Body>
-      </Modal> */}
+      </Modal>
     </>
   );
 };

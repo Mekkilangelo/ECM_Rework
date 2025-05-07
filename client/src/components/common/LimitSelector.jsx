@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Form, Badge, Dropdown, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
  * @param {Object} style - Styles CSS additionnels (optionnel)
  * @param {function} refreshTotal - Fonction pour rafraîchir le total (optionnel)
  */
-const LimitSelector = ({ 
+const LimitSelector = forwardRef(({ 
   itemsPerPage, 
   onLimitChange, 
   totalItems = null, 
@@ -26,7 +26,7 @@ const LimitSelector = ({
   size = 'sm',
   style = {},
   refreshTotal = null
-}) => {
+}, ref) => {
   const { t } = useTranslation();
   const [displayTotal, setDisplayTotal] = useState(totalItems);
 
@@ -34,17 +34,13 @@ const LimitSelector = ({
   useEffect(() => {
     setDisplayTotal(totalItems);
   }, [totalItems]);
-
-  // Force un rafraîchissement du total si une fonction refreshTotal est fournie
-  useEffect(() => {
-    if (refreshTotal) {
-      const interval = setInterval(() => {
-        refreshTotal();
-      }, 5000); // Rafraîchir toutes les 5 secondes
-      
-      return () => clearInterval(interval);
+  
+  // Exposer une méthode pour mettre à jour le total affiché depuis l'extérieur
+  useImperativeHandle(ref, () => ({
+    updateTotal: (newTotal) => {
+      setDisplayTotal(newTotal);
     }
-  }, [refreshTotal]);
+  }));
 
   const handleSelect = (value) => {
     const newLimit = parseInt(value, 10);
@@ -65,7 +61,7 @@ const LimitSelector = ({
             size={size} 
             className="d-flex align-items-center shadow-sm ml-2"
           >
-            {itemsPerPage} <FontAwesomeIcon className="ms-2" size="xs" />
+            {itemsPerPage}
           </Dropdown.Toggle>
 
           <Dropdown.Menu className="shadow-sm">
@@ -92,7 +88,7 @@ const LimitSelector = ({
       )}
     </div>
   );
-};
+});
 
 LimitSelector.propTypes = {
   itemsPerPage: PropTypes.number.isRequired,
@@ -104,5 +100,7 @@ LimitSelector.propTypes = {
   style: PropTypes.object,
   refreshTotal: PropTypes.func
 };
+
+LimitSelector.displayName = 'LimitSelector';
 
 export default LimitSelector;

@@ -19,7 +19,9 @@ const authService = {
   // Timestamp du dernier rafraîchissement de token
   lastTokenRefresh: Date.now(),
   // Intervalle minimal entre deux rafraîchissements (ms)
-  minRefreshInterval: 15 * 1000, // Réduit à 15 secondes pour une meilleure réactivité
+  minRefreshInterval: 60 * 1000, // Augmenté à 60 secondes pour éviter les appels trop fréquents
+  // Flag pour éviter les appels parallèles
+  isRefreshing: false,
   
   /**
    * Connexion utilisateur
@@ -136,6 +138,9 @@ const authService = {
     }
     
     // Créer un nouvel intervalle pour vérifier régulièrement l'activité
+    // Utiliser un intervalle d'au moins 60 secondes pour éviter les appels excessifs
+    const checkInterval = Math.max(authService.activityCheckInterval, 60000);
+    
     authService.periodicCheckInterval = setInterval(() => {
       // Si l'utilisateur n'est pas connecté, arrêter les vérifications
       if (!authService.isLoggedIn()) {
@@ -144,21 +149,33 @@ const authService = {
         return;
       }
       
-      authService.checkAndRefreshToken();
-    }, authService.activityCheckInterval); // Utiliser l'intervalle de vérification configuré
+      // Éviter les vérifications multiples si un rafraîchissement est déjà en cours
+      if (!authService.isRefreshing) {
+        authService.checkAndRefreshToken();
+      }
+    }, checkInterval); // Utiliser l'intervalle minimum de 60 secondes
+    
+    console.log(`Vérification périodique démarrée avec intervalle de ${checkInterval/1000} secondes`);
   },
   
   /**
    * Vérifie si un rafraîchissement du token est nécessaire et l'effectue
    */
   checkAndRefreshToken: async () => {
+    // Si un rafraîchissement est déjà en cours, ne pas en démarrer un autre
+    if (authService.isRefreshing) {
+      return;
+    }
+    
     try {
+      authService.isRefreshing = true;
       const now = Date.now();
       // Calculer le temps d'inactivité
       const inactiveTime = now - authService.lastActivity;
       
       // Si aucun token n'est présent, ne rien faire
       if (!authService.getToken()) {
+        authService.isRefreshing = false;
         return;
       }
       
@@ -175,6 +192,7 @@ const authService = {
           await authService.refreshToken(true);
           authService.lastTokenRefresh = Date.now();
           console.log('Rafraîchissement réussi après inactivité');
+          authService.isRefreshing = false;
           return;
         } catch (refreshError) {
           console.log('Échec du rafraîchissement après inactivité - Déconnexion');
@@ -186,10 +204,12 @@ const authService = {
           authService.cleanup();
           
           // Rediriger vers la page de login avec un message d'erreur
+          // Vérifier qu'on n'est pas déjà sur la page de login et forcer la redirection
           if (window.location.pathname !== '/login') {
             window.location.href = '/login?error=session_expired';
           }
           
+          authService.isRefreshing = false;
           return;
         }
       }
@@ -198,11 +218,12 @@ const authService = {
       const timeSinceLastRefresh = now - authService.lastTokenRefresh;
       if (timeSinceLastRefresh < authService.minRefreshInterval) {
         // Trop récent, on ne rafraîchit pas
+        authService.isRefreshing = false;
         return;
       }
       
-      // Rafraîchir préventivement le token si on approche du seuil d'inactivité (à 70% du seuil)
-      if (inactiveTime > (inactivityThreshold * 0.7)) {
+      // Rafraîchir préventivement le token uniquement si vraiment nécessaire (à 80% du seuil)
+      if (inactiveTime > (inactivityThreshold * 0.8)) {
         console.log(`Rafraîchissement préventif - Inactivité: ${Math.round(inactiveTime/1000)}s`);
         await authService.refreshToken(true); // Rafraîchissement silencieux
         authService.lastTokenRefresh = Date.now();
@@ -219,11 +240,11 @@ const authService = {
         localStorage.removeItem('user');
         authService.cleanup();
         
-        // Rediriger vers login
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login?error=session_expired';
-        }
+        // Rediriger vers login - Toujours forcer la redirection
+        window.location.href = '/login?error=session_expired';
       }
+    } finally {
+      authService.isRefreshing = false;
     }
   },
   
@@ -262,22 +283,27 @@ const authService = {
         localStorage.removeItem('user');
         
         // Nettoyer les timers
-        if (authService.activityTimer) {
-          clearTimeout(authService.activityTimer);
-          authService.activityTimer = null;
-        }
-        
-        if (authService.periodicCheckInterval) {
-          clearInterval(authService.periodicCheckInterval);
-          authService.periodicCheckInterval = null;
-        }
-        
-        // Supprimer les écouteurs d'événements
-        authService.removeActivityListeners();
+        authService.cleanup();
         
         // Rediriger vers la page de login (si ce n'est pas un rafraîchissement silencieux)
         if (window.location.pathname !== '/login') {
           window.location.href = '/login?error=session_expired';
+        }
+      } else {
+        // Même pour un rafraîchissement silencieux, rediriger si l'erreur est 401
+        // Cette partie est ajoutée pour assurer la redirection en cas d'expiration
+        if (error.response && error.response.status === 401) {
+          // Nettoyer les données d'authentification
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          
+          // Nettoyer les timers
+          authService.cleanup();
+          
+          // Forcer la redirection vers login
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login?error=session_expired';
+          }
         }
       }
       throw error;

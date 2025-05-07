@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import OrderForm from './OrderForm';
-import OrderDetails from './OrderDetails';
 import orderService from '../../../services/orderService';
 import '../../../styles/dataList.css';
 
@@ -72,16 +71,19 @@ const OrderList = () => {
             <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
           <h2 className="mb-0">
+            <FontAwesomeIcon icon={faFileInvoice} className="mr-2 text-danger" />
             {t('orders.title')} - {hierarchyState.clientName}
           </h2>
         </div>
-        <Button
-          variant="danger"
-          onClick={() => setShowCreateForm(true)}
-          className="d-flex align-items-center"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('orders.add')}
-        </Button>
+        {hasEditRights && (
+          <Button
+            variant="danger"
+            onClick={() => setShowCreateForm(true)}
+            className="d-flex align-items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('orders.add')}
+          </Button>
+        )}
       </div>
 
       {data.length > 0 ? (
@@ -136,24 +138,22 @@ const OrderList = () => {
                   </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
-                      {!hasEditRights && (
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          className="mr-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(order);
-                          }}
-                          title={t('common.view')}
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline-info"
+                        size="sm"
+                        className="mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(order);
+                        }}
+                        title={t('common.view')}
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </Button>
                       {hasEditRights && (
                         <>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-warning"
                             size="sm"
                             className="mr-1"
                             onClick={(e) => {
@@ -247,7 +247,7 @@ const OrderList = () => {
         </Modal.Body>
       </Modal>
 
-      {/* Modal pour voir les détails */}
+      {/* Modal pour voir les détails - utilise OrderForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
@@ -258,9 +258,11 @@ const OrderList = () => {
         </Modal.Header>
         <Modal.Body>
           {selectedOrder && (
-            <OrderDetails
-              orderId={selectedOrder.id}
+            <OrderForm
+              order={selectedOrder}
+              clientId={hierarchyState.clientId}
               onClose={() => setShowDetailModal(false)}
+              viewMode={true} // Active le mode lecture seule
             />
           )}
         </Modal.Body>

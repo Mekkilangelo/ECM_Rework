@@ -8,7 +8,7 @@ import DocumentsSection from './sections/DocumentsSection'
 import GeneralInfoSection from './sections/GeneralInfoSection'
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 
-const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }, ref) => {
+const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
 
@@ -33,7 +33,7 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
     cancelClose,
     saveAndClose,
     setFileAssociationCallback
-  } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated);
+  } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated, viewMode);
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   React.useEffect(() => {
@@ -52,6 +52,13 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
   }
 
+  // Style pour les champs en mode lecture seule
+  const readOnlyFieldStyle = viewMode ? {
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    cursor: 'default'
+  } : {};
+
   return (
     <div>
       {message && (
@@ -65,10 +72,12 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
         </div>
       )}
       
-      {/* Légende pour les champs obligatoires */}
-      <div className="text-muted small mb-3">
-        <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
-      </div>
+      {/* Légende pour les champs obligatoires - masquée en mode lecture seule */}
+      {!viewMode && (
+        <div className="text-muted small mb-3">
+          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+        </div>
+      )}
       
       <Form onSubmit={handleSubmit} autoComplete="off">
         <CollapsibleSection
@@ -81,6 +90,8 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
             formData={formData}
             errors={errors}
             handleChange={handleChange}
+            viewMode={viewMode}
+            readOnlyFieldStyle={readOnlyFieldStyle}
           />
         </CollapsibleSection>
 
@@ -95,6 +106,8 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
             handleContactChange={handleContactChange}
             addContact={addContact}
             removeContact={removeContact}
+            viewMode={viewMode}
+            readOnlyFieldStyle={readOnlyFieldStyle}
           />
         </CollapsibleSection>
 
@@ -107,31 +120,42 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated }
           <DocumentsSection
             orderNodeId={order ? order.id : null}
             onFileAssociationNeeded={handleFileAssociationNeeded}
+            viewMode={viewMode}
           />
         </CollapsibleSection>
 
         <div className="d-flex justify-content-end mt-3">
-          <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
-            {t('common.cancel')}
-          </Button>
-          <Button variant="warning" type="submit" disabled={loading}>
-            {loading 
-              ? (order ? t('common.modifying') : t('common.creating')) 
-              : (order ? t('common.edit') : t('common.create'))}
-          </Button>
+          {viewMode ? (
+            <Button variant="secondary" onClick={onClose}>
+              {t('common.close')}
+            </Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
+                {t('common.cancel')}
+              </Button>
+              <Button variant="warning" type="submit" disabled={loading}>
+                {loading 
+                  ? (order ? t('common.modifying') : t('common.creating')) 
+                  : (order ? t('common.edit') : t('common.create'))}
+              </Button>
+            </>
+          )}
         </div>
       </Form>
 
-      {/* Modal de confirmation pour la fermeture */}
-      <CloseConfirmationModal
-        show={showConfirmModal}
-        onHide={cancelClose}
-        onCancel={cancelClose}
-        onContinue={confirmClose}
-        onSave={saveAndClose}
-        title={t('closeModal.title')}
-        message={t('closeModal.unsavedChanges')}
-      />
+      {/* Modal de confirmation pour la fermeture - non affiché en mode lecture seule */}
+      {!viewMode && (
+        <CloseConfirmationModal
+          show={showConfirmModal}
+          onHide={cancelClose}
+          onCancel={cancelClose}
+          onContinue={confirmClose}
+          onSave={saveAndClose}
+          title={t('closeModal.title')}
+          message={t('closeModal.unsavedChanges')}
+        />
+      )}
     </div>
   );
 });

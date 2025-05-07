@@ -18,7 +18,8 @@
     "min": "Min",
     "max": "Max",
     "addOption": "Add option",
-    "back": "Back"
+    "back": "Back",
+    "close": "Close"
   },
   
   "pagination": {

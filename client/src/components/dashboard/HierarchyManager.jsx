@@ -7,22 +7,23 @@ import ClientList from './clients/ClientList';
 import OrderList from './orders/OrderList';
 import PartList from './parts/PartList';
 import TestList from './tests/TestList';
+import PropTypes from 'prop-types';
 
-const HierarchyManager = () => {
-  const { currentLevel } = useNavigation();
+const HierarchyManager = ({ onDataChanged }) => {
+  const { currentLevel, hierarchyState } = useNavigation();
   
   const renderCurrentLevel = () => {
     switch (currentLevel) {
       case 'client':
-        return <ClientList />;
+        return <ClientList onDataChanged={onDataChanged} />;
       case 'order':
-        return <OrderList />;
+        return <OrderList onDataChanged={onDataChanged} />;
       case 'part':
-        return <PartList />;
+        return <PartList orderId={hierarchyState.orderId} onDataChanged={onDataChanged} />;
       case 'test':
-        return <TestList />;
+        return <TestList partId={hierarchyState.partId} onDataChanged={onDataChanged} />;
       default:
-        return <ClientList />;
+        return <ClientList onDataChanged={onDataChanged} />;
     }
   };
   
@@ -32,6 +33,10 @@ const HierarchyManager = () => {
       {renderCurrentLevel()}
     </Container>
   );
+};
+
+HierarchyManager.propTypes = {
+  onDataChanged: PropTypes.func
 };
 
 export default HierarchyManager;

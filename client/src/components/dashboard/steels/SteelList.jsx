@@ -6,11 +6,12 @@ import { faPlus, faEye, faTrash, faEdit, faCodeBranch, faSearch } from '@fortawe
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import SteelForm from './SteelForm';
-import SteelDetails from './SteelDetails';
 import steelService from '../../../services/steelService';
 import '../../../styles/dataList.css';
+import { useTranslation } from 'react-i18next';
 
 const SteelList = () => {
+  const { t } = useTranslation();
   const { user } = useContext(AuthContext);
   const [steels, setSteels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,7 @@ const SteelList = () => {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
 
+  // Vérification des droits utilisateur
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
   useEffect(() => {
@@ -80,14 +82,14 @@ const SteelList = () => {
   };
 
   const handleDeleteSteel = async (steelId) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet acier ? Cette action est irréversible.")) {
+    if (window.confirm(t("steels.confirmDelete"))) {
       try {
         await steelService.deleteSteel(steelId);
-        alert("Acier supprimé avec succès");
+        alert(t("steels.deleteSuccess"));
         fetchSteels();
       } catch (err) {
         console.error('Erreur lors de la suppression de l\'acier:', err);
-        alert(err.response?.data?.message || "Une erreur est survenue lors de la suppression de l'acier");
+        alert(err.response?.data?.message || t("steels.deleteError"));
       }
     }
   };
@@ -168,17 +170,17 @@ const SteelList = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
           <FontAwesomeIcon className="mr-2 text-danger" />
-          Aciers
+          {t('steels.title')}
         </h2>
-        <div className="d-flex">
+        {hasEditRights && (
           <Button
             variant="danger"
             onClick={() => setShowCreateForm(true)}
             className="d-flex align-items-center"
           >
-            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouvel acier
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('steels.add')}
           </Button>
-        </div>
+        )}
       </div>
       {steels.length > 0 ? (
         <>
@@ -186,11 +188,11 @@ const SteelList = () => {
             <Table hover responsive className="data-table border-bottom">
               <thead>
                 <tr className="bg-light">
-                  <th style={{ width: '30%' }}>Grade</th>
-                  <th className="text-center">Famille</th>
-                  <th className="text-center">Standard</th>
-                  <th className="text-center">Modifié le</th>
-                  <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>Actions</th>
+                  <th style={{ width: '30%' }}>{t('steels.grade')}</th>
+                  <th className="text-center">{t('steels.family')}</th>
+                  <th className="text-center">{t('steels.standard')}</th>
+                  <th className="text-center">{t('common.modifiedAt')}</th>
+                  <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,7 +209,7 @@ const SteelList = () => {
                           className="d-flex align-items-center"
                         >
                           <div className="item-name font-weight-bold text-primary">
-                            {steelData.grade || "Sans grade"}
+                            {steelData.grade || t('steels.noGrade')}
                           </div>
                           <div className="ml-2">
                             <StatusBadge status={steel.data_status || steelData.data_status || 'active'} />
@@ -216,7 +218,17 @@ const SteelList = () => {
                       </td>
                       <td className="text-center">{steelData.family || "-"}</td>
                       <td className="text-center">{steelData.standard || "-"}</td>
-                      <td className="text-center">{steel.modified_at || steelData.modified_at || "-"}</td>
+                      <td className="text-center">
+                        {steel.modified_at || steelData.modified_at
+                          ? new Date(steel.modified_at || steelData.modified_at).toLocaleString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                          : "-"}
+                      </td>
                       <td className="text-center">
                         <div className="d-flex justify-content-center">
                           <Button
@@ -227,21 +239,21 @@ const SteelList = () => {
                               e.stopPropagation();
                               handleViewDetails(steel);
                             }}
-                            title="Détails"
+                            title={t('common.view')}
                           >
                             <FontAwesomeIcon icon={faEye} />
                           </Button>
                           {hasEditRights && (
                             <>
                               <Button
-                                variant="outline-primary"
+                                variant="outline-warning"
                                 size="sm"
                                 className="mr-1"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditSteel(steel);
                                 }}
-                                title="Modifier"
+                                title={t('common.edit')}
                               >
                                 <FontAwesomeIcon icon={faEdit} />
                               </Button>
@@ -252,7 +264,7 @@ const SteelList = () => {
                                   e.stopPropagation();
                                   handleDeleteSteel(steel.id || steelData.id);
                                 }}
-                                title="Supprimer"
+                                title={t('common.delete')}
                               >
                                 <FontAwesomeIcon icon={faTrash} />
                               </Button>
@@ -269,16 +281,16 @@ const SteelList = () => {
           {loading && <div className="text-center mt-3"><Spinner animation="border" size="sm" /></div>}
           {totalPages > 1 && renderPagination()}
           <div className="text-muted text-center mt-2">
-            Affichage de {steels.length} aciers sur {total} au total
+            {t('steels.showing', { count: steels.length, total: total })}
           </div>
         </>
       ) : (
         <Card className="text-center p-5 bg-light">
           <Card.Body>
             <FontAwesomeIcon icon={faCodeBranch} size="3x" className="text-secondary mb-3" />
-            <h4>Aucun acier trouvé</h4>
+            <h4>{t('steels.noSteelsFound')}</h4>
             <p className="text-muted">
-              {searchQuery ? 'Aucun résultat pour cette recherche' : 'Cliquez sur "Nouvel acier" pour ajouter un acier'}
+              {searchQuery ? t('steels.noResultsFound') : t('steels.clickToAddSteel')}
             </p>
           </Card.Body>
         </Card>
@@ -291,7 +303,7 @@ const SteelList = () => {
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Nouvel acier</Modal.Title>
+          <Modal.Title>{t('steels.add')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <SteelForm
@@ -311,7 +323,7 @@ const SteelList = () => {
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Modifier l'acier</Modal.Title>
+          <Modal.Title>{t('steels.edit')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedSteel && (
@@ -327,20 +339,21 @@ const SteelList = () => {
         </Modal.Body>
       </Modal>
 
-      {/* Modal pour voir les détails */}
+      {/* Modal pour voir les détails - utilise SteelForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>Détails de l'acier</Modal.Title>
+          <Modal.Title>{t('steels.details')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedSteel && (
-            <SteelDetails
-              steelId={selectedSteel.id || (selectedSteel.Steel && selectedSteel.Steel.id)}
+            <SteelForm
+              steel={selectedSteel}
               onClose={() => setShowDetailModal(false)}
+              viewMode={true} // Active le mode lecture seule
             />
           )}
         </Modal.Body>

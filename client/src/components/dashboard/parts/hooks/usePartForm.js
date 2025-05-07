@@ -10,7 +10,7 @@ import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import usePartData from './modules/usePartData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
-const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
+const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.orderId;
 
@@ -86,7 +86,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     refreshAllOptions
   };
   
-  // Handlers pour le formulaire
+  // Handlers pour le formulaire - en mode lecture seule, ces handlers ne modifient pas les données
   const { 
     handleChange, 
     handleSelectChange,
@@ -96,7 +96,8 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     setFormData, 
     errors, 
     setErrors,
-    refreshFunctions
+    refreshFunctions,
+    viewMode // Transmettre le mode lecture seule
   );
   
   // Chargement des données de la pièce en mode édition
@@ -111,7 +112,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
   
-  // Soumission du formulaire au serveur
+  // Soumission du formulaire au serveur - désactivée en mode lecture seule
   const { handleSubmit } = usePartSubmission(
     formData, 
     parentId,
@@ -123,10 +124,12 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     onPartCreated, 
     onPartUpdated, 
     onClose,
-    fileAssociationCallback
+    fileAssociationCallback,
+    viewMode // Transmettre le mode lecture seule
   );
 
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
+  // En mode lecture seule, la confirmation n'est pas nécessaire
   const { 
     showConfirmModal, 
     pendingClose, 
@@ -142,7 +145,8 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated) => {
     loading,
     fetchingPart,
     handleSubmit,
-    onClose
+    onClose,
+    viewMode // Passer le mode lecture seule
   );
 
   // Réinitialiser l'état initial après une sauvegarde réussie

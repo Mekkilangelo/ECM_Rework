@@ -13,7 +13,7 @@ import SteelSection from './sections/SteelSection';
 import PhotosSection from './sections/PhotosSection';
 import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
 
-const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, ref) => {
+const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
   
   // État pour stocker la fonction d'association de fichiers
@@ -48,7 +48,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
     confirmClose,
     cancelClose,
     saveAndClose,
-  } = usePartForm(part, onClose, onPartCreated, onPartUpdated);
+  } = usePartForm(part, onClose, onPartCreated, onPartUpdated, viewMode);
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   React.useEffect(() => {
@@ -93,9 +93,12 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
     }
   };
 
-  console.log("PartForm - lengthUnitOptions:", lengthUnitOptions);
-  console.log("PartForm - weightUnitOptions:", weightUnitOptions);
-  console.log("PartForm - hardnessUnitOptions:", hardnessUnitOptions);
+  // Style pour les champs en mode lecture seule
+  const readOnlyFieldStyle = viewMode ? {
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    cursor: 'default'
+  } : {};
 
   if (fetchingPart) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
@@ -115,10 +118,12 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
           </div>
         )}
         
-        {/* Légende pour les champs obligatoires */}
-        <div className="text-muted small mb-3">
-          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
-        </div>
+        {/* Légende pour les champs obligatoires - masquée en mode lecture seule */}
+        {!viewMode && (
+          <div className="text-muted small mb-3">
+            <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+          </div>
+        )}
         
         <Form onSubmit={handleSubmit} autoComplete="off">
           <CollapsibleSection
@@ -137,6 +142,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               designationOptions={designationOptions}
               loading={loading}
               selectStyles={selectStyles}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
           
@@ -152,10 +159,12 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               handleSelectChange={handleSelectChange}
               handleCreateOption={handleCreateOption}
               getSelectedOption={getSelectedOption}
-              lengthUnitOptions={lengthUnitOptions} // Passer directement les options d'unités
-              weightUnitOptions={weightUnitOptions} // Passer directement les options d'unités
+              lengthUnitOptions={lengthUnitOptions}
+              weightUnitOptions={weightUnitOptions}
               loading={loading}
               selectStyles={selectStyles}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
           
@@ -173,6 +182,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               loading={loading}
               selectStyles={selectStyles}
               onOpenSteelModal={handleOpenSteelModal}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
           
@@ -188,9 +199,11 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
               handleSelectChange={handleSelectChange}
               handleCreateOption={handleCreateOption}
               getSelectedOption={getSelectedOption}
-              hardnessUnitOptions={hardnessUnitOptions} // Passer directement les options d'unités
+              hardnessUnitOptions={hardnessUnitOptions}
               loading={loading}
               selectStyles={selectStyles}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
           
@@ -203,55 +216,68 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated }, re
             <PhotosSection
               partNodeId={part ? part.id : null}
               onFileAssociationNeeded={handleFileAssociationNeeded}
+              viewMode={viewMode}
             />
           </CollapsibleSection>
           
           <div className="d-flex justify-content-end mt-4">
-            <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="warning"
-              type="submit"
-              disabled={loading}
-            >
-              {loading
-                ? (part ? t('common.modifying') : t('common.creating'))
-                : (part ? t('common.edit') : t('common.create'))
-              }
-            </Button>
+            {viewMode ? (
+              <Button variant="secondary" onClick={onClose}>
+                {t('common.close')}
+              </Button>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  variant="warning"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading
+                    ? (part ? t('common.modifying') : t('common.creating'))
+                    : (part ? t('common.edit') : t('common.create'))
+                  }
+                </Button>
+              </>
+            )}
           </div>
         </Form>
       </div>
       
-      {/* Modal de confirmation pour la fermeture */}
-      <CloseConfirmationModal
-        show={showConfirmModal}
-        onHide={cancelClose}
-        onCancel={cancelClose}
-        onContinue={confirmClose}
-        onSave={saveAndClose}
-        title={t('closeModal.title')}
-        message={t('closeModal.unsavedChanges')}
-      />
+      {/* Modal de confirmation pour la fermeture - non affiché en mode lecture seule */}
+      {!viewMode && (
+        <CloseConfirmationModal
+          show={showConfirmModal}
+          onHide={cancelClose}
+          onCancel={cancelClose}
+          onContinue={confirmClose}
+          onSave={saveAndClose}
+          title={t('closeModal.title')}
+          message={t('closeModal.unsavedChanges')}
+        />
+      )}
       
-      {/* Modal de création d'acier */}
-      <Modal
-        show={showSteelModal}
-        onHide={handleCloseSteelModal}
-        size="lg"
-        backdrop="static"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>{t('steels.add')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <SteelForm
-            onClose={handleCloseSteelModal}
-            onSteelCreated={handleSteelCreated}
-          />
-        </Modal.Body>
-      </Modal>
+      {/* Modal de création d'acier - non affichée en mode lecture seule */}
+      {!viewMode && (
+        <Modal
+          show={showSteelModal}
+          onHide={handleCloseSteelModal}
+          size="lg"
+          backdrop="static"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>{t('steels.add')}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <SteelForm
+              onClose={handleCloseSteelModal}
+              onSteelCreated={handleSteelCreated}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
     </>
   );
 });

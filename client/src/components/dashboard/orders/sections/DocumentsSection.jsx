@@ -5,7 +5,9 @@ import fileService from '../../../../services/fileService';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const DocumentsSection = ({
-  orderNodeId
+  orderNodeId,
+  onFileAssociationNeeded,
+  viewMode = false
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
@@ -86,6 +88,46 @@ const DocumentsSection = ({
     }
   };
   
+  // Exposer la fonction d'association de fichiers
+  useEffect(() => {
+    if (onFileAssociationNeeded) {
+      // Fonction pour associer tous les fichiers temporaires à un nœud
+      const associateFilesToNode = async (nodeId) => {
+        try {
+          const tempIdArray = Object.values(tempIdsRef.current);
+          
+          if (tempIdArray.length === 0) {
+            return true; // Pas de fichiers à associer
+          }
+          
+          console.log(`Associating files with tempIds: ${JSON.stringify(tempIdArray)} to nodeId: ${nodeId}`);
+          
+          // Associer les fichiers au nœud
+          const results = await Promise.all(
+            tempIdArray.map(tempId => 
+              fileService.associateTempFiles(tempId, nodeId, 'documents')
+            )
+          );
+          
+          // Vérifier que toutes les associations ont réussi
+          const allSuccessful = results.every(result => result.data && result.data.success);
+          
+          if (!allSuccessful) {
+            console.error(t('orders.documents.associationError'), results);
+          }
+          
+          return allSuccessful;
+        } catch (error) {
+          console.error(t('orders.documents.associationError'), error);
+          return false;
+        }
+      };
+      
+      // Fournir la fonction au parent
+      onFileAssociationNeeded(associateFilesToNode);
+    }
+  }, [onFileAssociationNeeded, t]);
+  
   return (
     <>
       <div className="p-2">
@@ -109,6 +151,7 @@ const DocumentsSection = ({
           width="100%"
           showPreview={true}
           existingFiles={uploadedFiles['all_documents'] || []}
+          viewMode={viewMode} // Passer le mode lecture seule au composant FileUploader
         />
       </div>
     </>

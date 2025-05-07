@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import useClientForm from './hooks/useClientForm';
 import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
 
-const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdated }, ref) => {
+const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
   const {
     formData,
@@ -24,7 +24,7 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
     confirmClose,
     cancelClose,
     saveAndClose,
-  } = useClientForm(client, onClose, onClientCreated, onClientUpdated);
+  } = useClientForm(client, onClose, onClientCreated, onClientUpdated, viewMode);
 
   // Exposer handleCloseRequest à travers la référence
   useImperativeHandle(ref, () => ({
@@ -35,6 +35,13 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
   }
 
+  // Style pour les champs en mode lecture seule
+  const readOnlyFieldStyle = viewMode ? {
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    cursor: 'default'
+  } : {};
+
   return (
     <div>
       {message && (
@@ -43,46 +50,69 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
         </div>
       )}
       
-      {/* Légende pour les champs obligatoires */}
-      <div className="text-muted small mb-3">
-        <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
-      </div>
+      {/* Légende pour les champs obligatoires - masquée en mode lecture seule */}
+      {!viewMode && (
+        <div className="text-muted small mb-3">
+          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+        </div>
+      )}
       
       <Form onSubmit={handleSubmit} autoComplete="off">
         <Row>
           <Col md={12}>
             <Form.Group className="mb-3">
-              <Form.Label>{t('clients.name')} <span className="text-danger fw-bold">*</span></Form.Label>
+              <Form.Label>{t('clients.name')} {!viewMode && <span className="text-danger fw-bold">*</span>}</Form.Label>
               <Form.Control
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                isInvalid={!!errors.name}
+                isInvalid={!viewMode && !!errors.name}
                 autoComplete="off"
+                disabled={viewMode || loading}
+                readOnly={viewMode}
+                style={readOnlyFieldStyle}
               />
-              <Form.Control.Feedback type="invalid">
-                {errors.name && t(errors.name)}
-              </Form.Control.Feedback>
+              {!viewMode && (
+                <Form.Control.Feedback type="invalid">
+                  {errors.name && t(errors.name)}
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
           </Col>
         </Row>
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>{t('clients.country')} <span className="text-danger fw-bold">*</span></Form.Label>
+              <Form.Label>{t('clients.country')} {!viewMode && <span className="text-danger fw-bold">*</span>}</Form.Label>
               <Select
-                styles={selectStyles}
+                styles={{
+                  ...selectStyles,
+                  control: (base) => ({
+                    ...base,
+                    backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
+                    borderColor: viewMode ? '#dee2e6' : base.borderColor,
+                    cursor: viewMode ? 'default' : base.cursor,
+                    '&:hover': {
+                      borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
+                    }
+                  }),
+                  valueContainer: (base) => ({
+                    ...base,
+                    cursor: viewMode ? 'default' : base.cursor
+                  })
+                }}
                 options={countryOptions}
                 value={getSelectedOption(countryOptions, formData.country)}
                 onChange={(option) => handleSelectChange(option, 'country')}
-                isClearable
+                isClearable={!viewMode}
                 placeholder={t('clients.selectCountry')}
                 isLoading={loading && countryOptions.length === 0}
                 noOptionsMessage={() => t('clients.noCountryOptions')}
-                isInvalid={!!errors.country}
+                isInvalid={!viewMode && !!errors.country}
+                isDisabled={viewMode || loading}
               />
-              {errors.country && (
+              {!viewMode && errors.country && (
                 <div className="text-danger mt-1 small">
                   {t(errors.country)}
                 </div>
@@ -98,6 +128,9 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
                 value={formData.city}
                 onChange={handleChange}
                 autoComplete="off"
+                disabled={viewMode || loading}
+                readOnly={viewMode}
+                style={readOnlyFieldStyle}
               />
             </Form.Group>
           </Col>
@@ -112,6 +145,9 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
                 value={formData.client_group}
                 onChange={handleChange}
                 autoComplete="off"
+                disabled={viewMode || loading}
+                readOnly={viewMode}
+                style={readOnlyFieldStyle}
               />
             </Form.Group>
           </Col>
@@ -125,6 +161,9 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
                 onChange={handleChange}
                 rows={3}
                 autoComplete="off"
+                disabled={viewMode || loading}
+                readOnly={viewMode}
+                style={readOnlyFieldStyle}
               />
             </Form.Group>
           </Col>
@@ -140,32 +179,45 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
                 onChange={handleChange}
                 rows={3}
                 autoComplete="off"
+                disabled={viewMode || loading}
+                readOnly={viewMode}
+                style={readOnlyFieldStyle}
               />
             </Form.Group>
           </Col>
         </Row>
         <div className="d-flex justify-content-end mt-3">
-          <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
-            {t('common.cancel')}
-          </Button>
-          <Button variant="warning" type="submit" disabled={loading}>
-            {loading 
-              ? (client ? t('clients.modifying') : t('clients.creating')) 
-              : (client ? t('common.edit') : t('common.create'))
-            }
-          </Button>
+          {viewMode ? (
+            <Button variant="secondary" onClick={onClose}>
+              {t('common.close')}
+            </Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
+                {t('common.cancel')}
+              </Button>
+              <Button variant="warning" type="submit" disabled={loading}>
+                {loading 
+                  ? (client ? t('clients.modifying') : t('clients.creating')) 
+                  : (client ? t('common.edit') : t('common.create'))
+                }
+              </Button>
+            </>
+          )}
         </div>
       </Form>
-      {/* Modal de confirmation pour la fermeture */}
-      <CloseConfirmationModal
-        show={showConfirmModal}
-        onHide={cancelClose}
-        onCancel={cancelClose}
-        onContinue={confirmClose}
-        onSave={saveAndClose}
-        title={t('closeModal.title')}
-        message={t('closeModal.unsavedChanges')}
-      />
+      {/* Modal de confirmation pour la fermeture - non affiché en mode lecture seule */}
+      {!viewMode && (
+        <CloseConfirmationModal
+          show={showConfirmModal}
+          onHide={cancelClose}
+          onCancel={cancelClose}
+          onContinue={confirmClose}
+          onSave={saveAndClose}
+          title={t('closeModal.title')}
+          message={t('closeModal.unsavedChanges')}
+        />
+      )}
     </div>
   );
 });

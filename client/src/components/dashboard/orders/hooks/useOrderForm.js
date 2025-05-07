@@ -7,7 +7,7 @@ import useOrderData from './modules/useOrderData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 import { useState, useEffect, useCallback } from 'react';
 
-const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
+const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.clientId;
   
@@ -34,13 +34,13 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     setParentId
   } = useFormState();
   
-  // Handlers pour le formulaire
+  // Handlers pour le formulaire - en mode lecture seule, ces handlers ne devraient pas modifier les données
   const { 
     handleChange, 
     handleContactChange, 
     addContact, 
     removeContact 
-  } = useOrderHandlers(formData, setFormData, errors, setErrors);
+  } = useOrderHandlers(formData, setFormData, errors, setErrors, viewMode);
 
   // Chargement des données de la commande en mode édition
   useOrderData(
@@ -54,7 +54,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
   
-  // Soumission du formulaire au serveur
+  // Soumission du formulaire au serveur - en mode lecture seule, la soumission est désactivée
   const { handleSubmit } = useOrderSubmission(
     formData, 
     parentId,
@@ -66,10 +66,12 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     onOrderCreated, 
     onOrderUpdated, 
     onClose,
-    fileAssociationCallback
+    fileAssociationCallback,
+    viewMode // Transmettre le mode lecture seule
   );
   
   // Gestion de la confirmation de fermeture avec notre hook amélioré
+  // En mode lecture seule, on n'a pas besoin de confirmation pour fermer
   const { 
     showConfirmModal, 
     pendingClose, 
@@ -85,7 +87,8 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated) => {
     loading,
     fetchingOrder,
     handleSubmit,
-    onClose
+    onClose,
+    viewMode // Passer le mode lecture seule au hook de confirmation
   );
 
   // Réinitialiser l'état initial après une sauvegarde réussie

@@ -12,7 +12,9 @@ const BasicInfoSection = ({
   getSelectedOption,
   designationOptions,
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -20,26 +22,39 @@ const BasicInfoSection = ({
     return handleCreateOption(inputValue, 'designation', 'parts', 'designation');
   };
 
+  // Styles modifiés pour le mode lecture seule
+  const customSelectStyles = viewMode ? {
+    ...selectStyles,
+    control: (provided) => ({
+      ...provided,
+      ...readOnlyFieldStyle,
+      cursor: 'default'
+    }),
+    dropdownIndicator: () => ({ display: 'none' }),
+    indicatorSeparator: () => ({ display: 'none' })
+  } : selectStyles;
+
   return (
     <div className="row">
       <div className="col-md-6">
         <Form.Group className="mb-3">
-          <Form.Label>{t('parts.basicInfo.designation')} <span className="text-danger fw-bold">*</span></Form.Label>
+          <Form.Label>{t('parts.basicInfo.designation')} {!viewMode && <span className="text-danger fw-bold">*</span>}</Form.Label>
           <CreatableSelect
             name="designation"
             value={getSelectedOption(designationOptions, formData.designation)}
             onChange={(option) => handleSelectChange(option, { name: 'designation' })}
             options={designationOptions}
-            isClearable
-            styles={selectStyles}
+            isClearable={!viewMode}
+            styles={customSelectStyles}
             placeholder={t('parts.basicInfo.selectDesignation')}
             className="react-select-container"
             classNamePrefix="react-select"
             isLoading={loading}
             formatCreateLabel={(inputValue) =>  `${t('common.addOption')} "${inputValue}"`}
             onCreateOption={handleCreateDesignation}
+            isDisabled={viewMode}
           />
-          {errors.designation && (
+          {!viewMode && errors.designation && (
             <div className="text-danger mt-1 small">
               {t(errors.designation)}
             </div>
@@ -54,12 +69,17 @@ const BasicInfoSection = ({
             name="clientDesignation"
             value={formData.clientDesignation || ''}
             onChange={handleChange}
-            isInvalid={!!errors.clientDesignation}
+            isInvalid={!viewMode && !!errors.clientDesignation}
             autoComplete="off"
+            disabled={viewMode}
+            readOnly={viewMode}
+            style={viewMode ? readOnlyFieldStyle : {}}
           />
-          <Form.Control.Feedback type="invalid">
-            {errors.clientDesignation}
-          </Form.Control.Feedback>
+          {!viewMode && (
+            <Form.Control.Feedback type="invalid">
+              {errors.clientDesignation}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
       </div>
       <div className="col-md-6">
@@ -70,12 +90,17 @@ const BasicInfoSection = ({
             name="reference"
             value={formData.reference || ''}
             onChange={handleChange}
-            isInvalid={!!errors.reference}
+            isInvalid={!viewMode && !!errors.reference}
             autoComplete="off"
+            disabled={viewMode}
+            readOnly={viewMode}
+            style={viewMode ? readOnlyFieldStyle : {}}
           />
-          <Form.Control.Feedback type="invalid">
-            {errors.reference}
-          </Form.Control.Feedback>
+          {!viewMode && (
+            <Form.Control.Feedback type="invalid">
+              {errors.reference}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
       </div>
       <div className="col-md-6">
@@ -86,12 +111,17 @@ const BasicInfoSection = ({
             name="quantity"
             value={formData.quantity || ''}
             onChange={handleChange}
-            isInvalid={!!errors.quantity}
+            isInvalid={!viewMode && !!errors.quantity}
             autoComplete="off"
+            disabled={viewMode}
+            readOnly={viewMode}
+            style={viewMode ? readOnlyFieldStyle : {}}
           />
-          <Form.Control.Feedback type="invalid">
-            {errors.quantity}
-          </Form.Control.Feedback>
+          {!viewMode && (
+            <Form.Control.Feedback type="invalid">
+              {errors.quantity}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
       </div>
       <div className="col-md-12">
@@ -103,12 +133,17 @@ const BasicInfoSection = ({
             name="description"
             value={formData.description || ''}
             onChange={handleChange}
-            isInvalid={!!errors.description}
+            isInvalid={!viewMode && !!errors.description}
             autoComplete="off"
+            disabled={viewMode}
+            readOnly={viewMode}
+            style={viewMode ? readOnlyFieldStyle : {}}
           />
-          <Form.Control.Feedback type="invalid">
-            {errors.description}
-          </Form.Control.Feedback>
+          {!viewMode && (
+            <Form.Control.Feedback type="invalid">
+              {errors.description}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import useSteelForm from './hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
 
-const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
+const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }) => {
   const { t } = useTranslation();
   
   const {
@@ -31,11 +31,18 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
     handleChemicalElementChange,
     handleRateTypeChange,
     handleEquivalentChange
-  } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated);
+  } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated, viewMode);
   
   if (fetchingSteel) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
   }
+
+  // Style pour les champs en mode lecture seule
+  const readOnlyFieldStyle = viewMode ? {
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    cursor: 'default'
+  } : {};
   
   return (
     <div>
@@ -45,28 +52,35 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
         </div>
       )}
       
-      {/* Légende pour les champs obligatoires */}
-      <div className="text-muted small mb-3">
-        <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
-      </div>
+      {/* Légende pour les champs obligatoires - masquée en mode lecture seule */}
+      {!viewMode && (
+        <div className="text-muted small mb-3">
+          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+        </div>
+      )}
       
       <Form onSubmit={handleSubmit} autoComplete="off">
         <h5>{t('steels.steelInformation')}</h5>
         <Row>
           <Col md={4}>
             <Form.Group className="mb-3">
-              <Form.Label>{t('steels.grade')} <span className="text-danger fw-bold">*</span></Form.Label>
+              <Form.Label>{t('steels.grade')} {!viewMode && <span className="text-danger fw-bold">*</span>}</Form.Label>
               <Form.Control
                 type="text"
                 name="grade"
                 value={formData.grade}
                 onChange={handleChange}
-                isInvalid={!!errors.grade}
+                isInvalid={!viewMode && !!errors.grade}
                 autoComplete="off"
+                disabled={viewMode || loading}
+                readOnly={viewMode}
+                style={readOnlyFieldStyle}
               />
-              <Form.Control.Feedback type="invalid">
-                {errors.grade}
-              </Form.Control.Feedback>
+              {!viewMode && (
+                <Form.Control.Feedback type="invalid">
+                  {errors.grade}
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
           </Col>
           <Col md={4}>
@@ -76,16 +90,30 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                 styles={{
                   ...selectStyles,
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({ ...base, marginBottom: '5px' })
+                  control: (base) => ({ 
+                    ...base, 
+                    marginBottom: '5px',
+                    backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
+                    borderColor: viewMode ? '#dee2e6' : base.borderColor,
+                    cursor: viewMode ? 'default' : base.cursor,
+                    '&:hover': {
+                      borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
+                    }
+                  }),
+                  valueContainer: (base) => ({
+                    ...base,
+                    cursor: viewMode ? 'default' : base.cursor
+                  })
                 }}
                 menuPortalTarget={document.body}
                 options={steelFamilyOptions}
                 value={getSelectedOption(steelFamilyOptions, formData.family)}
                 onChange={(option) => handleSelectChange(option, 'family')}
-                isClearable
+                isClearable={!viewMode}
                 placeholder={t('steels.selectFamily')}
                 isLoading={loading && steelFamilyOptions.length === 0}
                 noOptionsMessage={() => t('steels.noFamilyAvailable')}
+                isDisabled={viewMode || loading}
               />
             </Form.Group>
           </Col>
@@ -96,16 +124,30 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                 styles={{
                   ...selectStyles,
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({ ...base, marginBottom: '5px' })
+                  control: (base) => ({ 
+                    ...base, 
+                    marginBottom: '5px',
+                    backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
+                    borderColor: viewMode ? '#dee2e6' : base.borderColor,
+                    cursor: viewMode ? 'default' : base.cursor,
+                    '&:hover': {
+                      borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
+                    }
+                  }),
+                  valueContainer: (base) => ({
+                    ...base,
+                    cursor: viewMode ? 'default' : base.cursor
+                  })
                 }}
                 menuPortalTarget={document.body}
                 options={steelStandardOptions}
                 value={getSelectedOption(steelStandardOptions, formData.standard)}
                 onChange={(option) => handleSelectChange(option, 'standard')}
-                isClearable
+                isClearable={!viewMode}
                 placeholder={t('steels.selectStandard')}
                 isLoading={loading && steelStandardOptions.length === 0}
                 noOptionsMessage={() => t('steels.noStandardAvailable')}
+                isDisabled={viewMode || loading}
               />
             </Form.Group>
           </Col>
@@ -120,7 +162,20 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                   <Select
                     styles={{
                       ...selectStyles,
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      control: (base) => ({ 
+                        ...base,
+                        backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
+                        borderColor: viewMode ? '#dee2e6' : base.borderColor,
+                        cursor: viewMode ? 'default' : base.cursor,
+                        '&:hover': {
+                          borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
+                        }
+                      }),
+                      valueContainer: (base) => ({
+                        ...base,
+                        cursor: viewMode ? 'default' : base.cursor
+                      })
                     }}
                     menuPortalTarget={document.body}
                     options={steelGradeOptions}
@@ -129,26 +184,31 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                     placeholder={t('steels.selectEquivalentSteel')}
                     isLoading={loading && steelGradeOptions.length === 0}
                     noOptionsMessage={() => t('steels.noSteelAvailable')}
+                    isDisabled={viewMode || loading}
                   />
                 </div>
-                <Button 
-                  variant="outline-danger" 
-                  size="sm" 
-                  className="ms-2"
-                  onClick={() => handleRemoveEquivalent(index)}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
+                {!viewMode && (
+                  <Button 
+                    variant="outline-danger" 
+                    size="sm" 
+                    className="ms-2"
+                    onClick={() => handleRemoveEquivalent(index)}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                )}
               </div>
             ))}
-            <Button 
-              variant="outline-primary" 
-              size="sm" 
-              onClick={handleAddEquivalent}
-              disabled={loading}
-            >
-              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('steels.addEquivalent')}
-            </Button>
+            {!viewMode && (
+              <Button 
+                variant="outline-primary" 
+                size="sm" 
+                onClick={handleAddEquivalent}
+                disabled={loading}
+              >
+                <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('steels.addEquivalent')}
+              </Button>
+            )}
           </Col>
         </Row>
         
@@ -162,7 +222,9 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                   <th style={{ width: '30%' }}>{t('steels.element')}</th>
                   <th style={{ width: '20%' }}>{t('steels.rate')}</th>
                   <th style={{ width: '35%' }}>{t('steels.value')} (%)</th>
-                  <th style={{ width: '10%' }}>{t('common.actions')}</th>
+                  {!viewMode && (
+                    <th style={{ width: '10%' }}>{t('common.actions')}</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -173,7 +235,20 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                       <Select
                         styles={{
                           ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          control: (base) => ({ 
+                            ...base,
+                            backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
+                            borderColor: viewMode ? '#dee2e6' : base.borderColor,
+                            cursor: viewMode ? 'default' : base.cursor,
+                            '&:hover': {
+                              borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
+                            }
+                          }),
+                          valueContainer: (base) => ({
+                            ...base,
+                            cursor: viewMode ? 'default' : base.cursor
+                          })
                         }}
                         menuPortalTarget={document.body}
                         options={elementOptions}
@@ -182,13 +257,27 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                         placeholder={t('steels.element')}
                         isLoading={loading && elementOptions.length === 0}
                         noOptionsMessage={() => t('steels.noElementAvailable')}
+                        isDisabled={viewMode || loading}
                       />
                     </td>
                     <td style={{ paddingRight: '10px' }}>
                       <Select
                         styles={{
                           ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          control: (base) => ({ 
+                            ...base,
+                            backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
+                            borderColor: viewMode ? '#dee2e6' : base.borderColor,
+                            cursor: viewMode ? 'default' : base.cursor,
+                            '&:hover': {
+                              borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
+                            }
+                          }),
+                          valueContainer: (base) => ({
+                            ...base,
+                            cursor: viewMode ? 'default' : base.cursor
+                          })
                         }}
                         menuPortalTarget={document.body}
                         options={[
@@ -204,6 +293,7 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                         )}
                         onChange={(option) => handleRateTypeChange(index, option?.value)}
                         placeholder={t('steels.type')}
+                        isDisabled={viewMode || loading}
                       />
                     </td>
                     <td>
@@ -214,6 +304,9 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                           value={element.value || ''}
                           onChange={(e) => handleChemicalElementChange(index, 'value', e.target.value)}
                           placeholder={t('steels.value')}
+                          disabled={viewMode || loading}
+                          readOnly={viewMode}
+                          style={readOnlyFieldStyle}
                         />
                       ) : (
                         <div className="d-flex">
@@ -224,6 +317,9 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                             onChange={(e) => handleChemicalElementChange(index, 'min_value', e.target.value)}
                             placeholder={t('steels.min')}
                             className="me-1"
+                            disabled={viewMode || loading}
+                            readOnly={viewMode}
+                            style={readOnlyFieldStyle}
                           />
                           <Form.Control
                             type="number"
@@ -231,43 +327,58 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated }) => {
                             value={element.max_value || ''}
                             onChange={(e) => handleChemicalElementChange(index, 'max_value', e.target.value)}
                             placeholder={t('steels.max')}
+                            disabled={viewMode || loading}
+                            readOnly={viewMode}
+                            style={readOnlyFieldStyle}
                           />
                         </div>
                       )}
                     </td>
-                    <td className="text-center">
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm" 
-                        onClick={() => handleRemoveChemicalElement(index)}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </Button>
-                    </td>
+                    {!viewMode && (
+                      <td className="text-center">
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm" 
+                          onClick={() => handleRemoveChemicalElement(index)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </Table>
-            <Button 
-              variant="outline-primary" 
-              size="sm" 
-              onClick={handleAddChemicalElement}
-              disabled={loading}
-            >
-              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('steels.addElement')}
-            </Button>
+            {!viewMode && (
+              <Button 
+                variant="outline-primary" 
+                size="sm" 
+                onClick={handleAddChemicalElement}
+                disabled={loading}
+              >
+                <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('steels.addElement')}
+              </Button>
+            )}
           </Col>
         </Row>
         
         <div className="d-flex justify-content-end mt-4">
-          <Button variant="secondary" onClick={onClose} className="me-2">
-            {t('common.cancel')}
-          </Button>
-          <Button variant="danger" type="submit" disabled={loading}>
-            {loading 
-              ? (steel ? t('steels.modifying') : t('steels.creating')) 
-              : (steel ? t('common.edit') : t('common.create'))}
-          </Button>
+          {viewMode ? (
+            <Button variant="secondary" onClick={onClose}>
+              {t('common.close')}
+            </Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={onClose} className="me-2">
+                {t('common.cancel')}
+              </Button>
+              <Button variant="danger" type="submit" disabled={loading}>
+                {loading 
+                  ? (steel ? t('steels.modifying') : t('steels.creating')) 
+                  : (steel ? t('common.edit') : t('common.create'))}
+              </Button>
+            </>
+          )}
         </div>
       </Form>
     </div>

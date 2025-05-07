@@ -13,7 +13,9 @@ const SteelSection = ({
   steelOptions,
   loading,
   selectStyles,
-  onOpenSteelModal
+  onOpenSteelModal,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
   const [selectedSteelInfo, setSelectedSteelInfo] = useState(null);
@@ -50,6 +52,18 @@ const SteelSection = ({
       height: '38px',
     }),
   };
+
+  // Styles modifiés pour le mode lecture seule
+  const customSelectStyles = viewMode ? {
+    ...compactSelectStyles,
+    control: (provided) => ({
+      ...provided,
+      ...readOnlyFieldStyle,
+      cursor: 'default'
+    }),
+    dropdownIndicator: () => ({ display: 'none' }),
+    indicatorSeparator: () => ({ display: 'none' })
+  } : compactSelectStyles;
 
   // Récupérer les détails de l'acier sélectionné
   useEffect(() => {
@@ -146,23 +160,26 @@ const SteelSection = ({
                   value={getSelectedOption(steelOptions, formData.steel)}
                   onChange={(option) => handleSelectChange(option, { name: 'steel' })}
                   options={steelOptions}
-                  isClearable
-                  styles={compactSelectStyles}
+                  isClearable={!viewMode}
+                  styles={customSelectStyles}
                   placeholder={t('parts.steel.selectOrAddSteel')}
                   className="react-select-container"
                   classNamePrefix="react-select"
                   isLoading={loading}
+                  isDisabled={viewMode}
                 />
               </div>
-              <Button
-                variant="outline-primary"
-                onClick={onOpenSteelModal}
-                title={t('parts.steel.addNewSteel')}
-                size="sm"
-                className="align-self-center"
-              >
-                <FontAwesomeIcon icon={faPlus} />
-              </Button>
+              {!viewMode && (
+                <Button
+                  variant="outline-primary"
+                  onClick={onOpenSteelModal}
+                  title={t('parts.steel.addNewSteel')}
+                  size="sm"
+                  className="align-self-center"
+                >
+                  <FontAwesomeIcon icon={faPlus} />
+                </Button>
+              )}
             </div>
           </Form.Group>
         </div>

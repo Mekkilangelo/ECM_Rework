@@ -8,6 +8,7 @@ import useModifiedState from './useModifiedState';
  * @param {boolean} isFetching - État de récupération des données
  * @param {Function} onSubmit - Fonction pour soumettre le formulaire
  * @param {Function} onClose - Fonction de fermeture fournie par le composant parent
+ * @param {boolean} [viewMode=false] - Si le formulaire est en mode lecture seule (pas de vérification de modification)
  * @param {Function} [customIsModifiedCheck] - Fonction optionnelle personnalisée pour déterminer si le formulaire a été modifié
  * @returns {Object} - Fonctions et états pour gérer la confirmation de fermeture
  */
@@ -17,6 +18,7 @@ const useCloseConfirmation = (
   isFetching = false, 
   onSubmit,
   onClose,
+  viewMode = false,
   customIsModifiedCheck = null
 ) => {
   // État pour contrôler l'affichage du modal de confirmation
@@ -25,15 +27,22 @@ const useCloseConfirmation = (
   const [pendingClose, setPendingClose] = useState(false);
 
   // Utiliser le hook useModifiedState pour suivre les modifications du formulaire
+  // En mode lecture seule, désactiver la vérification des modifications
   const { isModified, setModified, resetInitialState } = useModifiedState(
     formData,
     isLoading,
     isFetching,
-    customIsModifiedCheck
+    viewMode ? () => false : customIsModifiedCheck // En mode lecture seule, toujours retourner false
   );
   
   // Gérer la tentative de fermeture
   const handleCloseRequest = useCallback(() => {
+    // En mode lecture seule, fermer directement sans confirmation
+    if (viewMode) {
+      onClose();
+      return;
+    }
+    
     if (isModified) {
       setShowConfirmModal(true);
       setPendingClose(true);
@@ -41,7 +50,7 @@ const useCloseConfirmation = (
       // Si aucune modification, fermer directement
       onClose();
     }
-  }, [isModified, onClose]);
+  }, [isModified, onClose, viewMode]);
   
   // Confirmer la fermeture sans sauvegarder
   const confirmClose = useCallback(() => {

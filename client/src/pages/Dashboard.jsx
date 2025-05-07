@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,6 +15,8 @@ const DashboardContent = () => {
   const { t } = useTranslation();
   const { currentLevel, hierarchyState, currentPage, itemsPerPage, setItemsPerPage, setCurrentPage, navigateBack } = useNavigation();
   const { totalItems, refreshData } = useHierarchy();
+  // Référence vers le LimitSelector pour pouvoir mettre à jour son total
+  const limitSelectorRef = useRef(null);
   
   // Calculer le nombre de pages
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -33,6 +35,22 @@ const DashboardContent = () => {
     navigateBack();
   };
   
+  // Créer une fonction wrapper qui met à jour également le LimitSelector
+  const handleDataRefresh = async () => {
+    await refreshData();
+    // Mettre à jour manuellement le total dans le LimitSelector après avoir rafraîchi les données
+    if (limitSelectorRef.current) {
+      limitSelectorRef.current.updateTotal(totalItems);
+    }
+  };
+  
+  // Mettre à jour le total du LimitSelector quand totalItems change
+  useEffect(() => {
+    if (limitSelectorRef.current) {
+      limitSelectorRef.current.updateTotal(totalItems);
+    }
+  }, [totalItems]);
+  
   return (
     <Layout>
       <Container fluid>
@@ -41,10 +59,10 @@ const DashboardContent = () => {
             {/* Contrôles de pagination */}
             <div className="d-flex justify-content-between align-items-center mb-3">
               <LimitSelector 
+                ref={limitSelectorRef}
                 itemsPerPage={itemsPerPage} 
                 onLimitChange={handleLimitChange} 
                 totalItems={totalItems}
-                refreshTotal={refreshData}
               />
               
               <Pagination 
@@ -54,8 +72,8 @@ const DashboardContent = () => {
               />
             </div>
 
-            {/* Gestionnaire de hiérarchie */}
-            <HierarchyManager />
+            {/* Gestionnaire de hiérarchie avec la nouvelle fonction de rafraîchissement */}
+            <HierarchyManager onDataChanged={handleDataRefresh} />
 
             {/* Bouton de retour */}
             {showBackButton && (

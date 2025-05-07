@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import axios from 'axios';
 
@@ -16,8 +16,14 @@ export const useHierarchy = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [totalItems, setTotalItems] = useState(0);
+  // Utiliser une référence pour éviter des rendus supplémentaires
+  const isFetchingRef = useRef(false);
   
   const fetchData = async () => {
+    // Empêcher les appels simultanés
+    if (isFetchingRef.current) return;
+    
+    isFetchingRef.current = true;
     setLoading(true);
     setError(null);
     
@@ -88,13 +94,14 @@ export const useHierarchy = () => {
         setTotalItems(response.data.pagination?.total || 0);
       }
       
-      console.log('Parsed data:', data);
+      // Supprimer ce console.log qui utilise data (qui peut provoquer des re-rendus en boucle)
       console.log('Total items:', totalItems);
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
       setError(err.response?.data?.message || err.message || 'Une erreur est survenue lors du chargement des données');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
   

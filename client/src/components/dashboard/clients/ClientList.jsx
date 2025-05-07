@@ -8,11 +8,11 @@ import { AuthContext } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
 import ClientForm from './ClientForm';
-import ClientDetails from './ClientDetails';
 import clientService from '../../../services/clientService';
 import '../../../styles/dataList.css';
+import PropTypes from 'prop-types';
 
-const ClientList = () => {
+const ClientList = ({ onDataChanged }) => {
   const { t } = useTranslation();
   const { navigateToLevel } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
@@ -25,6 +25,15 @@ const ClientList = () => {
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   const isUserRole = user && user.role === 'user';
+
+  // Fonction de rafraîchissement améliorée qui met à jour également le total
+  const handleRefreshData = async () => {
+    await refreshData();
+    // Utiliser la fonction de rappel pour mettre à jour le total si elle est fournie
+    if (onDataChanged) {
+      onDataChanged();
+    }
+  };
 
   const handleClientClick = (client) => {
     if (client.data_status === 'new') {
@@ -48,7 +57,8 @@ const ClientList = () => {
       try {
         await clientService.deleteClient(clientId);
         alert(t('clients.deleteSuccess'));
-        refreshData();
+        // Utiliser la fonction améliorée pour également mettre à jour le total
+        handleRefreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression du client:', err);
         alert(err.response?.data?.message || t('clients.deleteError'));
@@ -120,24 +130,24 @@ const ClientList = () => {
                   </td>
                   <td className="text-center">
                     <div className="d-flex justify-content-center">
-                      {isUserRole && (
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          className="mr-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(client);
-                          }}
-                          title={t('common.view')}
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </Button>
-                      )}
+                      {/* Button to view details, for all users */}
+                      <Button
+                        variant="outline-info"
+                        size="sm"
+                        className="mr-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(client);
+                        }}
+                        title={t('common.view')}
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </Button>
+                      
                       {hasEditRights && (
                         <>
                           <Button
-                            variant="outline-primary"
+                            variant="outline-warning"
                             size="sm"
                             className="mr-1"
                             onClick={(e) => {
@@ -197,7 +207,7 @@ const ClientList = () => {
           <ClientForm
             ref={clientFormRef}
             onClose={() => setShowCreateForm(false)}
-            onClientCreated={() => refreshData()}
+            onClientCreated={() => handleRefreshData()} // Utiliser la fonction améliorée
           />
         </Modal.Body>
       </Modal>
@@ -223,13 +233,13 @@ const ClientList = () => {
               ref={clientFormRef}
               client={selectedClient}
               onClose={() => setShowEditForm(false)}
-              onClientUpdated={() => refreshData()}
+              onClientUpdated={() => handleRefreshData()} // Utiliser la fonction améliorée
             />
           )}
         </Modal.Body>
       </Modal>
 
-      {/* Modal pour voir les détails */}
+      {/* Modal pour voir les détails - utilise maintenant ClientForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
@@ -240,15 +250,20 @@ const ClientList = () => {
         </Modal.Header>
         <Modal.Body>
           {selectedClient && (
-            <ClientDetails
-              clientId={selectedClient.id}
+            <ClientForm
+              client={selectedClient}
               onClose={() => setShowDetailModal(false)}
+              viewMode={true} // Nouveau prop pour activer le mode lecture seule
             />
           )}
         </Modal.Body>
       </Modal>
     </>
   );
+};
+
+ClientList.propTypes = {
+  onDataChanged: PropTypes.func
 };
 
 export default ClientList;

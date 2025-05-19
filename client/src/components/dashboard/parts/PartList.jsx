@@ -1,26 +1,43 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowLeft, faCog, faEye, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../common/ActionButtons';
 import PartForm from './PartForm';
 import partService from '../../../services/partService';
 import '../../../styles/dataList.css';
+import useModalState from '../../../hooks/useModalState';
 
 const PartList = ({ orderId }) => {
   const { t } = useTranslation();
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedPart, setSelectedPart] = useState(null);
   const partFormRef = useRef(null);
+  
+  // Utilisation du hook useModalState pour gérer les modales
+  const {
+    showCreateModal: showCreateForm,
+    showEditModal: showEditForm,
+    showDetailModal,
+    selectedItem: selectedPart,
+    openCreateModal,
+    openEditModal,
+    openDetailModal,
+    closeCreateModal,
+    closeEditModal,
+    closeDetailModal,
+    handleRequestClose,
+    handleItemCreated,
+    handleItemUpdated
+  } = useModalState({
+    onRefreshData: refreshData
+  });
 
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -33,13 +50,11 @@ const PartList = ({ orderId }) => {
   };
 
   const handleViewDetails = (part) => {
-    setSelectedPart(part);
-    setShowDetailModal(true);
+    openDetailModal(part);
   };
 
   const handleEditPart = (part) => {
-    setSelectedPart(part);
-    setShowEditForm(true);
+    openEditModal(part);
   };
 
   const handleDeletePart = async (partId) => {
@@ -76,7 +91,7 @@ const PartList = ({ orderId }) => {
         </div>
         <Button
           variant="danger"
-          onClick={() => setShowCreateForm(true)}
+          onClick={openCreateModal}
           className="d-flex align-items-center"
         >
           <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('parts.new')}
@@ -130,62 +145,24 @@ const PartList = ({ orderId }) => {
                       : t('common.unknown')}
                   </td>
                   <td className="text-center">
-                    <div className="d-flex justify-content-center">
-                      {!hasEditRights && (
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          className="mr-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(part);
-                          }}
-                          title={t('common.view')}
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </Button>
-                      )}
-
-                      {hasEditRights && (
-                        <>
-                          <Button
-                            variant="outline-info"
-                            size="sm"
-                            className="mr-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(part);
-                            }}
-                            title={t('common.view')}
-                          >
-                            <FontAwesomeIcon icon={faEye} />
-                          </Button>
-                          <Button
-                            variant="outline-warning"
-                            size="sm"
-                            className="mr-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditPart(part);
-                            }}
-                            title={t('common.edit')}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeletePart(part.id);
-                            }}
-                            title={t('common.delete')}
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <ActionButtons
+                      itemId={part.id}
+                      onView={(e, id) => {
+                        handleViewDetails(part);
+                      }}
+                      onEdit={hasEditRights ? (e, id) => {
+                        handleEditPart(part);
+                      } : undefined}
+                      onDelete={hasEditRights ? (e, id) => {
+                        handleDeletePart(part.id);
+                      } : undefined}
+                      hasEditRights={hasEditRights}
+                      labels={{
+                        view: t('common.view'),
+                        edit: t('common.edit'),
+                        delete: t('common.delete')
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -205,13 +182,7 @@ const PartList = ({ orderId }) => {
       {/* Modal pour créer une pièce */}
       <Modal
         show={showCreateForm}
-        onHide={() => {
-          if (partFormRef.current && partFormRef.current.handleCloseRequest) {
-            partFormRef.current.handleCloseRequest();
-          } else {
-            setShowCreateForm(false);
-          }
-        }}
+        onHide={closeCreateModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -221,8 +192,8 @@ const PartList = ({ orderId }) => {
           <PartForm
             ref={partFormRef}
             orderId={orderId}
-            onClose={() => setShowCreateForm(false)}
-            onPartCreated={() => refreshData()}
+            onClose={closeCreateModal}
+            onPartCreated={handleItemCreated}
           />
         </Modal.Body>
       </Modal>
@@ -230,13 +201,7 @@ const PartList = ({ orderId }) => {
       {/* Modal pour éditer une pièce */}
       <Modal
         show={showEditForm}
-        onHide={() => {
-          if (partFormRef.current && partFormRef.current.handleCloseRequest) {
-            partFormRef.current.handleCloseRequest();
-          } else {
-            setShowEditForm(false);
-          }
-        }}
+        onHide={closeEditModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -248,8 +213,8 @@ const PartList = ({ orderId }) => {
               ref={partFormRef}
               part={selectedPart}
               orderId={orderId}
-              onClose={() => setShowEditForm(false)}
-              onPartUpdated={() => refreshData()}
+              onClose={closeEditModal}
+              onPartUpdated={handleItemUpdated}
             />
           )}
         </Modal.Body>
@@ -258,7 +223,7 @@ const PartList = ({ orderId }) => {
       {/* Modal pour voir les détails - utilise PartForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
-        onHide={() => setShowDetailModal(false)}
+        onHide={closeDetailModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -269,7 +234,7 @@ const PartList = ({ orderId }) => {
             <PartForm
               part={selectedPart}
               orderId={orderId}
-              onClose={() => setShowDetailModal(false)}
+              onClose={closeDetailModal}
               viewMode={true} // Active le mode lecture seule
             />
           )}

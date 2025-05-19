@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faEdit, faArrowLeft, faFlask, faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -7,39 +7,48 @@ import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../common/ActionButtons';
 import TestForm from './TestForm';
 //import TestDetails from './TestDetails';
 import '../../../styles/dataList.css';
 import testService from '../../../services/testService';
+import useModalState from '../../../hooks/useModalState';
 
 const TestList = ({ partId }) => {
   const { t } = useTranslation();
   const { navigateBack } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData, deleteItem } = useHierarchy();
   const { user } = useContext(AuthContext);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [selectedTest, setSelectedTest] = useState(null);
   const testFormRef = useRef(null);
+  
+  // Utilisation du hook useModalState pour gérer les modales
+  const {
+    showCreateModal: showCreateForm,
+    showEditModal: showEditForm,
+    showDetailModal,
+    showDeleteConfirmation,
+    selectedItem: selectedTest,
+    openCreateModal,
+    openEditModal,
+    openDetailModal,
+    openDeleteConfirmation,
+    closeCreateModal,
+    closeEditModal,
+    closeDetailModal,
+    closeDeleteConfirmation,
+    handleRequestClose,
+    handleItemCreated,
+    handleItemUpdated,
+    handleItemDeleted
+  } = useModalState({
+    onRefreshData: refreshData
+  });
 
   const handleTestClick = (test) => {
-    setSelectedTest(test);
-    setShowEditForm(true);
+    openEditModal(test);
     if (test.data_status === 'new') {
       updateItemStatus(test.id);
     }
-  };
-
-  const handleViewDetails = (test) => {
-    setSelectedTest(test);
-    setShowDetailModal(true);
-  };
-
-  const handleEditTest = (test) => {
-    setSelectedTest(test);
-    setShowEditForm(true);
   };
 
   const handleDeleteTest = async (testId) => {
@@ -58,38 +67,11 @@ const TestList = ({ partId }) => {
   const confirmDelete = async () => {
     try {
       await deleteItem(selectedTest.id);
-      setShowDeleteConfirmation(false);
+      closeDeleteConfirmation();
+      refreshData();
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
     }
-  };
-
-  const handleCloseEditForm = () => {
-    if (testFormRef.current && testFormRef.current.handleCloseRequest) {
-      testFormRef.current.handleCloseRequest();
-    } else {
-      setShowEditForm(false);
-    }
-  };
-
-  const handleCloseCreateForm = () => {
-    if (testFormRef.current && testFormRef.current.handleCloseRequest) {
-      testFormRef.current.handleCloseRequest();
-    } else {
-      setShowCreateForm(false);
-    }
-  };
-
-  // Fonction appelée après une mise à jour réussie
-  const handleTestUpdated = () => {
-    refreshData();
-    setShowEditForm(false); // S'assurer que le modal se ferme
-  };
-
-  // Fonction appelée après une création réussie
-  const handleTestCreated = () => {
-    refreshData();
-    setShowCreateForm(false); // S'assurer que le modal se ferme
   };
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -115,7 +97,7 @@ const TestList = ({ partId }) => {
         </div>
         <Button
           variant="danger"
-          onClick={() => setShowCreateForm(true)}
+          onClick={() => openCreateModal()}
           className="d-flex align-items-center"
         >
           <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('tests.new')}
@@ -165,49 +147,25 @@ const TestList = ({ partId }) => {
                       : t('common.unknown')}
                   </td>
                   <td className="text-center">
-                    <div className="d-flex justify-content-center">
-                      {!hasEditRights && (
-                        <Button
-                          variant="outline-info"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(test);
-                          }}
-                          title={t('common.view')}
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </Button>
-                      )}
-
-                      {hasEditRights && (
-                        <>
-                          <Button
-                            variant="outline-warning"
-                            size="sm"
-                            className="mr-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditTest(test);
-                            }}
-                            title={t('common.edit')}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteTest(test.id);
-                            }}
-                            title={t('common.delete')}
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <ActionButtons
+                      itemId={test.id}
+                      onView={(e, id) => {
+                        openDetailModal(test);
+                      }}
+                      onEdit={hasEditRights ? (e, id) => {
+                        openEditModal(test);
+                      } : undefined}
+                      onDelete={hasEditRights ? (e, id) => {
+                        handleDeleteTest(test.id);
+                      } : undefined}
+                      hasEditRights={hasEditRights}
+                      viewOnly={!hasEditRights}
+                      labels={{
+                        view: t('common.view'),
+                        edit: t('common.edit'),
+                        delete: t('common.delete')
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -227,7 +185,7 @@ const TestList = ({ partId }) => {
       {/* Modal pour créer un essai */}
       <Modal
         show={showCreateForm}
-        onHide={handleCloseCreateForm}
+        onHide={closeCreateModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -237,8 +195,8 @@ const TestList = ({ partId }) => {
           <TestForm
             ref={testFormRef}
             partId={partId}
-            onClose={() => setShowCreateForm(false)}
-            onTestCreated={handleTestCreated}
+            onClose={closeCreateModal}
+            onTestCreated={handleItemCreated}
           />
         </Modal.Body>
       </Modal>
@@ -246,7 +204,7 @@ const TestList = ({ partId }) => {
       {/* Modal pour éditer un essai */}
       <Modal
         show={showEditForm}
-        onHide={handleCloseEditForm}
+        onHide={closeEditModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -258,8 +216,8 @@ const TestList = ({ partId }) => {
               ref={testFormRef}
               test={selectedTest}
               partId={partId}
-              onClose={() => setShowEditForm(false)}
-              onTestUpdated={handleTestUpdated}
+              onClose={closeEditModal}
+              onTestUpdated={handleItemUpdated}
             />
           )}
         </Modal.Body>
@@ -268,7 +226,7 @@ const TestList = ({ partId }) => {
       {/* Modal de confirmation de suppression */}
       <Modal
         show={showDeleteConfirmation}
-        onHide={() => setShowDeleteConfirmation(false)}
+        onHide={closeDeleteConfirmation}
         centered
       >
         <Modal.Header closeButton className="bg-light">
@@ -278,7 +236,7 @@ const TestList = ({ partId }) => {
           {t('tests.deleteMessage', { name: selectedTest?.name })}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteConfirmation(false)}>
+          <Button variant="secondary" onClick={closeDeleteConfirmation}>
             {t('common.cancel')}
           </Button>
           <Button variant="danger" onClick={confirmDelete}>

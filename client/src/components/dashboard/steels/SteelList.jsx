@@ -1,14 +1,16 @@
 // src/components/reference/steels/SteelList.jsx
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faTrash, faEdit, faCodeBranch, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faCodeBranch, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../common/ActionButtons';
 import SteelForm from './SteelForm';
 import steelService from '../../../services/steelService';
 import '../../../styles/dataList.css';
 import { useTranslation } from 'react-i18next';
+import useModalState from '../../../hooks/useModalState';
 
 const SteelList = () => {
   const { t } = useTranslation();
@@ -16,17 +18,33 @@ const SteelList = () => {
   const [steels, setSteels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedSteel, setSelectedSteel] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const steelFormRef = useRef(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
+
+  // Utilisation du hook useModalState pour gérer les modales
+  const {
+    showCreateModal: showCreateForm,
+    showEditModal: showEditForm,
+    showDetailModal,
+    selectedItem: selectedSteel,
+    openCreateModal,
+    openEditModal,
+    openDetailModal,
+    closeCreateModal,
+    closeEditModal,
+    closeDetailModal,
+    handleRequestClose,
+    handleItemCreated,
+    handleItemUpdated
+  } = useModalState({
+    onRefreshData: fetchSteels
+  });
 
   // Vérification des droits utilisateur
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -72,13 +90,11 @@ const SteelList = () => {
   };
 
   const handleViewDetails = (steel) => {
-    setSelectedSteel(steel);
-    setShowDetailModal(true);
+    openDetailModal(steel);
   };
 
   const handleEditSteel = (steel) => {
-    setSelectedSteel(steel);
-    setShowEditForm(true);
+    openEditModal(steel);
   };
 
   const handleDeleteSteel = async (steelId) => {
@@ -175,7 +191,7 @@ const SteelList = () => {
         {hasEditRights && (
           <Button
             variant="danger"
-            onClick={() => setShowCreateForm(true)}
+            onClick={openCreateModal}
             className="d-flex align-items-center"
           >
             <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('steels.add')}
@@ -230,47 +246,24 @@ const SteelList = () => {
                           : "-"}
                       </td>
                       <td className="text-center">
-                        <div className="d-flex justify-content-center">
-                          <Button
-                            variant="outline-info"
-                            size="sm"
-                            className="mr-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(steel);
-                            }}
-                            title={t('common.view')}
-                          >
-                            <FontAwesomeIcon icon={faEye} />
-                          </Button>
-                          {hasEditRights && (
-                            <>
-                              <Button
-                                variant="outline-warning"
-                                size="sm"
-                                className="mr-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditSteel(steel);
-                                }}
-                                title={t('common.edit')}
-                              >
-                                <FontAwesomeIcon icon={faEdit} />
-                              </Button>
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteSteel(steel.id || steelData.id);
-                                }}
-                                title={t('common.delete')}
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        <ActionButtons
+                          itemId={steel.id || steelData.id}
+                          onView={(e, id) => {
+                            handleViewDetails(steel);
+                          }}
+                          onEdit={hasEditRights ? (e, id) => {
+                            handleEditSteel(steel);
+                          } : undefined}
+                          onDelete={hasEditRights ? (e, id) => {
+                            handleDeleteSteel(steel.id || steelData.id);
+                          } : undefined}
+                          hasEditRights={hasEditRights}
+                          labels={{
+                            view: t('common.view'),
+                            edit: t('common.edit'),
+                            delete: t('common.delete')
+                          }}
+                        />
                       </td>
                     </tr>
                   );
@@ -299,7 +292,7 @@ const SteelList = () => {
       {/* Modal pour créer un acier */}
       <Modal
         show={showCreateForm}
-        onHide={() => setShowCreateForm(false)}
+        onHide={closeCreateModal}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -307,10 +300,10 @@ const SteelList = () => {
         </Modal.Header>
         <Modal.Body>
           <SteelForm
-            onClose={() => setShowCreateForm(false)}
+            onClose={closeCreateModal}
             onSteelCreated={() => {
               fetchSteels();
-              setShowCreateForm(false);
+              closeCreateModal();
             }}
           />
         </Modal.Body>
@@ -319,7 +312,7 @@ const SteelList = () => {
       {/* Modal pour éditer un acier */}
       <Modal
         show={showEditForm}
-        onHide={() => setShowEditForm(false)}
+        onHide={closeEditModal}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -329,10 +322,10 @@ const SteelList = () => {
           {selectedSteel && (
             <SteelForm
               steel={selectedSteel}
-              onClose={() => setShowEditForm(false)}
+              onClose={closeEditModal}
               onSteelUpdated={() => {
                 fetchSteels();
-                setShowEditForm(false);
+                closeEditModal();
               }}
             />
           )}
@@ -342,7 +335,7 @@ const SteelList = () => {
       {/* Modal pour voir les détails - utilise SteelForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
-        onHide={() => setShowDetailModal(false)}
+        onHide={closeDetailModal}
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
@@ -352,7 +345,7 @@ const SteelList = () => {
           {selectedSteel && (
             <SteelForm
               steel={selectedSteel}
-              onClose={() => setShowDetailModal(false)}
+              onClose={closeDetailModal}
               viewMode={true} // Active le mode lecture seule
             />
           )}

@@ -1,30 +1,25 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faTrash, faEdit, faBuilding } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faBuilding } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { AuthContext } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../common/ActionButtons';
 import ClientForm from './ClientForm';
 import clientService from '../../../services/clientService';
 import '../../../styles/dataList.css';
 import PropTypes from 'prop-types';
+import useModalState from '../../../hooks/useModalState';
 
 const ClientList = ({ onDataChanged }) => {
   const { t } = useTranslation();
   const { navigateToLevel } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedClient, setSelectedClient] = useState(null);
   const clientFormRef = useRef(null);
-
-  const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
-  const isUserRole = user && user.role === 'user';
 
   // Fonction de rafraîchissement améliorée qui met à jour également le total
   const handleRefreshData = async () => {
@@ -35,21 +30,33 @@ const ClientList = ({ onDataChanged }) => {
     }
   };
 
+  // Utilisation du hook useModalState pour gérer les modales
+  const {
+    showCreateModal: showCreateForm,
+    showEditModal: showEditForm,
+    showDetailModal,
+    selectedItem: selectedClient,
+    openCreateModal,
+    openEditModal,
+    openDetailModal,
+    closeCreateModal,
+    closeEditModal,
+    closeDetailModal,
+    handleRequestClose,
+    handleItemCreated,
+    handleItemUpdated
+  } = useModalState({
+    onRefreshData: handleRefreshData
+  });
+
+  const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
+  const isUserRole = user && user.role === 'user';
+
   const handleClientClick = (client) => {
     if (client.data_status === 'new') {
       updateItemStatus(client.id);
     }
     navigateToLevel('order', client.id, client.name);
-  };
-
-  const handleViewDetails = (client) => {
-    setSelectedClient(client);
-    setShowDetailModal(true);
-  };
-
-  const handleEditClient = (client) => {
-    setSelectedClient(client);
-    setShowEditForm(true);
   };
 
   const handleDeleteClient = async (clientId) => {
@@ -77,7 +84,7 @@ const ClientList = ({ onDataChanged }) => {
         </h2>
         <Button
           variant="danger"
-          onClick={() => setShowCreateForm(true)}
+          onClick={openCreateModal}
           className="d-flex align-items-center"
         >
           <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('clients.add')}
@@ -129,49 +136,24 @@ const ClientList = ({ onDataChanged }) => {
                       : t('common.unknown')}
                   </td>
                   <td className="text-center">
-                    <div className="d-flex justify-content-center">
-                      {/* Button to view details, for all users */}
-                      <Button
-                        variant="outline-info"
-                        size="sm"
-                        className="mr-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(client);
-                        }}
-                        title={t('common.view')}
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </Button>
-                      
-                      {hasEditRights && (
-                        <>
-                          <Button
-                            variant="outline-warning"
-                            size="sm"
-                            className="mr-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClient(client);
-                            }}
-                            title={t('common.edit')}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteClient(client.id);
-                            }}
-                            title={t('common.delete')}
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <ActionButtons
+                      itemId={client.id}
+                      onView={(e, id) => {
+                        openDetailModal(client);
+                      }}
+                      onEdit={hasEditRights ? (e, id) => {
+                        openEditModal(client);
+                      } : undefined}
+                      onDelete={hasEditRights ? (e, id) => {
+                        handleDeleteClient(client.id);
+                      } : undefined}
+                      hasEditRights={hasEditRights}
+                      labels={{
+                        view: t('common.view'),
+                        edit: t('common.edit'),
+                        delete: t('common.delete')
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -191,13 +173,7 @@ const ClientList = ({ onDataChanged }) => {
       {/* Modal pour créer un client */}
       <Modal
         show={showCreateForm}
-        onHide={() => {
-          if (clientFormRef.current && clientFormRef.current.handleCloseRequest) {
-            clientFormRef.current.handleCloseRequest();
-          } else {
-            setShowCreateForm(false);
-          }
-        }}
+        onHide={() => handleRequestClose('create', clientFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -206,8 +182,12 @@ const ClientList = ({ onDataChanged }) => {
         <Modal.Body>
           <ClientForm
             ref={clientFormRef}
-            onClose={() => setShowCreateForm(false)}
-            onClientCreated={() => handleRefreshData()} // Utiliser la fonction améliorée
+            onClose={() => {
+              // Appeler directement closeCreateModal au lieu de handleRequestClose
+              // pour éviter la boucle infinie
+              closeCreateModal();
+            }}
+            onClientCreated={handleItemCreated}
           />
         </Modal.Body>
       </Modal>
@@ -215,13 +195,7 @@ const ClientList = ({ onDataChanged }) => {
       {/* Modal pour éditer un client */}
       <Modal
         show={showEditForm}
-        onHide={() => {
-          if (clientFormRef.current && clientFormRef.current.handleCloseRequest) {
-            clientFormRef.current.handleCloseRequest();
-          } else {
-            setShowEditForm(false);
-          }
-        }}
+        onHide={() => handleRequestClose('edit', clientFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -232,8 +206,12 @@ const ClientList = ({ onDataChanged }) => {
             <ClientForm
               ref={clientFormRef}
               client={selectedClient}
-              onClose={() => setShowEditForm(false)}
-              onClientUpdated={() => handleRefreshData()} // Utiliser la fonction améliorée
+              onClose={() => {
+                // Appeler directement closeEditModal au lieu de handleRequestClose
+                // pour éviter la boucle infinie
+                closeEditModal();
+              }}
+              onClientUpdated={handleItemUpdated}
             />
           )}
         </Modal.Body>
@@ -242,7 +220,7 @@ const ClientList = ({ onDataChanged }) => {
       {/* Modal pour voir les détails - utilise maintenant ClientForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
-        onHide={() => setShowDetailModal(false)}
+        onHide={() => handleRequestClose('detail', clientFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -252,7 +230,11 @@ const ClientList = ({ onDataChanged }) => {
           {selectedClient && (
             <ClientForm
               client={selectedClient}
-              onClose={() => setShowDetailModal(false)}
+              onClose={() => {
+                // Appeler directement closeDetailModal au lieu de handleRequestClose
+                // pour éviter la boucle infinie
+                closeDetailModal();
+              }}
               viewMode={true} // Nouveau prop pour activer le mode lecture seule
             />
           )}

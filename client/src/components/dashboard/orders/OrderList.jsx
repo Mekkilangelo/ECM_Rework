@@ -1,26 +1,43 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEye, faTrash, faEdit, faArrowLeft, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowLeft, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../context/NavigationContext';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../context/AuthContext';
 import StatusBadge from '../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../common/ActionButtons';
 import OrderForm from './OrderForm';
 import orderService from '../../../services/orderService';
 import '../../../styles/dataList.css';
+import useModalState from '../../../hooks/useModalState';
 
 const OrderList = () => {
   const { t } = useTranslation();
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const orderFormRef = useRef(null);
+
+  // Utilisation du hook useModalState pour gérer les modales
+  const {
+    showCreateModal: showCreateForm,
+    showEditModal: showEditForm,
+    showDetailModal,
+    selectedItem: selectedOrder,
+    openCreateModal,
+    openEditModal,
+    openDetailModal,
+    closeCreateModal,
+    closeEditModal,
+    closeDetailModal,
+    handleRequestClose,
+    handleItemCreated,
+    handleItemUpdated
+  } = useModalState({
+    onRefreshData: refreshData
+  });
 
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
@@ -30,16 +47,6 @@ const OrderList = () => {
       updateItemStatus(order.id);
     }
     navigateToLevel('part', order.id, order.name);
-  };
-
-  const handleViewDetails = (order) => {
-    setSelectedOrder(order);
-    setShowDetailModal(true);
-  };
-
-  const handleEditOrder = (order) => {
-    setSelectedOrder(order);
-    setShowEditForm(true);
   };
 
   const handleDeleteOrder = async (orderId) => {
@@ -78,7 +85,7 @@ const OrderList = () => {
         {hasEditRights && (
           <Button
             variant="danger"
-            onClick={() => setShowCreateForm(true)}
+            onClick={openCreateModal}
             className="d-flex align-items-center"
           >
             <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('orders.add')}
@@ -137,47 +144,24 @@ const OrderList = () => {
                       : t('common.unknown')}
                   </td>
                   <td className="text-center">
-                    <div className="d-flex justify-content-center">
-                      <Button
-                        variant="outline-info"
-                        size="sm"
-                        className="mr-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(order);
-                        }}
-                        title={t('common.view')}
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </Button>
-                      {hasEditRights && (
-                        <>
-                          <Button
-                            variant="outline-warning"
-                            size="sm"
-                            className="mr-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditOrder(order);
-                            }}
-                            title={t('common.edit')}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteOrder(order.id);
-                            }}
-                            title={t('common.delete')}
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    <ActionButtons
+                      itemId={order.id}
+                      onView={(e, id) => {
+                        openDetailModal(order);
+                      }}
+                      onEdit={hasEditRights ? (e, id) => {
+                        openEditModal(order);
+                      } : undefined}
+                      onDelete={hasEditRights ? (e, id) => {
+                        handleDeleteOrder(order.id);
+                      } : undefined}
+                      hasEditRights={hasEditRights}
+                      labels={{
+                        view: t('common.view'),
+                        edit: t('common.edit'),
+                        delete: t('common.delete')
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -197,13 +181,7 @@ const OrderList = () => {
       {/* Modal pour créer une commande */}
       <Modal
         show={showCreateForm}
-        onHide={() => {
-          if (orderFormRef.current && orderFormRef.current.handleCloseRequest) {
-            orderFormRef.current.handleCloseRequest();
-          } else {
-            setShowCreateForm(false);
-          }
-        }}
+        onHide={closeCreateModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -213,8 +191,8 @@ const OrderList = () => {
           <OrderForm
             ref={orderFormRef}
             clientId={hierarchyState.clientId}
-            onClose={() => setShowCreateForm(false)}
-            onOrderCreated={() => refreshData()}
+            onClose={closeCreateModal}
+            onOrderCreated={handleItemCreated}
           />
         </Modal.Body>
       </Modal>
@@ -222,13 +200,7 @@ const OrderList = () => {
       {/* Modal pour éditer une commande */}
       <Modal
         show={showEditForm}
-        onHide={() => {
-          if (orderFormRef.current && orderFormRef.current.handleCloseRequest) {
-            orderFormRef.current.handleCloseRequest();
-          } else {
-            setShowEditForm(false);
-          }
-        }}
+        onHide={closeEditModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -240,8 +212,8 @@ const OrderList = () => {
               ref={orderFormRef}
               order={selectedOrder}
               clientId={hierarchyState.clientId}
-              onClose={() => setShowEditForm(false)}
-              onOrderUpdated={() => refreshData()}
+              onClose={closeEditModal}
+              onOrderUpdated={handleItemUpdated}
             />
           )}
         </Modal.Body>
@@ -250,7 +222,7 @@ const OrderList = () => {
       {/* Modal pour voir les détails - utilise OrderForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
-        onHide={() => setShowDetailModal(false)}
+        onHide={closeDetailModal}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -261,7 +233,7 @@ const OrderList = () => {
             <OrderForm
               order={selectedOrder}
               clientId={hierarchyState.clientId}
-              onClose={() => setShowDetailModal(false)}
+              onClose={closeDetailModal}
               viewMode={true} // Active le mode lecture seule
             />
           )}

@@ -1,6 +1,6 @@
 // src/components/reference/steels/SteelList.jsx
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col, Pagination } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faCodeBranch, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from '../../../../context/AuthContext';
@@ -11,21 +11,65 @@ import steelService from '../../../../services/steelService';
 import '../../../../styles/dataList.css';
 import { useTranslation } from 'react-i18next';
 import useModalState from '../../../../hooks/useModalState';
+import Pagination from '../../../common/Pagination';
+import LimitSelector from '../../../common/LimitSelector';
 
-const SteelList = () => {
-  const { t } = useTranslation();
+const SteelList = () => {  const { t } = useTranslation();
   const { user } = useContext(AuthContext);
   const [steels, setSteels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const steelFormRef = useRef(null);
+  const limitSelectorRef = useRef(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
+  // Déclarer fetchSteels avant de l'utiliser
+  const fetchSteels = async () => {
+    try {
+      setLoading(true);
+      const response = await steelService.getAllSteels(currentPage, itemsPerPage);
+      
+      // Check the structure of the response based on your API
+      if (response.data && response.data.steels) {
+        // If the API returns { steels, pagination }
+        setSteels(response.data.steels);
+        
+        // Set pagination data
+        const { total, limit: responseLimit } = response.data.pagination;
+        setTotal(total);
+        setTotalPages(Math.ceil(total / responseLimit));
+        
+        // Mettre à jour le total dans le limitSelector
+        if (limitSelectorRef.current) {
+          limitSelectorRef.current.updateTotal(total);
+        }
+      } else if (Array.isArray(response.data)) {
+        // If the API directly returns an array of steels
+        setSteels(response.data);
+        // Assuming the total count is in a header or elsewhere
+        const totalCount = parseInt(response.headers['x-total-count'] || '0');
+        setTotal(totalCount);
+        setTotalPages(Math.ceil(totalCount / itemsPerPage));
+        
+        // Mettre à jour le total dans le limitSelector
+        if (limitSelectorRef.current) {
+          limitSelectorRef.current.updateTotal(totalCount);
+        }
+      }
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching steels:', err);
+      setError('Une erreur est survenue lors du chargement des aciers.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Utilisation du hook useModalState pour gérer les modales
   const {
@@ -45,54 +89,26 @@ const SteelList = () => {
   } = useModalState({
     onRefreshData: fetchSteels
   });
-
   // Vérification des droits utilisateur
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
   useEffect(() => {
     fetchSteels();
-  }, [currentPage, limit]);
-
-  const fetchSteels = async () => {
-    try {
-      setLoading(true);
-      const response = await steelService.getAllSteels(currentPage, limit);
-      
-      // Check the structure of the response based on your API
-      if (response.data && response.data.steels) {
-        // If the API returns { steels, pagination }
-        setSteels(response.data.steels);
-        
-        // Set pagination data
-        const { total, limit: responseLimit } = response.data.pagination;
-        setTotal(total);
-        setTotalPages(Math.ceil(total / responseLimit));
-      } else if (Array.isArray(response.data)) {
-        // If the API directly returns an array of steels
-        setSteels(response.data);
-        // Assuming the total count is in a header or elsewhere
-        const totalCount = parseInt(response.headers['x-total-count'] || '0');
-        setTotal(totalCount);
-        setTotalPages(Math.ceil(totalCount / limit));
-      }
-      
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching steels:', err);
-      setError('Une erreur est survenue lors du chargement des aciers.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [currentPage, itemsPerPage]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+  
+  // Fonction pour gérer le changement de limite d'éléments par page
+  const handleLimitChange = (newLimit) => {
+    setItemsPerPage(newLimit);
+    setCurrentPage(1); // Réinitialiser à la première page lors du changement de limite
   };
 
   const handleViewDetails = (steel) => {
     openDetailModal(steel);
   };
-
   const handleEditSteel = (steel) => {
     openEditModal(steel);
   };
@@ -110,77 +126,8 @@ const SteelList = () => {
     }
   };
 
-  const renderPagination = () => {
-    const items = [];
-    const maxPagesToShow = 5; // Show at most 5 page links
-    
-    // Calculate the range of pages to show
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-    
-    // Adjust startPage if we're near the end
-    if (endPage - startPage + 1 < maxPagesToShow && startPage > 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-    
-    // Add first page and ellipsis if needed
-    if (startPage > 1) {
-      items.push(
-        <Pagination.Item key={1} onClick={() => handlePageChange(1)}>
-          1
-        </Pagination.Item>
-      );
-      if (startPage > 2) {
-        items.push(<Pagination.Ellipsis key="ellipsis1" disabled />);
-      }
-    }
-    
-    // Add page numbers
-    for (let page = startPage; page <= endPage; page++) {
-      items.push(
-        <Pagination.Item 
-          key={page} 
-          active={page === currentPage}
-          onClick={() => handlePageChange(page)}
-        >
-          {page}
-        </Pagination.Item>
-      );
-    }
-    
-    // Add last page and ellipsis if needed
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        items.push(<Pagination.Ellipsis key="ellipsis2" disabled />);
-      }
-      items.push(
-        <Pagination.Item 
-          key={totalPages} 
-          onClick={() => handlePageChange(totalPages)}
-        >
-          {totalPages}
-        </Pagination.Item>
-      );
-    }
-    
-    return (
-      <Pagination className="mt-3 justify-content-center">
-        <Pagination.Prev
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-        />
-        {items}
-        <Pagination.Next
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        />
-      </Pagination>
-    );
-  };
-
   if (loading && steels.length === 0) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
-
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -198,6 +145,23 @@ const SteelList = () => {
           </Button>
         )}
       </div>
+      
+      {/* Contrôles de pagination */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <LimitSelector 
+          ref={limitSelectorRef}
+          itemsPerPage={itemsPerPage} 
+          onLimitChange={handleLimitChange} 
+          totalItems={total}
+        />
+        
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
+      
       {steels.length > 0 ? (
         <>
           <div className="data-list-container">
@@ -269,10 +233,18 @@ const SteelList = () => {
                   );
                 })}
               </tbody>
-            </Table>
-          </div>
+            </Table>          </div>
           {loading && <div className="text-center mt-3"><Spinner animation="border" size="sm" /></div>}
-          {totalPages > 1 && renderPagination()}
+          
+          {/* Pagination en bas de liste si besoin */}
+          <div className="d-flex justify-content-center mt-3">
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+          
           <div className="text-muted text-center mt-2">
             {t('steels.showing', { count: steels.length, total: total })}
           </div>

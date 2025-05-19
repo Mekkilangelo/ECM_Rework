@@ -3,7 +3,7 @@ import { Form, Button, Row, Col, Spinner, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
-import useSteelForm from './hooks/useSteelForm';
+import useSteelForm from '../hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
 
 const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }) => {

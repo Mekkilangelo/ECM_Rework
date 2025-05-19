@@ -5,7 +5,7 @@ import { useNavigation } from '../../context/NavigationContext';
 import Breadcrumb from '../common/Breadcrumb/Breadcrumb';
 import ClientList from './clients/ClientList';
 import OrderList from './orders/OrderList';
-import PartList from './parts/PartList';
+import PartList from './parts/list/PartList';
 import TestList from './tests/list/TestList';
 import PropTypes from 'prop-types';
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
-import FileUploader from '../../../common/FileUploader/FileUploader';
-import fileService from '../../../../services/fileService';
+import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
+import FileUploader from '../../../../../common/FileUploader/FileUploader';
+import fileService from '../../../../../../services/fileService';
 import { faImage } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 

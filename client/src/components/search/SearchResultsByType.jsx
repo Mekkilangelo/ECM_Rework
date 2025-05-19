@@ -10,9 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import ClientForm from '../dashboard/clients/ClientForm';
 import OrderForm from '../dashboard/orders/OrderForm';
-import PartForm from '../dashboard/parts/PartForm';
+import PartForm from '../dashboard/parts/form/PartForm';
 import TestForm from '../dashboard/tests/form/TestForm';
-import SteelForm from '../dashboard/steels/SteelForm';
+import SteelForm from '../dashboard/steels/form/SteelForm';
 import './SearchResultsByType.css';
 
 const SearchResultsByType = ({ results, entityTypes }) => {

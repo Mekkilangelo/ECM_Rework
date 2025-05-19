@@ -2,16 +2,16 @@ import React, { useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faArrowLeft, faCog, faEye, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { useNavigation } from '../../../context/NavigationContext';
-import { useHierarchy } from '../../../hooks/useHierarchy';
-import { AuthContext } from '../../../context/AuthContext';
+import { useNavigation } from '../../../../context/NavigationContext';
+import { useHierarchy } from '../../../../hooks/useHierarchy';
+import { AuthContext } from '../../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import StatusBadge from '../../common/StatusBadge/StatusBadge';
-import ActionButtons from '../../common/ActionButtons';
-import PartForm from './PartForm';
-import partService from '../../../services/partService';
-import '../../../styles/dataList.css';
-import useModalState from '../../../hooks/useModalState';
+import StatusBadge from '../../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../../common/ActionButtons';
+import PartForm from '../form/PartForm';
+import partService from '../../../../services/partService';
+import '../../../../styles/dataList.css';
+import useModalState from '../../../../hooks/useModalState';
 
 const PartList = ({ orderId }) => {
   const { t } = useTranslation();

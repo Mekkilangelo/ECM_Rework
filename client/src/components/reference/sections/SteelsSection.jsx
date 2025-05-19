@@ -4,7 +4,7 @@ import { Tab, Nav, Table, Button, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import EnumTableContent from '../EnumTableContent';
-import SteelList from '../../dashboard/steels/SteelList';
+import SteelList from '../../dashboard/steels/list/SteelList';
 
 const SteelsSection = () => {
   const [activePill, setActivePill] = useState('grades');

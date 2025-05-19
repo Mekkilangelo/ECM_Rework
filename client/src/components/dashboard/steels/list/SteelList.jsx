@@ -3,14 +3,14 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faCodeBranch, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { AuthContext } from '../../../context/AuthContext';
-import StatusBadge from '../../common/StatusBadge/StatusBadge';
-import ActionButtons from '../../common/ActionButtons';
-import SteelForm from './SteelForm';
-import steelService from '../../../services/steelService';
-import '../../../styles/dataList.css';
+import { AuthContext } from '../../../../context/AuthContext';
+import StatusBadge from '../../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../../common/ActionButtons';
+import SteelForm from '../form/SteelForm';
+import steelService from '../../../../services/steelService';
+import '../../../../styles/dataList.css';
 import { useTranslation } from 'react-i18next';
-import useModalState from '../../../hooks/useModalState';
+import useModalState from '../../../../hooks/useModalState';
 
 const SteelList = () => {
   const { t } = useTranslation();

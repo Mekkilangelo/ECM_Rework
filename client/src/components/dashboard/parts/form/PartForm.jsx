@@ -1,17 +1,17 @@
 import React, { forwardRef, useState, useCallback, useImperativeHandle } from 'react';
 import { Modal, Form, Button, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import SteelForm from '../steels/SteelForm';
-import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
+import SteelForm from '../../steels/form/SteelForm';
+import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
 // Custom hooks
-import usePartForm from './hooks/usePartForm';
+import usePartForm from '../hooks/usePartForm';
 // Section components
-import BasicInfoSection from './sections/BasicInfoSection';
-import DimensionsSection from './sections/DimensionsSection';
-import SpecificationsSection from './sections/SpecificationsSection';
-import SteelSection from './sections/SteelSection';
-import PhotosSection from './sections/PhotosSection';
-import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
+import BasicInfoSection from './sections/basic_infos/BasicInfoSection';
+import DimensionsSection from './sections/dimensions/DimensionsSection';
+import SpecificationsSection from './sections/specifications/SpecificationsSection';
+import SteelSection from './sections/steel/SteelSection';
+import PhotosSection from './sections/photos/PhotosSection';
+import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
 
 const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();

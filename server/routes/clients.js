@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const clientController = require('../controllers/clientController');
-const { protect } = require('../middleware/auth');
+const { readAccess, writeAccess } = require('../middleware/accessControl');
 
-// Routes pour la gestion des clients
+// Routes pour la gestion des clients (lecture seulement)
 router.get('/', clientController.getClients);
 router.get('/:clientId', clientController.getClientById);
 
-//Protected routes
-router.post('/', protect, clientController.createClient);
-router.put('/:clientId', protect, clientController.updateClient);
-router.delete('/:clientId', protect, clientController.deleteClient);
+// Routes protégées pour la modification (création, mise à jour, suppression)
+router.post('/', writeAccess, clientController.createClient);
+router.put('/:clientId', writeAccess, clientController.updateClient);
+router.delete('/:clientId', writeAccess, clientController.deleteClient);
 
 module.exports = router;

@@ -248,10 +248,25 @@ const superUserOnly = (req, res, next) => {
   next();
 };
 
+/**
+ * Middleware pour vérifier les droits d'édition (non lecture seule)
+ * Note: Pour un contrôle d'accès complet, utilisez plutôt les middleware de accessControl.js
+ */
+const editRightsOnly = (req, res, next) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'superuser') {
+    return res.status(403).json({
+      success: false,
+      message: 'Accès refusé. Mode lecture seule actif.'
+    });
+  }
+  next();
+};
+
 module.exports = { 
   protect, 
   authorize, 
   adminOnly,
   superUserOnly,
-  refreshTokenValidator
+  refreshTokenValidator,
+  editRightsOnly
 };

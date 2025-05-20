@@ -23,7 +23,8 @@ const enumRoutes = require('./routes/enums');
 const hierarchyRoutes = require('./routes/hierarchy');
 const chatbotRoutes = require('./routes/chatbot');
 const archiveRoutes = require('./routes/archives');
-const searchRoutes = require('./routes/search'); // Ajout des routes de recherche
+const searchRoutes = require('./routes/search'); // Routes de recherche
+const systemRoutes = require('./routes/system'); // Routes de gestion système
 
 // Initialize express app
 const app = express();
@@ -60,7 +61,8 @@ app.use('/api/enums', enumRoutes);
 app.use('/api/nodes', hierarchyRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/archives', archiveRoutes);
-app.use('/api/search', searchRoutes); // Ajout des routes de recherche
+app.use('/api/search', searchRoutes); // Routes de recherche
+app.use('/api/system', systemRoutes); // Routes de gestion système
 
 // Root route
 app.get('/api', (req, res) => {

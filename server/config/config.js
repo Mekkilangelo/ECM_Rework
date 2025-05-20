@@ -52,8 +52,7 @@ const config = {
     PUMP: process.env.PUMP_PATH || 'C:/Users/mekki/Desktop/DATA(X)/DATA(X)/C2 - TECHNIQUE/AFFAIRES EN COURS',
     BACKUP: process.env.BACKUP_DIR || 'C:/Users/mekki/Desktop/backups'
   },
-  
-  // Base de données
+    // Base de données
   DB: {
     HOST: process.env.DB_HOST || '127.0.0.1',
     NAME: process.env.DB_NAME || 'synergy',
@@ -61,6 +60,11 @@ const config = {
     PASSWORD: process.env.DB_PASSWORD || '',
     PORT: process.env.DB_PORT || 3306,
     SYNC_ALTER: process.env.DB_SYNC_ALTER === 'true'
+  },
+  
+  // Options de sécurité et d'accès
+  ACCESS: {
+    GLOBAL_READ_ONLY: process.env.GLOBAL_READ_ONLY === 'true',
   },
   
   // JSON Web Token

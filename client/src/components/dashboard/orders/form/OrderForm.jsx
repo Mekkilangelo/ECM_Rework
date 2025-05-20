@@ -1,12 +1,12 @@
 import React, { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
 import { Form, Button, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-import useOrderForm from './hooks/useOrderForm';
-import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
-import ContactsSection from './sections/ContactsSection'
-import DocumentsSection from './sections/DocumentsSection'
-import GeneralInfoSection from './sections/GeneralInfoSection'
-import CollapsibleSection from '../../common/CollapsibleSection/CollapsibleSection';
+import useOrderForm from '../hooks/useOrderForm';
+import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
+import ContactsSection from './sections/contacts/ContactsSection'
+import DocumentsSection from './sections/documents/DocumentsSection'
+import GeneralInfoSection from './sections/general_infos/GeneralInfoSection'
+import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
 
 const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();

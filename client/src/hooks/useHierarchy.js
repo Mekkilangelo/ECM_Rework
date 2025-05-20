@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
-export const useHierarchy = () => {
+const useHierarchy = () => {
   const { 
     currentLevel, 
     hierarchyState, 
@@ -146,3 +146,8 @@ export const useHierarchy = () => {
     refreshData: fetchData
   };
 };
+
+// Exporter useHierarchy comme exportation par défaut ET comme propriété nommée
+// pour permettre son utilisation avec require()
+export { useHierarchy };
+export default useHierarchy;

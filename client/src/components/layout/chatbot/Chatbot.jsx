@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentDots, faComments, faTimes } from '@fortawesome/free-solid-svg-icons';
-import chatbotService from '../../services/chatbotService';
-import '../../styles/chatbot.css';
+import chatbotService from '../../../services/chatbotService';
+import '../../../styles/chatbot.css';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);

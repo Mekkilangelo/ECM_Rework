@@ -2,17 +2,17 @@ import React, { useContext, useRef } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faBuilding } from '@fortawesome/free-solid-svg-icons';
-import { useNavigation } from '../../../context/NavigationContext';
-import { useHierarchy } from '../../../hooks/useHierarchy';
-import { AuthContext } from '../../../context/AuthContext';
+import { useNavigation } from '../../../../context/NavigationContext';
+import { useHierarchy } from '../../../../hooks/useHierarchy';
+import { AuthContext } from '../../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import StatusBadge from '../../common/StatusBadge/StatusBadge';
-import ActionButtons from '../../common/ActionButtons';
-import ClientForm from './ClientForm';
-import clientService from '../../../services/clientService';
-import '../../../styles/dataList.css';
+import StatusBadge from '../../../common/StatusBadge/StatusBadge';
+import ActionButtons from '../../../common/ActionButtons';
+import ClientForm from '../form/ClientForm';
+import clientService from '../../../../services/clientService';
+import '../../../../styles/dataList.css';
 import PropTypes from 'prop-types';
-import useModalState from '../../../hooks/useModalState';
+import useModalState from '../../../../hooks/useModalState';
 
 const ClientList = ({ onDataChanged }) => {
   const { t } = useTranslation();

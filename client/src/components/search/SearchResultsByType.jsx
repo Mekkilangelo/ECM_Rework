@@ -8,8 +8,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import ClientForm from '../dashboard/clients/ClientForm';
-import OrderForm from '../dashboard/orders/OrderForm';
+import ClientForm from '../dashboard/clients/form/ClientForm';
+import OrderForm from '../dashboard/orders/form/OrderForm';
 import PartForm from '../dashboard/parts/form/PartForm';
 import TestForm from '../dashboard/tests/form/TestForm';
 import SteelForm from '../dashboard/steels/form/SteelForm';

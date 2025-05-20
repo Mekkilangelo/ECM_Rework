@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import FileUploader from '../../../common/FileUploader/FileUploader';
-import fileService from '../../../../services/fileService';
+import FileUploader from '../../../../../common/FileUploader/FileUploader';
+import fileService from '../../../../../../services/fileService';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const DocumentsSection = ({

@@ -5,13 +5,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { NavigationProvider, useNavigation } from '../context/NavigationContext';
 import HierarchyManager from '../components/dashboard/HierarchyManager';
-import { useHierarchy } from '../hooks/useHierarchy';
 import { useTranslation } from 'react-i18next';
 import LimitSelector from '../components/common/LimitSelector';
 import Pagination from '../components/common/Pagination';
 
-// Composant Dashboard qui utilise les hooks
+// Composant qui utilise le hook useHierarchy séparément pour éviter les dépendances circulaires
 const DashboardContent = () => {
+  // Import dynamique pour éviter la dépendance circulaire
+  const { useHierarchy } = require('../hooks/useHierarchy');
+  
   const { t } = useTranslation();
   const { currentLevel, hierarchyState, currentPage, itemsPerPage, setItemsPerPage, setCurrentPage, navigateBack } = useNavigation();
   const { totalItems, refreshData } = useHierarchy();

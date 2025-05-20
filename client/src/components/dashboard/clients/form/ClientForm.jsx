@@ -2,8 +2,8 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
-import useClientForm from './hooks/useClientForm';
-import CloseConfirmationModal from '../../common/CloseConfirmation/CloseConfirmationModal';
+import useClientForm from '../hooks/useClientForm';
+import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
 
 const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();

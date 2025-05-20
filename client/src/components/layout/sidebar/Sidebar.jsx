@@ -13,10 +13,10 @@ import {
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
-import { cleanData } from '../../services/nodeService';
+import { cleanData } from '../../../services/nodeService';
 import { toast } from 'react-toastify';
-import '../../styles/sidebar.css';
-import { AuthContext } from '../../context/AuthContext';
+import '../../../styles/sidebar.css';
+import { AuthContext } from '../../../context/AuthContext';
 
 const Sidebar = ({ userRole }) => {
   const { t } = useTranslation();

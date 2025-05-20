@@ -1,8 +1,8 @@
 import React from 'react';
-import Header from './Header';
-import Footer from './Footer';
-import Sidebar from './Sidebar';
-import Chatbot from './Chatbot';
+import Header from './header/Header';
+import Footer from './footer/Footer';
+import Sidebar from './sidebar/Sidebar';
+import Chatbot from './chatbot/Chatbot';
 
 const Layout = ({ children }) => {
   return (

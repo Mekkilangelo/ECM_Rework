@@ -1,25 +1,25 @@
 {
   "common": {
-    "loading": "Loading...",
-    "user": "User",
-    "save": "Save",
+    "actions": "Actions",
+    "back": "Back",
     "cancel": "Cancel",
+    "close": "Close",
+    "create": "Create",
     "delete": "Delete",
     "edit": "Edit",
-    "create": "Create",
-    "view": "View",
-    "yes": "Yes",
-    "no": "No",
-    "actions": "Actions",
-    "unknown": "Unknown",
+    "loading": "Loading...",
+    "max": "Max",
+    "min": "Min",
     "modifiedAt": "Modified on",
+    "no": "No",
+    "save": "Save",
     "selectUnit": "Select a unit",
     "unit": "Unit",
-    "min": "Min",
-    "max": "Max",
-    "addOption": "Add option",
-    "back": "Back",
-    "close": "Close"
+    "unknown": "Unknown",
+    "user": "User",
+    "view": "View",
+    "yes": "Yes",
+    "addOption": "Add option"
   },
   
   "pagination": {
@@ -34,17 +34,6 @@
   
   "form": {
     "requiredFields": "Required fields"
-  },
-  
-  "api": {
-    "success": {
-      "created": "{{entityType}} successfully created",
-      "updated": "{{entityType}} successfully updated"
-    },
-    "error": {
-      "create": "Error creating {{entityType}}",
-      "update": "Error updating {{entityType}}"
-    }
   },
   
   "validation": {
@@ -79,13 +68,25 @@
     }
   },
   
+  "api": {
+    "success": {
+      "created": "{{entityType}} successfully created",
+      "updated": "{{entityType}} successfully updated"
+    },
+    "error": {
+      "create": "Error creating {{entityType}}",
+      "update": "Error updating {{entityType}}"
+    }
+  },
+  
   "errors": {
     "notFound": {
       "client": "Client not found"
     },
     "fetch": {
       "clients": "Error fetching clients",
-      "client": "Error fetching client"
+      "client": "Error fetching client",
+      "steelDetails": "Error fetching steel details:"
     },
     "create": {
       "client": "Error creating client"
@@ -95,7 +96,8 @@
     },
     "delete": {
       "client": "Error deleting client"
-    }
+    },
+    "general": "An error occurred. Please try again later."
   },
   
   "success": {
@@ -116,6 +118,54 @@
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "sessionExpired": "Your session has expired. Please login again."
+  },
+  
+  "navigation": {
+    "dashboard": "Dashboard",
+    "reference": "Reference",
+    "archives": "Archives",
+    "hierarchy": {
+      "clients": "Clients",
+      "requests": "Trial Requests",
+      "parts": "Parts",
+      "trials": "Trials"
+    }
+  },
+  
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "search": "Search",
+    "dataManagement": {
+      "title": "Data Management",
+      "dataPump": "Data Import",
+      "indexing": "Indexing",
+      "dataCleaning": "Data Cleaning",
+      "cleaningInProgress": "Cleaning in progress...",
+      "analysis": "Analysis"
+    },
+    "userManagement": {
+      "title": "User Management",
+      "manageUsers": "Manage users"
+    },
+    "archivesReference": {
+      "title": "Archives & References",
+      "archives": "Archives",
+      "reference": "Reference"
+    },
+    "support": {
+      "title": "Support",
+      "createTicket": "Create ticket"
+    },
+    "dataCleaning": {
+      "confirmMessage": "Warning! This action will permanently delete all data from the application.\n\nAre you sure you want to continue?",
+      "success": "Data successfully deleted",
+      "error": "Error while deleting data"
+    }
+  },
+  
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to the dashboard"
   },
   
   "search": {
@@ -234,23 +284,6 @@
       "allProcessTypes": "All process types",
       "allPositionTypes": "All position types"
     }
-  },
-  
-  "navigation": {
-    "dashboard": "Dashboard",
-    "reference": "Reference",
-    "archives": "Archives",
-    "hierarchy": {
-      "clients": "Clients",
-      "requests": "Trial Requests",
-      "parts": "Parts",
-      "trials": "Trials"
-    }
-  },
-  
-  "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome to the dashboard"
   },
   
   "clients": {
@@ -437,7 +470,13 @@
     "max": "Max",
     "addElement": "Add element",
     "modifying": "Modifying...",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "noGrade": "No grade",
+    "noSteelsFound": "No steels found",
+    "confirmDelete": "Are you sure you want to delete this steel? This action is irreversible.",
+    "deleteSuccess": "Steel successfully deleted",
+    "deleteError": "An error occurred while deleting the steel",
+    "showing": "Showing {{count}} of {{total}} steels"
   },
   
   "tests": {
@@ -485,7 +524,6 @@
     },
     
     "before": {
-
       "furnaceData": {
         "title": "Furnace Data",
         "furnaceType": "Furnace Type",
@@ -545,41 +583,41 @@
         },
         
         "thermalCycle": {
-        "title": "Thermal Cycle",
-        "step": "Step",
-        "ramp": "Ramp",
-        "rampUp": "Ramp Up",
-        "rampDown": "Ramp Down",
-        "rampContinue": "Continue",
-        "setpoint": "Setpoint",
-        "duration": "Duration",
-        "addStep": "Add step",
-        "otherParameters": "Other program parameters",
-        "waitTime": "Wait time",
-        "unit": "Unit",
-        "programDuration": "Program duration",
-        "cellTemp": "Cell temperature",
-        "waitPressure": "Wait pressure"
+          "title": "Thermal Cycle",
+          "step": "Step",
+          "ramp": "Ramp",
+          "rampUp": "Ramp Up",
+          "rampDown": "Ramp Down",
+          "rampContinue": "Continue",
+          "setpoint": "Setpoint",
+          "duration": "Duration",
+          "addStep": "Add step",
+          "otherParameters": "Other program parameters",
+          "waitTime": "Wait time",
+          "unit": "Unit",
+          "programDuration": "Program duration",
+          "cellTemp": "Cell temperature",
+          "waitPressure": "Wait pressure"
         },
         
         "chemicalCycle": {
-        "title": "Chemical Cycle",
-        "gas": "Gas",
-        "selectGas": "Select...",
-        "step": "Step",
-        "time": "Time",
-        "flowRate": "Flow Rate",
-        "pressure": "Pressure",
-        "turbine": "Turbine",
-        "addStep": "Add step"
+          "title": "Chemical Cycle",
+          "gas": "Gas",
+          "selectGas": "Select...",
+          "step": "Step",
+          "time": "Time",
+          "flowRate": "Flow Rate",
+          "pressure": "Pressure",
+          "turbine": "Turbine",
+          "addStep": "Add step"
         },
         
         "graphs": {
-        "title": "Graphs",
-        "importGraph": "Import graph",
-        "responseFilesMessage": "Files retrieval response",
-        "loadFilesError": "Error while loading files:",
-        "associateFilesError": "Error while associating files:"
+          "title": "Graphs",
+          "importGraph": "Import graph",
+          "responseFilesMessage": "Files retrieval response",
+          "loadFilesError": "Error while loading files:",
+          "associateFilesError": "Error while associating files:"
         },
 
         "quenchData": {
@@ -701,37 +739,6 @@
     }
   },
   
-  "sidebar": {
-    "dashboard": "Dashboard",
-    "search": "Search",
-    "dataManagement": {
-      "title": "Data Management",
-      "dataPump": "Data Import",
-      "indexing": "Indexing",
-      "dataCleaning": "Data Cleaning",
-      "cleaningInProgress": "Cleaning in progress...",
-      "analysis": "Analysis"
-    },
-    "userManagement": {
-      "title": "User Management",
-      "manageUsers": "Manage users"
-    },
-    "archivesReference": {
-      "title": "Archives & References",
-      "archives": "Archives",
-      "reference": "Reference"
-    },
-    "support": {
-      "title": "Support",
-      "createTicket": "Create ticket"
-    },
-    "dataCleaning": {
-      "confirmMessage": "Warning! This action will permanently delete all data from the application.\n\nAre you sure you want to continue?",
-      "success": "Data successfully deleted",
-      "error": "Error while deleting data"
-    }
-  },
-  
   "userManagement": {
     "title": "User Management",
     "users": "Users",
@@ -776,5 +783,12 @@
         "missingFields": "Username and password are required"
       }
     }
+  },
+  
+  "fileHandling": {
+    "loadError": "Error while loading files:",
+    "associateError": "Error while associating files:",
+    "responseMessage": "Files retrieval response",
+    "import": "Import {{name}}"
   }
 }

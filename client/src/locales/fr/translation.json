@@ -1,27 +1,27 @@
 {
   "common": {
-    "loading": "Chargement...",
-    "user": "Utilisateur",
-    "save": "Enregistrer",
-    "cancel": "Annuler",
-    "delete": "Supprimer",
-    "edit": "Modifier",
-    "create": "Créer",
-    "view": "Voir",
-    "yes": "Oui",
-    "no": "Non",
     "actions": "Actions",
-    "unknown": "Inconnu",
-    "modifiedAt": "Modifié le",
-    "selectUnit": "Sélectionner une unité",
-    "unit": "Unité",
-    "modifying": "Modification en cours...",
-    "creating": "Création en cours...",
-    "min": "Min",
-    "max": "Max",
     "addOption": "Ajouter une option",
     "back": "Retour",
-    "close": "Fermer"
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "create": "Créer",
+    "creating": "Création en cours...",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "loading": "Chargement...",
+    "max": "Max",
+    "min": "Min",
+    "modifiedAt": "Modifié le",
+    "modifying": "Modification en cours...",
+    "no": "Non",
+    "save": "Enregistrer",
+    "selectUnit": "Sélectionner une unité",
+    "unit": "Unité",
+    "unknown": "Inconnu",
+    "user": "Utilisateur",
+    "view": "Voir",
+    "yes": "Oui"
   },
   
   "pagination": {
@@ -38,17 +38,6 @@
     "requiredFields": "Champs obligatoires"
   },
   
-  "api": {
-    "success": {
-      "created": "{{entityType}} créé avec succès !",
-      "updated": "{{entityType}} modifié avec succès !"
-    },
-    "error": {
-      "create": "Erreur lors de la création du {{entityType}}",
-      "update": "Erreur lors de la modification du {{entityType}}"
-    }
-  },
-  
   "validation": {
     "required": {
       "name": "Le nom est requis",
@@ -61,6 +50,7 @@
       "parentPart": "Une pièce parente est requise",
       "testDate": "La date du test est requise",
       "grade": "Le grade est requis",
+      "family": "La famille est requise",
       "element": "L'élément est requis",
       "value": "La valeur est requise",
       "minValue": "La valeur minimale est requise",
@@ -80,13 +70,25 @@
     }
   },
   
+  "api": {
+    "success": {
+      "created": "{{entityType}} créé avec succès !",
+      "updated": "{{entityType}} modifié avec succès !"
+    },
+    "error": {
+      "create": "Erreur lors de la création du {{entityType}}",
+      "update": "Erreur lors de la modification du {{entityType}}"
+    }
+  },
+  
   "errors": {
     "notFound": {
       "client": "Client non trouvé"
     },
     "fetch": {
       "clients": "Erreur lors de la récupération des clients",
-      "client": "Erreur lors de la récupération du client"
+      "client": "Erreur lors de la récupération du client",
+      "steelDetails": "Erreur lors de la récupération des détails de l'acier:"
     },
     "create": {
       "client": "Erreur lors de la création du client"
@@ -96,7 +98,8 @@
     },
     "delete": {
       "client": "Erreur lors de la suppression du client"
-    }
+    },
+    "general": "Une erreur s'est produite. Veuillez réessayer plus tard."
   },
   
   "success": {
@@ -117,6 +120,54 @@
     "password": "Mot de passe",
     "forgotPassword": "Mot de passe oublié ?",
     "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter."
+  },
+  
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "reference": "Référentiel",
+    "archives": "Archives",
+    "hierarchy": {
+      "clients": "Clients",
+      "requests": "Demandes d'essai",
+      "parts": "Pièces",
+      "trials": "Essais"
+    }
+  },
+  
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "search": "Recherche",
+    "dataManagement": {
+      "title": "Gestion des Données",
+      "dataPump": "Importation de Données",
+      "indexing": "Indexation",
+      "dataCleaning": "Nettoyage des Données",
+      "cleaningInProgress": "Nettoyage en cours...",
+      "analysis": "Analyse"
+    },
+    "userManagement": {
+      "title": "Gestion des Utilisateurs",
+      "manageUsers": "Gérer les utilisateurs"
+    },
+    "archivesReference": {
+      "title": "Archives & Références",
+      "archives": "Archives",
+      "reference": "Référence"
+    },
+    "support": {
+      "title": "Support",
+      "createTicket": "Créer un ticket"
+    },
+    "dataCleaning": {
+      "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
+      "success": "Données supprimées avec succès",
+      "error": "Erreur lors de la suppression des données"
+    }
+  },
+  
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue sur le tableau de bord"
   },
   
   "search": {
@@ -237,23 +288,6 @@
     }
   },
   
-  "navigation": {
-    "dashboard": "Tableau de bord",
-    "reference": "Référentiel",
-    "archives": "Archives",
-    "hierarchy": {
-      "clients": "Clients",
-      "requests": "Demandes d'essai",
-      "parts": "Pièces",
-      "trials": "Essais"
-    }
-  },
-  
-  "dashboard": {
-    "title": "Tableau de bord",
-    "welcome": "Bienvenue sur le tableau de bord"
-  },
-  
   "clients": {
     "title": "Clients",
     "name": "Nom du client",
@@ -344,13 +378,6 @@
       "steel": "Acier",
       "photos": "Photos"
     },
-    "basicInfo": {
-      "designation": "Désignation",
-      "clientDesignation": "Désignation client",
-      "reference": "Référence",
-      "description": "Description",
-      "selectDesignation": "Sélectionner ou ajouter une désignation"
-    },
     "dimensions": {
       "mainDimensions": "Dimensions principales",
       "length": "Longueur",
@@ -371,15 +398,6 @@
       "upload": "Importer une {{view}}",
       "loadError": "Erreur lors du chargement des fichiers:",
       "associationError": "Erreur lors de l'association des fichiers:"
-    },
-    "specifications": {
-      "hardnessSpecs": "Spécifications de dureté",
-      "coreHardness": "Dureté à cœur",
-      "surfaceHardness": "Dureté en surface",
-      "toothHardness": "Dureté PdD",
-      "ecdDepth": "Profondeur ECD",
-      "hardness": "Dureté",
-      "ecdHardness": "Dureté ECD"
     },
     "steel": {
       "title": "Acier",
@@ -405,6 +423,22 @@
         "toolSteel": "Acier à outils",
         "alloySteel": "Acier allié"
       }
+    },
+    "basicInfo": {
+      "designation": "Désignation",
+      "clientDesignation": "Désignation client",
+      "reference": "Référence",
+      "description": "Description",
+      "selectDesignation": "Sélectionner ou ajouter une désignation"
+    },
+    "specifications": {
+      "hardnessSpecs": "Spécifications de dureté",
+      "coreHardness": "Dureté à cœur",
+      "surfaceHardness": "Dureté en surface",
+      "toothHardness": "Dureté PdD",
+      "ecdDepth": "Profondeur ECD",
+      "hardness": "Dureté",
+      "ecdHardness": "Dureté ECD"
     }
   },
   
@@ -437,7 +471,13 @@
     "max": "Max",
     "addElement": "Ajouter un élément",
     "modifying": "Modification en cours...",
-    "creating": "Création en cours..."
+    "creating": "Création en cours...",
+    "noGrade": "Sans grade",
+    "noSteelsFound": "Aucun acier trouvé",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet acier ? Cette action est irréversible.",
+    "deleteSuccess": "Acier supprimé avec succès",
+    "deleteError": "Une erreur est survenue lors de la suppression de l'acier",
+    "showing": "Affichage de {{count}} sur {{total}} aciers"
   },
   
   "tests": {
@@ -485,6 +525,19 @@
     },
     
     "before": {
+      "furnaceData": {
+        "title": "Données du four",
+        "furnaceType": "Type de four",
+        "heatingCell": "Cellule de chauffage",
+        "coolingMedia": "Média de refroidissement",
+        "furnaceSize": "Taille du four",
+        "quenchCell": "Cellule de trempe",
+        "selectOrAddFurnaceType": "Sélectionner ou ajouter un type de four",
+        "selectOrAddHeatingCell": "Sélectionner ou ajouter une cellule de chauffage",
+        "selectOrAddCoolingMedia": "Sélectionner ou ajouter un média de refroidissement",
+        "selectOrAddFurnaceSize": "Sélectionner ou ajouter une taille de four",
+        "selectOrAddQuenchCell": "Sélectionner ou ajouter une cellule de trempe"
+      },
 
       "testType": {
         "title": "Type de test",
@@ -518,20 +571,6 @@
         "associateFilesError": "Erreur lors de l'association des fichiers:"
       },
 
-      "furnaceData": {
-        "title": "Données du four",
-        "furnaceType": "Type de four",
-        "heatingCell": "Cellule de chauffage",
-        "coolingMedia": "Média de refroidissement",
-        "furnaceSize": "Taille du four",
-        "quenchCell": "Cellule de trempe",
-        "selectOrAddFurnaceType": "Sélectionner ou ajouter un type de four",
-        "selectOrAddHeatingCell": "Sélectionner ou ajouter une cellule de chauffage",
-        "selectOrAddCoolingMedia": "Sélectionner ou ajouter un média de refroidissement",
-        "selectOrAddFurnaceSize": "Sélectionner ou ajouter une taille de four",
-        "selectOrAddQuenchCell": "Sélectionner ou ajouter une cellule de trempe"
-      },
-
       "recipeData": {
         "title": "Données de recette",
         "recipeNumber": "Numéro de recette",
@@ -545,43 +584,43 @@
         },
         
         "thermalCycle": {
-        "title": "Cycle Thermique",
-        "step": "Étape",
-        "ramp": "Rampe",
-        "rampUp": "Montée",
-        "rampDown": "Descente",
-        "rampContinue": "Maintien",
-        "setpoint": "Consigne",
-        "duration": "Durée",
-        "addStep": "Ajouter une étape",
-        "otherParameters": "Autres paramètres du programme",
-        "waitTime": "Temps d'attente",
-        "unit": "Unité",
-        "programDuration": "Durée du programme",
-        "cellTemp": "Température cellule",
-        "waitPressure": "Pression d'attente"
+          "title": "Cycle Thermique",
+          "step": "Étape",
+          "ramp": "Rampe",
+          "rampUp": "Montée",
+          "rampDown": "Descente",
+          "rampContinue": "Maintien",
+          "setpoint": "Consigne",
+          "duration": "Durée",
+          "addStep": "Ajouter une étape",
+          "otherParameters": "Autres paramètres du programme",
+          "waitTime": "Temps d'attente",
+          "unit": "Unité",
+          "programDuration": "Durée du programme",
+          "cellTemp": "Température cellule",
+          "waitPressure": "Pression d'attente"
         },
         
         "chemicalCycle": {
-        "title": "Cycle Chimique",
-        "gas": "Gaz",
-        "selectGas": "Sélectionner...",
-        "step": "Étape",
-        "time": "Temps",
-        "flowRate": "Débit",
-        "pressure": "Pression",
-        "turbine": "Turbine",
-        "addStep": "Ajouter une étape"
+          "title": "Cycle Chimique",
+          "gas": "Gaz",
+          "selectGas": "Sélectionner...",
+          "step": "Étape",
+          "time": "Temps",
+          "flowRate": "Débit",
+          "pressure": "Pression",
+          "turbine": "Turbine",
+          "addStep": "Ajouter une étape"
         },
         
         "graphs": {
-        "title": "Graphiques",
-        "importGraph": "Importer un graphique",
-        "responseFilesMessage": "Réponse de récupération des fichiers",
-        "loadFilesError": "Erreur lors du chargement des fichiers:",
-        "associateFilesError": "Erreur lors de l'association des fichiers:"
+          "title": "Graphiques",
+          "importGraph": "Importer un graphique",
+          "responseFilesMessage": "Réponse de récupération des fichiers",
+          "loadFilesError": "Erreur lors du chargement des fichiers:",
+          "associateFilesError": "Erreur lors de l'association des fichiers:"
         },
-        
+
         "quenchData": {
           "title": "Données de trempe",
           "common": {
@@ -613,6 +652,7 @@
         }
       }
     },
+
     "after": {
       "specifications": {
         "title": "Spécifications de la pièce",
@@ -664,6 +704,12 @@
           "tooth": "PdD",
           "core": "Coeur"
         },
+        "controlLocation": {
+          "title": "Zones de contrôle",
+          "loadError": "Erreur lors du chargement des fichiers:",
+          "associateError": "Erreur lors de l'association des fichiers:",
+          "import": "Importer une zone de contrôle"
+        },
         "micrographs": {
           "title": "Micrographies",
           "zoomX50": "Zoom x50",
@@ -673,12 +719,6 @@
           "loadError": "Erreur lors du chargement des fichiers:",
           "associateError": "Erreur lors de l'association des fichiers:",
           "import": "Importer un {{name}}"
-        },
-        "controlLocation": {
-          "title": "Zones de contrôle",
-          "loadError": "Erreur lors du chargement des fichiers:",
-          "associateError": "Erreur lors de l'association des fichiers:",
-          "import": "Importer une zone de contrôle"
         },
         "resultCurve": {
           "title": "Courbe de dureté",
@@ -700,37 +740,6 @@
           "noPositions": "Veuillez définir des positions ECD dans la section précédente pour générer les données de courbe"
         }
       }
-    }
-  },
-  
-  "sidebar": {
-    "dashboard": "Tableau de bord",
-    "search": "Recherche",
-    "dataManagement": {
-      "title": "Gestion des Données",
-      "dataPump": "Importation de Données",
-      "indexing": "Indexation",
-      "dataCleaning": "Nettoyage des Données",
-      "cleaningInProgress": "Nettoyage en cours...",
-      "analysis": "Analyse"
-    },
-    "userManagement": {
-      "title": "Gestion des Utilisateurs",
-      "manageUsers": "Gérer les utilisateurs"
-    },
-    "archivesReference": {
-      "title": "Archives & Références",
-      "archives": "Archives",
-      "reference": "Référence"
-    },
-    "support": {
-      "title": "Support",
-      "createTicket": "Créer un ticket"
-    },
-    "dataCleaning": {
-      "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
-      "success": "Données supprimées avec succès",
-      "error": "Erreur lors de la suppression des données"
     }
   },
   
@@ -778,5 +787,12 @@
         "missingFields": "Nom d'utilisateur et mot de passe sont requis"
       }
     }
+  },
+  
+  "fileHandling": {
+    "loadError": "Erreur lors du chargement des fichiers:",
+    "associateError": "Erreur lors de l'association des fichiers:",
+    "responseMessage": "Réponse de récupération des fichiers",
+    "import": "Importer {{name}}"
   }
 }

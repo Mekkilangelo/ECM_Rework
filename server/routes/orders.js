@@ -1,13 +1,34 @@
+/**
+ * Routes de gestion des commandes
+ * ==============================
+ * 
+ * Ce module définit les routes API pour la gestion des commandes.
+ * Il permet de créer, lire, mettre à jour et supprimer des commandes
+ * dans le système.
+ * 
+ * Points d'accès:
+ * - GET /api/orders - Récupère toutes les commandes
+ * - GET /api/orders/:orderId - Récupère une commande spécifique
+ * - POST /api/orders - Crée une nouvelle commande
+ * - PUT /api/orders/:orderId - Met à jour une commande existante
+ * - DELETE /api/orders/:orderId - Supprime une commande
+ * 
+ * Contrôle d'accès:
+ * - Les routes GET sont accessibles par tous les utilisateurs authentifiés
+ * - Les routes POST, PUT, DELETE nécessitent des droits d'écriture (admin/superuser)
+ *   et vérifient le mode lecture seule global
+ */
+
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
-const { readAccess, writeAccess } = require('../middleware/accessControl');
+const { readAccess, writeAccess } = require('../middleware/access-control');
 
-// Routes pour la gestion des commandes (lecture seulement)
-router.get('/', orderController.getOrders);
-router.get('/:orderId', orderController.getOrderById);
+// Routes de lecture (accessibles à tous les utilisateurs authentifiés)
+router.get('/', readAccess, orderController.getOrders);
+router.get('/:orderId', readAccess, orderController.getOrderById);
 
-// Routes protégées pour la modification (création, mise à jour, suppression)
+// Routes de modification (nécessitent des droits d'écriture)
 router.post('/', writeAccess, orderController.createOrder);
 router.put('/:orderId', writeAccess, orderController.updateOrder);
 router.delete('/:orderId', writeAccess, orderController.deleteOrder);

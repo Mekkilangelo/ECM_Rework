@@ -4,7 +4,7 @@ const router = express.Router();
 const fileController = require('../controllers/fileController');
 const { protect } = require('../middleware/auth');
 const { upload } = require('../utils/fileStorage');
-const { resolveFilePath } = require('../middleware/filePathResolver');
+const { resolveFilePath } = require('../middleware/file-path');
 
 // Ordre correct des routes
 router.post('/upload', protect, upload.array('files', 10), resolveFilePath, fileController.uploadFiles);

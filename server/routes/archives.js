@@ -1,19 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const archiveController = require('../controllers/archiveController');
-const { protect } = require('../middleware/auth');
+const { readAccess, writeAccess } = require('../middleware/access-control');
 const validators = require('../middleware/validators');
 
-// Route pour récupérer le contenu d'un répertoire
-router.get('/directory', protect, validators.validatePath, archiveController.getDirectoryContents);
+// Routes de lecture (nécessitent une authentification)
+router.get('/directory', readAccess, validators.validatePath, archiveController.getDirectoryContents);
+router.get('/download', readAccess, validators.validatePath, archiveController.downloadArchive);
+router.get('/preview', readAccess, validators.validatePath, archiveController.getArchivePreview);
 
-// Route pour télécharger un fichier
-router.get('/download', protect, validators.validatePath, archiveController.downloadArchive);
-
-// Route pour obtenir un aperçu de fichier
-router.get('/preview', protect, validators.validatePath, archiveController.getArchivePreview);
-
-// Route pour créer un nouveau dossier
-router.post('/directory', protect, validators.validatePath, archiveController.createDirectory);
+// Routes d'écriture (nécessitent des droits d'édition)
+router.post('/directory', writeAccess, validators.validatePath, archiveController.createDirectory);
 
 module.exports = router;

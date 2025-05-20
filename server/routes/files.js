@@ -2,19 +2,24 @@
 const express = require('express');
 const router = express.Router();
 const fileController = require('../controllers/fileController');
-const { protect, editRightsOnly } = require('../middleware/auth');
+const { readAccess, writeAccess, publicAccess } = require('../middleware/access-control');
 const { upload } = require('../utils/fileStorage');
-const { resolveFilePath } = require('../middleware/filePathResolver');
+const { resolveFilePath } = require('../middleware/file-path');
 
 // Ordre correct des routes
-router.post('/upload', protect, editRightsOnly, upload.array('files', 10), resolveFilePath, fileController.uploadFiles);
-router.get('/node/:nodeId', protect, fileController.getFilesByNode);
-router.delete('/:fileId', protect, editRightsOnly, fileController.deleteFile);
-router.get('/download/:fileId', fileController.downloadFile);
-router.post('/associate', protect, editRightsOnly, fileController.associateFiles);
-router.get('/stats/:nodeId', protect, fileController.getFileStats);
+// Routes d'écriture (nécessitent des droits d'édition)
+router.post('/upload', writeAccess, upload.array('files', 10), resolveFilePath, fileController.uploadFiles);
+router.delete('/:fileId', writeAccess, fileController.deleteFile);
+router.post('/associate', writeAccess, fileController.associateFiles);
+
+// Routes de lecture (nécessitent uniquement une authentification)
+router.get('/node/:nodeId', readAccess, fileController.getFilesByNode);
+router.get('/stats/:nodeId', readAccess, fileController.getFileStats);
+
+// Routes publiques (accessibles sans authentification)
+router.get('/download/:fileId', publicAccess, fileController.downloadFile);
 
 // Cette route doit être la dernière car c'est la plus générique
-router.get('/:fileId', fileController.getFileById);
+router.get('/:fileId', publicAccess, fileController.getFileById);
 
 module.exports = router;

@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const testController = require('../controllers/testController');
-const { protect, editRightsOnly } = require('../middleware/auth');
+const { publicAccess, writeAccess } = require('../middleware/access-control');
 
-// Routes pour la gestion des tests
-router.get('/', testController.getTests);
-router.get('/:testId', testController.getTestById);
-router.get('/:testId/specs', testController.getTestSpecs);
+// Routes pour la gestion des tests (lecture uniquement)
+router.get('/', publicAccess, testController.getTests);
+router.get('/:testId', publicAccess, testController.getTestById);
+router.get('/:testId/specs', publicAccess, testController.getTestSpecs);
+router.get('/:testId/report', publicAccess, testController.getTestReportData);
 
-// Protected routes
-router.post('/', protect, editRightsOnly, testController.createTest);
-router.put('/:testId', protect, editRightsOnly, testController.updateTest);
-router.delete('/:testId', protect, editRightsOnly, testController.deleteTest);
-router.get('/:testId/report', testController.getTestReportData);
+// Routes protégées pour la modification (création, mise à jour, suppression)
+router.post('/', writeAccess, testController.createTest);
+router.put('/:testId', writeAccess, testController.updateTest);
+router.delete('/:testId', writeAccess, testController.deleteTest);
 
 module.exports = router;

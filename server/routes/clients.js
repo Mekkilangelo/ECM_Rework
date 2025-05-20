@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const clientController = require('../controllers/clientController');
-const { readAccess, writeAccess } = require('../middleware/accessControl');
+const { publicAccess, writeAccess } = require('../middleware/access-control');
 
 // Routes pour la gestion des clients (lecture seulement)
-router.get('/', clientController.getClients);
-router.get('/:clientId', clientController.getClientById);
+router.get('/', publicAccess, clientController.getClients);
+router.get('/:clientId', publicAccess, clientController.getClientById);
 
 // Routes protégées pour la modification (création, mise à jour, suppression)
 router.post('/', writeAccess, clientController.createClient);

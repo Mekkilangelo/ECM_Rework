@@ -1,49 +1,75 @@
 /**
- * Middleware d'authentification
- * Vérifie la validité du token JWT dans les requêtes
+ * Middleware d'authentification et d'autorisation
+ * ===============================================
+ * 
+ * Ce module contient les middlewares fondamentaux pour:
+ * 1. Authentifier les utilisateurs via JWT
+ * 2. Valider les droits d'accès basés sur les rôles
+ * 3. Gérer le rafraîchissement des tokens
+ * 
+ * Ces middlewares servent de briques de base pour construire des politiques 
+ * d'accès plus complexes dans accessControl.js.
  */
 
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const { User } = require('../models');
 
-// Accès correct à la clé secrète JWT
+// Configuration des paramètres d'authentification
 const JWT_SECRET = config.JWT.SECRET;
 // Délai d'inactivité en millisecondes (convertir minutes en ms)
 const INACTIVITY_TIMEOUT = parseInt(config.JWT.INACTIVITY_EXPIRE) * 60 * 1000;
 
 /**
- * Middleware pour protéger les routes nécessitant une authentification
+ * Middleware d'authentification principal
+ * ======================================
+ * 
+ * Vérifie l'authentification de l'utilisateur via le token JWT.
+ * Ce middleware est la première couche de sécurité pour toutes les routes protégées.
+ * 
+ * Fonctionnalités:
+ * - Extrait et valide le token JWT des en-têtes HTTP
+ * - Vérifie l'expiration naturelle du token
+ * - Contrôle le délai d'inactivité utilisateur
+ * - Charge les données utilisateur depuis la base de données
+ * - Expose les informations utilisateur via req.user
+ * 
+ * Utilisation typique:
+ * router.get('/resource', authenticate, resourceController.getResource);
+ * 
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @param {Function} next - Fonction pour passer au middleware suivant
+ * @returns {void}
  */
-const protect = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   let token;
 
-  // Vérifier si le token est présent dans les headers
+  // Extrait le token du header Authorization
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  // Vérifier si le token existe
+  // Vérifie la présence du token
   if (!token) {
     return res.status(401).json({ 
       success: false, 
       message: 'Accès non autorisé, token manquant' 
     });
   }
-
   try {
-    // Vérifier le token
+    // Vérifie et décode le token JWT
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Vérification détaillée uniquement en développement
+    // Journalisation en mode développement pour faciliter le débogage
     if (process.env.NODE_ENV === 'development') {
       console.log('Token vérifié pour l\'utilisateur:', decoded.username);
       console.log('Dernière activité:', new Date(decoded.lastActivity));
       console.log('Délai d\'inactivité configuré:', INACTIVITY_TIMEOUT, 'ms');
     }
 
-    // Vérifier si l'utilisateur a été inactif trop longtemps
-    // Cette vérification est ajoutée en plus de l'expiration naturelle du token
+    // Vérification du délai d'inactivité
+    // Cette vérification est complémentaire à l'expiration naturelle du JWT
     if (decoded.lastActivity) {
       const now = Date.now();
       const inactiveTime = now - decoded.lastActivity;
@@ -52,7 +78,7 @@ const protect = async (req, res, next) => {
         console.log('Temps d\'inactivité actuel:', inactiveTime, 'ms', '(', Math.round(inactiveTime/1000), 'secondes)');
       }
       
-      // Si l'utilisateur est inactif depuis plus longtemps que le délai configuré
+      // Si le délai d'inactivité dépasse la limite configurée, rejette la requête
       if (inactiveTime > INACTIVITY_TIMEOUT) {
         console.log('Session expirée due à l\'inactivité pour', decoded.username);
         return res.status(401).json({ 
@@ -61,9 +87,8 @@ const protect = async (req, res, next) => {
           errorType: 'inactivity_timeout'
         });
       }
-    }
-
-    // Récupérer l'utilisateur correspondant au token
+    }    // Récupère l'utilisateur depuis la base de données pour confirmer son existence
+    // et récupérer ses informations à jour (rôle, statut, etc.)
     const user = await User.findByPk(decoded.id);
 
     if (!user) {
@@ -73,18 +98,20 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // Ajouter l'utilisateur à la requête
+    // Ajoute l'utilisateur authentifié à l'objet requête
+    // Ces données seront disponibles pour tous les middlewares suivants
     req.user = {
       id: user.id,
       username: user.username,
       role: user.role
     };
 
+    // Passe au middleware suivant
     next();
   } catch (error) {
     console.error('Erreur de vérification du token:', error);
     
-    // Message d'erreur plus précis selon le type d'erreur
+    // Gestion spécifique selon le type d'erreur JWT
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 
         success: false, 
@@ -108,42 +135,56 @@ const protect = async (req, res, next) => {
 };
 
 /**
- * Middleware spécial pour valider le token pendant une opération de rafraîchissement
- * Contrairement au middleware protect, il est plus tolérant avec les tokens expirés
- * et l'inactivité, car son but est de permettre le rafraîchissement
+ * Middleware de validation pour le rafraîchissement des tokens
+ * ==========================================================
+ * 
+ * Middleware spécialisé pour la route de rafraîchissement des tokens.
+ * Contrairement au middleware authenticate standard, ce middleware accepte:
+ * - Les tokens légèrement expirés
+ * - Une période d'inactivité plus longue
+ * 
+ * Ce comportement permet aux utilisateurs de rafraîchir leur session même
+ * après une courte période d'expiration, offrant une meilleure expérience
+ * tout en maintenant la sécurité.
+ * 
+ * Utilisation typique:
+ * router.post('/refresh-token', validateRefreshToken, authController.refreshToken);
+ * 
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @param {Function} next - Fonction pour passer au middleware suivant
+ * @returns {void}
  */
-const refreshTokenValidator = async (req, res, next) => {
+const validateRefreshToken = async (req, res, next) => {
   let token;
 
-  // Vérifier si le token est présent dans les headers
+  // Extrait le token du header Authorization
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
-  // Vérifier si le token existe
+  // Vérifie la présence du token
   if (!token) {
     return res.status(401).json({ 
       success: false, 
       message: 'Accès non autorisé, token manquant' 
     });
-  }
-
-  try {
-    // Vérifier le token mais ignorer l'expiration
-    // Cela permet de rafraîchir des tokens légèrement expirés
+  }  try {
+    // Vérifie le token en ignorant l'expiration pour permettre le rafraîchissement
+    // de tokens récemment expirés
     const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
     
-    // Vérification détaillée uniquement en développement
+    // Journalisation en mode développement pour faciliter le débogage
     if (process.env.NODE_ENV === 'development') {
       console.log('Tentative de rafraîchissement du token pour:', decoded.username);
       console.log('Dernière activité:', new Date(decoded.lastActivity));
     }
 
-    // Utiliser un délai d'inactivité plus long pour le rafraîchissement
-    // Par exemple, 2 fois le délai d'inactivité normal
+    // Définit un délai d'inactivité étendu spécifique au rafraîchissement
+    // Ce délai est plus long que pour l'authentification standard
     const extendedInactivityTimeout = INACTIVITY_TIMEOUT * 2;
     
-    // Vérifier si l'utilisateur a été inactif trop longtemps
+    // Vérification du délai d'inactivité étendu
     if (decoded.lastActivity) {
       const now = Date.now();
       const inactiveTime = now - decoded.lastActivity;
@@ -153,7 +194,7 @@ const refreshTokenValidator = async (req, res, next) => {
         console.log('Délai étendu autorisé:', Math.round(extendedInactivityTimeout/1000), 'secondes');
       }
       
-      // On utilise un délai plus long que pour le middleware protect
+      // Même avec la tolérance étendue, refuse les tokens inactifs depuis trop longtemps
       if (inactiveTime > extendedInactivityTimeout) {
         console.log('Rafraîchissement refusé - Inactivité trop longue pour:', decoded.username);
         return res.status(401).json({ 
@@ -162,9 +203,7 @@ const refreshTokenValidator = async (req, res, next) => {
           errorType: 'inactivity_timeout'
         });
       }
-    }
-
-    // Vérifier rapidement si l'utilisateur existe toujours
+    }    // Vérifie que l'utilisateur existe toujours dans la base de données
     const user = await User.findByPk(decoded.id);
     
     if (!user) {
@@ -174,22 +213,24 @@ const refreshTokenValidator = async (req, res, next) => {
       });
     }
 
-    // Ajouter les informations nécessaires à la requête
+    // Ajoute l'utilisateur authentifié à l'objet requête
     req.user = {
       id: user.id,
       username: user.username,
       role: user.role
     };
     
-    // Ajouter le token décodé à la requête
+    // Ajoute le token décodé pour permettre au contrôleur
+    // d'accéder aux métadonnées du token lors du rafraîchissement
     req.decodedToken = decoded;
 
+    // Passe au middleware suivant (généralement le contrôleur de rafraîchissement)
     next();
   } catch (error) {
     console.error('Erreur lors de la validation pour rafraîchissement:', error);
     
-    // Même si on ignore l'expiration dans la vérification,
-    // un token corrompu ou mal formé devrait être rejeté
+    // Gestion spécifique des erreurs pour le rafraîchissement
+    // Même en ignorant l'expiration, un token corrompu doit être rejeté
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ 
         success: false, 
@@ -207,66 +248,143 @@ const refreshTokenValidator = async (req, res, next) => {
 };
 
 /**
- * Middleware pour autoriser seulement certains rôles
- * @param {String[]} roles - Tableau des rôles autorisés
+ * Middleware d'autorisation basé sur les rôles
+ * ===========================================
+ * 
+ * Fonction factory qui génère un middleware vérifiant si le rôle de l'utilisateur
+ * est inclus dans la liste des rôles autorisés.
+ * 
+ * Ce middleware fournit un contrôle d'accès granulaire au niveau des routes
+ * et permet une flexibilité pour définir quels rôles peuvent accéder à quelles ressources.
+ * 
+ * Utilisation typique:
+ * router.get('/admin-resource', authenticate, authorizeRoles('admin', 'superuser'), controller.getResource);
+ * router.get('/user-resource', authenticate, authorizeRoles('user', 'admin', 'superuser'), controller.getResource);
+ * 
+ * Note: Ce middleware doit être utilisé après authenticate car il dépend de req.user.
+ * 
+ * @param {...string} roles - Liste des rôles autorisés
+ * @returns {Function} Middleware Express pour la vérification des rôles
  */
-const authorize = (...roles) => {
+const authorizeRoles = (...roles) => {
   return (req, res, next) => {
+    // Vérifie que le rôle de l'utilisateur est dans la liste des rôles autorisés
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ 
         success: false, 
         message: `Le rôle ${req.user.role} n'est pas autorisé à accéder à cette ressource` 
       });
     }
+    // Si le rôle est autorisé, passe au middleware suivant
     next();
   };
 };
 
 /**
- * Middleware pour vérifier que l'utilisateur est admin ou superuser
+ * Middleware pour les droits d'administration
+ * ==========================================
+ * 
+ * Vérifie si l'utilisateur possède des droits d'administration.
+ * Ce middleware autorise les utilisateurs ayant les rôles 'admin' ou 'superuser'.
+ * 
+ * Utilisé pour protéger les routes administratives qui ne devraient être
+ * accessibles qu'aux administrateurs du système.
+ * 
+ * Utilisation typique:
+ * router.get('/admin/users', authenticate, requireAdmin, userController.getAllUsers);
+ * 
+ * Note: Ce middleware doit être utilisé après authenticate car il dépend de req.user.
+ * 
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @param {Function} next - Fonction pour passer au middleware suivant
+ * @returns {void}
  */
-const adminOnly = (req, res, next) => {
+const requireAdmin = (req, res, next) => {
+  // Vérifie si l'utilisateur a un rôle d'administration
   if (req.user.role !== 'admin' && req.user.role !== 'superuser') {
     return res.status(403).json({
       success: false,
       message: 'Accès réservé aux administrateurs'
     });
   }
+  // Si l'utilisateur est un administrateur, passe au middleware suivant
   next();
 };
 
 /**
- * Middleware pour vérifier que l'utilisateur est superuser
+ * Middleware pour les droits de super-administrateur
+ * ================================================
+ * 
+ * Vérifie si l'utilisateur possède des droits de super-administrateur.
+ * Ce middleware n'autorise que les utilisateurs ayant le rôle 'superuser'.
+ * 
+ * Utilisé pour protéger les routes critiques qui ne devraient être accessibles
+ * qu'aux super-administrateurs du système, comme la configuration système,
+ * la gestion des sauvegardes, ou les opérations sensibles.
+ * 
+ * Utilisation typique:
+ * router.put('/system/settings', authenticate, requireSuperUser, systemController.updateSettings);
+ * 
+ * Note: Ce middleware doit être utilisé après authenticate car il dépend de req.user.
+ * 
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @param {Function} next - Fonction pour passer au middleware suivant
+ * @returns {void}
  */
-const superUserOnly = (req, res, next) => {
+const requireSuperUser = (req, res, next) => {
+  // Vérifie que l'utilisateur est strictement un super-administrateur
   if (req.user.role !== 'superuser') {
     return res.status(403).json({
       success: false,
       message: 'Accès réservé aux super-administrateurs'
     });
   }
+  // Si l'utilisateur est un super-administrateur, passe au middleware suivant
   next();
 };
 
 /**
- * Middleware pour vérifier les droits d'édition (non lecture seule)
- * Note: Pour un contrôle d'accès complet, utilisez plutôt les middleware de accessControl.js
+ * Middleware pour les droits d'édition
+ * ===================================
+ * 
+ * Vérifie si l'utilisateur possède des droits d'édition sur le système.
+ * Ce middleware autorise les utilisateurs ayant les rôles 'admin' ou 'superuser'
+ * à effectuer des opérations de modification (POST, PUT, DELETE).
+ * 
+ * Utilisé pour protéger les routes de modification qui ne devraient pas
+ * être accessibles aux utilisateurs en lecture seule.
+ * 
+ * Note: Pour un contrôle d'accès complet incluant la vérification du mode
+ * lecture seule global, utilisez plutôt le middleware combiné 'writeAccess'
+ * du module accessControl.js.
+ * 
+ * Utilisation typique:
+ * router.post('/resource', authenticate, requireEditRights, resourceController.createResource);
+ * 
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @param {Function} next - Fonction pour passer au middleware suivant
+ * @returns {void}
  */
-const editRightsOnly = (req, res, next) => {
+const requireEditRights = (req, res, next) => {
+  // Vérifie si l'utilisateur a des droits d'édition
   if (req.user.role !== 'admin' && req.user.role !== 'superuser') {
     return res.status(403).json({
       success: false,
       message: 'Accès refusé. Mode lecture seule actif.'
     });
   }
+  // Si l'utilisateur a des droits d'édition, passe au middleware suivant
   next();
 };
 
 module.exports = { 
-  protect, 
-  authorize, 
-  adminOnly,
-  superUserOnly,
-  refreshTokenValidator,
-  editRightsOnly
+  authenticate, 
+  authorizeRoles, 
+  requireAdmin,
+  requireSuperUser,
+  validateRefreshToken,
+  requireEditRights
 };

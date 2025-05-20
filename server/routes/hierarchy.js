@@ -1,21 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const nodeController = require('../controllers/nodeController');
-const { protect, editRightsOnly } = require('../middleware/auth');
+const { publicAccess, writeAccess } = require('../middleware/access-control');
 
+// Routes pour la gestion de la hiérarchie (lecture uniquement)
+router.get('/', publicAccess, nodeController.getNodes);
+router.get('/:nodeId/:type', publicAccess, nodeController.getNodeDetails);
+router.get('/count', publicAccess, nodeController.getTotalNodes);
 
-// Routes pour la gestion de la hiérarchie
-
-router.get('/', nodeController.getNodes);
-router.get('/:nodeId/:type', nodeController.getNodeDetails);
-router.get('/count', nodeController.getTotalNodes);
-
-//Protected routes
-router.post('/', protect, editRightsOnly, nodeController.createNode);
-router.put('/:nodeId', protect, editRightsOnly, nodeController.updateNode);
-router.delete('/:nodeId', protect, editRightsOnly, nodeController.deleteNode);
-router.delete('/', protect, editRightsOnly, nodeController.deleteNodes);
-
-router.put('/:nodeId/status', protect, editRightsOnly, nodeController.updateNodeStatus);
+// Routes protégées pour la modification (création, mise à jour, suppression)
+router.post('/', writeAccess, nodeController.createNode);
+router.put('/:nodeId', writeAccess, nodeController.updateNode);
+router.delete('/:nodeId', writeAccess, nodeController.deleteNode);
+router.delete('/', writeAccess, nodeController.deleteNodes);
+router.put('/:nodeId/status', writeAccess, nodeController.updateNodeStatus);
 
 module.exports = router;

@@ -8,6 +8,7 @@ import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
 const FurnaceReportSection = ({
   testNodeId,
   onFileAssociationNeeded,
+  viewMode = false
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
@@ -135,8 +136,7 @@ const FurnaceReportSection = ({
           className="mb-3"
           level={1}
         >
-          <div className="p-2">
-            <FileUploader
+          <div className="p-2">            <FileUploader
               category="furnace_report"
               subcategory={view.id}
               nodeId={testNodeId}
@@ -156,6 +156,7 @@ const FurnaceReportSection = ({
               width="100%"
               showPreview={true}
               existingFiles={uploadedFiles[view.id] || []}
+              readOnly={viewMode}
             />
           </div>
         </CollapsibleSection>

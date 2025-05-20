@@ -13,6 +13,8 @@ const TestTypeSection = ({
   processTypeOptions,
   loading,
   selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -30,55 +32,82 @@ const TestTypeSection = ({
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.testType.mountingType')}</Form.Label>
-            <CreatableSelect
+            <Form.Label>{t('tests.before.testType.mountingType')}</Form.Label>            <CreatableSelect
               name="mountingType"
               value={getSelectedOption(mountingTypeOptions, formData.mountingType)}
               onChange={(option) => handleSelectChange(option, { name: 'mountingType' })}
               onCreateOption={handleCreateMountingType}
               options={mountingTypeOptions}
               isClearable
-              styles={selectStyles}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.testType.selectOrAddMountingType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.testType.positionType')}</Form.Label>
-            <CreatableSelect
+            <Form.Label>{t('tests.before.testType.positionType')}</Form.Label>            <CreatableSelect
               name="positionType"
               value={getSelectedOption(positionTypeOptions, formData.positionType)}
               onChange={(option) => handleSelectChange(option, { name: 'positionType' })}
               onCreateOption={handleCreatePositionType}
               options={positionTypeOptions}
               isClearable
-              styles={selectStyles}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.testType.selectOrAddPositionType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.testType.processType')}</Form.Label>
-            <CreatableSelect
+            <Form.Label>{t('tests.before.testType.processType')}</Form.Label>            <CreatableSelect
               name="processType"
               value={getSelectedOption(processTypeOptions, formData.processType)}
               onChange={(option) => handleSelectChange(option, { name: 'processType' })}
               onCreateOption={handleCreateProcessType}
               options={processTypeOptions}
               isClearable
-              styles={selectStyles}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.testType.selectOrAddProcessType')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isDisabled={viewMode}
             />
           </Form.Group>
         </Col>

@@ -11,10 +11,11 @@ const LoadDataSection = ({
   lengthUnitOptions,
   weightUnitOptions,
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
-
   // Style compact pour les Select
   const compactSelectStyles = {
     ...selectStyles,
@@ -27,6 +28,7 @@ const LoadDataSection = ({
       minHeight: '38px',
       height: '38px',
       fontSize: '0.9rem',
+      ...(viewMode ? readOnlyFieldStyle : {})
     }),
     valueContainer: (provided) => ({
       ...provided,
@@ -44,6 +46,7 @@ const LoadDataSection = ({
     indicatorsContainer: (provided) => ({
       ...provided,
       height: '38px',
+      ...(viewMode ? { display: 'none' } : {})
     }),
   };
 
@@ -55,40 +58,43 @@ const LoadDataSection = ({
           <Row className="g-2">
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small">{t('tests.before.loadData.length')}</Form.Label>
-                <Form.Control
+                <Form.Label className="small">{t('tests.before.loadData.length')}</Form.Label>                <Form.Control
                   type="number"
                   name="loadData.length"
                   value={formData.loadData?.length}
                   onChange={handleChange}
                   step="0.01"
                   size="sm"
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small">{t('tests.before.loadData.width')}</Form.Label>
-                <Form.Control
+                <Form.Label className="small">{t('tests.before.loadData.width')}</Form.Label>                <Form.Control
                   type="number"
                   name="loadData.width"
                   value={formData.loadData?.width}
                   onChange={handleChange}
                   step="0.01"
                   size="sm"
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small">{t('tests.before.loadData.height')}</Form.Label>
-                <Form.Control
+                <Form.Label className="small">{t('tests.before.loadData.height')}</Form.Label>                <Form.Control
                   type="number"
                   name="loadData.height"
                   value={formData.loadData?.height}
                   onChange={handleChange}
                   step="0.01"
                   size="sm"
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </Form.Group>
             </Col>
@@ -96,15 +102,15 @@ const LoadDataSection = ({
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>
-            <Select
+            <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>            <Select
               name="loadData.sizeUnit"
               value={formData.loadData?.sizeUnit 
                 ? getSelectedOption(lengthUnitOptions, formData.loadData?.sizeUnit) 
                 : lengthUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.sizeUnit' })}
               options={lengthUnitOptions}
-              isClearable
+              isClearable={!viewMode}
+              isDisabled={viewMode}
               styles={compactSelectStyles}
               placeholder={t('tests.before.loadData.unit')}
               className="react-select-container"
@@ -118,27 +124,29 @@ const LoadDataSection = ({
       <Row className="g-2 mb-3">
         <Col md={3}>
           <Form.Group>
-            <Form.Label className="small">{t('tests.before.loadData.floorCount')}</Form.Label>
-            <Form.Control
+            <Form.Label className="small">{t('tests.before.loadData.floorCount')}</Form.Label>            <Form.Control
               type="number"
               name="loadData.floorCount"
               value={formData.loadData?.floorCount}
               onChange={handleChange}
               step="1"
               size="sm"
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
         <Col md={3}>
           <Form.Group>
-            <Form.Label className="small">{t('tests.before.loadData.partCount')}</Form.Label>
-            <Form.Control
+            <Form.Label className="small">{t('tests.before.loadData.partCount')}</Form.Label>            <Form.Control
               type="number"
               name="loadData.partCount"
               value={formData.loadData?.partCount}
               onChange={handleChange}
               step="1"
               size="sm"
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -146,14 +154,15 @@ const LoadDataSection = ({
           <InputGroup size="sm">
             <Form.Group className="w-100">
               <Form.Label className="small">{t('tests.before.loadData.weight')}</Form.Label>
-              <InputGroup size="sm">
-                <Form.Control
+              <InputGroup size="sm">                <Form.Control
                   type="number"
                   name="loadData.weight"
                   value={formData.loadData?.weight}
                   onChange={handleChange}
                   step="0.01"
                   size="sm"
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </InputGroup>
             </Form.Group>
@@ -161,15 +170,15 @@ const LoadDataSection = ({
         </Col>
         <Col md={3}>
           <Form.Group>
-            <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>
-            <Select
+            <Form.Label className="small">{t('tests.before.loadData.unit')}</Form.Label>            <Select
               name="loadData.weightUnit"
               value={formData.loadData?.weightUnit 
                 ? getSelectedOption(weightUnitOptions, formData.loadData?.weightUnit) 
                 : lengthUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.weightUnit' })}
               options={weightUnitOptions}
-              isClearable
+              isClearable={!viewMode}
+              isDisabled={viewMode}
               styles={compactSelectStyles}
               placeholder={t('tests.before.loadData.unit')}
               className="react-select-container"
@@ -180,14 +189,15 @@ const LoadDataSection = ({
         </Col>
       </Row>
       <Form.Group className="mb-3">
-        <Form.Label className="small">{t('tests.before.loadData.loadComments')}</Form.Label>
-        <Form.Control
+        <Form.Label className="small">{t('tests.before.loadData.loadComments')}</Form.Label>        <Form.Control
           as="textarea"
           name="loadData.loadComments"
           value={formData.loadData?.loadComments}
           onChange={handleChange}
           rows={2}
           size="sm"
+          readOnly={viewMode}
+          style={viewMode ? readOnlyFieldStyle : {}}
         />
       </Form.Group>
     </>

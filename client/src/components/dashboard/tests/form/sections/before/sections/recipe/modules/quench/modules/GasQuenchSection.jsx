@@ -11,7 +11,9 @@ const GasQuenchSection = ({
   handleGasQuenchSpeedRemove,
   handleGasQuenchPressureAdd,
   handleGasQuenchPressureRemove,
-  loading
+  loading,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -46,7 +48,7 @@ const GasQuenchSection = ({
             <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
             <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
             <th>{t('tests.before.recipeData.quenchData.gas.speed')} (rpm) </th>
-            <th style={{ width: '80px' }}>{t('common.actions')}</th>
+            {!viewMode && <th style={{ width: '80px' }}>{t('common.actions')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -59,7 +61,9 @@ const GasQuenchSection = ({
                   value={step.duration || ''}
                   onChange={(e) => handleGasQuenchSpeedChange(index, 'duration', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               <td>
@@ -68,33 +72,39 @@ const GasQuenchSection = ({
                   value={step.speed || ''}
                   onChange={(e) => handleGasQuenchSpeedChange(index, 'speed', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
-              <td className="text-center">
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => handleGasQuenchSpeedRemove(index)}
-                  disabled={formData.quenchData?.gasQuenchSpeed?.length <= 1 || loading}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              </td>
+              {!viewMode && (
+                <td className="text-center">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleGasQuenchSpeedRemove(index)}
+                    disabled={formData.quenchData?.gasQuenchSpeed?.length <= 1 || loading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className="text-end mb-3">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={handleGasQuenchSpeedAdd}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
-        </Button>
-      </div>
+      {!viewMode && (
+        <div className="text-end mb-3">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleGasQuenchSpeedAdd}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
+          </Button>
+        </div>
+      )}
 
       <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.gas.pressureParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
@@ -103,7 +113,7 @@ const GasQuenchSection = ({
             <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
             <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
             <th>{t('tests.before.recipeData.quenchData.gas.pressure')} (mb)</th>
-            <th style={{ width: '80px' }}>{t('common.actions')}</th>
+            {!viewMode && <th style={{ width: '80px' }}>{t('common.actions')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -116,7 +126,9 @@ const GasQuenchSection = ({
                   value={step.duration || ''}
                   onChange={(e) => handleGasQuenchPressureChange(index, 'duration', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               <td>
@@ -125,33 +137,39 @@ const GasQuenchSection = ({
                   value={step.pressure || ''}
                   onChange={(e) => handleGasQuenchPressureChange(index, 'pressure', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
-              <td className="text-center">
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => handleGasQuenchPressureRemove(index)}
-                  disabled={formData.quenchData?.gasQuenchPressure?.length <= 1 || loading}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              </td>
+              {!viewMode && (
+                <td className="text-center">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleGasQuenchPressureRemove(index)}
+                    disabled={formData.quenchData?.gasQuenchPressure?.length <= 1 || loading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className="text-end mb-3">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={handleGasQuenchPressureAdd}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
-        </Button>
-      </div>
+      {!viewMode && (
+        <div className="text-end mb-3">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleGasQuenchPressureAdd}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
+          </Button>
+        </div>
+      )}
     </>
   );
 };

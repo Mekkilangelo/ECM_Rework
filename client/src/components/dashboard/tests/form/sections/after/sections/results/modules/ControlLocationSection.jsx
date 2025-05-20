@@ -8,6 +8,7 @@ const ControlLocationSection = ({
   testNodeId,
   resultIndex = 0,
   onFileAssociationNeeded,
+  viewMode = false
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -89,6 +90,7 @@ const ControlLocationSection = ({
         width="100%"
         showPreview={true}
         existingFiles={uploadedFiles}
+        readOnly={viewMode}
       />
     </div>
   );

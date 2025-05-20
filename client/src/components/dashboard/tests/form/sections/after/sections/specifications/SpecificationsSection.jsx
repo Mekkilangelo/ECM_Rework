@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { testService } from '../../../../../../../../services/testService';
 import { Spinner, ListGroup } from 'react-bootstrap';
 
-const SpecificationsSection = ({ testNodeId, parentId }) => {
+const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
   const { t } = useTranslation();
   const [specifications, setSpecifications] = useState(null);
   const [loading, setLoading] = useState(true);

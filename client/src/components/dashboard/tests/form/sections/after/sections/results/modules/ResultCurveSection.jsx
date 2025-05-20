@@ -40,6 +40,8 @@ const ResultCurveSection = ({
   test,
   formData,
   parentId,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('curve');
@@ -354,7 +356,9 @@ const ResultCurveSection = ({
           onChange={(e) => handlePointChange(index, 'distance', e.target.value)}
           onBlur={handleBlur}
           placeholder={t('tests.after.results.resultCurve.distance')}
-          disabled={loading}
+          disabled={loading || viewMode}
+          readOnly={viewMode}
+          style={viewMode ? readOnlyFieldStyle : {}}
         />
       </td>
     ];
@@ -370,7 +374,9 @@ const ResultCurveSection = ({
             onChange={(e) => setHardnessForPosition(index, positionName, e.target.value)}
             onBlur={handleBlur}
             placeholder={`${positionName}`}
-            disabled={loading}
+            disabled={loading || viewMode}
+            readOnly={viewMode}
+            style={viewMode ? readOnlyFieldStyle : {}}
           />
         </td>
       );
@@ -379,14 +385,16 @@ const ResultCurveSection = ({
     // Ajouter la cellule pour les actions
     cells.push(
       <td key={`actions-${index}`} className="text-center">
-        <Button
-          variant="outline-danger"
-          size="sm"
-          onClick={() => removeDataPoint(index)}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faTrash} />
-        </Button>
+        {!viewMode && (
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={() => removeDataPoint(index)}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </Button>
+        )}
       </td>
     );
     
@@ -447,14 +455,16 @@ const ResultCurveSection = ({
                 </tbody>
               </Table>
               <div className="text-end">
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={addDataPoint}
-                  disabled={loading}
-                >
-                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.resultCurve.addPoint')}
-                </Button>
+                {!viewMode && (
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={addDataPoint}
+                    disabled={loading}
+                  >
+                    <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.resultCurve.addPoint')}
+                  </Button>
+                )}
               </div>
             </>
           )}

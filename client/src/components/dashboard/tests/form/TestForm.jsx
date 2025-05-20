@@ -11,7 +11,7 @@ import BeforeTabContent from './sections/before/BeforeTabContent';
 import AfterTabContent from './sections/after/AfterTabContent';
 import ReportTabContent from './sections/report/ReportTabContent';
 
-const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, ref) => {
+const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
 
   // État pour stocker la fonction d'association de fichiers
@@ -75,7 +75,6 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
   useImperativeHandle(ref, () => ({
     handleCloseRequest
   }));
-
   const {
     formData,
     errors,
@@ -90,7 +89,14 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
     cancelClose,
     saveAndClose,
     ...formHandlers
-  } = useTestForm(test, onClose, onTestCreated, onTestUpdated);
+  } = useTestForm(test, onClose, onTestCreated, onTestUpdated, viewMode);
+
+  // Style pour les champs en mode lecture seule
+  const readOnlyFieldStyle = viewMode ? {
+    backgroundColor: '#f8f9fa',
+    border: '1px solid #dee2e6',
+    cursor: 'default'
+  } : {};
 
   // Fonction pour rendre les titres d'onglets avec mise en gras et rouge pour l'onglet actif
   const renderTabTitle = (title, eventKey) => {
@@ -138,17 +144,18 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
             {message.text}
           </div>
         )}
-        
-        {errors.parent && (
+          {errors.parent && (
           <div className="alert alert-danger mb-3">
             {t(errors.parent)}
           </div>
         )}
         
-        {/* Légende pour les champs obligatoires */}
-        <div className="text-muted small mb-3">
-          <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
-        </div>
+        {/* Légende pour les champs obligatoires - masquée en mode lecture seule */}
+        {!viewMode && (
+          <div className="text-muted small mb-3">
+            <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
+          </div>
+        )}
         
         <Form onSubmit={handleSubmit}>
 
@@ -159,8 +166,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
             rememberState={true}
             nestingLevel={0}
           >
-            {/* Section BasicInfo toujours visible */}
-            <BasicInfoSection
+            {/* Section BasicInfo toujours visible */}            <BasicInfoSection
               formData={formData}
               errors={errors}
               handleChange={formHandlers.handleChange}
@@ -170,6 +176,8 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
               statusOptions={formHandlers.statusOptions}
               loading={loading}
               selectStyles={formHandlers.selectStyles}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
           
@@ -180,8 +188,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
               onSelect={handleTabChange}
               className="mb-4 mt-4"
               id="test-form-tabs"
-            >
-              <Tab eventKey="before" title={renderTabTitle(t('tests.tabs.before'), "before")}>
+            >              <Tab eventKey="before" title={renderTabTitle(t('tests.tabs.before'), "before")}>
                 <BeforeTabContent 
                   formData={formData}
                   errors={errors}
@@ -189,9 +196,10 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   formHandlers={formHandlers}
                   test={test}
                   handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
+                  viewMode={viewMode}
+                  readOnlyFieldStyle={readOnlyFieldStyle}
                 />
-              </Tab>
-              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
+              </Tab>              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
                 <AfterTabContent 
                   formData={formData}
                   errors={errors}
@@ -199,6 +207,8 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
                   formHandlers={formHandlers}
                   test={test}
                   handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
+                  viewMode={viewMode}
+                  readOnlyFieldStyle={readOnlyFieldStyle}
                 />
               </Tab>
               <Tab eventKey="report" title={renderTabTitle(t('tests.tabs.report'), "report")}>
@@ -210,42 +220,50 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated }, re
             </Tabs>
           ) : (
             // En mode création, on affiche directement le contenu de l'onglet "Before"
-            <div className="mt-4">
-              <BeforeTabContent 
+            <div className="mt-4">              <BeforeTabContent 
                 formData={formData}
                 errors={errors}
                 loading={loading}
                 formHandlers={formHandlers}
                 test={test}
                 handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
+                viewMode={viewMode}
+                readOnlyFieldStyle={readOnlyFieldStyle}
               />
             </div>
-          )}
-
-          {/* Boutons de soumission */}
+          )}          {/* Boutons de soumission */}
           <div className="d-flex justify-content-end mt-4">
-            <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
-              {t('common.cancel')}
-            </Button>
-            <Button variant="warning" type="submit" disabled={loading}>
-              {loading 
-                ? (isEditMode ? t('tests.modifying') : t('tests.creating')) 
-                : (isEditMode ? t('common.edit') : t('common.create'))}
-            </Button>
+            {viewMode ? (
+              <Button variant="secondary" onClick={onClose}>
+                {t('common.close')}
+              </Button>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
+                  {t('common.cancel')}
+                </Button>
+                <Button variant="warning" type="submit" disabled={loading}>
+                  {loading 
+                    ? (isEditMode ? t('tests.modifying') : t('tests.creating')) 
+                    : (isEditMode ? t('common.edit') : t('common.create'))}
+                </Button>
+              </>
+            )}
           </div>
-        </Form>
-      </div>
+        </Form>      </div>
 
-      {/* Modal de confirmation pour la fermeture */}
-      <CloseConfirmationModal
-        show={showConfirmModal}
-        onHide={cancelClose}
-        onCancel={cancelClose}
-        onContinue={confirmClose}
-        onSave={saveAndClose}
-        title={t('closeModal.title')}
-        message={t('closeModal.unsavedChanges')}
-      />
+      {/* Modal de confirmation pour la fermeture - non affichée en mode lecture seule */}
+      {!viewMode && (
+        <CloseConfirmationModal
+          show={showConfirmModal}
+          onHide={cancelClose}
+          onCancel={cancelClose}
+          onContinue={confirmClose}
+          onSave={saveAndClose}
+          title={t('closeModal.title')}
+          message={t('closeModal.unsavedChanges')}
+        />
+      )}
     </>
   );
 });

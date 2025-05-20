@@ -12,7 +12,9 @@ const PreoxidationSection = ({
   temperatureUnitOptions,
   timeUnitOptions,
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -28,12 +30,21 @@ const PreoxidationSection = ({
               value={getSelectedOption(coolingMediaOptions, formData.recipeData?.preoxMedia)}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxMedia' })}
               options={coolingMediaOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.preoxidation.media')}
               className="react-select-container"
               classNamePrefix="react-select"
-              isDisabled={loading}
             />
           </Form.Group>
         </Col>
@@ -46,7 +57,9 @@ const PreoxidationSection = ({
               value={formData.recipeData?.preoxTemp}
               onChange={handleChange}
               step="0.1"
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -60,12 +73,21 @@ const PreoxidationSection = ({
                 : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxTempUnit' })}
               options={temperatureUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.preoxidation.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
-              isDisabled={loading}
             />
           </Form.Group>
         </Col>
@@ -78,7 +100,9 @@ const PreoxidationSection = ({
               value={formData.recipeData?.preoxDuration}
               onChange={handleChange}
               step="0.1"
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -92,12 +116,21 @@ const PreoxidationSection = ({
                 : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxDurationUnit' })}
               options={timeUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.preoxidation.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
-              isDisabled={loading}
             />
           </Form.Group>
         </Col>

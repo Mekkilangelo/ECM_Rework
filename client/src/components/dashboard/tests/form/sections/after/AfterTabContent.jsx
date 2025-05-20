@@ -5,7 +5,7 @@ import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 
-const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded }) => {
+const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {} }) => {
   const { t } = useTranslation();
   
   return (
@@ -15,10 +15,10 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
         isExpandedByDefault={true}
         sectionId="test-specifications"
         rememberState={false}
-      >
-        <SpecificationsSection
+      >        <SpecificationsSection
           testNodeId={test ? test.id : null}
           parentId={formHandlers.parentId}
+          viewMode={viewMode}
         />
       </CollapsibleSection>
       <CollapsibleSection
@@ -27,10 +27,10 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
         sectionId="test-furnace-report"
         rememberState={false}
         level={0}
-      >
-        <FurnaceReportSection
+      >        <FurnaceReportSection
           testNodeId={test ? test.id : null}
           onFileAssociationNeeded={handleFileAssociationNeeded}
+          viewMode={viewMode}
         />
       </CollapsibleSection>
       <CollapsibleSection
@@ -55,10 +55,11 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
           handleEcdPositionAdd={formHandlers.handleEcdPositionAdd}
           handleEcdPositionRemove={formHandlers.handleEcdPositionRemove}
           handleEcdPositionChange={formHandlers.handleEcdPositionChange}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
+          loading={loading}          selectStyles={formHandlers.selectStyles}
           test={test}
           handleFileAssociationNeeded={handleFileAssociationNeeded}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
     </>

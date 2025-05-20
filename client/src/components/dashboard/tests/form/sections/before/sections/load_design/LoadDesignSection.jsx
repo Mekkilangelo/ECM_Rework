@@ -7,6 +7,7 @@ import { faFile } from '@fortawesome/free-solid-svg-icons';
 const LoadDesignSection = ({
   testNodeId,
   onFileAssociationNeeded,
+  viewMode = false
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
@@ -144,8 +145,7 @@ const LoadDesignSection = ({
   }, [onFileAssociationNeeded, associateFiles]);
   
   return (
-    <>
-      <div className="p-2">
+    <>      <div className="p-2">
         <FileUploader
           category="load_design"
           subcategory={'load_design'}
@@ -166,6 +166,7 @@ const LoadDesignSection = ({
           width="100%"
           showPreview={true}
           existingFiles={uploadedFiles['load_design'] || []}
+          readOnly={viewMode}
         />
       </div>
     </>

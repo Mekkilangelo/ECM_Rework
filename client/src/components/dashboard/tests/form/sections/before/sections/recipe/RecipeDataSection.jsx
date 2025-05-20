@@ -30,7 +30,10 @@ const RecipeDataSection = ({
   handleOilQuenchSpeedRemove,
   loading,
   selectStyles,
-  test
+  test,
+  handleFileAssociationNeeded,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
   
@@ -40,20 +43,20 @@ const RecipeDataSection = ({
       <Row>
         <Col md={12}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.recipeNumber')}</Form.Label>
-            <Form.Control
+            <Form.Label>{t('tests.before.recipeData.recipeNumber')}</Form.Label>            <Form.Control
               type="text"
               name="recipeData.recipeNumber"
               value={formData.recipeData?.recipeNumber}
               onChange={handleChange}
               autoComplete="off"
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
       </Row>
       
-      {/* Preoxidation Section */}
-      <PreoxidationSection
+      {/* Preoxidation Section */}      <PreoxidationSection
         formData={formData}
         handleChange={handleChange}
         handleSelectChange={handleSelectChange}
@@ -63,6 +66,8 @@ const RecipeDataSection = ({
         timeUnitOptions={timeUnitOptions}
         loading={loading}
         selectStyles={selectStyles}
+        viewMode={viewMode}
+        readOnlyFieldStyle={readOnlyFieldStyle}
       />
       
       <CollapsibleSection
@@ -72,8 +77,7 @@ const RecipeDataSection = ({
         rememberState={true}
         level={1}
       >
-        {/* Thermal Cycle Section */}
-        <ThermalCycleSection
+        {/* Thermal Cycle Section */}        <ThermalCycleSection
           formData={formData}
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
@@ -86,6 +90,8 @@ const RecipeDataSection = ({
           handleThermalCycleChange={handleThermalCycleChange}
           loading={loading}
           selectStyles={selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
       
@@ -96,8 +102,7 @@ const RecipeDataSection = ({
         rememberState={true}
         level={1}
       >  
-        {/* Chemical Cycle Section */}
-        <ChemicalCycleSection
+        {/* Chemical Cycle Section */}        <ChemicalCycleSection
           formData={formData}
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
@@ -106,6 +111,8 @@ const RecipeDataSection = ({
           handleChemicalCycleRemove={handleChemicalCycleRemove}
           loading={loading}
           selectStyles={selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
       
@@ -127,8 +134,7 @@ const RecipeDataSection = ({
         rememberState={true}
         level={1}
       >
-        {/* Quench Data Section - Imported from external component */}
-        <QuenchDataSection
+        {/* Quench Data Section - Imported from external component */}        <QuenchDataSection
           formData={formData}
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
@@ -143,6 +149,8 @@ const RecipeDataSection = ({
           timeUnitOptions={timeUnitOptions}
           loading={loading}
           selectStyles={selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
     </>

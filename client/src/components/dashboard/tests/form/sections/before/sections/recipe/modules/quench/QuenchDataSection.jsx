@@ -21,8 +21,10 @@ const QuenchDataSection = ({
   handleOilQuenchSpeedAdd,
   handleOilQuenchSpeedRemove,
   loading,
-  selectStyles
-}) => {
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
+})=> {
   const { t } = useTranslation();
   const [quenchType, setQuenchType] = useState('gas'); // 'gas' ou 'oil'
   
@@ -60,8 +62,7 @@ const QuenchDataSection = ({
           eventKey="gas"
           title={renderTabTitle(t('tests.before.recipeData.quenchData.gas.title'), faWind, "gas")}
         >
-          <div className="fade-in tab-content-container">
-            <GasQuenchSection
+          <div className="fade-in tab-content-container">            <GasQuenchSection
               formData={formData}
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
@@ -72,6 +73,8 @@ const QuenchDataSection = ({
               handleGasQuenchPressureRemove={handleGasQuenchPressureRemove}
               loading={loading}
               selectStyles={selectStyles}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </div>
         </Tab>
@@ -79,8 +82,7 @@ const QuenchDataSection = ({
           eventKey="oil"
           title={renderTabTitle(t('tests.before.recipeData.quenchData.oil.title'), faOilCan, "oil")}
         >
-          <div className="fade-in tab-content-container">
-            <OilQuenchSection
+          <div className="fade-in tab-content-container">            <OilQuenchSection
               formData={formData}
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
@@ -91,6 +93,8 @@ const QuenchDataSection = ({
               handleOilQuenchSpeedRemove={handleOilQuenchSpeedRemove}
               loading={loading}
               selectStyles={selectStyles}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </div>
         </Tab>

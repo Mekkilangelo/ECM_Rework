@@ -9,6 +9,7 @@ const MicrographsSection = ({
   testNodeId,
   resultIndex = 0,  // Ajout d'un index par défaut
   onFileAssociationNeeded,
+  viewMode = false
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
@@ -144,6 +145,7 @@ const MicrographsSection = ({
               width="100%"
               showPreview={true}
               existingFiles={uploadedFiles[view.id] || []}
+              readOnly={viewMode}
             />
           </div>
         </CollapsibleSection>

@@ -15,6 +15,8 @@ const FurnaceDataSection = ({
   quenchCellOptions,
   loading,
   selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -41,8 +43,18 @@ const FurnaceDataSection = ({
               onChange={(option) => handleSelectChange(option, { name: 'furnaceType' })}
               onCreateOption={handleCreateFurnaceType}
               options={furnaceTypeOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.furnaceData.selectOrAddFurnaceType')}
               className="react-select-container"
               classNamePrefix="react-select"
@@ -59,8 +71,18 @@ const FurnaceDataSection = ({
               onChange={(option) => handleSelectChange(option, { name: 'heatingCell' })}
               onCreateOption={handleCreateHeatingCell}
               options={heatingCellOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.furnaceData.selectOrAddHeatingCell')}
               className="react-select-container"
               classNamePrefix="react-select"
@@ -77,8 +99,18 @@ const FurnaceDataSection = ({
               onChange={(option) => handleSelectChange(option, { name: 'coolingMedia' })}
               onCreateOption={handleCreateCoolingMedia}
               options={coolingMediaOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.furnaceData.selectOrAddCoolingMedia')}
               className="react-select-container"
               classNamePrefix="react-select"
@@ -97,8 +129,18 @@ const FurnaceDataSection = ({
               onChange={(option) => handleSelectChange(option, { name: 'furnaceSize' })}
               onCreateOption={handleCreateFurnaceSize}
               options={furnaceSizeOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.furnaceData.selectOrAddFurnaceSize')}
               className="react-select-container"
               classNamePrefix="react-select"
@@ -115,8 +157,18 @@ const FurnaceDataSection = ({
               onChange={(option) => handleSelectChange(option, { name: 'quenchCell' })}
               onCreateOption={handleCreateQuenchCell}
               options={quenchCellOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.furnaceData.selectOrAddQuenchCell')}
               className="react-select-container"
               classNamePrefix="react-select"

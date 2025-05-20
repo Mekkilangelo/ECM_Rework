@@ -13,7 +13,9 @@ const ChemicalCycleSection = ({
   handleChemicalCycleAdd,
   handleChemicalCycleRemove,
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
   
@@ -67,10 +69,19 @@ const ChemicalCycleSection = ({
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas1)}
               onChange={(option) => handleGlobalGasChange(option, 1)}
               options={gasOptions}
-              styles={selectStyles}
-              isDisabled={loading}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
+              isDisabled={loading || viewMode}
               placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
-              isClearable
+              isClearable={!viewMode}
             />
           </Form.Group>
         </Col>
@@ -81,10 +92,19 @@ const ChemicalCycleSection = ({
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas2)}
               onChange={(option) => handleGlobalGasChange(option, 2)}
               options={gasOptions}
-              styles={selectStyles}
-              isDisabled={loading}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
+              isDisabled={loading || viewMode}
               placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
-              isClearable
+              isClearable={!viewMode}
             />
           </Form.Group>
         </Col>
@@ -95,10 +115,19 @@ const ChemicalCycleSection = ({
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas3)}
               onChange={(option) => handleGlobalGasChange(option, 3)}
               options={gasOptions}
-              styles={selectStyles}
-              isDisabled={loading}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
+              isDisabled={loading || viewMode}
               placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
-              isClearable
+              isClearable={!viewMode}
             />
           </Form.Group>
         </Col>
@@ -125,7 +154,9 @@ const ChemicalCycleSection = ({
             )}
             <th>{t('tests.before.recipeData.chemicalCycle.pressure')} (mb)</th>
             <th className="text-center">{t('tests.before.recipeData.chemicalCycle.turbine')}</th>
-            <th style={{ width: '80px' }}>{t('common.actions')}</th>
+            {!viewMode && (
+              <th style={{ width: '80px' }}>{t('common.actions')}</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -138,7 +169,9 @@ const ChemicalCycleSection = ({
                   value={cycle.time || ''}
                   onChange={(e) => handleChemicalCycleChange(index, 'time', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               {/* Débit pour Gaz 1 */}
@@ -150,7 +183,9 @@ const ChemicalCycleSection = ({
                     value={cycle.debit1 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit1', e.target.value)}
                     step="0.1"
-                    disabled={loading}
+                    disabled={loading || viewMode}
+                    readOnly={viewMode}
+                    style={viewMode ? readOnlyFieldStyle : {}}
                   />
                 </td>
               )}
@@ -163,7 +198,9 @@ const ChemicalCycleSection = ({
                     value={cycle.debit2 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit2', e.target.value)}
                     step="0.1"
-                    disabled={loading}
+                    disabled={loading || viewMode}
+                    readOnly={viewMode}
+                    style={viewMode ? readOnlyFieldStyle : {}}
                   />
                 </td>
               )}
@@ -176,7 +213,9 @@ const ChemicalCycleSection = ({
                     value={cycle.debit3 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit3', e.target.value)}
                     step="0.1"
-                    disabled={loading}
+                    disabled={loading || viewMode}
+                    readOnly={viewMode}
+                    style={viewMode ? readOnlyFieldStyle : {}}
                   />
                 </td>
               )}
@@ -186,7 +225,9 @@ const ChemicalCycleSection = ({
                   value={cycle.pressure || ''}
                   onChange={(e) => handleChemicalCycleChange(index, 'pressure', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               {/* Colonne Turbine avec case à cocher */}
@@ -199,36 +240,41 @@ const ChemicalCycleSection = ({
                       id={`turbine-custom-switch-${index}`}
                       checked={cycle.turbine || false}
                       onChange={(e) => handleTurbineChange(index, e.target.checked)}
-                      disabled={loading}
+                      disabled={loading || viewMode}
+                      readOnly={viewMode}
                     />
                     <label className="custom-control-label" htmlFor={`turbine-custom-switch-${index}`}></label>
                   </div>
                 </div>
               </td>
-              <td className="text-center">
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => handleChemicalCycleRemove(index)}
-                  disabled={formData.recipeData?.chemicalCycle?.length <= 1 || loading}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              </td>
+              {!viewMode && (
+                <td className="text-center">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleChemicalCycleRemove(index)}
+                    disabled={formData.recipeData?.chemicalCycle?.length <= 1 || loading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className="text-end mb-3">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={handleChemicalCycleAdd}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.chemicalCycle.addStep')}
-        </Button>
-      </div>
+      {!viewMode && (
+        <div className="text-end mb-3">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleChemicalCycleAdd}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.chemicalCycle.addStep')}
+          </Button>
+        </div>
+      )}
     </>
   );
 };

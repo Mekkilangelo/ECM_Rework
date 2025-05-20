@@ -17,7 +17,9 @@ const ThermalCycleSection = ({
   handleThermalCycleRemove,
   handleThermalCycleChange,
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
   
@@ -51,9 +53,19 @@ const ThermalCycleSection = ({
                   menuPortalTarget={document.body}
                   styles={{
                     ...selectStyles,
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    ...(viewMode ? {
+                      control: (provided) => ({
+                        ...provided,
+                        ...readOnlyFieldStyle,
+                        cursor: 'default'
+                      }),
+                      dropdownIndicator: () => ({ display: 'none' }),
+                      indicatorSeparator: () => ({ display: 'none' })
+                    } : {})
                   }}
-                  isDisabled={loading}
+                  isDisabled={loading || viewMode}
+                  isClearable={!viewMode}
                   formatOptionLabel={option => (
                     <div className="d-flex align-items-center">
                       <FontAwesomeIcon icon={option.icon} className="me-2" />
@@ -68,7 +80,9 @@ const ThermalCycleSection = ({
                   value={cycle.setpoint || ''}
                   onChange={(e) => handleThermalCycleChange(index, 'setpoint', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               <td>
@@ -77,33 +91,39 @@ const ThermalCycleSection = ({
                   value={cycle.duration || ''}
                   onChange={(e) => handleThermalCycleChange(index, 'duration', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               <td className="text-center">
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => handleThermalCycleRemove(index)}
-                  disabled={formData.recipeData?.thermalCycle?.length <= 1 || loading}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
+                {!viewMode && (
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleThermalCycleRemove(index)}
+                    disabled={formData.recipeData?.thermalCycle?.length <= 1 || loading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className="text-end mb-3">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={handleThermalCycleAdd}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.thermalCycle.addStep')}
-        </Button>
-      </div>
+      {!viewMode && (
+        <div className="text-end mb-3">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleThermalCycleAdd}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.thermalCycle.addStep')}
+          </Button>
+        </div>
+      )}
       
       {/* Autres paramètres de recette */}
       <h5 className="mt-4 mb-2">{t('tests.before.recipeData.thermalCycle.otherParameters')}</h5>
@@ -117,6 +137,9 @@ const ThermalCycleSection = ({
               value={formData.recipeData?.waitTime}
               onChange={handleChange}
               step="0.1"
+              style={viewMode ? readOnlyFieldStyle : {}}
+              readOnly={viewMode}
+              disabled={loading || viewMode}
             />
           </Form.Group>
         </Col>
@@ -130,10 +153,19 @@ const ThermalCycleSection = ({
                 : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitTimeUnit' })}
               options={timeUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.thermalCycle.unit')}
-              isLoading={loading}
             />
           </Form.Group>
         </Col>
@@ -146,6 +178,9 @@ const ThermalCycleSection = ({
               value={formData.recipeData?.programDuration}
               onChange={handleChange}
               step="0.1"
+              style={viewMode ? readOnlyFieldStyle : {}}
+              readOnly={viewMode}
+              disabled={loading || viewMode}
             />
           </Form.Group>
         </Col>
@@ -159,10 +194,19 @@ const ThermalCycleSection = ({
                 : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.programDurationUnit' })}
               options={timeUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.thermalCycle.unit')}
-              isLoading={loading}
             />
           </Form.Group>
         </Col>
@@ -177,6 +221,9 @@ const ThermalCycleSection = ({
               value={formData.recipeData?.cellTemp}
               onChange={handleChange}
               step="0.1"
+              style={viewMode ? readOnlyFieldStyle : {}}
+              readOnly={viewMode}
+              disabled={loading || viewMode}
             />
           </Form.Group>
         </Col>
@@ -190,10 +237,19 @@ const ThermalCycleSection = ({
                 : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.cellTempUnit' })}
               options={temperatureUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.thermalCycle.unit')}
-              isLoading={loading}
             />
           </Form.Group>
         </Col>
@@ -206,6 +262,9 @@ const ThermalCycleSection = ({
               value={formData.recipeData?.waitPressure}
               onChange={handleChange}
               step="0.1"
+              style={viewMode ? readOnlyFieldStyle : {}}
+              readOnly={viewMode}
+              disabled={loading || viewMode}
             />
           </Form.Group>
         </Col>
@@ -219,10 +278,19 @@ const ThermalCycleSection = ({
                 : pressureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitPressureUnit' })}
               options={pressureUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.thermalCycle.unit')}
-              isLoading={loading}
             />
           </Form.Group>
         </Col>

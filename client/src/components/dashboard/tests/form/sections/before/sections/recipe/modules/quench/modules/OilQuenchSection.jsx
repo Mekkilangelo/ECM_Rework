@@ -15,7 +15,9 @@ const OilQuenchSection = ({
   handleOilQuenchSpeedAdd,
   handleOilQuenchSpeedRemove,
   loading,
-  selectStyles
+  selectStyles,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
 
@@ -39,7 +41,7 @@ const OilQuenchSection = ({
             <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
             <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
             <th>{t('tests.before.recipeData.quenchData.oil.speed')} (rpm)</th>
-            <th style={{ width: '80px' }}>{t('common.actions')}</th>
+            {!viewMode && <th style={{ width: '80px' }}>{t('common.actions')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -52,7 +54,9 @@ const OilQuenchSection = ({
                   value={step.duration || ''}
                   onChange={(e) => handleOilQuenchSpeedChange(index, 'duration', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
               <td>
@@ -61,33 +65,39 @@ const OilQuenchSection = ({
                   value={step.speed || ''}
                   onChange={(e) => handleOilQuenchSpeedChange(index, 'speed', e.target.value)}
                   step="0.1"
-                  disabled={loading}
+                  disabled={loading || viewMode}
+                  readOnly={viewMode}
+                  style={viewMode ? readOnlyFieldStyle : {}}
                 />
               </td>
-              <td className="text-center">
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => handleOilQuenchSpeedRemove(index)}
-                  disabled={formData.quenchData?.oilQuenchSpeed?.length <= 1 || loading}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              </td>
+              {!viewMode && (
+                <td className="text-center">
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleOilQuenchSpeedRemove(index)}
+                    disabled={formData.quenchData?.oilQuenchSpeed?.length <= 1 || loading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className="text-end mb-3">
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={handleOilQuenchSpeedAdd}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
-        </Button>
-      </div>
+      {!viewMode && (
+        <div className="text-end mb-3">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleOilQuenchSpeedAdd}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
+          </Button>
+        </div>
+      )}
 
       <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.oil.parameters')}</h5>
       <Row>
@@ -100,7 +110,9 @@ const OilQuenchSection = ({
               value={formData.quenchData?.oilTemperature || ''}
               onChange={handleChange}
               step="0.1"
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -114,10 +126,19 @@ const OilQuenchSection = ({
                 : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'quenchData.oilTempUnit' })}
               options={temperatureUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
-              isDisabled={loading}
             />
           </Form.Group>
         </Col>
@@ -130,7 +151,9 @@ const OilQuenchSection = ({
               value={formData.quenchData?.oilInertingPressure || ''}
               onChange={handleChange}
               step="0.1"
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -145,7 +168,9 @@ const OilQuenchSection = ({
               value={formData.quenchData?.oilInertingDelay || ''}
               onChange={handleChange}
               step="0.1"
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -159,10 +184,19 @@ const OilQuenchSection = ({
                 : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'quenchData.oilInertingDelayUnit' })}
               options={timeUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
-              isDisabled={loading}
             />
           </Form.Group>
         </Col>
@@ -175,7 +209,9 @@ const OilQuenchSection = ({
               value={formData.quenchData?.oilDrippingTime || ''}
               onChange={handleChange}
               step="0.1"
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
         </Col>
@@ -189,10 +225,19 @@ const OilQuenchSection = ({
                 : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'quenchData.oilDrippingTimeUnit' })}
               options={timeUnitOptions}
-              isClearable
-              styles={selectStyles}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
               placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
-              isDisabled={loading}
             />
           </Form.Group>
         </Col>

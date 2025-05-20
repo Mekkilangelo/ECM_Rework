@@ -8,7 +8,7 @@ import LoadDataSection from './sections/load_data/LoadDataSection';
 import RecipeDataSection from './sections/recipe/RecipeDataSection';
 import LoadDesignSection from './sections/load_design/LoadDesignSection';
 
-const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded }) => {
+const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {} }) => {
   const { t } = useTranslation();
   
   // États pour stocker les fonctions d'association de fichiers des sous-sections
@@ -83,11 +83,12 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           handleSelectChange={formHandlers.handleSelectChange}
           handleCreateOption={formHandlers.handleCreateOption}
           getSelectedOption={formHandlers.getSelectedOption}
-          mountingTypeOptions={formHandlers.mountingTypeOptions}
-          positionTypeOptions={formHandlers.positionTypeOptions}
+          mountingTypeOptions={formHandlers.mountingTypeOptions}          positionTypeOptions={formHandlers.positionTypeOptions}
           processTypeOptions={formHandlers.processTypeOptions}
           loading={loading}
           selectStyles={formHandlers.selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
       
@@ -105,10 +106,11 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           furnaceTypeOptions={formHandlers.furnaceTypeOptions}
           heatingCellOptions={formHandlers.heatingCellOptions}
           coolingMediaOptions={formHandlers.coolingMediaOptions}
-          furnaceSizeOptions={formHandlers.furnaceSizeOptions}
-          quenchCellOptions={formHandlers.quenchCellOptions}
+          furnaceSizeOptions={formHandlers.furnaceSizeOptions}          quenchCellOptions={formHandlers.quenchCellOptions}
           loading={loading}
           selectStyles={formHandlers.selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
       
@@ -123,10 +125,11 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
           getSelectedOption={formHandlers.getSelectedOption}
-          lengthUnitOptions={formHandlers.lengthUnitOptions}
-          weightUnitOptions={formHandlers.weightUnitOptions}
+          lengthUnitOptions={formHandlers.lengthUnitOptions}          weightUnitOptions={formHandlers.weightUnitOptions}
           loading={loading}
           selectStyles={formHandlers.selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
       
@@ -135,10 +138,10 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
         isExpandedByDefault={false}
         sectionId="test-load-design"
         rememberState={true}
-      >
-        <LoadDesignSection
+      >        <LoadDesignSection
           testNodeId={test ? test.id : null}
           onFileAssociationNeeded={handleLoadDesignFileAssociationNeeded}
+          viewMode={viewMode}
         />
       </CollapsibleSection>
       
@@ -168,10 +171,11 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           handleGasQuenchPressureRemove={formHandlers.handleGasQuenchPressureRemove}
           handleOilQuenchSpeedAdd={formHandlers.handleOilQuenchSpeedAdd}
           handleOilQuenchSpeedRemove={formHandlers.handleOilQuenchSpeedRemove}
-          loading={loading}
-          selectStyles={formHandlers.selectStyles}
+          loading={loading}          selectStyles={formHandlers.selectStyles}
           test={test}
           handleFileAssociationNeeded={handleRecipeDataFileAssociationNeeded}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
     </>

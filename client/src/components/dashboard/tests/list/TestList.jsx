@@ -198,8 +198,7 @@ const TestList = ({ partId }) => {
             onClose={closeCreateModal}
             onTestCreated={handleItemCreated}
           />
-        </Modal.Body>
-      </Modal>
+        </Modal.Body>      </Modal>
 
       {/* Modal pour éditer un essai */}
       <Modal
@@ -218,6 +217,27 @@ const TestList = ({ partId }) => {
               partId={partId}
               onClose={closeEditModal}
               onTestUpdated={handleItemUpdated}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal pour voir les détails - utilise TestForm en mode lecture seule */}
+      <Modal
+        show={showDetailModal}
+        onHide={closeDetailModal}
+        size="xl"
+      >
+        <Modal.Header closeButton className="bg-light">
+          <Modal.Title>{t('tests.details')}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedTest && (
+            <TestForm
+              test={selectedTest}
+              partId={partId}
+              onClose={closeDetailModal}
+              viewMode={true} // Active le mode lecture seule
             />
           )}
         </Modal.Body>

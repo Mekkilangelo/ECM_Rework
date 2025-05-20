@@ -27,7 +27,9 @@ const ResultsDataSection = ({
   loading,
   selectStyles,
   test,
-  handleFileAssociationNeeded
+  handleFileAssociationNeeded,
+  viewMode = false,
+  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
   
@@ -98,17 +100,18 @@ const ResultsDataSection = ({
   const results = formData.resultsData?.results || [];
 
   return (
-    <div>
-      <h6 className="mb-3 d-flex justify-content-between align-items-center">
+    <div>      <h6 className="mb-3 d-flex justify-content-between align-items-center">
         <span>{t('tests.after.results.resultsLabel')}</span>
-        <Button
-          variant="outline-primary"
-          size="sm"
-          onClick={handleResultBlocAdd}
-          disabled={loading}
-        >
-          <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addResult')}
-        </Button>
+        {!viewMode && (
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleResultBlocAdd}
+            disabled={loading}
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addResult')}
+          </Button>
+        )}
       </h6>
       
       {results.map((result, resultIndex) => (
@@ -120,9 +123,8 @@ const ResultsDataSection = ({
           rememberState={true}
           level={0}
           className="mb-3"
-        >
-          <div className="mb-3 d-flex justify-content-end">
-            {results.length > 1 && (
+        >          <div className="mb-3 d-flex justify-content-end">
+            {!viewMode && results.length > 1 && (
               <Button
                 variant="outline-danger"
                 size="sm"
@@ -135,12 +137,13 @@ const ResultsDataSection = ({
           </div>
           
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.after.results.description')}</Form.Label>
-            <Form.Control
+            <Form.Label>{t('tests.after.results.description')}</Form.Label>            <Form.Control
               type="text"
               value={result.description || ''}
               onChange={(e) => handleResultChange(resultIndex, 'description', e.target.value)}
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
           
@@ -166,7 +169,9 @@ const ResultsDataSection = ({
                         value={point.location || ''}
                         onChange={(e) => handleHardnessChange(resultIndex, hardnessIndex, 'location', e.target.value)}
                         placeholder={t('tests.after.results.enterPosition')}
-                        disabled={loading}
+                        disabled={loading || viewMode}
+                        readOnly={viewMode}
+                        style={viewMode ? readOnlyFieldStyle : {}}
                       />
                     </td>
                     <td>
@@ -175,7 +180,9 @@ const ResultsDataSection = ({
                         value={point.value || ''}
                         onChange={(e) => handleHardnessChange(resultIndex, hardnessIndex, 'value', e.target.value)}
                         placeholder={t('tests.after.results.enterValue')}
-                        disabled={loading}
+                        disabled={loading || viewMode}
+                        readOnly={viewMode}
+                        style={viewMode ? readOnlyFieldStyle : {}}
                       />
                     </td>
                     <td>
@@ -184,17 +191,26 @@ const ResultsDataSection = ({
                         onChange={(option) => handleHardnessChange(resultIndex, hardnessIndex, 'unit', option)}
                         options={hardnessUnitOptions}
                         placeholder={t('common.selectUnit')}
-                        isDisabled={loading}
+                        isDisabled={loading || viewMode}
                         menuPortalTarget={document.body}
                         styles={{
                           ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          ...(viewMode ? {
+                            control: (provided) => ({
+                              ...provided,
+                              ...readOnlyFieldStyle,
+                              cursor: 'default'
+                            }),
+                            dropdownIndicator: () => ({ display: 'none' }),
+                            indicatorSeparator: () => ({ display: 'none' })
+                          } : {})
                         }}
-                        isClearable
+                        isClearable={!viewMode}
                       />
                     </td>
                     <td className="text-center">
-                      {result.hardnessPoints.length > 1 ? (
+                      {!viewMode && result.hardnessPoints.length > 1 ? (
                         <Button
                           variant="outline-danger"
                           size="sm"
@@ -208,16 +224,17 @@ const ResultsDataSection = ({
                   </tr>
                 ))}
               </tbody>
-            </Table>
-            <div className="text-end mt-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => handleHardnessResultAdd(resultIndex)}
-                disabled={loading}
-              >
-                <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addPoint')}
-              </Button>
+            </Table>            <div className="text-end mt-2">
+              {!viewMode && (
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => handleHardnessResultAdd(resultIndex)}
+                  disabled={loading}
+                >
+                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addPoint')}
+                </Button>
+              )}
             </div>
           </Form.Group>
           
@@ -233,6 +250,8 @@ const ResultsDataSection = ({
                     onChange={(e) => handleEcdChange(resultIndex, 'hardnessValue', e.target.value)}
                     placeholder={t('tests.after.results.hardnessValue')}
                     disabled={loading}
+                    readOnly={viewMode}
+                    style={viewMode ? readOnlyFieldStyle : {}}
                   />
                 </Form.Group>
               </Col>
@@ -244,9 +263,20 @@ const ResultsDataSection = ({
                     onChange={(option) => handleEcdChange(resultIndex, 'hardnessUnit', option)}
                     options={hardnessUnitOptions}
                     placeholder={t('tests.after.results.hardnessUnit')}
-                    isDisabled={loading}
-                    styles={selectStyles}
-                    isClearable
+                    isDisabled={loading || viewMode}
+                    styles={{
+                      ...selectStyles,
+                      ...(viewMode ? {
+                        control: (provided) => ({
+                          ...provided,
+                          ...readOnlyFieldStyle,
+                          cursor: 'default'
+                        }),
+                        dropdownIndicator: () => ({ display: 'none' }),
+                        indicatorSeparator: () => ({ display: 'none' })
+                      } : {})
+                    }}
+                    isClearable={!viewMode}
                   />
                 </Form.Group>
               </Col>
@@ -269,7 +299,9 @@ const ResultsDataSection = ({
                         value={point.name || ''}
                         onChange={(e) => handleEcdPositionChange(resultIndex, positionIndex, 'name', e.target.value)}
                         placeholder={t('tests.after.results.enterPosition')}
-                        disabled={loading}
+                        disabled={loading || viewMode}
+                        readOnly={viewMode}
+                        style={viewMode ? readOnlyFieldStyle : {}}
                       />
                     </td>
                     <td>
@@ -279,6 +311,8 @@ const ResultsDataSection = ({
                         onChange={(e) => handleEcdPositionChange(resultIndex, positionIndex, 'distance', e.target.value)}
                         placeholder={t('tests.after.results.enterDistance')}
                         disabled={loading}
+                        readOnly={viewMode}
+                        style={viewMode ? readOnlyFieldStyle : {}}
                       />
                     </td>
                     <td>
@@ -289,17 +323,26 @@ const ResultsDataSection = ({
                         onChange={(option) => handleEcdPositionChange(resultIndex, positionIndex, 'unit', option)}
                         options={lengthUnitOptions}
                         placeholder={t('common.selectUnit')}
-                        isDisabled={loading}
+                        isDisabled={loading || viewMode}
                         menuPortalTarget={document.body}
                         styles={{
                           ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          ...(viewMode ? {
+                            control: (provided) => ({
+                              ...provided,
+                              ...readOnlyFieldStyle,
+                              cursor: 'default'
+                            }),
+                            dropdownIndicator: () => ({ display: 'none' }),
+                            indicatorSeparator: () => ({ display: 'none' })
+                          } : {})
                         }}
-                        isClearable
+                        isClearable={!viewMode}
                       />
                     </td>
                     <td className="text-center">
-                      {result.ecd?.ecdPoints?.length > 1 ? (
+                      {!viewMode && result.ecd?.ecdPoints?.length > 1 ? (
                         <Button
                           variant="outline-danger"
                           size="sm"
@@ -315,14 +358,16 @@ const ResultsDataSection = ({
               </tbody>
             </Table>
             <div className="text-end mt-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => handleEcdPositionAdd(resultIndex)}
-                disabled={loading}
-              >
-                <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addPoint')}
-              </Button>
+              {!viewMode && (
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => handleEcdPositionAdd(resultIndex)}
+                  disabled={loading}
+                >
+                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addPoint')}
+                </Button>
+              )}
             </div>
           </Form.Group>
 
@@ -346,6 +391,8 @@ const ResultsDataSection = ({
               test={test}
               formData={formData}
               parentId={parentId}
+              viewMode={viewMode}
+              readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
           
@@ -356,7 +403,9 @@ const ResultsDataSection = ({
               rows={3}
               value={result.comment || ''}
               onChange={(e) => handleResultChange(resultIndex, 'comment', e.target.value)}
-              disabled={loading}
+              disabled={loading || viewMode}
+              readOnly={viewMode}
+              style={viewMode ? readOnlyFieldStyle : {}}
             />
           </Form.Group>
           
@@ -372,6 +421,7 @@ const ResultsDataSection = ({
               testNodeId={test ? test.id : null}
               resultIndex={resultIndex}
               onFileAssociationNeeded={handleFileAssociationNeeded}
+              viewMode={viewMode}
             />
           </CollapsibleSection>
           
@@ -386,6 +436,7 @@ const ResultsDataSection = ({
               testNodeId={test ? test.id : null}
               resultIndex={resultIndex}
               onFileAssociationNeeded={handleFileAssociationNeeded}
+              viewMode={viewMode}
             />
           </CollapsibleSection>
         </CollapsibleSection>

@@ -46,9 +46,15 @@ const processQueue = (error, token = null) => {
 // Intercepteur pour ajouter automatiquement le token aux requêtes
 api.interceptors.request.use(
   (config) => {
-    const token = authService.getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = authService.getToken();
+      if (token) {
+        // Le token a déjà été vérifié par getToken()
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du token à la requête:', error);
+      // Ne pas nettoyer le localStorage ici pour éviter les boucles infinies
     }
     return config;
   },
@@ -120,9 +126,11 @@ api.interceptors.response.use(
           isRedirecting = true;
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          
-          if (window.location.pathname !== '/login') {
-            window.location.href = `/login?error=session_expired`;
+            if (window.location.pathname !== '/login') {
+            console.log('Redirection depuis intercepteur Axios...');
+            setTimeout(() => {
+              window.location.replace(`/login?error=session_expired`);
+            }, 100);
           }
           
           setTimeout(() => {
@@ -140,15 +148,19 @@ api.interceptors.response.use(
       isRedirecting = true;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
-      // Redirection vers la page de login seulement si on n'y est pas déjà
+        // Redirection vers la page de login seulement si on n'y est pas déjà
       if (window.location.pathname !== '/login') {
         // Si la déconnexion est intentionnelle, afficher un message de succès
         // sinon afficher un message d'erreur pour session expirée
         if (isIntentionalLogout) {
-          window.location.href = `/login?success=logout`;
+          setTimeout(() => {
+            window.location.replace(`/login?success=logout`);
+          }, 100);
         } else {
-          window.location.href = `/login?error=session_expired`;
+          console.log('Redirection vers login après erreur 401...');
+          setTimeout(() => {
+            window.location.replace(`/login?error=session_expired`);
+          }, 100);
         }
         
         // Réinitialiser le flag de déconnexion intentionnelle

@@ -7,18 +7,24 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const { generateToken, verifyPassword, hashPassword, refreshToken } = require('../config/auth');
 const config = require('../config/config');
-
-// Accès aux constantes JWT
-const JWT_SECRET = config.JWT.SECRET;
-const JWT_INACTIVITY_EXPIRE = config.JWT.INACTIVITY_EXPIRE;
+const logger = require('../utils/logger');
+const apiResponse = require('../utils/apiResponse');
+const { AuthenticationError, NotFoundError } = require('../utils/errors');
 
 /**
  * Authentification d'un utilisateur
  * @route POST /api/auth/login
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Réponse avec token JWT et infos utilisateur
  */
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
+    
+    // Journalisation de la tentative de connexion
+    logger.info(`Tentative de connexion pour l'utilisateur: ${username}`);
 
     // Vérifier si l'utilisateur existe
     const user = await User.findOne({ where: { username } });
@@ -27,91 +33,85 @@ const login = async (req, res) => {
       // Délai pour contrer les attaques par force brute
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      return res.status(401).json({
-        success: false,
-        message: 'Identifiants invalides'
-      });
+      logger.warn(`Échec d'authentification pour l'utilisateur: ${username}`);
+      return apiResponse.error(res, 'Identifiants invalides', 401);
     }
 
-    // Vérifier si l'utilisateur a les droits nécessaires
-    // if (user.role !== 'admin' && user.role !== 'superuser') {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Droits insuffisants'
-    //   });
-    // }
-
-    // Générer un token JWT
+    // Mise à jour de la date de dernière connexion
+    await User.update(
+      { last_login: new Date() },
+      { where: { id: user.id } }
+    );    // Générer un token JWT
     const token = generateToken(user);
+    
+    logger.info(`Connexion réussie pour l'utilisateur: ${username}`, { userId: user.id });
 
-    res.status(200).json({
-      success: true,
+    // Journaliser le token (longueur et format) pour débogage
+    logger.debug(`Token généré - longueur: ${token ? token.length : 0}, format valide: ${token && token.split('.').length === 3}`);
+
+    // Renvoyer la réponse de succès avec le token et les infos utilisateur
+    return apiResponse.success(res, {
       token,
       user: {
         id: user.id,
         username: user.username,
         role: user.role
       }
-    });
+    }, 'Authentification réussie');
   } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur lors de la connexion'
-    });
+    logger.error(`Erreur lors de la connexion: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
  * Récupération des informations de l'utilisateur connecté
  * @route GET /api/auth/me
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Informations de l'utilisateur
  */
-const getMe = async (req, res) => {
+const getMe = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'role']
+      attributes: ['id', 'username', 'role', 'last_login', 'created_at']
     });
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'Utilisateur non trouvé'
-      });
+      throw new NotFoundError('Utilisateur non trouvé');
     }
 
-    res.status(200).json({
-      success: true,
-      data: user
-    });
+    return apiResponse.success(res, user, 'Informations utilisateur récupérées avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération des informations utilisateur:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur'
-    });
+    logger.error(`Erreur lors de la récupération des informations utilisateur: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
  * Rafraîchissement du token JWT
  * @route POST /api/auth/refresh-token
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Nouveau token JWT
  */
-const refreshUserToken = async (req, res) => {
+const refreshUserToken = async (req, res, next) => {
   try {
     const tokenHeader = req.headers.authorization;
     
     if (!tokenHeader || !tokenHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token non fourni'
-      });
+      throw new AuthenticationError('Token non fourni');
     }
-    
-    const oldToken = tokenHeader.split(' ')[1];
     
     // Utiliser les informations déjà décodées par le middleware refreshTokenValidator
     // Le token peut être légèrement expiré, mais le middleware l'a déjà validé
     // avec des règles plus souples pour permettre le rafraîchissement
+      // Récupérer l'ancienne activité du token pour des logs de débogage
+    const oldActivity = req.decodedToken.lastActivity;
+    const currentTime = Date.now();
+    const inactiveTime = currentTime - oldActivity;
     
     // Générer un nouveau token avec la date d'activité mise à jour
     const newToken = jwt.sign(
@@ -119,28 +119,34 @@ const refreshUserToken = async (req, res) => {
         id: req.user.id, 
         username: req.user.username, 
         role: req.user.role,
-        lastActivity: Date.now() // Mettre à jour le timestamp d'activité
+        lastActivity: currentTime // Mettre à jour le timestamp d'activité
       },
-      JWT_SECRET,
-      { expiresIn: JWT_INACTIVITY_EXPIRE }
+      config.JWT.SECRET,
+      { expiresIn: config.JWT.INACTIVITY_EXPIRE }
     );
     
+    // Logs améliorés pour mieux comprendre le comportement
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug(`Rafraîchissement de token:
+      - Utilisateur: ${req.user.username} (ID: ${req.user.id})
+      - Dernière activité: ${new Date(oldActivity).toISOString()}
+      - Temps d'inactivité: ${Math.round(inactiveTime/1000)}s
+      - Inactivité maximale configurée: ${config.JWT.INACTIVITY_EXPIRE}
+      - Nouvelle expiration fixée à: ${config.JWT.INACTIVITY_EXPIRE} à partir de maintenant`);
+    }
+    
     // Renvoyer le nouveau token
-    res.status(200).json({
-      success: true,
+    return apiResponse.success(res, {
       token: newToken,
       user: {
         id: req.user.id,
         username: req.user.username,
         role: req.user.role
       }
-    });
+    }, 'Token rafraîchi avec succès');
   } catch (error) {
-    console.error('Erreur lors du rafraîchissement du token:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur lors du rafraîchissement du token'
-    });
+    logger.error(`Erreur lors du rafraîchissement du token: ${error.message}`, error);
+    next(error);
   }
 };
 

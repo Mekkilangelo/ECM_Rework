@@ -14,11 +14,12 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const { User } = require('../models');
+const { parseJwtTime } = require('../config/auth');
 
 // Configuration des paramètres d'authentification
 const JWT_SECRET = config.JWT.SECRET;
-// Délai d'inactivité en millisecondes (convertir minutes en ms)
-const INACTIVITY_TIMEOUT = parseInt(config.JWT.INACTIVITY_EXPIRE) * 60 * 1000;
+// Délai d'inactivité en millisecondes (utiliser la fonction de conversion pour traiter correctement les formats comme "10m")
+const INACTIVITY_TIMEOUT = parseJwtTime(config.JWT.INACTIVITY_EXPIRE);
 
 /**
  * Middleware d'authentification principal
@@ -48,6 +49,19 @@ const authenticate = async (req, res, next) => {
   // Extrait le token du header Authorization
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
+    // Journaliser le token (masquer une partie pour la sécurité)
+    if (process.env.NODE_ENV === 'development' && token) {
+      const tokenPreview = token.length > 20 ? 
+        `${token.substring(0, 10)}...${token.substring(token.length - 5)}` : 
+        'token trop court';
+      console.log(`Token reçu (aperçu): ${tokenPreview}`);
+      console.log(`Structure du token: ${token ? token.split('.').length : 0} segments`);
+      
+      // Vérifier si le token a une structure valide de JWT (doit avoir 3 segments séparés par des points)
+      if (token.split('.').length !== 3) {
+        console.error('Token JWT malformé - Structure incorrecte');
+      }
+    }
   }
 
   // Vérifie la présence du token
@@ -107,9 +121,16 @@ const authenticate = async (req, res, next) => {
     };
 
     // Passe au middleware suivant
-    next();
-  } catch (error) {
+    next();  } catch (error) {
     console.error('Erreur de vérification du token:', error);
+    // Afficher plus de détails sur le token qui a causé l'erreur
+    if (process.env.NODE_ENV === 'development' && token) {
+      console.error(`Token problématique (aperçu): ${token.length > 20 ? 
+        `${token.substring(0, 10)}...${token.substring(token.length - 5)}` : 
+        token}`);
+      console.error(`Type d'erreur JWT: ${error.name}`);
+      console.error(`Message d'erreur JWT: ${error.message}`);
+    }
     
     // Gestion spécifique selon le type d'erreur JWT
     if (error.name === 'TokenExpiredError') {
@@ -173,8 +194,7 @@ const validateRefreshToken = async (req, res, next) => {
     // Vérifie le token en ignorant l'expiration pour permettre le rafraîchissement
     // de tokens récemment expirés
     const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
-    
-    // Journalisation en mode développement pour faciliter le débogage
+      // Journalisation en mode développement pour faciliter le débogage
     if (process.env.NODE_ENV === 'development') {
       console.log('Tentative de rafraîchissement du token pour:', decoded.username);
       console.log('Dernière activité:', new Date(decoded.lastActivity));
@@ -182,7 +202,8 @@ const validateRefreshToken = async (req, res, next) => {
 
     // Définit un délai d'inactivité étendu spécifique au rafraîchissement
     // Ce délai est plus long que pour l'authentification standard
-    const extendedInactivityTimeout = INACTIVITY_TIMEOUT * 2;
+    // On multiplie par 2 pour donner plus de temps lors du rafraîchissement
+    const extendedInactivityTimeout = parseJwtTime(config.JWT.INACTIVITY_EXPIRE) * 2;
     
     // Vérification du délai d'inactivité étendu
     if (decoded.lastActivity) {

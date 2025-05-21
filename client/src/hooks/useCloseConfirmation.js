@@ -34,29 +34,35 @@ const useCloseConfirmation = (
     isFetching,
     viewMode ? () => false : customIsModifiedCheck // En mode lecture seule, toujours retourner false
   );
-  
-  // Gérer la tentative de fermeture
-  const handleCloseRequest = useCallback(() => {
+    // Gérer la tentative de fermeture
+  const handleCloseRequest = useCallback((closeCallback = onClose) => {
     // En mode lecture seule, fermer directement sans confirmation
     if (viewMode) {
-      onClose();
+      closeCallback();
       return;
     }
     
-    if (isModified) {
-      setShowConfirmModal(true);
-      setPendingClose(true);
-    } else {
-      // Si aucune modification, fermer directement
-      onClose();
+    try {
+      if (isModified) {
+        console.debug('Modifications détectées, affichage de la confirmation');
+        setShowConfirmModal(true);
+        setPendingClose(true);
+      } else {
+        // Si aucune modification, fermer directement
+        console.debug('Aucune modification, fermeture directe');
+        closeCallback();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification des modifications', error);
+      // En cas d'erreur, mieux vaut fermer directement pour éviter de bloquer l'utilisateur
+      closeCallback();
     }
   }, [isModified, onClose, viewMode]);
-  
-  // Confirmer la fermeture sans sauvegarder
-  const confirmClose = useCallback(() => {
+    // Confirmer la fermeture sans sauvegarder
+  const confirmClose = useCallback((closeCallback = onClose) => {
     setShowConfirmModal(false);
     setPendingClose(false);
-    onClose();
+    closeCallback();
   }, [onClose]);
   
   // Annuler la fermeture
@@ -66,13 +72,13 @@ const useCloseConfirmation = (
   }, []);
   
   // Sauvegarder et fermer
-  const saveAndClose = useCallback((e) => {
+  const saveAndClose = useCallback((e, closeCallback = onClose) => {
     if (e) {
       e.preventDefault();
     }
     setShowConfirmModal(false);
     setPendingClose(false);
-    onSubmit(e, true); // true indique que c'est une fermeture après sauvegarde
+    onSubmit(e, true, closeCallback); // true indique que c'est une fermeture après sauvegarde
   }, [onSubmit]);
 
   return {

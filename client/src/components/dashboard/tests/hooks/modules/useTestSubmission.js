@@ -1,5 +1,7 @@
 import useApiSubmission from '../../../../../hooks/useApiSubmission';
 import testService from '../../../../../services/testService';
+import i18next from 'i18next';
+import { useState } from 'react';
 
 /**
  * Hook spécifique pour gérer les soumissions de tests
@@ -25,10 +27,8 @@ const useTestSubmission = (
   setMessage, 
   onTestCreated,
   onTestUpdated, 
-  onClose,
-  fileAssociationCallback
-) => {
-  const initialFormState = {
+  onClose,  fileAssociationCallback
+) => {  const defaultFormState = {
     name: '',
     location: '',
     loadNumber: '',
@@ -93,11 +93,12 @@ const useTestSubmission = (
           hardnessPoints: [{ location: '', value: '', unit: ''}],
           ecd: { hardnessValue: '', hardnessUnit: '', toothFlank: { distance: '', unit: '' }, toothRoot: { distance: '', unit: '' }},
           comment: '',
-          hardnessUnit: 'HV', curveData: { points: [] }
-        }
+          hardnessUnit: 'HV', curveData: { points: [] }        }
       ]
-    }
-  };
+    }  };
+  
+  // État local pour suivre si une soumission est en cours
+  const [loading, setLoadingState] = useState(false);
   
   // Formatage des données pour l'API
   const formatDataForApi = () => {
@@ -380,8 +381,7 @@ const useTestSubmission = (
           console.error(`Erreur lors de l'association de fichiers:`, error);
           return false;
         }
-      }
-      return true;
+      }      return true;
     } : null;
   
   const handleSubmit = async (e, isCloseAfterSave = false) => {
@@ -401,10 +401,9 @@ const useTestSubmission = (
     }
     
     setLoading(true);
-    
-    try {
+      try {
       // Préparer les données pour l'API
-      const testData = prepareTestData(formData);
+      const testData = formatDataForApi();
       
       let response;
       
@@ -432,10 +431,9 @@ const useTestSubmission = (
         // Si c'est une sauvegarde avant fermeture, fermer le formulaire
         if (isCloseAfterSave && onClose) {
           onClose();
-        }
-      } else {
+        }      } else {
         // Mode création
-        response = await testService.createTest(parentId, testData);
+        response = await testService.createTest(testData);
         console.log("Test created:", response);
         
         // Réinitialiser le formulaire
@@ -461,9 +459,22 @@ const useTestSubmission = (
         if (onClose) {
           onClose();
         }
+      }    } catch (error) {
+      console.error("Error submitting test:", error);
+      setMessage({
+        type: 'danger',
+        text: i18next.t('api.error.' + (test ? 'update' : 'create'), { entityType: i18next.t('tests.title') })
+      });
+      
+      // If available, show more specific error message from the API
+      if (error.response && error.response.data && error.response.data.message) {
+        setMessage({
+          type: 'danger',
+          text: error.response.data.message
+        });
       }
-    } catch (error) {
-      // ...existing code for error handling...
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -479,11 +490,10 @@ const useTestSubmission = (
     onClose,
     formatDataForApi,
     customApiService: {
-      create: testService.createTest,
-      update: testService.updateTest
+      create: testService.createTest,      update: testService.updateTest
     },
     entityType: 'Test',
-    initialFormState,
+    initialFormState: defaultFormState,
     fileAssociationCallback: wrappedFileAssociationCallback,  // Utiliser le wrapper ici
     parentId
   });

@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import testService from '../../../../../services/testService';
 
 const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
   useEffect(() => {
@@ -9,8 +7,9 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
       const fetchTestDetails = async () => {
         setFetchingTest(true);
         try {
-          const response = await axios.get(`${API_URL}/tests/${test.id}`);
-          const testData = response.data;
+          // Utiliser le service testService au lieu d'axios directement
+          const response = await testService.getTest(test.id);
+          const testData = response.data.data || response.data; // Adaptation au format de réponse API
           
           // Check if data is in the Test property or directly in testData
           const data = testData.Test || testData;
@@ -50,8 +49,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             quenchData, 
             resultsData 
           });
-          
-          // Map from API structure to form structure
+            // Map from API structure to form structure
           setFormData({
             // Basic information
             name: data.test_code || '',

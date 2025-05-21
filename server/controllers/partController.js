@@ -1,360 +1,168 @@
-const { Node, Part, Closure } = require('../models');
-const { sequelize } = require('../models');
-const { Op } = require('sequelize');
+/**
+ * Contrôleur de gestion des pièces
+ * Gère les opérations CRUD sur les pièces
+ */
+
+const { partService } = require('../services');
+const logger = require('../utils/logger');
+const apiResponse = require('../utils/apiResponse');
 
 /**
- * Fonction utilitaire pour valider les données de la pièce
- * @param {Object} data - Données de la pièce à valider
- * @returns {Object} - Objet contenant les erreurs de validation
+ * Récupère toutes les pièces avec pagination
+ * @route GET /api/parts
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Liste paginée des pièces
  */
-const validatePartData = (data) => {
-  const errors = {};
-  
-  // Validation des champs obligatoires
-  if (!data.name || !data.name.trim()) {
-    errors.name = 'Le nom est requis';
-  }
-  
-  if (!data.designation || !data.designation.trim()) {
-    errors.designation = 'La désignation est requise';
-  }
-  
-  if (!data.parent_id) {
-    errors.parent = 'ID parent est requis';
-  }
-  
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors
-  };
-};
-
-/**
- * Récupérer toutes les pièces avec pagination
- */
-exports.getParts = async (req, res) => {
+const getParts = async (req, res, next) => {
   try {
-    const { limit = 10, offset = 0, parent_id } = req.query;
+    const { limit = 10, offset = 0, parent_id, search } = req.query;
+    const { sortBy, sortOrder } = req.query || { sortBy: 'modified_at', sortOrder: 'DESC' };
     
-    const whereCondition = { type: 'part' };
-    
-    // Si un order_id est fourni, rechercher les pièces associées à cette commande
-    if (parent_id) {
-      const orderDescendants = await Closure.findAll({
-        where: { ancestor_id: parent_id },
-        attributes: ['descendant_id']
-      });
-      
-      const descendantIds = orderDescendants.map(d => d.descendant_id);
-      
-      whereCondition.id = {
-        [Op.in]: descendantIds
-      };
-    }
-    
-    const parts = await Node.findAll({
-      where: whereCondition,
-      include: [{
-        model: Part,
-        attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference','quantity']
-      }],
-      order: [['modified_at', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+    logger.info('Récupération des pièces', { 
+      limit, 
+      offset, 
+      parent_id, 
+      search, 
+      sortBy, 
+      sortOrder 
     });
     
-    const total = await Node.count({
-      where: whereCondition
+    // Déléguer au service
+    const result = await partService.getAllParts({
+      limit,
+      offset,
+      parent_id,
+      sortBy,
+      sortOrder,
+      search
     });
     
-    return res.status(200).json({
-      parts,
-      pagination: {
-        total,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
-      }
-    });
+    // Renvoyer la réponse paginée
+    return apiResponse.paginated(
+      res,
+      result.parts,
+      result.pagination,
+      'Pièces récupérées avec succès'
+    );
   } catch (error) {
-    console.error('Erreur lors de la récupération des pièces:', error);
-    return res.status(500).json({ message: 'Erreur lors de la récupération des pièces', error: error.message });
+    logger.error(`Erreur lors de la récupération des pièces: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Récupérer une pièce spécifique
+ * Récupère une pièce spécifique par son ID
+ * @route GET /api/parts/:partId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Détails de la pièce
  */
-exports.getPartById = async (req, res) => {
+const getPartById = async (req, res, next) => {
   try {
     const { partId } = req.params;
     
-    const part = await Node.findOne({
-      where: { id: partId, type: 'part' },
-      include: [{
-        model: Part,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
+    logger.info(`Récupération de la pièce #${partId}`);
     
-    if (!part) {
-      return res.status(404).json({ message: 'Pièce non trouvée' });
-    }
+    // Déléguer au service
+    const part = await partService.getPartById(partId);
     
-    return res.status(200).json(part);
+    logger.debug('Part data sent to client:', part);
+    
+    return apiResponse.success(res, part, 'Pièce récupérée avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération de la pièce:', error);
-    return res.status(500).json({ message: 'Erreur lors de la récupération de la pièce', error: error.message });
+    logger.error(`Erreur lors de la récupération de la pièce #${req.params.partId}: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Créer une nouvelle pièce
+ * Crée une nouvelle pièce
+ * @route POST /api/parts
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Pièce créée
  */
-exports.createPart = async (req, res) => {
+const createPart = async (req, res, next) => {
   try {
-    const { parent_id, designation, dimensions, specifications, steel, description, clientDesignation, reference, quantity } = req.body;
-
-    const name = req.body.designation || null;
+    const partData = req.body;
     
-    // Validation des données
-    const { isValid, errors } = validatePartData({ name, designation, parent_id });
-    if (!isValid) {
-      return res.status(400).json({ message: 'Données invalides', errors });
-    }
-    
-    // Vérifier si le parent existe et est une commande
-    const parentNode = await Node.findByPk(parent_id);
-    if (!parentNode) {
-      return res.status(404).json({ message: 'Node parent non trouvé' });
-    }
-    
-    if (parentNode.type !== 'order') {
-      return res.status(400).json({ message: 'Le parent doit être une commande' });
-    }
-    
-    // Créer la pièce dans une transaction
-    const result = await sequelize.transaction(async (t) => {
-      // Créer le nœud
-      const newNode = await Node.create({
-        name,
-        path: `${parentNode.path}/${name}`,
-        type: 'part',
-        parent_id,
-        created_at: new Date(),
-        modified_at: new Date(),
-        data_status: 'new',
-        description
-      }, { transaction: t });
-      
-      // Créer les données de la pièce
-      await Part.create({
-        node_id: newNode.id,
-        designation,
-        dimensions,
-        specifications,
-        steel,
-        client_designation: clientDesignation,
-        reference,
-        quantity
-      }, { transaction: t });
-      
-      // Créer l'entrée de fermeture (auto-relation)
-      await Closure.create({
-        ancestor_id: newNode.id,
-        descendant_id: newNode.id,
-        depth: 0
-      }, { transaction: t });
-      
-      // Créer les relations de fermeture avec les ancêtres
-      const parentClosures = await Closure.findAll({
-        where: { descendant_id: parent_id },
-        transaction: t
-      });
-      
-      for (const pc of parentClosures) {
-        await Closure.create({
-          ancestor_id: pc.ancestor_id,
-          descendant_id: newNode.id,
-          depth: pc.depth + 1
-        }, { transaction: t });
-      }
-      
-      return newNode;
+    logger.info('Création d\'une nouvelle pièce', { 
+      parent_id: partData.parent_id,
+      designation: partData.designation 
     });
     
-    // Récupérer la pièce complète avec ses données associées
-    const newPart = await Node.findByPk(result.id, {
-      include: [{
-        model: Part,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
+    // Déléguer au service
+    const newPart = await partService.createPart(partData);
     
-    return res.status(201).json(newPart);
+    return apiResponse.success(
+      res, 
+      newPart, 
+      'Pièce créée avec succès',
+      201
+    );
   } catch (error) {
-    console.error('Erreur lors de la création de la pièce:', error);
-    return res.status(500).json({ message: 'Erreur lors de la création de la pièce', error: error.message });
+    logger.error(`Erreur lors de la création de la pièce: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Mettre à jour une pièce existante
+ * Met à jour une pièce existante
+ * @route PUT /api/parts/:partId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Pièce mise à jour
  */
-exports.updatePart = async (req, res) => {
+const updatePart = async (req, res, next) => {
   try {
     const { partId } = req.params;
-    const { designation, dimensions, specifications, steel, description, clientDesignation, reference, quantity } = req.body;
-
-    const name = req.body.designation || null;
+    const partData = req.body;
     
-    const node = await Node.findOne({
-      where: { id: partId, type: 'part' },
-      include: [{
-        model: Part
-      }]
-    });
+    logger.info(`Mise à jour de la pièce #${partId}`);
     
-    if (!node) {
-      return res.status(404).json({ message: 'Pièce non trouvée' });
-    }
+    // Déléguer au service
+    const updatedPart = await partService.updatePart(partId, partData);
     
-    await sequelize.transaction(async (t) => {
-      // Mettre à jour le nœud
-      if (name) {
-        const oldPath = node.path;
-        const newPath = oldPath.substring(0, oldPath.lastIndexOf('/') + 1) + name;
-        
-        await node.update({
-          name,
-          path: newPath,
-          modified_at: new Date(),
-          description
-        }, { transaction: t });
-        
-        // Si le nom a changé, mettre à jour les chemins des descendants
-        if (name !== node.name) {
-          const descendants = await Closure.findAll({
-            where: { 
-              ancestor_id: partId,
-              depth: { [Op.gt]: 0 }
-            },
-            transaction: t
-          });
-          
-          for (const relation of descendants) {
-            const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
-            const descendantPath = descendant.path.replace(oldPath, newPath);
-            await descendant.update({ path: descendantPath }, { transaction: t });
-          }
-        }
-      } else {
-        // Juste mettre à jour la date de modification
-        await node.update({
-          modified_at: new Date(),
-          description
-        }, { transaction: t });
-      }
-      
-      // Mettre à jour les données de la pièce
-      const partData = {};
-      partData.designation = designation;
-      partData.dimensions = dimensions;
-      partData.specifications = specifications;
-      partData.steel = steel;
-      partData.client_designation = clientDesignation;
-      partData.reference = reference;
-      partData.quantity = quantity;
-      
-      if (Object.keys(partData).length > 0) {
-        await Part.update(partData, {
-          where: { node_id: partId },
-          transaction: t
-        });
-      }
-    });
-    
-    // Récupérer et renvoyer la pièce mise à jour
-    const updatedPart = await Node.findByPk(partId, {
-      include: [{
-        model: Part,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
-    
-    return res.status(200).json(updatedPart);
+    return apiResponse.success(res, updatedPart, 'Pièce mise à jour avec succès');
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de la pièce:', error);
-    return res.status(500).json({ message: 'Erreur lors de la mise à jour de la pièce', error: error.message });
+    logger.error(`Erreur lors de la mise à jour de la pièce #${req.params.partId}: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Supprimer une pièce et tous ses descendants
+ * Supprime une pièce et tous ses descendants
+ * @route DELETE /api/parts/:partId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Confirmation de suppression
  */
-exports.deletePart = async (req, res) => {
-  // Créer une transaction pour assurer l'intégrité des données
-  const t = await sequelize.transaction();
-  
+const deletePart = async (req, res, next) => {
   try {
     const { partId } = req.params;
     
-    // 1. Vérifier que la pièce existe
-    const part = await Node.findOne({
-      where: { id: partId, type: 'part' },
-      transaction: t
-    });
+    logger.info(`Suppression de la pièce #${partId}`);
     
-    if (!part) {
-      await t.rollback();
-      return res.status(404).json({ message: 'Pièce non trouvée' });
-    }
+    // Déléguer au service
+    await partService.deletePart(partId);
     
-    // 2. Trouver tous les descendants dans la table closure
-    const closureEntries = await Closure.findAll({
-      where: { ancestor_id: partId },
-      transaction: t
-    });
-    
-    // Récupérer tous les IDs des descendants (y compris le nœud lui-même)
-    const descendantIds = new Set(closureEntries.map(entry => entry.descendant_id));
-    descendantIds.add(parseInt(partId)); // Ajouter l'ID de la pièce elle-même
-    
-    // 3. Supprimer toutes les entrées de fermeture associées aux descendants
-    // Supprimer d'abord où ils sont descendants ou ancêtres
-    await Closure.destroy({
-      where: {
-        [Op.or]: [
-          { descendant_id: { [Op.in]: Array.from(descendantIds) } },
-          { ancestor_id: { [Op.in]: Array.from(descendantIds) } }
-        ]
-      },
-      transaction: t
-    });
-    
-    // 4. Maintenant, supprimer tous les nœuds descendants
-    await Node.destroy({
-      where: {
-        id: { [Op.in]: Array.from(descendantIds) }
-      },
-      transaction: t
-    });
-    
-    // 5. Valider toutes les modifications
-    await t.commit();
-    
-    return res.status(200).json({ 
-      message: 'Pièce supprimée avec succès',
-      deletedId: partId
-    });
-    
+    return apiResponse.success(res, { deletedId: partId }, 'Pièce supprimée avec succès');
   } catch (error) {
-    // En cas d'erreur, annuler toutes les modifications
-    await t.rollback();
-    console.error('Erreur lors de la suppression de la pièce:', error);
-    
-    return res.status(500).json({ 
-      message: 'Erreur lors de la suppression de la pièce', 
-      error: error.message 
-    });
+    logger.error(`Erreur lors de la suppression de la pièce #${req.params.partId}: ${error.message}`, error);
+    next(error);
   }
+};
+
+module.exports = {
+  getParts,
+  getPartById,
+  createPart,
+  updatePart,
+  deletePart
 };

@@ -24,12 +24,11 @@ const Sidebar = ({ userRole }) => {
   const [allClients, setAllClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [isToggled, setIsToggled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { user } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);  const { user } = useContext(AuthContext);
 
-  // Check if user is superuser or admin
-  const isSuperUser = user.role === "superuser";
-  const isAdmin = user.role === "admin";
+  // Check if user is superuser or admin, with null check to prevent errors
+  const isSuperUser = user && user.role === "superuser";
+  const isAdmin = user && user.role === "admin";
   const canManageUsers = isSuperUser || isAdmin;
 
   // Fonction pour gérer le nettoyage des données

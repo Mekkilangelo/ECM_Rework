@@ -17,6 +17,7 @@ if (process.env.NODE_ENV === 'development') {
   console.log('Configuration d\'authentification:');
   console.log('- JWT_EXPIRE:', JWT_EXPIRE);
   console.log('- JWT_INACTIVITY_EXPIRE:', JWT_INACTIVITY_EXPIRE);
+  console.log('- JWT_SECRET (longueur):', JWT_SECRET ? JWT_SECRET.length : 'non défini');
 }
 
 /**
@@ -25,16 +26,38 @@ if (process.env.NODE_ENV === 'development') {
  * @returns {String} - Token JWT
  */
 const generateToken = (user) => {
-  return jwt.sign(
-    { 
+  try {
+    if (!JWT_SECRET) {
+      console.error('ERREUR CRITIQUE: JWT_SECRET est undefined ou vide!');
+      throw new Error('JWT_SECRET manquant');
+    }
+    
+    const payload = { 
       id: user.id, 
       username: user.username, 
       role: user.role,
       lastActivity: Date.now() // Ajouter un timestamp d'activité
-    },
-    JWT_SECRET,
-    { expiresIn: JWT_INACTIVITY_EXPIRE } // Utiliser la durée d'inactivité pour l'expiration
-  );
+    };
+    
+    const token = jwt.sign(
+      payload,
+      JWT_SECRET,
+      { expiresIn: JWT_INACTIVITY_EXPIRE } // Utiliser la durée d'inactivité pour l'expiration
+    );
+    
+    // Vérification que le token généré est valide
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) {
+      console.error('ERREUR: Token JWT généré malformé!');
+    } else {
+      console.log(`Token JWT généré avec succès pour ${user.username} (format valide)`);
+    }
+    
+    return token;
+  } catch (error) {
+    console.error('Erreur lors de la génération du token JWT:', error);
+    throw error;
+  }
 };
 
 /**
@@ -147,5 +170,6 @@ module.exports = {
   generateToken,
   verifyPassword,
   hashPassword,
-  refreshToken
+  refreshToken,
+  parseJwtTime
 };

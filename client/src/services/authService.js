@@ -28,21 +28,55 @@ const authService = {
    * @param {string} username - Nom d'utilisateur
    * @param {string} password - Mot de passe
    * @returns {Promise} - Promesse avec les données de connexion
-   */
-  login: async (username, password) => {
+   */  login: async (username, password) => {
     try {
       const response = await api.post('/auth/login', { username, password });
       
-      // Stocker le token dans le localStorage
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        // Démarrer le suivi d'activité
-        authService.setupActivityTracking();
+      console.log('Réponse complète du serveur:', response);
+      
+      // Dans la nouvelle structure API, le token peut être dans response.data.data.token
+      let token = null;
+      let userData = null;
+      
+      // Essayer différentes structures possibles de la réponse
+      if (response.data && response.data.data && response.data.data.token) {
+        // Structure: { success: true, message: '...', data: { token: '...', user: {...} } }
+        token = response.data.data.token;
+        userData = response.data.data.user;
+        console.log('Token trouvé dans response.data.data.token');
+      } else if (response.data && response.data.token) {
+        // Structure: { token: '...', user: {...} } ou { success: true, token: '...', user: {...} }
+        token = response.data.token;
+        userData = response.data.user;
+        console.log('Token trouvé dans response.data.token');
       }
       
-      return response.data;
+      // Stocker le token dans le localStorage avec vérification
+      if (token) {
+        // Vérifier que le token a une structure JWT valide
+        if (typeof token === 'string' && token.split('.').length === 3) {
+          console.log('Token JWT valide reçu, structure correcte');
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(userData || {}));
+          // Démarrer le suivi d'activité
+          authService.setupActivityTracking();
+          
+          // Retourner les données au format attendu
+          return {
+            token,
+            user: userData
+          };
+        } else {
+          console.error('Token JWT invalide reçu du serveur:', 
+            typeof token === 'string' ? `${token.substring(0, 10)}...` : typeof token);
+          throw new Error('Token JWT malformé reçu du serveur');
+        }
+      } else {
+        console.error('Aucun token reçu dans la réponse du serveur:', response.data);
+        throw new Error('Aucun token reçu');
+      }
     } catch (error) {
+      console.error('Erreur lors de la connexion:', error);
       throw error;
     }
   },
@@ -178,10 +212,15 @@ const authService = {
         authService.isRefreshing = false;
         return;
       }
-      
-      // Définir le seuil d'inactivité à 90% du temps d'inactivité configuré
-      // Pour 10 minutes, cela signifie environ 9 minutes
+        // Définir le seuil d'inactivité selon la configuration
+      // refreshBeforeExpire minutes en millisecondes (par défaut 9 minutes)
       const inactivityThreshold = authService.refreshInterval;
+      
+      // Logs de débogage améliorés
+      console.log(`État actuel de l'activité:
+      - Temps d'inactivité: ${Math.round(inactiveTime/1000)}s
+      - Seuil de rafraîchissement: ${Math.round(inactivityThreshold/1000)}s (${authConfig.refreshBeforeExpire} minutes)
+      - Intervalle entre vérifications: ${Math.round(authService.activityCheckInterval/1000)}s`);
       
       // Si l'utilisateur est inactif depuis plus longtemps que le seuil configuré
       if (inactiveTime > inactivityThreshold) {
@@ -202,11 +241,13 @@ const authService = {
           
           // Nettoyer les timers
           authService.cleanup();
-          
-          // Rediriger vers la page de login avec un message d'erreur
+            // Rediriger vers la page de login avec un message d'erreur
           // Vérifier qu'on n'est pas déjà sur la page de login et forcer la redirection
           if (window.location.pathname !== '/login') {
-            window.location.href = '/login?error=session_expired';
+            console.log('Redirection vers login après échec de rafraîchissement...');
+            setTimeout(() => {
+              window.location.replace('/login?error=session_expired');
+            }, 100);
           }
           
           authService.isRefreshing = false;
@@ -221,17 +262,22 @@ const authService = {
         authService.isRefreshing = false;
         return;
       }
-      
-      // Rafraîchir préventivement le token uniquement si vraiment nécessaire (à 80% du seuil)
-      if (inactiveTime > (inactivityThreshold * 0.8)) {
-        console.log(`Rafraîchissement préventif - Inactivité: ${Math.round(inactiveTime/1000)}s`);
+        // Rafraîchir préventivement le token si on atteint 75% du seuil d'inactivité
+      // Pour 9 minutes, cela signifie environ 6.75 minutes
+      const preventiveThreshold = inactivityThreshold * 0.75;
+      if (inactiveTime > preventiveThreshold) {
+        console.log(`Rafraîchissement préventif:
+        - Inactivité actuelle: ${Math.round(inactiveTime/1000)}s
+        - Seuil préventif (75%): ${Math.round(preventiveThreshold/1000)}s
+        - Seuil total: ${Math.round(inactivityThreshold/1000)}s`);
+        
         await authService.refreshToken(true); // Rafraîchissement silencieux
+        authService.lastActivity = Date.now(); // Réinitialiser le compteur d'activité aussi
         authService.lastTokenRefresh = Date.now();
       }
     } catch (error) {
       console.error('Erreur lors de la vérification/rafraîchissement du token:', error);
-      
-      // En cas d'erreur 401 (non autorisé), cela signifie que le serveur a rejeté le token
+        // En cas d'erreur 401 (non autorisé), cela signifie que le serveur a rejeté le token
       if (error.response && error.response.status === 401) {
         console.log('Session expirée côté serveur - Déconnexion forcée');
         
@@ -240,8 +286,11 @@ const authService = {
         localStorage.removeItem('user');
         authService.cleanup();
         
-        // Rediriger vers login - Toujours forcer la redirection
-        window.location.href = '/login?error=session_expired';
+        // Rediriger vers login - Utiliser une redirection forcée
+        console.log('Redirection vers login en cours...');
+        setTimeout(() => {
+          window.location.replace('/login?error=session_expired');
+        }, 100);
       }
     } finally {
       authService.isRefreshing = false;
@@ -252,15 +301,25 @@ const authService = {
    * Rafraîchissement du token JWT basé sur l'activité
    * @param {boolean} silent - Si true, ne pas rediriger en cas d'échec
    * @returns {Promise} - Promesse avec le nouveau token
-   */
-  refreshToken: async (silent = false) => {
+   */  refreshToken: async (silent = false) => {
     try {
       authService.silentRefresh = silent;
       
       const token = authService.getToken();
       if (!token) throw new Error('Aucun token à rafraîchir');
       
-      const response = await api.post('/auth/refresh-token');
+      // Vérifier que le token est bien formé
+      if (token.split('.').length !== 3) {
+        console.error('Tentative de rafraîchir un token malformé');
+        throw new Error('Token malformé');
+      }
+      
+      // Ajouter explicitement le header pour cette requête (sans dépendre de l'intercepteur)
+      const response = await api.post('/auth/refresh-token', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
@@ -284,10 +343,12 @@ const authService = {
         
         // Nettoyer les timers
         authService.cleanup();
-        
-        // Rediriger vers la page de login (si ce n'est pas un rafraîchissement silencieux)
+          // Rediriger vers la page de login (si ce n'est pas un rafraîchissement silencieux)
         if (window.location.pathname !== '/login') {
-          window.location.href = '/login?error=session_expired';
+          console.log('Redirection vers login après erreur non silencieuse...');
+          setTimeout(() => {
+            window.location.replace('/login?error=session_expired');
+          }, 100);
         }
       } else {
         // Même pour un rafraîchissement silencieux, rediriger si l'erreur est 401
@@ -299,10 +360,12 @@ const authService = {
           
           // Nettoyer les timers
           authService.cleanup();
-          
-          // Forcer la redirection vers login
+            // Forcer la redirection vers login
           if (window.location.pathname !== '/login') {
-            window.location.href = '/login?error=session_expired';
+            console.log('Redirection vers login après erreur 401 silencieuse...');
+            setTimeout(() => {
+              window.location.replace('/login?error=session_expired');
+            }, 100);
           }
         }
       }
@@ -343,13 +406,28 @@ const authService = {
       throw error;
     }
   },
-  
-  /**
+    /**
    * Récupération du token stocké
    * @returns {string|null} - Token JWT ou null
-   */
-  getToken: () => {
-    return localStorage.getItem('token');
+   */  getToken: () => {
+    try {
+      const token = localStorage.getItem('token');
+      // Vérifier que token existe et n'est pas la chaîne "undefined"
+      if (token && token !== "undefined" && token.trim() !== "") {
+        // Vérifier que le token a bien la structure JWT (xxx.yyy.zzz)
+        if (token.split('.').length === 3) {
+          return token;
+        } else {
+          console.error('Token mal formaté trouvé dans localStorage');
+          // Ne pas supprimer immédiatement pour éviter les boucles infinies
+          return null;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Erreur lors de la récupération du token:', error);
+      return null;
+    }
   },
   
   /**
@@ -359,14 +437,22 @@ const authService = {
   isLoggedIn: () => {
     return !!localStorage.getItem('token');
   },
-  
-  /**
+    /**
    * Récupération de l'utilisateur stocké
    * @returns {Object|null} - Objet utilisateur ou null
    */
   getUser: () => {
     const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    // Vérifier que user existe et n'est pas la chaîne "undefined"
+    if (user && user !== "undefined") {
+      try {
+        return JSON.parse(user);
+      } catch (error) {
+        console.error("Erreur de parsing JSON pour l'utilisateur:", error);
+        return null;
+      }
+    }
+    return null;
   }
 };
 

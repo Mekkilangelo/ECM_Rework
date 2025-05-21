@@ -70,26 +70,35 @@ const useHierarchy = () => {
             limit: itemsPerPage 
           };
       }
-      
-      console.log(`Fetching data from ${url} with params:`, params);
+        console.log(`Fetching data from ${url} with params:`, params);
       
       const response = await axios.get(url, { params });
       console.log('API Response:', response.data);
-      
-      // Adapter la structure de données selon le niveau
-      if (currentLevel === 'client') {
+      console.log('API Response Structure:', {
+        hasData: !!response.data.data,
+        dataLength: response.data.data?.length,
+        pagination: response.data.pagination,
+        hasClients: !!response.data.clients
+      });
+        // Adapter la structure de données selon la nouvelle API qui utilise data au lieu de clients/orders/etc.
+      if (response.data && response.data.data) {
+        // La nouvelle structure a les données dans response.data.data
+        setData(response.data.data || []);
+        setTotalItems(response.data.pagination?.total || 0);
+      } else if (currentLevel === 'client') {
+        // Fallback pour l'ancienne structure API
         setData(response.data.clients || []);
         setTotalItems(response.data.pagination?.total || 0);
       } else if (currentLevel === 'order') {
-        // Adapter selon la structure de la réponse pour les commandes
+        // Fallback pour l'ancienne structure API
         setData(response.data.orders || []);
         setTotalItems(response.data.pagination?.total || 0);
       } else if (currentLevel === 'part') {
-        // Adapter selon la structure de la réponse pour les pièces
+        // Fallback pour l'ancienne structure API
         setData(response.data.parts || []);
         setTotalItems(response.data.pagination?.total || 0);
       } else if (currentLevel === 'test') {
-        // Adapter selon la structure de la réponse pour les tests
+        // Fallback pour l'ancienne structure API
         setData(response.data.tests || []);
         setTotalItems(response.data.pagination?.total || 0);
       }

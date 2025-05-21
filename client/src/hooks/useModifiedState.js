@@ -21,7 +21,6 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
   const initAttempts = useRef(0);
   // Timeout pour la stabilisation
   const stabilizationTimeout = useRef(null);
-
   // Fonction pour comparer les objets de manière approfondie
   const deepCompare = useCallback((obj1, obj2) => {
     // Si les objets sont identiques (même référence), ils sont égaux
@@ -30,6 +29,26 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     // Si l'un des deux est null ou non-objet, comparer directement
     if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
       return obj1 === obj2;
+    }
+    
+    // Traitement spécial pour les modèles qui contiennent une sous-propriété avec leur nom (modèle)
+    // Par exemple: { Test: {...}, id: 1, ... } - pour traiter la nouvelle structure du backend
+    for (const key of Object.keys(obj1)) {
+      if (typeof obj1[key] === 'object' && obj1[key] !== null && 
+          key === key.charAt(0).toUpperCase() + key.slice(1) && // Le nom commence par une majuscule
+          !Array.isArray(obj1[key])) {
+        // Probablement un modèle dans la nouvelle structure
+        return deepCompare(obj1[key], obj2);
+      }
+    }
+    
+    for (const key of Object.keys(obj2)) {
+      if (typeof obj2[key] === 'object' && obj2[key] !== null && 
+          key === key.charAt(0).toUpperCase() + key.slice(1) && // Le nom commence par une majuscule
+          !Array.isArray(obj2[key])) {
+        // Probablement un modèle dans la nouvelle structure
+        return deepCompare(obj1, obj2[key]);
+      }
     }
     
     // Traitement spécial pour les options des listes Select de react-select
@@ -100,16 +119,64 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
         }
         
         // Pour les objets, chercher un équivalent dans l'autre tableau
-        const item1Id = item1.id || item1._id;
-        if (item1Id) {
+        // Gérer le cas où l'objet a un sous-modèle (structure du nouveau backend)
+        const modelKey = Object.keys(item1).find(key => 
+          typeof item1[key] === 'object' && 
+          item1[key] !== null && 
+          key === key.charAt(0).toUpperCase() + key.slice(1) && 
+          !Array.isArray(item1[key])
+        );
+        
+        // Si on a trouvé un sous-modèle, l'utiliser pour la comparaison
+        const effectiveItem1 = modelKey ? item1[modelKey] : item1;
+        const item1Id = effectiveItem1.id || effectiveItem1._id || item1.id || item1._id;        if (item1Id) {
           // Si l'objet a un ID, chercher un objet avec le même ID
-          const matchingItem = obj2.find(i => (i.id === item1Id || i._id === item1Id));
-          if (!matchingItem || !deepCompare(item1, matchingItem)) return false;
-        } else {
+          // Gérer le cas où les objets dans obj2 ont des sous-modèles
+          const matchingItem = obj2.find(i => {
+            // Chercher si i a un sous-modèle
+            const modelKey = Object.keys(i).find(key => 
+              typeof i[key] === 'object' && 
+              i[key] !== null && 
+              key === key.charAt(0).toUpperCase() + key.slice(1) && 
+              !Array.isArray(i[key])
+            );
+            
+            // Utiliser le sous-modèle ou l'objet directement
+            const effectiveItem = modelKey ? i[modelKey] : i;
+            return effectiveItem.id === item1Id || 
+                  effectiveItem._id === item1Id || 
+                  i.id === item1Id || 
+                  i._id === item1Id;
+          });
+          
+          if (!matchingItem) return false;
+          
+          // Pour comparer les objets, utiliser leurs sous-modèles s'ils existent
+          const modelKeyForMatchingItem = Object.keys(matchingItem).find(key => 
+            typeof matchingItem[key] === 'object' && 
+            matchingItem[key] !== null && 
+            key === key.charAt(0).toUpperCase() + key.slice(1) && 
+            !Array.isArray(matchingItem[key])
+          );
+          
+          const effectiveMatchingItem = modelKeyForMatchingItem ? matchingItem[modelKeyForMatchingItem] : matchingItem;
+          
+          if (!deepCompare(effectiveItem1, effectiveMatchingItem)) return false;        } else {
           // Sans ID, comparer avec chaque élément (moins efficace)
           let found = false;
           for (const item2 of obj2) {
-            if (deepCompare(item1, item2)) {
+            // Chercher si item2 a un sous-modèle
+            const modelKey = Object.keys(item2).find(key => 
+              typeof item2[key] === 'object' && 
+              item2[key] !== null && 
+              key === key.charAt(0).toUpperCase() + key.slice(1) && 
+              !Array.isArray(item2[key])
+            );
+            
+            // Utiliser le sous-modèle ou l'objet directement
+            const effectiveItem2 = modelKey ? item2[modelKey] : item2;
+            
+            if (deepCompare(effectiveItem1, effectiveItem2)) {
               found = true;
               break;
             }
@@ -120,8 +187,7 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
       
       return true;
     }
-    
-    // Pour les objets standards
+      // Pour les objets standards
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
     
@@ -130,18 +196,33 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
       return keys.filter(key => !key.startsWith('_') && 
                                key !== 'id' && 
                                key !== 'createdAt' && 
-                               key !== 'updatedAt');
+                               key !== 'updatedAt' &&
+                               key !== 'created_at' && // Nouvelles propriétés du backend
+                               key !== 'updated_at' &&
+                               key !== 'modified_at' &&
+                               key !== 'node_id' &&
+                               // Ignorer les clés qui représentent un modèle (commencent par majuscule)
+                               !(typeof obj1[key] === 'object' && 
+                                 obj1[key] !== null && 
+                                 key === key.charAt(0).toUpperCase() + key.slice(1) && 
+                                 !Array.isArray(obj1[key])));
     };
     
     const filteredKeys1 = getFilteredKeys(keys1);
     const filteredKeys2 = getFilteredKeys(keys2);
     
     if (filteredKeys1.length !== filteredKeys2.length) return false;
-    
-    // Vérifier chaque propriété (hors propriétés techniques)
+      // Vérifier chaque propriété (hors propriétés techniques)
     for (const key of filteredKeys1) {
       // Ignorer certains champs techniques qui peuvent changer sans intervention utilisateur
-      if (key.startsWith('_') || key === 'id' || key === 'createdAt' || key === 'updatedAt') continue;
+      if (key.startsWith('_') || 
+          key === 'id' || 
+          key === 'createdAt' || 
+          key === 'updatedAt' ||
+          key === 'created_at' || 
+          key === 'updated_at' ||
+          key === 'modified_at' ||
+          key === 'node_id') continue;
       
       if (!keys2.includes(key)) return false;
       
@@ -151,7 +232,6 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     
     return true;
   }, []);
-
   // Fonction pour vérifier si l'état actuel est différent de l'état initial
   const checkIfModified = useCallback(() => {
     if (!initialState || !currentState) return false;
@@ -162,14 +242,23 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     }
     
     // Sinon utiliser la comparaison profonde par défaut
-    return !deepCompare(initialState, currentState);
+    const result = !deepCompare(initialState, currentState);
+    
+    // Journaliser les modifications pour le débogage si nécessaire
+    if (result) {
+      console.debug('État modifié détecté dans useModifiedState', { 
+        initialState, 
+        currentState 
+      });
+    }
+    
+    return result;
   }, [initialState, currentState, deepCompare, customCompare]);
 
   // Méthode pour définir explicitement l'état comme modifié
   const setModified = useCallback((modified = true) => {
     setIsModified(modified);
   }, []);
-
   // Méthode pour réinitialiser l'état initial avec l'état actuel
   const resetInitialState = useCallback(() => {
     if (currentState) {
@@ -178,6 +267,7 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
         const cleanState = JSON.parse(JSON.stringify(currentState));
         setInitialState(cleanState);
         setIsModified(false);
+        console.debug('État initial réinitialisé dans useModifiedState', cleanState);
       } catch (error) {
         // En cas d'erreur lors de la sérialisation (par ex. circular references),
         // utiliser une copie simple
@@ -204,9 +294,7 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     // Si nous avons déjà initialisé ou si currentState est null, ne rien faire
     if (isInitialized || !currentState) {
       return;
-    }
-
-    // Attendre que les données soient stables (ne changent plus pendant un court délai)
+    }    // Attendre que les données soient stables (ne changent plus pendant un court délai)
     stabilizationTimeout.current = setTimeout(() => {
       initAttempts.current += 1;
       
@@ -219,9 +307,23 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
         
         // Réinitialiser le compteur de tentatives
         initAttempts.current = 0;
+        
+        console.debug('État initial défini dans useModifiedState', cleanState);
       } catch (error) {
         console.warn("Error creating deep copy during initialization. Using shallow copy.", error);
-        setInitialState({...currentState});
+        try {
+          // Essayons de créer une copie simple mais plus sécurisée
+          const shallowCleanState = {};
+          for (const key in currentState) {
+            if (typeof currentState[key] !== 'function' && key !== '_reactInternals' && !key.startsWith('__')) {
+              shallowCleanState[key] = currentState[key];
+            }
+          }
+          setInitialState(shallowCleanState);
+        } catch (fallbackError) {
+          console.error("Fallback copy also failed. Using direct reference.", fallbackError);
+          setInitialState(currentState);
+        }
         setIsInitialized(true);
         setIsModified(false);
       }

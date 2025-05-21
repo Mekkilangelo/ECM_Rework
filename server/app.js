@@ -37,9 +37,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Ajout d'un ID unique à chaque requête
+const requestIdMiddleware = require('./middleware/request-id');
+
+// Middleware de journalisation des réponses pour le débogage
+const responseLogger = require('./middleware/response-logger');
+app.use(responseLogger);
+app.use(requestIdMiddleware);
+
 // Log all requests
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.originalUrl}`);
+  logger.info(`${req.method} ${req.originalUrl}`, { requestId: req.id });
   next();
 });
 

@@ -67,11 +67,18 @@ const Login = () => {
       setSuccessMessage('');
     }
   }, [location]);
-
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
+      console.log('Tentative de connexion pour:', values.username);
+      
       // Utiliser le service d'authentification existant
       const result = await authService.login(values.username, values.password);
+      
+      console.log('Authentification réussie, données reçues:', {
+        tokenExiste: !!result.token,
+        tokenFormat: result.token ? 'JWT valide' : 'Non disponible',
+        userInfo: result.user ? `${result.user.username} (${result.user.role})` : 'Information utilisateur manquante'
+      });
       
       // Mettre à jour le contexte d'authentification
       login(result.token, result.user);
@@ -81,7 +88,7 @@ const Login = () => {
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Erreur de connexion:', error);
-      setError(error.response?.data?.message || 'Erreur d\'authentification');
+      setError(error.response?.data?.message || error.message || 'Erreur d\'authentification');
     } finally {
       setSubmitting(false);
     }

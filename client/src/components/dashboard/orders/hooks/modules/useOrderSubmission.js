@@ -34,19 +34,22 @@ const useOrderSubmission = (
     commercial: '',
     contacts: [{ name: '', phone: '', email: '' }]
   };
-  
-  const formatDataForApi = () => {
+    const formatDataForApi = () => {
     // Filtrer les contacts vides
     const filteredContacts = formData.contacts.filter(contact => 
       contact.name.trim() !== '' || contact.phone.trim() !== '' || contact.email.trim() !== ''
     );
     
+    const formattedDate = formData.order_date ? new Date(formData.order_date).toISOString().split('T')[0] : null;
+    
+    // S'assurer que toutes les données nécessaires sont bien incluses
     return {
       parent_id: parentId,
-      order_date: formData.order_date,
+      order_date: formattedDate, // S'assurer que la date est au format ISO
       description: formData.description,
       commercial: formData.commercial,
-      contacts: filteredContacts
+      contacts: filteredContacts,
+      name: order ? order.name : null // Conserver le nom si en mode édition
     };
   };
   

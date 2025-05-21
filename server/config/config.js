@@ -69,7 +69,7 @@ const config = {
   
   // JSON Web Token
   JWT: {
-    SECRET: process.env.JWT_SECRET || 'default_jwt_secret_for_production',
+    SECRET: process.env.JWT_SECRET || 'default_jwt_secret_for_development_and_testing',
     EXPIRE: process.env.JWT_EXPIRE || '24h',
     INACTIVITY_EXPIRE: process.env.JWT_INACTIVITY_EXPIRE || '10m', // Valeur par défaut corrigée à 10m
     REFRESH_BEFORE_EXPIRE: parseInt(process.env.JWT_REFRESH_BEFORE_EXPIRE || '9', 10)

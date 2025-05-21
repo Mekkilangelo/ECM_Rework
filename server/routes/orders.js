@@ -23,9 +23,13 @@ const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { readAccess, writeAccess } = require('../middleware/access-control');
+const paginationMiddleware = require('../middleware/pagination');
+
+// Middleware de pagination pour les listes
+const paginate = paginationMiddleware();
 
 // Routes de lecture (accessibles à tous les utilisateurs authentifiés)
-router.get('/', readAccess, orderController.getOrders);
+router.get('/', readAccess, paginate, orderController.getOrders);
 router.get('/:orderId', readAccess, orderController.getOrderById);
 
 // Routes de modification (nécessitent des droits d'écriture)

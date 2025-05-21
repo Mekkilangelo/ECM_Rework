@@ -30,12 +30,16 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { readAccess, adminAccess, adminWriteAccess } = require('../middleware/access-control');
+const paginationMiddleware = require('../middleware/pagination');
+
+// Middleware de pagination pour les listes
+const paginate = paginationMiddleware();
 
 // Route pour l'utilisateur actuel (accessible à tout utilisateur authentifié)
 router.get('/me', readAccess, userController.getCurrentUser);
 
 // Routes de consultation des utilisateurs (administrateurs uniquement)
-router.get('/', adminAccess, userController.getUsers);
+router.get('/', adminAccess, paginate, userController.getUsers);
 router.get('/:userId', adminAccess, userController.getUserById);
 
 // Routes de modification des utilisateurs (administrateurs uniquement, vérification mode lecture seule)

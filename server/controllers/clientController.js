@@ -1,340 +1,164 @@
-// server/controllers/clientController.js
-const { Node, Client, Closure } = require('../models');
-const { sequelize } = require('../models');
-const { Op } = require('sequelize');
+/**
+ * Contrôleur de gestion des clients
+ * Gère les opérations CRUD sur les clients
+ */
+
+const { clientService } = require('../services');
+const logger = require('../utils/logger');
+const apiResponse = require('../utils/apiResponse');
 
 /**
- * Fonction utilitaire pour valider les données du client
- * @param {Object} data - Données du client à valider
- * @returns {Object} - Objet contenant les erreurs de validation
+ * Récupère tous les clients avec pagination
+ * @route GET /api/clients
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Liste paginée des clients
  */
-const validateClientData = (data) => {
-  const errors = {};
-  
-  // Validation des champs obligatoires
-  if (!data.name || !data.name.trim()) {
-    errors.name = 'Le nom du client est requis';
-  }
-  
-  if (!data.country) {
-    errors.country = 'Le pays est requis';
-  }
-  
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors
-  };
-};
-
-/**
- * Récupérer tous les clients avec pagination
- */
-exports.getClients = async (req, res) => {
+const getClients = async (req, res, next) => {
   try {
-    const { limit = 10, offset = 0 } = req.query;
+    const { limit = 10, offset = 0, search } = req.query;
+    const { sortBy, sortOrder } = req.query || { sortBy: 'modified_at', sortOrder: 'DESC' };
     
-    const clients = await Node.findAll({
-      where: { type: 'client' },
-      include: [{
-        model: Client,
-        attributes: ['client_code', 'country', 'city', 'client_group', 'address']
-      }],
-      order: [['modified_at', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+    logger.info('Récupération des clients', { 
+      limit, 
+      offset, 
+      search,
+      sortBy,
+      sortOrder
     });
     
-    const total = await Node.count({
-      where: { type: 'client' }
+    // Déléguer au service
+    const result = await clientService.getAllClients({
+      limit,
+      offset,
+      search,
+      sortBy,
+      sortOrder
     });
     
-    return res.status(200).json({
-      clients,
-      pagination: {
-        total,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
-      }
-    });
+    // Renvoyer la réponse paginée
+    return apiResponse.paginated(
+      res,
+      result.clients,
+      result.pagination,
+      'Clients récupérés avec succès'
+    );
   } catch (error) {
-    console.error('Erreur lors de la récupération des clients:', error);
-    return res.status(500).json({ message: 'Erreur lors de la récupération des clients', error: error.message });
+    logger.error(`Erreur lors de la récupération des clients: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Récupérer un client spécifique
+ * Récupère un client spécifique par son ID
+ * @route GET /api/clients/:clientId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Détails du client
  */
-exports.getClientById = async (req, res) => {
+const getClientById = async (req, res, next) => {
   try {
     const { clientId } = req.params;
     
-    const client = await Node.findOne({
-      where: { id: clientId, type: 'client' },
-      include: [{
-        model: Client,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
+    logger.info(`Récupération du client #${clientId}`);
     
-    if (!client) {
-      return res.status(404).json({ message: 'Client non trouvé' });
-    }
+    // Déléguer au service
+    const client = await clientService.getClientById(clientId);
     
-    return res.status(200).json(client);
+    return apiResponse.success(res, client, 'Client récupéré avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération du client:', error);
-    return res.status(500).json({ message: 'Erreur lors de la récupération du client', error: error.message });
+    logger.error(`Erreur lors de la récupération du client #${req.params.clientId}: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Créer un nouveau client
+ * Crée un nouveau client
+ * @route POST /api/clients
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Client créé
  */
-exports.createClient = async (req, res) => {
+const createClient = async (req, res, next) => {
   try {
-    const { name, group, country, city, client_group, description, address } = req.body;
+    const clientData = req.body;
     
-    // Validation des données
-    const { isValid, errors } = validateClientData({ name, country });
-    if (!isValid) {
-      return res.status(400).json({ message: 'Données invalides', errors });
-    }
-    
-    // Vérifier si un client avec ce nom existe déjà
-    const existingClient = await Node.findOne({
-      where: { 
-        name,
-        type: 'client'
-      }
+    logger.info('Création d\'un nouveau client', { 
+      name: clientData.name, 
+      country: clientData.country 
     });
     
-    if (existingClient) {
-      return res.status(409).json({ message: 'Un client avec ce nom existe déjà' });
-    }
+    // Déléguer au service
+    const newClient = await clientService.createClient(clientData);
     
-    // Créer le client dans une transaction
-    const result = await sequelize.transaction(async (t) => {
-      // Créer le nœud
-      const newNode = await Node.create({
-        name,
-        path: `/${name}`,
-        type: 'client',
-        parent_id: null,
-        created_at: new Date(),
-        modified_at: new Date(),
-        data_status: 'new',
-        description
-      }, { transaction: t });
-      
-      // Générer le client_code à partir du node_id
-      const client_code = `CLI_${newNode.id}`;
-      
-      // Créer les données du client
-      await Client.create({
-        node_id: newNode.id,
-        client_code,
-        country,
-        city,
-        client_group,
-        address
-      }, { transaction: t });
-      
-      // Créer l'entrée de fermeture (auto-relation)
-      await Closure.create({
-        ancestor_id: newNode.id,
-        descendant_id: newNode.id,
-        depth: 0
-      }, { transaction: t });
-      
-      return newNode;
-    });
-    
-    // Récupérer le client complet avec ses données associées
-    const newClient = await Node.findByPk(result.id, {
-      include: [{
-        model: Client,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
-    
-    return res.status(201).json(newClient);
+    return apiResponse.success(
+      res, 
+      newClient, 
+      'Client créé avec succès',
+      201
+    );
   } catch (error) {
-    console.error('Erreur lors de la création du client:', error);
-    return res.status(500).json({ message: 'Erreur lors de la création du client', error: error.message });
+    logger.error(`Erreur lors de la création du client: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Mettre à jour un client existant
+ * Met à jour un client existant
+ * @route PUT /api/clients/:clientId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Client mis à jour
  */
-exports.updateClient = async (req, res) => {
+const updateClient = async (req, res, next) => {
   try {
     const { clientId } = req.params;
-    const { name, client_code, country, city, client_group, address, description } = req.body;
+    const clientData = req.body;
     
-    // Validation des données si country est fourni
-    if (country !== undefined) {
-      const { isValid, errors } = validateClientData({ name: name || 'nom-temporaire', country });
-      if (!isValid) {
-        return res.status(400).json({ message: 'Données invalides', errors });
-      }
-    }
+    logger.info(`Mise à jour du client #${clientId}`);
     
-    const node = await Node.findOne({
-      where: { id: clientId, type: 'client' },
-      include: [{
-        model: Client
-      }]
-    });
+    // Déléguer au service
+    const updatedClient = await clientService.updateClient(clientId, clientData);
     
-    if (!node) {
-      return res.status(404).json({ message: 'Client non trouvé' });
-    }
-    
-    // Si le code client change, vérifier s'il est déjà utilisé
-    if (client_code && client_code !== node.Client.client_code) {
-      const existingClient = await Client.findOne({
-        where: { client_code }
-      });
-      
-      if (existingClient) {
-        return res.status(409).json({ message: 'Ce code client existe déjà' });
-      }
-    }
-    
-    await sequelize.transaction(async (t) => {
-      // Mettre à jour le nœud
-      const nodeUpdateData = {};
-      
-      if (name) {
-        nodeUpdateData.name = name;
-        nodeUpdateData.path = `/${name}`;
-      }
-      
-      if (description !== undefined) {
-        nodeUpdateData.description = description;
-      }
-      
-      nodeUpdateData.modified_at = new Date();
-      
-      await node.update(nodeUpdateData, { transaction: t });
-      
-      // Si le nom a changé, mettre à jour les chemins des descendants
-      if (name && name !== node.name) {
-        const descendants = await Closure.findAll({
-          where: { 
-            ancestor_id: clientId,
-            depth: { [Op.gt]: 0 }
-          },
-          transaction: t
-        });
-        
-        for (const relation of descendants) {
-          const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
-          const descendantPath = descendant.path.replace(node.path, `/${name}`);
-          await descendant.update({ path: descendantPath }, { transaction: t });
-        }
-      }
-      
-      // Mettre à jour les données du client
-      const clientData = {};
-      if (client_code !== undefined) clientData.client_code = client_code;
-      if (country !== undefined) clientData.country = country;
-      if (city !== undefined) clientData.city = city;
-      if (client_group !== undefined) clientData.client_group = client_group;
-      if (address !== undefined) clientData.address = address;
-      
-      if (Object.keys(clientData).length > 0) {
-        await Client.update(clientData, {
-          where: { node_id: clientId },
-          transaction: t
-        });
-      }
-    });
-    
-    // Récupérer et renvoyer le client mis à jour
-    const updatedClient = await Node.findByPk(clientId, {
-      include: [{
-        model: Client,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
-    
-    return res.status(200).json(updatedClient);
+    return apiResponse.success(res, updatedClient, 'Client mis à jour avec succès');
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du client:', error);
-    return res.status(500).json({ message: 'Erreur lors de la mise à jour du client', error: error.message });
+    logger.error(`Erreur lors de la mise à jour du client #${req.params.clientId}: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Supprimer un client et tous ses descendants
+ * Supprime un client et tous ses descendants
+ * @route DELETE /api/clients/:clientId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Confirmation de suppression
  */
-exports.deleteClient = async (req, res) => {
-  // Créer une transaction pour assurer l'intégrité des données
-  const t = await sequelize.transaction();
-  
+const deleteClient = async (req, res, next) => {
   try {
     const { clientId } = req.params;
     
-    // 1. Vérifier que le client existe
-    const client = await Node.findOne({
-      where: { id: clientId, type: 'client' },
-      transaction: t
-    });
+    logger.info(`Suppression du client #${clientId}`);
     
-    if (!client) {
-      await t.rollback();
-      return res.status(404).json({ message: 'Client non trouvé' });
-    }
+    // Déléguer au service
+    await clientService.deleteClient(clientId);
     
-    // 2. Trouver tous les descendants dans la table closure
-    const closureEntries = await Closure.findAll({
-      where: { ancestor_id: clientId },
-      transaction: t
-    });
-    
-    // Récupérer tous les IDs des descendants (y compris le nœud lui-même)
-    const descendantIds = new Set(closureEntries.map(entry => entry.descendant_id));
-    descendantIds.add(parseInt(clientId)); // Ajouter l'ID du client lui-même
-    
-    // 3. Supprimer toutes les entrées de fermeture associées aux descendants
-    // Supprimer d'abord où ils sont descendants ou ancêtres
-    await Closure.destroy({
-      where: {
-        [Op.or]: [
-          { descendant_id: { [Op.in]: Array.from(descendantIds) } },
-          { ancestor_id: { [Op.in]: Array.from(descendantIds) } }
-        ]
-      },
-      transaction: t
-    });
-    
-    // 4. Maintenant, supprimer tous les nœuds descendants
-    await Node.destroy({
-      where: {
-        id: { [Op.in]: Array.from(descendantIds) }
-      },
-      transaction: t
-    });
-    
-    // 5. Valider toutes les modifications
-    await t.commit();
-    
-    return res.status(200).json({ 
-      message: 'Client supprimé avec succès',
-      deletedId: clientId
-    });
-    
+    return apiResponse.success(res, { deletedId: clientId }, 'Client supprimé avec succès');
   } catch (error) {
-    // En cas d'erreur, annuler toutes les modifications
-    await t.rollback();
-    console.error('Erreur lors de la suppression du client:', error);
-    
-    return res.status(500).json({ 
-      message: 'Erreur lors de la suppression du client', 
-      error: error.message 
-    });
+    logger.error(`Erreur lors de la suppression du client #${req.params.clientId}: ${error.message}`, error);
+    next(error);
   }
+};
+
+module.exports = {
+  getClients,
+  getClientById,
+  createClient,
+  updateClient,
+  deleteClient
 };

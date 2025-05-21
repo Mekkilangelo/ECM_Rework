@@ -1,262 +1,278 @@
-const { User } = require('../models');
-const crypto = require('crypto');
+/**
+ * Controller de gestion des utilisateurs
+ * Gère les opérations CRUD sur les utilisateurs
+ */
+
+const { userService } = require('../services');
+const apiResponse = require('../utils/apiResponse');
+const logger = require('../utils/logger');
+const { ValidationError, AuthorizationError } = require('../utils/errors');
 
 /**
- * Enregistrer un nouvel utilisateur
+ * Enregistre un nouvel utilisateur
  * @route POST /api/users/register
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Utilisateur créé
  */
-const register = async (req, res) => {
-  const { username, password, role } = req.body;
-
+const register = async (req, res, next) => {
   try {
-    // Vérifiez que les informations sont complètes
-    if (!username || !password || !role) {
-      return res.status(400).json({ message: 'Tous les champs sont requis (username, password, role)' });
-    }
-
-    // Vérifiez si le rôle est valide
-    const validRoles = ['admin', 'user', 'superuser'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: `Le rôle doit être l'un de : ${validRoles.join(', ')}` });
-    }
-
-    // Vérifiez que l'utilisateur connecté a le droit d'attribuer ce rôle
-    if (req.user.role !== 'superuser' && role === 'superuser') {
-      return res.status(403).json({ message: 'Vous n\'avez pas les droits pour créer un superuser' });
-    }
-
-    // Vérifiez qu'il n'existe pas déjà
-    const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Ce nom d\'utilisateur existe déjà.' });
-    }
-
-    // Créez et enregistrez l'utilisateur
-    const newUser = await User.create({
-      username,
-      password_hash: password,
-      role
+    const userData = req.body;
+    const currentUser = req.user;
+    
+    logger.info('Création d\'un nouvel utilisateur', { 
+      username: userData.username,
+      role: userData.role,
+      by: currentUser.username
     });
-
-    return res.status(201).json({ message: 'Utilisateur enregistré avec succès.', user: newUser });
+    
+    // Déléguer au service
+    const newUser = await userService.createUser(userData, currentUser);
+    
+    return apiResponse.success(
+      res,
+      newUser,
+      'Utilisateur enregistré avec succès',
+      201
+    );
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Erreur serveur lors de l\'enregistrement de l\'utilisateur.' });
+    logger.error(`Erreur lors de l'enregistrement de l'utilisateur: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Récupérer tous les utilisateurs
+ * Récupère tous les utilisateurs avec pagination
  * @route GET /api/users
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Liste paginée des utilisateurs
  */
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
-    const users = await User.findAll({
-      attributes: ['id', 'username', 'role', 'created_at']
+    const { limit, offset, sortBy, sortOrder } = req.pagination || {
+      limit: 10,
+      offset: 0,
+      sortBy: 'created_at',
+      sortOrder: 'DESC'
+    };
+    
+    logger.info('Récupération des utilisateurs', { 
+      limit, 
+      offset, 
+      sortBy, 
+      sortOrder 
     });
-    return res.status(200).json(users);
+    
+    // Déléguer au service
+    const result = await userService.getAllUsers({
+      limit,
+      offset,
+      sortBy,
+      sortOrder
+    });
+    
+    return apiResponse.paginated(
+      res,
+      result.users,
+      result.pagination,
+      'Utilisateurs récupérés avec succès'
+    );
   } catch (error) {
-    console.error('Erreur lors de la récupération des utilisateurs:', error);
-    return res.status(500).json({ message: 'Erreur serveur lors de la récupération des utilisateurs.' });
+    logger.error(`Erreur lors de la récupération des utilisateurs: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Récupérer un utilisateur par son ID
+ * Récupère un utilisateur par son ID
  * @route GET /api/users/:userId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Détails de l'utilisateur
  */
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.params.userId, {
-      attributes: ['id', 'username', 'role', 'created_at']
-    });
+    const { userId } = req.params;
     
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé.' });
-    }
+    logger.info(`Récupération de l'utilisateur #${userId}`);
     
-    return res.status(200).json(user);
+    // Déléguer au service
+    const user = await userService.getUserById(userId);
+    
+    return apiResponse.success(res, user, 'Utilisateur récupéré avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-    return res.status(500).json({ message: 'Erreur serveur lors de la récupération de l\'utilisateur.' });
+    logger.error(`Erreur lors de la récupération de l'utilisateur #${req.params.userId}: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Mettre à jour les rôles des utilisateurs
+ * Met à jour les rôles des utilisateurs
  * @route PUT /api/users/roles
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Résultat de la mise à jour
  */
-const updateUsersRoles = async (req, res) => {
-  const { users } = req.body;
-  
-  if (!users || !Array.isArray(users) || users.length === 0) {
-    return res.status(400).json({ message: 'Aucun utilisateur à mettre à jour.' });
-  }
-  
+const updateUsersRoles = async (req, res, next) => {
   try {
-    const validRoles = ['admin', 'user', 'superuser'];
-    const userRole = req.user.role;
-    const updatedUsers = [];
+    const { users } = req.body;
+    const currentUser = req.user;
     
-    // Parcourir tous les utilisateurs à mettre à jour
-    for (const userData of users) {
-      const { id, role } = userData;
-      
-      if (!id || !role) {
-        continue; // Ignorer les entrées incomplètes
-      }
-      
-      if (!validRoles.includes(role)) {
-        continue; // Ignorer les rôles invalides
-      }
-      
-      // Vérifier que l'utilisateur a le droit de modifier ce rôle
-      if (userRole !== 'superuser' && role === 'superuser') {
-        continue; // Un admin ne peut pas attribuer le rôle superuser
-      }
-      
-      // Vérifier que l'utilisateur existe
-      const userToUpdate = await User.findByPk(id);
-      if (!userToUpdate) {
-        continue; // Ignorer les utilisateurs qui n'existent pas
-      }
-      
-      // Ne pas permettre de modifier son propre rôle
-      if (userToUpdate.id === req.user.id) {
-        continue;
-      }
-      
-      // Ne pas permettre à un admin de modifier un superuser
-      if (userRole === 'admin' && userToUpdate.role === 'superuser') {
-        continue;
-      }
-      
-      // Mettre à jour le rôle
-      userToUpdate.role = role;
-      await userToUpdate.save();
-      updatedUsers.push(userToUpdate);
+    if (!users || !Array.isArray(users) || users.length === 0) {
+      throw new ValidationError('Aucun utilisateur à mettre à jour');
     }
     
-    return res.status(200).json({
-      message: `${updatedUsers.length} utilisateur(s) mis à jour avec succès.`,
-      users: updatedUsers
+    logger.info(`Mise à jour des rôles pour ${users.length} utilisateur(s)`, {
+      by: currentUser.username
     });
     
+    // Déléguer au service
+    const result = await userService.updateUsersRoles(users, currentUser);
+    
+    return apiResponse.success(res, result, 'Rôles mis à jour avec succès');
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Erreur serveur lors de la mise à jour des rôles.' });
+    logger.error(`Erreur lors de la mise à jour des rôles: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Supprimer un utilisateur
+ * Met à jour un utilisateur
+ * @route PUT /api/users/:userId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Utilisateur mis à jour
+ */
+const updateUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const userData = req.body;
+    const currentUser = req.user;
+    
+    logger.info(`Mise à jour de l'utilisateur #${userId}`, {
+      by: currentUser.username
+    });
+    
+    // Déléguer au service
+    const updatedUser = await userService.updateUser(userId, userData, currentUser);
+    
+    return apiResponse.success(res, updatedUser, 'Utilisateur mis à jour avec succès');
+  } catch (error) {
+    logger.error(`Erreur lors de la mise à jour de l'utilisateur #${req.params.userId}: ${error.message}`, error);
+    next(error);
+  }
+};
+
+/**
+ * Supprime un utilisateur
  * @route DELETE /api/users/:userId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Confirmation de suppression
  */
-const deleteUser = async (req, res) => {
-  const userId = req.params.userId;
-  
+const deleteUser = async (req, res, next) => {
   try {
-    const user = await User.findByPk(userId);
+    const { userId } = req.params;
+    const currentUser = req.user;
     
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+    if (parseInt(userId) === currentUser.id) {
+      throw new ValidationError('Vous ne pouvez pas supprimer votre propre compte');
     }
     
-    // Ne pas permettre de supprimer son propre compte
-    if (user.id === req.user.id) {
-      return res.status(403).json({ message: 'Vous ne pouvez pas supprimer votre propre compte.' });
-    }
+    logger.info(`Suppression de l'utilisateur #${userId}`, {
+      by: currentUser.username
+    });
     
-    // Ne pas permettre à un admin de supprimer un superuser
-    if (req.user.role === 'admin' && user.role === 'superuser') {
-      return res.status(403).json({ message: 'Vous n\'avez pas les droits pour supprimer un superuser.' });
-    }
+    // Déléguer au service
+    await userService.deleteUser(userId, currentUser);
     
-    await user.destroy();
-    return res.status(200).json({ message: 'Utilisateur supprimé avec succès.' });
-    
+    return apiResponse.success(res, { deletedId: userId }, 'Utilisateur supprimé avec succès');
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Erreur serveur lors de la suppression de l\'utilisateur.' });
+    logger.error(`Erreur lors de la suppression de l'utilisateur #${req.params.userId}: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Récupérer l'utilisateur actuel
+ * Récupère l'utilisateur actuellement connecté
  * @route GET /api/users/me
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Informations de l'utilisateur connecté
  */
-const getCurrentUser = async (req, res) => {
+const getCurrentUser = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'role', 'created_at']
-    });
+    const userId = req.user.id;
     
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé.' });
-    }
+    // Réutiliser la méthode getUserById
+    const user = await userService.getUserById(userId);
     
-    return res.status(200).json(user);
+    return apiResponse.success(res, user, 'Profil récupéré avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur actuel:', error);
-    return res.status(500).json({ message: 'Erreur serveur lors de la récupération de l\'utilisateur.' });
+    logger.error(`Erreur lors de la récupération du profil: ${error.message}`, error);
+    next(error);
   }
 };
 
 /**
- * Régénérer le mot de passe d'un utilisateur
- * @route POST /api/users/:userId/reset-password
- */
-const resetPassword = async (req, res) => {
-  const userId = req.params.userId;
-  
-  try {
-    const user = await User.findByPk(userId);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé.' });
-    }
-    
-    // Ne pas permettre de réinitialiser le mot de passe d'un superuser si on n'est pas superuser
-    if (req.user.role !== 'superuser' && user.role === 'superuser') {
-      return res.status(403).json({ 
-        message: 'Vous n\'avez pas les droits pour réinitialiser le mot de passe d\'un superuser.' 
-      });
-    }
-    
-    // Générer un nouveau mot de passe aléatoire
-    const newPassword = generateRandomPassword(12);
-    
-    // Mettre à jour le mot de passe de l'utilisateur
-    user.password_hash = newPassword;
-    await user.save();
-    
-    return res.status(200).json({ 
-      message: 'Mot de passe réinitialisé avec succès.', 
-      newPassword
-    });
-    
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ 
-      message: 'Erreur serveur lors de la réinitialisation du mot de passe.' 
-    });
-  }
-};
-
-/**
- * Générer un mot de passe aléatoire
+ * Génère un mot de passe aléatoire
  * @param {number} length - Longueur du mot de passe
- * @returns {string} - Mot de passe généré
+ * @returns {string} Mot de passe généré
  */
 const generateRandomPassword = (length = 12) => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
-  let result = '';
-  
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+  let password = '';
   for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    password += charset[randomIndex];
   }
-  
-  return result;
+  return password;
+};
+
+/**
+ * Réinitialise le mot de passe d'un utilisateur
+ * @route POST /api/users/:userId/reset-password
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Nouveau mot de passe
+ */
+const resetPassword = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = req.user;
+    
+    logger.info(`Réinitialisation du mot de passe pour l'utilisateur #${userId}`, {
+      by: currentUser.username
+    });
+    
+    // Récupérer l'utilisateur
+    const user = await userService.getUserById(userId);
+    
+    // Vérifier les droits
+    if (user.role === 'superuser' && currentUser.role !== 'superuser') {
+      throw new AuthorizationError('Vous n\'avez pas les droits pour réinitialiser le mot de passe d\'un superuser');
+    }
+    
+    // Générer un nouveau mot de passe
+    const newPassword = generateRandomPassword(12);
+    
+    // Mettre à jour l'utilisateur avec le nouveau mot de passe
+    await userService.updateUser(userId, { password: newPassword }, currentUser);
+    
+    return apiResponse.success(res, { newPassword }, 'Mot de passe réinitialisé avec succès');
+  } catch (error) {
+    logger.error(`Erreur lors de la réinitialisation du mot de passe: ${error.message}`, error);
+    next(error);
+  }
 };
 
 module.exports = {
@@ -264,6 +280,7 @@ module.exports = {
   getUsers,
   getUserById,
   updateUsersRoles,
+  updateUser,
   deleteUser,
   getCurrentUser,
   resetPassword

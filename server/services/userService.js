@@ -24,7 +24,7 @@ const getAllUsers = async (options = {}) => {
   const { limit = 10, offset = 0, sortBy = 'created_at', sortOrder = 'DESC' } = options;
   
   const users = await User.findAndCountAll({
-    attributes: ['id', 'username', 'role', 'created_at', 'last_login'],
+    attributes: ['id', 'username', 'role', 'created_at'],
     order: [[sortBy, sortOrder]],
     limit: parseInt(limit),
     offset: parseInt(offset)
@@ -47,7 +47,7 @@ const getAllUsers = async (options = {}) => {
  */
 const getUserById = async (userId) => {
   const user = await User.findByPk(userId, {
-    attributes: ['id', 'username', 'role', 'created_at', 'last_login']
+    attributes: ['id', 'username', 'role', 'created_at']
   });
   
   if (!user) {
@@ -82,11 +82,10 @@ const createUser = async (userData, currentUser) => {
   if (exists) {
     throw new ConflictError('Ce nom d\'utilisateur existe déjà');
   }
-  
-  // Création de l'utilisateur
+    // Création de l'utilisateur
   const newUser = await User.create({
     username,
-    password_hash: await hashPassword(password),
+    password_hash: password, // Ne pas hacher ici, le hook beforeCreate du modèle le fera
     role,
     created_at: new Date()
   });
@@ -136,22 +135,19 @@ const updateUser = async (userId, userData, currentUser) => {
       throw new ConflictError('Ce nom d\'utilisateur existe déjà');
     }
   }
-  
-  // Préparation des données à mettre à jour
+    // Préparation des données à mettre à jour
   const updateData = {};
-  
-  if (userData.username) updateData.username = userData.username;
+    if (userData.username) updateData.username = userData.username;
   if (userData.role) updateData.role = userData.role;
-  if (userData.password) updateData.password_hash = await hashPassword(userData.password);
+  if (userData.password) updateData.password_hash = userData.password; // Ne pas hacher ici, le hook beforeUpdate du modèle le fera
   
-  updateData.modified_at = new Date();
+  // Note: modified_at field removed as it doesn't exist in the database
   
   // Mise à jour de l'utilisateur
   await user.update(updateData);
-  
-  // Récupérer les données mises à jour
+    // Récupérer les données mises à jour
   const updatedUser = await User.findByPk(userId, {
-    attributes: ['id', 'username', 'role', 'created_at', 'modified_at']
+    attributes: ['id', 'username', 'role', 'created_at']
   });
   
   return updatedUser;

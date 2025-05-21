@@ -36,10 +36,12 @@ const validateOrderData = (data) => {
 const validateUserData = (data) => {
   const errors = {};
   
-  // Validation des champs obligatoires
-  if (!data.username || data.username.trim() === '') {
+  // Validation des champs obligatoires, sauf si c'est juste une mise à jour du mot de passe
+  const isPasswordOnlyUpdate = data.password && Object.keys(data).length === 1;
+  
+  if (!isPasswordOnlyUpdate && (!data.username || data.username.trim() === '')) {
     errors.username = 'Le nom d\'utilisateur est requis';
-  } else if (data.username.length < 3) {
+  } else if (data.username && data.username.length < 3) {
     errors.username = 'Le nom d\'utilisateur doit contenir au moins 3 caractères';
   }
   

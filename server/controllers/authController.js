@@ -35,13 +35,9 @@ const login = async (req, res, next) => {
       
       logger.warn(`Échec d'authentification pour l'utilisateur: ${username}`);
       return apiResponse.error(res, 'Identifiants invalides', 401);
-    }
-
-    // Mise à jour de la date de dernière connexion
-    await User.update(
-      { last_login: new Date() },
-      { where: { id: user.id } }
-    );    // Générer un token JWT
+    }    // Mise à jour de la date de dernière connexion
+    // Note: last_login field removed as it doesn't exist in the database
+    // Générer un token JWT
     const token = generateToken(user);
     
     logger.info(`Connexion réussie pour l'utilisateur: ${username}`, { userId: user.id });
@@ -72,10 +68,9 @@ const login = async (req, res, next) => {
  * @param {Function} next - Middleware suivant
  * @returns {Object} Informations de l'utilisateur
  */
-const getMe = async (req, res, next) => {
-  try {
+const getMe = async (req, res, next) => {  try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'username', 'role', 'last_login', 'created_at']
+      attributes: ['id', 'username', 'role', 'created_at']
     });
 
     if (!user) {

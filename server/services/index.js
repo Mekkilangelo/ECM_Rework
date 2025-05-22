@@ -10,6 +10,7 @@ const clientService = require('./clientService');
 const partService = require('./partService');
 const testService = require('./testService');
 const steelService = require('./steelService');
+const nodeService = require('./nodeService');
 
 module.exports = {
   fileService,
@@ -18,5 +19,6 @@ module.exports = {
   clientService,
   partService,
   testService,
-  steelService
+  steelService,
+  nodeService
 };

@@ -7,8 +7,9 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { Node, File, sequelize } = require('../models');
+const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
-const { NotFoundError } = require('../utils/errors');
+const { NotFoundError, ValidationError } = require('../utils/errors');
 
 /**
  * Construit le chemin du nœud pour un fichier
@@ -278,10 +279,176 @@ const deleteFile = async (fileId) => {
   }
 };
 
+/**
+ * Récupère tous les fichiers associés à un nœud avec filtrage optionnel
+ * @param {Object} options - Options de recherche
+ * @returns {Promise<Object>} Fichiers trouvés et leurs détails
+ */
+const getAllFilesByNode = async (options) => {
+  const { nodeId, category, subcategory } = options;
+  
+  // Construire les conditions de recherche
+  const conditions = {
+    type: 'file',
+    parent_id: nodeId
+  };
+  
+  // Filtrer par catégorie et sous-catégorie si fournis
+  const fileConditions = {};
+  if (category) fileConditions.category = category;
+  if (subcategory) fileConditions.subcategory = subcategory;
+  
+  // Récupérer les nœuds de fichiers
+  const fileNodes = await Node.findAll({
+    where: conditions,
+    include: [
+      {
+        model: File,
+        where: Object.keys(fileConditions).length > 0 ? fileConditions : undefined,
+        required: true
+      }
+    ]
+  });
+  
+  // Formater la réponse
+  const files = fileNodes.map(node => ({
+    id: node.id,
+    name: node.name,
+    path: node.path,
+    createdAt: node.created_at,
+    size: node.File ? node.File.size : null,
+    mimeType: node.File ? node.File.mime_type : null,
+    category: node.File ? node.File.category : null,
+    subcategory: node.File ? node.File.subcategory : null,
+    type: node.File ? node.File.mime_type : 'application/octet-stream'
+  }));
+  
+  return { files };
+};
+
+/**
+ * Récupère un fichier spécifique par son ID
+ * @param {number} fileId - ID du fichier
+ * @returns {Promise<Object>} Données du fichier
+ */
+const getFileById = async (fileId) => {
+  const fileData = await File.findOne({ 
+    where: { node_id: fileId }
+  });
+  
+  if (!fileData) {
+    throw new NotFoundError('Fichier non trouvé');
+  }
+  
+  // Vérifier si le fichier existe physiquement
+  if (!fs.existsSync(fileData.file_path)) {
+    throw new NotFoundError('Fichier physique introuvable', { path: fileData.file_path });
+  }
+  
+  return fileData;
+};
+
+/**
+ * Préparation au téléchargement d'un fichier
+ * @param {number} fileId - ID du fichier à télécharger
+ * @returns {Promise<Object>} Informations pour le téléchargement
+ */
+const downloadFile = async (fileId) => {
+  // Récupérer les données du fichier
+  const fileData = await File.findOne({ 
+    where: { node_id: fileId }
+  });
+  
+  const nodeData = await Node.findOne({ 
+    where: { id: fileId } 
+  });
+  
+  if (!fileData || !nodeData) {
+    throw new NotFoundError('Fichier non trouvé');
+  }
+  
+  // Vérifier si le fichier existe physiquement
+  if (!fs.existsSync(fileData.file_path)) {
+    throw new NotFoundError('Fichier physique introuvable', { path: fileData.file_path });
+  }
+  
+  return { 
+    filePath: fileData.file_path, 
+    originalName: fileData.original_name 
+  };
+};
+
+/**
+ * Récupère les statistiques des fichiers pour un nœud
+ * @param {number} nodeId - ID du nœud parent
+ * @returns {Promise<Object>} Statistiques des fichiers
+ */
+const getFileStats = async (nodeId) => {
+  // Vérifier si le nœud existe
+  const node = await Node.findByPk(nodeId);
+  if (!node) {
+    throw new NotFoundError('Nœud non trouvé');
+  }
+  
+  // Compter par catégories
+  const categories = await File.findAll({
+    attributes: [
+      'category',
+      [sequelize.fn('COUNT', sequelize.col('node_id')), 'count'],
+      [sequelize.fn('SUM', sequelize.col('size')), 'totalSize']
+    ],
+    include: [{
+      model: Node,
+      where: {
+        parent_id: nodeId
+      }
+    }],
+    group: ['category']
+  });
+  
+  // Compter par sous-catégories
+  const subcategories = await File.findAll({
+    attributes: [
+      'category',
+      'subcategory',
+      [sequelize.fn('COUNT', sequelize.col('node_id')), 'count'],
+      [sequelize.fn('SUM', sequelize.col('size')), 'totalSize']
+    ],
+    include: [{
+      model: Node,
+      where: {
+        parent_id: nodeId
+      }
+    }],
+    group: ['category', 'subcategory']
+  });
+  
+  // Formater et retourner les statistiques
+  return {
+    fileCount: categories.reduce((acc, cat) => acc + parseInt(cat.dataValues.count), 0),
+    totalSize: categories.reduce((acc, cat) => acc + parseInt(cat.dataValues.totalSize), 0),
+    byCategory: categories.map(cat => ({
+      category: cat.category,
+      count: parseInt(cat.dataValues.count),
+      totalSize: parseInt(cat.dataValues.totalSize)
+    })),
+    bySubcategory: subcategories.map(subcat => ({
+      category: subcat.category,
+      subcategory: subcat.subcategory,
+      count: parseInt(subcat.dataValues.count),
+      totalSize: parseInt(subcat.dataValues.totalSize)
+    }))
+  };
+};
+
 module.exports = {
   buildNodePath,
   saveUploadedFiles,
   associateFilesToNode,
   getFileDetails,
-  deleteFile
+  deleteFile,
+  getAllFilesByNode,
+  getFileById,
+  downloadFile,
+  getFileStats
 };

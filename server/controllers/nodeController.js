@@ -1,33 +1,6 @@
-const { Node, Closure, Client, Order, Part, Test, File, Furnace, Steel, sequelize } = require('../models');
-const { Op } = require('sequelize');
-
-// Fonction utilitaire pour obtenir le modèle correspondant au type
-const getModelForType = (type) => {
-  const typeModelMap = {
-    'client': Client,
-    'order': Order,
-    'part': Part,
-    'test': Test,
-    'file': File,
-    'furnace': Furnace,
-    'steel': Steel
-  };
-  return typeModelMap[type];
-};
-
-// Fonction utilitaire pour obtenir les attributs à inclure selon le type
-const getAttributesForType = (type) => {
-  const typeAttributesMap = {
-    'client': ['country', 'city', 'client_group','address'],
-    'order': ['order_number', 'order_date', 'commercial'],
-    'part': ['designation', 'steel'],
-    'test': ['test_code', 'status', 'test_date', 'location', 'is_mesured'],
-    'file': ['size', 'mime_type'],
-    'furnace': ['furnace_type', 'furnace_size'],
-    'steel': ['grade', 'standard', 'family']
-  };
-  return typeAttributesMap[type] || [];
-};
+const { nodeService } = require('../services');
+const apiResponse = require('../utils/apiResponse');
+const logger = require('../utils/logger');
 
 /**
  * Remplace la procédure p_get_nodes
@@ -37,68 +10,32 @@ exports.getNodes = async (req, res) => {
   try {
     const { ancestorId = 0, type, depth = 1, limit = 10, offset = 0 } = req.query;
     
-    // Validation des entrées
-    if (!type || !['client', 'order', 'test', 'file', 'part', 'furnace', 'steel'].includes(type)) {
-      return res.status(400).json({ message: 'Type de nœud invalide' });
-    }
-
-    const associatedModel = getModelForType(type);
-    const modelAttributes = getAttributesForType(type);
+    logger.info(`Récupération des nœuds de type ${type}`, {
+      ancestorId,
+      type,
+      depth,
+      limit,
+      offset
+    });
     
-    // Configuration de base pour la requête
-    const queryOptions = {
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [['modified_at', 'DESC']],
-      include: [{
-        model: associatedModel,
-        attributes: modelAttributes
-      }]
-    };
+    // Déléguer au service
+    const nodes = await nodeService.getNodes({
+      ancestorId,
+      type,
+      depth,
+      limit,
+      offset
+    });
 
-    // Logique spécifique selon le type
-    if (type === 'client') {
-      // Pour les clients, pas besoin de contrainte ancestorId
-      queryOptions.where = { type };
-    } else if (type === 'steel' && parseInt(ancestorId) === 0) {
-      // Pour les aciers sans parent spécifié
-      queryOptions.where = { type };
-    } else {
-      // Pour les autres types avec une contrainte de hiérarchie
-      const descendantIds = await Closure.findAll({
-        attributes: ['descendant_id'],
-        where: { 
-          ancestor_id: parseInt(ancestorId)
-        }
-      });
-      
-      const ids = descendantIds.map(item => item.descendant_id);
-      
-      queryOptions.where = {
-        id: { [Op.in]: ids },
-        type
-      };
-      
-      // Ajout d'une contrainte de profondeur pour les fichiers
-      if (type === 'file') {
-        queryOptions.include.push({
-          model: Closure,
-          as: 'ClosureRelations',
-          attributes: [],
-          where: {
-            ancestor_id: parseInt(ancestorId),
-            depth: { [Op.lte]: parseInt(depth) }
-          }
-        });
-      }
-    }
-
-    const nodes = await Node.findAll(queryOptions);
-
-    return res.status(200).json(nodes);
+    return apiResponse.success(res, nodes, 'Nœuds récupérés avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération des nœuds:', error);
-    return res.status(500).json({ message: 'Erreur lors de la récupération des nœuds', error: error.message });
+    logger.error(`Erreur lors de la récupération des nœuds: ${error.message}`, error);
+    
+    if (error.name === 'ValidationError') {
+      return apiResponse.error(res, error.message, 400);
+    }
+    
+    return apiResponse.error(res, 'Erreur lors de la récupération des nœuds', 500);
   }
 };
 
@@ -110,29 +47,22 @@ exports.getNodeDetails = async (req, res) => {
   try {
     const { nodeId, type } = req.params;
     
-    // Validation des entrées
-    if (!type || !['client', 'order', 'test', 'file', 'part', 'furnace', 'steel'].includes(type)) {
-      return res.status(400).json({ message: 'Type de nœud invalide' });
-    }
+    logger.info(`Récupération des détails du nœud #${nodeId} de type ${type}`);
     
-    const associatedModel = getModelForType(type);
+    // Déléguer au service
+    const node = await nodeService.getNodeDetails(nodeId, type);
     
-    const node = await Node.findOne({
-      where: { id: nodeId, type },
-      include: [{
-        model: associatedModel,
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
-    
-    if (!node) {
-      return res.status(404).json({ message: 'Nœud non trouvé' });
-    }
-    
-    return res.status(200).json(node);
+    return apiResponse.success(res, node, 'Détails du nœud récupérés avec succès');
   } catch (error) {
-    console.error('Erreur lors de la récupération des détails du nœud:', error);
-    return res.status(500).json({ message: 'Erreur lors de la récupération des détails du nœud', error: error.message });
+    logger.error(`Erreur lors de la récupération des détails du nœud: ${error.message}`, error);
+    
+    if (error.name === 'ValidationError') {
+      return apiResponse.error(res, error.message, 400);
+    } else if (error.name === 'NotFoundError') {
+      return apiResponse.error(res, error.message, 404);
+    }
+    
+    return apiResponse.error(res, 'Erreur lors de la récupération des détails du nœud', 500);
   }
 };
 
@@ -144,42 +74,23 @@ exports.getTotalNodes = async (req, res) => {
   try {
     const { ancestorId = 0, type } = req.query;
     
-    // Validation des entrées
-    if (!type || !['client', 'order', 'test', 'file', 'part', 'furnace', 'steel'].includes(type)) {
-      return res.status(400).json({ message: 'Type de nœud invalide' });
-    }
+    logger.info(`Comptage des nœuds de type ${type}`, { ancestorId });
     
-    const associatedModel = getModelForType(type);
+    // Déléguer au service
+    const count = await nodeService.getTotalNodes({
+      ancestorId,
+      type
+    });
     
-    // Configuration de la requête
-    const countOptions = {
-      include: [{
-        model: associatedModel,
-        attributes: []
-      }],
-      where: { type }
-    };
-    
-    // Ajout de la contrainte d'ancêtre pour tous les types sauf client
-    if (type !== 'client' && parseInt(ancestorId) !== 0) {
-      const descendantIds = await Closure.findAll({
-        attributes: ['descendant_id'],
-        where: { 
-          ancestor_id: parseInt(ancestorId)
-        }
-      });
-      
-      const ids = descendantIds.map(item => item.descendant_id);
-      
-      countOptions.where.id = { [Op.in]: ids };
-    }
-    
-    const count = await Node.count(countOptions);
-    
-    return res.status(200).json({ total: count });
+    return apiResponse.success(res, { total: count }, 'Comptage des nœuds effectué avec succès');
   } catch (error) {
-    console.error('Erreur lors du comptage des nœuds:', error);
-    return res.status(500).json({ message: 'Erreur lors du comptage des nœuds', error: error.message });
+    logger.error(`Erreur lors du comptage des nœuds: ${error.message}`, error);
+    
+    if (error.name === 'ValidationError') {
+      return apiResponse.error(res, error.message, 400);
+    }
+    
+    return apiResponse.error(res, 'Erreur lors du comptage des nœuds', 500);
   }
 };
 
@@ -190,85 +101,32 @@ exports.createNode = async (req, res) => {
   try {
     const { name, type, parentId, data, description } = req.body;
     
-    // Validation des entrées
-    if (!name || !type || !['client', 'order', 'test', 'file', 'part', 'furnace', 'steel'].includes(type)) {
-      return res.status(400).json({ message: 'Données de nœud invalides' });
-    }
-    
-    // Si ce n'est pas un client ou un acier sans parent, vérifier que le parent existe
-    if (type !== 'client' && (type !== 'steel' || parentId)) {
-      if (!parentId) {
-        return res.status(400).json({ message: 'ID du parent requis pour ce type de nœud' });
-      }
-      
-      const parentNode = await Node.findByPk(parentId);
-      if (!parentNode) {
-        return res.status(404).json({ message: 'Nœud parent non trouvé' });
-      }
-    }
-    
-    // Création du nœud dans une transaction
-    const result = await sequelize.transaction(async (t) => {
-      // Générer le chemin
-      let path;
-      if (parentId) {
-        const parentNode = await Node.findByPk(parentId, { transaction: t });
-        path = `${parentNode.path}/${name}`;
-      } else {
-        path = `/${name}`;
-      }
-      
-      // Créer le nœud
-      const newNode = await Node.create({
-        name,
-        path,
-        type,
-        parent_id: parentId || null,
-        created_at: new Date(),
-        modified_at: new Date(),
-        data_status: 'new',
-        description
-      }, { transaction: t });
-      
-      // Créer l'entrée dans la table spécifique
-      const specificModel = getModelForType(type);
-      await specificModel.create({
-        node_id: newNode.id,
-        ...data
-      }, { transaction: t });
-      
-      // Créer les entrées de fermeture
-      // 1. Auto-relation (profondeur 0)
-      await Closure.create({
-        ancestor_id: newNode.id,
-        descendant_id: newNode.id,
-        depth: 0
-      }, { transaction: t });
-      
-      // 2. Relations avec les ancêtres si un parent existe
-      if (parentId) {
-        const parentClosures = await Closure.findAll({
-          where: { descendant_id: parentId },
-          transaction: t
-        });
-        
-        // Pour chaque ancêtre du parent, créer une relation avec le nouveau nœud
-        for (const parentClosure of parentClosures) {
-          await Closure.create({
-            ancestor_id: parentClosure.ancestor_id,
-            descendant_id: newNode.id,
-            depth: parentClosure.depth + 1
-          }, { transaction: t });
-        }
-      }
-      
-      return newNode;
+    logger.info(`Création d'un nouveau nœud de type ${type}`, {
+      name,
+      parentId,
+      type
     });
     
-    return res.status(201).json(result);
+    // Déléguer au service
+    const newNode = await nodeService.createNode({
+      name,
+      type,
+      parentId,
+      data,
+      description
+    });
+    
+    return apiResponse.success(res, newNode, 'Nœud créé avec succès', 201);
   } catch (error) {
-    console.error('Erreur lors de la création du nœud:', error);
-    return res.status(500).json({ message: 'Erreur lors de la création du nœud', error: error.message });
+    logger.error(`Erreur lors de la création du nœud: ${error.message}`, error);
+    
+    if (error.name === 'ValidationError') {
+      return apiResponse.error(res, error.message, 400);
+    } else if (error.name === 'NotFoundError') {
+      return apiResponse.error(res, error.message, 404);
+    }
+    
+    return apiResponse.error(res, 'Erreur lors de la création du nœud', 500);
   }
 };
 
@@ -280,71 +138,26 @@ exports.updateNode = async (req, res) => {
     const { nodeId } = req.params;
     const { name, data } = req.body;
     
-    const node = await Node.findByPk(nodeId);
-    if (!node) {
-      return res.status(404).json({ message: 'Nœud non trouvé' });
+    logger.info(`Mise à jour du nœud #${nodeId}`, {
+      name: name || 'inchangé',
+      dataChanged: !!data
+    });
+    
+    // Déléguer au service
+    const updatedNode = await nodeService.updateNode(nodeId, {
+      name,
+      data
+    });
+    
+    return apiResponse.success(res, updatedNode, 'Nœud mis à jour avec succès');
+  } catch (error) {
+    logger.error(`Erreur lors de la mise à jour du nœud: ${error.message}`, error);
+    
+    if (error.name === 'NotFoundError') {
+      return apiResponse.error(res, error.message, 404);
     }
     
-    await sequelize.transaction(async (t) => {
-      // Mettre à jour le nœud
-      if (name) {
-        // Si le nom change, mettre à jour aussi le chemin
-        if (name !== node.name) {
-          // 1. Mettre à jour le chemin de ce nœud
-          const pathParts = node.path.split('/');
-          pathParts[pathParts.length - 1] = name;
-          const newPath = pathParts.join('/');
-          
-          await node.update({
-            name,
-            path: newPath,
-            modified_at: new Date()
-          }, { transaction: t });
-          
-          // 2. Mettre à jour récursivement les chemins des descendants
-          const descendants = await Closure.findAll({
-            where: { 
-              ancestor_id: nodeId,
-              depth: { [Op.gt]: 0 }
-            },
-            transaction: t
-          });
-          
-          for (const relation of descendants) {
-            const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
-            const descendantPath = descendant.path.replace(node.path, newPath);
-            await descendant.update({ path: descendantPath }, { transaction: t });
-          }
-        } else {
-          // Juste mettre à jour la date de modification
-          await node.update({
-            modified_at: new Date()
-          }, { transaction: t });
-        }
-      }
-      
-      // Mettre à jour les données spécifiques au type
-      if (data) {
-        const specificModel = getModelForType(node.type);
-        await specificModel.update(data, {
-          where: { node_id: nodeId },
-          transaction: t
-        });
-      }
-    });
-    
-    // Récupérer et renvoyer le nœud mis à jour avec ses données spécifiques
-    const updatedNode = await Node.findByPk(nodeId, {
-      include: [{
-        model: getModelForType(node.type),
-        attributes: { exclude: ['node_id'] }
-      }]
-    });
-    
-    return res.status(200).json(updatedNode);
-  } catch (error) {
-    console.error('Erreur lors de la mise à jour du nœud:', error);
-    return res.status(500).json({ message: 'Erreur lors de la mise à jour du nœud', error: error.message });
+    return apiResponse.error(res, 'Erreur lors de la mise à jour du nœud', 500);
   }
 };
 
@@ -352,139 +165,43 @@ exports.updateNode = async (req, res) => {
  * Fonction pour supprimer un nœud et tous ses descendants
  */
 exports.deleteNode = async (req, res) => {
-  const t = await sequelize.transaction();
-  
   try {
     const { nodeId } = req.params;
     
-    console.log(`Tentative de suppression du nœud avec l'ID ${nodeId}`);
+    logger.info(`Suppression du nœud #${nodeId}`);
     
-    // 1. Vérifier que le nœud existe
-    const node = await Node.findByPk(nodeId, { transaction: t });
+    // Déléguer au service
+    await nodeService.deleteNode(nodeId);
     
-    if (!node) {
-      await t.rollback();
-      return res.status(404).json({ message: 'Nœud non trouvé' });
-    }
-    
-    console.log(`Nœud trouvé: ${node.name} (ID: ${node.id}, Type: ${node.type})`);
-    
-    // 2. Supprimer d'abord les références dans Closure
-    console.log(`Suppression des références dans Closure pour le nœud ${nodeId}`);
-    const closureDeleted = await Closure.destroy({
-      where: {
-        [Op.or]: [
-          { ancestor_id: nodeId },
-          { descendant_id: nodeId }
-        ]
-      },
-      transaction: t
-    });
-    
-    console.log(`${closureDeleted} entrées supprimées dans la table Closure`);
-    
-    // 3. Supprimer les données spécifiques au type (avec une fonction helper)
-    if (node.type) {
-      const deletedSpecific = await deleteSpecificData(node.type, nodeId, t);
-      console.log(`Données spécifiques au type ${node.type} supprimées: ${deletedSpecific}`);
-    }
-    
-    // 4. Supprimer le nœud
-    console.log(`Suppression du nœud ${nodeId}`);
-    await node.destroy({ transaction: t });
-    
-    console.log(`Nœud ${nodeId} supprimé avec succès`);
-    
-    // 5. Valider la transaction
-    await t.commit();
-    return res.status(200).json({ message: 'Nœud supprimé avec succès' });
+    return apiResponse.success(res, { deletedId: nodeId }, 'Nœud supprimé avec succès');
   } catch (error) {
-    console.error('Erreur lors de la suppression du nœud:', error);
+    logger.error(`Erreur lors de la suppression du nœud: ${error.message}`, error);
     
-    // En cas d'erreur, annuler toutes les modifications
-    await t.rollback();
+    if (error.name === 'NotFoundError') {
+      return apiResponse.error(res, error.message, 404);
+    }
     
-    return res.status(500).json({
-      message: 'Erreur lors de la suppression du nœud',
-      error: error.message
-    });
+    return apiResponse.error(res, 'Erreur lors de la suppression du nœud', 500);
   }
 };
-
-// Fonction helper pour supprimer les données spécifiques au type
-async function deleteSpecificData(nodeType, nodeId, transaction) {
-  const { Client, Order, Part, Test, File, Steel, Furnace } = require('../models');
-  
-  switch (nodeType) {
-    case 'client':
-      return await Client.destroy({ where: { node_id: nodeId }, transaction });
-    case 'order':
-      return await Order.destroy({ where: { node_id: nodeId }, transaction });
-    case 'part':
-      return await Part.destroy({ where: { node_id: nodeId }, transaction });
-    case 'test':
-      return await Test.destroy({ where: { node_id: nodeId }, transaction });
-    case 'file':
-      return await File.destroy({ where: { node_id: nodeId }, transaction });
-    case 'steel':
-      return await Steel.destroy({ where: { node_id: nodeId }, transaction });
-    case 'furnace':
-      return await Furnace.destroy({ where: { node_id: nodeId }, transaction });
-    default:
-      return 0;
-  }
-}
 
 /**
  * Fonction pour vider toutes les tables de la base de données
  * Permet de réinitialiser complètement les données
  */
 exports.deleteNodes = async (req, res) => {
-  const t = await sequelize.transaction();
-  
   try {
-    console.log('Début de la procédure de suppression des données');
+    logger.info('Début de la procédure de suppression de toutes les données');
     
-    // Désactiver les contraintes de clé étrangère
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', { transaction: t });
+    // Déléguer au service
+    const result = await nodeService.deleteAllNodes();
     
-    // Tables à nettoyer avec leurs modèles Sequelize correspondants
-    const models = [Client, Order, Part, Test, File, Furnace, Node, Closure];
-    
-    // Suppression des données de chaque table en utilisant les méthodes Sequelize
-    for (const model of models) {
-      console.log(`Suppression des données de la table ${model.tableName}`);
-      await model.destroy({ 
-        truncate: true,
-        cascade: true, 
-        force: true, 
-        transaction: t 
-      });
-    }
-    
-    // Réactiver les contraintes de clé étrangère
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', { transaction: t });
-    
-    console.log('Toutes les tables ont été vidées avec succès');
-    
-    // Valider la transaction
-    await t.commit();
-    
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Toutes les tables ont été vidées avec succès',
-      tables: models.map(model => model.tableName || model.name)
-    });
+    return apiResponse.success(res, {
+      tables: result.tables
+    }, 'Toutes les tables ont été vidées avec succès');
   } catch (error) {
-    // En cas d'erreur, annuler la transaction
-    await t.rollback();
-    
-    console.error('Erreur lors de la suppression des données:', error);
-    return res.status(500).json({ 
-      success: false,
-      message: 'Erreur lors de la suppression des données', 
-      error: error.message 
-    });
+    logger.error(`Erreur lors de la suppression des données: ${error.message}`, error);
+    return apiResponse.error(res, 'Erreur lors de la suppression des données', 500);
   }
 };
 
@@ -492,54 +209,24 @@ exports.deleteNodes = async (req, res) => {
 exports.getTable = async (req, res) => {
   try {
     const { parentId = null, limit = 10, page = 1 } = req.query;
-    const offset = (page - 1) * limit;
     
-    // Récupérer les enfants directs du nœud parent
-    const nodes = await Node.findAll({
-      attributes: ['id', 'name', 'type', 'created_at', 'updated_at'],
-      include: [
-        {
-          model: Closure,
-          as: 'ancestors',
-          where: { 
-            ancestor_id: parentId || null,
-            depth: 1
-          },
-          required: parentId ? true : false
-        }
-      ],
-      limit: parseInt(limit),
-      offset: offset,
-      order: [['updated_at', 'DESC']]
+    logger.info(`Récupération de la table hiérarchique`, {
+      parentId,
+      limit,
+      page
     });
     
-    // Récupérer le total pour la pagination
-    const count = await Node.count({
-      include: [
-        {
-          model: Closure,
-          as: 'ancestors',
-          where: { 
-            ancestor_id: parentId || null,
-            depth: 1
-          },
-          required: parentId ? true : false
-        }
-      ]
+    // Déléguer au service
+    const result = await nodeService.getTable({
+      parentId,
+      limit,
+      page
     });
     
-    return res.status(200).json({
-      nodes,
-      pagination: {
-        total: count,
-        pages: Math.ceil(count / limit),
-        current: parseInt(page),
-        limit: parseInt(limit)
-      }
-    });
+    return apiResponse.success(res, result, 'Table hiérarchique récupérée avec succès');
   } catch (error) {
-    console.error('Error fetching nodes:', error);
-    return res.status(500).json({ error: 'Failed to fetch nodes' });
+    logger.error(`Erreur lors de la récupération de la table: ${error.message}`, error);
+    return apiResponse.error(res, 'Erreur lors de la récupération de la table hiérarchique', 500);
   }
 };
 
@@ -549,25 +236,20 @@ exports.updateNodeStatus = async (req, res) => {
     const { nodeId } = req.params;
     const { status } = req.body;
     
-    const node = await Node.findByPk(nodeId);
-    if (!node) {
-      return res.status(404).json({ message: 'Nœud non trouvé' });
+    logger.info(`Mise à jour du statut du nœud #${nodeId}`, { status });
+    
+    // Déléguer au service
+    const result = await nodeService.updateNodeStatus(nodeId, status);
+    
+    return apiResponse.success(res, result, 'Statut mis à jour avec succès');
+  } catch (error) {
+    logger.error(`Erreur lors de la mise à jour du statut du nœud: ${error.message}`, error);
+    
+    if (error.name === 'NotFoundError') {
+      return apiResponse.error(res, error.message, 404);
     }
     
-    // Mettre à jour le statut et la date de modification
-    await node.update({
-      data_status: status,
-      modified_at: new Date()
-    });
-    
-    return res.status(200).json({ 
-      message: 'Statut mis à jour avec succès',
-      id: nodeId,
-      data_status: status
-    });
-  } catch (error) {
-    console.error('Erreur lors de la mise à jour du statut du nœud:', error);
-    return res.status(500).json({ message: 'Erreur lors de la mise à jour du statut', error: error.message });
+    return apiResponse.error(res, 'Erreur lors de la mise à jour du statut', 500);
   }
 };
 

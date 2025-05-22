@@ -1,67 +1,125 @@
 import api from './api';
 
-const userService = {  // Récupérer tous les utilisateurs
-  getAllUsers: async () => {
+/**
+ * Service de gestion des utilisateurs
+ * Fournit des méthodes pour interagir avec l'API REST pour les opérations CRUD sur les utilisateurs
+ */
+const userService = {
+  /**
+   * Récupère tous les utilisateurs
+   * @returns {Promise<Array>} Liste des utilisateurs
+   * @throws {Error} En cas d'échec de la requête
+   */
+  getUsers: async () => {
     try {
       const response = await api.get('/users');
-      // Si la réponse correspond au nouveau format (data + pagination)
-      if (response.data && response.data.data) {
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
         return response.data.data;
       }
       return response.data;
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Erreur lors de la récupération des utilisateurs:', error);
       throw error;
     }
   },
-  // Créer un nouvel utilisateur
+
+  /**
+   * Récupère un utilisateur par son identifiant
+   * @param {string|number} userId - L'identifiant de l'utilisateur
+   * @returns {Promise<Object>} Les données de l'utilisateur
+   * @throws {Error} En cas d'échec de la requête
+   */
+  getUser: async (userId) => {
+    try {
+      const response = await api.get(`/users/${userId}`);
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération de l'utilisateur ${userId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Crée un nouvel utilisateur
+   * @param {Object} userData - Les données du nouvel utilisateur
+   * @returns {Promise<Object>} Les données de l'utilisateur créé
+   * @throws {Error} En cas d'échec de la requête
+   */
   createUser: async (userData) => {
     try {
       const response = await api.post('/users/register', userData);
-      return response.data && response.data.data ? response.data.data : response.data;
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Erreur lors de la création de l\'utilisateur:', error);
       throw error;
     }
   },
-    // Mettre à jour plusieurs utilisateurs (leurs rôles)
+
+  /**
+   * Met à jour les rôles de plusieurs utilisateurs
+   * @param {Array} usersData - Tableau d'objets utilisateur avec leurs nouveaux rôles
+   * @returns {Promise<Object>} Résultat de l'opération
+   * @throws {Error} En cas d'échec de la requête
+   */
   updateUsersRoles: async (usersData) => {
     try {
       const response = await api.put('/users/roles', { users: usersData });
-      return response.data && response.data.data ? response.data.data : response.data;
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
     } catch (error) {
-      console.error('Error updating user roles:', error);
+      console.error('Erreur lors de la mise à jour des rôles utilisateurs:', error);
       throw error;
     }
   },
-    // Supprimer un utilisateur
+
+  /**
+   * Supprime un utilisateur
+   * @param {string|number} userId - L'identifiant de l'utilisateur à supprimer
+   * @returns {Promise<Object>} Résultat de l'opération
+   * @throws {Error} En cas d'échec de la requête
+   */
   deleteUser: async (userId) => {
     try {
       const response = await api.delete(`/users/${userId}`);
-      return response.data && response.data.data ? response.data.data : response.data;
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
     } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
-    }
-  },
-    // Récupérer un utilisateur par son ID
-  getUserById: async (userId) => {
-    try {
-      const response = await api.get(`/users/${userId}`);
-      return response.data && response.data.data ? response.data.data : response.data;
-    } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error(`Erreur lors de la suppression de l'utilisateur ${userId}:`, error);
       throw error;
     }
   },
   
-  // Réinitialiser le mot de passe d'un utilisateur
+  /**
+   * Réinitialise le mot de passe d'un utilisateur
+   * @param {string|number} userId - L'identifiant de l'utilisateur
+   * @returns {Promise<Object>} Données incluant le nouveau mot de passe
+   * @throws {Error} En cas d'échec de la requête
+   */
   resetPassword: async (userId) => {
     try {
       const response = await api.post(`/users/${userId}/reset-password`);
-      return response.data && response.data.data ? response.data.data : response.data;
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
     } catch (error) {
-      console.error('Error resetting user password:', error);
+      console.error(`Erreur lors de la réinitialisation du mot de passe de l'utilisateur ${userId}:`, error);
       throw error;
     }
   },

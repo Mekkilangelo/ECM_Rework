@@ -31,7 +31,7 @@ const LoadDesignSection = ({
   
   const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(testNodeId, { category: 'load_design' });
+      const response = await fileService.getNodeFiles(testNodeId, { category: 'load_design' });
       console.log(t('tests.before.loadDesign.responseFilesMessage'), response.data);
       
       // Organiser les fichiers par sous-catégorie

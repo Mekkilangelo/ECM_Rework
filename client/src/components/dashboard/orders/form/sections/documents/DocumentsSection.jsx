@@ -30,7 +30,7 @@ const DocumentsSection = ({
   
   const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(orderNodeId, { category: 'documents' });
+      const response = await fileService.getNodeFiles(orderNodeId, { category: 'documents' });
       console.log('Réponse de récupération des fichiers', response.data);
       
       // Organiser les fichiers par sous-catégorie

@@ -132,7 +132,7 @@ const SectionPhotoManager = ({
       for (const source of config.sources) {
         try {
           console.log(`Chargement des photos pour ${source.category}/${source.subcategory} avec nodeId: ${nodeId}`);
-          const response = await fileService.getFilesByNode(
+          const response = await fileService.getNodeFiles(
             nodeId, // Utiliser le nodeId correct
             { category: source.category, subcategory: source.subcategory }
           );

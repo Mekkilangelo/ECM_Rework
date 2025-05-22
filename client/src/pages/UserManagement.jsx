@@ -37,11 +37,10 @@ const UserManagementContent = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await userService.getAllUsers();
+      const response = await userService.getUsers();
       setUsers(response);
       
       // Initialize edited users with original data

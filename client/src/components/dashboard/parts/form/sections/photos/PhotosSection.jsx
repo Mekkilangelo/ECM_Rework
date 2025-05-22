@@ -39,7 +39,7 @@ const PhotosSection = ({
 
   const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(partNodeId, { category: 'photos' });
+      const response = await fileService.getNodeFiles(partNodeId, { category: 'photos' });
 
       console.log('Réponse de récupération des fichiers', response.data);
 

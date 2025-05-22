@@ -1,6 +1,13 @@
 import { useEffect } from 'react';
 import clientService from '../../../../../services/clientService';
 
+/**
+ * Hook pour récupérer et formater les données d'un client
+ * @param {Object} client - Le client à récupérer et formater
+ * @param {Function} setFormData - Fonction pour mettre à jour les données du formulaire
+ * @param {Function} setMessage - Fonction pour définir les messages d'erreur/succès
+ * @param {Function} setFetchingClient - Fonction pour indiquer l'état de chargement
+ */
 const useClientData = (client, setFormData, setMessage, setFetchingClient) => {
   // Charger les données complètes du client si on est en mode édition
   useEffect(() => {
@@ -8,8 +15,8 @@ const useClientData = (client, setFormData, setMessage, setFetchingClient) => {
       if (client && client.id) {
         try {
           setFetchingClient(true);
-          const response = await clientService.getClient(client.id);
-          const clientData = response.data;
+          // Récupération des données du client avec la méthode refactorisée
+          const clientData = await clientService.getClient(client.id);
           
           console.log("Client data received:", clientData);
           

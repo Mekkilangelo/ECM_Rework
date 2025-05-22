@@ -8,7 +8,8 @@ const chatbotService = {
    * Envoie un message au service de chatbot
    * @param {string} message - Le message de l'utilisateur
    * @param {number} threshold - Le seuil de pertinence pour les résultats
-   * @returns {Promise} - Promesse contenant la réponse du serveur
+   * @returns {Promise<Object>} Réponse du chatbot contenant le message et les éventuelles données associées
+   * @throws {Error} En cas d'échec de la requête
    */
   sendMessage: async (message, threshold) => {
     try {
@@ -16,8 +17,13 @@ const chatbotService = {
         message,
         threshold
       });
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
+      console.error('Erreur lors de l\'envoi du message au chatbot:', error);
       throw error;
     }
   }

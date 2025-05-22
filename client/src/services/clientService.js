@@ -1,43 +1,113 @@
 import api from './api';
 
-export const clientService = {
-  getClients: (page = 1, limit = 10) => 
-    api.get('/clients', { params: { page, limit } })
-      .then(response => {
-        // Si la réponse correspond au nouveau format (data + pagination)
-        if (response.data && response.data.data) {
-          return {
-            data: {
-              clients: response.data.data,
-              pagination: response.data.pagination
-            }
-          };
-        }
-        // Sinon, retourner la réponse telle quelle
-        return response;
-      }),
+/**
+ * Service de gestion des clients
+ * Fournit des méthodes pour interagir avec l'API REST pour les opérations CRUD sur les clients
+ */
+const clientService = {
+  /**
+   * Récupère la liste des clients avec pagination
+   * @param {number} page - Numéro de la page (commence à 1)
+   * @param {number} limit - Nombre d'éléments par page
+   * @returns {Promise<Object>} Données des clients et informations de pagination
+   * @throws {Error} En cas d'échec de la requête
+   */
+  getClients: async (page = 1, limit = 10) => {
+    try {
+      const response = await api.get('/clients', { params: { page, limit } });
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return {
+          clients: response.data.data,
+          pagination: response.data.pagination
+        };
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des clients:', error);
+      throw error;
+    }
+  },
   
-  getClient: (id) => 
-    api.get(`/clients/${id}`)
-      .then(response => {
-        // Si la réponse correspond au nouveau format (data)
-        if (response.data && response.data.data) {
-          return { 
-            data: response.data.data 
-          };
-        }
-        // Sinon, retourner la réponse telle quelle
-        return response;
-      }),
+  /**
+   * Récupère un client par son identifiant
+   * @param {string|number} id - L'identifiant du client
+   * @returns {Promise<Object>} Les données du client
+   * @throws {Error} En cas d'échec de la requête
+   */
+  getClient: async (id) => {
+    try {
+      const response = await api.get(`/clients/${id}`);
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la récupération du client ${id}:`, error);
+      throw error;
+    }
+  },
   
-  createClient: (data) => 
-    api.post('/clients', data),
+  /**
+   * Crée un nouveau client
+   * @param {Object} data - Les données du nouveau client
+   * @returns {Promise<Object>} Les données du client créé
+   * @throws {Error} En cas d'échec de la requête
+   */
+  createClient: async (data) => {
+    try {
+      const response = await api.post('/clients', data);
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la création du client:', error);
+      throw error;
+    }
+  },
   
-  updateClient: (id, data) => 
-    api.put(`/clients/${id}`, data),
+  /**
+   * Met à jour un client existant
+   * @param {string|number} id - L'identifiant du client à mettre à jour
+   * @param {Object} data - Les nouvelles données du client
+   * @returns {Promise<Object>} Les données du client mis à jour
+   * @throws {Error} En cas d'échec de la requête
+   */
+  updateClient: async (id, data) => {
+    try {
+      const response = await api.put(`/clients/${id}`, data);
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la mise à jour du client ${id}:`, error);
+      throw error;
+    }
+  },
   
-  deleteClient: (id) => 
-    api.delete(`/clients/${id}`)
+  /**
+   * Supprime un client
+   * @param {string|number} id - L'identifiant du client à supprimer
+   * @returns {Promise<Object>} Résultat de l'opération
+   * @throws {Error} En cas d'échec de la requête
+   */  deleteClient: async (id) => {
+    try {
+      const response = await api.delete(`/clients/${id}`);
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la suppression du client ${id}:`, error);
+      throw error;
+    }
+  }
 };
 
 export default clientService;

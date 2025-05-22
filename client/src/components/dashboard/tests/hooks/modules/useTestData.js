@@ -1,15 +1,21 @@
 import { useEffect } from 'react';
 import testService from '../../../../../services/testService';
 
+/**
+ * Hook pour récupérer et formater les données d'un test
+ * @param {Object} test - Le test à récupérer et formater
+ * @param {Function} setFormData - Fonction pour mettre à jour les données du formulaire
+ * @param {Function} setMessage - Fonction pour définir les messages d'erreur/succès
+ * @param {Function} setFetchingTest - Fonction pour indiquer l'état de chargement
+ */
 const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
   useEffect(() => {
     if (test && test.id) {
       const fetchTestDetails = async () => {
         setFetchingTest(true);
         try {
-          // Utiliser le service testService au lieu d'axios directement
-          const response = await testService.getTest(test.id);
-          const testData = response.data.data || response.data; // Adaptation au format de réponse API
+          // Récupération des données du test avec la méthode refactorisée
+          const testData = await testService.getTest(test.id);
           
           // Check if data is in the Test property or directly in testData
           const data = testData.Test || testData;

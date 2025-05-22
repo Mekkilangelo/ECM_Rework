@@ -1,15 +1,22 @@
 import { useEffect } from 'react';
-import axios from 'axios';
+import partService from '../../../../../services/partService';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-
-const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId) => {  useEffect(() => {
+/**
+ * Hook pour récupérer et formater les données d'une pièce
+ * @param {Object} part - La pièce à récupérer et formater
+ * @param {Function} setFormData - Fonction pour mettre à jour les données du formulaire
+ * @param {Function} setMessage - Fonction pour définir les messages d'erreur/succès
+ * @param {Function} setFetchingPart - Fonction pour indiquer l'état de chargement
+ * @param {Function} setParentId - Fonction pour définir l'ID de la commande parente
+ */
+const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId) => {  
+  useEffect(() => {
     if (part && part.id) {
       const fetchPartDetails = async () => {
         setFetchingPart(true);
         try {
-          const response = await axios.get(`${API_URL}/parts/${part.id}`);
-          const partData = response.data.data || response.data; // Tenir compte du format de réponse API standard
+          // Utilisation du service refactorisé
+          const partData = await partService.getPart(part.id);
           
           console.log('Raw part data received from API:', partData);
           

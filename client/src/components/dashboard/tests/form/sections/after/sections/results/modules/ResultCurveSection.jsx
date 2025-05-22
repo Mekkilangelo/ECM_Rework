@@ -84,9 +84,59 @@ const ResultCurveSection = ({
         try {
           // Appeler la nouvelle méthode du service pour récupérer les spécifications
           const response = await testService.getTestSpecs(test.id, parentId);
-          if (response.data && response.data.ecdPoints) {
+          console.log('Réponse du service getTestSpecs pour ResultCurveSection:', response);          // Vérifiez la structure de la réponse
+          if (response && response.data && response.data.ecdPoints) {
             // Utiliser directement les points formatés par le backend
             setSpecData(response.data.ecdPoints);
+          } else if (response && response.ecdPoints) {
+            // Alternative si la structure est différente
+            setSpecData(response.ecdPoints);
+          } else if (response && response.specifications) {
+            // Si nous avons des spécifications sous forme d'objet ou de chaîne JSON
+            let specs = response.specifications;
+            if (typeof specs === 'string') {
+              try {
+                specs = JSON.parse(specs);
+              } catch (e) {
+                console.error('Erreur lors du parsing des spécifications:', e);
+              }
+            }
+            
+            // Vérifier si nous avons des données ECD dans les spécifications
+            if (specs && specs.ecd) {
+              console.log('Spécifications ECD trouvées:', specs.ecd);
+              
+              // Si les points sont déjà présents, les utiliser directement
+              if (specs.ecd.points) {
+                setSpecData(specs.ecd.points);
+              } 
+              // Sinon, générer des points à partir des valeurs de référence (hardness et depthMax/depthMin)
+              else if (specs.ecd.hardness) {
+                // Créer deux points pour former une ligne horizontale à la valeur de dureté spécifiée
+                // Si depthMax est défini, utiliser comme point final, sinon utiliser une valeur par défaut
+                const depthMax = parseFloat(specs.ecd.depthMax) || 1.0;
+                const depthMin = parseFloat(specs.ecd.depthMin) || 0.0;
+                const hardnessValue = parseFloat(specs.ecd.hardness);
+                
+                // Générer des points pour tracer une ligne de spécification
+                const generatedPoints = [
+                  { distance: depthMin, value: hardnessValue },
+                  { distance: depthMax, value: hardnessValue }
+                ];
+                
+                console.log('Points de spécification générés:', generatedPoints);
+                setSpecData(generatedPoints);
+              } else {
+                console.warn('Les données ECD ne contiennent pas les valeurs nécessaires');
+                setSpecData(null);
+              }
+            } else {
+              console.warn('Les données ECD ne sont pas disponibles dans les spécifications');
+              setSpecData(null);
+            }
+          } else {
+            console.warn('Les données ECD ne sont pas disponibles dans la réponse');
+            setSpecData(null);
           }
         } catch (error) {
           console.error(t('tests.after.results.resultCurve.specError'), error);
@@ -281,9 +331,9 @@ const ResultCurveSection = ({
         });
       }
     }
-    
-    // Ajouter la courbe de spécification si disponible
-    if (specData) {
+      // Ajouter la courbe de spécification si disponible
+    if (specData && specData.length > 0) {
+      console.log('Ajout des données de spécification à la courbe:', specData);
       datasets.push({
         label: t('tests.after.results.resultCurve.specification'),
         data: specData.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.value)})),

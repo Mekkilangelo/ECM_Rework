@@ -13,7 +13,7 @@ import {
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
-import { cleanData } from '../../../services/nodeService';
+import nodeService from '../../../services/nodeService';
 import { toast } from 'react-toastify';
 import '../../../styles/sidebar.css';
 import { AuthContext } from '../../../context/AuthContext';
@@ -43,7 +43,7 @@ const Sidebar = ({ userRole }) => {
     try {
       setIsLoading(true);
       // Appel de l'API pour nettoyer les données
-      const result = await cleanData();
+      const result = await nodeService.cleanData();
       // Afficher un message de succès
       toast.success(result.message || t('sidebar.dataCleaning.success'));
       // Attendre 2 secondes avant de recharger la page

@@ -27,8 +27,10 @@ const authService = {
    * Connexion utilisateur
    * @param {string} username - Nom d'utilisateur
    * @param {string} password - Mot de passe
-   * @returns {Promise} - Promesse avec les données de connexion
-   */  login: async (username, password) => {
+   * @returns {Promise<Object>} Données d'authentification (token et informations utilisateur)
+   * @throws {Error} En cas d'échec de l'authentification
+   */  
+  login: async (username, password) => {
     try {
       const response = await api.post('/auth/login', { username, password });
       
@@ -38,8 +40,8 @@ const authService = {
       let token = null;
       let userData = null;
       
-      // Essayer différentes structures possibles de la réponse
-      if (response.data && response.data.data && response.data.data.token) {
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true && response.data.data) {
         // Structure: { success: true, message: '...', data: { token: '...', user: {...} } }
         token = response.data.data.token;
         userData = response.data.data.user;

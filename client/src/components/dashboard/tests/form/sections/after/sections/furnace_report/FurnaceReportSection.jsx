@@ -38,7 +38,7 @@ const FurnaceReportSection = ({
   
   const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(testNodeId, { category: 'furnace_report' });
+      const response = await fileService.getNodeFiles(testNodeId, { category: 'furnace_report' });
       console.log(t('tests.after.furnaceReport.filesResponse'), response.data);
       
       // Organiser les fichiers par sous-catégorie

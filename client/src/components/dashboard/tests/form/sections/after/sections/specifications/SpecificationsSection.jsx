@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { testService } from '../../../../../../../../services/testService';
+import testService from '../../../../../../../../services/testService';
 import { Spinner, ListGroup } from 'react-bootstrap';
 
 const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
@@ -14,12 +14,35 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
       if (!testNodeId || !parentId) {
         setLoading(false);
         return;
-      }
-
-      try {
+      }      try {
         setLoading(true);
         const response = await testService.getTestSpecs(testNodeId, parentId);
-        setSpecifications(response.data.specifications);
+        
+        // Log la réponse pour le débogage
+        console.log('Réponse du service getTestSpecs:', response);
+          // Vérifiez si la réponse a la structure attendue
+        // Si response est un objet avec la propriété 'specifications'
+        if (response && response.specifications) {
+          // Assurez-vous que specifications est un objet et non une chaîne
+          const specs = typeof response.specifications === 'string' 
+            ? JSON.parse(response.specifications) 
+            : response.specifications;
+          setSpecifications(specs);
+        } 
+        // Si la réponse contient response.data.specifications
+        else if (response && response.data && response.data.specifications) {
+          // Assurez-vous que specifications est un objet et non une chaîne
+          const specs = typeof response.data.specifications === 'string'
+            ? JSON.parse(response.data.specifications)
+            : response.data.specifications;
+          setSpecifications(specs);
+        } 
+        // Sinon, initialisez avec un objet vide
+        else {
+          console.warn('La réponse ne contient pas de spécifications, initialisation avec valeurs par défaut');
+          setSpecifications({});
+        }
+        
         setLoading(false);
       } catch (err) {
         console.error(t('tests.after.specifications.fetchError'), err);

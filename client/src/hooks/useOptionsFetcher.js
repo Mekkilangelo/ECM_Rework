@@ -122,21 +122,23 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   }, []);
 
   // ------ FONCTIONS DE RÉCUPÉRATION INDIVIDUELLES ------
-  
-  // Récupérer les valeurs d'énumération génériques avec gestion d'erreur
+    // Récupérer les valeurs d'énumération génériques avec gestion d'erreur
   const fetchEnumValues = useCallback(async (category, field, setter) => {
     try {
-      const response = await enumService.getEnumValues(category, field);
-      if (response && response.data && response.data.values) {
-        const values = response.data.values || [];
-        setter(values.map(value => ({ 
-          value: value, 
-          label: value 
-        })));
-      } else {
-        console.warn(`Format inattendu pour ${category}.${field}:`, response);
-        setter([]);
+      const enumData = await enumService.getEnumValues(category, field);
+      
+      // Adaptation au nouveau format de réponse
+      let values = [];
+      if (enumData && enumData.values) {
+        values = enumData.values;
+      } else if (enumData && enumData.data && enumData.data.values) {
+        values = enumData.data.values;
       }
+      
+      setter(values.map(value => ({ 
+        value: value, 
+        label: value 
+      })));
     } catch (error) {
       console.error(`Erreur lors de la récupération des options ${category}.${field}:`, error);
       setter([]);
@@ -160,16 +162,19 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   const fetchElementOptions = useCallback(async () => {
     await fetchEnumValues('steels', 'elements', setElementOptions);
   }, [fetchEnumValues]);
-
   // Fonction pour récupérer les aciers
   const fetchSteelOptions = useCallback(async () => {
     try {
       console.log("Récupération des aciers en cours...");
-      const response = await steelService.getAllSteels();
+      // Utilisation de la méthode renommée getSteels au lieu de getAllSteels
+      const response = await steelService.getSteels();
       
       let steelsList = [];
       
-      if (response && response.data) {
+      if (response && response.steels) {
+        // Nouveau format de réponse: response.steels
+        steelsList = response.steels;
+      } else if (response && response.data) {
         if (response.data.steels && Array.isArray(response.data.steels)) {
           steelsList = response.data.steels;
         } else if (Array.isArray(response.data)) {
@@ -223,22 +228,24 @@ const useOptionsFetcher = (setLoading, options = {}) => {
       setSteelGradeOptions([]);
     }
   }, []);
-
   // Récupérer les désignations de pièces
   const fetchDesignationOptions = useCallback(async () => {
     try {
       // Utiliser la méthode correcte pour récupérer les désignations
-      const response = await enumService.getEnumValues('parts', 'designation');
-      if (response && response.data && response.data.values) {
-        const designations = response.data.values || [];
-        setDesignationOptions(designations.map(designation => ({ 
-          value: designation, 
-          label: designation 
-        })));
-      } else {
-        console.warn('Format de réponse des désignations inattendu:', response);
-        setDesignationOptions([]);
+      const enumData = await enumService.getEnumValues('parts', 'designation');
+      
+      // Adaptation au nouveau format de réponse
+      let designations = [];
+      if (enumData && enumData.values) {
+        designations = enumData.values;
+      } else if (enumData && enumData.data && enumData.data.values) {
+        designations = enumData.data.values;
       }
+      
+      setDesignationOptions(designations.map(designation => ({ 
+        value: designation, 
+        label: designation 
+      })));
     } catch (error) {
       console.error('Erreur lors de la récupération des désignations:', error);
       setDesignationOptions([]);
@@ -290,7 +297,6 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   const fetchQuenchCellOptions = useCallback(async () => {
     await fetchEnumValues('furnaces', 'quench_cell', setQuenchCellOptions);
   }, [fetchEnumValues]);
-
   // Fonction pour récupérer les unités
   const fetchUnitOptions = useCallback(async () => {
     try {
@@ -298,71 +304,69 @@ const useOptionsFetcher = (setLoading, options = {}) => {
       
       let allUnitOptions = [];
       
+      // Fonction d'aide pour extraire les valeurs de l'énumération
+      const extractEnumValues = (enumData) => {
+        if (enumData && enumData.values) {
+          return enumData.values;
+        } else if (enumData && enumData.data && enumData.data.values) {
+          return enumData.data.values;
+        }
+        return [];
+      };
+      
       // Récupérer les unités de longueur
       const lengthUnitsResponse = await enumService.getEnumValues('units', 'length_units');
-      if (lengthUnitsResponse && lengthUnitsResponse.data && lengthUnitsResponse.data.values) {
-        const lengthUnits = lengthUnitsResponse.data.values.map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'length'
-        }));
-        allUnitOptions = [...allUnitOptions, ...lengthUnits];
-      }
+      const lengthUnits = extractEnumValues(lengthUnitsResponse).map(unit => ({
+        value: unit,
+        label: unit,
+        type: 'length'
+      }));
+      allUnitOptions = [...allUnitOptions, ...lengthUnits];
       
       // Récupérer les unités de poids
       const weightUnitsResponse = await enumService.getEnumValues('units', 'weight_units');
-      if (weightUnitsResponse && weightUnitsResponse.data && weightUnitsResponse.data.values) {
-        const weightUnits = weightUnitsResponse.data.values.map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'weight'
-        }));
-        allUnitOptions = [...allUnitOptions, ...weightUnits];
-      }
+      const weightUnits = extractEnumValues(weightUnitsResponse).map(unit => ({
+        value: unit,
+        label: unit,
+        type: 'weight'
+      }));
+      allUnitOptions = [...allUnitOptions, ...weightUnits];
       
       // Récupérer les unités de temps
       const timeUnitsResponse = await enumService.getEnumValues('units', 'time_units');
-      if (timeUnitsResponse && timeUnitsResponse.data && timeUnitsResponse.data.values) {
-        const timeUnits = timeUnitsResponse.data.values.map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'time'
-        }));
-        allUnitOptions = [...allUnitOptions, ...timeUnits];
-      }
+      const timeUnits = extractEnumValues(timeUnitsResponse).map(unit => ({
+        value: unit,
+        label: unit,
+        type: 'time'
+      }));
+      allUnitOptions = [...allUnitOptions, ...timeUnits];
       
       // Récupérer les unités de température
       const temperatureUnitsResponse = await enumService.getEnumValues('units', 'temperature_units');
-      if (temperatureUnitsResponse && temperatureUnitsResponse.data && temperatureUnitsResponse.data.values) {
-        const tempUnits = temperatureUnitsResponse.data.values.map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'temperature'
-        }));
-        allUnitOptions = [...allUnitOptions, ...tempUnits];
-      }
+      const tempUnits = extractEnumValues(temperatureUnitsResponse).map(unit => ({
+        value: unit,
+        label: unit,
+        type: 'temperature'
+      }));
+      allUnitOptions = [...allUnitOptions, ...tempUnits];
       
       // Récupérer les unités de pression
       const pressureUnitsResponse = await enumService.getEnumValues('units', 'pressure_units');
-      if (pressureUnitsResponse && pressureUnitsResponse.data && pressureUnitsResponse.data.values) {
-        const pressureUnits = pressureUnitsResponse.data.values.map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'pressure'
-        }));
-        allUnitOptions = [...allUnitOptions, ...pressureUnits];
-      }
+      const pressureUnits = extractEnumValues(pressureUnitsResponse).map(unit => ({
+        value: unit,
+        label: unit,
+        type: 'pressure'
+      }));
+      allUnitOptions = [...allUnitOptions, ...pressureUnits];
       
       // Récupérer les unités de dureté
       const hardnessUnitsResponse = await enumService.getEnumValues('units', 'hardness_units');
-      if (hardnessUnitsResponse && hardnessUnitsResponse.data && hardnessUnitsResponse.data.values) {
-        const hardnessUnits = hardnessUnitsResponse.data.values.map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'hardness'
-        }));
-        allUnitOptions = [...allUnitOptions, ...hardnessUnits];
-      }
+      const hardnessUnits = extractEnumValues(hardnessUnitsResponse).map(unit => ({
+        value: unit,
+        label: unit,
+        type: 'hardness'
+      }));
+      allUnitOptions = [...allUnitOptions, ...hardnessUnits];
       
       setUnitOptions(allUnitOptions);
       console.log("Unités récupérées avec succès:", allUnitOptions);

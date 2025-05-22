@@ -202,15 +202,25 @@ const getTestReportData = async (req, res, next) => {
 const getTestSpecs = async (req, res, next) => {
   try {
     const { testId } = req.params;
+    const { parent_id } = req.query;
     
-    logger.info(`Récupération des spécifications du test #${testId}`);
+    logger.info(`Récupération des spécifications du test #${testId}`, { 
+      testId, 
+      parent_id,
+      query: req.query,
+      url: req.originalUrl
+    });
     
     // Déléguer au service
-    const specs = await testService.getTestSpecs(testId);
+    const specs = await testService.getTestSpecs(testId, parent_id);
     
+    logger.info(`Spécifications récupérées avec succès pour le test #${testId}`);
     return apiResponse.success(res, specs, 'Spécifications du test récupérées avec succès');
   } catch (error) {
-    logger.error(`Erreur lors de la récupération des spécifications du test #${req.params.testId}: ${error.message}`, error);
+    logger.error(`Erreur lors de la récupération des spécifications du test #${req.params.testId}: ${error.message}`, { 
+      stack: error.stack,
+      name: error.name
+    });
     next(error);
   }
 };

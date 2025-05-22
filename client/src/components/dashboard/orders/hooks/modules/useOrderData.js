@@ -3,6 +3,14 @@ import { useEffect } from 'react';
 import orderService from '../../../../../services/orderService';
 import { analyzeObjectStructure } from '../../../../../utils/debugUtils';
 
+/**
+ * Hook pour récupérer et formater les données d'une commande
+ * @param {Object} order - La commande à récupérer et formater
+ * @param {Function} setFormData - Fonction pour mettre à jour les données du formulaire
+ * @param {Function} setMessage - Fonction pour définir les messages d'erreur/succès
+ * @param {Function} setFetchingOrder - Fonction pour indiquer l'état de chargement
+ * @param {Function} setParentId - Fonction pour définir l'ID du client parent
+ */
 const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParentId) => {
   // Charger les données complètes de la commande si on est en mode édition
   useEffect(() => {
@@ -11,25 +19,14 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
         try {
           setFetchingOrder(true);
           console.log(`Récupération des détails de la commande avec l'ID ${order.id}...`);
-          const response = await orderService.getOrder(order.id);
           
-          // Analyser la réponse brute pour comprendre sa structure
-          analyzeObjectStructure(response, 'API Response');
+          // Récupération des données de la commande avec la méthode refactorisée
+          const orderData = await orderService.getOrder(order.id);
           
-          // Adapté pour gérer le format de réponse standard de l'API
-          // La structure peut être { data: { ... } } ou { success: true, message: "...", data: { ... } }
-          let orderData;
-          if (response.data.success !== undefined) {
-            console.log("Nouveau format d'API détecté avec structure success/message/data");
-            orderData = response.data.data; // Nouveau format API avec { success, message, data }
-          } else {
-            console.log("Ancien format d'API détecté avec structure directe");
-            orderData = response.data; // Ancien format direct
-          }
-          
-          // Analyser la structure des données extraites pour le débogage
+          // Analyser la structure des données pour le débogage
           analyzeObjectStructure(orderData, 'Order Data');
-            // Traitement du champ contacts JSON
+          
+          // Traitement du champ contacts JSON
           let contacts = [];
           
           // Vérification et extraction des contacts avec gestion des différentes structures possibles
@@ -97,23 +94,21 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
           }
         } catch (error) {
           console.error('Erreur lors du chargement des détails de la commande:', error);
-            // Analyse détaillée de l'erreur pour aider au débogage
+          // Analyse détaillée de l'erreur pour aider au débogage
           if (error.response) {
-            console.error('Données de réponse d\'erreur:', error.response.data);
-            console.error('Status HTTP:', error.response.status);
-            console.error('Headers:', error.response.headers);
-          } else if (error.request) {
-            console.error('Requête envoyée mais pas de réponse reçue');
-          } else {
-            console.error('Erreur de configuration de la requête:', error.message);
+            console.error('Détails de l\'erreur:', {
+              status: error.response.status,
+              headers: error.response.headers,
+              data: error.response.data
+            });
           }
           
           setMessage({
             type: 'danger',
-            text: `Impossible de charger les données de la commande: ${error.message || "Erreur inconnue"}`
+            text: 'Impossible de charger les données de la commande: ' + 
+                 (error.response?.data?.message || error.message || 'Erreur inconnue')
           });
         } finally {
-          console.log("Fin du chargement des détails de la commande");
           setFetchingOrder(false);
         }
       }
@@ -124,3 +119,4 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
 };
 
 export default useOrderData;
+

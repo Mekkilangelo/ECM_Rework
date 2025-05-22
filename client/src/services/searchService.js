@@ -1,7 +1,57 @@
 import api from './api';
 
+/**
+ * Service de recherche
+ * Fournit des méthodes pour effectuer des recherches dans le système
+ */
 const searchService = {
-  // Fonction de recherche avec support pour les filtres avancés
+  /**
+   * Effectue une recherche avec des filtres avancés
+   * @param {Object} params - Paramètres de recherche
+   * @param {string} [params.q] - Terme de recherche
+   * @param {string} [params.entityTypes] - Types d'entités à rechercher (clients, commandes, pièces, tests, aciers)
+   * @param {number} [params.page] - Numéro de page pour la pagination
+   * @param {number} [params.limit] - Nombre d'éléments par page
+   * @param {string} [params.clientGroup] - Groupe de client (filtre client)
+   * @param {string} [params.country] - Pays (filtre client)
+   * @param {string} [params.city] - Ville (filtre client)
+   * @param {string} [params.address] - Adresse (filtre client)
+   * @param {string} [params.orderDate] - Date de commande (filtre commande)
+   * @param {string} [params.commercial] - Commercial (filtre commande)
+   * @param {string} [params.contacts] - Contacts (filtre commande)
+   * @param {string} [params.partDesignation] - Désignation de pièce (filtre pièce)
+   * @param {string} [params.clientDesignation] - Désignation client (filtre pièce)
+   * @param {string} [params.reference] - Référence (filtre pièce)
+   * @param {string} [params.steelType] - Type d'acier (filtre pièce)
+   * @param {number} [params.minQuantity] - Quantité minimale (filtre pièce)
+   * @param {number} [params.maxQuantity] - Quantité maximale (filtre pièce)
+   * @param {number} [params.minLength] - Longueur minimale (filtre pièce)
+   * @param {number} [params.maxLength] - Longueur maximale (filtre pièce)
+   * @param {number} [params.minWidth] - Largeur minimale (filtre pièce)
+   * @param {number} [params.maxWidth] - Largeur maximale (filtre pièce)
+   * @param {number} [params.minHeight] - Hauteur minimale (filtre pièce)
+   * @param {number} [params.maxHeight] - Hauteur maximale (filtre pièce)
+   * @param {number} [params.minCoreHardness] - Dureté à cœur minimale (filtre pièce)
+   * @param {number} [params.maxCoreHardness] - Dureté à cœur maximale (filtre pièce)
+   * @param {string} [params.testStatus] - Statut du test (filtre test)
+   * @param {string} [params.testLocation] - Emplacement du test (filtre test)
+   * @param {string} [params.mountingType] - Type de montage (filtre test)
+   * @param {string} [params.processType] - Type de processus (filtre test)
+   * @param {string} [params.positionType] - Type de position (filtre test)
+   * @param {string} [params.testDateFrom] - Date de début du test (filtre test)
+   * @param {string} [params.testDateTo] - Date de fin du test (filtre test)
+   * @param {string} [params.loadNumber] - Numéro de charge (filtre test)
+   * @param {string} [params.furnaceType] - Type de four (filtre test)
+   * @param {string} [params.recipeNumber] - Numéro de recette (filtre test)
+   * @param {string} [params.preoxMedia] - Média de préoxydation (filtre test)
+   * @param {string} [params.steelFamily] - Famille d'acier (filtre acier)
+   * @param {string} [params.steelStandard] - Norme d'acier (filtre acier)
+   * @param {string} [params.steelGrade] - Nuance d'acier (filtre acier)
+   * @param {string} [params.equivalent] - Équivalent (filtre acier)
+   * @param {string} [params.chemicalElement] - Élément chimique (filtre acier)
+   * @returns {Promise<Object>} Résultats de recherche et métadonnées de pagination
+   * @throws {Error} En cas d'échec de la requête
+   */
   search: async (params) => {
     try {
       // Transformation des paramètres en chaîne de requête
@@ -16,8 +66,7 @@ const searchService = {
       // Ajouter les filtres pour les clients
       if (params.clientGroup) queryParams.append('clientGroup', params.clientGroup);
       if (params.country) queryParams.append('country', params.country);
-      if (params.city) queryParams.append('city', params.city);
-      if (params.address) queryParams.append('address', params.address);
+      if (params.city) queryParams.append('city', params.city);      if (params.address) queryParams.append('address', params.address);
       
       // Ajouter les filtres pour les commandes
       if (params.orderDate) queryParams.append('orderDate', params.orderDate);
@@ -66,20 +115,38 @@ const searchService = {
       
       // Appel à l'API avec les paramètres
       const response = await api.get(`/search?${queryParams.toString()}`);
+      
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return {
+          results: response.data.data,
+          pagination: response.data.pagination,
+          metadata: response.data.metadata
+        };
+      }
       return response.data;
     } catch (error) {
-      console.error('Search service error:', error);
+      console.error('Erreur lors de la recherche:', error);
       throw error;
     }
   },
   
-  // Fonction pour obtenir les suggestions de recherche
+  /**
+   * Récupère des suggestions de recherche basées sur un terme partiel
+   * @param {string} query - Terme de recherche partiel
+   * @returns {Promise<Array>} Liste des suggestions
+   * @throws {Error} En cas d'échec de la requête
+   */
   getSuggestions: async (query) => {
     try {
       const response = await api.get(`/search/suggestions?q=${encodeURIComponent(query)}`);
+      
+      // Traitement de la réponse selon le nouveau format d'API
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
       return response.data;
-    } catch (error) {
-      console.error('Get suggestions error:', error);
+    } catch (error) {      console.error('Erreur lors de la récupération des suggestions:', error);
       throw error;
     }
   }

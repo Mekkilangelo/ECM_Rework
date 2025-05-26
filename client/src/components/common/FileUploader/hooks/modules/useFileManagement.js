@@ -8,11 +8,15 @@ const useFileManagement = (
   setInternalUploadedFiles, 
   onFilesUploaded, 
   setError
-) => {
-  // Supprimer un fichier déjà téléchargé
+) => {  // Supprimer un fichier déjà téléchargé
   const removeUploadedFile = async (fileId) => {
     try {
-      await fileService.deleteFile(fileId);
+      const response = await fileService.deleteFile(fileId);
+      
+      // Vérifier que la suppression a réussi
+      if (!response.data || response.data.success === false) {
+        throw new Error(response.data?.message || 'Échec de la suppression du fichier');
+      }
       
       // Important: Create the updated files array
       const updatedFiles = internalUploadedFiles.filter(f => f.id !== fileId);

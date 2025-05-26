@@ -11,8 +11,7 @@ const fileService = {
    * @param {Function} onUploadProgress - Callback pour suivre la progression du téléchargement
    * @returns {Promise<Object>} Résultat de l'opération de téléchargement
    * @throws {Error} En cas d'échec de la requête
-   */
-  uploadFiles: async (formData, onUploadProgress) => {
+   */  uploadFiles: async (formData, onUploadProgress) => {
     try {
       const response = await api.post(`/files/upload`, formData, {
         headers: {
@@ -20,11 +19,8 @@ const fileService = {
         },
         onUploadProgress
       });
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true) {
-        return response.data.data;
-      }
-      return response.data;
+      // On retourne directement la réponse pour une gestion uniforme
+      return response;
     } catch (error) {
       console.error('Erreur lors du téléchargement des fichiers:', error);
       throw error;
@@ -54,14 +50,9 @@ const fileService = {
       const queryString = params.toString();
       if (queryString) {
         url += `?${queryString}`;
-      }
-      
-      const response = await api.get(url);
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true) {
-        return response.data.data;
-      }
-      return response.data;
+      }      const response = await api.get(url);
+      // On retourne directement la réponse pour une gestion uniforme
+      return response;
     } catch (error) {
       console.error(`Erreur lors de la récupération des fichiers du nœud ${nodeId}:`, error);
       throw error;
@@ -74,14 +65,10 @@ const fileService = {
    * @returns {Promise<Object>} Résultat de l'opération
    * @throws {Error} En cas d'échec de la requête
    */
-  deleteFile: async (fileId) => {
-    try {
+  deleteFile: async (fileId) => {    try {
       const response = await api.delete(`/files/${fileId}`);
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true) {
-        return response.data.data;
-      }
-      return response.data;
+      // On retourne directement la réponse pour une gestion uniforme
+      return response;
     } catch (error) {
       console.error(`Erreur lors de la suppression du fichier ${fileId}:`, error);
       throw error;
@@ -148,18 +135,13 @@ const fileService = {
    */
   associateFiles: async (nodeId, tempId, options = {}) => {
     try {
-      const { category, subcategory } = options;
-      const response = await api.post(`/files/associate`, {
+      const { category, subcategory } = options;      const response = await api.post(`/files/associate`, {
         nodeId,
         tempId,
         category,
-        subcategory
-      });
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true) {
-        return response.data.data;
-      }
-      return response.data;
+        subcategory      });
+      // On retourne directement la réponse pour une gestion uniforme
+      return response;
     } catch (error) {
       console.error(`Erreur lors de l'association des fichiers au nœud ${nodeId}:`, error);
       throw error;
@@ -172,14 +154,10 @@ const fileService = {
    * @returns {Promise<Object>} Statistiques des fichiers (par catégorie, etc.)
    * @throws {Error} En cas d'échec de la requête
    */
-  getFileStats: async (nodeId) => {
-    try {
+  getFileStats: async (nodeId) => {    try {
       const response = await api.get(`/files/stats/${nodeId}`);
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true) {
-        return response.data.data;
-      }
-      return response.data;
+      // On retourne directement la réponse pour une gestion uniforme
+      return response;
     } catch (error) {
       console.error(`Erreur lors de la récupération des statistiques de fichiers pour le nœud ${nodeId}:`, error);
       throw error;

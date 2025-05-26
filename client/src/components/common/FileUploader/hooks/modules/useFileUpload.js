@@ -27,14 +27,18 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     if (category) formData.append('category', category);
     if (subcategory) formData.append('subcategory', subcategory);
     
-    try {
-      const response = await fileService.uploadFiles(formData, (progressEvent) => {
+    try {      const response = await fileService.uploadFiles(formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         setUploadProgress(percentCompleted);
       });
       
-      const newFiles = response.data.files;
-      const tempId = response.data.tempId; // S'assurer que cette valeur est correctement extraite
+      // Accès aux données selon la nouvelle structure de réponse API uniformisée
+      if (!response.data || response.data.success === false) {
+        throw new Error(response.data?.message || 'Échec de l\'upload des fichiers');
+      }
+      
+      const newFiles = response.data.data.files;
+      const tempId = response.data.data.tempId;
       
       console.log("Upload response:", response.data);
       console.log("New files:", newFiles);

@@ -36,17 +36,25 @@ const PhotosSection = ({
       loadExistingFiles();
     }
   }, [partNodeId]);
-
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(partNodeId, { category: 'photos' });
 
       console.log('Réponse de récupération des fichiers', response.data);
 
+      // Vérifier que la requête a réussi
+      if (!response.data || response.data.success === false) {
+        console.error(t('parts.photos.loadError'), response.data?.message);
+        return;
+      }
+      
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
+      
+      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
+      const files = response.data.data?.files || [];
 
-      response.data.files.forEach(file => {
+      files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
           filesBySubcategory[subcategory] = [];
@@ -123,12 +131,20 @@ const PhotosSection = ({
           promises.push(promise);
         }
       });
-      
-      // Attendre que toutes les requêtes soient terminées
+        // Attendre que toutes les requêtes soient terminées
       if (promises.length > 0) {
         console.log(`Starting ${promises.length} file association requests`);
         const results = await Promise.all(promises);
         console.log("File association results:", results);
+        
+        // Vérifier que toutes les associations ont réussi
+        const allSuccessful = results.every(result => result.data && result.data.success);
+        
+        if (!allSuccessful) {
+          console.error(t('parts.photos.associateError'), results);
+          return false;
+        }
+        
         console.log(`${promises.length} groupes de fichiers associés au nœud ${newNodeId}`);
         
         // Réinitialiser les tempIds après association réussie

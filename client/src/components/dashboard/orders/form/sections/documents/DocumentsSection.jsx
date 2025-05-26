@@ -27,15 +27,23 @@ const DocumentsSection = ({
       loadExistingFiles();
     }
   }, [orderNodeId]);
-  
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(orderNodeId, { category: 'documents' });
       console.log('Réponse de récupération des fichiers', response.data);
       
+      // Vérifier que la requête a réussi
+      if (!response.data || response.data.success === false) {
+        console.error(t('orders.documents.loadError'), response.data?.message);
+        return;
+      }
+      
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
-      response.data.files.forEach(file => {
+      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
+      const files = response.data.data?.files || [];
+      
+      files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
           filesBySubcategory[subcategory] = [];
@@ -101,11 +109,10 @@ const DocumentsSection = ({
           }
           
           console.log(`Associating files with tempIds: ${JSON.stringify(tempIdArray)} to nodeId: ${nodeId}`);
-          
-          // Associer les fichiers au nœud
+            // Associer les fichiers au nœud
           const results = await Promise.all(
             tempIdArray.map(tempId => 
-              fileService.associateTempFiles(tempId, nodeId, 'documents')
+              fileService.associateFiles(nodeId, tempId, { category: 'documents' })
             )
           );
           

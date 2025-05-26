@@ -45,11 +45,18 @@ module.exports = (sequelize) => {
     additional_info: {
       type: DataTypes.JSON,
       allowNull: true
-    }
-  }, {
+    }  }, {
     tableName: 'files',
     timestamps: false
   });
+
+  // Définir les associations
+  File.associate = function(models) {
+    File.belongsTo(models.Node, {
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+  };
 
   return File;
 };

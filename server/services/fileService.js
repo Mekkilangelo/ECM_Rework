@@ -26,11 +26,22 @@ const buildNodePath = async (nodeId, category, subcategory, filename) => {
   }
   
   let nodePath = parentNode.path;
+  
+  // Déterminer la structure de chemin appropriée en fonction du type de nœud
+  let categoryPath = category;
+  let subcategoryPath = subcategory;
+  
+  // Si le parent est un ordre, respecter la structure order/documents/alldocuments
+  if (parentNode.type === 'order') {
+    categoryPath = 'documents';
+    subcategoryPath = 'alldocuments';
+  }
+  
   // Ajouter la catégorie et sous-catégorie au chemin
-  if (category) {
-    nodePath += `/${category}`;
-    if (subcategory) {
-      nodePath += `/${subcategory}`;
+  if (categoryPath) {
+    nodePath += `/${categoryPath}`;
+    if (subcategoryPath) {
+      nodePath += `/${subcategoryPath}`;
     }
   }
   nodePath += `/${filename}`;
@@ -58,10 +69,20 @@ const saveUploadedFiles = async (files, data) => {
     for (const file of files) {
       // Déterminer le chemin final du fichier
       let finalPath;
-      
-      if (nodeId) {
+        if (nodeId) {
+        // Déterminer la structure de répertoire appropriée en fonction du type de nœud parent
+        let categoryPath = category || 'general';
+        let subcategoryPath = subcategory || '';
+        
+        // Vérifier si le nœud parent est un ordre
+        const parentNode = await Node.findByPk(nodeId);
+        if (parentNode && parentNode.type === 'order') {
+          categoryPath = 'documents';
+          subcategoryPath = 'alldocuments';
+        }
+        
         // Créer le chemin du répertoire si nécessaire
-        const dirPath = path.join(UPLOAD_BASE_DIR, nodeId.toString(), category || 'general', subcategory || '');
+        const dirPath = path.join(UPLOAD_BASE_DIR, nodeId.toString(), categoryPath, subcategoryPath);
         fs.mkdirSync(dirPath, { recursive: true });
         
         // Déplacer le fichier de temp vers le chemin final
@@ -136,43 +157,60 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
   
   // Utiliser une transaction
   const transaction = await sequelize.transaction();
-  
-  try {
-    // Récupérer les fichiers temporaires
+    try {
+    // Récupérer les fichiers temporaires en utilisant le champ additional_info.temp_id
     const tempFiles = await File.findAll({
+      where: {
+        'additional_info.temp_id': tempId
+      },
       include: [{
         model: Node,
-        where: {
-          path: { [sequelize.Op.like]: `/temp/${tempId}/%` }
-        }
+        required: true
       }]
     });
     
     if (!tempFiles.length) {
       throw new NotFoundError('Aucun fichier temporaire trouvé avec cet ID');
     }
-    
-    // Vérifier que le nœud parent existe
+      // Vérifier que le nœud parent existe
     const parentNode = await Node.findByPk(nodeId);
     if (!parentNode) {
       throw new NotFoundError('Nœud parent non trouvé');
     }
     
-    // Créer le répertoire de destination si nécessaire
-    const destDir = path.join(UPLOAD_BASE_DIR, nodeId.toString(), category || 'general', subcategory || '');
-    fs.mkdirSync(destDir, { recursive: true });
+    // Déterminer la structure de répertoire appropriée en fonction du type de nœud parent
+    let categoryPath = category || 'general';
+    let subcategoryPath = subcategory || '';
     
-    // Mettre à jour chaque fichier et le déplacer vers le répertoire final
+    // Si le parent est un ordre, respecter la structure order/documents/alldocuments
+    if (parentNode.type === 'order') {
+      categoryPath = 'documents';
+      subcategoryPath = 'alldocuments';
+    }
+    
+    // Créer le répertoire de destination
+    const destDir = path.join(UPLOAD_BASE_DIR, nodeId.toString(), categoryPath, subcategoryPath);
+    fs.mkdirSync(destDir, { recursive: true });
+      // Mettre à jour chaque fichier et le déplacer vers le répertoire final
     for (const file of tempFiles) {
       // Déplacer le fichier physique
       const fileName = path.basename(file.file_path);
       const destPath = path.join(destDir, fileName);
       fs.renameSync(file.file_path, destPath);
       
-      // Mettre à jour les enregistrements
+      // Récupérer le nœud associé au fichier
+      const fileNode = file.Node;
+      if (!fileNode) {
+        throw new Error('Node is not associated to File!');
+      }
+      
+      // Construire le nouveau chemin pour le nœud
+      const newNodePath = await buildNodePath(nodeId, categoryPath, subcategoryPath, fileNode.name);
+      
+      // Mettre à jour les enregistrements du nœud
       await Node.update({
         parent_id: nodeId,
-        path: await buildNodePath(nodeId, category, subcategory, file.Node.name),
+        path: newNodePath,
         data_status: 'updated',
         modified_at: new Date()
       }, { 
@@ -180,10 +218,11 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
         transaction 
       });
       
+      // Mettre à jour l'enregistrement du fichier
       await File.update({
         file_path: destPath,
-        category: category || file.category,
-        subcategory: subcategory || file.subcategory,
+        category: categoryPath,
+        subcategory: subcategoryPath,
         additional_info: {
           ...file.additional_info,
           associated_at: new Date().toISOString(),
@@ -241,11 +280,18 @@ const deleteFile = async (fileId) => {
   
   try {
     // Récupérer les détails du fichier
+    // D'abord, vérifions que le nœud existe et qu'il s'agit bien d'un fichier
+    const node = await Node.findOne({
+      where: { id: fileId, type: 'file' }
+    });
+    
+    if (!node) {
+      throw new NotFoundError('Nœud de fichier non trouvé');
+    }
+    
+    // Ensuite, récupérons les informations du fichier associé
     const file = await File.findOne({
-      include: [{
-        model: Node,
-        where: { id: fileId, type: 'file' }
-      }]
+      where: { node_id: fileId }
     });
     
     if (!file) {

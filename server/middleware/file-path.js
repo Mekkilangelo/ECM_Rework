@@ -22,8 +22,7 @@ exports.resolveFilePath = async (req, res, next) => {
     // Analyser le chemin du nœud pour construire la structure de répertoires
     // Le chemin est dans le format '/client/order/part' dans la base
     const nodePath = node.path;
-    
-    // Construire le chemin physique en fonction du type de nœud et de la catégorie
+      // Construire le chemin physique en fonction du type de nœud et de la catégorie
     let physicalPath = UPLOAD_BASE_DIR;
     
     // Séparer les composants du chemin
@@ -38,14 +37,22 @@ exports.resolveFilePath = async (req, res, next) => {
     }
     
     // Ajouter les sous-dossiers selon la catégorie et sous-catégorie
-    if (category) {
-      physicalPath = path.join(physicalPath, category);
+    // Si le nœud est un ordre, respecter la structure order/documents/alldocuments
+    let categoryToUse = category;
+    let subcategoryToUse = subcategory;
+    
+    if (node.type === 'order') {
+      categoryToUse = 'documents';
+      subcategoryToUse = 'alldocuments';
+    }
+    
+    if (categoryToUse) {
+      physicalPath = path.join(physicalPath, categoryToUse);
       if (!fs.existsSync(physicalPath)) {
         fs.mkdirSync(physicalPath, { recursive: true });
       }
-      
-      if (subcategory) {
-        physicalPath = path.join(physicalPath, subcategory);
+        if (subcategoryToUse) {
+        physicalPath = path.join(physicalPath, subcategoryToUse);
         if (!fs.existsSync(physicalPath)) {
           fs.mkdirSync(physicalPath, { recursive: true });
         }

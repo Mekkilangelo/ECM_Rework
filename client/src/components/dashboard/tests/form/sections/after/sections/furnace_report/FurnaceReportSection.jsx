@@ -35,15 +35,23 @@ const FurnaceReportSection = ({
       loadExistingFiles();
     }
   }, [testNodeId]);
-  
-  const loadExistingFiles = async () => {
+    const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(testNodeId, { category: 'furnace_report' });
       console.log(t('tests.after.furnaceReport.filesResponse'), response.data);
       
+      // Vérifier que la requête a réussi
+      if (!response.data || response.data.success === false) {
+        console.error(t('tests.after.furnaceReport.loadError'), response.data?.message);
+        return;
+      }
+      
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
-      response.data.files.forEach(file => {
+      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
+      const files = response.data.data?.files || [];
+      
+      files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
           filesBySubcategory[subcategory] = [];
@@ -88,31 +96,42 @@ const FurnaceReportSection = ({
       }
     }
   };
-  
-  // Méthode pour associer les fichiers lors de la soumission du formulaire
+    // Méthode pour associer les fichiers lors de la soumission du formulaire
   // Utilisez useCallback pour mémoriser cette fonction
   const associateFiles = useCallback(async (newTestNodeId) => {
     try {
       // Utilisez la référence pour obtenir les tempIds les plus récents
       const currentTempIds = tempIdsRef.current;
+      let allSuccessful = true;
       
       // Parcourir tous les tempIds et les associer
       for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newTestNodeId, tempId, {
+        const response = await fileService.associateFiles(newTestNodeId, tempId, {
           category: 'furnace_report',
           subcategory
         });
+        
+        // Vérifier que l'association a réussi
+        if (!response.data || response.data.success === false) {
+          console.error(t('tests.after.furnaceReport.associateError'), response.data?.message);
+          allSuccessful = false;
+        }
       }
       
-      // Réinitialiser les tempIds
-      setTempIds({});
-      
-      // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
-      if (newTestNodeId === testNodeId) {
-        loadExistingFiles();
+      if (allSuccessful) {
+        // Réinitialiser les tempIds
+        setTempIds({});
+        
+        // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
+        if (newTestNodeId === testNodeId) {
+          loadExistingFiles();
+        }
       }
+      
+      return allSuccessful;
     } catch (error) {
       console.error(t('tests.after.furnaceReport.associateError'), error);
+      return false;
     }
   }, [testNodeId]); // Ne dépend que de testNodeId, pas de tempIds
   

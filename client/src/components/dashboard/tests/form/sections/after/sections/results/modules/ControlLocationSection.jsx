@@ -24,14 +24,20 @@ const ControlLocationSection = ({
       loadExistingFiles();
     }
   }, [testNodeId, resultIndex]);
-  
-  const loadExistingFiles = async () => {
+    const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(testNodeId, {
+      const response = await fileService.getNodeFiles(testNodeId, {
         category: `control-location-result-${resultIndex}`,
       });
       
-      setUploadedFiles(response.data.files || []);
+      // Vérifier que la requête a réussi
+      if (!response.data || response.data.success === false) {
+        console.error(t('tests.after.results.controlLocation.loadError'), response.data?.message);
+        return;
+      }
+      
+      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
+      setUploadedFiles(response.data.data?.files || []);
     } catch (error) {
       console.error(t('tests.after.results.controlLocation.loadError'), error);
     }
@@ -48,22 +54,31 @@ const ControlLocationSection = ({
       }
     }
   };
-  
-  const associateFiles = useCallback(async (newTestNodeId) => {
+    const associateFiles = useCallback(async (newTestNodeId) => {
     try {
       if (tempIdRef.current) {
-        await fileService.associateFiles(newTestNodeId, tempIdRef.current, {
+        const response = await fileService.associateFiles(newTestNodeId, tempIdRef.current, {
           category: `control-location-result-${resultIndex}`,
         });
+        
+        // Vérifier que l'association a réussi
+        if (!response.data || response.data.success === false) {
+          console.error(t('tests.after.results.controlLocation.associateError'), response.data?.message);
+          return false;
+        }
         
         setTempId(null);
         
         if (newTestNodeId === testNodeId) {
           loadExistingFiles();
         }
+        
+        return true;
       }
+      return true; // Aucun fichier à associer
     } catch (error) {
       console.error(t('tests.after.results.controlLocation.associateError'), error);
+      return false;
     }
   }, [testNodeId, resultIndex]);
   

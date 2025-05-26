@@ -32,15 +32,23 @@ const MicrographsSection = ({
       loadExistingFiles();
     }
   }, [testNodeId, resultIndex]);
-  
-  const loadExistingFiles = async () => {
+    const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getFilesByNode(testNodeId, {
+      const response = await fileService.getNodeFiles(testNodeId, {
         category: `micrographs-result-${resultIndex}`,  // Modification ici
       });
       
+      // Vérifier que la requête a réussi
+      if (!response.data || response.data.success === false) {
+        console.error(t('tests.after.results.micrographs.loadError'), response.data?.message);
+        return;
+      }
+      
       const filesBySubcategory = {};
-      response.data.files.forEach(file => {
+      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
+      const files = response.data.data?.files || [];
+      
+      files.forEach(file => {
         const subcategory = file.subcategory || 'other';
         if (!filesBySubcategory[subcategory]) {
           filesBySubcategory[subcategory] = [];
@@ -84,22 +92,30 @@ const MicrographsSection = ({
       }
     }
   };
-  
-  const associateFiles = useCallback(async (newTestNodeId) => {
+    const associateFiles = useCallback(async (newTestNodeId) => {
     try {
       const currentTempIds = tempIdsRef.current;
+      let allSuccessful = true;
       
       for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        await fileService.associateFiles(newTestNodeId, tempId, {
-          category: `micrographs-result-${resultIndex}`,  // Modification ici
+        const response = await fileService.associateFiles(newTestNodeId, tempId, {
+          category: `micrographs-result-${resultIndex}`,
           subcategory
         });
+        
+        // Vérifier que l'association a réussi
+        if (!response.data || response.data.success === false) {
+          console.error(t('tests.after.results.micrographs.associateError'), response.data?.message);
+          allSuccessful = false;
+        }
       }
       
-      setTempIds({});
-      
-      if (newTestNodeId === testNodeId) {
-        loadExistingFiles();
+      if (allSuccessful) {
+        setTempIds({});
+        
+        if (newTestNodeId === testNodeId) {
+          loadExistingFiles();
+        }
       }
     } catch (error) {
       console.error(t('tests.after.results.micrographs.associateError'), error);

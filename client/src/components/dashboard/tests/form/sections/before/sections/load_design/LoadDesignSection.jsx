@@ -28,15 +28,23 @@ const LoadDesignSection = ({
       loadExistingFiles();
     }
   }, [testNodeId]);
-  
-  const loadExistingFiles = async () => {
+    const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(testNodeId, { category: 'load_design' });
       console.log(t('tests.before.loadDesign.responseFilesMessage'), response.data);
       
+      // Vérifier que la requête a réussi
+      if (!response.data || response.data.success === false) {
+        console.error(t('tests.before.loadDesign.loadFilesError'), response.data?.message);
+        return;
+      }
+      
       // Organiser les fichiers par sous-catégorie
       const filesBySubcategory = {};
-      response.data.files.forEach(file => {
+      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
+      const files = response.data.data?.files || [];
+      
+      files.forEach(file => {
         const subcategory = file.subcategory || 'load_design';
         if (!filesBySubcategory[subcategory]) {
           filesBySubcategory[subcategory] = [];
@@ -98,8 +106,7 @@ const LoadDesignSection = ({
     
     try {
       const promises = [];
-      
-      // Parcourir tous les tempIds et les associer
+        // Parcourir tous les tempIds et les associer
       Object.entries(tempIdsRef.current).forEach(([subcategory, tempId]) => {
         if (tempId) {
           console.log(`Associating files for subcategory ${subcategory} with tempId ${tempId}`);
@@ -116,6 +123,14 @@ const LoadDesignSection = ({
         console.log(`Starting ${promises.length} file association requests`);
         const results = await Promise.all(promises);
         console.log("File association results:", results);
+        
+        // Vérifier que toutes les associations ont réussi
+        const allSuccessful = results.every(result => result.data && result.data.success);
+        
+        if (!allSuccessful) {
+          console.error(t('tests.before.loadDesign.associationError'), results);
+          return false;
+        }
         
         // Réinitialiser les tempIds
         setTempIds({});

@@ -1,84 +1,90 @@
 import api, { setIntentionalLogout } from './api';
-import { authConfig } from '../config';
+import { jwtDecode } from 'jwt-decode';
+import { authConfig, SESSION_INACTIVITY_TIMEOUT_SECONDS } from '../config';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
+// Afficher les paramètres de configuration au démarrage pour vérification
+if (process.env.NODE_ENV === 'development') {
+  console.log('====== CONFIGURATION DU SERVICE D\'AUTHENTIFICATION ======');
+  console.log(`📋 VALEURS DU FICHIER .ENV:`);
+  console.log(`  • REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS = ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'NON DÉFINIE'}`);
+  console.log(`  • REACT_APP_ACTIVITY_CHECK_INTERVAL = ${process.env.REACT_APP_ACTIVITY_CHECK_INTERVAL || 'NON DÉFINIE'}`);
+  console.log(`  • REACT_APP_HEARTBEAT_INTERVAL = ${process.env.REACT_APP_HEARTBEAT_INTERVAL || 'NON DÉFINIE'}`);
+  console.log(`\n📊 VALEURS CONFIGURÉES:`);
+  console.log(`  • Délai d'inactivité: ${SESSION_INACTIVITY_TIMEOUT_SECONDS} secondes (${SESSION_INACTIVITY_TIMEOUT_SECONDS/60} minutes)`);
+  console.log(`  • Délai d'inactivité total: ${authConfig.sessionInactivityTimeout/1000} secondes`);
+  console.log(`  • Intervalle de vérification du token: ${authConfig.activityCheckInterval/1000} secondes`);
+  console.log(`  • Intervalle de heartbeat: ${authConfig.heartbeatInterval/1000} secondes`);
+  console.log(`  • Seuil de rafraîchissement proactif: ${authConfig.refreshThreshold/1000} secondes avant expiration`);
+  console.log('=======================================================');
+}
 
 /**
- * Service d'authentification
- * Gère les appels API liés à l'authentification
+ * Service d'authentification optimisé
+ * 
+ * Principales améliorations:
+ * - Utilisation de jwt-decode pour vérifier l'expiration du token côté client
+ * - Système de rafraîchissement plus simple et fiable
+ * - Meilleure gestion des redirections et de l'activité utilisateur
+ * - Moins de logs pour une meilleure performance
  */
 const authService = {
-  // Timer pour détecter l'inactivité
-  activityTimer: null,
-  // Durée avant rafraîchissement du token (minutes en ms)
-  refreshInterval: authConfig.refreshBeforeExpire * 60 * 1000,
-  // Intervalle de vérification de l'activité
-  activityCheckInterval: authConfig.activityCheckInterval,
-  // Flag pour indiquer si c'est un rafraîchissement silencieux
-  silentRefresh: false,
-  // Timestamp de la dernière activité utilisateur 
-  lastActivity: Date.now(),
-  // Timestamp du dernier rafraîchissement de token
-  lastTokenRefresh: Date.now(),
-  // Intervalle minimal entre deux rafraîchissements (ms)
-  minRefreshInterval: 60 * 1000, // Augmenté à 60 secondes pour éviter les appels trop fréquents
-  // Flag pour éviter les appels parallèles
-  isRefreshing: false,
+  // Fréquence de vérification du token (ms)
+  tokenCheckInterval: authConfig.activityCheckInterval,
+  
+  // Intervalle d'heartbeat pour maintenir la session active (ms)
+  heartbeatInterval: authConfig.heartbeatInterval,
+  
+  // Instances des intervalles
+  tokenChecker: null,
+  heartbeat: null,
+  
+  // Durée avant expiration pour déclencher un rafraîchissement préventif (ms)
+  refreshThreshold: authConfig.refreshThreshold,
+  
+  // Durée maximale d'inactivité pour expiration de session (ms)
+  inactivityTimeout: authConfig.sessionInactivityTimeout,
+  
+  // Seuils d'inactivité en pourcentage
+  heartbeatInactivityThreshold: authConfig.heartbeatInactivityThreshold,
+  refreshInactivityThreshold: authConfig.refreshInactivityThreshold,
   
   /**
    * Connexion utilisateur
    * @param {string} username - Nom d'utilisateur
    * @param {string} password - Mot de passe
-   * @returns {Promise<Object>} Données d'authentification (token et informations utilisateur)
-   * @throws {Error} En cas d'échec de l'authentification
-   */  
+   * @returns {Promise<Object>} Données d'authentification
+   */
   login: async (username, password) => {
     try {
       const response = await api.post('/auth/login', { username, password });
       
-      console.log('Réponse complète du serveur:', response);
+      // Extraction du token selon le format de réponse
+      let token, userData;
       
-      // Dans la nouvelle structure API, le token peut être dans response.data.data.token
-      let token = null;
-      let userData = null;
-      
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true && response.data.data) {
-        // Structure: { success: true, message: '...', data: { token: '...', user: {...} } }
+      if (response.data?.success === true && response.data?.data) {
         token = response.data.data.token;
         userData = response.data.data.user;
-        console.log('Token trouvé dans response.data.data.token');
-      } else if (response.data && response.data.token) {
-        // Structure: { token: '...', user: {...} } ou { success: true, token: '...', user: {...} }
+      } else if (response.data?.token) {
         token = response.data.token;
         userData = response.data.user;
-        console.log('Token trouvé dans response.data.token');
       }
       
-      // Stocker le token dans le localStorage avec vérification
-      if (token) {
-        // Vérifier que le token a une structure JWT valide
-        if (typeof token === 'string' && token.split('.').length === 3) {
-          console.log('Token JWT valide reçu, structure correcte');
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(userData || {}));
-          // Démarrer le suivi d'activité
-          authService.setupActivityTracking();
-          
-          // Retourner les données au format attendu
-          return {
-            token,
-            user: userData
-          };
-        } else {
-          console.error('Token JWT invalide reçu du serveur:', 
-            typeof token === 'string' ? `${token.substring(0, 10)}...` : typeof token);
-          throw new Error('Token JWT malformé reçu du serveur');
-        }
+      // Vérification et stockage du token
+      if (token && typeof token === 'string' && token.split('.').length === 3) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData || {}));
+        
+        // Démarrer la gestion de session
+        authService.startSessionManager();
+        
+        return { token, user: userData };
       } else {
-        console.error('Aucun token reçu dans la réponse du serveur:', response.data);
-        throw new Error('Aucun token reçu');
+        throw new Error('Token JWT invalide reçu du serveur');
       }
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
+      console.error('Erreur lors de la connexion:', error.message);
       throw error;
     }
   },
@@ -87,318 +93,338 @@ const authService = {
    * Déconnexion utilisateur
    */
   logout: () => {
-    // Marquer la déconnexion comme intentionnelle avant de supprimer le token
     setIntentionalLogout(true);
-    
-    // Nettoyer les ressources
-    authService.cleanup();
-    
-    // Supprimer le token et les données utilisateur
+    authService.stopSessionManager();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
-    // Rediriger vers la page de login avec un message de succès
-    // On utilise un timeout pour s'assurer que les écouteurs d'événements sont nettoyés
     setTimeout(() => {
       window.location.href = '/login?success=logout';
     }, 10);
   },
   
   /**
-   * Supprime les écouteurs d'événements d'activité
+   * Démarrer la gestion de session
+   * - Vérifie périodiquement la validité du token
+   * - Maintient la session active avec un heartbeat
    */
-  removeActivityListeners: () => {
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    events.forEach(event => {
-      document.removeEventListener(event, authService.resetActivityTimer);
-    });
-  },
-  
-  /**
-   * Configuration du suivi d'activité
-   */
-  setupActivityTracking: () => {
-    // Liste des événements à surveiller
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    
-    // Nettoyer tout timer existant
-    if (authService.activityTimer) {
-      clearTimeout(authService.activityTimer);
-      authService.activityTimer = null;
-    }
-    
-    // D'abord supprimer les écouteurs existants pour éviter les doublons
-    authService.removeActivityListeners();
-    
-    // Ajouter les écouteurs d'événements pour chaque type d'événement
-    events.forEach(event => {
-      document.addEventListener(event, authService.resetActivityTimer, { passive: true });
-    });
-    
-    // Initialiser le timer et les timestamps
-    authService.lastActivity = Date.now();
-    authService.lastTokenRefresh = Date.now();
-    authService.resetActivityTimer();
-    
-    // Démarrer le processus de vérification périodique
-    authService.startPeriodicCheck();
-  },
-  
-  /**
-   * Réinitialise le timer d'activité
-   */
-  resetActivityTimer: () => {
-    // Mettre à jour le timestamp de la dernière activité
-    authService.lastActivity = Date.now();
-    
-    if (authService.activityTimer) {
-      clearTimeout(authService.activityTimer);
-    }
-    
-    // Programmation du rafraîchissement du token
-    authService.activityTimer = setTimeout(() => {
-      // Vérifier simplement si un rafraîchissement est nécessaire
-      // Le rafraîchissement effectif est géré par startPeriodicCheck
-      authService.checkAndRefreshToken();
-    }, authService.refreshInterval);
-  },
-  
-  /**
-   * Démarre une vérification périodique de l'activité et du token
-   * Cette fonction est plus robuste que le simple timer d'activité
-   */
-  startPeriodicCheck: () => {
-    // Annuler tout intervalle existant
-    if (authService.periodicCheckInterval) {
-      clearInterval(authService.periodicCheckInterval);
-    }
-    
-    // Créer un nouvel intervalle pour vérifier régulièrement l'activité
-    // Utiliser un intervalle d'au moins 60 secondes pour éviter les appels excessifs
-    const checkInterval = Math.max(authService.activityCheckInterval, 60000);
-    
-    authService.periodicCheckInterval = setInterval(() => {
-      // Si l'utilisateur n'est pas connecté, arrêter les vérifications
-      if (!authService.isLoggedIn()) {
-        clearInterval(authService.periodicCheckInterval);
-        authService.periodicCheckInterval = null;
+  startSessionManager: () => {
+    authService.stopSessionManager(); // Nettoyer les intervalles existants
+      // 1. Vérification périodique du token et de son expiration
+    authService.tokenChecker = setInterval(() => {
+      const token = authService.getToken();
+      if (!token) {
+        authService.stopSessionManager();
         return;
       }
       
-      // Éviter les vérifications multiples si un rafraîchissement est déjà en cours
-      if (!authService.isRefreshing) {
-        authService.checkAndRefreshToken();
-      }
-    }, checkInterval); // Utiliser l'intervalle minimum de 60 secondes
-    
-    console.log(`Vérification périodique démarrée avec intervalle de ${checkInterval/1000} secondes`);
-  },
-  
-  /**
-   * Vérifie si un rafraîchissement du token est nécessaire et l'effectue
-   */
-  checkAndRefreshToken: async () => {
-    // Si un rafraîchissement est déjà en cours, ne pas en démarrer un autre
-    if (authService.isRefreshing) {
-      return;
-    }
-    
-    try {
-      authService.isRefreshing = true;
-      const now = Date.now();
-      // Calculer le temps d'inactivité
-      const inactiveTime = now - authService.lastActivity;
-      
-      // Si aucun token n'est présent, ne rien faire
-      if (!authService.getToken()) {
-        authService.isRefreshing = false;
-        return;
-      }
-        // Définir le seuil d'inactivité selon la configuration
-      // refreshBeforeExpire minutes en millisecondes (par défaut 9 minutes)
-      const inactivityThreshold = authService.refreshInterval;
-      
-      // Logs de débogage améliorés
-      console.log(`État actuel de l'activité:
-      - Temps d'inactivité: ${Math.round(inactiveTime/1000)}s
-      - Seuil de rafraîchissement: ${Math.round(inactivityThreshold/1000)}s (${authConfig.refreshBeforeExpire} minutes)
-      - Intervalle entre vérifications: ${Math.round(authService.activityCheckInterval/1000)}s`);
-      
-      // Si l'utilisateur est inactif depuis plus longtemps que le seuil configuré
-      if (inactiveTime > inactivityThreshold) {
-        console.log(`Inactivité détectée: ${Math.round(inactiveTime/1000)}s - Tentative de rafraîchissement...`);
+      try {        // Vérifier l'inactivité utilisateur côté client
+        const inactiveTime = Date.now() - authService.lastUserActivity;
+        const configuredTimeoutSec = Math.round(authService.inactivityTimeout / 1000);
         
-        // Au lieu de déconnecter immédiatement, essayer de rafraîchir le token
-        try {
-          await authService.refreshToken(true);
-          authService.lastTokenRefresh = Date.now();
-          console.log('Rafraîchissement réussi après inactivité');
-          authService.isRefreshing = false;
-          return;
-        } catch (refreshError) {
-          console.log('Échec du rafraîchissement après inactivité - Déconnexion');
-          // Si le rafraîchissement échoue, déconnecter l'utilisateur
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          
-          // Nettoyer les timers
-          authService.cleanup();
-            // Rediriger vers la page de login avec un message d'erreur
-          // Vérifier qu'on n'est pas déjà sur la page de login et forcer la redirection
-          if (window.location.pathname !== '/login') {
-            console.log('Redirection vers login après échec de rafraîchissement...');
-            setTimeout(() => {
-              window.location.replace('/login?error=session_expired');
-            }, 100);
-          }
-          
-          authService.isRefreshing = false;
+        if (inactiveTime >= authService.inactivityTimeout) {
+          console.log(
+            `[CONFIG] Inactivité maximale atteinte: ${Math.round(inactiveTime/1000)}s / ${configuredTimeoutSec}s` +
+            `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes` +
+            `\n- Expiration forcée de la session...`
+          );
+          authService.handleSessionExpired();
           return;
         }
-      }
-      
-      // Vérifier si le dernier rafraîchissement est trop récent
-      const timeSinceLastRefresh = now - authService.lastTokenRefresh;
-      if (timeSinceLastRefresh < authService.minRefreshInterval) {
-        // Trop récent, on ne rafraîchit pas
-        authService.isRefreshing = false;
-        return;
-      }
-        // Rafraîchir préventivement le token si on atteint 75% du seuil d'inactivité
-      // Pour 9 minutes, cela signifie environ 6.75 minutes
-      const preventiveThreshold = inactivityThreshold * 0.75;
-      if (inactiveTime > preventiveThreshold) {
-        console.log(`Rafraîchissement préventif:
-        - Inactivité actuelle: ${Math.round(inactiveTime/1000)}s
-        - Seuil préventif (75%): ${Math.round(preventiveThreshold/1000)}s
-        - Seuil total: ${Math.round(inactivityThreshold/1000)}s`);
         
-        await authService.refreshToken(true); // Rafraîchissement silencieux
-        authService.lastActivity = Date.now(); // Réinitialiser le compteur d'activité aussi
-        authService.lastTokenRefresh = Date.now();
-      }
-    } catch (error) {
-      console.error('Erreur lors de la vérification/rafraîchissement du token:', error);
-        // En cas d'erreur 401 (non autorisé), cela signifie que le serveur a rejeté le token
-      if (error.response && error.response.status === 401) {
-        console.log('Session expirée côté serveur - Déconnexion forcée');
+        // Vérifier l'expiration du token
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
         
-        // Nettoyage complet
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        authService.cleanup();
+        // Si le token est expiré, rediriger vers login
+        if (decoded.exp <= currentTime) {
+          console.log('Token expiré détecté, redirection...');
+          authService.handleSessionExpired();
+          return;
+        }        // Si le token est proche de l'expiration ET utilisateur actif, le rafraîchir
+        const timeUntilExpiry = decoded.exp - currentTime;
+        // Utiliser la variable configuredTimeoutSec déjà déclarée plus haut
         
-        // Rediriger vers login - Utiliser une redirection forcée
-        console.log('Redirection vers login en cours...');
-        setTimeout(() => {
-          window.location.replace('/login?error=session_expired');
-        }, 100);
+        // Ne rafraîchir que si l'utilisateur est suffisamment actif (moins de 70% du temps d'inactivité configuré)
+        if (timeUntilExpiry < authService.refreshThreshold / 1000 && 
+            inactiveTime < authService.inactivityTimeout * 0.7) {
+          console.log(
+            `[CONFIG] Rafraîchissement proactif` +
+            `\n- Expiration dans: ${Math.round(timeUntilExpiry)}s` +
+            `\n- Inactivité actuelle: ${Math.round(inactiveTime/1000)}s / ${configuredTimeoutSec}s` +
+            `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes`
+          );
+          authService.refreshToken();
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du token:', error);
+        authService.handleSessionExpired();
       }
-    } finally {
-      authService.isRefreshing = false;
+    }, authService.tokenCheckInterval);// Variables pour suivre l'activité de l'utilisateur
+    authService.lastUserActivity = Date.now();
+    let inactiveTimeCount = 0;
+    
+    // Définir les événements d'activité (accessibles globalement dans authService)
+    authService.activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    // Ajouter des écouteurs d'événements pour l'activité utilisateur
+    authService.activityEvents.forEach(event => {
+      window.addEventListener(event, authService.updateUserActivity);
+    });
+      // 2. Heartbeat pour maintenir la session active uniquement si l'utilisateur est actif
+    authService.heartbeat = setInterval(async () => {
+      try {
+        if (authService.isLoggedIn()) {
+          // Calculer le temps d'inactivité
+          const inactiveTime = Date.now() - authService.lastUserActivity;
+          
+          // Incrémenter le compteur d'inactivité (pour les logs)
+          inactiveTimeCount += authService.heartbeatInterval;          // Vérifier si l'utilisateur est actif
+          // On n'envoie un heartbeat que si l'utilisateur est actif ET que l'inactivité est en-dessous
+          // du seuil configuré
+          const inactivityThreshold = authService.inactivityTimeout * authService.heartbeatInactivityThreshold;
+          
+          if (inactiveTime < inactivityThreshold) {
+            // Utilisateur actif - envoyer un heartbeat pour maintenir la session
+            const token = authService.getToken();
+            const axios = (await import('axios')).default;
+            
+            // Utiliser un endpoint spécifique pour le heartbeat si disponible
+            await axios.get(`${API_URL}/auth/me`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+              // Calcul des indicateurs pour le log
+            const inactiveSec = Math.round(inactiveTime/1000);
+            const timeoutSec = Math.round(authService.inactivityTimeout/1000);
+            const percentInactive = Math.round((inactiveTime / authService.inactivityTimeout) * 100);
+            
+            console.log(
+              `[HEARTBEAT] Maintien de session - SUCCESS ✅` +
+              `\n- Inactivité: ${inactiveSec}s / ${timeoutSec}s (${percentInactive}%)` +
+              `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes`
+            );
+          } else {
+            // Utilisateur inactif ou proche du seuil - ne pas envoyer de heartbeat
+            const inactiveSec = Math.round(inactiveTime/1000);
+            const timeoutSec = Math.round(authService.inactivityTimeout/1000);
+            const percentInactive = Math.round((inactiveTime / authService.inactivityTimeout) * 100);
+            const thresholdPercent = Math.round(authService.heartbeatInactivityThreshold * 100);
+            
+            console.log(
+              `[HEARTBEAT] Maintien de session - BLOQUÉ ⚠️` +
+              `\n- Inactivité: ${inactiveSec}s / ${timeoutSec}s (${percentInactive}%)` +
+              `\n- Seuil de blocage: ${thresholdPercent}% du délai total (${Math.round(thresholdPercent * timeoutSec / 100)}s)` +
+              `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes`
+            );
+          }
+        }
+      } catch (error) {
+        console.warn('Erreur de heartbeat:', error.message);        // En cas d'erreur 401, la session est expirée
+        if (error.response && error.response.status === 401) {          // Nettoyer les écouteurs d'événements avant la redirection
+          authService.activityEvents.forEach(event => {
+            window.removeEventListener(event, authService.updateUserActivity);
+          });
+          authService.handleSessionExpired();
+        }
+      }
+    }, authService.heartbeatInterval);
+  },
+    /**
+   * Arrêter la gestion de session
+   */
+  stopSessionManager: () => {
+    // Nettoyer les intervalles
+    if (authService.tokenChecker) {
+      clearInterval(authService.tokenChecker);
+      authService.tokenChecker = null;
+    }
+    
+    if (authService.heartbeat) {
+      clearInterval(authService.heartbeat);
+      authService.heartbeat = null;
+    }    // Nettoyer les écouteurs d'événements pour l'activité utilisateur
+    if (authService.activityEvents) {
+      console.log('Nettoyage des écouteurs d\'événements d\'activité');
+      authService.activityEvents.forEach(event => {
+        window.removeEventListener(event, authService.updateUserActivity);
+      });
+    }
+  },
+    /**
+   * Gère l'expiration de session
+   */
+  handleSessionExpired: () => {
+    console.log(
+      `[SESSION] ⏱️ Session expirée` +
+      `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes` +
+      `\n- Redirection vers la page de connexion...`
+    );
+    authService.stopSessionManager();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    if (window.location.pathname !== '/login') {
+      window.location.replace('/login?error=session_expired');
+    }
+  },
+  // Dernière activité utilisateur connue (pour le rafraîchissement de token)
+  lastUserActivity: Date.now(),
+  /**
+   * Met à jour la dernière activité utilisateur
+   * Cette fonction est appelée par les écouteurs d'événements
+   */  updateUserActivity: () => {
+    const now = Date.now();
+    authService.lastUserActivity = now;
+    
+    // Journaliser l'activité utilisateur (activé seulement en mode développement)
+    if (process.env.NODE_ENV === 'development') {
+      const lastUpdate = sessionStorage.getItem('last_activity_log');
+      // Ne journaliser l'activité qu'une fois toutes les 10 secondes pour éviter de surcharger la console
+      if (!lastUpdate || (now - parseInt(lastUpdate, 10)) > 10000) {
+        // Calculer les seuils en secondes pour une meilleure lisibilité
+        const totalTimeoutSec = Math.round(authService.inactivityTimeout / 1000);
+        const heartbeatThresholdSec = Math.round(authService.inactivityTimeout * authService.heartbeatInactivityThreshold / 1000);
+        const refreshThresholdSec = Math.round(authService.inactivityTimeout * authService.refreshInactivityThreshold / 1000);
+        
+        // Récupérer la valeur brute depuis l'environnement pour vérification
+        const envTimeoutValue = process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS;
+          console.log(
+          `[ACTIVITÉ] 👆 Utilisateur actif - Timer d'inactivité réinitialisé` +
+          `\n📋 CONFIGURATION:` +
+          `\n  • Fichier .env: REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS=${envTimeoutValue || 'non définie'}` +
+          `\n  • Expiration totale: ${totalTimeoutSec}s (${Math.round(totalTimeoutSec/60 * 10)/10} min) d'inactivité` +
+          `\n  • Heartbeats bloqués après: ${heartbeatThresholdSec}s (${Math.round(heartbeatThresholdSec/60 * 10)/10} min) d'inactivité` +
+          `\n  • Rafraîchissement bloqué après: ${refreshThresholdSec}s (${Math.round(refreshThresholdSec/60 * 10)/10} min) d'inactivité`
+        );
+        sessionStorage.setItem('last_activity_log', now.toString());
+      }
     }
   },
   
   /**
-   * Rafraîchissement du token JWT basé sur l'activité
-   * @param {boolean} silent - Si true, ne pas rediriger en cas d'échec
-   * @returns {Promise} - Promesse avec le nouveau token
-   */  refreshToken: async (silent = false) => {
+   * Rafraîchit le token JWT
+   * @returns {Promise<Object>}
+   */
+  refreshToken: async () => {
     try {
-      authService.silentRefresh = silent;
-      
       const token = authService.getToken();
-      if (!token) throw new Error('Aucun token à rafraîchir');
+      if (!token) throw new Error('Aucun token à rafraîchir');      // Vérifier si l'utilisateur a été actif récemment
+      const inactiveTime = Date.now() - authService.lastUserActivity;
+      // Utiliser le seuil d'inactivité configuré pour les refresh
+      const maxInactivityForRefresh = authService.inactivityTimeout * authService.refreshInactivityThreshold;
+      const configuredTimeoutSec = Math.round(authService.inactivityTimeout / 1000);
+      const maxInactivitySec = Math.round(maxInactivityForRefresh / 1000);
       
-      // Vérifier que le token est bien formé
-      if (token.split('.').length !== 3) {
-        console.error('Tentative de rafraîchir un token malformé');
-        throw new Error('Token malformé');
+      if (inactiveTime > maxInactivityForRefresh) {
+        const percentInactive = Math.round((inactiveTime / authService.inactivityTimeout) * 100);
+        const inactiveSec = Math.round(inactiveTime/1000);        console.log(
+          `[TOKEN] ⛔ Rafraîchissement BLOQUÉ - Utilisateur trop inactif` +
+          `\n📋 DONNÉES:` +
+          `\n  • Inactivité: ${inactiveSec}s / ${configuredTimeoutSec}s (${percentInactive}%)` +
+          `\n  • Seuil de blocage: ${maxInactivitySec}s (${authService.refreshInactivityThreshold * 100}% du délai total)` +
+          `\n  • Valeur du .env: REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS=${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'non définie'}`
+        );
+        // Si l'utilisateur est inactif depuis trop longtemps, ne pas rafraîchir le token
+        // pour permettre l'expiration normale de la session
+        return null;
       }
       
-      // Ajouter explicitement le header pour cette requête (sans dépendre de l'intercepteur)
+      console.log(
+        `[TOKEN] 🔄 Rafraîchissement en cours` +
+        `\n📋 DONNÉES:` +
+        `\n  • Inactivité: ${Math.round(inactiveTime/1000)}s / ${configuredTimeoutSec}s (${Math.round((inactiveTime/authService.inactivityTimeout)*100)}%)` +
+        `\n  • Valeur du .env: REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS=${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'non définie'}`
+      );
       const response = await api.post('/auth/refresh-token', {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Amélioration de la vérification de la réponse
+      if (response.data && response.data.success !== false) {
+        // Support de différentes structures de réponse
+        const newToken = response.data.token || (response.data.data && response.data.data.token);
+        const userData = response.data.user || (response.data.data && response.data.data.user);
         
-        // Mettre à jour le timestamp du dernier rafraîchissement
-        authService.lastTokenRefresh = Date.now();
-        
-        return response.data;
-      }
-    } catch (error) {
-      // Si le rafraîchissement échoue avec une erreur 401, cela signifie que la session a expiré
-      if (error.response && error.response.status === 401) {
-        console.log('La session a expiré en raison de l\'inactivité');
+        if (newToken) {
+          localStorage.setItem('token', newToken);
+          if (userData) {
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+          return { token: newToken, user: userData };
+        }
       }
       
-      if (!silent) {
-        // Seulement nettoyer les données d'authentification si ce n'est pas un rafraîchissement silencieux
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        // Nettoyer les timers
-        authService.cleanup();
-          // Rediriger vers la page de login (si ce n'est pas un rafraîchissement silencieux)
-        if (window.location.pathname !== '/login') {
-          console.log('Redirection vers login après erreur non silencieuse...');
-          setTimeout(() => {
-            window.location.replace('/login?error=session_expired');
-          }, 100);
-        }
-      } else {
-        // Même pour un rafraîchissement silencieux, rediriger si l'erreur est 401
-        // Cette partie est ajoutée pour assurer la redirection en cas d'expiration
-        if (error.response && error.response.status === 401) {
-          // Nettoyer les données d'authentification
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          
-          // Nettoyer les timers
-          authService.cleanup();
-            // Forcer la redirection vers login
-          if (window.location.pathname !== '/login') {
-            console.log('Redirection vers login après erreur 401 silencieuse...');
-            setTimeout(() => {
-              window.location.replace('/login?error=session_expired');
-            }, 100);
-          }
-        }
+      console.warn('Format de réponse invalide lors du rafraîchissement du token:', response.data);
+      return null;
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement du token:', error);
+      if (error.response?.status === 401) {
+        // Si le token est définitivement expiré, on ne considère pas cela comme une erreur critique
+        // mais on laisse le système gérer naturellement cette expiration
+        return null;
       }
       throw error;
-    } finally {
-      authService.silentRefresh = false;
     }
   },
   
   /**
-   * Nettoyage des ressources lors de la déconnexion
+   * Vérifie si l'utilisateur est connecté
+   * @returns {boolean}
    */
-  cleanup: () => {
-    // Nettoyer les timers
-    if (authService.activityTimer) {
-      clearTimeout(authService.activityTimer);
-      authService.activityTimer = null;
-    }
-    
-    if (authService.periodicCheckInterval) {
-      clearInterval(authService.periodicCheckInterval);
-      authService.periodicCheckInterval = null;
-    }
-    
-    // Supprimer les écouteurs d'événements
-    authService.removeActivityListeners();
+  isLoggedIn: () => {
+    return !!authService.getToken();
   },
   
   /**
-   * Récupération des informations de l'utilisateur connecté
-   * @returns {Promise} - Promesse avec les données utilisateur
+   * Configure le suivi d'activité
+   * Alias pour startSessionManager (pour compatibilité)
+   */
+  setupActivityTracking: () => {
+    authService.startSessionManager();
+  },
+  
+  /**
+   * Récupération du token stocké
+   * @returns {string|null}
+   */
+  getToken: () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || token === 'undefined' || token === 'null') return null;
+      
+      // Vérification basique de la structure (3 parties séparées par des points)
+      if (token.split('.').length !== 3) return null;
+      
+      return token;
+    } catch (error) {
+      console.error('Erreur lors de la récupération du token:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Récupération des données utilisateur
+   * @returns {Object|null}
+   */
+  getUser: () => {
+    try {
+      const userString = localStorage.getItem('user');
+      if (!userString) return null;
+      
+      return JSON.parse(userString);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données utilisateur:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Récupération des informations de l'utilisateur connecté depuis l'API
+   * @returns {Promise}
    */
   getCurrentUser: async () => {
     try {
@@ -407,54 +433,6 @@ const authService = {
     } catch (error) {
       throw error;
     }
-  },
-    /**
-   * Récupération du token stocké
-   * @returns {string|null} - Token JWT ou null
-   */  getToken: () => {
-    try {
-      const token = localStorage.getItem('token');
-      // Vérifier que token existe et n'est pas la chaîne "undefined"
-      if (token && token !== "undefined" && token.trim() !== "") {
-        // Vérifier que le token a bien la structure JWT (xxx.yyy.zzz)
-        if (token.split('.').length === 3) {
-          return token;
-        } else {
-          console.error('Token mal formaté trouvé dans localStorage');
-          // Ne pas supprimer immédiatement pour éviter les boucles infinies
-          return null;
-        }
-      }
-      return null;
-    } catch (error) {
-      console.error('Erreur lors de la récupération du token:', error);
-      return null;
-    }
-  },
-  
-  /**
-   * Vérification si un utilisateur est connecté
-   * @returns {boolean} - Vrai si connecté
-   */
-  isLoggedIn: () => {
-    return !!localStorage.getItem('token');
-  },
-    /**
-   * Récupération de l'utilisateur stocké
-   * @returns {Object|null} - Objet utilisateur ou null
-   */
-  getUser: () => {
-    const user = localStorage.getItem('user');
-    // Vérifier que user existe et n'est pas la chaîne "undefined"
-    if (user && user !== "undefined") {
-      try {
-        return JSON.parse(user);
-      } catch (error) {
-        console.error("Erreur de parsing JSON pour l'utilisateur:", error);
-        return null;
-      }
-    }
-    return null;
   }
 };
 

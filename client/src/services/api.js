@@ -9,18 +9,15 @@ const api = axios.create({
   timeout: 30000, // 30 secondes de timeout
   headers: {
     'Content-Type': 'application/json'
-  },
-  withCredentials: false // Cross-origin cookies si nécessaire
+  }
 });
 
-// Flag pour éviter les redirictions multiples et déterminer si la déconnexion est intentionnelle
+// Flag pour gérer la déconnexion et éviter les redirections multiples
 let isRedirecting = false;
 let isIntentionalLogout = false;
-let isInitialLoad = true;
-let isRefreshing = false;
-let failedQueue = [];
+let isInitialLoad = true; // Flag pour le chargement initial
 
-// Fonctions exportées pour modifier les flags
+// Fonction pour définir la déconnexion comme intentionnelle
 export const setIntentionalLogout = (value) => {
   isIntentionalLogout = value;
 };
@@ -30,31 +27,16 @@ export const setInitialLoadComplete = () => {
   isInitialLoad = false;
 };
 
-// Fonction pour traiter la file d'attente des requêtes échouées
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  
-  failedQueue = [];
-};
-
 // Intercepteur pour ajouter automatiquement le token aux requêtes
 api.interceptors.request.use(
   (config) => {
     try {
       const token = authService.getToken();
       if (token) {
-        // Le token a déjà été vérifié par getToken()
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
       console.error('Erreur lors de l\'ajout du token à la requête:', error);
-      // Ne pas nettoyer le localStorage ici pour éviter les boucles infinies
     }
     return config;
   },
@@ -63,7 +45,7 @@ api.interceptors.request.use(
   }
 );
 
-// Intercepteur pour gérer les erreurs de réponse (ex: 401 Unauthorized)
+// Intercepteur pour gérer les erreurs de réponse
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -71,103 +53,50 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Si nous avons une erreur 401 (non autorisé) et que nous n'avons pas déjà essayé de rafraîchir le token
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      // Si nous sommes en train de rafraîchir le token, mettre la requête en file d'attente
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-        .then(token => {
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
-          return api(originalRequest);
-        })
-        .catch(err => {
-          return Promise.reject(err);
-        });
-      }
-      
-      // Ne pas essayer de rafraîchir lors du chargement initial
-      if (isInitialLoad) {
-        console.log('Token expiré détecté au démarrage, nettoyage silencieux');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        isInitialLoad = false;
-        return Promise.reject(error);
-      }
-      
-      // Si c'est la première fois, essayer de rafraîchir le token
+    // Ne pas traiter les erreurs pendant le chargement initial ou si logout intentionnel
+    if (isInitialLoad || isIntentionalLogout) {
+      return Promise.reject(error);
+    }
+    
+    // Si erreur 401 et pas de retry déjà effectué
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      isRefreshing = true;
       
       try {
-        console.log("Tentative de rafraîchissement du token après erreur 401");
-        // Essayer de rafraîchir le token
-        const result = await authService.refreshToken(true);
-        if (result && result.token) {
-          const newToken = result.token;
-          console.log("Token rafraîchi avec succès");
-          
-          // Traiter toutes les requêtes en attente avec le nouveau token
-          processQueue(null, newToken);
-          
-          // Mettre à jour le header de la requête originale et la renvoyer
-          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-          isRefreshing = false;
+        // Tenter de rafraîchir le token
+        const result = await authService.refreshToken();
+        if (result?.token) {
+          originalRequest.headers['Authorization'] = `Bearer ${result.token}`;
           return api(originalRequest);
         }
-      } catch (refreshError) {
-        console.error("Échec du rafraîchissement:", refreshError);
-        // En cas d'échec du rafraîchissement
-        processQueue(refreshError, null);
         
-        // Nettoyage et redirection uniquement si on n'est pas déjà en train de rediriger
-        if (!isRedirecting && !isIntentionalLogout) {
+        // Si le rafraîchissement n'a pas retourné de token mais n'a pas lancé d'erreur
+        // (cas de session naturellement expirée)
+        if (!isRedirecting) {
           isRedirecting = true;
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-            if (window.location.pathname !== '/login') {
-            console.log('Redirection depuis intercepteur Axios...');
-            setTimeout(() => {
-              window.location.replace(`/login?error=session_expired`);
-            }, 100);
-          }
-          
+          authService.handleSessionExpired();
           setTimeout(() => {
             isRedirecting = false;
           }, 3000);
         }
-        
-        isRefreshing = false;
+        return Promise.reject(error);
+      } catch (refreshError) {
+        // Si le rafraîchissement échoue et qu'on n'est pas déjà en train de rediriger
+        if (!isRedirecting) {
+          isRedirecting = true;
+          authService.handleSessionExpired();
+          setTimeout(() => {
+            isRedirecting = false;
+          }, 3000);
+        }
         return Promise.reject(refreshError);
       }
     }
     
-    // Pour les autres erreurs 401 (échec après tentative de rafraîchissement ou autre route)
-    if (error.response && error.response.status === 401 && !isRedirecting) {
+    // Pour les autres erreurs 401
+    if (error.response?.status === 401 && !isRedirecting) {
       isRedirecting = true;
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-        // Redirection vers la page de login seulement si on n'y est pas déjà
-      if (window.location.pathname !== '/login') {
-        // Si la déconnexion est intentionnelle, afficher un message de succès
-        // sinon afficher un message d'erreur pour session expirée
-        if (isIntentionalLogout) {
-          setTimeout(() => {
-            window.location.replace(`/login?success=logout`);
-          }, 100);
-        } else {
-          console.log('Redirection vers login après erreur 401...');
-          setTimeout(() => {
-            window.location.replace(`/login?error=session_expired`);
-          }, 100);
-        }
-        
-        // Réinitialiser le flag de déconnexion intentionnelle
-        isIntentionalLogout = false;
-      }
-      
-      // Réinitialiser le flag après un délai
+      authService.handleSessionExpired();
       setTimeout(() => {
         isRedirecting = false;
       }, 3000);

@@ -73,13 +73,14 @@ const authenticate = async (req, res, next) => {
   }
   try {
     // Vérifie et décode le token JWT
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Journalisation en mode développement pour faciliter le débogage
+    const decoded = jwt.verify(token, JWT_SECRET);    // Journalisation en mode développement pour faciliter le débogage
     if (process.env.NODE_ENV === 'development') {
-      console.log('Token vérifié pour l\'utilisateur:', decoded.username);
-      console.log('Dernière activité:', new Date(decoded.lastActivity));
-      console.log('Délai d\'inactivité configuré:', INACTIVITY_TIMEOUT, 'ms');
+      console.log(`[SERVER] 🔒 Token vérifié`);
+      console.log(`📋 DONNÉES JWT:`);
+      console.log(`  • Utilisateur: ${decoded.username}`);
+      console.log(`  • Dernière activité: ${new Date(decoded.lastActivity).toLocaleString()}`);
+      console.log(`  • Délai d'inactivité configuré: ${INACTIVITY_TIMEOUT/1000}s (${config.JWT.INACTIVITY_EXPIRE})`);
+      console.log(`  • Valeur du .env: JWT_INACTIVITY_EXPIRE=${process.env.JWT_INACTIVITY_EXPIRE || 'non définie'}`);
     }
 
     // Vérification du délai d'inactivité
@@ -89,12 +90,15 @@ const authenticate = async (req, res, next) => {
       const inactiveTime = now - decoded.lastActivity;
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('Temps d\'inactivité actuel:', inactiveTime, 'ms', '(', Math.round(inactiveTime/1000), 'secondes)');
+        const inactiveSeconds = Math.round(inactiveTime/1000);
+        const inactivePercent = Math.round((inactiveTime / INACTIVITY_TIMEOUT) * 100);
+        console.log(`[SERVER] ⏱️ Inactivité: ${inactiveSeconds}s / ${INACTIVITY_TIMEOUT/1000}s (${inactivePercent}%)`);
       }
       
       // Si le délai d'inactivité dépasse la limite configurée, rejette la requête
       if (inactiveTime > INACTIVITY_TIMEOUT) {
-        console.log('Session expirée due à l\'inactivité pour', decoded.username);
+        console.log(`[SERVER] ⚠️ SESSION EXPIRÉE pour l'utilisateur "${decoded.username}"`);
+        console.log(`  • Cause: Inactivité de ${Math.round(inactiveTime/1000)}s > limite de ${INACTIVITY_TIMEOUT/1000}s`);
         return res.status(401).json({ 
           success: false, 
           message: 'Session expirée due à l\'inactivité',

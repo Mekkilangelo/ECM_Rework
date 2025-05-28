@@ -3,15 +3,6 @@ import { Row, Col, Table } from 'react-bootstrap';
 import ReportPageHeader from './ReportPageHeader';
 
 const CoverPageSection = ({ testData, partData, clientData }) => {
-  // Vérifier que les données nécessaires sont présentes
-  if (!testData || !partData) {
-    return (
-      <div className="text-center p-5">
-        <p>Données insuffisantes pour afficher la page de garde</p>
-      </div>
-    );
-  }
-
   // Fonction pour déboguer la structure de l'ECD
   useEffect(() => {
     if (partData && partData.specifications && partData.specifications.ecd) {
@@ -20,6 +11,15 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
       console.log("ECD direct:", partData.ecd);
     }
   }, [partData]);
+  
+  // Vérifier que les données nécessaires sont présentes
+  if (!testData || !partData) {
+    return (
+      <div className="text-center p-5">
+        <p>Données insuffisantes pour afficher la page de garde</p>
+      </div>
+    );
+  }
 
   // Récupérer les spécifications depuis les données de la pièce (comme dans ControlSection)
   // Peut être un tableau ou un objet selon la structure des données

@@ -119,15 +119,16 @@ const refreshUserToken = async (req, res, next) => {
       config.JWT.SECRET,
       { expiresIn: config.JWT.INACTIVITY_EXPIRE }
     );
-    
-    // Logs améliorés pour mieux comprendre le comportement
+      // Logs améliorés pour mieux comprendre le comportement
     if (process.env.NODE_ENV === 'development') {
-      logger.debug(`Rafraîchissement de token:
-      - Utilisateur: ${req.user.username} (ID: ${req.user.id})
-      - Dernière activité: ${new Date(oldActivity).toISOString()}
-      - Temps d'inactivité: ${Math.round(inactiveTime/1000)}s
-      - Inactivité maximale configurée: ${config.JWT.INACTIVITY_EXPIRE}
-      - Nouvelle expiration fixée à: ${config.JWT.INACTIVITY_EXPIRE} à partir de maintenant`);
+      logger.debug(`[SERVER] 🔄 Rafraîchissement de token
+      📋 DONNÉES:
+      • Utilisateur: ${req.user.username} (ID: ${req.user.id})
+      • Dernière activité: ${new Date(oldActivity).toLocaleString()}
+      • Temps d'inactivité: ${Math.round(inactiveTime/1000)}s
+      • Inactivité maximale configurée: ${config.JWT.INACTIVITY_EXPIRE}
+      • Valeur du .env: JWT_INACTIVITY_EXPIRE=${process.env.JWT_INACTIVITY_EXPIRE || 'non définie'}
+      • Valeur du .env: JWT_REFRESH_BEFORE_EXPIRE=${process.env.JWT_REFRESH_BEFORE_EXPIRE || 'non définie'}`);
     }
     
     // Renvoyer le nouveau token

@@ -6,28 +6,64 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { Node, File, sequelize } = require('../models');
+const { Node, File, Closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 
 /**
- * Construit le chemin du nœud pour un fichier
- * @param {number} nodeId - ID du nœud parent
+ * Construit le chemin physique pour un fichier à partir du chemin du nœud parent
+ * @param {Object} parentNode - Nœud parent
+ * @param {string} category - Catégorie du fichier
+ * @param {string} subcategory - Sous-catégorie du fichier
+ * @returns {string} Chemin physique complet
+ */
+const buildPhysicalFilePath = (parentNode, category, subcategory) => {
+  // Commencer par le répertoire de base
+  let physicalPath = UPLOAD_BASE_DIR;
+  
+  // Construire le chemin à partir du chemin logique du nœud parent
+  // Le chemin logique est comme "/Audi/TRQ_20250528" 
+  const pathComponents = parentNode.path.split('/').filter(c => c.length > 0);
+  
+  // Ajouter chaque composant du chemin
+  for (const component of pathComponents) {
+    physicalPath = path.join(physicalPath, component);
+  }
+  
+  // Déterminer la structure de catégorie appropriée
+  let categoryPath = category || 'general';
+  let subcategoryPath = subcategory || '';
+  
+  // Si le parent est un ordre, respecter la structure spécifique
+  if (parentNode.type === 'order') {
+    categoryPath = 'documents';
+    subcategoryPath = 'alldocuments';
+  }
+  
+  // Ajouter la catégorie et sous-catégorie
+  if (categoryPath) {
+    physicalPath = path.join(physicalPath, categoryPath);
+    if (subcategoryPath) {
+      physicalPath = path.join(physicalPath, subcategoryPath);
+    }
+  }
+  
+  return physicalPath;
+};
+
+/**
+ * Construit le chemin logique pour un fichier (utilisé dans la base de données)
+ * @param {Object} parentNode - Nœud parent
  * @param {string} category - Catégorie du fichier
  * @param {string} subcategory - Sous-catégorie du fichier
  * @param {string} filename - Nom du fichier
- * @returns {Promise<string>} Chemin du nœud
+ * @returns {string} Chemin logique
  */
-const buildNodePath = async (nodeId, category, subcategory, filename) => {
-  const parentNode = await Node.findByPk(nodeId);
-  if (!parentNode) {
-    throw new NotFoundError('Nœud parent introuvable');
-  }
-  
+const buildNodePath = (parentNode, category, subcategory, filename) => {
   let nodePath = parentNode.path;
   
-  // Déterminer la structure de chemin appropriée en fonction du type de nœud
+  // Déterminer la structure de chemin appropriée
   let categoryPath = category;
   let subcategoryPath = subcategory;
   
@@ -45,8 +81,46 @@ const buildNodePath = async (nodeId, category, subcategory, filename) => {
     }
   }
   nodePath += `/${filename}`;
+    return nodePath;
+};
+
+/**
+ * Nettoie les dossiers temporaires vides après déplacement des fichiers
+ * @param {Array} tempFiles - Liste des fichiers temporaires déplacés
+ */
+const cleanupTempDirectories = async (tempFiles) => {
+  const tempDirsToCheck = new Set();
   
-  return nodePath;
+  // Collecter tous les dossiers temporaires à vérifier
+  for (const file of tempFiles) {
+    const tempDir = path.dirname(file.file_path);
+    tempDirsToCheck.add(tempDir);
+  }
+  
+  // Vérifier et supprimer les dossiers vides
+  for (const tempDir of tempDirsToCheck) {
+    try {
+      if (fs.existsSync(tempDir)) {
+        const files = fs.readdirSync(tempDir);
+        if (files.length === 0) {
+          fs.rmdirSync(tempDir);
+          console.log(`Dossier temporaire vide supprimé: ${tempDir}`);
+          
+          // Vérifier aussi le dossier parent s'il est dans temp/
+          const parentDir = path.dirname(tempDir);
+          if (parentDir.includes('temp') && fs.existsSync(parentDir)) {
+            const parentFiles = fs.readdirSync(parentDir);
+            if (parentFiles.length === 0) {
+              fs.rmdirSync(parentDir);
+              console.log(`Dossier parent temporaire vide supprimé: ${parentDir}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Erreur lors du nettoyage du dossier temporaire ${tempDir}:`, error.message);
+    }
+  }
 };
 
 /**
@@ -66,37 +140,41 @@ const saveUploadedFiles = async (files, data) => {
   const transaction = await sequelize.transaction();
   
   try {
+    // Récupérer le nœud parent si nodeId est fourni
+    let parentNode = null;
+    if (nodeId) {
+      parentNode = await Node.findByPk(nodeId, { transaction });
+      if (!parentNode) {
+        throw new NotFoundError('Nœud parent non trouvé');
+      }
+    }
+
     for (const file of files) {
       // Déterminer le chemin final du fichier
       let finalPath;
-        if (nodeId) {
-        // Déterminer la structure de répertoire appropriée en fonction du type de nœud parent
-        let categoryPath = category || 'general';
-        let subcategoryPath = subcategory || '';
-        
-        // Vérifier si le nœud parent est un ordre
-        const parentNode = await Node.findByPk(nodeId);
-        if (parentNode && parentNode.type === 'order') {
-          categoryPath = 'documents';
-          subcategoryPath = 'alldocuments';
-        }
-        
-        // Créer le chemin du répertoire si nécessaire
-        const dirPath = path.join(UPLOAD_BASE_DIR, nodeId.toString(), categoryPath, subcategoryPath);
-        fs.mkdirSync(dirPath, { recursive: true });
+      let nodePath;
+      
+      if (nodeId && parentNode) {
+        // Construire le chemin physique en utilisant le chemin du parent
+        const physicalDirPath = buildPhysicalFilePath(parentNode, category, subcategory);
+        fs.mkdirSync(physicalDirPath, { recursive: true });
         
         // Déplacer le fichier de temp vers le chemin final
-        finalPath = path.join(dirPath, file.filename);
+        finalPath = path.join(physicalDirPath, file.filename);
         fs.renameSync(file.path, finalPath);
+        
+        // Construire le chemin logique pour la base de données
+        nodePath = buildNodePath(parentNode, category, subcategory, file.originalname);
       } else {
         // Garder le fichier dans temp pour l'instant
         finalPath = file.path;
+        nodePath = `/temp/${tempId}/${file.filename}`;
       }
       
       // Créer l'enregistrement du nœud
       const fileNode = await Node.create({
         name: file.originalname,
-        path: nodeId ? await buildNodePath(nodeId, category, subcategory, file.originalname) : `/temp/${tempId}/${file.filename}`,
+        path: nodePath,
         type: 'file',
         parent_id: nodeId ? parseInt(nodeId) : null,
         created_at: new Date(),
@@ -157,12 +235,14 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
   
   // Utiliser une transaction
   const transaction = await sequelize.transaction();
-    try {
+  try {
     // Récupérer les fichiers temporaires en utilisant le champ additional_info.temp_id
+    // Utiliser l'opérateur JSON de Sequelize pour une compatibilité maximale
     const tempFiles = await File.findAll({
-      where: {
-        'additional_info.temp_id': tempId
-      },
+      where: sequelize.where(
+        sequelize.json('additional_info.temp_id'),
+        tempId
+      ),
       include: [{
         model: Node,
         required: true
@@ -172,7 +252,8 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     if (!tempFiles.length) {
       throw new NotFoundError('Aucun fichier temporaire trouvé avec cet ID');
     }
-      // Vérifier que le nœud parent existe
+    
+    // Vérifier que le nœud parent existe
     const parentNode = await Node.findByPk(nodeId);
     if (!parentNode) {
       throw new NotFoundError('Nœud parent non trouvé');
@@ -187,15 +268,14 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       categoryPath = 'documents';
       subcategoryPath = 'alldocuments';
     }
-    
-    // Créer le répertoire de destination
-    const destDir = path.join(UPLOAD_BASE_DIR, nodeId.toString(), categoryPath, subcategoryPath);
-    fs.mkdirSync(destDir, { recursive: true });
-      // Mettre à jour chaque fichier et le déplacer vers le répertoire final
+      // Créer le répertoire de destination en utilisant le chemin du parent
+    const physicalDirPath = buildPhysicalFilePath(parentNode, categoryPath, subcategoryPath);
+    fs.mkdirSync(physicalDirPath, { recursive: true });
+        // Mettre à jour chaque fichier et le déplacer vers le répertoire final
     for (const file of tempFiles) {
       // Déplacer le fichier physique
       const fileName = path.basename(file.file_path);
-      const destPath = path.join(destDir, fileName);
+      const destPath = path.join(physicalDirPath, fileName);
       fs.renameSync(file.file_path, destPath);
       
       // Récupérer le nœud associé au fichier
@@ -204,10 +284,21 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
         throw new Error('Node is not associated to File!');
       }
       
-      // Construire le nouveau chemin pour le nœud
-      const newNodePath = await buildNodePath(nodeId, categoryPath, subcategoryPath, fileNode.name);
+      // Construire le nouveau chemin logique pour le nœud
+      const newNodePath = buildNodePath(parentNode, categoryPath, subcategoryPath, fileNode.name);
       
-      // Mettre à jour les enregistrements du nœud
+      // ÉTAPE 1: Supprimer les anciennes relations de fermeture du nœud fichier
+      await Closure.destroy({
+        where: {
+          [Op.or]: [
+            { ancestor_id: file.node_id },
+            { descendant_id: file.node_id }
+          ]
+        },
+        transaction
+      });
+      
+      // ÉTAPE 2: Mettre à jour les enregistrements du nœud avec le nouveau parent et chemin
       await Node.update({
         parent_id: nodeId,
         path: newNodePath,
@@ -217,8 +308,30 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
         where: { id: file.node_id },
         transaction 
       });
+
+      // ÉTAPE 3: Recréer toutes les relations de fermeture
+      // 3a. Relation avec lui-même (depth = 0)
+      await Closure.create({
+        ancestor_id: file.node_id,
+        descendant_id: file.node_id,
+        depth: 0
+      }, { transaction });
+
+      // 3b. Relations avec tous les ancêtres du nouveau parent
+      const ancestorRelations = await Closure.findAll({
+        where: { descendant_id: nodeId },
+        transaction
+      });
+
+      for (const ancestorRelation of ancestorRelations) {
+        await Closure.create({
+          ancestor_id: ancestorRelation.ancestor_id,
+          descendant_id: file.node_id,
+          depth: ancestorRelation.depth + 1
+        }, { transaction });
+      }
       
-      // Mettre à jour l'enregistrement du fichier
+      // ÉTAPE 4: Mettre à jour l'enregistrement du fichier avec le nouveau chemin physique
       await File.update({
         file_path: destPath,
         category: categoryPath,
@@ -234,6 +347,9 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       });
     }
     
+    // Nettoyer les dossiers temporaires vides après déplacement des fichiers
+    await cleanupTempDirectories(tempFiles);
+    
     // Valider la transaction
     await transaction.commit();
     
@@ -245,6 +361,69 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
   } catch (error) {
     // Annuler la transaction en cas d'erreur
     await transaction.rollback();
+    throw error;
+  }
+};
+
+/**
+ * Supprime physiquement tous les fichiers associés à un nœud et ses descendants
+ * @param {number} nodeId - ID du nœud parent
+ * @param {Object} transaction - Transaction Sequelize optionnelle
+ * @returns {Promise<number>} Nombre de fichiers supprimés
+ */
+const deleteNodeFiles = async (nodeId, transaction = null) => {
+  try {
+    // Récupérer tous les fichiers associés à ce nœud et ses descendants
+    const fileNodes = await Node.findAll({
+      where: {
+        [Op.or]: [
+          { parent_id: nodeId, type: 'file' },
+          { id: nodeId, type: 'file' }
+        ]
+      },
+      include: [{
+        model: File,
+        required: true
+      }],
+      transaction
+    });
+
+    let deletedCount = 0;
+
+    for (const fileNode of fileNodes) {
+      try {
+        const file = fileNode.File;
+        
+        // Supprimer le fichier physique si il existe
+        if (file && file.file_path && fs.existsSync(file.file_path)) {
+          fs.unlinkSync(file.file_path);
+          console.log(`Fichier physique supprimé: ${file.file_path}`);
+        }
+
+        // Supprimer l'enregistrement File
+        if (file) {
+          await File.destroy({
+            where: { node_id: fileNode.id },
+            transaction
+          });
+        }
+
+        // Supprimer le nœud de fichier
+        await Node.destroy({
+          where: { id: fileNode.id },
+          transaction
+        });
+
+        deletedCount++;
+      } catch (error) {
+        console.warn(`Erreur lors de la suppression du fichier ${fileNode.id}:`, error.message);
+        // Continue avec les autres fichiers même si un échoue
+      }
+    }
+
+    return deletedCount;
+  } catch (error) {
+    console.error('Erreur lors de la suppression des fichiers du nœud:', error);
     throw error;
   }
 };
@@ -487,14 +666,200 @@ const getFileStats = async (nodeId) => {
   };
 };
 
+/**
+ * Met à jour un fichier (changement de parent, catégorie, etc.)
+ * @param {number} fileId - ID du fichier à mettre à jour
+ * @param {Object} updateData - Données de mise à jour
+ * @param {number} [updateData.newParentId] - Nouvel ID du parent
+ * @param {string} [updateData.category] - Nouvelle catégorie
+ * @param {string} [updateData.subcategory] - Nouvelle sous-catégorie
+ * @param {string} [updateData.name] - Nouveau nom du fichier
+ * @returns {Promise<Object>} Résultat de l'opération
+ */
+const updateFile = async (fileId, updateData) => {
+  const { newParentId, category, subcategory, name } = updateData;
+  
+  const transaction = await sequelize.transaction();
+  
+  try {
+    // Récupérer le fichier actuel
+    const currentFile = await File.findOne({
+      where: { node_id: fileId },
+      include: [{
+        model: Node,
+        required: true
+      }],
+      transaction
+    });
+    
+    if (!currentFile) {
+      throw new NotFoundError('Fichier non trouvé');
+    }
+    
+    const currentNode = currentFile.Node;
+    let needsPhysicalMove = false;
+    let newPhysicalPath = currentFile.file_path;
+    let newLogicalPath = currentNode.path;
+    
+    // Si changement de parent, gérer le déplacement
+    if (newParentId && newParentId !== currentNode.parent_id) {
+      const newParent = await Node.findByPk(newParentId, { transaction });
+      if (!newParent) {
+        throw new NotFoundError('Nouveau nœud parent non trouvé');
+      }
+      
+      // Déterminer la nouvelle structure
+      let newCategory = category || currentFile.category || 'general';
+      let newSubcategory = subcategory || currentFile.subcategory || '';
+      
+      if (newParent.type === 'order') {
+        newCategory = 'documents';
+        newSubcategory = 'alldocuments';
+      }
+      
+      // Construire les nouveaux chemins
+      const newPhysicalDir = buildPhysicalFilePath(newParent, newCategory, newSubcategory);
+      const fileName = name || currentNode.name;
+      newPhysicalPath = path.join(newPhysicalDir, path.basename(currentFile.file_path));
+      newLogicalPath = buildNodePath(newParent, newCategory, newSubcategory, fileName);
+      
+      // Créer le répertoire de destination
+      fs.mkdirSync(newPhysicalDir, { recursive: true });
+      
+      // Déplacer le fichier physique
+      fs.renameSync(currentFile.file_path, newPhysicalPath);
+      needsPhysicalMove = true;
+      
+      // Supprimer les anciennes relations de fermeture
+      await Closure.destroy({
+        where: {
+          [Op.or]: [
+            { ancestor_id: fileId },
+            { descendant_id: fileId }
+          ]
+        },
+        transaction
+      });
+      
+      // Mettre à jour le nœud avec le nouveau parent et chemin
+      await Node.update({
+        parent_id: newParentId,
+        path: newLogicalPath,
+        name: fileName,
+        data_status: 'updated',
+        modified_at: new Date()
+      }, {
+        where: { id: fileId },
+        transaction
+      });
+      
+      // Recréer les relations de fermeture
+      // Relation avec lui-même
+      await Closure.create({
+        ancestor_id: fileId,
+        descendant_id: fileId,
+        depth: 0
+      }, { transaction });
+      
+      // Relations avec tous les ancêtres du nouveau parent
+      const ancestorRelations = await Closure.findAll({
+        where: { descendant_id: newParentId },
+        transaction
+      });
+      
+      for (const ancestorRelation of ancestorRelations) {
+        await Closure.create({
+          ancestor_id: ancestorRelation.ancestor_id,
+          descendant_id: fileId,
+          depth: ancestorRelation.depth + 1
+        }, { transaction });
+      }
+      
+      // Mettre à jour l'enregistrement File
+      await File.update({
+        file_path: newPhysicalPath,
+        category: newCategory,
+        subcategory: newSubcategory,
+        additional_info: {
+          ...currentFile.additional_info,
+          updated_at: new Date().toISOString()
+        }
+      }, {
+        where: { node_id: fileId },
+        transaction
+      });
+      
+    } else if (name && name !== currentNode.name) {
+      // Changement de nom seulement
+      const newFileName = name;
+      const currentDir = path.dirname(currentFile.file_path);
+      const currentExt = path.extname(currentFile.file_path);
+      newPhysicalPath = path.join(currentDir, newFileName + currentExt);
+      
+      // Renommer le fichier physique
+      fs.renameSync(currentFile.file_path, newPhysicalPath);
+      
+      // Mettre à jour le chemin logique
+      newLogicalPath = currentNode.path.replace(currentNode.name, newFileName);
+      
+      // Mettre à jour en base
+      await Node.update({
+        name: newFileName,
+        path: newLogicalPath,
+        data_status: 'updated',
+        modified_at: new Date()
+      }, {
+        where: { id: fileId },
+        transaction
+      });
+      
+      await File.update({
+        file_path: newPhysicalPath,
+        additional_info: {
+          ...currentFile.additional_info,
+          updated_at: new Date().toISOString()
+        }
+      }, {
+        where: { node_id: fileId },
+        transaction
+      });
+    }
+    
+    // Valider la transaction
+    await transaction.commit();
+    
+    // Retourner le fichier mis à jour
+    const updatedFile = await File.findOne({
+      where: { node_id: fileId },
+      include: [{
+        model: Node,
+        attributes: { exclude: ['id'] }
+      }]
+    });
+    
+    return {
+      success: true,
+      file: updatedFile,
+      physicalPathChanged: needsPhysicalMove
+    };
+    
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+};
+
 module.exports = {
+  buildPhysicalFilePath,
   buildNodePath,
   saveUploadedFiles,
   associateFilesToNode,
   getFileDetails,
   deleteFile,
+  deleteNodeFiles,
   getAllFilesByNode,
   getFileById,
   downloadFile,
-  getFileStats
+  getFileStats,
+  updateFile
 };

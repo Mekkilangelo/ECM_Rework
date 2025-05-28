@@ -237,6 +237,55 @@ const getFileStats = async (req, res) => {
   }
 };
 
+/**
+ * Met à jour un fichier (changement de parent, nom, catégorie)
+ * @route PUT /api/files/:fileId
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @returns {Object} Fichier mis à jour
+ */
+const updateFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const { newParentId, category, subcategory, name } = req.body;
+    
+    // Validation des données
+    if (newParentId && !Number.isInteger(parseInt(newParentId))) {
+      return apiResponse.error(res, 'ID du nouveau parent invalide', 400);
+    }
+    
+    logger.info(`Mise à jour du fichier #${fileId}`, { 
+      newParentId, 
+      category, 
+      subcategory, 
+      name 
+    });
+    
+    // Déléguer au service
+    const result = await fileService.updateFile(parseInt(fileId), {
+      newParentId: newParentId ? parseInt(newParentId) : undefined,
+      category,
+      subcategory,
+      name
+    });
+    
+    return apiResponse.success(
+      res, 
+      result, 
+      'Fichier mis à jour avec succès'
+    );
+  } catch (error) {
+    if (error.name === 'NotFoundError') {
+      return apiResponse.error(res, error.message, 404);
+    }
+    if (error.name === 'ValidationError') {
+      return apiResponse.error(res, error.message, 400);
+    }
+    logger.error(`Erreur lors de la mise à jour du fichier: ${error.message}`, error);
+    return apiResponse.error(res, error.message, 500);
+  }
+};
+
 module.exports = {
   uploadFiles,
   associateFiles,
@@ -244,5 +293,6 @@ module.exports = {
   getFileById,
   downloadFile,
   deleteFile,
-  getFileStats
+  getFileStats,
+  updateFile
 };

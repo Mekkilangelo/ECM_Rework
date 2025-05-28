@@ -5,6 +5,47 @@ const fs = require('fs');
 
 const UPLOAD_BASE_DIR = path.join(__dirname, '../uploads');
 
+/**
+ * Construit le chemin physique pour un fichier à partir du chemin du nœud parent
+ * @param {Object} parentNode - Nœud parent
+ * @param {string} category - Catégorie du fichier
+ * @param {string} subcategory - Sous-catégorie du fichier
+ * @returns {string} Chemin physique complet
+ */
+const buildPhysicalFilePath = (parentNode, category, subcategory) => {
+  // Commencer par le répertoire de base
+  let physicalPath = UPLOAD_BASE_DIR;
+  
+  // Construire le chemin à partir du chemin logique du nœud parent
+  // Le chemin logique est comme "/Audi/TRQ_20250528" 
+  const pathComponents = parentNode.path.split('/').filter(c => c.length > 0);
+  
+  // Ajouter chaque composant du chemin
+  for (const component of pathComponents) {
+    physicalPath = path.join(physicalPath, component);
+  }
+  
+  // Déterminer la structure de catégorie appropriée
+  let categoryPath = category || 'general';
+  let subcategoryPath = subcategory || '';
+  
+  // Si le parent est un ordre, respecter la structure spécifique
+  if (parentNode.type === 'order') {
+    categoryPath = 'documents';
+    subcategoryPath = 'alldocuments';
+  }
+  
+  // Ajouter la catégorie et sous-catégorie
+  if (categoryPath) {
+    physicalPath = path.join(physicalPath, categoryPath);
+    if (subcategoryPath) {
+      physicalPath = path.join(physicalPath, subcategoryPath);
+    }
+  }
+  
+  return physicalPath;
+};
+
 exports.resolveFilePath = async (req, res, next) => {
   try {
     const { nodeId, category, subcategory } = req.body;
@@ -19,44 +60,12 @@ exports.resolveFilePath = async (req, res, next) => {
       return res.status(404).json({ message: 'Nœud non trouvé' });
     }
     
-    // Analyser le chemin du nœud pour construire la structure de répertoires
-    // Le chemin est dans le format '/client/order/part' dans la base
-    const nodePath = node.path;
-      // Construire le chemin physique en fonction du type de nœud et de la catégorie
-    let physicalPath = UPLOAD_BASE_DIR;
+    // Construire le chemin physique en utilisant la nouvelle fonction
+    const physicalPath = buildPhysicalFilePath(node, category, subcategory);
     
-    // Séparer les composants du chemin
-    const pathComponents = nodePath.split('/').filter(c => c.length > 0);
-    
-    // Construire le chemin physique en fonction du chemin du nœud
-    for (const component of pathComponents) {
-      physicalPath = path.join(physicalPath, component);
-      if (!fs.existsSync(physicalPath)) {
-        fs.mkdirSync(physicalPath, { recursive: true });
-      }
-    }
-    
-    // Ajouter les sous-dossiers selon la catégorie et sous-catégorie
-    // Si le nœud est un ordre, respecter la structure order/documents/alldocuments
-    let categoryToUse = category;
-    let subcategoryToUse = subcategory;
-    
-    if (node.type === 'order') {
-      categoryToUse = 'documents';
-      subcategoryToUse = 'alldocuments';
-    }
-    
-    if (categoryToUse) {
-      physicalPath = path.join(physicalPath, categoryToUse);
-      if (!fs.existsSync(physicalPath)) {
-        fs.mkdirSync(physicalPath, { recursive: true });
-      }
-        if (subcategoryToUse) {
-        physicalPath = path.join(physicalPath, subcategoryToUse);
-        if (!fs.existsSync(physicalPath)) {
-          fs.mkdirSync(physicalPath, { recursive: true });
-        }
-      }
+    // Créer le répertoire s'il n'existe pas
+    if (!fs.existsSync(physicalPath)) {
+      fs.mkdirSync(physicalPath, { recursive: true });
     }
     
     // Ajouter le chemin résolu aux données de la requête

@@ -9,6 +9,7 @@ const { resolveFilePath } = require('../middleware/file-path');
 // Ordre correct des routes
 // Routes d'écriture (nécessitent des droits d'édition)
 router.post('/upload', writeAccess, upload.array('files', 10), resolveFilePath, fileController.uploadFiles);
+router.put('/:fileId', writeAccess, fileController.updateFile);
 router.delete('/:fileId', writeAccess, fileController.deleteFile);
 router.post('/associate', writeAccess, fileController.associateFiles);
 

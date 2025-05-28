@@ -54,7 +54,6 @@ module.exports = (sequelize) => {
       }
     ]
   });
-
   Node.associate = function(models) {
     Node.hasMany(models.Node, { as: 'children', foreignKey: 'parent_id' });
     Node.belongsTo(models.Node, { as: 'parent', foreignKey: { name: 'parent_id', allowNull: true }, onDelete: 'SET NULL', onUpdate: 'CASCADE' });
@@ -67,6 +66,10 @@ module.exports = (sequelize) => {
     Node.hasOne(models.File, { foreignKey: 'node_id' });
     Node.hasOne(models.Steel, { foreignKey: 'node_id' });
     Node.hasOne(models.Furnace, { foreignKey: 'node_id' });
+    
+    // Associations avec Closure pour les relations hiérarchiques
+    Node.hasMany(models.Closure, { as: 'AncestorClosures', foreignKey: 'ancestor_id' });
+    Node.hasMany(models.Closure, { as: 'DescendantClosures', foreignKey: 'descendant_id' });
   };
 
   return Node;

@@ -6,6 +6,7 @@
 const { Node, Closure, Client, Order, Part, Test, File, Furnace, Steel, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { NotFoundError, ValidationError } = require('../utils/errors');
+const { deletePhysicalFiles } = require('../utils/fileUtils');
 
 /**
  * Fonction utilitaire pour obtenir le modèle correspondant au type
@@ -375,8 +376,23 @@ const deleteNode = async (nodeId) => {
       await t.rollback();
       throw new NotFoundError('Nœud non trouvé');
     }
+
+    // 2. Récupérer tous les descendants pour supprimer leurs fichiers physiques
+    const descendants = await Closure.findAll({
+      where: { ancestor_id: nodeId },
+      transaction: t
+    });    // 3. Supprimer les fichiers physiques associés à ce nœud et tous ses descendants
+    const allNodeIds = [nodeId, ...descendants.map(d => d.descendant_id)];
+    for (const nodeIdToClean of allNodeIds) {
+      try {
+        await deletePhysicalFiles(nodeIdToClean, t);
+      } catch (error) {
+        console.warn(`Erreur lors de la suppression des fichiers du nœud ${nodeIdToClean}:`, error.message);
+        // Continue avec les autres nœuds même si un échoue
+      }
+    }
     
-    // 2. Supprimer d'abord les références dans Closure
+    // 4. Supprimer toutes les références dans Closure
     await Closure.destroy({
       where: {
         [Op.or]: [
@@ -387,15 +403,37 @@ const deleteNode = async (nodeId) => {
       transaction: t
     });
     
-    // 3. Supprimer les données spécifiques au type
-    if (node.type) {
+    // 5. Supprimer les données spécifiques au type pour tous les descendants
+    for (const desc of descendants) {
+      const descendantNode = await Node.findByPk(desc.descendant_id, { transaction: t });
+      if (descendantNode && descendantNode.type !== 'file') { // Les fichiers sont déjà supprimés
+        await deleteSpecificData(descendantNode.type, desc.descendant_id, t);
+      }
+    }
+
+    // 6. Supprimer les données spécifiques du nœud principal si ce n'est pas un fichier
+    if (node.type && node.type !== 'file') {
       await deleteSpecificData(node.type, nodeId, t);
     }
+
+    // 7. Supprimer tous les nœuds descendants (sauf les fichiers déjà supprimés)
+    const nonFileDescendants = descendants.filter(d => d.descendant_id !== nodeId);
+    if (nonFileDescendants.length > 0) {
+      await Node.destroy({
+        where: {
+          id: { [Op.in]: nonFileDescendants.map(d => d.descendant_id) },
+          type: { [Op.ne]: 'file' } // Les fichiers sont déjà supprimés
+        },
+        transaction: t
+      });
+    }
+
+    // 8. Supprimer le nœud principal si ce n'est pas un fichier
+    if (node.type !== 'file') {
+      await node.destroy({ transaction: t });
+    }
     
-    // 4. Supprimer le nœud
-    await node.destroy({ transaction: t });
-    
-    // 5. Valider la transaction
+    // 9. Valider la transaction
     await t.commit();
     return true;
   } catch (error) {

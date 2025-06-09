@@ -126,20 +126,13 @@ const RecipePreviewChart = ({ formData }) => {
           timeOffset,
           startTemp
         });
-        
-        if (step.ramp === 'up' || step.ramp === 'down') {
+          if (step.ramp === 'up' || step.ramp === 'down') {
           // Pour une rampe montante/descendante
-          // CORRECTION #1: Ajouter un point intermédiaire pour la pente
+          // La durée indiquée est maintenant le temps de la rampe pour atteindre la consigne
           temperaturePoints.push({ x: timeOffset, y: startTemp });
-          temperaturePoints.push({ x: timeOffset + 1, y: setpoint }); // Rampe de 1 minute
-          timeOffset += 1; // Ajouter 1 minute pour la rampe
-          
-          // CORRECTION #2: Si la durée est > 1, on ajoute un palier pour le temps restant
-          if (duration > 1) {
-            temperaturePoints.push({ x: timeOffset + (duration - 1), y: setpoint });
-            timeOffset += (duration - 1);
-          }
-        } 
+          temperaturePoints.push({ x: timeOffset + duration, y: setpoint });
+          timeOffset += duration;
+        }
         else if (step.ramp === 'continue') {
           // Pour un palier, on maintient la température constante pendant la durée spécifiée
           // CORRECTION #3: Utiliser la température définie et non pas la température de départ
@@ -148,15 +141,15 @@ const RecipePreviewChart = ({ formData }) => {
           timeOffset += duration;
         }
       });
-      
-      // La dernière étape a déjà été traitée correctement dans la boucle ci-dessus
+        // La dernière étape a déjà été traitée correctement dans la boucle ci-dessus
       const lastStep = thermalCycle[thermalCycle.length - 1];
       const lastTemp = lastStep ? parseInt(lastStep.setpoint) || 0 : cellTemp;
       
-      // Ajouter une rampe finale vers 0°C (durée de 1 minute) depuis la dernière température
-      temperaturePoints.push({ x: timeOffset, y: lastTemp }); // Point explicite au début de la rampe finale
-      temperaturePoints.push({ x: timeOffset + 1, y: 0 });
-      const totalThermalTime = timeOffset + 1; // Inclut la rampe finale
+      // Ajouter une rampe finale vers 0°C (durée par défaut de 1 minute si pas spécifiée)
+      const finalRampDuration = 1; // Vous pouvez ajuster cette valeur ou la rendre configurable
+      temperaturePoints.push({ x: timeOffset, y: lastTemp });
+      temperaturePoints.push({ x: timeOffset + finalRampDuration, y: 0 });
+      const totalThermalTime = timeOffset + finalRampDuration;
       
       // Construire les courbes de débit de gaz
       const gasDatasets = {};

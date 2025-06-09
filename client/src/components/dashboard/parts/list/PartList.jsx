@@ -87,15 +87,16 @@ const PartList = ({ orderId }) => {
           </Button>
           <h2 className="mb-0">
             {t('parts.title')} - {hierarchyState.orderName}
-          </h2>
-        </div>
-        <Button
-          variant="danger"
-          onClick={openCreateModal}
-          className="d-flex align-items-center"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('parts.new')}
-        </Button>
+          </h2>        </div>
+        {hasEditRights && (
+          <Button
+            variant="danger"
+            onClick={openCreateModal}
+            className="d-flex align-items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('parts.new')}
+          </Button>
+        )}
       </div>
 
       {data.length > 0 ? (

@@ -77,18 +77,19 @@ const ClientList = ({ onDataChanged }) => {
   if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
-    <>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <>      <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
           {t('clients.title')}
         </h2>
-        <Button
-          variant="danger"
-          onClick={openCreateModal}
-          className="d-flex align-items-center"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('clients.add')}
-        </Button>
+        {hasEditRights && (
+          <Button
+            variant="danger"
+            onClick={openCreateModal}
+            className="d-flex align-items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('clients.add')}
+          </Button>
+        )}
       </div>
 
       {data.length > 0 ? (

@@ -43,9 +43,15 @@ const TestList = ({ partId }) => {
   } = useModalState({
     onRefreshData: refreshData
   });
-
   const handleTestClick = (test) => {
-    openEditModal(test);
+    if (hasEditRights) {
+      // Admin et superuser : ouvrir en mode édition
+      openEditModal(test);
+    } else {
+      // User : ouvrir en mode visualisation
+      openDetailModal(test);
+    }
+    
     if (test.data_status === 'new') {
       updateItemStatus(test.id);
     }
@@ -93,20 +99,20 @@ const TestList = ({ partId }) => {
           </Button>
           <h2 className="mb-0">
             {t('tests.title')}
-          </h2>
-        </div>
-        <Button
-          variant="danger"
-          onClick={() => openCreateModal()}
-          className="d-flex align-items-center"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('tests.new')}
-        </Button>
-      </div>
-
-      {data.length > 0 ? (
+          </h2>        </div>
+        {hasEditRights && (
+          <Button
+            variant="danger"
+            onClick={() => openCreateModal()}
+            className="d-flex align-items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('tests.new')}
+          </Button>
+        )}
+      </div>{data.length > 0 ? (
         <div className="data-list-container">
-          <Table hover responsive className="data-table border-bottom">            <thead>
+          <Table hover responsive className="data-table border-bottom">
+            <thead>
               <tr className="bg-light">
                 <th style={{ width: '25%' }}>{t('tests.testCode')}</th>
                 <th className="text-center">{t('tests.loadNumber')}</th>
@@ -118,7 +124,8 @@ const TestList = ({ partId }) => {
             </thead>
             <tbody>
               {data.map(test => (
-                <tr key={test.id}>                  <td>
+                <tr key={test.id}>
+                  <td>
                     <div
                       onClick={() => handleTestClick(test)}
                       style={{ cursor: 'pointer' }}
@@ -198,7 +205,10 @@ const TestList = ({ partId }) => {
             onClose={closeCreateModal}
             onTestCreated={handleItemCreated}
           />
-        </Modal.Body>      </Modal>      {/* Modal pour éditer un essai */}
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal pour éditer un essai */}
       <Modal
         show={showEditForm}
         onHide={() => handleRequestClose('edit', testFormRef)}
@@ -206,8 +216,8 @@ const TestList = ({ partId }) => {
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>{t('tests.edit')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>          {selectedTest && (
+        </Modal.Header>        <Modal.Body>
+          {selectedTest && (
             <TestForm
               ref={testFormRef}
               test={selectedTest}
@@ -221,7 +231,9 @@ const TestList = ({ partId }) => {
             />
           )}
         </Modal.Body>
-      </Modal>      {/* Modal pour voir les détails - utilise TestForm en mode lecture seule */}
+      </Modal>
+
+      {/* Modal pour voir les détails - utilise TestForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
         onHide={() => handleRequestClose('detail', testFormRef)}

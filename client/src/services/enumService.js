@@ -75,7 +75,6 @@ const enumService = {
       throw error;
     }
   },
-
   /**
    * Ajoute une nouvelle valeur d'énumération
    * @param {string} tableName - Nom de la table
@@ -87,9 +86,9 @@ const enumService = {
   addEnumValue: async (tableName, columnName, value) => {
     try {
       const response = await api.post(`${API_URL}/table/${tableName}/column/${columnName}`, { value });
-      // Traitement de la réponse selon le nouveau format d'API
+      // Retourner l'objet complet avec success pour compatibilité avec useFormHandlers
       if (response.data && response.data.success === true) {
-        return response.data.data;
+        return response.data;  // Retourner l'objet complet avec success et data
       }
       return response.data;
     } catch (error) {

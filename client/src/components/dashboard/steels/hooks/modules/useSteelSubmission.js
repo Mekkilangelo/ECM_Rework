@@ -40,8 +40,7 @@ const useSteelSubmission = ({
       grade: formData.grade,
       family: formData.family,
       standard: formData.standard,
-      equivalents: formData.equivalents, 
-      // Transformer chemical_elements en chemistery
+      equivalents: formData.equivalents,      // Transformer chemical_elements en chemistery
       chemistery: formData.chemical_elements.map(element => {
         // Transformer les éléments chimiques pour l'API
         if (element.rate_type === 'exact') {
@@ -55,8 +54,8 @@ const useSteelSubmission = ({
           return {
             element: element.element,
             value: null,
-            min_value: parseFloat(element.min_value),
-            max_value: parseFloat(element.max_value)
+            min_value: element.min_value ? parseFloat(element.min_value) : null,
+            max_value: element.max_value ? parseFloat(element.max_value) : null
           };
         }
       })

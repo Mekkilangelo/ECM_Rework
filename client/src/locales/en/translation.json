@@ -48,15 +48,15 @@
       "parentPart": "Parent part is required",
       "testDate": "Test date is required",
       "grade": "Grade is required",
-      "family": "Family is required",
-      "element": "Element is required",
+      "family": "Family is required",      "element": "Element is required",
       "value": "Value is required",
       "minValue": "Minimum value is required",
       "maxValue": "Maximum value is required",
+      "minOrMax": "At least one value (minimum or maximum) must be entered",
       "equivalentSteel": "An equivalent steel must be selected"
-    },
-    "invalid": {
-      "data": "Invalid data"
+    },    "invalid": {
+      "data": "Invalid data",
+      "number": "This value must be a valid number"
     },
     "duplicate": {
       "clientName": "A client with this name already exists",
@@ -486,8 +486,8 @@
     "form": "Trial form",
     "add": "Add trial",
     "edit": "Edit trial",
-    "new": "New trial",
-    "testCode": "Trial code",
+    "new": "New trial",    "testCode": "Trial code",
+    "loadNumber": "Load Number",
     "date": "Date",
     "location": "Location",
     "noName": "No name",

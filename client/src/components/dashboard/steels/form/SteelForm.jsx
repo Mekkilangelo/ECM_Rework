@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useImperativeHandle, forwardRef } from 'react';
 import { Form, Button, Row, Col, Spinner, Table } from 'react-bootstrap';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import useSteelForm from '../hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
 import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
 
-const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }) => {
+const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
-    const {
+  
+  const {
     formData,
     errors,
     loading,
@@ -31,6 +33,11 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
     handleChemicalElementChange,
     handleRateTypeChange,
     handleEquivalentChange,
+    // Fonctions pour CreatableSelect
+    handleCreateFamily,
+    handleCreateStandard,
+    handleCreateElement,
+    handleCreateGrade,
     // Gestion de la confirmation de fermeture
     showConfirmModal,
     pendingClose,
@@ -39,8 +46,12 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
     handleCloseRequest,
     confirmClose,
     cancelClose,
-    saveAndClose
-  } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated, viewMode);
+    saveAndClose  } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated, viewMode);
+  
+  // Exposer handleCloseRequest à travers la référence
+  useImperativeHandle(ref, () => ({
+    handleCloseRequest
+  }));
   
   if (fetchingSteel) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
@@ -91,11 +102,10 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                 </Form.Control.Feedback>
               )}
             </Form.Group>
-          </Col>
-          <Col md={4}>
+          </Col>          <Col md={4}>
             <Form.Group className="mb-3">
               <Form.Label>{t('steels.family')}</Form.Label>
-              <Select
+              <CreatableSelect
                 styles={{
                   ...selectStyles,
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -118,18 +128,20 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                 options={steelFamilyOptions}
                 value={getSelectedOption(steelFamilyOptions, formData.family)}
                 onChange={(option) => handleSelectChange(option, 'family')}
+                onCreateOption={handleCreateFamily}
+                formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
                 isClearable={!viewMode}
+                isCreatable={!viewMode}
                 placeholder={t('steels.selectFamily')}
                 isLoading={loading && steelFamilyOptions.length === 0}
                 noOptionsMessage={() => t('steels.noFamilyAvailable')}
                 isDisabled={viewMode || loading}
               />
             </Form.Group>
-          </Col>
-          <Col md={4}>
+          </Col>          <Col md={4}>
             <Form.Group className="mb-3">
               <Form.Label>{t('steels.standard')}</Form.Label>
-              <Select
+              <CreatableSelect
                 styles={{
                   ...selectStyles,
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -152,7 +164,10 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                 options={steelStandardOptions}
                 value={getSelectedOption(steelStandardOptions, formData.standard)}
                 onChange={(option) => handleSelectChange(option, 'standard')}
+                onCreateOption={handleCreateStandard}
+                formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
                 isClearable={!viewMode}
+                isCreatable={!viewMode}
                 placeholder={t('steels.selectStandard')}
                 isLoading={loading && steelStandardOptions.length === 0}
                 noOptionsMessage={() => t('steels.noStandardAvailable')}
@@ -165,10 +180,9 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
         <h5 className="mt-4">{t('steels.equivalents')}</h5>
         <Row>
           <Col md={12}>
-            {formData.equivalents.map((equivalent, index) => (
-              <div key={index} className="d-flex mb-2 align-items-center">
+            {formData.equivalents.map((equivalent, index) => (              <div key={index} className="d-flex mb-2 align-items-center">
                 <div className="flex-grow-1" style={{ paddingRight: '10px' }}>
-                  <Select
+                  <CreatableSelect
                     styles={{
                       ...selectStyles,
                       menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -190,6 +204,9 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                     options={steelGradeOptions}
                     value={getSelectedOption(steelGradeOptions, equivalent.steel_id)}
                     onChange={(option) => handleEquivalentChange(index, 'steel_id', option?.value)}
+                    onCreateOption={handleCreateGrade}
+                    formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
+                    isCreatable={!viewMode}
                     placeholder={t('steels.selectEquivalentSteel')}
                     isLoading={loading && steelGradeOptions.length === 0}
                     noOptionsMessage={() => t('steels.noSteelAvailable')}
@@ -239,9 +256,8 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
               <tbody>
                 {formData.chemical_elements.map((element, index) => (
                   <tr key={`chemical-element-${index}`}>
-                    <td className="text-center align-middle">{index + 1}</td>
-                    <td style={{ paddingRight: '10px' }}>
-                      <Select
+                    <td className="text-center align-middle">{index + 1}</td>                    <td style={{ paddingRight: '10px' }}>
+                      <CreatableSelect
                         styles={{
                           ...selectStyles,
                           menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -263,6 +279,9 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                         options={elementOptions}
                         value={getSelectedOption(elementOptions, element.element)}
                         onChange={(option) => handleChemicalElementChange(index, 'element', option?.value)}
+                        onCreateOption={handleCreateElement}
+                        formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
+                        isCreatable={!viewMode}
                         placeholder={t('steels.element')}
                         isLoading={loading && elementOptions.length === 0}
                         noOptionsMessage={() => t('steels.noElementAvailable')}
@@ -288,12 +307,10 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                             cursor: viewMode ? 'default' : base.cursor
                           })
                         }}
-                        menuPortalTarget={document.body}
-                        options={[
+                        menuPortalTarget={document.body}                        options={[
                           { value: 'exact', label: '=' },
                           { value: 'range', label: 'min - max' },
-                        ]}
-                        value={getSelectedOption(
+                        ]}                        value={getSelectedOption(
                           [
                             { value: 'exact', label: '=' },
                             { value: 'range', label: 'min - max' },
@@ -323,8 +340,7 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                             type="number"
                             step="0.01"
                             value={element.min_value || ''}
-                            onChange={(e) => handleChemicalElementChange(index, 'min_value', e.target.value)}
-                            placeholder={t('steels.min')}
+                            onChange={(e) => handleChemicalElementChange(index, 'min_value', e.target.value)}                            placeholder={t('steels.min')}
                             className="me-1"
                             disabled={viewMode || loading}
                             readOnly={viewMode}
@@ -396,13 +412,14 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
           onHide={cancelClose}
           onCancel={cancelClose}
           onContinue={confirmClose}
-          onSave={saveAndClose}
-          title={t('closeModal.title')}
+          onSave={saveAndClose}          title={t('closeModal.title')}
           message={t('closeModal.unsavedChanges')}
         />
       )}
     </div>
   );
-};
+});
+
+SteelForm.displayName = 'SteelForm';
 
 export default SteelForm;

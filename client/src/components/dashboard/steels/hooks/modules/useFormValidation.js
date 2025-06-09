@@ -8,29 +8,37 @@ const useFormValidation = (formData, setErrors) => {
     
     // Validation de la famille d'acier
     if (!formData.family?.trim()) newErrors.family = 'validation.required.family';
-    
-    // Validation des composants chimiques si présents
-    if (formData.chemicalComponents && formData.chemicalComponents.length > 0) {
+      // Validation des composants chimiques si présents
+    if (formData.chemical_elements && formData.chemical_elements.length > 0) {
       const componentErrors = [];
       
-      formData.chemicalComponents.forEach((component, index) => {
+      formData.chemical_elements.forEach((component, index) => {
         const compError = {};
         
         // Validation de l'élément
         if (!component.element) compError.element = 'validation.required.element';
         
         // Validation du type de valeur (min/max ou unique)
-        if (component.valueType === 'single' && !component.value) {
+        if (component.rate_type === 'exact' && !component.value) {
           compError.value = 'validation.required.value';
-        } else if (component.valueType === 'range') {
-          // Vérifier que min et max sont présents
-          if (!component.minValue) compError.minValue = 'validation.required.minValue';
-          if (!component.maxValue) compError.maxValue = 'validation.required.maxValue';
+        } else if (component.rate_type === 'range') {
+          // Au moins une valeur (min ou max) doit être présente
+          if (!component.min_value && !component.max_value) {
+            compError.range = 'validation.required.minOrMax';
+          }
           
           // Si les deux sont présents, vérifier que min < max
-          if (component.minValue && component.maxValue && 
-              parseFloat(component.minValue) >= parseFloat(component.maxValue)) {
+          if (component.min_value && component.max_value && 
+              parseFloat(component.min_value) >= parseFloat(component.max_value)) {
             compError.range = 'validation.range.minLessThanMax';
+          }
+          
+          // Validation des valeurs numériques si présentes
+          if (component.min_value && isNaN(parseFloat(component.min_value))) {
+            compError.min_value = 'validation.invalid.number';
+          }
+          if (component.max_value && isNaN(parseFloat(component.max_value))) {
+            compError.max_value = 'validation.invalid.number';
           }
         }
         
@@ -40,16 +48,15 @@ const useFormValidation = (formData, setErrors) => {
       });
       
       if (componentErrors.some(err => err)) {
-        newErrors.chemicalComponents = componentErrors;
+        newErrors.chemical_elements = componentErrors;
       }
     }
     
     // Validation des équivalents si présents
     if (formData.equivalents && formData.equivalents.length > 0) {
       const equivalentErrors = [];
-      
-      formData.equivalents.forEach((equivalent, index) => {
-        if (!equivalent.steelId) {
+        formData.equivalents.forEach((equivalent, index) => {
+        if (!equivalent.steel_id) {
           equivalentErrors[index] = {
             steel: 'validation.required.equivalentSteel'
           };

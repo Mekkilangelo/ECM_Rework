@@ -42,13 +42,12 @@ const getAllTests = async (options = {}) => {
       sequelize.literal(`Test.test_code LIKE '%${search.replace(/'/g, "''")}%'`)
     ];
   }
-  
-  // Exécuter la requête
+    // Exécuter la requête
   const tests = await Node.findAll({
     where: whereCondition,
     include: [{
       model: Test,
-      attributes: ['test_code', 'test_date', 'status', 'location']
+      attributes: ['test_code', 'load_number', 'test_date', 'status', 'location']
     }],
     order: [[sortBy, sortOrder]],
     limit: parseInt(limit),

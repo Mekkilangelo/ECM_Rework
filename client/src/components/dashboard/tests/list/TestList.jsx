@@ -106,10 +106,10 @@ const TestList = ({ partId }) => {
 
       {data.length > 0 ? (
         <div className="data-list-container">
-          <Table hover responsive className="data-table border-bottom">
-            <thead>
+          <Table hover responsive className="data-table border-bottom">            <thead>
               <tr className="bg-light">
-                <th style={{ width: '30%' }}>{t('tests.testCode')}</th>
+                <th style={{ width: '25%' }}>{t('tests.testCode')}</th>
+                <th className="text-center">{t('tests.loadNumber')}</th>
                 <th className="text-center">{t('tests.date')}</th>
                 <th className="text-center">{t('tests.location')}</th>
                 <th className="text-center">{t('common.modifiedAt')}</th>
@@ -118,8 +118,7 @@ const TestList = ({ partId }) => {
             </thead>
             <tbody>
               {data.map(test => (
-                <tr key={test.id}>
-                  <td>
+                <tr key={test.id}>                  <td>
                     <div
                       onClick={() => handleTestClick(test)}
                       style={{ cursor: 'pointer' }}
@@ -133,6 +132,7 @@ const TestList = ({ partId }) => {
                       </div>
                     </div>
                   </td>
+                  <td className="text-center">{test.Test?.load_number || "-"}</td>
                   <td className="text-center">{test.Test?.test_date || t('tests.notDoneYet')}</td>
                   <td className="text-center">{test.Test?.location || "-"}</td>
                   <td className="text-center">

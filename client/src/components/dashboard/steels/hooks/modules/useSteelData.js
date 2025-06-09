@@ -38,13 +38,12 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel) => {
               equivalents: Array.isArray(steelProperties.equivalents) ? steelProperties.equivalents : [],
               chemical_elements: []
             };
-            
-            // Transformer les données de chimie en éléments chimiques pour le formulaire
+              // Transformer les données de chimie en éléments chimiques pour le formulaire
             if (Array.isArray(steelProperties.chemistery)) {
               formattedData.chemical_elements = steelProperties.chemistery.map(chem => ({
                 element: chem.element || '',
-                rate_type: (chem.min_value !== null && chem.min_value !== undefined && 
-                            chem.max_value !== null && chem.max_value !== undefined) ? 'range' : 'exact',
+                rate_type: (chem.min_value !== null && chem.min_value !== undefined) || 
+                          (chem.max_value !== null && chem.max_value !== undefined) ? 'range' : 'exact',
                 value: chem.value !== null && chem.value !== undefined ? chem.value.toString() : '',
                 min_value: chem.min_value !== null && chem.min_value !== undefined ? chem.min_value.toString() : '',
                 max_value: chem.max_value !== null && chem.max_value !== undefined ? chem.max_value.toString() : '',
@@ -53,8 +52,8 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel) => {
               // Alternative si les éléments sont dans un autre champ
               formattedData.chemical_elements = steelProperties.elements.map(elem => ({
                 element: elem.element || '',
-                rate_type: (elem.min_value !== null && elem.min_value !== undefined && 
-                           elem.max_value !== null && elem.max_value !== undefined) ? 'range' : 'exact',
+                rate_type: (elem.min_value !== null && elem.min_value !== undefined) || 
+                          (elem.max_value !== null && elem.max_value !== undefined) ? 'range' : 'exact',
                 value: elem.value !== null && elem.value !== undefined ? elem.value.toString() : '',
                 min_value: elem.min_value !== null && elem.min_value !== undefined ? elem.min_value.toString() : '',
                 max_value: elem.max_value !== null && elem.max_value !== undefined ? elem.max_value.toString() : '',

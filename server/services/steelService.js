@@ -335,17 +335,57 @@ const deleteSteel = async (steelId) => {
   
   try {
     // Vérifier les références avant suppression
-    // (À implémenter: vérification des pièces utilisant cet acier)
     
-    // Supprimer dans une transaction
+    // 1. Vérifier si cet acier est utilisé comme équivalent par d'autres aciers
+    const steelsWithEquivalents = await Steel.findAll({
+      where: {
+        equivalents: {
+          [Op.ne]: null
+        }
+      },
+      include: [{
+        model: Node,
+        required: true
+      }]
+    });
+    
+    // Chercher si l'acier à supprimer est référencé dans les équivalents
+    const referencingSteel = steelsWithEquivalents.find(s => {
+      if (s.equivalents && Array.isArray(s.equivalents)) {
+        return s.equivalents.some(equiv => equiv.steelId == steelId);
+      }
+      return false;
+    });
+    
+    if (referencingSteel) {
+      throw new ValidationError(
+        `Impossible de supprimer cet acier car il est utilisé comme équivalent par l'acier "${referencingSteel.Node.name}" (ID: ${referencingSteel.node_id}). Veuillez d'abord retirer cette référence.`
+      );
+    }
+    
+    // 2. Vérifier si cet acier est utilisé par des pièces
+    // (À implémenter selon la structure de votre base de données)
+      // Supprimer dans une transaction
     await sequelize.transaction(async (t) => {
-      // Supprimer les données Steel en premier (à cause de la clé étrangère)
+      // 1. Supprimer les données Steel en premier (à cause de la clé étrangère)
       await Steel.destroy({
         where: { node_id: steelId },
         transaction: t
       });
       
-      // Supprimer le nœud
+      // 2. Supprimer toutes les entrées dans la table closure où ce nœud apparaît
+      const { Closure } = require('../models');
+      await Closure.destroy({
+        where: {
+          [Op.or]: [
+            { ancestor_id: steelId },
+            { descendant_id: steelId }
+          ]
+        },
+        transaction: t
+      });
+      
+      // 3. Supprimer le nœud
       await steel.destroy({ transaction: t });
     });
     

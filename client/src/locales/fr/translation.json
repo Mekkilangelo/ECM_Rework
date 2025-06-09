@@ -50,15 +50,15 @@
       "parentPart": "Une pièce parente est requise",
       "testDate": "La date du test est requise",
       "grade": "Le grade est requis",
-      "family": "La famille est requise",
-      "element": "L'élément est requis",
+      "family": "La famille est requise",      "element": "L'élément est requis",
       "value": "La valeur est requise",
       "minValue": "La valeur minimale est requise",
       "maxValue": "La valeur maximale est requise",
+      "minOrMax": "Au moins une valeur (minimum ou maximum) doit être saisie",
       "equivalentSteel": "Un acier équivalent doit être sélectionné"
-    },
-    "invalid": {
-      "data": "Données invalides"
+    },    "invalid": {
+      "data": "Données invalides",
+      "number": "Cette valeur doit être un nombre valide"
     },
     "duplicate": {
       "clientName": "Un client avec ce nom existe déjà",
@@ -487,8 +487,8 @@
     "form": "Formulaire d'essai",
     "add": "Ajouter un essai",
     "edit": "Modifier l'essai",
-    "new": "Nouvel essai",
-    "testCode": "Code d'essai",
+    "new": "Nouvel essai",    "testCode": "Code d'essai",
+    "loadNumber": "Numéro de charge",
     "date": "Date",
     "location": "Lieu",
     "noName": "Sans nom",

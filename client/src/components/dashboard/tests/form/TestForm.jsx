@@ -74,8 +74,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
   // Exposer handleCloseRequest à travers la référence
   useImperativeHandle(ref, () => ({
     handleCloseRequest
-  }));
-  const {
+  }));  const {
     formData,
     errors,
     loading,
@@ -84,6 +83,9 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
     setFileAssociationCallback,
     handleSubmit,
     showConfirmModal,
+    pendingClose,
+    isModified,
+    setModified,
     handleCloseRequest,
     confirmClose,
     cancelClose,
@@ -238,8 +240,10 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                 {t('common.close')}
               </Button>
             ) : (
-              <>
-                <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
+              <>                <Button variant="secondary" onClick={() => {
+                  console.log('🟢 Cancel button clicked in TestForm');
+                  handleCloseRequest();
+                }} className="mr-2">
                   {t('common.cancel')}
                 </Button>
                 <Button variant="warning" type="submit" disabled={loading}>

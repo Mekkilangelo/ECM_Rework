@@ -70,15 +70,25 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
             console.log("Aucun contact valide trouvé, ajout d'un contact vide");
             contacts = [{ name: '', phone: '', email: '' }];
           }
-          
-          // Construction du nouvel état du formulaire en cherchant dans les différentes structures possibles
-          const formDataUpdate = {
+            // Construction du nouvel état du formulaire en normalisant la structure
+          // Après la refactorisation, nous devons normaliser les données pour la comparaison
+          const normalizedData = {
             // Essayer d'abord orderData.Order.*, puis orderData.* 
             order_date: orderData.Order?.order_date || orderData.order_date || '',
             commercial: orderData.Order?.commercial || orderData.commercial || '',
             // La description est habituellement au niveau du nœud parent (orderData)
             description: orderData.description || '',
             contacts: contacts
+          };
+          
+          console.log("Données normalisées pour le formulaire:", normalizedData);
+          
+          // Créer une copie propre sans les métadonnées du backend
+          const formDataUpdate = {
+            order_date: normalizedData.order_date,
+            commercial: normalizedData.commercial,
+            description: normalizedData.description,
+            contacts: normalizedData.contacts
           };
           
           console.log("Mise à jour du formulaire avec:", formDataUpdate);

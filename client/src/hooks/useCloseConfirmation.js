@@ -25,7 +25,6 @@ const useCloseConfirmation = (
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   // État pour indiquer qu'une fermeture est en attente
   const [pendingClose, setPendingClose] = useState(false);
-
   // Utiliser le hook useModifiedState pour suivre les modifications du formulaire
   // En mode lecture seule, désactiver la vérification des modifications
   const { isModified, setModified, resetInitialState } = useModifiedState(
@@ -34,35 +33,68 @@ const useCloseConfirmation = (
     isFetching,
     viewMode ? () => false : customIsModifiedCheck // En mode lecture seule, toujours retourner false
   );
-    // Gérer la tentative de fermeture
-  const handleCloseRequest = useCallback((closeCallback = onClose) => {
-    // En mode lecture seule, fermer directement sans confirmation
+  // Gérer la tentative de fermeture
+  const handleCloseRequest = useCallback((closeCallbackOrEvent) => {    // En mode lecture seule, fermer directement sans confirmation
     if (viewMode) {
-      closeCallback();
+      let finalCallback;
+      if (typeof closeCallbackOrEvent === 'function') {
+        finalCallback = closeCallbackOrEvent;
+      } else {
+        finalCallback = onClose;
+      }
+      if (typeof finalCallback === 'function') {
+        finalCallback();
+      }
       return;
-    }
-    
-    try {
+    }    try {
       if (isModified) {
-        console.debug('Modifications détectées, affichage de la confirmation');
         setShowConfirmModal(true);
         setPendingClose(true);
       } else {
         // Si aucune modification, fermer directement
-        console.debug('Aucune modification, fermeture directe');
-        closeCallback();
-      }
+        let finalCallback;
+        if (typeof closeCallbackOrEvent === 'function') {
+          finalCallback = closeCallbackOrEvent;
+        } else {
+          finalCallback = onClose;
+        }
+        if (typeof finalCallback === 'function') {
+          finalCallback();
+        }      }
     } catch (error) {
       console.error('Erreur lors de la vérification des modifications', error);
       // En cas d'erreur, mieux vaut fermer directement pour éviter de bloquer l'utilisateur
-      closeCallback();
+      let finalCallback;
+      if (typeof closeCallbackOrEvent === 'function') {
+        finalCallback = closeCallbackOrEvent;
+      } else {
+        finalCallback = onClose;
+      }
+      if (typeof finalCallback === 'function') {
+        finalCallback();
+      }
     }
-  }, [isModified, onClose, viewMode]);
-    // Confirmer la fermeture sans sauvegarder
-  const confirmClose = useCallback((closeCallback = onClose) => {
+  }, [isModified, onClose, viewMode, formData]);
+
+  // Confirmer la fermeture sans sauvegarder
+  const confirmClose = useCallback((closeCallbackOrEvent) => {
     setShowConfirmModal(false);
     setPendingClose(false);
-    closeCallback();
+    
+    // Si le premier paramètre est un événement React (objet avec des propriétés spécifiques)
+    // ou n'est pas une fonction, utiliser onClose directement
+    let finalCallback;
+    if (typeof closeCallbackOrEvent === 'function') {
+      finalCallback = closeCallbackOrEvent;
+    } else {
+      finalCallback = onClose;
+    }
+    
+    if (typeof finalCallback === 'function') {
+      finalCallback();
+    } else {
+      console.error('Aucune fonction de fermeture disponible');
+    }
   }, [onClose]);
   
   // Annuler la fermeture
@@ -70,19 +102,31 @@ const useCloseConfirmation = (
     setShowConfirmModal(false);
     setPendingClose(false);
   }, []);
-  
   // Sauvegarder et fermer
-  const saveAndClose = useCallback((e, closeCallback = onClose) => {
-    if (e) {
-      e.preventDefault();
+  const saveAndClose = useCallback((eOrCloseCallback, closeCallback) => {
+    // Si le premier paramètre est un événement, l'empêcher de se propager
+    if (eOrCloseCallback && typeof eOrCloseCallback === 'object' && eOrCloseCallback.preventDefault) {
+      eOrCloseCallback.preventDefault();
     }
+    
     setShowConfirmModal(false);
     setPendingClose(false);
-    onSubmit(e, true, closeCallback); // true indique que c'est une fermeture après sauvegarde
-  }, [onSubmit]);
-
+    
+    // Déterminer le bon callback à utiliser
+    let finalCallback;
+    if (typeof eOrCloseCallback === 'function') {
+      finalCallback = eOrCloseCallback;
+    } else if (typeof closeCallback === 'function') {
+      finalCallback = closeCallback;
+    } else {
+      finalCallback = onClose;
+    }
+    
+    onSubmit(eOrCloseCallback, true, finalCallback); // true indique que c'est une fermeture après sauvegarde
+  }, [onSubmit, onClose]);
   return {
     showConfirmModal,
+    setShowConfirmModal, // Ajout pour les tests de debug
     pendingClose,
     isModified,
     setModified,

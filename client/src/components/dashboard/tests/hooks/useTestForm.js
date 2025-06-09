@@ -8,7 +8,7 @@ import useTestSubmission from './modules/useTestSubmission';
 import useTestData from './modules/useTestData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 
-const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
+const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.partId;
   
@@ -143,13 +143,13 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated) => {
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
-    saveAndClose 
-  } = useCloseConfirmation(
+    saveAndClose   } = useCloseConfirmation(
     formData,        // État actuel du formulaire 
     loading,         // État de chargement
     fetchingTest,    // État de récupération des données
     handleSubmit,    // Fonction de soumission
-    onClose          // Fonction de fermeture
+    onClose,         // Fonction de fermeture
+    viewMode         // Mode lecture seule
   );
 
   // Réinitialiser l'état initial après une sauvegarde réussie

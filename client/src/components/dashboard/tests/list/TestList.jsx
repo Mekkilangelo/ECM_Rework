@@ -198,34 +198,33 @@ const TestList = ({ partId }) => {
             onClose={closeCreateModal}
             onTestCreated={handleItemCreated}
           />
-        </Modal.Body>      </Modal>
-
-      {/* Modal pour éditer un essai */}
+        </Modal.Body>      </Modal>      {/* Modal pour éditer un essai */}
       <Modal
         show={showEditForm}
-        onHide={closeEditModal}
+        onHide={() => handleRequestClose('edit', testFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>{t('tests.edit')}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedTest && (
+        <Modal.Body>          {selectedTest && (
             <TestForm
               ref={testFormRef}
               test={selectedTest}
               partId={partId}
-              onClose={closeEditModal}
+              onClose={() => {
+                // Appeler directement closeEditModal au lieu de handleRequestClose
+                // pour éviter la boucle infinie
+                closeEditModal();
+              }}
               onTestUpdated={handleItemUpdated}
             />
           )}
         </Modal.Body>
-      </Modal>
-
-      {/* Modal pour voir les détails - utilise TestForm en mode lecture seule */}
+      </Modal>      {/* Modal pour voir les détails - utilise TestForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
-        onHide={closeDetailModal}
+        onHide={() => handleRequestClose('detail', testFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">

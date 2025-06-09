@@ -5,11 +5,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import useSteelForm from '../hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
+import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
 
 const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }) => {
   const { t } = useTranslation();
-  
-  const {
+    const {
     formData,
     errors,
     loading,
@@ -30,7 +30,16 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
     handleRemoveChemicalElement,
     handleChemicalElementChange,
     handleRateTypeChange,
-    handleEquivalentChange
+    handleEquivalentChange,
+    // Gestion de la confirmation de fermeture
+    showConfirmModal,
+    pendingClose,
+    isModified,
+    setModified,
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
+    saveAndClose
   } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated, viewMode);
   
   if (fetchingSteel) {
@@ -361,15 +370,14 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
             )}
           </Col>
         </Row>
-        
-        <div className="d-flex justify-content-end mt-4">
+          <div className="d-flex justify-content-end mt-4">
           {viewMode ? (
             <Button variant="secondary" onClick={onClose}>
               {t('common.close')}
             </Button>
           ) : (
             <>
-              <Button variant="secondary" onClick={onClose} className="me-2">
+              <Button variant="secondary" onClick={handleCloseRequest} className="me-2">
                 {t('common.cancel')}
               </Button>
               <Button variant="danger" type="submit" disabled={loading}>
@@ -378,9 +386,21 @@ const SteelForm = ({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = 
                   : (steel ? t('common.edit') : t('common.create'))}
               </Button>
             </>
-          )}
-        </div>
+          )}        </div>
       </Form>
+
+      {/* Modal de confirmation pour la fermeture - non affiché en mode lecture seule */}
+      {!viewMode && (
+        <CloseConfirmationModal
+          show={showConfirmModal}
+          onHide={cancelClose}
+          onCancel={cancelClose}
+          onContinue={confirmClose}
+          onSave={saveAndClose}
+          title={t('closeModal.title')}
+          message={t('closeModal.unsavedChanges')}
+        />
+      )}
     </div>
   );
 };

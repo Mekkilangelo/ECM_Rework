@@ -127,11 +127,11 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     fileAssociationCallback,
     viewMode // Transmettre le mode lecture seule
   );
-
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
   // En mode lecture seule, la confirmation n'est pas nécessaire
   const { 
     showConfirmModal, 
+    setShowConfirmModal, // Ajout pour les tests de debug
     pendingClose, 
     isModified,
     setModified,
@@ -180,10 +180,10 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     getSelectedOption,
     selectStyles,
     refreshSteels: refreshSteelOptions,
-    setFileAssociationCallback,
-    isModified,
+    setFileAssociationCallback,    isModified,
     setModified,
     showConfirmModal,
+    setShowConfirmModal, // Ajout pour les tests de debug
     pendingClose,
     handleCloseRequest,
     confirmClose,

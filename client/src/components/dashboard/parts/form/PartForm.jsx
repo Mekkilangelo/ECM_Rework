@@ -22,9 +22,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
     console.log("File association function received in PartForm");
     setFileAssociationMethod(() => associateFilesFunc);
-  }, []);
-
-  const {
+  }, []);  const {
     formData,
     errors,
     loading,
@@ -44,6 +42,10 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     refreshSteels,
     setFileAssociationCallback,
     showConfirmModal,
+    setShowConfirmModal, // Ajout pour les tests de debug
+    pendingClose,
+    isModified,
+    setModified,
     handleCloseRequest,
     confirmClose,
     cancelClose,
@@ -225,10 +227,18 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               <Button variant="secondary" onClick={onClose}>
                 {t('common.close')}
               </Button>
-            ) : (
-              <>
-                <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
+            ) : (              <>
+                <Button variant="secondary" onClick={() => {
+                  console.log('🟢 Cancel button clicked in PartForm');
+                  handleCloseRequest();
+                }} className="mr-2">
                   {t('common.cancel')}
+                </Button>
+                <Button variant="danger" onClick={() => {
+                  console.log('🔧 TEST: Force showing modal');
+                  setShowConfirmModal(true);
+                }} className="mr-2">
+                  TEST MODAL
                 </Button>
                 <Button
                   variant="warning"

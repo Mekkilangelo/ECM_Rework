@@ -177,12 +177,10 @@ const PartList = ({ orderId }) => {
             <p className="text-muted">{t('parts.clickToAdd')}</p>
           </Card.Body>
         </Card>
-      )}
-
-      {/* Modal pour créer une pièce */}
+      )}      {/* Modal pour créer une pièce */}
       <Modal
         show={showCreateForm}
-        onHide={closeCreateModal}
+        onHide={() => handleRequestClose('create', partFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -196,34 +194,33 @@ const PartList = ({ orderId }) => {
             onPartCreated={handleItemCreated}
           />
         </Modal.Body>
-      </Modal>
-
-      {/* Modal pour éditer une pièce */}
+      </Modal>      {/* Modal pour éditer une pièce */}
       <Modal
         show={showEditForm}
-        onHide={closeEditModal}
+        onHide={() => handleRequestClose('edit', partFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>{t('parts.edit')}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedPart && (
+        <Modal.Body>          {selectedPart && (
             <PartForm
               ref={partFormRef}
               part={selectedPart}
               orderId={orderId}
-              onClose={closeEditModal}
+              onClose={() => {
+                // Appeler directement closeEditModal au lieu de handleRequestClose
+                // pour éviter la boucle infinie
+                closeEditModal();
+              }}
               onPartUpdated={handleItemUpdated}
             />
           )}
         </Modal.Body>
-      </Modal>
-
-      {/* Modal pour voir les détails - utilise PartForm en mode lecture seule */}
+      </Modal>      {/* Modal pour voir les détails - utilise PartForm en mode lecture seule */}
       <Modal
         show={showDetailModal}
-        onHide={closeDetailModal}
+        onHide={() => handleRequestClose('detail', partFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">

@@ -8,7 +8,7 @@ import DocumentsSection from './sections/documents/DocumentsSection'
 import GeneralInfoSection from './sections/general_infos/GeneralInfoSection'
 import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
 
-const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated, viewMode = false }, ref) => {
+const OrderForm = forwardRef(({ order, clientId, onClose, onOrderCreated, onOrderUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
   const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
 
@@ -33,7 +33,7 @@ const OrderForm = forwardRef(({ order, onClose, onOrderCreated, onOrderUpdated, 
     cancelClose,
     saveAndClose,
     setFileAssociationCallback
-  } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated, viewMode);
+  } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated, viewMode, clientId);
 
   // Mettre à jour le callback d'association de fichiers dans le hook quand il change
   React.useEffect(() => {

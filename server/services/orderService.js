@@ -256,8 +256,7 @@ const updateOrder = async (orderId, orderData) => {
     if (orderData.name) nodeUpdates.name = orderData.name;
     if (orderData.description) nodeUpdates.description = orderData.description;
     
-    // Toujours mettre à jour le statut et la date de modification
-    nodeUpdates.data_status = 'updated';
+    // Mettre à jour la date de modification
     nodeUpdates.modified_at = new Date();
     
     // S'assurer que la mise à jour est toujours appliquée pour mettre à jour modified_at

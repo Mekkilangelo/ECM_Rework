@@ -176,12 +176,10 @@ const OrderList = () => {
             <p className="text-muted">{t('orders.clickToAddOrder')}</p>
           </Card.Body>
         </Card>
-      )}
-
-      {/* Modal pour créer une commande */}
+      )}      {/* Modal pour créer une commande */}
       <Modal
         show={showCreateForm}
-        onHide={closeCreateModal}
+        onHide={() => handleRequestClose('create', orderFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
@@ -200,7 +198,7 @@ const OrderList = () => {
       {/* Modal pour éditer une commande */}
       <Modal
         show={showEditForm}
-        onHide={closeEditModal}
+        onHide={() => handleRequestClose('edit', orderFormRef)}
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">

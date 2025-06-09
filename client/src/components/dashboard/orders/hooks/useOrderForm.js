@@ -7,7 +7,7 @@ import useOrderData from './modules/useOrderData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 import { useState, useEffect, useCallback } from 'react';
 
-const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode = false) => {
+const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode = false, clientId) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.clientId;
   

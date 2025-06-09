@@ -4,8 +4,7 @@ import api from './api';
  * Service de gestion des aciers
  * Fournit des méthodes pour interagir avec l'API REST pour les opérations CRUD et de recherche sur les aciers
  */
-const steelService = {
-  /**
+const steelService = {  /**
    * Récupère tous les aciers avec pagination
    * @param {number} page - Numéro de la page (commence à 1)
    * @param {number} limit - Nombre d'éléments par page
@@ -14,23 +13,36 @@ const steelService = {
    */
   getSteels: async (page = 1, limit = 10) => {
     try {
+      console.log('=== FRONTEND steelService.getSteels called ===');
+      console.log('Paramètres:', { page, limit, offset: (page - 1) * limit });
+      
       const response = await api.get('/steels', { 
         params: { limit, offset: (page - 1) * limit } 
       });
+      
+      console.log('Réponse brute de l\'API:', response);
+      console.log('Données de la réponse:', response.data);
+      
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
+        console.log('Réponse API formatée:', {
+          steels: response.data.data,
+          pagination: response.data.pagination
+        });
         return {
           steels: response.data.data,
           pagination: response.data.pagination
         };
       }
+      
+      console.log('Retour des données brutes:', response.data);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des aciers:', error);
+      console.error('Détails de l\'erreur:', error.response?.data);
       throw error;
     }
   },
-
   /**
    * Récupère toutes les nuances d'acier disponibles
    * @returns {Promise<Array>} Liste des nuances d'acier
@@ -38,14 +50,24 @@ const steelService = {
    */
   getSteelGrades: async () => {
     try {
+      console.log('=== FRONTEND steelService.getSteelGrades called ===');
+      
       const response = await api.get('/steels/grades');
+      
+      console.log('Réponse brute grades:', response);
+      console.log('Données grades:', response.data);
+      
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
+        console.log('Grades formatés:', response.data.data);
         return response.data.data;
       }
+      
+      console.log('Retour grades brutes:', response.data);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des nuances d\'acier:', error);
+      console.error('Détails de l\'erreur grades:', error.response?.data);
       throw error;
     }
   },
@@ -189,8 +211,10 @@ const steelService = {
     } catch (error) {
       console.error(`Erreur lors de la récupération des aciers selon la norme "${standard}":`, error);
       throw error;
-    }
-  }
+    }  }
 };
+
+// Ajouter un alias pour maintenir la compatibilité
+steelService.getAllSteels = steelService.getSteels;
 
 export default steelService;

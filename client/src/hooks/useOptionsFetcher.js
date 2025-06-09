@@ -121,8 +121,7 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     return options.find(option => option.value === value) || null;
   }, []);
 
-  // ------ FONCTIONS DE RÉCUPÉRATION INDIVIDUELLES ------
-    // Récupérer les valeurs d'énumération génériques avec gestion d'erreur
+  // ------ FONCTIONS DE RÉCUPÉRATION INDIVIDUELLES ------    // Récupérer les valeurs d'énumération génériques avec gestion d'erreur
   const fetchEnumValues = useCallback(async (category, field, setter) => {
     try {
       const enumData = await enumService.getEnumValues(category, field);
@@ -130,9 +129,14 @@ const useOptionsFetcher = (setLoading, options = {}) => {
       // Adaptation au nouveau format de réponse
       let values = [];
       if (enumData && enumData.values) {
+        // Format direct: { values: [...] }
         values = enumData.values;
       } else if (enumData && enumData.data && enumData.data.values) {
+        // Format avec success: { success: true, data: { values: [...] } }
         values = enumData.data.values;
+      } else if (Array.isArray(enumData)) {
+        // Format direct tableau
+        values = enumData;
       }
       
       setter(values.map(value => ({ 

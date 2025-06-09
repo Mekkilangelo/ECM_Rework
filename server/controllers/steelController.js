@@ -18,6 +18,10 @@ const { ValidationError } = require('../utils/errors');
  */
 const getSteels = async (req, res, next) => {
   try {
+    logger.info('=== CONTROLLER getSteels called ===');
+    logger.info('req.query:', JSON.stringify(req.query, null, 2));
+    logger.info('req.pagination:', JSON.stringify(req.pagination, null, 2));
+    
     const { search, filter } = req.query;
     const { limit, offset, sortBy, sortOrder } = req.pagination || {
       limit: 10,
@@ -26,7 +30,7 @@ const getSteels = async (req, res, next) => {
       sortOrder: 'ASC'
     };
     
-    logger.info('Récupération des aciers', { 
+    logger.info('Paramètres extraits du contrôleur:', { 
       limit, 
       offset, 
       sortBy, 
@@ -35,25 +39,58 @@ const getSteels = async (req, res, next) => {
       filter
     });
     
-    // Déléguer au service
-    const result = await steelService.getAllSteels({
+    const serviceOptions = {
       limit,
       offset,
       sortBy,
       sortOrder,
       search,
       filter: filter ? JSON.parse(filter) : null
+    };
+    
+    logger.info('Options envoyées au service:', JSON.stringify(serviceOptions, null, 2));
+    
+    // Déléguer au service
+    const result = await steelService.getAllSteels(serviceOptions);
+    
+    logger.info('Résultat du service:', {
+      steelsCount: result.steels ? result.steels.length : 0,
+      pagination: result.pagination
+    });
+    
+    // Transformation des données pour l'API
+    const formattedSteels = result.steels.map(steel => ({
+      id: steel.id,
+      name: steel.name,
+      description: steel.description,
+      grade: steel.Steel?.grade,
+      family: steel.Steel?.family,
+      standard: steel.Steel?.standard,
+      equivalents: steel.Steel?.equivalents,
+      chemistery: steel.Steel?.chemistery,
+      elements: steel.Steel?.elements,
+      created_at: steel.created_at,
+      modified_at: steel.modified_at
+    }));
+    
+    logger.info('Données formatées pour l\'API:', {
+      formattedSteelsCount: formattedSteels.length,
+      firstSteel: formattedSteels[0] || null
     });
     
     // Renvoyer la réponse paginée
-    return apiResponse.paginated(
+    const apiResponseResult = apiResponse.paginated(
       res,
-      result.steels,
+      formattedSteels,
       result.pagination,
       'Aciers récupérés avec succès'
     );
+    
+    logger.info('Réponse API envoyée');
+    return apiResponseResult;
   } catch (error) {
     logger.error(`Erreur lors de la récupération des aciers: ${error.message}`, error);
+    logger.error('Stack trace:', error.stack);
     next(error);
   }
 };

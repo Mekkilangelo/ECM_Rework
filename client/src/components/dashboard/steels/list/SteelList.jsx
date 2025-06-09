@@ -27,28 +27,56 @@ const SteelList = () => {  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
-  // Déclarer fetchSteels avant de l'utiliser
+  const [total, setTotal] = useState(0);  // Déclarer fetchSteels avant de l'utiliser
   const fetchSteels = async () => {
     try {
+      console.log('=== FRONTEND SteelList fetchSteels called ===');
+      console.log('Paramètres:', { currentPage, itemsPerPage });
+      
       setLoading(true);
-      const response = await steelService.getAllSteels(currentPage, itemsPerPage);
+      const response = await steelService.getSteels(currentPage, itemsPerPage);
+      
+      console.log('Réponse complète steelService.getSteels:', response);
       
       // Check the structure of the response based on your API
-      if (response.data && response.data.steels) {
+      if (response && response.steels) {
+        console.log('Structure trouvée: response.steels');
+        console.log('Aciers trouvés:', response.steels);
+        console.log('Pagination:', response.pagination);
+        
         // If the API returns { steels, pagination }
-        setSteels(response.data.steels);
+        setSteels(response.steels);
         
         // Set pagination data
-        const { total, limit: responseLimit } = response.data.pagination;
-        setTotal(total);
-        setTotalPages(Math.ceil(total / responseLimit));
+        const { total, limit: responseLimit } = response.pagination || {};
+        console.log('Pagination data:', { total, responseLimit });
+        
+        setTotal(total || 0);
+        setTotalPages(Math.ceil((total || 0) / (responseLimit || itemsPerPage)));
         
         // Mettre à jour le total dans le limitSelector
         if (limitSelectorRef.current) {
-          limitSelectorRef.current.updateTotal(total);
+          limitSelectorRef.current.updateTotal(total || 0);
+        }
+      } else if (response && response.data && response.data.steels) {
+        console.log('Structure trouvée: response.data.steels');
+        console.log('Aciers trouvés:', response.data.steels);
+        
+        setSteels(response.data.steels);
+        
+        // Set pagination data
+        const { total, limit: responseLimit } = response.data.pagination || {};
+        setTotal(total || 0);
+        setTotalPages(Math.ceil((total || 0) / (responseLimit || itemsPerPage)));
+        
+        // Mettre à jour le total dans le limitSelector
+        if (limitSelectorRef.current) {
+          limitSelectorRef.current.updateTotal(total || 0);
         }
       } else if (Array.isArray(response.data)) {
+        console.log('Structure trouvée: response.data (array)');
+        console.log('Aciers trouvés:', response.data);
+        
         // If the API directly returns an array of steels
         setSteels(response.data);
         // Assuming the total count is in a header or elsewhere
@@ -60,11 +88,23 @@ const SteelList = () => {  const { t } = useTranslation();
         if (limitSelectorRef.current) {
           limitSelectorRef.current.updateTotal(totalCount);
         }
+      } else {
+        console.log('Structure non reconnue:', response);
+        setSteels([]);
+        setTotal(0);
+        setTotalPages(1);
       }
+      
+      console.log('État final:', {
+        steelsCount: steels.length,
+        total,
+        totalPages
+      });
       
       setError(null);
     } catch (err) {
       console.error('Error fetching steels:', err);
+      console.error('Détails erreur:', err.response?.data);
       setError('Une erreur est survenue lors du chargement des aciers.');
     } finally {
       setLoading(false);
@@ -130,9 +170,8 @@ const SteelList = () => {  const { t } = useTranslation();
   if (error) return <Alert variant="danger">{error}</Alert>;
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <FontAwesomeIcon className="mr-2 text-danger" />
+      <div className="d-flex justify-content-between align-items-center mb-4">        <h2 className="mb-0">
+          <FontAwesomeIcon icon={faCodeBranch} className="mr-2 text-danger" />
           {t('steels.title')}
         </h2>
         {hasEditRights && (

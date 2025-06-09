@@ -20,23 +20,34 @@ const EnumTableContent = ({ table, column }) => {
   useEffect(() => {
     fetchEnumValues();
   }, [table, column]);
-
   const fetchEnumValues = async () => {
+    console.log(`[EnumTableContent] Début fetchEnumValues pour table: ${table}, column: ${column}`);
     setLoading(true);
     try {
+      console.log(`[EnumTableContent] Appel enumService.getEnumValues(${table}, ${column})`);
       const response = await enumService.getEnumValues(table, column);
+      console.log(`[EnumTableContent] Réponse de enumService:`, response);
+      
       if (response && response.success && response.data) {
+        console.log(`[EnumTableContent] Réponse avec success=true, values:`, response.data.values);
         setValues(response.data.values || []);
+      } else if (response && response.values) {
+        console.log(`[EnumTableContent] Réponse avec format direct values:`, response.values);
+        setValues(response.values || []);
       } else {
+        console.log(`[EnumTableContent] Format de réponse non reconnu, définition de valeurs vides`);
+        console.log(`[EnumTableContent] Structure complète de la réponse:`, JSON.stringify(response, null, 2));
         setValues([]);
       }
       setError(null);
     } catch (err) {
-      console.error('Error fetching enum values:', err);
+      console.error('[EnumTableContent] Error fetching enum values:', err);
+      console.error('[EnumTableContent] Stack trace:', err.stack);
       setError('Failed to load values. Please try again.');
       setValues([]);
     } finally {
       setLoading(false);
+      console.log(`[EnumTableContent] Fin fetchEnumValues, loading=false`);
     }
   };
 

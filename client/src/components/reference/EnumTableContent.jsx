@@ -72,7 +72,6 @@ const EnumTableContent = ({ table, column }) => {
     setOriginalValue(value);
     setShowModal(true);
   };
-
   const handleDelete = async (value) => {
     const count = await checkValueUsage(value);
     setUsageCount(count);
@@ -89,7 +88,8 @@ const EnumTableContent = ({ table, column }) => {
       if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette valeur : ${value} ?`)) {
         try {
           await enumService.deleteEnumValue(table, column, value);
-          setValues(values.filter(v => v !== value));
+          // Rafraîchir la liste après suppression pour assurer la cohérence
+          await fetchEnumValues();
         } catch (err) {
           console.error('Error deleting enum value:', err);
           alert('Échec de la suppression. Veuillez réessayer.');
@@ -97,18 +97,34 @@ const EnumTableContent = ({ table, column }) => {
       }
     }
   };
-
   const handleAdd = () => {
     setModalMode('add');
     setCurrentValue('');
     setOriginalValue('');
+    setReplacementValue('');
+    setUsageCount(0);
     setShowUsageWarning(false);
     setShowModal(true);
   };
 
+  // Gérer la fermeture du modal avec réinitialisation des états
+  const handleModalClose = () => {
+    setShowModal(false);
+    setCurrentValue('');
+    setOriginalValue('');
+    setReplacementValue('');
+    setUsageCount(0);
+    setShowUsageWarning(false);
+    setModalMode('add');
+  };
   const handleSave = async () => {
-    if (!currentValue.trim()) {
+    if (modalMode !== 'delete' && !currentValue.trim()) {
       alert('La valeur ne peut pas être vide');
+      return;
+    }
+
+    if (modalMode === 'delete' && !replacementValue) {
+      alert('Veuillez sélectionner une valeur de remplacement');
       return;
     }
 
@@ -123,19 +139,31 @@ const EnumTableContent = ({ table, column }) => {
         await enumService.updateEnumValue(table, column, originalValue, currentValue);
         setValues(values.map(v => v === originalValue ? currentValue : v));
       } else if (modalMode === 'delete') {
-        if (!replacementValue) {
-          alert('Veuillez sélectionner une valeur de remplacement');
-          return;
-        }
-        
         await enumService.replaceAndDeleteEnumValue(table, column, originalValue, replacementValue);
         setValues(values.filter(v => v !== originalValue));
       }
-      
+        // Réinitialiser les états du modal
+      setCurrentValue('');
+      setOriginalValue('');
+      setReplacementValue('');
+      setUsageCount(0);
+      setShowUsageWarning(false);
+      setModalMode('add');
       setShowModal(false);
+      
+      // Rafraîchir la liste pour s'assurer de la cohérence
+      await fetchEnumValues();
     } catch (err) {
       console.error('Error saving enum value:', err);
       alert('Échec de l\'enregistrement. Veuillez réessayer.');
+    }
+  };
+
+  // Gérer la soumission du formulaire avec Enter
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSave();
     }
   };
 
@@ -214,13 +242,13 @@ const EnumTableContent = ({ table, column }) => {
             <p className="text-muted">Cliquez sur "Ajouter une nouvelle valeur" pour ajouter des valeurs à cette énumération</p>
           </Card.Body>
         </Card>
-      )}
-
-      {/* Modal for Add/Edit/Delete with Replacement */}
+      )}      {/* Modal for Add/Edit/Delete with Replacement */}
       <Modal 
         show={showModal} 
-        onHide={() => setShowModal(false)}
+        onHide={handleModalClose}
         size="lg"
+        backdrop="static"
+        keyboard={true}
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>
@@ -239,8 +267,7 @@ const EnumTableContent = ({ table, column }) => {
               Cette valeur est utilisée dans {usageCount} enregistrement(s). La modification mettra à jour tous ces enregistrements.
             </Alert>
           )}
-          
-          <Form>
+            <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
             {modalMode === 'delete' ? (
               <>
                 <Alert variant="warning">
@@ -263,6 +290,7 @@ const EnumTableContent = ({ table, column }) => {
                   <Form.Select 
                     value={replacementValue} 
                     onChange={(e) => setReplacementValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   >
                     <option value="">Sélectionnez une valeur de remplacement</option>
                     {values
@@ -281,17 +309,25 @@ const EnumTableContent = ({ table, column }) => {
                   type="text" 
                   value={currentValue} 
                   onChange={(e) => setCurrentValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder={`Entrez la valeur ${column}`}
+                  autoFocus
                 />
               </Form.Group>
             )}
           </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowModal(false)}>
+        </Modal.Body>        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={handleModalClose}>
             Annuler
           </Button>
-          <Button variant="danger" onClick={handleSave}>
+          <Button 
+            variant="danger" 
+            onClick={handleSave}
+            disabled={
+              (modalMode === 'delete' && !replacementValue) || 
+              (modalMode !== 'delete' && !currentValue.trim())
+            }
+          >
             {modalMode === 'delete' ? 'Supprimer et remplacer' : 'Enregistrer'}
           </Button>
         </Modal.Footer>

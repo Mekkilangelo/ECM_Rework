@@ -43,8 +43,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           const quenchData = typeof data.quench_data === 'string' 
             ? JSON.parse(data.quench_data) 
             : (data.quench_data || {});
-            
-          const resultsData = typeof data.results_data === 'string' 
+              const resultsData = typeof data.results_data === 'string' 
             ? JSON.parse(data.results_data) 
             : (data.results_data || {});
           
@@ -55,7 +54,9 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             quenchData, 
             resultsData 
           });
-            // Map from API structure to form structure
+          
+          console.log('Raw results_data structure:', resultsData);
+          console.log('Results array:', resultsData?.results);// Map from API structure to form structure
           setFormData({
             // Basic information
             name: data.test_code || '',
@@ -63,7 +64,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             testDate: data.test_date || '',
             location: data.location || '',
             status: data.status || '',
-            description: testData.description || '',
+            description: data.description || '',
             
             // Test types
             mountingType: data.mounting_type || '',
@@ -203,121 +204,149 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
               oilDrippingTime: quenchData.oil_quench?.dripping_time?.value || '',
               oilDrippingTimeUnit: quenchData.oil_quench?.dripping_time?.unit || ''
             },
-            
-            // Results data - improved handling based on the provided example format
+              // Results data - Traitement de la nouvelle structure avec results > samples
             resultsData: {
               results: Array.isArray(resultsData?.results) 
-                ? resultsData.results.map(result => {
-                    // Process hardness points
-                    const hardnessPoints = Array.isArray(result.hardness_points) 
-                      ? result.hardness_points.map(point => ({
-                          location: point.location || '',
-                          value: point.value || '',
-                          unit: point.unit || ''
-                        }))
-                      : [{ location: '', value: '', unit: '' }];
-                      
-                    // Process ECD data - Adapter pour le nouveau format avec positions variables
-                    const ecdData = {
-                      hardnessValue: result.ecd?.hardness_value || '',
-                      hardnessUnit: result.ecd?.hardness_unit || '',
-                      ecdPoints: []
-                    };
-                    
-                    // Traiter les positions ECD
-                    if (result.ecd?.positions && Array.isArray(result.ecd.positions)) {
-                      // Nouveau format avec tableau de positions
-                      ecdData.ecdPoints = result.ecd.positions.map(pos => ({
-                        name: pos.name || '',
-                        distance: pos.distance || '',
-                        unit: pos.unit || ''
-                      }));
-                    } else if (result.ecd?.tooth_flank || result.ecd?.tooth_root) {
-                      // Ancien format avec positions fixes - conversion pour retrocompatibilité
-                      if (result.ecd?.tooth_flank) {
-                        ecdData.ecdPoints.push({
-                          name: 'Flanc de dent',
-                          distance: result.ecd.tooth_flank.distance || '',
-                          unit: result.ecd.tooth_flank.unit || ''
-                        });
-                      }
-                      
-                      if (result.ecd?.tooth_root) {
-                        ecdData.ecdPoints.push({
-                          name: 'Pied de dent',
-                          distance: result.ecd.tooth_root.distance || '',
-                          unit: result.ecd.tooth_root.unit || ''
-                        });
-                      }
-                    }
-                    
-                    // Si aucun point n'existe, créer au moins un point vide
-                    if (ecdData.ecdPoints.length === 0) {
-                      ecdData.ecdPoints.push({
-                        name: '',
-                        distance: '',
-                        unit: ''
-                      });
-                    }
-                    
-                    // Nouveau: traiter les données de courbe avec prise en compte des positions dynamiques
-                    const curvePoints = Array.isArray(result.curve_data?.points) 
-                      ? result.curve_data.points.map(point => {
-                          // Créer un objet de base avec la distance
-                          const curvePoint = {
-                            distance: point.distance || ''
+                ? resultsData.results.map(resultBlock => {
+                    // Traiter les échantillons dans chaque bloc de résultat
+                    const samples = Array.isArray(resultBlock.samples) && resultBlock.samples.length > 0
+                      ? resultBlock.samples.map(sample => {
+                          // Process hardness points
+                          const hardnessPoints = Array.isArray(sample.hardness_points) 
+                            ? sample.hardness_points.map(point => ({
+                                location: point.location || '',
+                                value: point.value || '',
+                                unit: point.unit || ''
+                              }))
+                            : [{ location: '', value: '', unit: '' }];
+                            
+                          // Process ECD data - Adapter pour le nouveau format avec positions variables
+                          const ecdData = {
+                            hardnessValue: sample.ecd?.hardness_value || '',
+                            hardnessUnit: sample.ecd?.hardness_unit || '',
+                            ecdPoints: []
                           };
                           
-                          // Ajouter les valeurs de dureté pour les positions ECD dynamiques
-                          if (result.ecd?.positions && Array.isArray(result.ecd.positions)) {
-                            result.ecd.positions.forEach(pos => {
-                              if (pos.name) {
-                                // Générer le nom du champ en snake_case comme stocké dans l'API
-                                const fieldKey = pos.name.toLowerCase().replace(/\s+/g, '_');
-                                // Générer le nom du champ en camelCase comme utilisé dans le frontend
-                                const fieldName = `hardness_${fieldKey.replace(/[^a-zA-Z0-9_]/g, '')}`;
-                                
-                                // Ajouter au point de courbe si la valeur existe dans les données
-                                if (point[fieldKey] !== undefined) {
-                                  curvePoint[fieldName] = point[fieldKey] || '';
-                                }
-                              }
-                            });
+                          // Traiter les positions ECD
+                          if (sample.ecd?.positions && Array.isArray(sample.ecd.positions)) {
+                            // Nouveau format avec tableau de positions
+                            ecdData.ecdPoints = sample.ecd.positions.map(pos => ({
+                              name: pos.name || '',
+                              distance: pos.distance || '',
+                              unit: pos.unit || ''
+                            }));
+                          } else if (sample.ecd?.tooth_flank || sample.ecd?.tooth_root) {
+                            // Ancien format avec positions fixes - conversion pour retrocompatibilité
+                            if (sample.ecd?.tooth_flank) {
+                              ecdData.ecdPoints.push({
+                                name: 'Flanc de dent',
+                                distance: sample.ecd.tooth_flank.distance || '',
+                                unit: sample.ecd.tooth_flank.unit || ''
+                              });
+                            }
+                            
+                            if (sample.ecd?.tooth_root) {
+                              ecdData.ecdPoints.push({
+                                name: 'Pied de dent',
+                                distance: sample.ecd.tooth_root.distance || '',
+                                unit: sample.ecd.tooth_root.unit || ''
+                              });
+                            }
                           }
                           
-                          // Conserver l'ancien format pour la rétrocompatibilité
-                          curvePoint.flankHardness = point.flank_hardness || '';
-                          curvePoint.rootHardness = point.root_hardness || '';
+                          // Si aucun point n'existe, créer au moins un point vide
+                          if (ecdData.ecdPoints.length === 0) {
+                            ecdData.ecdPoints.push({
+                              name: '',
+                              distance: '',
+                              unit: ''
+                            });
+                          }
+                            console.log('Processing sample:', sample);
+                          console.log('Sample curve_data:', sample.curve_data);
                           
-                          return curvePoint;
+                          // Traiter les données de courbe avec prise en compte des positions dynamiques
+                          const curvePoints = Array.isArray(sample.curve_data?.points) 
+                            ? sample.curve_data.points.map(point => {
+                                // Créer un objet de base avec la distance
+                                const curvePoint = {
+                                  distance: point.distance || ''
+                                };
+                                
+                                // Ajouter les valeurs de dureté pour les positions ECD dynamiques
+                                if (sample.ecd?.positions && Array.isArray(sample.ecd.positions)) {
+                                  sample.ecd.positions.forEach(pos => {
+                                    if (pos.name) {
+                                      // Utiliser directement le nom de la position comme clé dans les données de courbe
+                                      const positionKey = pos.name.toLowerCase();
+                                      if (point[positionKey] !== undefined) {
+                                        // Créer aussi un champ avec le format attendu par ResultCurveSection
+                                        const fieldName = `hardness_${positionKey.replace(/\s+/g, '_')}`;
+                                        curvePoint[fieldName] = point[positionKey] || '';
+                                        // Garder aussi la clé originale pour compatibilité
+                                        curvePoint[positionKey] = point[positionKey] || '';
+                                      }
+                                    }
+                                  });
+                                }
+                                
+                                // Conserver l'ancien format pour la rétrocompatibilité
+                                curvePoint.flankHardness = point.flank_hardness || '';
+                                curvePoint.rootHardness = point.root_hardness || '';
+                                
+                                return curvePoint;                              })
+                            : [];
+                            
+                          console.log('Processed curve points:', curvePoints);
+                            
+                          return {
+                            step: sample.step || 1,
+                            description: sample.description || '',
+                            hardnessPoints: hardnessPoints,
+                            ecd: ecdData,
+                            hardnessUnit: sample.hardness_unit || '',
+                            curveData: { points: curvePoints },
+                            comment: sample.comment || ''
+                          };
                         })
-                      : [];
-                      
+                      : [{
+                          step: 1,
+                          description: '',
+                          hardnessPoints: [{ location: '', value: '', unit: '' }],
+                          ecd: {
+                            hardnessValue: '',
+                            hardnessUnit: '',
+                            ecdPoints: [{ name: '', distance: '', unit: '' }]
+                          },
+                          hardnessUnit: '',
+                          curveData: { points: [] },
+                          comment: ''
+                        }];
+
                     return {
-                      step: result.step || 1,
-                      description: result.description || '',
-                      hardnessPoints: hardnessPoints,
-                      ecd: ecdData,
-                      hardnessUnit: result.hardness_unit || '',
-                      curveData: { points: curvePoints },
-                      comment: result.comment || ''
+                      step: resultBlock.step || 1,
+                      description: resultBlock.description || '',
+                      samples: samples
                     };
                   })
                 : [{
                     step: 1,
                     description: '',
-                    hardnessPoints: [{ location: '', value: '', unit: '' }],
-                    ecd: {
-                      hardnessValue: '',
+                    samples: [{
+                      step: 1,
+                      description: '',
+                      hardnessPoints: [{ location: '', value: '', unit: '' }],
+                      ecd: {
+                        hardnessValue: '',
+                        hardnessUnit: '',
+                        ecdPoints: [{ name: '', distance: '', unit: '' }]
+                      },
                       hardnessUnit: '',
-                      ecdPoints: [{ name: '', distance: '', unit: '' }]
-                    },
-                    hardnessUnit: '',
-                    curveData: { points: [] },
-                    comment: ''
+                      curveData: { points: [] },
+                      comment: ''
+                    }]
                   }]
-            }
-          });
+            }          });
           
           console.log('FormData set successfully');
           

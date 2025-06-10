@@ -258,28 +258,37 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
       }));
     }
   }, [formData, setFormData]);
-
   // Gestion des résultats
   const handleResultBlocAdd = useCallback(() => {
     const newResult = {
       step: (formData.resultsData?.results?.length || 0) + 1,
       description: '',
-      hardnessPoints: [{
-        location: '',
-        value: '',
-        unit: ''
-      }],
-      ecd: {
-        toothFlank: {
-          distance: '',
-          unit: ''
-        },
-        toothRoot: {
-          distance: '',
-          unit: ''
+      samples: [
+        {
+          step: 1,
+          description: '',
+          hardnessPoints: [{
+            location: '',
+            value: '',
+            unit: ''
+          }],
+          ecd: {
+            hardnessValue: '',
+            hardnessUnit: '',
+            toothFlank: {
+              distance: '',
+              unit: ''
+            },
+            toothRoot: {
+              distance: '',
+              unit: ''
+            },
+            ecdPoints: [{ name: '', distance: '', unit: '' }]
+          },
+          hardnessUnit: 'HV',
+          curveData: { points: [] }
         }
-      },
-      comment: ''
+      ]
     };
     
     setFormData(prev => ({
@@ -289,8 +298,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         results: [...(prev.resultsData?.results || []), newResult]
       }
     }));
-  }, [formData, setFormData]);
-  
+    }, [formData, setFormData]);
+
   const handleResultBlocRemove = useCallback((index) => {
     if (formData.resultsData?.results?.length > 1) {
       const updatedResults = formData.resultsData.results.filter((_, i) => i !== index);
@@ -307,20 +316,79 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           results: updatedResults
         }
       }));
+    }  }, [formData, setFormData]);
+
+  // Gestion des échantillons
+  const handleSampleAdd = useCallback((resultIndex) => {
+    const updatedResults = [...formData.resultsData.results];
+    
+    const newSample = {
+      step: (updatedResults[resultIndex].samples?.length || 0) + 1,
+      description: '',
+      hardnessPoints: [{
+        location: '',
+        value: '',
+        unit: ''
+      }],
+      ecd: {
+        hardnessValue: '',
+        hardnessUnit: '',
+        toothFlank: {
+          distance: '',
+          unit: ''
+        },
+        toothRoot: {
+          distance: '',
+          unit: ''
+        },
+        ecdPoints: [{ name: '', distance: '', unit: '' }]
+      },
+      hardnessUnit: 'HV',
+      curveData: { points: [] }
+    };
+    
+    updatedResults[resultIndex].samples = [...(updatedResults[resultIndex].samples || []), newSample];
+    
+    setFormData(prev => ({
+      ...prev,
+      resultsData: {
+        ...prev.resultsData,
+        results: updatedResults
+      }
+    }));
+  }, [formData, setFormData]);
+
+  const handleSampleRemove = useCallback((resultIndex, sampleIndex) => {
+    if (formData.resultsData?.results?.[resultIndex]?.samples?.length > 1) {
+      const updatedResults = [...formData.resultsData.results];
+      const updatedSamples = updatedResults[resultIndex].samples.filter((_, i) => i !== sampleIndex);
+      
+      // Recalculer les étapes
+      updatedSamples.forEach((item, i) => {
+        item.step = i + 1;
+      });
+      
+      updatedResults[resultIndex].samples = updatedSamples;
+      
+      setFormData(prev => ({
+        ...prev,
+        resultsData: {
+          ...prev.resultsData,
+          results: updatedResults
+        }
+      }));
     }
   }, [formData, setFormData]);
-  
-  // Gestion des résultats de dureté
-  const handleHardnessResultAdd = useCallback((resultIndex) => {
+  // Gestion des résultats de dureté (mis à jour pour les échantillons)
+  const handleHardnessResultAdd = useCallback((resultIndex, sampleIndex) => {
     // Utiliser le callback de setState pour être sûr de travailler avec les données les plus récentes
     setFormData(prev => {
       const updatedResults = [...(prev.resultsData?.results || [])];
       
-      // Ajouter un nouveau point de dureté
-      if (updatedResults[resultIndex]) {
-        // Créer un nouveau tableau de points de dureté pour éviter les problèmes de référence
-        updatedResults[resultIndex].hardnessPoints = [
-          ...(updatedResults[resultIndex].hardnessPoints || []),
+      // Ajouter un nouveau point de dureté au bon échantillon
+      if (updatedResults[resultIndex]?.samples?.[sampleIndex]) {
+        updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = [
+          ...(updatedResults[resultIndex].samples[sampleIndex].hardnessPoints || []),
           {
             location: '',
             value: '',
@@ -339,44 +407,38 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     });
   }, [setFormData]);
   
-  const handleHardnessResultRemove = useCallback((resultIndex, hardnessIndex) => {
+  const handleHardnessResultRemove = useCallback((resultIndex, sampleIndex, hardnessIndex) => {
     setFormData(prev => {
       const updatedResults = [...(prev.resultsData?.results || [])];
       
-      if (updatedResults[resultIndex]?.hardnessPoints?.length > 1) {
-        updatedResults[resultIndex].hardnessPoints = 
-          updatedResults[resultIndex].hardnessPoints.filter((_, i) => i !== hardnessIndex);
+      if (updatedResults[resultIndex]?.samples?.[sampleIndex]?.hardnessPoints?.length > 1) {
+        updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = 
+          updatedResults[resultIndex].samples[sampleIndex].hardnessPoints.filter((_, i) => i !== hardnessIndex);
       }
       
       return {
-        ...prev,
-        resultsData: {
-          ...prev.resultsData,
-          results: updatedResults
-        }
-      };
+        ...prev,      };
     });
   }, [setFormData]);
-
-  // Nouvelle fonction pour gérer les positions ECD
-  const handleEcdPositionAdd = useCallback((resultIndex) => {
+  // Nouvelle fonction pour gérer les positions ECD (mis à jour pour les échantillons)
+  const handleEcdPositionAdd = useCallback((resultIndex, sampleIndex) => {
     const updatedResults = [...formData.resultsData.results];
     
     // S'assurer que l'objet ecd et son tableau de positions existent
-    if (!updatedResults[resultIndex].ecd) {
-      updatedResults[resultIndex].ecd = {
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd = {
         hardnessValue: '',
         hardnessUnit: '',
         ecdPoints: []
       };
     }
     
-    if (!updatedResults[resultIndex].ecd.ecdPoints) {
-      updatedResults[resultIndex].ecd.ecdPoints = [];
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = [];
     }
     
     // Ajouter une nouvelle position
-    updatedResults[resultIndex].ecd.ecdPoints.push({
+    updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints.push({
       name: '',
       distance: '',
       unit: ''
@@ -390,13 +452,13 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     });
   }, [formData, handleChange]);
   
-  const handleEcdPositionRemove = useCallback((resultIndex, positionIndex) => {
+  const handleEcdPositionRemove = useCallback((resultIndex, sampleIndex, positionIndex) => {
     const updatedResults = [...formData.resultsData.results];
     
-    if (updatedResults[resultIndex].ecd?.ecdPoints && 
-        updatedResults[resultIndex].ecd.ecdPoints.length > 1) {
-      updatedResults[resultIndex].ecd.ecdPoints = 
-        updatedResults[resultIndex].ecd.ecdPoints.filter((_, i) => i !== positionIndex);
+    if (updatedResults[resultIndex].samples[sampleIndex].ecd?.ecdPoints && 
+        updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints.length > 1) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = 
+        updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints.filter((_, i) => i !== positionIndex);
       
       handleChange({
         target: {
@@ -407,27 +469,26 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     }
   }, [formData, handleChange]);
 
-  const handleEcdPositionChange = (resultIndex, positionIndex, field, value) => {
+  const handleEcdPositionChange = (resultIndex, sampleIndex, positionIndex, field, value) => {
     const updatedResults = [...formData.resultsData.results];
     
     // S'assurer que l'objet ecd et son tableau de positions existent
-    if (!updatedResults[resultIndex].ecd) {
-      updatedResults[resultIndex].ecd = {
-        hardnessValue: '',
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd = {        hardnessValue: '',
         hardnessUnit: '',
         ecdPoints: []
       };
     }
     
-    if (!updatedResults[resultIndex].ecd.ecdPoints) {
-      updatedResults[resultIndex].ecd.ecdPoints = [{ name: '', distance: '', unit: '' }];
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = [{ name: '', distance: '', unit: '' }];
     }
     
     // Mettre à jour le champ spécifique
     if (field === 'unit') {
-      updatedResults[resultIndex].ecd.ecdPoints[positionIndex][field] = value ? value.value : '';
+      updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints[positionIndex][field] = value ? value.value : '';
     } else {
-      updatedResults[resultIndex].ecd.ecdPoints[positionIndex][field] = value;
+      updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints[positionIndex][field] = value;
     }
     
     handleChange({
@@ -453,6 +514,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     handleOilQuenchSpeedRemove,
     handleResultBlocAdd,
     handleResultBlocRemove,
+    handleSampleAdd,
+    handleSampleRemove,
     handleHardnessResultAdd,
     handleHardnessResultRemove,
     handleEcdPositionAdd,

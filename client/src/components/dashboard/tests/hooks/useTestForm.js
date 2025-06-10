@@ -105,9 +105,9 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleThermalCycleAdd, handleThermalCycleRemove, handleThermalCycleChange,
     handleChemicalCycleAdd, handleChemicalCycleRemove,
     handleGasQuenchSpeedAdd, handleGasQuenchSpeedRemove,
-    handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,
-    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
+    handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
     handleResultBlocAdd, handleResultBlocRemove,
+    handleSampleAdd, handleSampleRemove,
     handleHardnessResultAdd, handleHardnessResultRemove,
     handleCreateOption, // Ajouter le handler pour la création d'options
     handleEcdPositionAdd, // Nouvelles fonctions pour la gestion des positions ECD
@@ -220,10 +220,11 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleGasQuenchSpeedRemove,
     handleGasQuenchPressureAdd,
     handleGasQuenchPressureRemove,
-    handleOilQuenchSpeedAdd,
-    handleOilQuenchSpeedRemove,
+    handleOilQuenchSpeedAdd,    handleOilQuenchSpeedRemove,
     handleResultBlocAdd,
     handleResultBlocRemove,
+    handleSampleAdd,
+    handleSampleRemove,
     handleHardnessResultAdd,
     handleHardnessResultRemove,
     // Nouvelles fonctions pour la gestion des positions ECD

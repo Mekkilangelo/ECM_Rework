@@ -676,12 +676,15 @@
         "loadError": "Error while loading files:",
         "associateError": "Error while associating files:",
         "import": "Import {{name}}"
-      },
-      "results": {
+      },      "results": {
         "resultsLabel": "Results",
         "addResult": "Add result",
         "resultNumber": "Result #{{number}}",
         "description": "Description",
+        "samples": "Samples",
+        "addSample": "Add sample",
+        "sampleNumber": "Sample {{number}}",
+        "sampleDescription": "Sample description",
         "hardness": "Hardness",
         "position": "Position",
         "value": "Value",

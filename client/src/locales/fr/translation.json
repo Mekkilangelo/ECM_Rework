@@ -677,13 +677,16 @@
         "loadError": "Erreur lors du chargement des fichiers:",
         "associateError": "Erreur lors de l'association des fichiers:",
         "import": "Importer une {{name}}"
-      },
-      "results": {
+      },      "results": {
         "title": "Résultats",
         "resultsLabel": "Résultats",
         "addResult": "Ajouter un résultat",
         "resultNumber": "Résultat #{{number}}",
         "description": "Description",
+        "samples": "Échantillons",
+        "addSample": "Ajouter un échantillon",
+        "sampleNumber": "Échantillon {{number}}",
+        "sampleDescription": "Description de l'échantillon",
         "hardness": "Dureté",
         "position": "Position",
         "value": "Valeur",

@@ -7,6 +7,7 @@ import { faImage } from '@fortawesome/free-solid-svg-icons';
 const ControlLocationSection = ({
   testNodeId,
   resultIndex = 0,
+  sampleIndex = 0,  // Ajout du sampleIndex
   onFileAssociationNeeded,
   viewMode = false
 }) => {
@@ -18,16 +19,15 @@ const ControlLocationSection = ({
   useEffect(() => {
     tempIdRef.current = tempId;
   }, [tempId]);
-  
-  useEffect(() => {
+    useEffect(() => {
     if (testNodeId) {
       loadExistingFiles();
     }
-  }, [testNodeId, resultIndex]);
+  }, [testNodeId, resultIndex, sampleIndex]);
     const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(testNodeId, {
-        category: `control-location-result-${resultIndex}`,
+        category: `control-location-result-${resultIndex}-sample-${sampleIndex}`,  // Nouveau format avec sample
       });
       
       // Vérifier que la requête a réussi
@@ -53,12 +53,11 @@ const ControlLocationSection = ({
         setTempId(newTempId);
       }
     }
-  };
-    const associateFiles = useCallback(async (newTestNodeId) => {
+  };  const associateFiles = useCallback(async (newTestNodeId) => {
     try {
       if (tempIdRef.current) {
         const response = await fileService.associateFiles(newTestNodeId, tempIdRef.current, {
-          category: `control-location-result-${resultIndex}`,
+          category: `control-location-result-${resultIndex}-sample-${sampleIndex}`,  // Nouveau format avec sample
         });
         
         // Vérifier que l'association a réussi
@@ -80,18 +79,17 @@ const ControlLocationSection = ({
       console.error(t('tests.after.results.controlLocation.associateError'), error);
       return false;
     }
-  }, [testNodeId, resultIndex]);
+  }, [testNodeId, resultIndex, sampleIndex]);
   
   useEffect(() => {
     if (onFileAssociationNeeded) {
       onFileAssociationNeeded(associateFiles);
     }
   }, [onFileAssociationNeeded, associateFiles]);
-  
-  return (
+    return (
     <div className="p-2">
       <FileUploader
-        category={`control-location-result-${resultIndex}`}
+        category={`control-location-result-${resultIndex}-sample-${sampleIndex}`}  // Nouveau format avec sample
         subcategory="control-location"
         nodeId={testNodeId}
         onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}

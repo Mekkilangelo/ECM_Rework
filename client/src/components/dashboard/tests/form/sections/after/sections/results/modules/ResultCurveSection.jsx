@@ -31,6 +31,7 @@ const colorPalette = [
 const ResultCurveSection = ({
   result,
   resultIndex,
+  sampleIndex,  // Ajout du sampleIndex
   handleChange,
   handleSelectChange,
   getSelectedOption,
@@ -45,27 +46,31 @@ const ResultCurveSection = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('curve');
-  
-  // Structure de données pour les points de mesure
-  const [dataPoints, setDataPoints] = useState(() => {
-    // Initialiser à partir des données existantes ou créer un tableau vide
-    if (result.curveData && result.curveData.points) {
-      return [...result.curveData.points];
-    }
-    return [];
-  });
+    // Structure de données pour les points de mesure
+  const [dataPoints, setDataPoints] = useState([]);
   
   // État séparé pour l'affichage du tableau (données triées)
-  const [displayPoints, setDisplayPoints] = useState(() => {
-    if (result.curveData && result.curveData.points) {
-      return [...result.curveData.points].sort((a, b) => {
+  const [displayPoints, setDisplayPoints] = useState([]);
+  
+  // Effet pour synchroniser les données quand result change
+  useEffect(() => {
+    if (result && result.curveData && result.curveData.points) {
+      console.log('Mise à jour des données de courbe:', result.curveData.points);
+      setDataPoints([...result.curveData.points]);
+      
+      // Trier les points pour l'affichage
+      const sortedPoints = [...result.curveData.points].sort((a, b) => {
         const distA = parseFloat(a.distance) || 0;
         const distB = parseFloat(b.distance) || 0;
         return distA - distB;
       });
+      setDisplayPoints(sortedPoints);
+    } else {
+      console.log('Aucune donnée de courbe trouvée dans result:', result);
+      setDataPoints([]);
+      setDisplayPoints([]);
     }
-    return [];
-  });
+  }, [result]);
   
   // Ajout du state pour le pas d'incrémentation
   const [stepValue, setStepValue] = useState(0.1);
@@ -146,11 +151,10 @@ const ResultCurveSection = ({
     
     fetchSpecData();
   }, [test, parentId, t]);
-  
-  // Mettre à jour le formData parent avec les nouvelles données
+    // Mettre à jour le formData parent avec les nouvelles données
   const updateParentFormData = (newPoints) => {
     const updatedResults = [...formData.resultsData.results];
-    updatedResults[resultIndex].curveData = { points: newPoints };
+    updatedResults[resultIndex].samples[sampleIndex].curveData = { points: newPoints };
     handleChange({
       target: {
         name: 'resultsData.results',
@@ -205,11 +209,14 @@ const ResultCurveSection = ({
     const newPoint = {
       distance: nextDistance
     };
-    
-    // Ajouter un champ pour chaque position ECD
+      // Ajouter un champ pour chaque position ECD
     ecdPositions.forEach(position => {
       const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
+      const positionKey = position.name.toLowerCase();
+      
+      // Créer les deux formats
       newPoint[fieldName] = '';
+      newPoint[positionKey] = '';
     });
     
     // Pour la compatibilité avec le format existant, conserver les champs flankHardness et rootHardness
@@ -237,13 +244,19 @@ const ResultCurveSection = ({
   const getFieldNameForPosition = (positionName) => {
     return `hardness_${positionName.replace(/\s+/g, '_').toLowerCase()}`;
   };
-  
-  // Obtenir la valeur de dureté pour une position et un point donné
+    // Obtenir la valeur de dureté pour une position et un point donné
   const getHardnessForPosition = (point, positionName) => {
     const fieldName = getFieldNameForPosition(positionName);
-    // Si le champ existe, utiliser cette valeur
+    
+    // Si le champ avec le format hardness_xxx existe, utiliser cette valeur
     if (point[fieldName] !== undefined) {
       return point[fieldName];
+    }
+    
+    // Essayer avec la clé directe (nom de position en minuscules)
+    const positionKey = positionName.toLowerCase();
+    if (point[positionKey] !== undefined) {
+      return point[positionKey];
     }
     
     // Compatibilité avec l'ancien format - vérifier les cas spéciaux
@@ -256,11 +269,14 @@ const ResultCurveSection = ({
     
     return '';
   };
-  
-  // Mettre à jour la valeur de dureté pour une position et un point donné
+    // Mettre à jour la valeur de dureté pour une position et un point donné
   const setHardnessForPosition = (index, positionName, value) => {
     const fieldName = getFieldNameForPosition(positionName);
+    const positionKey = positionName.toLowerCase();
+    
+    // Mettre à jour avec les deux formats pour assurer la compatibilité
     handlePointChange(index, fieldName, value);
+    handlePointChange(index, positionKey, value);
     
     // Compatibilité avec l'ancien format - mettre à jour les champs spéciaux
     if (positionName.toLowerCase().includes('flanc')) {

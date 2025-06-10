@@ -47,9 +47,10 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
           handleSelectChange={formHandlers.handleSelectChange}
           getSelectedOption={formHandlers.getSelectedOption}
           lengthUnitOptions={formHandlers.lengthUnitOptions}
-          hardnessUnitOptions={formHandlers.hardnessUnitOptions}
-          handleResultBlocAdd={formHandlers.handleResultBlocAdd}
+          hardnessUnitOptions={formHandlers.hardnessUnitOptions}          handleResultBlocAdd={formHandlers.handleResultBlocAdd}
           handleResultBlocRemove={formHandlers.handleResultBlocRemove}
+          handleSampleAdd={formHandlers.handleSampleAdd}
+          handleSampleRemove={formHandlers.handleSampleRemove}
           handleHardnessResultAdd={formHandlers.handleHardnessResultAdd}
           handleHardnessResultRemove={formHandlers.handleHardnessResultRemove}
           handleEcdPositionAdd={formHandlers.handleEcdPositionAdd}

@@ -84,18 +84,28 @@ const useTestSubmission = (
       oilInertingDelayUnit: '',
       oilDrippingTime: '',
       oilDrippingTimeUnit: ''
-    },
-    resultsData: {
+    },    resultsData: {
       results: [
         {
           step: 1,
           description: '',
-          hardnessPoints: [{ location: '', value: '', unit: ''}],
-          ecd: { hardnessValue: '', hardnessUnit: '', toothFlank: { distance: '', unit: '' }, toothRoot: { distance: '', unit: '' }},
-          comment: '',
-          hardnessUnit: 'HV', curveData: { points: [] }        }
+          samples: [
+            {
+              step: 1,
+              description: '',
+              hardnessPoints: [{ location: '', value: '', unit: ''}],
+              ecd: { 
+                hardnessValue: '', 
+                hardnessUnit: '', 
+                ecdPoints: [{ name: '', distance: '', unit: '' }]
+              },
+              hardnessUnit: 'HV',
+              curveData: { points: [] }
+            }
+          ]
+        }
       ]
-    }  };
+    }};
   
   // État local pour suivre si une soumission est en cours
   const [loading, setLoadingState] = useState(false);
@@ -276,75 +286,82 @@ const useTestSubmission = (
         }
       }
     };
-    
-    // Formatage des données de résultat
+      // Formatage des données de résultat - NOUVELLE STRUCTURE AVEC ÉCHANTILLONS
     const resultsData = formData.resultsData && formData.resultsData.results?.length > 0 && 
     formData.resultsData.results.some(result => 
       result.description || 
-      (result.hardnessPoints && result.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
-      (result.ecd && (result.ecd.toothFlank?.distance || result.ecd.toothRoot?.distance)) ||
-      (result.curveData && result.curveData.points && result.curveData.points.length > 0) ||
-      result.comment
+      (result.samples && result.samples.some(sample =>
+        sample.description ||
+        (sample.hardnessPoints && sample.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
+        (sample.ecd && sample.ecd.ecdPoints && sample.ecd.ecdPoints.some(p => p.distance || p.name)) ||
+        (sample.curveData && sample.curveData.points && sample.curveData.points.length > 0)
+      ))
     ) ? {
       results: formData.resultsData.results.map(result => {
-        // Formatage des points de dureté
-        const hardnessPoints = result.hardnessPoints?.length > 0 && 
-          result.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
-          result.hardnessPoints.map(point => ({
-            location: point.location || null,
-            value: point.value || null,
-            unit: point.unit || null
-          })) : null;
-        
-        // Formatage des données ECD
-        const ecdData = result.ecd ? {
-          hardness_value: result.ecd.hardnessValue || null,
-          hardness_unit: result.ecd.hardnessUnit || null,
-          positions: Array.isArray(result.ecd.ecdPoints) && result.ecd.ecdPoints.length > 0 ? 
-            result.ecd.ecdPoints.map(point => ({
-              name: point.name || null,
-              distance: point.distance || null,
-              unit: point.unit || null
-            })) : null
-        } : null;
-        
-        // Formatage des données de courbe
-        const curveData = result.curveData && result.curveData.points && result.curveData.points.length > 0 ? {
-          points: result.curveData.points.map(point => {
-            // Structure de base avec la distance
-            const formattedPoint = {
-              distance: point.distance || null
-            };
+        // Formatage des échantillons
+        const samples = result.samples && result.samples.length > 0 ? 
+          result.samples.map(sample => {
+            // Formatage des points de dureté
+            const hardnessPoints = sample.hardnessPoints?.length > 0 && 
+              sample.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
+              sample.hardnessPoints.map(point => ({
+                location: point.location || null,
+                value: point.value || null,
+                unit: point.unit || null
+              })) : null;
             
-            // Ajouter les valeurs des positions ECD dynamiques si elles existent
-            if (result.ecd && Array.isArray(result.ecd.ecdPoints)) {
-              result.ecd.ecdPoints.forEach(ecdPosition => {
-                if (ecdPosition.name) {
-                  // Convertir le nom de position en clé valide pour l'API (snake_case)
-                  const positionKey = ecdPosition.name.toLowerCase().replace(/\s+/g, '_');
-                  // Récupérer la valeur depuis le point de la courbe
-                  const fieldName = `hardness_${positionKey}`;
-                  formattedPoint[positionKey] = point[fieldName] || null;
+            // Formatage des données ECD
+            const ecdData = sample.ecd ? {
+              hardness_value: sample.ecd.hardnessValue || null,
+              hardness_unit: sample.ecd.hardnessUnit || null,
+              positions: Array.isArray(sample.ecd.ecdPoints) && sample.ecd.ecdPoints.length > 0 ? 
+                sample.ecd.ecdPoints.map(point => ({
+                  name: point.name || null,
+                  distance: point.distance || null,
+                  unit: point.unit || null
+                })) : null
+            } : null;
+            
+            // Formatage des données de courbe
+            const curveData = sample.curveData && sample.curveData.points && sample.curveData.points.length > 0 ? {
+              points: sample.curveData.points.map(point => {
+                // Structure de base avec la distance
+                const formattedPoint = {
+                  distance: point.distance || null
+                };
+                
+                // Ajouter les valeurs des positions ECD dynamiques si elles existent
+                if (sample.ecd && Array.isArray(sample.ecd.ecdPoints)) {
+                  sample.ecd.ecdPoints.forEach(ecdPosition => {
+                    if (ecdPosition.name) {
+                      // Convertir le nom de position en clé valide pour l'API (snake_case)
+                      const positionKey = ecdPosition.name.toLowerCase().replace(/\s+/g, '_');
+                      // Récupérer la valeur depuis le point de la courbe
+                      const fieldName = `hardness_${positionKey}`;
+                      formattedPoint[positionKey] = point[fieldName] || null;
+                    }
+                  });
                 }
-              });
-            }
+                
+                // Conserver les champs historiques pour la compatibilité
+                formattedPoint.flank_hardness = point.flankHardness || null;
+                formattedPoint.root_hardness = point.rootHardness || null;
+                
+                return formattedPoint;
+              })
+            } : null;
             
-            // Conserver les champs historiques pour la compatibilité
-            formattedPoint.flank_hardness = point.flankHardness || null;
-            formattedPoint.root_hardness = point.rootHardness || null;
-            
-            return formattedPoint;
-          })
-        } : null;
-        
-        return {
+            return {
+              step: sample.step,
+              description: sample.description || null,
+              hardness_points: hardnessPoints,
+              ecd: ecdData,
+              curve_data: curveData
+            };
+          }) : null;        return {
           step: result.step,
           description: result.description || null,
-          hardness_points: hardnessPoints,
-          ecd: ecdData,
-          curve_data: curveData,
-          hardness_unit: result.hardnessUnit || null,
-          comment: result.comment || null
+          samples: samples
         };
       })
     } : null;

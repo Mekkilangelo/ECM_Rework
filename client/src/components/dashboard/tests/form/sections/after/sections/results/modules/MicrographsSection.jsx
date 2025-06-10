@@ -7,7 +7,8 @@ import { faImage } from '@fortawesome/free-solid-svg-icons';
 
 const MicrographsSection = ({
   testNodeId,
-  resultIndex = 0,  // Ajout d'un index par défaut
+  resultIndex = 0,
+  sampleIndex = 0,  // Ajout du sampleIndex
   onFileAssociationNeeded,
   viewMode = false
 }) => {
@@ -26,16 +27,15 @@ const MicrographsSection = ({
     { id: 'x1000', name: t('tests.after.results.micrographs.zoomX1000') },
     { id: 'other', name: t('tests.after.results.micrographs.otherZoom') },
   ];
-  
-  useEffect(() => {
+    useEffect(() => {
     if (testNodeId) {
       loadExistingFiles();
     }
-  }, [testNodeId, resultIndex]);
+  }, [testNodeId, resultIndex, sampleIndex]);
     const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(testNodeId, {
-        category: `micrographs-result-${resultIndex}`,  // Modification ici
+        category: `micrographs-result-${resultIndex}-sample-${sampleIndex}`,  // Nouveau format avec sample
       });
       
       // Vérifier que la requête a réussi
@@ -91,15 +91,14 @@ const MicrographsSection = ({
         }));
       }
     }
-  };
-    const associateFiles = useCallback(async (newTestNodeId) => {
+  };  const associateFiles = useCallback(async (newTestNodeId) => {
     try {
       const currentTempIds = tempIdsRef.current;
       let allSuccessful = true;
       
       for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
         const response = await fileService.associateFiles(newTestNodeId, tempId, {
-          category: `micrographs-result-${resultIndex}`,
+          category: `micrographs-result-${resultIndex}-sample-${sampleIndex}`,  // Nouveau format avec sample
           subcategory
         });
         
@@ -120,29 +119,28 @@ const MicrographsSection = ({
     } catch (error) {
       console.error(t('tests.after.results.micrographs.associateError'), error);
     }
-  }, [testNodeId, resultIndex]);
+  }, [testNodeId, resultIndex, sampleIndex]);
   
   useEffect(() => {
     if (onFileAssociationNeeded) {
       onFileAssociationNeeded(associateFiles);
     }
   }, [onFileAssociationNeeded, associateFiles]);
-  
-  return (
+    return (
     <>
       {views.map((view) => (
         <CollapsibleSection
-          key={`${resultIndex}-${view.id}`}
+          key={`${resultIndex}-${sampleIndex}-${view.id}`}  // Mise à jour de la clé
           title={view.name}
           isExpandedByDefault={view.id === 'x50'}
-          sectionId={`test-micrographs-${resultIndex}-${view.id}`}
+          sectionId={`test-micrographs-${resultIndex}-${sampleIndex}-${view.id}`}  // Mise à jour de l'ID
           rememberState={true}
           className="mb-3"
           level={2}
         >
           <div className="p-2">
             <FileUploader
-              category={`micrographs-result-${resultIndex}`}  // Modification ici
+              category={`micrographs-result-${resultIndex}-sample-${sampleIndex}`}  // Nouveau format avec sample
               subcategory={view.id}
               nodeId={testNodeId}
               onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
@@ -168,6 +166,6 @@ const MicrographsSection = ({
       ))}
     </>
   );
-};
+}; 
 
 export default MicrographsSection;

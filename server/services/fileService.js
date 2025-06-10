@@ -170,8 +170,7 @@ const saveUploadedFiles = async (files, data) => {
         finalPath = file.path;
         nodePath = `/temp/${tempId}/${file.filename}`;
       }
-      
-      // Créer l'enregistrement du nœud
+        // Créer l'enregistrement du nœud
       const fileNode = await Node.create({
         name: file.originalname,
         path: nodePath,
@@ -181,7 +180,31 @@ const saveUploadedFiles = async (files, data) => {
         data_status: 'new',
         description: `File uploaded as ${category || 'general'}${subcategory ? `/${subcategory}` : ''}`
       }, { transaction });
-      
+
+      // Créer les relations de fermeture si le fichier est directement associé à un nœud
+      if (nodeId) {
+        // 1. Auto-relation (profondeur 0)
+        await Closure.create({
+          ancestor_id: fileNode.id,
+          descendant_id: fileNode.id,
+          depth: 0
+        }, { transaction });
+        
+        // 2. Relations avec les ancêtres du parent
+        const parentClosures = await Closure.findAll({
+          where: { descendant_id: parseInt(nodeId) },
+          transaction
+        });
+        
+        for (const parentClosure of parentClosures) {
+          await Closure.create({
+            ancestor_id: parentClosure.ancestor_id,
+            descendant_id: fileNode.id,
+            depth: parentClosure.depth + 1
+          }, { transaction });
+        }
+      }
+
       // Créer l'enregistrement du fichier
       const fileRecord = await File.create({
         node_id: fileNode.id,
@@ -461,7 +484,8 @@ const deleteFile = async (fileId) => {
     // Récupérer les détails du fichier
     // D'abord, vérifions que le nœud existe et qu'il s'agit bien d'un fichier
     const node = await Node.findOne({
-      where: { id: fileId, type: 'file' }
+      where: { id: fileId, type: 'file' },
+      transaction
     });
     
     if (!node) {
@@ -470,19 +494,31 @@ const deleteFile = async (fileId) => {
     
     // Ensuite, récupérons les informations du fichier associé
     const file = await File.findOne({
-      where: { node_id: fileId }
+      where: { node_id: fileId },
+      transaction
     });
     
     if (!file) {
       throw new NotFoundError('Fichier non trouvé');
     }
     
-    // Supprimer le fichier physique
+    // 1. Supprimer toutes les relations de fermeture liées à ce fichier
+    await Closure.destroy({
+      where: {
+        [Op.or]: [
+          { ancestor_id: fileId },
+          { descendant_id: fileId }
+        ]
+      },
+      transaction
+    });
+    
+    // 2. Supprimer le fichier physique
     if (fs.existsSync(file.file_path)) {
       fs.unlinkSync(file.file_path);
     }
     
-    // Supprimer les enregistrements en base
+    // 3. Supprimer les enregistrements en base
     await File.destroy({
       where: { node_id: fileId },
       transaction
@@ -512,17 +548,29 @@ const deleteFile = async (fileId) => {
 const getAllFilesByNode = async (options) => {
   const { nodeId, category, subcategory } = options;
   
-  // Construire les conditions de recherche
+  console.log(`[getAllFilesByNode] Recherche: nodeId=${nodeId}, category=${category}, subcategory=${subcategory}`);
+  
+  // D'abord, récupérer tous les descendants du nœud (y compris lui-même)
+  const descendantClosure = await Closure.findAll({
+    where: { ancestor_id: nodeId },
+    attributes: ['descendant_id', 'depth']
+  });
+  
+  console.log(`[getAllFilesByNode] Relations closure trouvées: ${descendantClosure.length}`);
+  
+  // Extraire les IDs des descendants
+  const descendantIds = descendantClosure.map(closure => closure.descendant_id);
+  
+  // Construire les conditions de recherche pour les fichiers descendants
   const conditions = {
     type: 'file',
-    parent_id: nodeId
+    id: { [Op.in]: descendantIds }
   };
   
   // Filtrer par catégorie et sous-catégorie si fournis
   const fileConditions = {};
   if (category) fileConditions.category = category;
   if (subcategory) fileConditions.subcategory = subcategory;
-  
   // Récupérer les nœuds de fichiers
   const fileNodes = await Node.findAll({
     where: conditions,
@@ -535,6 +583,8 @@ const getAllFilesByNode = async (options) => {
     ]
   });
   
+  console.log(`[getAllFilesByNode] Fichiers trouvés: ${fileNodes.length}`);
+  
   // Formater la réponse
   const files = fileNodes.map(node => ({
     id: node.id,
@@ -545,8 +595,11 @@ const getAllFilesByNode = async (options) => {
     mimeType: node.File ? node.File.mime_type : null,
     category: node.File ? node.File.category : null,
     subcategory: node.File ? node.File.subcategory : null,
+    original_name: node.File ? node.File.original_name : null,
+    file_path: node.File ? node.File.file_path : null,
     type: node.File ? node.File.mime_type : 'application/octet-stream'
   }));
+  console.log(`[getAllFilesByNode] Retour: ${files.length} fichiers`);
   
   return { files };
 };

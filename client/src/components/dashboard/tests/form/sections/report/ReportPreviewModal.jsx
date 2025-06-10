@@ -26,9 +26,9 @@ const ReportPreviewModal = ({
 
   // Récupérer l'ID de la pièce depuis reportData
   const partId = reportData?.partId;
-  
-  console.log("ReportPreviewModal - ID de la pièce:", partId);
+    console.log("ReportPreviewModal - ID de la pièce:", partId);
   console.log("ReportPreviewModal - reportData:", reportData);
+  console.log("ReportPreviewModal - reportData structure:", Object.keys(reportData || {}));
   console.log("ReportPreviewModal - selectedPhotos:", selectedPhotos);
 
   // Préparation des photos pour les sections
@@ -77,13 +77,12 @@ const ReportPreviewModal = ({
 
   // Extraire les données client pour l'en-tête
   const clientData = reportData.client || {};
-
   // Reformater les données de test pour l'en-tête
   const formattedTestData = {
-    testCode: reportData.test?.testCode || '',
-    processType: reportData.test?.processType || '',
-    loadNumber: reportData.test?.loadNumber || '',
-    testDate: reportData.test?.testDate || null
+    testCode: reportData.testCode || '',
+    processType: reportData.processType || '',
+    loadNumber: reportData.loadNumber || '',
+    testDate: reportData.testDate || null
   };
 
   console.log("FORMATTED TEST DATA:", formattedTestData);
@@ -100,10 +99,9 @@ const ReportPreviewModal = ({
             padding: '20px', 
             minHeight: '297mm', 
             position: 'relative',
-            pageBreakAfter: 'always' 
-          }}>
+            pageBreakAfter: 'always'          }}>
             <CoverPageSection 
-              testData={reportData.test} 
+              testData={formattedTestData} 
               partData={reportData.part} 
               clientData={clientData}
             />
@@ -120,10 +118,9 @@ const ReportPreviewModal = ({
               {/* En-tête principal */}
               <ReportHeader testData={formattedTestData} clientData={clientData} />
               
-              {/* Section Identification */}
-              <div style={{ marginTop: '30px' }}>
+              {/* Section Identification */}              <div style={{ marginTop: '30px' }}>
                 <IdentificationSection 
-                  testData={reportData.test} 
+                  testData={formattedTestData} 
                   partData={reportData.part} 
                   clientData={clientData} 
                   selectedPhotos={selectedPhotos} 
@@ -134,10 +131,8 @@ const ReportPreviewModal = ({
           ) : (
             /* Si identification n'est pas sélectionnée, commencer par la première section active */
             null /* Ne pas créer de page vide */
-          )}
-
-          {/* Section Recipe sur une nouvelle page */}
-          {selectedSections.recipe && (reportData.test?.recipe_data || reportData.test?.recipeData) && (
+          )}          {/* Section Recipe sur une nouvelle page */}
+          {selectedSections.recipe && (reportData.recipe_data || reportData.recipeData) && (
             <div className="report-page" style={{ 
               padding: '20px', 
               minHeight: '297mm', 
@@ -146,8 +141,8 @@ const ReportPreviewModal = ({
             }}>
               <ReportPageHeader testData={formattedTestData} clientData={clientData} />
               <RecipeSection 
-                testData={reportData.test} 
-                recipeData={reportData.test?.recipe_data || reportData.test?.recipeData} 
+                testData={formattedTestData} 
+                recipeData={reportData.recipe_data || reportData.recipeData}
               />
             </div>
           )}
@@ -158,11 +153,10 @@ const ReportPreviewModal = ({
               padding: '20px', 
               minHeight: '297mm', 
               position: 'relative',
-              pageBreakAfter: 'always' 
-            }}>
+              pageBreakAfter: 'always'            }}>
               <ReportPageHeader testData={formattedTestData} clientData={clientData} />
               <LoadSection 
-                testData={reportData.test} 
+                testData={formattedTestData} 
                 selectedPhotos={formattedPhotos || selectedPhotos}  // Utiliser les photos formatées
                 partId={partId}  // Ajout de l'ID de la pièce
               />
@@ -177,9 +171,8 @@ const ReportPreviewModal = ({
               position: 'relative',
               pageBreakAfter: 'always' 
             }}>
-              <ReportPageHeader testData={formattedTestData} clientData={clientData} />
-              <CurvesSection 
-                testData={reportData.test} 
+              <ReportPageHeader testData={formattedTestData} clientData={clientData} />              <CurvesSection 
+                testData={formattedTestData} 
                 selectedPhotos={formattedPhotos || selectedPhotos}  // Ajouter ici
                 partId={partId}  // Ajout de l'ID de la pièce
               />
@@ -192,21 +185,19 @@ const ReportPreviewModal = ({
               padding: '20px', 
               minHeight: '297mm', 
               position: 'relative',
-              pageBreakAfter: 'always' 
-            }}>
+              pageBreakAfter: 'always'            }}>
               <ReportPageHeader testData={formattedTestData} clientData={clientData} />
               <MicrographySection 
-                testData={reportData.test} 
+                testData={formattedTestData} 
                 selectedPhotos={formattedPhotos || selectedPhotos}  // Ajouter ici
                 partId={partId}  // Ajout de l'ID de la pièce
               />
             </div>
           )}
-          
-          {/* Section Control avec une page par résultat */}
-          {selectedSections.control && reportData.test?.results && (
+            {/* Section Control avec une page par résultat */}
+          {selectedSections.control && reportData.results && (
             <>
-              {reportData.test.results.map((result, index) => {
+              {reportData.results.map((result, index) => {
                 // Débogage des spécifications
                 console.log(`Result ${index} - Part Data:`, reportData.part);
                 console.log(`Result ${index} - Specifications:`, reportData.part?.specifications);
@@ -226,10 +217,9 @@ const ReportPreviewModal = ({
                       color: '#20c997' 
                     }}>
                       Contrôles et résultats
-                    </h3>
-                    <ControlSection 
+                    </h3>                    <ControlSection 
                       testData={{
-                        ...reportData.test,
+                        ...formattedTestData,
                         results: [result] // N'envoyer que le résultat actuel
                       }} 
                       partData={reportData.part || {}}

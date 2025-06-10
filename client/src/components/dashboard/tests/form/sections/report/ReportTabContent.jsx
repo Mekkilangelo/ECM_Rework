@@ -198,22 +198,22 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
       const sectionsToFetch = {
         ...selectedSections,
         // Forcer identification pour récupérer les données client
-        identification: true
-      };
-      
-      const response = await testService.getTestReportData(testId, sectionsToFetch);
+        identification: true      };
+        const reportDataResponse = await testService.getTestReportData(testId, sectionsToFetch);
 
-      // Ajouter explicitement les photos sélectionnées à reportData
-      response.data.selectedPhotos = selectedPhotos;
-      
-      // Ajouter l'ID de la pièce aux données du rapport
-      response.data.partId = parentNodeId;
+      // Créer un nouvel objet de rapport avec toutes les données nécessaires
+      const completeReportData = {
+        ...reportDataResponse,
+        selectedPhotos: selectedPhotos,
+        partId: parentNodeId
+      };
       
       // Afficher les données dans la console pour débogage
       console.log("ReportTabContent - Photos sélectionnées par section:", selectedPhotos);
       console.log("ReportTabContent - ID de la pièce:", parentNodeId);
+      console.log("ReportTabContent - Données complètes du rapport:", completeReportData);
       
-      setReportData(response.data);
+      setReportData(completeReportData);
       setShowPreview(true);
     } catch (err) {
       console.error("Erreur lors de la récupération des données du rapport:", err);

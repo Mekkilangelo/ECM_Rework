@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import fileService from '../../../../../../../services/fileService';
 
-const CurvesSection = ({ testData, selectedPhotos = {} }) => {
+const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
+  // Vérification de sécurité pour les données du test
+  const safeTestData = testData || {};
+  
   // Fonction plus intelligente pour organiser les photos par sous-catégorie
   const getCurvesPhotosByCategory = () => {
     const result = {
@@ -337,9 +340,8 @@ const CurvesSection = ({ testData, selectedPhotos = {} }) => {
                 </div>
               </div>
             </div>
-            
-            {/* Zone pour graphique de potentiel carbone */}
-            {testData.processType && testData.processType.toLowerCase().includes("cémentation") && (
+              {/* Zone pour graphique de potentiel carbone */}
+            {safeTestData.processType && safeTestData.processType.toLowerCase().includes("cémentation") && (
               <div>
                 <h4 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>Potentiel carbone</h4>
                 <div style={{ 

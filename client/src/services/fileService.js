@@ -96,12 +96,21 @@ const fileService = {
   getFilePreviewUrl: (fileId) => {
     return `${api.defaults.baseURL}/files/${fileId}`;
   },
-    /**
+  /**
    * Récupère l'URL d'un fichier par son ID
    * @param {string|number} fileId - Identifiant du fichier
    * @returns {string} URL du fichier
    */
   getFileUrl: (fileId) => {
+    return `${api.defaults.baseURL}/files/${fileId}`;
+  },
+  
+  /**
+   * Récupère l'URL d'un fichier par son ID (alias pour getFileUrl)
+   * @param {string|number} fileId - Identifiant du fichier
+   * @returns {string} URL du fichier
+   */
+  getFileById: (fileId) => {
     return `${api.defaults.baseURL}/files/${fileId}`;
   },
   

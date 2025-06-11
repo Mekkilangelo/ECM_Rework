@@ -2,6 +2,26 @@ import { useEffect } from 'react';
 import testService from '../../../../../services/testService';
 
 /**
+ * Fonction utilitaire pour convertir les secondes en heures, minutes, secondes
+ */
+const convertSecondsToHMS = (totalSeconds) => {
+  if (!totalSeconds || totalSeconds === '') {
+    return { hours: '', minutes: '', seconds: '' };
+  }
+  
+  const total = parseInt(totalSeconds, 10);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  
+  return {
+    hours: hours > 0 ? hours.toString() : '',
+    minutes: minutes > 0 ? minutes.toString() : '',
+    seconds: seconds > 0 ? seconds.toString() : ''
+  };
+};
+
+/**
  * Hook pour récupérer et formater les données d'un test
  * @param {Object} test - Le test à récupérer et formater
  * @param {Function} setFormData - Fonction pour mettre à jour les données du formulaire
@@ -156,12 +176,43 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
               selectedGas1: selectedGas1,
               selectedGas2: selectedGas2,
               selectedGas3: selectedGas3,
-              
-              // Other recipe parameters
+                // Other recipe parameters
               waitTime: recipeData.wait_time?.value || '',
               waitTimeUnit: recipeData.wait_time?.unit || '',
+              // Convertir le temps d'attente en champs décomposés si la valeur est en secondes
+              ...(recipeData.wait_time?.value && recipeData.wait_time?.unit === 'seconds' 
+                ? (() => {
+                    const { hours, minutes, seconds } = convertSecondsToHMS(recipeData.wait_time.value);
+                    return {
+                      waitTimeHours: hours,
+                      waitTimeMinutes: minutes,
+                      waitTimeSeconds: seconds
+                    };
+                  })() 
+                : {
+                    waitTimeHours: '',
+                    waitTimeMinutes: '',
+                    waitTimeSeconds: ''
+                  }
+              ),
               programDuration: recipeData.program_duration?.value || '',
               programDurationUnit: recipeData.program_duration?.unit || '',
+              // Convertir la durée du programme en champs décomposés si la valeur est en secondes
+              ...(recipeData.program_duration?.value && recipeData.program_duration?.unit === 'seconds' 
+                ? (() => {
+                    const { hours, minutes, seconds } = convertSecondsToHMS(recipeData.program_duration.value);
+                    return {
+                      programDurationHours: hours,
+                      programDurationMinutes: minutes,
+                      programDurationSeconds: seconds
+                    };
+                  })() 
+                : {
+                    programDurationHours: '',
+                    programDurationMinutes: '',
+                    programDurationSeconds: ''
+                  }
+              ),
               cellTemp: recipeData.cell_temp?.value || '',
               cellTempUnit: recipeData.cell_temp?.unit || '',
               waitPressure: recipeData.wait_pressure?.value || '',

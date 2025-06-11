@@ -150,8 +150,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
         isExpandedByDefault={true}
         sectionId="test-recipe-data"
         rememberState={true}
-      >      
-        <RecipeDataSection
+      >        <RecipeDataSection
           formData={formData}
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
@@ -163,6 +162,7 @@ const BeforeTabContent = ({ formData, errors, loading, formHandlers, test, handl
           handleThermalCycleAdd={formHandlers.handleThermalCycleAdd}
           handleThermalCycleRemove={formHandlers.handleThermalCycleRemove}
           handleThermalCycleChange={formHandlers.handleThermalCycleChange}
+          handleTimeComponentChange={formHandlers.handleTimeComponentChange}
           handleChemicalCycleAdd={formHandlers.handleChemicalCycleAdd}
           handleChemicalCycleRemove={formHandlers.handleChemicalCycleRemove}
           handleGasQuenchSpeedAdd={formHandlers.handleGasQuenchSpeedAdd}

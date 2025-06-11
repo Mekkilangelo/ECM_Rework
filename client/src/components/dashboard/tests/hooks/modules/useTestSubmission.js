@@ -4,6 +4,18 @@ import i18next from 'i18next';
 import { useState } from 'react';
 
 /**
+ * Fonction utilitaire pour convertir heures, minutes, secondes en secondes totales
+ */
+const convertHMSToSeconds = (hours, minutes, seconds) => {
+  const h = parseInt(hours || '0', 10);
+  const m = parseInt(minutes || '0', 10);
+  const s = parseInt(seconds || '0', 10);
+  
+  const totalSeconds = (h * 3600) + (m * 60) + s;
+  return totalSeconds > 0 ? totalSeconds.toString() : '';
+};
+
+/**
  * Hook spécifique pour gérer les soumissions de tests
  * @param {Object} formData - Données du formulaire de test
  * @param {Function} setFormData - Fonction pour mettre à jour formData
@@ -217,14 +229,21 @@ const useTestSubmission = (
         media: formData.recipeData.preoxMedia || null
       },
       thermal_cycle: thermalCycleData,
-      chemical_cycle: chemicalCycleData,
-      wait_time: {
-        value: formData.recipeData.waitTime || null,
-        unit: formData.recipeData.waitTimeUnit || null
+      chemical_cycle: chemicalCycleData,      wait_time: {
+        value: convertHMSToSeconds(
+          formData.recipeData.waitTimeHours,
+          formData.recipeData.waitTimeMinutes,
+          formData.recipeData.waitTimeSeconds
+        ) || null,
+        unit: 'seconds' // Toujours stocker en secondes
       },
       program_duration: {
-        value: formData.recipeData.programDuration || null,
-        unit: formData.recipeData.programDurationUnit || null
+        value: convertHMSToSeconds(
+          formData.recipeData.programDurationHours,
+          formData.recipeData.programDurationMinutes,
+          formData.recipeData.programDurationSeconds
+        ) || null,
+        unit: 'seconds' // Toujours stocker en secondes
       },
       cell_temp: {
         value: formData.recipeData.cellTemp || null,

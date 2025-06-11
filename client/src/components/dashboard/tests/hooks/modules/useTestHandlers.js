@@ -499,6 +499,88 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     });
   };
 
+  // Fonctions de conversion de temps pour les champs h/min/s
+  const convertSecondsToHMS = useCallback((totalSeconds) => {
+    if (!totalSeconds || totalSeconds === '') {
+      return { hours: '', minutes: '', seconds: '' };
+    }
+    
+    const total = parseInt(totalSeconds, 10);
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const seconds = total % 60;
+    
+    return {
+      hours: hours > 0 ? hours.toString() : '',
+      minutes: minutes > 0 ? minutes.toString() : '',
+      seconds: seconds > 0 ? seconds.toString() : ''
+    };
+  }, []);
+  
+  const convertHMSToSeconds = useCallback((hours, minutes, seconds) => {
+    const h = parseInt(hours || '0', 10);
+    const m = parseInt(minutes || '0', 10);
+    const s = parseInt(seconds || '0', 10);
+    
+    const totalSeconds = (h * 3600) + (m * 60) + s;
+    return totalSeconds > 0 ? totalSeconds.toString() : '';
+  }, []);
+  
+  // Gestionnaires pour les champs de temps décomposés
+  const handleTimeComponentChange = useCallback((fieldBase, component, value) => {
+    setFormData(prev => {
+      const currentData = prev.recipeData || {};
+      const currentHours = currentData[`${fieldBase}Hours`] || '';
+      const currentMinutes = currentData[`${fieldBase}Minutes`] || '';
+      const currentSeconds = currentData[`${fieldBase}Seconds`] || '';
+      
+      let newHours = currentHours;
+      let newMinutes = currentMinutes;
+      let newSecondsValue = currentSeconds;
+      
+      switch (component) {
+        case 'hours':
+          newHours = value;
+          break;
+        case 'minutes':
+          newMinutes = value;
+          break;
+        case 'seconds':
+          newSecondsValue = value;
+          break;
+      }
+      
+      // Convertir en secondes totales pour le stockage
+      const totalSeconds = convertHMSToSeconds(newHours, newMinutes, newSecondsValue);
+      
+      return {
+        ...prev,
+        recipeData: {
+          ...currentData,
+          [fieldBase]: totalSeconds,
+          [`${fieldBase}Hours`]: newHours,
+          [`${fieldBase}Minutes`]: newMinutes,
+          [`${fieldBase}Seconds`]: newSecondsValue
+        }
+      };
+    });
+  }, [setFormData, convertHMSToSeconds]);
+  
+  // Fonction pour initialiser les champs décomposés depuis la valeur en secondes
+  const initializeTimeComponents = useCallback((fieldBase, totalSeconds) => {
+    const { hours, minutes, seconds } = convertSecondsToHMS(totalSeconds);
+    
+    setFormData(prev => ({
+      ...prev,
+      recipeData: {
+        ...prev.recipeData,
+        [`${fieldBase}Hours`]: hours,
+        [`${fieldBase}Minutes`]: minutes,
+        [`${fieldBase}Seconds`]: seconds
+      }
+    }));
+  }, [setFormData, convertSecondsToHMS]);
+  
   return {
     ...globalHandlers,
     handleThermalCycleAdd,
@@ -520,7 +602,11 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     handleHardnessResultRemove,
     handleEcdPositionAdd,
     handleEcdPositionRemove,
-    handleEcdPositionChange
+    handleEcdPositionChange,
+    convertSecondsToHMS,
+    convertHMSToSeconds,
+    handleTimeComponentChange,
+    initializeTimeComponents
   };
 };
 

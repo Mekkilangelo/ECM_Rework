@@ -16,6 +16,7 @@ const ThermalCycleSection = ({
   handleThermalCycleAdd,
   handleThermalCycleRemove,
   handleThermalCycleChange,
+  handleTimeComponentChange,
   loading,
   selectStyles,
   viewMode = false,
@@ -124,90 +125,103 @@ const ThermalCycleSection = ({
           </Button>
         </div>
       )}
-      
-      {/* Autres paramètres de recette */}
+        {/* Autres paramètres de recette */}
       <h5 className="mt-4 mb-2">{t('tests.before.recipeData.thermalCycle.otherParameters')}</h5>
       <Row>
-        <Col md={3}>
+        <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>{t('tests.before.recipeData.thermalCycle.waitTime')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="recipeData.waitTime"
-              value={formData.recipeData?.waitTime}
-              onChange={handleChange}
-              step="0.1"
-              style={viewMode ? readOnlyFieldStyle : {}}
-              readOnly={viewMode}
-              disabled={loading || viewMode}
-            />
+            <Row>
+              <Col xs={4}>
+                <Form.Control
+                  type="number"
+                  placeholder="h"
+                  value={formData.recipeData?.waitTimeHours || ''}
+                  onChange={(e) => handleTimeComponentChange('waitTime', 'hours', e.target.value)}
+                  min="0"
+                  style={viewMode ? readOnlyFieldStyle : {}}
+                  readOnly={viewMode}
+                  disabled={loading || viewMode}
+                />
+                <Form.Text className="text-muted small">{t('common.hours')}</Form.Text>
+              </Col>
+              <Col xs={4}>
+                <Form.Control
+                  type="number"
+                  placeholder="min"
+                  value={formData.recipeData?.waitTimeMinutes || ''}
+                  onChange={(e) => handleTimeComponentChange('waitTime', 'minutes', e.target.value)}
+                  min="0"
+                  max="59"
+                  style={viewMode ? readOnlyFieldStyle : {}}
+                  readOnly={viewMode}
+                  disabled={loading || viewMode}
+                />
+                <Form.Text className="text-muted small">{t('common.minutes')}</Form.Text>
+              </Col>
+              <Col xs={4}>
+                <Form.Control
+                  type="number"
+                  placeholder="s"
+                  value={formData.recipeData?.waitTimeSeconds || ''}
+                  onChange={(e) => handleTimeComponentChange('waitTime', 'seconds', e.target.value)}
+                  min="0"
+                  max="59"
+                  style={viewMode ? readOnlyFieldStyle : {}}
+                  readOnly={viewMode}
+                  disabled={loading || viewMode}
+                />
+                <Form.Text className="text-muted small">{t('common.seconds')}</Form.Text>
+              </Col>
+            </Row>
           </Form.Group>
         </Col>
-        <Col md={3}>
-          <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
-            <Select
-              name="recipeData.waitTimeUnit"
-              value={formData.recipeData?.waitTimeUnit 
-                ? getSelectedOption(timeUnitOptions, formData.recipeData?.waitTimeUnit) 
-                : timeUnitOptions[0] || null}
-              onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitTimeUnit' })}
-              options={timeUnitOptions}
-              isClearable={!viewMode}
-              isDisabled={loading || viewMode}
-              styles={viewMode ? {
-                ...selectStyles,
-                control: (provided) => ({
-                  ...provided,
-                  ...readOnlyFieldStyle,
-                  cursor: 'default'
-                }),
-                dropdownIndicator: () => ({ display: 'none' }),
-                indicatorSeparator: () => ({ display: 'none' })
-              } : selectStyles}
-              placeholder={t('tests.before.recipeData.thermalCycle.unit')}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={3}>
+        <Col md={6}>
           <Form.Group className="mb-3">
             <Form.Label>{t('tests.before.recipeData.thermalCycle.programDuration')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="recipeData.programDuration"
-              value={formData.recipeData?.programDuration}
-              onChange={handleChange}
-              step="0.1"
-              style={viewMode ? readOnlyFieldStyle : {}}
-              readOnly={viewMode}
-              disabled={loading || viewMode}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={3}>
-          <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
-            <Select
-              name="recipeData.programDurationUnit"
-              value={formData.recipeData?.programDurationUnit 
-                ? getSelectedOption(timeUnitOptions, formData.recipeData?.programDurationUnit) 
-                : timeUnitOptions[0] || null}
-              onChange={(option) => handleSelectChange(option, { name: 'recipeData.programDurationUnit' })}
-              options={timeUnitOptions}
-              isClearable={!viewMode}
-              isDisabled={loading || viewMode}
-              styles={viewMode ? {
-                ...selectStyles,
-                control: (provided) => ({
-                  ...provided,
-                  ...readOnlyFieldStyle,
-                  cursor: 'default'
-                }),
-                dropdownIndicator: () => ({ display: 'none' }),
-                indicatorSeparator: () => ({ display: 'none' })
-              } : selectStyles}
-              placeholder={t('tests.before.recipeData.thermalCycle.unit')}
-            />
+            <Row>
+              <Col xs={4}>
+                <Form.Control
+                  type="number"
+                  placeholder="h"
+                  value={formData.recipeData?.programDurationHours || ''}
+                  onChange={(e) => handleTimeComponentChange('programDuration', 'hours', e.target.value)}
+                  min="0"
+                  style={viewMode ? readOnlyFieldStyle : {}}
+                  readOnly={viewMode}
+                  disabled={loading || viewMode}
+                />
+                <Form.Text className="text-muted small">{t('common.hours')}</Form.Text>
+              </Col>
+              <Col xs={4}>
+                <Form.Control
+                  type="number"
+                  placeholder="min"
+                  value={formData.recipeData?.programDurationMinutes || ''}
+                  onChange={(e) => handleTimeComponentChange('programDuration', 'minutes', e.target.value)}
+                  min="0"
+                  max="59"
+                  style={viewMode ? readOnlyFieldStyle : {}}
+                  readOnly={viewMode}
+                  disabled={loading || viewMode}
+                />
+                <Form.Text className="text-muted small">{t('common.minutes')}</Form.Text>
+              </Col>
+              <Col xs={4}>
+                <Form.Control
+                  type="number"
+                  placeholder="s"
+                  value={formData.recipeData?.programDurationSeconds || ''}
+                  onChange={(e) => handleTimeComponentChange('programDuration', 'seconds', e.target.value)}
+                  min="0"
+                  max="59"
+                  style={viewMode ? readOnlyFieldStyle : {}}
+                  readOnly={viewMode}
+                  disabled={loading || viewMode}
+                />
+                <Form.Text className="text-muted small">{t('common.seconds')}</Form.Text>
+              </Col>
+            </Row>
           </Form.Group>
         </Col>
       </Row>

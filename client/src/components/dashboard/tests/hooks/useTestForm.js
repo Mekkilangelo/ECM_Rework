@@ -98,8 +98,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     refreshUnitOptions,
     refreshAllOptions
   };
-  
-  // Handlers pour le formulaire
+    // Handlers pour le formulaire
   const { 
     handleChange, handleSelectChange, 
     handleThermalCycleAdd, handleThermalCycleRemove, handleThermalCycleChange,
@@ -112,7 +111,12 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleCreateOption, // Ajouter le handler pour la création d'options
     handleEcdPositionAdd, // Nouvelles fonctions pour la gestion des positions ECD
     handleEcdPositionRemove,
-    handleEcdPositionChange
+    handleEcdPositionChange,
+    // Fonctions de gestion du temps
+    convertSecondsToHMS,
+    convertHMSToSeconds,
+    handleTimeComponentChange,
+    initializeTimeComponents
   } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
   
   // Validation du formulaire
@@ -228,11 +232,15 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleHardnessResultAdd,
     handleHardnessResultRemove,
     // Nouvelles fonctions pour la gestion des positions ECD
-    handleEcdPositionAdd,
-    handleEcdPositionRemove,
+    handleEcdPositionAdd,    handleEcdPositionRemove,
     handleEcdPositionChange,
     // Ajout du handler pour créer de nouvelles options
     handleCreateOption,
+    // Fonctions de gestion du temps
+    convertSecondsToHMS,
+    convertHMSToSeconds,
+    handleTimeComponentChange,
+    initializeTimeComponents,
     // Fonctions de rafraîchissement
     refreshLocationOptions,
     refreshStatusOptions,

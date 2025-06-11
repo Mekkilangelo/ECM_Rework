@@ -20,6 +20,7 @@ const RecipeDataSection = ({
   handleThermalCycleAdd,
   handleThermalCycleRemove,
   handleThermalCycleChange,
+  handleTimeComponentChange,
   handleChemicalCycleAdd,
   handleChemicalCycleRemove,
   handleGasQuenchSpeedAdd,
@@ -76,8 +77,7 @@ const RecipeDataSection = ({
         sectionId="test-thermal-cycle"
         rememberState={true}
         level={1}
-      >
-        {/* Thermal Cycle Section */}        <ThermalCycleSection
+      >        {/* Thermal Cycle Section */}        <ThermalCycleSection
           formData={formData}
           handleChange={handleChange}
           handleSelectChange={handleSelectChange}
@@ -88,6 +88,7 @@ const RecipeDataSection = ({
           handleThermalCycleAdd={handleThermalCycleAdd}
           handleThermalCycleRemove={handleThermalCycleRemove}
           handleThermalCycleChange={handleThermalCycleChange}
+          handleTimeComponentChange={handleTimeComponentChange}
           loading={loading}
           selectStyles={selectStyles}
           viewMode={viewMode}

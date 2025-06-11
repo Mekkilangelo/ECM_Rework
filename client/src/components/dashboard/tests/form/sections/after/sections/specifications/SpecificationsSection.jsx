@@ -73,10 +73,55 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
     if (max) return t('tests.after.specifications.formatMax', { value: max });
     return t('tests.after.specifications.notAvailable');
   };
+  // Fonction pour formater l'affichage des spécifications de dureté
+  const formatHardnessSpec = (spec) => {
+    const range = formatRange(spec.min, spec.max);
+    return `${range}${spec.unit ? ` ${spec.unit}` : ''}`;
+  };
+
+  // Fonction pour formater l'affichage des spécifications ECD
+  const formatEcdSpec = (spec) => {
+    const depthRange = formatRange(spec.depthMin, spec.depthMax);
+    const hardnessText = spec.hardness ? ` (${spec.hardness}${spec.hardnessUnit ? ` ${spec.hardnessUnit}` : ''})` : '';
+    return `${depthRange}${spec.depthUnit ? ` ${spec.depthUnit}` : ''}${hardnessText}`;
+  };
 
   return (
     <ListGroup variant="flush">
-      {specifications.ecd && (
+      {/* Affichage des spécifications de dureté dynamiques */}
+      {specifications.hardnessSpecs && Array.isArray(specifications.hardnessSpecs) && specifications.hardnessSpecs.length > 0 && (
+        specifications.hardnessSpecs.map((spec, index) => (
+          <ListGroup.Item key={`hardness-${index}`} className="py-2">
+            <span className="d-flex justify-content-between">
+              <span>
+                {spec.name ? `${spec.name}:` : `${t('parts.specifications.hardnessSpecs')} ${index + 1}:`}
+              </span>
+              <span className="text-primary">
+                {formatHardnessSpec(spec)}
+              </span>
+            </span>
+          </ListGroup.Item>
+        ))
+      )}
+
+      {/* Affichage des spécifications ECD dynamiques */}
+      {specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs) && specifications.ecdSpecs.length > 0 && (
+        specifications.ecdSpecs.map((spec, index) => (
+          <ListGroup.Item key={`ecd-${index}`} className="py-2">
+            <span className="d-flex justify-content-between">
+              <span>
+                {spec.name ? `${spec.name}:` : `${t('parts.specifications.ecdSpecs')} ${index + 1}:`}
+              </span>
+              <span className="text-primary">
+                {formatEcdSpec(spec)}
+              </span>
+            </span>
+          </ListGroup.Item>
+        ))
+      )}
+
+      {/* Support pour l'ancien format de spécifications (rétrocompatibilité) */}
+      {specifications.ecd && !Array.isArray(specifications.ecdSpecs) && (
         <ListGroup.Item className="py-2">
           <span className="d-flex justify-content-between">
             <span>{t('tests.after.specifications.ecd', { hardness: specifications.ecd.hardness, unit: specifications.ecd.unit })}</span>
@@ -84,7 +129,7 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
           </span>
         </ListGroup.Item>
       )}
-      {specifications.surfaceHardness && (
+      {specifications.surfaceHardness && !Array.isArray(specifications.hardnessSpecs) && (
         <ListGroup.Item className="py-2">
           <span className="d-flex justify-content-between">
             <span>{t('tests.after.specifications.surfaceHardness')}</span>
@@ -94,7 +139,7 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
           </span>
         </ListGroup.Item>
       )}
-      {specifications.coreHardness && (
+      {specifications.coreHardness && !Array.isArray(specifications.hardnessSpecs) && (
         <ListGroup.Item className="py-2">
           <span className="d-flex justify-content-between">
             <span>{t('tests.after.specifications.coreHardness')}</span>
@@ -104,7 +149,7 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
           </span>
         </ListGroup.Item>
       )}
-      {specifications.toothHardness && (
+      {specifications.toothHardness && !Array.isArray(specifications.hardnessSpecs) && (
         <ListGroup.Item className="py-2">
           <span className="d-flex justify-content-between">
             <span>{t('tests.after.specifications.toothHardness')}</span>
@@ -112,6 +157,15 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
               {formatRange(specifications.toothHardness.min, specifications.toothHardness.max)} {specifications.toothHardness.unit}
             </span>
           </span>
+        </ListGroup.Item>
+      )}
+
+      {/* Message si aucune spécification n'est disponible */}
+      {(!specifications.hardnessSpecs || specifications.hardnessSpecs.length === 0) &&
+       (!specifications.ecdSpecs || specifications.ecdSpecs.length === 0) &&
+       !specifications.ecd && !specifications.surfaceHardness && !specifications.coreHardness && !specifications.toothHardness && (
+        <ListGroup.Item className="py-2 text-center">
+          <span className="text-muted small">{t('tests.after.specifications.noSpecifications')}</span>
         </ListGroup.Item>
       )}
     </ListGroup>

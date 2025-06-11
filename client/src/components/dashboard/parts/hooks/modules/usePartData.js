@@ -17,8 +17,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
         try {
           // Utilisation du service refactorisé
           const partData = await partService.getPart(part.id);
-          
-          console.log('Raw part data received from API:', partData);
+            console.log('Raw part data received from API:', partData);
           
           // Vérifier si les données sont dans la propriété Part ou directement dans partData
           const data = partData.Part || partData;
@@ -42,11 +41,71 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
           } catch (err) {
             console.error('Error parsing specifications:', err);
             specifications = {};
+          }// Parser les spécifications de dureté dynamiques
+          let hardnessSpecs = [];
+          if (specifications.hardnessSpecs && Array.isArray(specifications.hardnessSpecs)) {
+            hardnessSpecs = specifications.hardnessSpecs.map((spec) => ({
+              name: spec.name || '',
+              min: spec.min || '',
+              max: spec.max || '',
+              unit: spec.unit || ''
+            }));
+          } else {
+            // Migration des anciennes spécifications vers le nouveau format
+            const legacySpecs = [];
+            if (specifications.coreHardness && (specifications.coreHardness.min || specifications.coreHardness.max)) {
+              legacySpecs.push({
+                name: 'Core',
+                min: specifications.coreHardness.min || '',
+                max: specifications.coreHardness.max || '',
+                unit: specifications.coreHardness.unit || ''
+              });
+            }
+            if (specifications.surfaceHardness && (specifications.surfaceHardness.min || specifications.surfaceHardness.max)) {
+              legacySpecs.push({
+                name: 'Surface',
+                min: specifications.surfaceHardness.min || '',
+                max: specifications.surfaceHardness.max || '',
+                unit: specifications.surfaceHardness.unit || ''
+              });
+            }
+            if (specifications.toothHardness && (specifications.toothHardness.min || specifications.toothHardness.max)) {
+              legacySpecs.push({
+                name: 'Tooth',
+                min: specifications.toothHardness.min || '',
+                max: specifications.toothHardness.max || '',
+                unit: specifications.toothHardness.unit || ''
+              });
+            }
+            hardnessSpecs = legacySpecs;
           }
-          
-          console.log('Dimensions parsed:', dimensions);
-          console.log('Specifications parsed:', specifications);
-            // Extraire les valeurs en gérant les cas où les propriétés pourraient être undefined
+
+          // Parser les spécifications ECD dynamiques
+          let ecdSpecs = [];
+          if (specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs)) {
+            ecdSpecs = specifications.ecdSpecs.map((spec) => ({
+              name: spec.name || '',
+              depthMin: spec.depthMin || '',
+              depthMax: spec.depthMax || '',
+              depthUnit: spec.depthUnit || '',
+              hardness: spec.hardness || '',
+              hardnessUnit: spec.hardnessUnit || ''
+            }));
+          } else {
+            // Migration de l'ancienne spécification ECD vers le nouveau format
+            if (specifications.ecd && (specifications.ecd.depthMin || specifications.ecd.depthMax || specifications.ecd.hardness)) {
+              ecdSpecs = [{
+                name: 'ECD',
+                depthMin: specifications.ecd.depthMin || '',
+                depthMax: specifications.ecd.depthMax || '',
+                depthUnit: specifications.ecd.depthUnit || '',
+                hardness: specifications.ecd.hardness || '',
+                hardnessUnit: specifications.ecd.unit || ''
+              }];
+            }
+          }
+
+          // Extraire les valeurs en gérant les cas où les propriétés pourraient être undefined
           const formValues = {
             name: partData.name || data.name || '',
             designation: data.designation || '',
@@ -67,20 +126,9 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             weight: dimensions?.weight?.value || '',
             weightUnit: dimensions?.weight?.unit || '',
             
-            // Specifications avec gestion de valeurs potentiellement undefined
-            coreHardnessMin: specifications?.coreHardness?.min || '',
-            coreHardnessMax: specifications?.coreHardness?.max || '',
-            coreHardnessUnit: specifications?.coreHardness?.unit || '',
-            surfaceHardnessMin: specifications?.surfaceHardness?.min || '',
-            surfaceHardnessMax: specifications?.surfaceHardness?.max || '',
-            surfaceHardnessUnit: specifications?.surfaceHardness?.unit || '',
-            toothHardnessMin: specifications?.toothHardness?.min || '',
-            toothHardnessMax: specifications?.toothHardness?.max || '',
-            toothHardnessUnit: specifications?.toothHardness?.unit || '',
-            ecdDepthMin: specifications?.ecd?.depthMin || '',
-            ecdDepthMax: specifications?.ecd?.depthMax || '',
-            ecdHardness: specifications?.ecd?.hardness || '',
-            ecdHardnessUnit: specifications?.ecd?.unit || '',
+            // Nouvelles spécifications dynamiques
+            hardnessSpecs: hardnessSpecs,
+            ecdSpecs: ecdSpecs,
           };
           
           console.log('Setting form data to:', formValues);

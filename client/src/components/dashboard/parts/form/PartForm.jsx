@@ -41,6 +41,13 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     selectStyles,
     refreshSteels,
     setFileAssociationCallback,
+    // Handlers spécifiques aux spécifications
+    addHardnessSpec,
+    removeHardnessSpec,
+    updateHardnessSpec,
+    addEcdSpec,
+    removeEcdSpec,
+    updateEcdSpec,
     showConfirmModal,
     setShowConfirmModal, // Ajout pour les tests de debug
     pendingClose,
@@ -194,18 +201,25 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
             isExpandedByDefault={false}
             sectionId="part-specifications"
             rememberState={true}
-          >
-            <SpecificationsSection
+          >            <SpecificationsSection
               formData={formData}
               handleChange={handleChange}
               handleSelectChange={handleSelectChange}
               handleCreateOption={handleCreateOption}
               getSelectedOption={getSelectedOption}
               hardnessUnitOptions={hardnessUnitOptions}
+              depthUnitOptions={lengthUnitOptions} // Utiliser lengthUnitOptions pour les unités de profondeur
               loading={loading}
               selectStyles={selectStyles}
               viewMode={viewMode}
               readOnlyFieldStyle={readOnlyFieldStyle}
+              // Nouveaux handlers spécialisés
+              addHardnessSpec={addHardnessSpec}
+              removeHardnessSpec={removeHardnessSpec}
+              updateHardnessSpec={updateHardnessSpec}
+              addEcdSpec={addEcdSpec}
+              removeEcdSpec={removeEcdSpec}
+              updateEcdSpec={updateEcdSpec}
             />
           </CollapsibleSection>
           
@@ -233,12 +247,6 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
                   handleCloseRequest();
                 }} className="mr-2">
                   {t('common.cancel')}
-                </Button>
-                <Button variant="danger" onClick={() => {
-                  console.log('🔧 TEST: Force showing modal');
-                  setShowConfirmModal(true);
-                }} className="mr-2">
-                  TEST MODAL
                 </Button>
                 <Button
                   variant="warning"

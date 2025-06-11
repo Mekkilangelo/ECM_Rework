@@ -71,80 +71,93 @@ const ResultCurveSection = ({
       setDisplayPoints([]);
     }
   }, [result]);
-  
-  // Ajout du state pour le pas d'incrémentation
+    // Ajout du state pour le pas d'incrémentation
   const [stepValue, setStepValue] = useState(0.1);
-  const [specData, setSpecData] = useState(null);
+  const [specData, setSpecData] = useState([]);
   
   // Récupérer l'unité de dureté à partir des données ECD
   const hardnessUnit = result.ecd?.hardnessUnit || "HV";
   
   // Positions ECD disponibles pour les colonnes
   const ecdPositions = result.ecd?.ecdPoints || [];
-  
-  // Effet pour charger les spécifications ECD depuis l'API
+    // Effet pour charger les spécifications ECD depuis l'API
   useEffect(() => {
     const fetchSpecData = async () => {
       if (test && test.id && parentId) {
         try {
           // Appeler la nouvelle méthode du service pour récupérer les spécifications
           const response = await testService.getTestSpecs(test.id, parentId);
-          console.log('Réponse du service getTestSpecs pour ResultCurveSection:', response);          // Vérifiez la structure de la réponse
-          if (response && response.data && response.data.ecdPoints) {
-            // Utiliser directement les points formatés par le backend
-            setSpecData(response.data.ecdPoints);
-          } else if (response && response.ecdPoints) {
-            // Alternative si la structure est différente
-            setSpecData(response.ecdPoints);
-          } else if (response && response.specifications) {
-            // Si nous avons des spécifications sous forme d'objet ou de chaîne JSON
-            let specs = response.specifications;
-            if (typeof specs === 'string') {
-              try {
-                specs = JSON.parse(specs);
-              } catch (e) {
-                console.error('Erreur lors du parsing des spécifications:', e);
-              }
-            }
+          console.log('Réponse du service getTestSpecs pour ResultCurveSection:', response);
+          
+          let specifications = null;
+          
+          // Extraction des spécifications selon la structure de réponse
+          if (response && response.specifications) {
+            specifications = typeof response.specifications === 'string' 
+              ? JSON.parse(response.specifications) 
+              : response.specifications;
+          } else if (response && response.data && response.data.specifications) {
+            specifications = typeof response.data.specifications === 'string'
+              ? JSON.parse(response.data.specifications)
+              : response.data.specifications;
+          }
+          
+          if (specifications) {
+            const specLines = [];
             
-            // Vérifier si nous avons des données ECD dans les spécifications
-            if (specs && specs.ecd) {
-              console.log('Spécifications ECD trouvées:', specs.ecd);
+            // Nouveau format : traitement des spécifications ECD multiples
+            if (specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs)) {
+              console.log('Spécifications ECD multiples trouvées:', specifications.ecdSpecs);
               
-              // Si les points sont déjà présents, les utiliser directement
-              if (specs.ecd.points) {
-                setSpecData(specs.ecd.points);
-              } 
-              // Sinon, générer des points à partir des valeurs de référence (hardness et depthMax/depthMin)
-              else if (specs.ecd.hardness) {
-                // Créer deux points pour former une ligne horizontale à la valeur de dureté spécifiée
-                // Si depthMax est défini, utiliser comme point final, sinon utiliser une valeur par défaut
-                const depthMax = parseFloat(specs.ecd.depthMax) || 1.0;
-                const depthMin = parseFloat(specs.ecd.depthMin) || 0.0;
-                const hardnessValue = parseFloat(specs.ecd.hardness);
-                
-                // Générer des points pour tracer une ligne de spécification
-                const generatedPoints = [
+              specifications.ecdSpecs.forEach((ecdSpec, index) => {
+                if (ecdSpec.hardness && (ecdSpec.depthMin !== undefined || ecdSpec.depthMax !== undefined)) {
+                  const depthMin = parseFloat(ecdSpec.depthMin) || 0.0;
+                  const depthMax = parseFloat(ecdSpec.depthMax) || 1.0;
+                  const hardnessValue = parseFloat(ecdSpec.hardness);
+                  
+                  // Créer une ligne de spécification pour cette ECD
+                  const specLine = {
+                    name: ecdSpec.name || `ECD ${index + 1}`,
+                    points: [
+                      { distance: depthMin, value: hardnessValue },
+                      { distance: depthMax, value: hardnessValue }
+                    ],
+                    unit: ecdSpec.hardnessUnit || 'HV'
+                  };
+                  
+                  specLines.push(specLine);
+                }
+              });
+            }
+            // Format ancien : compatibilité avec l'ancien format ECD unique
+            else if (specifications.ecd && specifications.ecd.hardness) {
+              console.log('Spécification ECD unique trouvée (format ancien):', specifications.ecd);
+              
+              const depthMin = parseFloat(specifications.ecd.depthMin) || 0.0;
+              const depthMax = parseFloat(specifications.ecd.depthMax) || 1.0;
+              const hardnessValue = parseFloat(specifications.ecd.hardness);
+              
+              const specLine = {
+                name: 'ECD',
+                points: [
                   { distance: depthMin, value: hardnessValue },
                   { distance: depthMax, value: hardnessValue }
-                ];
-                
-                console.log('Points de spécification générés:', generatedPoints);
-                setSpecData(generatedPoints);
-              } else {
-                console.warn('Les données ECD ne contiennent pas les valeurs nécessaires');
-                setSpecData(null);
-              }
-            } else {
-              console.warn('Les données ECD ne sont pas disponibles dans les spécifications');
-              setSpecData(null);
+                ],
+                unit: specifications.ecd.unit || 'HV'
+              };
+              
+              specLines.push(specLine);
             }
+            
+            console.log('Lignes de spécification générées:', specLines);
+            setSpecData(specLines);
           } else {
-            console.warn('Les données ECD ne sont pas disponibles dans la réponse');
-            setSpecData(null);
+            console.warn('Aucune spécification trouvée dans la réponse');
+            setSpecData([]);
           }
         } catch (error) {
           console.error(t('tests.after.results.resultCurve.specError'), error);
+          setSpecData([]);
         }
       }
     };
@@ -346,17 +359,23 @@ const ResultCurveSection = ({
           tension: 0.1
         });
       }
-    }
-      // Ajouter la courbe de spécification si disponible
+    }      // Ajouter les courbes de spécification si disponibles
     if (specData && specData.length > 0) {
       console.log('Ajout des données de spécification à la courbe:', specData);
-      datasets.push({
-        label: t('tests.after.results.resultCurve.specification'),
-        data: specData.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.value)})),
-        borderColor: 'rgb(0, 0, 0)',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderDash: [5, 5],
-        tension: 0
+      
+      specData.forEach((spec, index) => {
+        if (spec.points && spec.points.length > 0) {
+          datasets.push({
+            label: `${t('tests.after.results.resultCurve.specification')} - ${spec.name}`,
+            data: spec.points.map(p => ({x: parseFloat(p.distance), y: parseFloat(p.value)})),
+            borderColor: 'rgb(0, 0, 0)',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            borderDash: [5, 5],
+            tension: 0,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          });
+        }
       });
     }
     

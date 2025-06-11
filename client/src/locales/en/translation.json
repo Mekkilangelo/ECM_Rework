@@ -1,6 +1,7 @@
 {
   "common": {
     "actions": "Actions",
+    "add": "Add",
     "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
@@ -11,6 +12,7 @@
     "max": "Max",
     "min": "Min",
     "modifiedAt": "Modified on",
+    "name": "Name",
     "no": "No",
     "save": "Save",
     "selectUnit": "Select a unit",
@@ -429,13 +431,20 @@
       "reference": "Reference",
       "description": "Description",
       "selectDesignation": "Select or add a designation"
-    },
-    "specifications": {
+    },    "specifications": {
+      "depthMin": "Minimum Depth",
+      "depthMax": "Maximum Depth",
+      "depthUnit": "Depth Unit",
       "hardnessSpecs": "Hardness Specifications",
+      "hardnessUnit": "Hardness Unit",
+      "hardnessName": "Hardness Name",
+      "noHardnessSpecs": "No hardness specifications defined",
       "coreHardness": "Core Hardness",
       "surfaceHardness": "Surface Hardness",
       "toothHardness": "Tooth Hardness",
       "ecdDepth": "ECD Depth",
+      "ecdSpecs": "ECD Specifications",
+      "noEcdSpecs": "No ECD specifications defined",
       "hardness": "Hardness",
       "ecdHardness": "ECD Hardness"
     }

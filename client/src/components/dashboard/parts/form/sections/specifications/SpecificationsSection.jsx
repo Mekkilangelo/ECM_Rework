@@ -1,19 +1,28 @@
 import React from 'react';
-import { Form, InputGroup, Row, Col } from 'react-bootstrap';
+import { Form, Button, Card } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
+import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 
 const SpecificationsSection = ({
   formData,
-  handleChange,
-  handleSelectChange,
   handleCreateOption,
   getSelectedOption,
-  hardnessUnitOptions, // Recevoir directement le tableau d'options d'unités de dureté
+  hardnessUnitOptions,
+  depthUnitOptions,
   loading,
   selectStyles,
   viewMode = false,
-  readOnlyFieldStyle = {}
+  readOnlyFieldStyle = {},
+  // Nouveaux handlers dédiés
+  addHardnessSpec,
+  removeHardnessSpec,
+  updateHardnessSpec,
+  addEcdSpec,
+  removeEcdSpec,
+  updateEcdSpec
 }) => {
   const { t } = useTranslation();
 
@@ -61,274 +70,277 @@ const SpecificationsSection = ({
     indicatorSeparator: () => ({ display: 'none' })
   } : unitSelectStyles;
 
-  const handleCreateCoreHardnessUnit = (inputValue) => {
-    return handleCreateOption(inputValue, 'coreHardnessUnit', 'units', 'hardness_units');
-  };
-  
-  const handleCreateSurfaceHardnessUnit = (inputValue) => {
-    return handleCreateOption(inputValue, 'surfaceHardnessUnit', 'units', 'hardness_units');
-  };
-  
-  const handleCreateToothHardnessUnit = (inputValue) => {
-    return handleCreateOption(inputValue, 'toothHardnessUnit', 'units', 'hardness_units');
-  };
-  
-  const handleCreateEcdHardnessUnit = (inputValue) => {
-    return handleCreateOption(inputValue, 'ecdHardnessUnit', 'units', 'hardness_units');
+  // Initialiser les spécifications si elles n'existent pas
+  const hardnessSpecs = formData.hardnessSpecs || [];
+  const ecdSpecs = formData.ecdSpecs || [];
+  // Fonction pour créer de nouvelles unités
+  const handleCreateHardnessUnit = (inputValue, specIndex, specType) => {
+    return handleCreateOption(inputValue, `${specType}Unit_${specIndex}`, 'units', 'hardness_units');
   };
 
-  // Debug
-  console.log("SpecificationsSection - hardnessUnitOptions:", hardnessUnitOptions);
-
+  const handleCreateDepthUnit = (inputValue, specIndex) => {
+    return handleCreateOption(inputValue, `depthUnit_${specIndex}`, 'units', 'depth_units');
+  };
   return (
     <>
-      <h6 className="text-muted mb-2">{t('parts.specifications.coreHardness')}</h6>
-      <div className="row mb-3 g-2 align-items-end">
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.min')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="coreHardnessMin"
-              value={formData.coreHardnessMin || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
+      {/* Section Spécifications de Dureté */}
+      <CollapsibleSection
+        title={t('parts.specifications.hardnessSpecs')}
+        isExpandedByDefault={false}
+        sectionId="hardness-specifications"
+        rememberState={true}
+        level={1}
+      >
+        <div className="d-flex justify-content-end mb-3">
+          {!viewMode && (
+            <Button 
+              variant="outline-primary" 
+              size="sm" 
+              onClick={addHardnessSpec}
+              className="d-flex align-items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faPlus} />
+              {t('common.add')}
+            </Button>
+          )}
         </div>
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.max')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="coreHardnessMax"
-              value={formData.coreHardnessMax || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
+        
+        {hardnessSpecs.length === 0 ? (
+          <p className="text-muted mb-0 text-center py-2">
+            {t('parts.specifications.noHardnessSpecs')}
+          </p>        ) : (
+          hardnessSpecs.map((spec, index) => (
+            <div key={index} className="border rounded p-3 mb-3">
+              <div className="row g-2 align-items-end">
+                <div className="col-md-4">
+                  <Form.Group>
+                    <Form.Label className="small">{t('common.name')}</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={spec.name || ''}
+                      onChange={(e) => updateHardnessSpec(index, 'name', e.target.value)}
+                      placeholder={t('parts.specifications.hardnessName')}
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>                <div className="col">
+                  <Form.Group>
+                    <Form.Label className="small">{t('common.min')}</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={spec.min || ''}
+                      onChange={(e) => updateHardnessSpec(index, 'min', e.target.value)}
+                      step="0.01"
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col">                  <Form.Group>
+                    <Form.Label className="small">{t('common.max')}</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={spec.max || ''}
+                      onChange={(e) => updateHardnessSpec(index, 'max', e.target.value)}
+                      step="0.01"
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col-auto" style={{ minWidth: '150px' }}>
+                  <Form.Group>
+                    <Form.Label className="small">{t('common.unit')}</Form.Label>
+                    <CreatableSelect
+                      value={spec.unit 
+                        ? getSelectedOption(hardnessUnitOptions, spec.unit) 
+                        : null}
+                      onChange={(option) => updateHardnessSpec(index, 'unit', option?.value || '')}
+                      options={hardnessUnitOptions || []}
+                      isClearable={!viewMode}
+                      styles={customSelectStyles}
+                      placeholder={t('common.selectUnit')}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
+                      formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}                      onCreateOption={(inputValue) => handleCreateHardnessUnit(inputValue, index, 'hardness')}
+                      isDisabled={viewMode}
+                    />
+                  </Form.Group>
+                </div>
+                {!viewMode && (
+                  <div className="col-auto">
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm"
+                      onClick={() => removeHardnessSpec(index)}
+                      className="d-flex align-items-center"
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </CollapsibleSection>      {/* Section Spécifications ECD */}
+      <CollapsibleSection
+        title={t('parts.specifications.ecdSpecs')}
+        isExpandedByDefault={false}
+        sectionId="ecd-specifications"
+        rememberState={true}
+        level={1}
+      >
+        <div className="d-flex justify-content-end mb-3">
+          {!viewMode && (
+            <Button 
+              variant="outline-primary" 
+              size="sm" 
+              onClick={addEcdSpec}
+              className="d-flex align-items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faPlus} />
+              {t('common.add')}
+            </Button>
+          )}
         </div>
-        <div className="col-auto">
-          <Form.Group>
-            <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <CreatableSelect
-              name="coreHardnessUnit"
-              value={formData.coreHardnessUnit 
-                ? getSelectedOption(hardnessUnitOptions, formData.coreHardnessUnit) 
-                : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
-              onChange={(option) => handleSelectChange(option, { name: 'coreHardnessUnit' })}
-              options={hardnessUnitOptions || []}
-              isClearable={!viewMode}
-              styles={customSelectStyles}
-              placeholder={t('common.selectUnit')}
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
-              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
-              onCreateOption={handleCreateCoreHardnessUnit}
-              isDisabled={viewMode}
-            />
-          </Form.Group>
-        </div>
-      </div>
-
-      <h6 className="text-muted mb-2">{t('parts.specifications.surfaceHardness')}</h6>
-      <div className="row mb-3 g-2 align-items-end">
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.min')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="surfaceHardnessMin"
-              value={formData.surfaceHardnessMin || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.max')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="surfaceHardnessMax"
-              value={formData.surfaceHardnessMax || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col-auto">
-          <Form.Group>
-            <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <CreatableSelect
-              name="surfaceHardnessUnit"
-              value={formData.surfaceHardnessUnit 
-                ? getSelectedOption(hardnessUnitOptions, formData.surfaceHardnessUnit) 
-                : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
-              onChange={(option) => handleSelectChange(option, { name: 'surfaceHardnessUnit' })}
-              options={hardnessUnitOptions || []}
-              isClearable={!viewMode}
-              styles={customSelectStyles}
-              placeholder={t('common.selectUnit')}
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
-              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
-              onCreateOption={handleCreateSurfaceHardnessUnit}
-              isDisabled={viewMode}
-            />
-          </Form.Group>
-        </div>
-      </div>
-
-      <h6 className="text-muted mb-2">{t('parts.specifications.toothHardness')}</h6>
-      <div className="row mb-3 g-2 align-items-end">
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.min')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="toothHardnessMin"
-              value={formData.toothHardnessMin || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.max')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="toothHardnessMax"
-              value={formData.toothHardnessMax || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col-auto">
-          <Form.Group>
-            <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <CreatableSelect
-              name="toothHardnessUnit"
-              value={formData.toothHardnessUnit 
-                ? getSelectedOption(hardnessUnitOptions, formData.toothHardnessUnit) 
-                : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
-              onChange={(option) => handleSelectChange(option, { name: 'toothHardnessUnit' })}
-              options={hardnessUnitOptions || []}
-              isClearable={!viewMode}
-              styles={customSelectStyles}
-              placeholder={t('common.selectUnit')}
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
-              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
-              onCreateOption={handleCreateToothHardnessUnit}
-              isDisabled={viewMode}
-            />
-          </Form.Group>
-        </div>
-      </div>
-
-      <h6 className="text-muted mb-2">{t('parts.specifications.ecdDepth')}</h6>
-      <div className="row g-2 align-items-end">
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.min')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="ecdDepthMin"
-              value={formData.ecdDepthMin || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('common.max')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="ecdDepthMax"
-              value={formData.ecdDepthMax || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col">
-          <Form.Group>
-            <Form.Label className="small">{t('parts.specifications.ecdHardness')}</Form.Label>
-            <Form.Control
-              type="number"
-              name="ecdHardness"
-              value={formData.ecdHardness || ''}
-              onChange={handleChange}
-              step="0.01"
-              size="sm"
-              disabled={viewMode}
-              readOnly={viewMode}
-              style={viewMode ? readOnlyFieldStyle : {}}
-            />
-          </Form.Group>
-        </div>
-        <div className="col-auto">
-          <Form.Group>
-            <Form.Label className="small">{t('common.unit')}</Form.Label>
-            <CreatableSelect
-              name="ecdHardnessUnit"
-              value={formData.ecdHardnessUnit 
-                ? getSelectedOption(hardnessUnitOptions, formData.ecdHardnessUnit) 
-                : (Array.isArray(hardnessUnitOptions) && hardnessUnitOptions.length > 0) ? hardnessUnitOptions[0] : null}
-              onChange={(option) => handleSelectChange(option, { name: 'ecdHardnessUnit' })}
-              options={hardnessUnitOptions || []}
-              isClearable={!viewMode}
-              styles={customSelectStyles}
-              placeholder={t('common.selectUnit')}
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
-              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
-              onCreateOption={handleCreateEcdHardnessUnit}
-              isDisabled={viewMode}
-            />
-          </Form.Group>
-        </div>
-      </div>
+        
+        {ecdSpecs.length === 0 ? (
+          <p className="text-muted mb-0 text-center py-2">
+            {t('parts.specifications.noEcdSpecs')}
+          </p>
+        ) : (          ecdSpecs.map((spec, index) => (
+            <div key={index} className="border rounded p-3 mb-3">
+              <div className="row g-2 mb-2">
+                <div className="col-md-12">
+                  <Form.Group>
+                    <Form.Label className="small">{t('common.name')}</Form.Label>                    <Form.Control
+                      type="text"
+                      value={spec.name || ''}
+                      onChange={(e) => updateEcdSpec(index, 'name', e.target.value)}
+                      placeholder={t('parts.specifications.ecdName')}
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>
+              </div>
+              
+              {/* Ligne pour la profondeur */}
+              <div className="row g-2 mb-2">
+                <div className="col">
+                  <Form.Group>
+                    <Form.Label className="small">{t('parts.specifications.depthMin')}</Form.Label>                    <Form.Control
+                      type="number"
+                      value={spec.depthMin || ''}
+                      onChange={(e) => updateEcdSpec(index, 'depthMin', e.target.value)}
+                      step="0.01"
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col">
+                  <Form.Group>
+                    <Form.Label className="small">{t('parts.specifications.depthMax')}</Form.Label>                    <Form.Control
+                      type="number"
+                      value={spec.depthMax || ''}
+                      onChange={(e) => updateEcdSpec(index, 'depthMax', e.target.value)}
+                      step="0.01"
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col-auto" style={{ minWidth: '150px' }}>
+                  <Form.Group>
+                    <Form.Label className="small">{t('parts.specifications.depthUnit')}</Form.Label>
+                    <CreatableSelect
+                      value={spec.depthUnit 
+                        ? getSelectedOption(depthUnitOptions, spec.depthUnit) 
+                        : null}                      onChange={(option) => updateEcdSpec(index, 'depthUnit', option?.value || '')}
+                      options={depthUnitOptions || []}
+                      isClearable={!viewMode}
+                      styles={customSelectStyles}
+                      placeholder={t('common.selectUnit')}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      isLoading={loading && (!depthUnitOptions || !depthUnitOptions.length)}
+                      formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+                      onCreateOption={(inputValue) => handleCreateDepthUnit(inputValue, index)}
+                      isDisabled={viewMode}
+                    />
+                  </Form.Group>
+                </div>
+              </div>
+              
+              {/* Ligne pour la dureté */}
+              <div className="row g-2 align-items-end">
+                <div className="col">
+                  <Form.Group>
+                    <Form.Label className="small">{t('parts.specifications.ecdHardness')}</Form.Label>                    <Form.Control
+                      type="number"
+                      value={spec.hardness || ''}
+                      onChange={(e) => updateEcdSpec(index, 'hardness', e.target.value)}
+                      step="0.01"
+                      size="sm"
+                      disabled={viewMode}
+                      readOnly={viewMode}
+                      style={viewMode ? readOnlyFieldStyle : {}}
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col-auto" style={{ minWidth: '150px' }}>
+                  <Form.Group>
+                    <Form.Label className="small">{t('parts.specifications.hardnessUnit')}</Form.Label>
+                    <CreatableSelect
+                      value={spec.hardnessUnit 
+                        ? getSelectedOption(hardnessUnitOptions, spec.hardnessUnit) 
+                        : null}                      onChange={(option) => updateEcdSpec(index, 'hardnessUnit', option?.value || '')}
+                      options={hardnessUnitOptions || []}
+                      isClearable={!viewMode}
+                      styles={customSelectStyles}
+                      placeholder={t('common.selectUnit')}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
+                      formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+                      onCreateOption={(inputValue) => handleCreateHardnessUnit(inputValue, index, 'ecd')}
+                      isDisabled={viewMode}
+                    />
+                  </Form.Group>
+                </div>
+                {!viewMode && (
+                  <div className="col-auto">
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm"
+                      onClick={() => removeEcdSpec(index)}
+                      className="d-flex align-items-center"
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </CollapsibleSection>
     </>
   );
 };

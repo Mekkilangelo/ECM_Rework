@@ -85,12 +85,18 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     refreshUnitOptions,
     refreshAllOptions
   };
-  
-  // Handlers pour le formulaire - en mode lecture seule, ces handlers ne modifient pas les données
+    // Handlers pour le formulaire - en mode lecture seule, ces handlers ne modifient pas les données
   const { 
     handleChange, 
     handleSelectChange,
-    handleCreateOption
+    handleCreateOption,
+    // Handlers spécifiques aux spécifications
+    addHardnessSpec,
+    removeHardnessSpec,
+    updateHardnessSpec,
+    addEcdSpec,
+    removeEcdSpec,
+    updateEcdSpec
   } = usePartHandlers(
     formData, 
     setFormData, 
@@ -171,8 +177,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     timeUnitOptions,
     temperatureUnitOptions,
     pressureUnitOptions,
-    hardnessUnitOptions,
-    handleChange,
+    hardnessUnitOptions,    handleChange,
     handleSelectChange,
     handleCreateOption,
     handleSubmit,
@@ -180,7 +185,15 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     getSelectedOption,
     selectStyles,
     refreshSteels: refreshSteelOptions,
-    setFileAssociationCallback,    isModified,
+    setFileAssociationCallback,
+    // Handlers spécifiques aux spécifications
+    addHardnessSpec,
+    removeHardnessSpec,
+    updateHardnessSpec,
+    addEcdSpec,
+    removeEcdSpec,
+    updateEcdSpec,
+    isModified,
     setModified,
     showConfirmModal,
     setShowConfirmModal, // Ajout pour les tests de debug

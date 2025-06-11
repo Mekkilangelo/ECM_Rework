@@ -16,8 +16,7 @@ const usePartSubmission = (
   onPartUpdated, 
   onClose,
   fileAssociationCallback
-) => {
-  const initialFormState = {
+) => {  const initialFormState = {
     name: '',
     designation: '',
     clientDesignation: '',
@@ -32,24 +31,12 @@ const usePartSubmission = (
     diameterUnit: '',
     weight: '',
     weightUnit: '',
-    coreHardnessMin: '',
-    coreHardnessMax: '',
-    coreHardnessUnit: '',
-    surfaceHardnessMin: '',
-    surfaceHardnessMax: '',
-    surfaceHardnessUnit: '',
-    toothHardnessMin: '',
-    toothHardnessMax: '',
-    toothHardnessUnit: '',
-    ecdDepthMin: '',
-    ecdDepthMax: '',
-    ecdHardness: '',
-    ecdHardnessUnit: '',
+    hardnessSpecs: [],
+    ecdSpecs: [],
     steel: '',
     description: ''
   };
-  
-  const formatDataForApi = () => {
+    const formatDataForApi = () => {
     // Structurer les dimensions en JSON
     const dimensions = {
       rectangular: {
@@ -69,29 +56,10 @@ const usePartSubmission = (
       }
     };
     
-    // Structurer les spécifications en JSON
+    // Structurer les spécifications en JSON avec la nouvelle structure
     const specifications = {
-      coreHardness: {
-        min: formData.coreHardnessMin || null,
-        max: formData.coreHardnessMax || null,
-        unit: formData.coreHardnessUnit || null
-      },
-      surfaceHardness: {
-        min: formData.surfaceHardnessMin || null,
-        max: formData.surfaceHardnessMax || null,
-        unit: formData.surfaceHardnessUnit || null
-      },
-      toothHardness: {
-        min: formData.toothHardnessMin || null,
-        max: formData.toothHardnessMax || null,
-        unit: formData.toothHardnessUnit || null
-      },
-      ecd: {
-        depthMin: formData.ecdDepthMin || null,
-        depthMax: formData.ecdDepthMax || null,
-        hardness: formData.ecdHardness || null,
-        unit: formData.ecdHardnessUnit || null
-      }
+      hardnessSpecs: formData.hardnessSpecs || [],
+      ecdSpecs: formData.ecdSpecs || []
     };
     
     return {

@@ -1,6 +1,7 @@
 {
   "common": {
     "actions": "Actions",
+    "add": "Ajouter",
     "addOption": "Ajouter une option",
     "back": "Retour",
     "cancel": "Annuler",
@@ -14,6 +15,7 @@
     "min": "Min",
     "modifiedAt": "Modifié le",
     "modifying": "Modification en cours...",
+    "name": "Nom",
     "no": "Non",
     "save": "Enregistrer",
     "selectUnit": "Sélectionner une unité",
@@ -430,13 +432,21 @@
       "reference": "Référence",
       "description": "Description",
       "selectDesignation": "Sélectionner ou ajouter une désignation"
-    },
-    "specifications": {
+    },    "specifications": {
+      "depthMin": "Profondeur min",
+      "depthMax": "Profondeur max",
+      "depthUnit": "Unité de profondeur",
       "hardnessSpecs": "Spécifications de dureté",
+      "hardnessUnit": "Unité de dureté",
+      "hardnessName": "Nom de la spécification",
+      "noHardnessSpecs": "Aucune spécification de dureté définie",
       "coreHardness": "Dureté à cœur",
       "surfaceHardness": "Dureté en surface",
       "toothHardness": "Dureté PdD",
       "ecdDepth": "Profondeur ECD",
+      "ecdSpecs": "Spécifications ECD",
+      "ecdName": "Nom de la spécification ECD",
+      "noEcdSpecs": "Aucune spécification ECD définie",
       "hardness": "Dureté",
       "ecdHardness": "Dureté ECD"
     }

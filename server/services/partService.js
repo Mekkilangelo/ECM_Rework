@@ -7,6 +7,7 @@ const { Node, Part, Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
+const { deletePhysicalDirectory } = require('../utils/fileUtils');
 
 /**
  * Fonction utilitaire pour valider les données de la pièce
@@ -414,6 +415,9 @@ const deletePart = async (partId) => {
       await t.rollback();
       throw new NotFoundError('Pièce non trouvée');
     }
+
+    // Stocker le chemin physique de la pièce pour la suppression
+    const partPhysicalPath = part.path;
     
     // 2. Trouver tous les descendants dans la table closure
     const closureEntries = await Closure.findAll({
@@ -447,6 +451,21 @@ const deletePart = async (partId) => {
     
     // 5. Valider toutes les modifications
     await t.commit();
+    
+    // NOUVELLE FONCTIONNALITÉ : Supprimer le dossier physique de la pièce
+    // Cette opération se fait après la validation de la transaction pour éviter
+    // de supprimer les fichiers si la transaction échoue
+    try {
+      const deletionResult = await deletePhysicalDirectory(partPhysicalPath);
+      if (deletionResult) {
+        console.log(`Dossier physique de la pièce ${partId} supprimé avec succès`);
+      } else {
+        console.warn(`Échec de la suppression du dossier physique de la pièce ${partId}`);
+      }
+    } catch (physicalDeleteError) {
+      // Log l'erreur mais ne pas faire échouer l'opération car la DB a été nettoyée
+      console.error(`Erreur lors de la suppression du dossier physique de la pièce ${partId}:`, physicalDeleteError);
+    }
     
     return true;
   } catch (error) {

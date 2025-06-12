@@ -11,6 +11,7 @@ const {
   NotFoundError, 
   ValidationError 
 } = require('../utils/errors');
+const { deletePhysicalDirectory } = require('../utils/fileUtils');
 
 /**
  * Récupère toutes les commandes avec pagination et filtrage
@@ -309,7 +310,11 @@ const deleteOrder = async (orderId) => {
   if (!orderNode) {
     throw new NotFoundError('Commande non trouvée');
   }
-    // Récupérer tous les descendants de cette commande
+
+  // Stocker le chemin physique de la commande pour la suppression
+  const orderPhysicalPath = orderNode.path;
+  
+  // Récupérer tous les descendants de cette commande
   const descendants = await Closure.findAll({
     where: { ancestor_id: orderId },
     order: [['depth', 'DESC']] // Important: supprimer les plus profonds d'abord
@@ -318,10 +323,23 @@ const deleteOrder = async (orderId) => {
   // Démarrer une transaction
   const transaction = await sequelize.transaction();
   
-  try {    // Supprimer tous les descendants
-    for (const desc of descendants) {
+  try {    // Supprimer tous les descendants (du plus profond au moins profond)
+    const sortedDescendants = descendants.sort((a, b) => b.depth - a.depth);
+    
+    for (const desc of sortedDescendants) {
       if (desc.depth > 0) { // Ne pas supprimer la commande elle-même pour l'instant
-        // Supprimer les entités spécifiques (Order, File, etc.)
+        // D'abord supprimer toutes les relations de fermeture pour ce descendant
+        await Closure.destroy({
+          where: {
+            [Op.or]: [
+              { ancestor_id: desc.descendant_id },
+              { descendant_id: desc.descendant_id }
+            ]
+          },
+          transaction
+        });
+        
+        // Ensuite supprimer les entités spécifiques (Order, File, etc.)
         const node = await Node.findByPk(desc.descendant_id, { transaction });
         if (node) {
           if (node.type === 'file') {
@@ -336,12 +354,13 @@ const deleteOrder = async (orderId) => {
             });
           } // Ajouter d'autres types si nécessaire
           
-          // Supprimer le nœud
+          // Enfin supprimer le nœud
           await node.destroy({ transaction });
         }
       }
     }
-      // Supprimer toutes les relations de fermeture liées à cette commande
+    
+    // Supprimer les relations de fermeture restantes pour le nœud racine
     await Closure.destroy({
       where: {
         [Op.or]: [
@@ -363,6 +382,21 @@ const deleteOrder = async (orderId) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // NOUVELLE FONCTIONNALITÉ : Supprimer le dossier physique de la commande
+    // Cette opération se fait après la validation de la transaction pour éviter
+    // de supprimer les fichiers si la transaction échoue
+    try {
+      const deletionResult = await deletePhysicalDirectory(orderPhysicalPath);
+      if (deletionResult) {
+        console.log(`Dossier physique de la commande ${orderId} supprimé avec succès`);
+      } else {
+        console.warn(`Échec de la suppression du dossier physique de la commande ${orderId}`);
+      }
+    } catch (physicalDeleteError) {
+      // Log l'erreur mais ne pas faire échouer l'opération car la DB a été nettoyée
+      console.error(`Erreur lors de la suppression du dossier physique de la commande ${orderId}:`, physicalDeleteError);
+    }
     
     return true;
   } catch (error) {

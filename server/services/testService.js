@@ -12,6 +12,7 @@ const {
   NotFoundError, 
   ValidationError 
 } = require('../utils/errors');
+const { deletePhysicalDirectory } = require('../utils/fileUtils');
 const logger = require('../utils/logger');
 const fileService = require('./fileService');
 
@@ -389,6 +390,9 @@ const deleteTest = async (testId) => {
   if (!testNode) {
     throw new NotFoundError('Test non trouvé');
   }
+
+  // Stocker le chemin physique du test pour la suppression
+  const testPhysicalPath = testNode.path;
   
   // Récupérer tous les descendants de ce test
   const descendants = await Closure.findAll({
@@ -436,6 +440,22 @@ const deleteTest = async (testId) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // NOUVELLE FONCTIONNALITÉ : Supprimer le dossier physique du test
+    // Cette opération se fait après la validation de la transaction pour éviter
+    // de supprimer les fichiers si la transaction échoue
+    try {
+      const deletionResult = await deletePhysicalDirectory(testPhysicalPath);
+      if (deletionResult) {
+        console.log(`Dossier physique du test ${testId} supprimé avec succès`);
+      } else {
+        console.warn(`Échec de la suppression du dossier physique du test ${testId}`);
+      }
+    } catch (physicalDeleteError) {
+      // Log l'erreur mais ne pas faire échouer l'opération car la DB a été nettoyée
+      console.error(`Erreur lors de la suppression du dossier physique du test ${testId}:`, physicalDeleteError);
+    }
+    
     return true;
   } catch (error) {
     // Annuler la transaction en cas d'erreur

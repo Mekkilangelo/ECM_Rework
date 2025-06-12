@@ -234,19 +234,8 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     // Normaliser les deux états avant comparaison
     const normalizedInitial = normalizeDataForComparison(initialState);
     const normalizedCurrent = normalizeDataForComparison(currentState);
-    
-    // Utiliser la comparaison profonde avec les données normalisées
+      // Utiliser la comparaison profonde avec les données normalisées
     const result = !deepCompare(normalizedInitial, normalizedCurrent);
-    
-    // Journaliser les modifications pour le débogage si nécessaire
-    if (result) {
-      console.debug('État modifié détecté dans useModifiedState', { 
-        normalizedInitial, 
-        normalizedCurrent,
-        originalInitialState: initialState,
-        originalCurrentState: currentState
-      });
-    }
     
     return result;
   }, [initialState, currentState, deepCompare, customCompare, normalizeDataForComparison]);
@@ -259,13 +248,11 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     if (currentState) {
       // Normaliser les données avant de les stocker comme état initial
       const normalizedState = normalizeDataForComparison(currentState);
-      
-      // Créer une copie profonde pour éviter les références partagées
+        // Créer une copie profonde pour éviter les références partagées
       try {
         const cleanState = JSON.parse(JSON.stringify(normalizedState));
         setInitialState(cleanState);
         setIsModified(false);
-        console.debug('État initial réinitialisé dans useModifiedState avec données normalisées', cleanState);
       } catch (error) {
         // En cas d'erreur lors de la sérialisation (par ex. circular references),
         // utiliser une copie simple
@@ -304,12 +291,9 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
         const cleanState = JSON.parse(JSON.stringify(normalizedState));
         setInitialState(cleanState);
         setIsInitialized(true);
-        setIsModified(false);
-        
+        setIsModified(false);        
         // Réinitialiser le compteur de tentatives
         initAttempts.current = 0;
-        
-        console.debug('État initial défini dans useModifiedState avec données normalisées', cleanState);
       } catch (error) {
         console.warn("Error creating deep copy during initialization. Using shallow copy.", error);
         try {
@@ -340,27 +324,12 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
 
   // Mettre à jour l'état de modification chaque fois que l'état actuel change
   useEffect(() => {
-    if (isInitialized && !isLoading && !isFetching) {
-      // Vérifier après un petit délai pour éviter les problèmes de timing
+    if (isInitialized && !isLoading && !isFetching) {      // Vérifier après un petit délai pour éviter les problèmes de timing
       const checkTimeout = setTimeout(() => {
         const wasModified = isModified;
         const nowModified = checkIfModified();
         
-        console.log('🟡 useModifiedState check:', {
-          isInitialized,
-          isLoading,
-          isFetching,
-          wasModified,
-          nowModified,
-          currentState: Object.keys(currentState || {}),
-          initialState: Object.keys(initialState || {})
-        });
-        
         setIsModified(nowModified);
-        
-        if (wasModified !== nowModified) {
-          console.log('🟡 Modification state changed from', wasModified, 'to', nowModified);
-        }
       }, 100);
       
       return () => clearTimeout(checkTimeout);

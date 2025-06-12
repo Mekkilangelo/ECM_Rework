@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../../../common/FileUploader/FileUploader';
 import fileService from '../../../../../../services/fileService';
+import useFileAssociation from '../../../../../../hooks/useFileAssociation';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const DocumentsSection = ({
@@ -11,15 +12,13 @@ const DocumentsSection = ({
 }) => {
   const { t } = useTranslation();
   const [uploadedFiles, setUploadedFiles] = useState({});
-  const [tempIds, setTempIds] = useState({});
+  const [pendingFiles, setPendingFiles] = useState([]); // Nouveau : stocker les fichiers en attente
   
-  // Utilisez une référence pour stocker tempIds sans déclencher de re-renders
-  const tempIdsRef = useRef({});
+  // Hook pour gérer l'association des fichiers
+  const { createAssociationFunction } = useFileAssociation();
   
-  // Mettez à jour la référence quand tempIds change
-  useEffect(() => {
-    tempIdsRef.current = tempIds;
-  }, [tempIds]);
+  // Référence pour stocker les fonctions d'upload
+  const uploaderRef = useRef(null);
   
   // Charger les fichiers existants
   useEffect(() => {
@@ -56,12 +55,16 @@ const DocumentsSection = ({
       console.error(t('orders.documents.loadError'), error);
     }
   };
-  
-  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+  const handleFilesUploaded = (files, tempId, operation = 'add', fileId = null) => {
+    console.log("🔄 [DocumentsSection] handleFilesUploaded called:", {
+      operation,
+      filesCount: files.length,
+      fileNames: files.map(f => f.name)
+    });
+    
     if (operation === 'delete') {
       // Pour une suppression, mettre à jour uniquement la sous-catégorie concernée
       setUploadedFiles(prev => {
-        // Trouver la sous-catégorie qui contient ce fichier
         const updatedFiles = { ...prev };
         
         // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
@@ -70,79 +73,49 @@ const DocumentsSection = ({
         });
         
         return updatedFiles;
-      });
+      });    } else if (operation === 'standby') {
+      // En mode standby, stocker les fichiers dans notre état local
+      console.log("📦 [DocumentsSection] Storing pending files:", files.map(f => f.name));
+      setPendingFiles(files);
     } else {
-      // Pour l'ajout, mettre à jour la sous-catégorie spécifique
+      // Mode normal : ajouter les fichiers uploadés
       const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'all_documents';
       
-      setUploadedFiles(prev => {
-        const updatedFiles = { ...prev };
-        // Garantir que la sous-catégorie existe
-        if (!updatedFiles[subcategory]) {
-          updatedFiles[subcategory] = [];
-        }
-        // Ajouter les nouveaux fichiers
-        updatedFiles[subcategory] = [...updatedFiles[subcategory], ...files];
-        return updatedFiles;
-      });
-      
-      // Stocker le tempId pour cette sous-catégorie si fourni
-      if (newTempId) {
-        setTempIds(prev => ({
-          ...prev,
-          [subcategory]: newTempId
-        }));
-      }
+      setUploadedFiles(prev => ({
+        ...prev,
+        [subcategory]: [...(prev[subcategory] || []), ...files]
+      }));
     }
-  };
-  
-  // Exposer la fonction d'association de fichiers
+  };// Fonction pour enregistrer les références aux fonctions d'upload
+  const handleUploaderReady = (uploadPendingFiles, getPendingFiles) => {
+    uploaderRef.current = { uploadPendingFiles, getPendingFiles };
+  };  // Exposer la fonction d'association de fichiers
   useEffect(() => {
-    if (onFileAssociationNeeded) {
-      // Fonction pour associer tous les fichiers temporaires à un nœud
-      const associateFilesToNode = async (nodeId) => {
-        try {
-          const tempIdArray = Object.values(tempIdsRef.current);
-          
-          if (tempIdArray.length === 0) {
-            return true; // Pas de fichiers à associer
-          }
-          
-          console.log(`Associating files with tempIds: ${JSON.stringify(tempIdArray)} to nodeId: ${nodeId}`);
-            // Associer les fichiers au nœud
-          const results = await Promise.all(
-            tempIdArray.map(tempId => 
-              fileService.associateFiles(nodeId, tempId, { category: 'documents' })
-            )
-          );
-          
-          // Vérifier que toutes les associations ont réussi
-          const allSuccessful = results.every(result => result.data && result.data.success);
-          
-          if (!allSuccessful) {
-            console.error(t('orders.documents.associationError'), results);
-          }
-          
-          return allSuccessful;
-        } catch (error) {
-          console.error(t('orders.documents.associationError'), error);
-          return false;
-        }
-      };
+    if (onFileAssociationNeeded && uploaderRef.current) {
+      // Créer la fonction d'association qui utilise nos fichiers stockés localement
+      const associationFunction = createAssociationFunction(
+        uploaderRef.current.uploadPendingFiles,
+        () => {
+          console.log("📋 [DocumentsSection] getPendingFiles called, returning:", pendingFiles.map(f => f.name));
+          return pendingFiles; // Utiliser nos fichiers stockés localement
+        },
+        'documents',
+        'all_documents'
+      );
       
-      // Fournir la fonction au parent
-      onFileAssociationNeeded(associateFilesToNode);
+      // Exposer au composant parent
+      onFileAssociationNeeded(associationFunction);
     }
-  }, [onFileAssociationNeeded, t]);
+  }, [onFileAssociationNeeded, createAssociationFunction, pendingFiles]); // Ajouter pendingFiles comme dépendance
   
   return (
     <>
-      <div className="p-2">
-        <FileUploader
+      <div className="p-2">        <FileUploader
           category="documents"
-          subcategory={'all_documents'}
+          subcategory="all_documents"
           nodeId={orderNodeId}
           onFilesUploaded={handleFilesUploaded}
+          onUploaderReady={handleUploaderReady}
           maxFiles={5}
           acceptedFileTypes={{
             'application/pdf': ['.pdf'],
@@ -158,7 +131,7 @@ const DocumentsSection = ({
           width="100%"
           showPreview={true}
           existingFiles={uploadedFiles['all_documents'] || []}
-          viewMode={viewMode} // Passer le mode lecture seule au composant FileUploader
+          viewMode={viewMode}
         />
       </div>
     </>

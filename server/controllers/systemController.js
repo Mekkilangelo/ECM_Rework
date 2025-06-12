@@ -158,8 +158,111 @@ const updateReadOnlyMode = async (req, res) => {
   }
 };
 
+/**
+ * Nettoyer les fichiers temporaires orphelins
+ * @route POST /api/system/cleanup/temp-files
+ */
+const cleanupTempFiles = async (req, res) => {
+  try {
+    const { cleanupOrphanedTempFiles, showTempFileStats } = require('../scripts/cleanup-temp-files');
+    
+    // Récupérer les stats avant nettoyage
+    const statsBefore = {};
+    
+    console.log('🧹 Début du nettoyage manuel des fichiers temporaires...');
+    
+    // Effectuer le nettoyage
+    await cleanupOrphanedTempFiles();
+    
+    console.log('✅ Nettoyage manuel terminé');
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Nettoyage des fichiers temporaires effectué avec succès',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Erreur lors du nettoyage des fichiers temporaires:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors du nettoyage des fichiers temporaires',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Obtenir les statistiques des fichiers temporaires
+ * @route GET /api/system/stats/temp-files
+ */
+const getTempFileStats = async (req, res) => {
+  try {
+    const { File, sequelize } = require('../models');
+    const fs = require('fs');
+    const { TEMP_DIR } = require('../utils/fileStorage');
+    
+    // Compter les fichiers temporaires en DB
+    const tempFilesCount = await File.count({
+      where: sequelize.where(
+        sequelize.fn('JSON_UNQUOTE', sequelize.fn('JSON_EXTRACT', sequelize.col('additional_info'), '$.temp_id')),
+        { [sequelize.Op.ne]: null }
+      )
+    });
+    
+    // Compter les dossiers temporaires physiques
+    let tempDirsCount = 0;
+    let tempFilesPhysicalCount = 0;
+    
+    if (fs.existsSync(TEMP_DIR)) {
+      const entries = fs.readdirSync(TEMP_DIR, { withFileTypes: true });
+      tempDirsCount = entries.filter(entry => entry.isDirectory()).length;
+      
+      // Compter les fichiers dans chaque dossier temporaire
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const dirPath = path.join(TEMP_DIR, entry.name);
+          try {
+            const files = fs.readdirSync(dirPath);
+            tempFilesPhysicalCount += files.length;
+          } catch (error) {
+            console.warn(`Erreur lors de l'accès au dossier ${dirPath}:`, error.message);
+          }
+        }
+      }
+    }
+    
+    const stats = {
+      database: {
+        tempFilesCount
+      },
+      filesystem: {
+        tempDirsCount,
+        tempFilesPhysicalCount
+      },
+      paths: {
+        tempDir: TEMP_DIR
+      },
+      timestamp: new Date().toISOString()
+    };
+    
+    return res.status(200).json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des statistiques:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des statistiques des fichiers temporaires',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSystemSettings,
   updateReadOnlyMode,
-  getSecurityInfo
+  getSecurityInfo,
+  cleanupTempFiles,
+  getTempFileStats
 };

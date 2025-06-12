@@ -31,13 +31,12 @@ const uploadFiles = async (req, res) => {
       subcategory, 
       fileCount: files.length 
     });
-    
-    // Déléguer au service
+      // Déléguer au service
     const result = await fileService.saveUploadedFiles(files, {
       nodeId,
       category,
       subcategory
-    });
+    }, req);
     
     return apiResponse.success(
       res, 

@@ -39,18 +39,8 @@ const CloseConfirmationModal = ({
   modalClassName = "",
   saveButtonVariant = "primary",
   continueButtonVariant = "outline-danger",
-  cancelButtonVariant = "outline-secondary",
-  icon = null
+  cancelButtonVariant = "outline-secondary",  icon = null
 }) => {
-  // Log de debug pour voir si le modal reçoit les bonnes props
-  console.log('🔵 CloseConfirmationModal props:', {
-    show,
-    onHide: typeof onHide,
-    onCancel: typeof onCancel,
-    onContinue: typeof onContinue,
-    onSave: typeof onSave
-  });
-
   return (
     <Modal 
       show={show} 

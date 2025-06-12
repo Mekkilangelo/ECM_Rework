@@ -48,19 +48,25 @@ if (!fs.existsSync(TEMP_DIR)) {
 // Configuration du stockage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Si un nodeId est fourni et que le chemin est résolu, utiliser ce chemin
-    if (req.body.nodeId && req.resolvedPath) {
+    console.log('📂 [multer-destination] Début de la résolution du stockage...');
+    console.log('📋 [multer-destination] req.body:', req.body);
+    console.log('📋 [multer-destination] req.resolvedPath:', req.resolvedPath);
+    
+    // Si le chemin a été résolu par le middleware, l'utiliser
+    if (req.resolvedPath) {
+      console.log('✅ [multer-destination] Utilisation du chemin résolu:', req.resolvedPath);
       cb(null, req.resolvedPath);
     } else {
-      // Sinon, stocker dans le dossier temporaire
-      const tempId = `temp-${uuidv4()}`;
-      req.tempId = tempId;
-      
-      const tempUploadDir = path.join(TEMP_DIR, tempId);
+      // Pas de chemin résolu : stockage temporaire
+      console.log('📦 [multer-destination] Stockage temporaire...');
+      if (!req.tempId) {
+        req.tempId = `temp-${uuidv4()}`;
+      }
+      const tempUploadDir = path.join(TEMP_DIR, req.tempId);
       if (!fs.existsSync(tempUploadDir)) {
         fs.mkdirSync(tempUploadDir, { recursive: true });
       }
-      
+      console.log('📁 [multer-destination] Dossier temporaire créé:', tempUploadDir);
       cb(null, tempUploadDir);
     }
   },
@@ -68,7 +74,9 @@ const storage = multer.diskStorage({
     // Générer un nom unique pour le fichier
     const uniqueSuffix = crypto.randomBytes(8).toString('hex');
     const safeFileName = file.originalname.replace(/\s+/g, '_');
-    cb(null, `${uniqueSuffix}-${safeFileName}`);
+    const finalName = `${uniqueSuffix}-${safeFileName}`;
+    console.log('📄 [multer-filename] Nom généré:', finalName);
+    cb(null, finalName);
   }
 });
 
@@ -100,19 +108,35 @@ const generateFileChecksum = (filePath) => {
   });
 };
 
-// Utilitaire pour nettoyer le dossier temporaire
+// Utilitaire pour nettoyer les dossiers temporaires
 const cleanupTempDir = async (olderThan = 24 * 60 * 60 * 1000) => {
   try {
-    const files = fs.readdirSync(TEMP_DIR);
+    if (!fs.existsSync(TEMP_DIR)) {
+      return;
+    }
+    
+    const entries = fs.readdirSync(TEMP_DIR, { withFileTypes: true });
     const now = Date.now();
     
-    for (const file of files) {
-      const filePath = path.join(TEMP_DIR, file);
-      const stats = fs.statSync(filePath);
+    for (const entry of entries) {
+      const fullPath = path.join(TEMP_DIR, entry.name);
       
-      if (now - stats.mtimeMs > olderThan) {
-        fs.unlinkSync(filePath);
-        console.log(`Fichier temporaire nettoyé: ${file}`);
+      try {
+        const stats = fs.statSync(fullPath);
+        
+        if (now - stats.mtimeMs > olderThan) {
+          if (entry.isDirectory()) {
+            // Supprimer récursivement le dossier temporaire
+            fs.rmSync(fullPath, { recursive: true, force: true });
+            console.log(`Dossier temporaire nettoyé: ${entry.name}`);
+          } else {
+            // Supprimer le fichier isolé
+            fs.unlinkSync(fullPath);
+            console.log(`Fichier temporaire nettoyé: ${entry.name}`);
+          }
+        }
+      } catch (statError) {
+        console.warn(`Erreur lors de l'accès aux stats de ${fullPath}:`, statError.message);
       }
     }
   } catch (error) {

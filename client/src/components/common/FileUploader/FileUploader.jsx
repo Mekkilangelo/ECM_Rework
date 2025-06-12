@@ -17,18 +17,19 @@ const FileUploader = ({
   height = '150px',
   width = '100%',
   fileIcon = faFile,
-  existingFiles = []
-}) => {
-  // Utiliser le hook personnalisé
+  existingFiles = [],
+  enableStandbyMode = false, // Nouveau prop pour activer le mode standby
+  onUploaderReady = null // Callback pour exposer les fonctions d'upload
+}) => {// Utiliser le hook personnalisé
   const fileUploader = useFileUploader({
     maxFiles,
     acceptedFileTypes,
     fileIcon,
     existingFiles,
-    onFilesUploaded
+    onFilesUploaded,
+    enableStandbyMode: enableStandbyMode || !nodeId // Mode standby si explicitement activé ou si pas de nodeId
   });
-  
-  const { 
+    const { 
     files, 
     uploadedFiles, 
     dropzoneProps, 
@@ -45,8 +46,15 @@ const FileUploader = ({
     isImage,
     getFileType,
     renderThumbnail,
-    renderPreviewContent
-  } = fileUploader;
+    renderPreviewContent,
+    standbyMode,
+    getPendingFiles,    uploadPendingFiles
+  } = fileUploader;  // Exposer les fonctions d'upload via le callback
+  React.useEffect(() => {
+    if (onUploaderReady && standbyMode) {
+      onUploaderReady(uploadPendingFiles, getPendingFiles);
+    }
+  }, [onUploaderReady, standbyMode, uploadPendingFiles, getPendingFiles]);
 
   return (
     <div className="file-uploader mb-4">
@@ -87,16 +95,25 @@ const FileUploader = ({
                   <FontAwesomeIcon icon={faTrash} />
                 </Button>
               </li>
-            ))}
-          </ul>
-          <Button
-            variant="primary"
-            className="mt-2"
-            onClick={() => handleUpload(nodeId, category, subcategory)}
-            disabled={uploading}
-          >
-            {uploading ? 'Téléchargement en cours...' : 'Télécharger les fichiers'}
-          </Button>
+            ))}          </ul>
+          {!standbyMode && (
+            <Button
+              variant="primary"
+              className="mt-2"
+              onClick={() => handleUpload(nodeId, category, subcategory)}
+              disabled={uploading}
+            >
+              {uploading ? 'Téléchargement en cours...' : 'Télécharger les fichiers'}
+            </Button>
+          )}
+          {standbyMode && (
+            <div className="mt-2 text-info">
+              <small>
+                <FontAwesomeIcon icon={faFile} className="me-1" />
+                Fichiers en attente - seront uploadés lors de la sauvegarde
+              </small>
+            </div>
+          )}
           {uploading && (
             <ProgressBar
               now={uploadProgress}

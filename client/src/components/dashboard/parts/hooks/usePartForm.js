@@ -16,7 +16,6 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
 
   // État pour stocker la fonction de rappel d'association de fichiers
   const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
-  
   // Fonction de rappel pour recevoir la méthode d'association de fichiers
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
     setFileAssociationCallback(() => associateFilesFunc);

@@ -24,10 +24,10 @@ const convertHMSToSeconds = (hours, minutes, seconds) => {
  * @param {Object} test - Test existant (pour le mode édition)
  * @param {Function} setLoading - Fonction pour définir l'état de chargement
  * @param {Function} setMessage - Fonction pour définir les messages
- * @param {Function} onTestCreated - Callback après création
- * @param {Function} onTestUpdated - Callback après mise à jour
+ * @param {Function} onTestCreated - Callback après création * @param {Function} onTestUpdated - Callback après mise à jour
  * @param {Function} onClose - Callback de fermeture
  * @param {Function} fileAssociationCallback - Callback pour associer des fichiers
+ * @param {boolean} viewMode - Mode lecture seule
  */
 const useTestSubmission = (
   formData, 
@@ -39,8 +39,10 @@ const useTestSubmission = (
   setMessage, 
   onTestCreated,
   onTestUpdated, 
-  onClose,  fileAssociationCallback
-) => {  const defaultFormState = {
+  onClose,
+  fileAssociationCallback,
+  viewMode = false
+) => {const defaultFormState = {
     name: '',
     location: '',
     loadNumber: '',
@@ -527,11 +529,11 @@ const useTestSubmission = (
     formatDataForApi,
     customApiService: {
       create: testService.createTest,      update: testService.updateTest
-    },
-    entityType: 'Test',
+    },    entityType: 'Test',
     initialFormState: defaultFormState,
     fileAssociationCallback: wrappedFileAssociationCallback,  // Utiliser le wrapper ici
-    parentId
+    parentId,
+    viewMode
   });
 };
 

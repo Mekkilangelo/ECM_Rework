@@ -52,12 +52,10 @@ const useOrderSubmission = (
       name: order ? order.name : null // Conserver le nom si en mode édition
     };
   };
-  
   // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
   const wrappedFileAssociationCallback = fileAssociationCallback ? 
     async (nodeId) => {
       if (typeof fileAssociationCallback === 'function') {
-        console.log(`Associant les fichiers au nœud ${nodeId}...`);
         return await fileAssociationCallback(nodeId);
       }
       return true;

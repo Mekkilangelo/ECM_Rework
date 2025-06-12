@@ -33,4 +33,8 @@ router.get('/security', readAccess, systemController.getSecurityInfo);
 // Routes de modification des paramètres système (super-administrateur uniquement)
 router.put('/settings/readonly', superUserAccess, systemController.updateReadOnlyMode);
 
+// Routes de nettoyage des fichiers temporaires (nécessitent droits super-admin)
+router.post('/cleanup/temp-files', superUserAccess, systemController.cleanupTempFiles);
+router.get('/stats/temp-files', readAccess, systemController.getTempFileStats);
+
 module.exports = router;

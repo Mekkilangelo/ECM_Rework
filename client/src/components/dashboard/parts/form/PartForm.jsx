@@ -1,4 +1,4 @@
-import React, { forwardRef, useState, useCallback, useImperativeHandle } from 'react';
+import React, { forwardRef, useState, useImperativeHandle } from 'react';
 import { Modal, Form, Button, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import SteelForm from '../../steels/form/SteelForm';
@@ -15,14 +15,8 @@ import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSe
 
 const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
-  
-  // État pour stocker la fonction d'association de fichiers
-  const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
-  
-  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
-    console.log("File association function received in PartForm");
-    setFileAssociationMethod(() => associateFilesFunc);
-  }, []);  const {
+
+  const {
     formData,
     errors,
     loading,
@@ -40,7 +34,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     getSelectedOption,
     selectStyles,
     refreshSteels,
-    setFileAssociationCallback,
+    handleFileAssociationNeeded,
     // Handlers spécifiques aux spécifications
     addHardnessSpec,
     removeHardnessSpec,
@@ -58,14 +52,6 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     cancelClose,
     saveAndClose,
   } = usePartForm(part, onClose, onPartCreated, onPartUpdated, viewMode);
-
-  // Mettre à jour le callback d'association de fichiers dans le hook quand il change
-  React.useEffect(() => {
-    if (setFileAssociationCallback && fileAssociationMethod) {
-      console.log("Setting file association callback in PartForm");
-      setFileAssociationCallback(() => fileAssociationMethod);
-    }
-  }, [fileAssociationMethod, setFileAssociationCallback]);
 
   // Exposer handleCloseRequest à travers la référence
   useImperativeHandle(ref, () => ({

@@ -4,22 +4,6 @@ import { authConfig, SESSION_INACTIVITY_TIMEOUT_SECONDS } from '../config';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
-// Afficher les paramètres de configuration au démarrage pour vérification
-if (process.env.NODE_ENV === 'development') {
-  console.log('====== CONFIGURATION DU SERVICE D\'AUTHENTIFICATION ======');
-  console.log(`📋 VALEURS DU FICHIER .ENV:`);
-  console.log(`  • REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS = ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'NON DÉFINIE'}`);
-  console.log(`  • REACT_APP_ACTIVITY_CHECK_INTERVAL = ${process.env.REACT_APP_ACTIVITY_CHECK_INTERVAL || 'NON DÉFINIE'}`);
-  console.log(`  • REACT_APP_HEARTBEAT_INTERVAL = ${process.env.REACT_APP_HEARTBEAT_INTERVAL || 'NON DÉFINIE'}`);
-  console.log(`\n📊 VALEURS CONFIGURÉES:`);
-  console.log(`  • Délai d'inactivité: ${SESSION_INACTIVITY_TIMEOUT_SECONDS} secondes (${SESSION_INACTIVITY_TIMEOUT_SECONDS/60} minutes)`);
-  console.log(`  • Délai d'inactivité total: ${authConfig.sessionInactivityTimeout/1000} secondes`);
-  console.log(`  • Intervalle de vérification du token: ${authConfig.activityCheckInterval/1000} secondes`);
-  console.log(`  • Intervalle de heartbeat: ${authConfig.heartbeatInterval/1000} secondes`);
-  console.log(`  • Seuil de rafraîchissement proactif: ${authConfig.refreshThreshold/1000} secondes avant expiration`);
-  console.log('=======================================================');
-}
-
 /**
  * Service d'authentification optimisé
  * 
@@ -120,14 +104,8 @@ const authService = {
       
       try {        // Vérifier l'inactivité utilisateur côté client
         const inactiveTime = Date.now() - authService.lastUserActivity;
-        const configuredTimeoutSec = Math.round(authService.inactivityTimeout / 1000);
         
         if (inactiveTime >= authService.inactivityTimeout) {
-          console.log(
-            `[CONFIG] Inactivité maximale atteinte: ${Math.round(inactiveTime/1000)}s / ${configuredTimeoutSec}s` +
-            `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes` +
-            `\n- Expiration forcée de la session...`
-          );
           authService.handleSessionExpired();
           return;
         }
@@ -135,25 +113,18 @@ const authService = {
         // Vérifier l'expiration du token
         const decoded = jwtDecode(token);
         const currentTime = Date.now() / 1000;
-        
-        // Si le token est expiré, rediriger vers login
+          // Si le token est expiré, rediriger vers login
         if (decoded.exp <= currentTime) {
-          console.log('Token expiré détecté, redirection...');
           authService.handleSessionExpired();
           return;
-        }        // Si le token est proche de l'expiration ET utilisateur actif, le rafraîchir
+        }
+        
+        // Si le token est proche de l'expiration ET utilisateur actif, le rafraîchir
         const timeUntilExpiry = decoded.exp - currentTime;
-        // Utiliser la variable configuredTimeoutSec déjà déclarée plus haut
         
         // Ne rafraîchir que si l'utilisateur est suffisamment actif (moins de 70% du temps d'inactivité configuré)
         if (timeUntilExpiry < authService.refreshThreshold / 1000 && 
             inactiveTime < authService.inactivityTimeout * 0.7) {
-          console.log(
-            `[CONFIG] Rafraîchissement proactif` +
-            `\n- Expiration dans: ${Math.round(timeUntilExpiry)}s` +
-            `\n- Inactivité actuelle: ${Math.round(inactiveTime/1000)}s / ${configuredTimeoutSec}s` +
-            `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes`
-          );
           authService.refreshToken();
         }
       } catch (error) {
@@ -183,8 +154,7 @@ const authService = {
           // On n'envoie un heartbeat que si l'utilisateur est actif ET que l'inactivité est en-dessous
           // du seuil configuré
           const inactivityThreshold = authService.inactivityTimeout * authService.heartbeatInactivityThreshold;
-          
-          if (inactiveTime < inactivityThreshold) {
+            if (inactiveTime < inactivityThreshold) {
             // Utilisateur actif - envoyer un heartbeat pour maintenir la session
             const token = authService.getToken();
             const axios = (await import('axios')).default;
@@ -195,34 +165,12 @@ const authService = {
                 'Authorization': `Bearer ${token}`
               }
             });
-              // Calcul des indicateurs pour le log
-            const inactiveSec = Math.round(inactiveTime/1000);
-            const timeoutSec = Math.round(authService.inactivityTimeout/1000);
-            const percentInactive = Math.round((inactiveTime / authService.inactivityTimeout) * 100);
-            
-            console.log(
-              `[HEARTBEAT] Maintien de session - SUCCESS ✅` +
-              `\n- Inactivité: ${inactiveSec}s / ${timeoutSec}s (${percentInactive}%)` +
-              `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes`
-            );
-          } else {
-            // Utilisateur inactif ou proche du seuil - ne pas envoyer de heartbeat
-            const inactiveSec = Math.round(inactiveTime/1000);
-            const timeoutSec = Math.round(authService.inactivityTimeout/1000);
-            const percentInactive = Math.round((inactiveTime / authService.inactivityTimeout) * 100);
-            const thresholdPercent = Math.round(authService.heartbeatInactivityThreshold * 100);
-            
-            console.log(
-              `[HEARTBEAT] Maintien de session - BLOQUÉ ⚠️` +
-              `\n- Inactivité: ${inactiveSec}s / ${timeoutSec}s (${percentInactive}%)` +
-              `\n- Seuil de blocage: ${thresholdPercent}% du délai total (${Math.round(thresholdPercent * timeoutSec / 100)}s)` +
-              `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes`
-            );
           }
         }
       } catch (error) {
         console.warn('Erreur de heartbeat:', error.message);        // En cas d'erreur 401, la session est expirée
-        if (error.response && error.response.status === 401) {          // Nettoyer les écouteurs d'événements avant la redirection
+        if (error.response && error.response.status === 401) {
+          // Nettoyer les écouteurs d'événements avant la redirection
           authService.activityEvents.forEach(event => {
             window.removeEventListener(event, authService.updateUserActivity);
           });
@@ -246,21 +194,15 @@ const authService = {
       authService.heartbeat = null;
     }    // Nettoyer les écouteurs d'événements pour l'activité utilisateur
     if (authService.activityEvents) {
-      console.log('Nettoyage des écouteurs d\'événements d\'activité');
       authService.activityEvents.forEach(event => {
         window.removeEventListener(event, authService.updateUserActivity);
       });
     }
   },
-    /**
+  /**
    * Gère l'expiration de session
    */
   handleSessionExpired: () => {
-    console.log(
-      `[SESSION] ⏱️ Session expirée` +
-      `\n- Délai configuré dans .env: ${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'valeur par défaut'} secondes` +
-      `\n- Redirection vers la page de connexion...`
-    );
     authService.stopSessionManager();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -277,30 +219,6 @@ const authService = {
    */  updateUserActivity: () => {
     const now = Date.now();
     authService.lastUserActivity = now;
-    
-    // Journaliser l'activité utilisateur (activé seulement en mode développement)
-    if (process.env.NODE_ENV === 'development') {
-      const lastUpdate = sessionStorage.getItem('last_activity_log');
-      // Ne journaliser l'activité qu'une fois toutes les 10 secondes pour éviter de surcharger la console
-      if (!lastUpdate || (now - parseInt(lastUpdate, 10)) > 10000) {
-        // Calculer les seuils en secondes pour une meilleure lisibilité
-        const totalTimeoutSec = Math.round(authService.inactivityTimeout / 1000);
-        const heartbeatThresholdSec = Math.round(authService.inactivityTimeout * authService.heartbeatInactivityThreshold / 1000);
-        const refreshThresholdSec = Math.round(authService.inactivityTimeout * authService.refreshInactivityThreshold / 1000);
-        
-        // Récupérer la valeur brute depuis l'environnement pour vérification
-        const envTimeoutValue = process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS;
-          console.log(
-          `[ACTIVITÉ] 👆 Utilisateur actif - Timer d'inactivité réinitialisé` +
-          `\n📋 CONFIGURATION:` +
-          `\n  • Fichier .env: REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS=${envTimeoutValue || 'non définie'}` +
-          `\n  • Expiration totale: ${totalTimeoutSec}s (${Math.round(totalTimeoutSec/60 * 10)/10} min) d'inactivité` +
-          `\n  • Heartbeats bloqués après: ${heartbeatThresholdSec}s (${Math.round(heartbeatThresholdSec/60 * 10)/10} min) d'inactivité` +
-          `\n  • Rafraîchissement bloqué après: ${refreshThresholdSec}s (${Math.round(refreshThresholdSec/60 * 10)/10} min) d'inactivité`
-        );
-        sessionStorage.setItem('last_activity_log', now.toString());
-      }
-    }
   },
   
   /**
@@ -314,30 +232,13 @@ const authService = {
       const inactiveTime = Date.now() - authService.lastUserActivity;
       // Utiliser le seuil d'inactivité configuré pour les refresh
       const maxInactivityForRefresh = authService.inactivityTimeout * authService.refreshInactivityThreshold;
-      const configuredTimeoutSec = Math.round(authService.inactivityTimeout / 1000);
-      const maxInactivitySec = Math.round(maxInactivityForRefresh / 1000);
       
       if (inactiveTime > maxInactivityForRefresh) {
-        const percentInactive = Math.round((inactiveTime / authService.inactivityTimeout) * 100);
-        const inactiveSec = Math.round(inactiveTime/1000);        console.log(
-          `[TOKEN] ⛔ Rafraîchissement BLOQUÉ - Utilisateur trop inactif` +
-          `\n📋 DONNÉES:` +
-          `\n  • Inactivité: ${inactiveSec}s / ${configuredTimeoutSec}s (${percentInactive}%)` +
-          `\n  • Seuil de blocage: ${maxInactivitySec}s (${authService.refreshInactivityThreshold * 100}% du délai total)` +
-          `\n  • Valeur du .env: REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS=${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'non définie'}`
-        );
         // Si l'utilisateur est inactif depuis trop longtemps, ne pas rafraîchir le token
         // pour permettre l'expiration normale de la session
         return null;
       }
-      
-      console.log(
-        `[TOKEN] 🔄 Rafraîchissement en cours` +
-        `\n📋 DONNÉES:` +
-        `\n  • Inactivité: ${Math.round(inactiveTime/1000)}s / ${configuredTimeoutSec}s (${Math.round((inactiveTime/authService.inactivityTimeout)*100)}%)` +
-        `\n  • Valeur du .env: REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS=${process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS || 'non définie'}`
-      );
-      const response = await api.post('/auth/refresh-token', {}, {
+        const response = await api.post('/auth/refresh-token', {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

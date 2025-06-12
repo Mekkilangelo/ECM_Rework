@@ -121,8 +121,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
-  
-  // Soumission du formulaire au serveur
+    // Soumission du formulaire au serveur
   const { handleSubmit } = useTestSubmission(
     formData, 
     setFormData, 
@@ -134,7 +133,8 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     onTestCreated,
     onTestUpdated,
     onClose,
-    fileAssociationCallback
+    fileAssociationCallback,
+    viewMode // Transmettre le mode lecture seule
   );
   
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture

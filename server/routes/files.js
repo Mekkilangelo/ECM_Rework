@@ -3,12 +3,11 @@ const express = require('express');
 const router = express.Router();
 const fileController = require('../controllers/fileController');
 const { readAccess, writeAccess, publicAccess } = require('../middleware/access-control');
-const { upload } = require('../utils/fileStorage');
-const { resolveFilePath } = require('../middleware/file-path');
+const { parseAndResolvePath } = require('../middleware/parse-and-resolve');
 
 // Ordre correct des routes
 // Routes d'écriture (nécessitent des droits d'édition)
-router.post('/upload', writeAccess, upload.array('files', 10), resolveFilePath, fileController.uploadFiles);
+router.post('/upload', writeAccess, parseAndResolvePath, fileController.uploadFiles);
 router.put('/:fileId', writeAccess, fileController.updateFile);
 router.delete('/:fileId', writeAccess, fileController.deleteFile);
 router.post('/associate', writeAccess, fileController.associateFiles);

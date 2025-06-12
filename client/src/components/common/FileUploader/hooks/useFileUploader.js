@@ -13,27 +13,28 @@ const useFileUploader = ({
   acceptedFileTypes = {},
   fileIcon = faFile,
   existingFiles = [],
-  onFilesUploaded
-}) => {
-  // États
+  onFilesUploaded,
+  enableStandbyMode = false
+}) => {  // États
   const [files, setFiles] = useState([]);
   const [internalUploadedFiles, setInternalUploadedFiles] = useState([]);
+  const [standbyMode] = useState(enableStandbyMode);
   
   // Mise à jour de l'état interne lorsque existingFiles change
   useEffect(() => {
     setInternalUploadedFiles([...existingFiles]);
   }, [existingFiles]);
-
   // Utilisation des hooks spécialisés
-  const fileUpload = useFileUpload(files, setFiles, setInternalUploadedFiles, onFilesUploaded);
+  const fileUpload = useFileUpload(files, setFiles, setInternalUploadedFiles, onFilesUploaded, standbyMode);
   const filePreview = useFilePreview(fileIcon);
-  
-  const fileSelection = useFileSelection(
+    const fileSelection = useFileSelection(
     files, 
     setFiles, 
     maxFiles, 
     acceptedFileTypes, 
-    fileUpload.setError
+    fileUpload.setError,
+    onFilesUploaded,
+    standbyMode
   );
   
   const fileManagement = useFileManagement(
@@ -42,12 +43,18 @@ const useFileUploader = ({
     onFilesUploaded, 
     fileUpload.setError
   );
-
   // Hook API unifiée
   return {
     // État des fichiers
     files,
     uploadedFiles: internalUploadedFiles,
+      // Mode standby
+    standbyMode,
+    getPendingFiles: () => {
+      console.log("📋 [useFileUploader] getPendingFiles called, files:", files.map(f => f.name));
+      return files;
+    },
+    uploadPendingFiles: fileUpload.uploadPendingFiles,
     
     // Sélection des fichiers
     dropzoneProps: {

@@ -172,6 +172,28 @@ async function startServer() {
       logger.info('Tables synchronized (without alter)');
     }
 
+    // Nettoyage automatique des fichiers temporaires au démarrage
+    try {
+      logger.info('Starting automatic cleanup of temporary files...');
+      const { cleanupOrphanedTempFiles } = require('./scripts/cleanup-temp-files');
+      await cleanupOrphanedTempFiles();
+      logger.info('Temporary files cleanup completed');
+      
+      // Programmer un nettoyage automatique toutes les 6 heures
+      setInterval(async () => {
+        try {
+          logger.info('Running scheduled cleanup of temporary files...');
+          await cleanupOrphanedTempFiles();
+          logger.info('Scheduled cleanup completed');
+        } catch (error) {
+          logger.error('Error during scheduled cleanup:', error);
+        }
+      }, 6 * 60 * 60 * 1000); // 6 heures
+      
+    } catch (error) {
+      logger.warn('Error during initial temp files cleanup:', error);
+    }
+
     // **IMPORTANT** - Ajouter cette partie après l'initialisation de la BD
     // et avant le démarrage du serveur pour s'assurer que c'est la dernière route définie
     if (process.env.NODE_ENV === 'production') {

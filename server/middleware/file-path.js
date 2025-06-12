@@ -46,7 +46,7 @@ const buildPhysicalFilePath = (parentNode, category, subcategory) => {
   return physicalPath;
 };
 
-exports.resolveFilePath = async (req, res, next) => {
+const resolveFilePath = async (req, res, next) => {
   try {
     const { nodeId, category, subcategory } = req.body;
     
@@ -76,4 +76,9 @@ exports.resolveFilePath = async (req, res, next) => {
     console.error('Erreur lors de la résolution du chemin du fichier:', error);
     res.status(500).json({ message: 'Erreur lors de la résolution du chemin' });
   }
+};
+
+module.exports = {
+  resolveFilePath,
+  buildPhysicalFilePath
 };

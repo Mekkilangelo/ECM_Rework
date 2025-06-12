@@ -64,22 +64,13 @@ const useHierarchy = () => {
           };
           break;
         default:
-          url = `${API_URL}/clients`;
-          params = { 
+          url = `${API_URL}/clients`;          params = { 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage 
           };
       }
-        console.log(`Fetching data from ${url} with params:`, params);
       
       const response = await axios.get(url, { params });
-      console.log('API Response:', response.data);
-      console.log('API Response Structure:', {
-        hasData: !!response.data.data,
-        dataLength: response.data.data?.length,
-        pagination: response.data.pagination,
-        hasClients: !!response.data.clients
-      });
         // Adapter la structure de données selon la nouvelle API qui utilise data au lieu de clients/orders/etc.
       if (response.data && response.data.data) {
         // La nouvelle structure a les données dans response.data.data
@@ -98,13 +89,9 @@ const useHierarchy = () => {
         setData(response.data.parts || []);
         setTotalItems(response.data.pagination?.total || 0);
       } else if (currentLevel === 'test') {
-        // Fallback pour l'ancienne structure API
-        setData(response.data.tests || []);
+        // Fallback pour l'ancienne structure API        setData(response.data.tests || []);
         setTotalItems(response.data.pagination?.total || 0);
       }
-      
-      // Supprimer ce console.log qui utilise data (qui peut provoquer des re-rendus en boucle)
-      console.log('Total items:', totalItems);
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
       setError(err.response?.data?.message || err.message || 'Une erreur est survenue lors du chargement des données');
@@ -113,17 +100,8 @@ const useHierarchy = () => {
       isFetchingRef.current = false;
     }
   };
-  
-  // Recharger les données quand le niveau, la page ou les filtres changent
+    // Recharger les données quand le niveau, la page ou les filtres changent
   useEffect(() => {
-    console.log('useEffect triggered with:', {
-      currentLevel,
-      clientId: hierarchyState.clientId,
-      orderId: hierarchyState.orderId,
-      partId: hierarchyState.partId,
-      currentPage,
-      itemsPerPage
-    });
     fetchData();
   }, [currentLevel, hierarchyState.clientId, hierarchyState.orderId, 
       hierarchyState.partId, currentPage, itemsPerPage]);

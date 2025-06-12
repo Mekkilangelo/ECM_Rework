@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { Form, Button, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import useOrderForm from '../hooks/useOrderForm';
@@ -10,11 +10,6 @@ import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSe
 
 const OrderForm = forwardRef(({ order, clientId, onClose, onOrderCreated, onOrderUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
-  const [fileAssociationMethod, setFileAssociationMethod] = useState(null);
-
-  const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
-    setFileAssociationMethod(() => associateFilesFunc);
-  }, []);
 
   const {
     formData,
@@ -32,16 +27,8 @@ const OrderForm = forwardRef(({ order, clientId, onClose, onOrderCreated, onOrde
     confirmClose,
     cancelClose,
     saveAndClose,
-    setFileAssociationCallback
+    handleFileAssociationNeeded
   } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated, viewMode, clientId);
-
-  // Mettre à jour le callback d'association de fichiers dans le hook quand il change
-  React.useEffect(() => {
-    if (setFileAssociationCallback && fileAssociationMethod) {
-      console.log("Setting file association callback in OrderForm");
-      setFileAssociationCallback(() => fileAssociationMethod);
-    }
-  }, [fileAssociationMethod, setFileAssociationCallback]);  
 
   // Exposer handleCloseRequest à travers la référence
   useImperativeHandle(ref, () => ({

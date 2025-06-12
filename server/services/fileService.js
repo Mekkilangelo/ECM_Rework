@@ -11,46 +11,8 @@ const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 
-/**
- * Construit le chemin physique pour un fichier à partir du chemin du nœud parent
- * @param {Object} parentNode - Nœud parent
- * @param {string} category - Catégorie du fichier
- * @param {string} subcategory - Sous-catégorie du fichier
- * @returns {string} Chemin physique complet
- */
-const buildPhysicalFilePath = (parentNode, category, subcategory) => {
-  // Commencer par le répertoire de base
-  let physicalPath = UPLOAD_BASE_DIR;
-  
-  // Construire le chemin à partir du chemin logique du nœud parent
-  // Le chemin logique est comme "/Audi/TRQ_20250528" 
-  const pathComponents = parentNode.path.split('/').filter(c => c.length > 0);
-  
-  // Ajouter chaque composant du chemin
-  for (const component of pathComponents) {
-    physicalPath = path.join(physicalPath, component);
-  }
-  
-  // Déterminer la structure de catégorie appropriée
-  let categoryPath = category || 'general';
-  let subcategoryPath = subcategory || '';
-  
-  // Si le parent est un ordre, respecter la structure spécifique
-  if (parentNode.type === 'order') {
-    categoryPath = 'documents';
-    subcategoryPath = 'alldocuments';
-  }
-  
-  // Ajouter la catégorie et sous-catégorie
-  if (categoryPath) {
-    physicalPath = path.join(physicalPath, categoryPath);
-    if (subcategoryPath) {
-      physicalPath = path.join(physicalPath, subcategoryPath);
-    }
-  }
-  
-  return physicalPath;
-};
+// Importer la fonction depuis le middleware pour éviter la duplication
+const { buildPhysicalFilePath } = require('../middleware/file-path');
 
 /**
  * Construit le chemin logique pour un fichier (utilisé dans la base de données)
@@ -81,7 +43,7 @@ const buildNodePath = (parentNode, category, subcategory, filename) => {
     }
   }
   nodePath += `/${filename}`;
-    return nodePath;
+  return nodePath;
 };
 
 /**
@@ -127,13 +89,11 @@ const cleanupTempDirectories = async (tempFiles) => {
  * Enregistre des fichiers téléchargés
  * @param {Array} files - Fichiers téléchargés
  * @param {Object} data - Données supplémentaires (nodeId, category, subcategory)
+ * @param {Object} req - Objet request pour récupérer tempId si défini
  * @returns {Promise<Object>} Résultat de l'opération
  */
-const saveUploadedFiles = async (files, data) => {
+const saveUploadedFiles = async (files, data, req = null) => {
   const { nodeId, category, subcategory } = data;
-  
-  // Si nodeId n'est pas fourni, nous stockons temporairement
-  const tempId = nodeId || `temp-${uuidv4()}`;
   const fileRecords = [];
   
   // Utiliser une transaction pour garantir la cohérence des données
@@ -149,37 +109,28 @@ const saveUploadedFiles = async (files, data) => {
       }
     }
 
-    for (const file of files) {
-      // Déterminer le chemin final du fichier
-      let finalPath;
-      let nodePath;
-      
-      if (nodeId && parentNode) {
-        // Construire le chemin physique en utilisant le chemin du parent
-        const physicalDirPath = buildPhysicalFilePath(parentNode, category, subcategory);
-        fs.mkdirSync(physicalDirPath, { recursive: true });
-        
-        // Déplacer le fichier de temp vers le chemin final
-        finalPath = path.join(physicalDirPath, file.filename);
-        fs.renameSync(file.path, finalPath);
-        
-        // Construire le chemin logique pour la base de données
-        nodePath = buildNodePath(parentNode, category, subcategory, file.originalname);
-      } else {
-        // Garder le fichier dans temp pour l'instant
-        finalPath = file.path;
-        nodePath = `/temp/${tempId}/${file.filename}`;
-      }
-        // Créer l'enregistrement du nœud
-      const fileNode = await Node.create({
-        name: file.originalname,
-        path: nodePath,
-        type: 'file',
-        parent_id: nodeId ? parseInt(nodeId) : null,
-        created_at: new Date(),
-        data_status: 'new',
-        description: `File uploaded as ${category || 'general'}${subcategory ? `/${subcategory}` : ''}`
-      }, { transaction });
+  // Validation : nodeId est maintenant requis
+  if (!nodeId || !parentNode) {
+    throw new Error('Le nodeId parent est requis pour l\'upload de fichiers');
+  }
+
+  for (const file of files) {
+    // Le fichier est déjà stocké au bon endroit par multer
+    const finalPath = file.path;
+    
+    // Construire le chemin logique
+    const nodePath = buildNodePath(parentNode, category, subcategory, file.originalname);
+    
+    // Créer l'enregistrement du nœud
+    const fileNode = await Node.create({
+      name: file.originalname,
+      path: nodePath,
+      type: 'file',
+      parent_id: parseInt(nodeId),
+      created_at: new Date(),
+      data_status: 'new',
+      description: `File uploaded as ${category || 'general'}${subcategory ? `/${subcategory}` : ''}`
+    }, { transaction });
 
       // Créer les relations de fermeture si le fichier est directement associé à un nœud
       if (nodeId) {
@@ -203,9 +154,7 @@ const saveUploadedFiles = async (files, data) => {
             depth: parentClosure.depth + 1
           }, { transaction });
         }
-      }
-
-      // Créer l'enregistrement du fichier
+      }      // Créer l'enregistrement du fichier
       const fileRecord = await File.create({
         node_id: fileNode.id,
         original_name: file.originalname,
@@ -215,7 +164,6 @@ const saveUploadedFiles = async (files, data) => {
         category: category || 'general',
         subcategory: subcategory || null,
         additional_info: {
-          temp_id: !nodeId ? tempId : null,
           upload_date: new Date().toISOString()
         }
       }, { transaction });
@@ -225,19 +173,16 @@ const saveUploadedFiles = async (files, data) => {
         name: file.originalname,
         size: file.size,
         type: file.mimetype,
-        tempId: !nodeId ? tempId : null,
         category,
         subcategory
       });
     }
-    
-    // Valider la transaction
+      // Valider la transaction
     await transaction.commit();
     
     return {
       success: true,
-      files: fileRecords,
-      tempId
+      files: fileRecords
     };
   } catch (error) {
     // Annuler la transaction en cas d'erreur
@@ -903,7 +848,6 @@ const updateFile = async (fileId, updateData) => {
 };
 
 module.exports = {
-  buildPhysicalFilePath,
   buildNodePath,
   saveUploadedFiles,
   associateFilesToNode,

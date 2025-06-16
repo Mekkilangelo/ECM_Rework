@@ -169,6 +169,10 @@ const downloadFile = async (req, res) => {
     // Déléguer au service
     const fileInfo = await fileService.downloadFile(fileId);
     
+    // Définir les headers appropriés pour le téléchargement
+    res.setHeader('Content-Disposition', `attachment; filename="${fileInfo.originalName}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    
     // Téléchargement du fichier
     return res.download(fileInfo.filePath, fileInfo.originalName);
   } catch (error) {

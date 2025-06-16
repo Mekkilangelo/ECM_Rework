@@ -4,8 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus, faList, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import enumService from '../../services/enumService';
 import '../../styles/dataList.css';
+import useConfirmationDialog from '../../hooks/useConfirmationDialog';
 
 const EnumTableContent = ({ table, column }) => {
+  const { confirmDelete } = useConfirmationDialog();
   const [values, setValues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,10 +84,10 @@ const EnumTableContent = ({ table, column }) => {
       setOriginalValue(value);
       setCurrentValue(value);
       setReplacementValue('');
-      setShowModal(true);
-    } else {
+      setShowModal(true);    } else {
       // Si la valeur n'est pas utilisée, confirmer la suppression simple
-      if (window.confirm(`Êtes-vous sûr de vouloir supprimer cette valeur : ${value} ?`)) {
+      const confirmed = await confirmDelete(value, 'la valeur');
+      if (confirmed) {
         try {
           await enumService.deleteEnumValue(table, column, value);
           // Rafraîchir la liste après suppression pour assurer la cohérence

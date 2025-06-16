@@ -1,25 +1,31 @@
 {
-  "name": "ecm-monitoring-desktop",
-  "version": "1.0.0",
-  "main": "dist/main.js",
+  "name": "ECM-Synergy",
+  "version": "1.1.0",
+  "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "vite",
-    "build": "node build.js && vite build",
-    "pack": "electron-builder --dir",
-    "preview": "vite preview",
-    "dist": "npm run build && electron-builder"
+    "dev": "electron . --dev",
+    "clean": "rimraf dist dist-installers resources",
+    "build:client": "cd ../client && npm run build",
+    "build:server": "cd ../server && npm install --omit=dev",
+    "build:copy": "node build.js",
+    "build": "npm run clean && concurrently \"npm run build:client\" \"npm run build:server\" && npm run build:copy",
+    "pack": "npm run build && cross-env NODE_ENV=production electron-builder --dir",
+    "dist": "npm run build && cross-env NODE_ENV=production electron-builder",
+    "dist:win": "npm run build && cross-env NODE_ENV=production electron-builder --win",
+    "dist:mac": "npm run build && cross-env NODE_ENV=production electron-builder --mac",
+    "dist:linux": "npm run build && cross-env NODE_ENV=production electron-builder --linux"
   },
   "author": "Custom IA",
   "license": "UNLICENSED",
   "description": "Application desktop pour ECM Monitoring",
   "devDependencies": {
+    "chalk": "^4.1.2",
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.0",
-    "pkg": "^5.8.1",
-    "vite": "^5.0.0",
-    "vite-plugin-electron": "^0.14.0",
-    "vite-plugin-electron-renderer": "^0.14.6"
+    "rimraf": "^5.0.0"
   },
   "dependencies": {
     "electron-is-dev": "^2.0.0",

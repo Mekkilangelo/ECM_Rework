@@ -13,33 +13,30 @@ import TestForm from '../form/TestForm';
 import '../../../../styles/dataList.css';
 import testService from '../../../../services/testService';
 import useModalState from '../../../../hooks/useModalState';
+import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const TestList = ({ partId }) => {
   const { t } = useTranslation();
   const { navigateBack } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData, deleteItem } = useHierarchy();
   const { user } = useContext(AuthContext);
+  const { confirmDelete } = useConfirmationDialog();
   const testFormRef = useRef(null);
-  
-  // Utilisation du hook useModalState pour gérer les modales
+    // Utilisation du hook useModalState pour gérer les modales
   const {
     showCreateModal: showCreateForm,
     showEditModal: showEditForm,
     showDetailModal,
-    showDeleteConfirmation,
     selectedItem: selectedTest,
     openCreateModal,
     openEditModal,
     openDetailModal,
-    openDeleteConfirmation,
     closeCreateModal,
     closeEditModal,
     closeDetailModal,
-    closeDeleteConfirmation,
     handleRequestClose,
     handleItemCreated,
-    handleItemUpdated,
-    handleItemDeleted
+    handleItemUpdated
   } = useModalState({
     onRefreshData: refreshData
   });
@@ -54,11 +51,12 @@ const TestList = ({ partId }) => {
     
     if (test.data_status === 'new') {
       updateItemStatus(test.id);
-    }
-  };
-
-  const handleDeleteTest = async (testId) => {
-    if (window.confirm(t('tests.deleteConfirmation'))) {
+    }  };  const handleDeleteTest = async (testId) => {
+    const testToDelete = data.find(t => t.id === testId);
+    const testName = testToDelete?.name || 'ce test';
+    
+    const confirmed = await confirmDelete(testName, 'le test');
+    if (confirmed) {
       try {
         await testService.deleteTest(testId);
         alert(t('tests.deleteSuccess'));
@@ -67,18 +65,7 @@ const TestList = ({ partId }) => {
         console.error('Erreur lors de la suppression du test:', err);
         alert(err.response?.data?.message || t('tests.deleteError'));
       }
-    }
-  };
-
-  const confirmDelete = async () => {
-    try {
-      await deleteItem(selectedTest.id);
-      closeDeleteConfirmation();
-      refreshData();
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-    }
-  };
+    }  };
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
@@ -251,30 +238,7 @@ const TestList = ({ partId }) => {
               viewMode={true} // Active le mode lecture seule
             />
           )}
-        </Modal.Body>
-      </Modal>
-
-      {/* Modal de confirmation de suppression */}
-      <Modal
-        show={showDeleteConfirmation}
-        onHide={closeDeleteConfirmation}
-        centered
-      >
-        <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('tests.confirmDelete')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {t('tests.deleteMessage', { name: selectedTest?.name })}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={closeDeleteConfirmation}>
-            {t('common.cancel')}
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            {t('common.delete')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        </Modal.Body>      </Modal>
     </>
   );
 };

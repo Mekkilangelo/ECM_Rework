@@ -34,6 +34,9 @@ lerna-debug.log*
 /electron/dist-*/
 /electron/node_modules/
 /electron/*.exe
+/electron/prereq
+/electron/resources
+
 
 # Fichiers d'exécution et binaires
 *.exe

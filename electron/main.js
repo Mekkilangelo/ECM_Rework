@@ -1,19 +1,19 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
 const { spawn } = require('child_process');
 const fs = require('fs-extra');
+const { getServerPath, getUserDataPaths } = require('./config');
 
-// Au début du fichier main.js, après les imports
-const userDataPath = app.getPath('userData');
-const appDataPath = path.join(userDataPath, 'data');
-const logsPath = path.join(userDataPath, 'logs');
+// Configuration des chemins utilisateur
+const userPaths = getUserDataPaths();
 
 // Créer les dossiers nécessaires
 try {
-  fs.mkdirSync(appDataPath, { recursive: true });
-  fs.mkdirSync(logsPath, { recursive: true });
-  console.log('Application data directories created at:', userDataPath);
+  Object.values(userPaths).forEach(dirPath => {
+    fs.mkdirSync(dirPath, { recursive: true });
+  });
+  console.log('Application data directories created');
 } catch (error) {
   console.error('Failed to create data directories:', error);
 }
@@ -182,25 +182,13 @@ async function createWindow() {
   });
 }
 
-// Dans main.js
-const devServerPath = path.resolve(process.cwd(), '..', 'server', 'server.js');
-const serverPath = isDev ? devServerPath : path.join(__dirname, 'resources/server/server.js');
-
+// Fonction pour démarrer le serveur backend
 function startServer() {
-  // Déterminer le chemin du serveur en fonction du mode (dev/prod)
-  let serverPath;
+  const serverPath = getServerPath();
   
-  if (isDev) {
-    serverPath = path.resolve(__dirname, '..', 'server', 'server.js');
-  } else {
-    serverPath = path.join(process.resourcesPath, 'server', 'server.js');
-  }
-  
-  console.log(`Starting server from: ${serverPath}`);
-  
-  // Créer un fichier de log dans un emplacement accessible
-  const userDataPath = app.getPath('userData'); // Dossier des données utilisateur spécifique à l'application
-  const logFilePath = path.join(userDataPath, 'server-log.txt');
+  console.log('Starting server from:', serverPath);
+    // Créer un fichier de log dans un emplacement accessible
+  const logFilePath = path.join(userPaths.logs, 'server-log.txt');
   const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
   
   logStream.write(`[${new Date().toISOString()}] Starting server from: ${serverPath}\n`);
@@ -262,8 +250,67 @@ function startServer() {
   });
 }
 
-ipcMain.handle('show-error', (event, message) => {
-  dialog.showErrorBox('Error', message);
+// Gestionnaires IPC
+ipcMain.handle('show-error', async (event, message) => {
+  return dialog.showErrorBox('Erreur', message);
+});
+
+// Optimisation de la fonction downloadFile dans main.js
+ipcMain.handle('download-file', async (event, url, fileName) => {
+  try {
+    console.log('Starting download:', url);
+    
+    // Créer un dossier de téléchargements dans userData si nécessaire
+    const userDataPath = app.getPath('userData');
+    const downloadsPath = path.join(userDataPath, 'downloads');
+    
+    if (!fs.existsSync(downloadsPath)) {
+      fs.mkdirSync(downloadsPath, { recursive: true });
+    }
+    
+    // Utiliser le système de téléchargement d'Electron
+    const result = await new Promise((resolve, reject) => {
+      mainWindow.webContents.session.once('will-download', (event, item, webContents) => {
+        // Définir le chemin de sauvegarde
+        const savePath = path.join(downloadsPath, item.getFilename());
+        item.setSavePath(savePath);
+        
+        item.on('updated', (event, state) => {
+          if (state === 'interrupted') {
+            console.log('Download is interrupted but can be resumed');
+          } else if (state === 'progressing') {
+            if (item.isPaused()) {
+              console.log('Download is paused');
+            } else {
+              console.log(`Received bytes: ${item.getReceivedBytes()}`);
+            }
+          }
+        });
+        
+        item.once('done', (event, state) => {
+          if (state === 'completed') {
+            console.log('Download successfully completed');
+            resolve({ success: true, path: savePath });
+          } else {
+            console.log(`Download failed: ${state}`);
+            resolve({ success: false, error: state });
+          }
+        });
+      });
+      
+      // Déclencher le téléchargement
+      mainWindow.webContents.downloadURL(url);
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Download error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('open-external', async (event, url) => {
+  return shell.openExternal(url);
 });
 
 app.on('ready', () => {

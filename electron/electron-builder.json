@@ -1,14 +1,16 @@
 {
   "appId": "com.customia.ecm-monitoring",
-  "productName": "ECM Monitoring",
+  "productName": "ECM - Synergy",
   "directories": {
     "output": "dist-installers",
     "buildResources": "icons"
-  },
-  "files": [
-    "dist/**/*",
+  },  "files": [
+    "main.js",
+    "preload.js",
+    "config.js",
     "icons/**/*",
-    "package.json"
+    "package.json",
+    "node_modules/**/*"
   ],
   "extraResources": [
     {

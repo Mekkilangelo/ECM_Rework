@@ -13,9 +13,11 @@ import { useTranslation } from 'react-i18next';
 import useModalState from '../../../../hooks/useModalState';
 import Pagination from '../../../common/Pagination';
 import LimitSelector from '../../../common/LimitSelector';
+import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const SteelList = () => {  const { t } = useTranslation();
   const { user } = useContext(AuthContext);
+  const { confirmDelete } = useConfirmationDialog();
   const [steels, setSteels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -152,9 +154,12 @@ const SteelList = () => {  const { t } = useTranslation();
   const handleEditSteel = (steel) => {
     openEditModal(steel);
   };
-
   const handleDeleteSteel = async (steelId) => {
-    if (window.confirm(t("steels.confirmDelete"))) {
+    const steelToDelete = steels.find(s => s.id === steelId);
+    const steelName = steelToDelete?.Steel?.grade || steelToDelete?.grade || 'cet acier';
+    
+    const confirmed = await confirmDelete(steelName, 'l\'acier');
+    if (confirmed) {
       try {
         await steelService.deleteSteel(steelId);
         alert(t("steels.deleteSuccess"));

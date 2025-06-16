@@ -12,12 +12,14 @@ import OrderForm from '../form/OrderForm';
 import orderService from '../../../../services/orderService';
 import '../../../../styles/dataList.css';
 import useModalState from '../../../../hooks/useModalState';
+import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const OrderList = () => {
   const { t } = useTranslation();
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
+  const { confirmDelete } = useConfirmationDialog();
   const orderFormRef = useRef(null);
 
   // Utilisation du hook useModalState pour gérer les modales
@@ -48,9 +50,12 @@ const OrderList = () => {
     }
     navigateToLevel('part', order.id, order.name);
   };
-
   const handleDeleteOrder = async (orderId) => {
-    if (window.confirm(t('orders.confirmDelete'))) {
+    const orderToDelete = data.find(o => o.id === orderId);
+    const orderName = orderToDelete?.name || 'cette commande';
+    
+    const confirmed = await confirmDelete(orderName, 'la commande');
+    if (confirmed) {
       try {
         await orderService.deleteOrder(orderId);
         alert(t('orders.deleteSuccess'));

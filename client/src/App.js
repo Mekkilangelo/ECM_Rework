@@ -25,6 +25,7 @@ import Search from './pages/Search'; // Import de la nouvelle page de recherche
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NavigationProvider } from './context/NavigationContext'; // Import du NavigationProvider
+import { ConfirmationProvider } from './context/ConfirmationContext'; // Import du ConfirmationProvider
 
 // Composant de chargement pour Suspense
 const LoadingFallback = () => (
@@ -59,7 +60,8 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <NavigationProvider> {/* Ajout du NavigationProvider */}
-          <Suspense fallback={<LoadingFallback />}>
+          <ConfirmationProvider> {/* Ajout du ConfirmationProvider */}
+            <Suspense fallback={<LoadingFallback />}>
             <BrowserRouter>
               <Routes>
                 {/* Routes publiques */}
@@ -137,13 +139,13 @@ function App() {
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-              />
-              
+              />              
             </BrowserRouter>
           </Suspense>
-        </NavigationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+        </ConfirmationProvider> {/* Fermeture du ConfirmationProvider */}
+      </NavigationProvider>
+    </AuthProvider>
+  </ThemeProvider>
   );
 }
 

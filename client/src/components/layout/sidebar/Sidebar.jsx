@@ -17,9 +17,11 @@ import nodeService from '../../../services/nodeService';
 import { toast } from 'react-toastify';
 import '../../../styles/sidebar.css';
 import { AuthContext } from '../../../context/AuthContext';
+import useConfirmationDialog from '../../../hooks/useConfirmationDialog';
 
 const Sidebar = ({ userRole }) => {
   const { t } = useTranslation();
+  const { confirmDestructiveAction } = useConfirmationDialog();
   const location = useLocation();
   const [allClients, setAllClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -30,13 +32,13 @@ const Sidebar = ({ userRole }) => {
   const isSuperUser = user && user.role === "superuser";
   const isAdmin = user && user.role === "admin";
   const canManageUsers = isSuperUser || isAdmin;
-
   // Fonction pour gérer le nettoyage des données
   const handleDataCleaning = async (e) => {
     e.preventDefault();
     // Confirmation avant suppression
-    const isConfirmed = window.confirm(
-      t('sidebar.dataCleaning.confirmMessage')
+    const isConfirmed = await confirmDestructiveAction(
+      t('sidebar.dataCleaning.confirmMessage'),
+      t('sidebar.dataCleaning.title')
     );
     if (!isConfirmed) return;
 

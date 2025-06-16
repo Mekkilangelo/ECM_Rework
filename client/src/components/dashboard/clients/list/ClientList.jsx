@@ -13,12 +13,14 @@ import clientService from '../../../../services/clientService';
 import '../../../../styles/dataList.css';
 import PropTypes from 'prop-types';
 import useModalState from '../../../../hooks/useModalState';
+import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const ClientList = ({ onDataChanged }) => {
   const { t } = useTranslation();
   const { navigateToLevel } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
+  const { confirmDelete } = useConfirmationDialog();
   const clientFormRef = useRef(null);
 
   // Fonction de rafraîchissement améliorée qui met à jour également le total
@@ -58,9 +60,12 @@ const ClientList = ({ onDataChanged }) => {
     }
     navigateToLevel('order', client.id, client.name);
   };
-
   const handleDeleteClient = async (clientId) => {
-    if (window.confirm(t('clients.confirmDelete'))) {
+    const clientToDelete = data.find(c => c.id === clientId);
+    const clientName = clientToDelete?.name || 'ce client';
+    
+    const confirmed = await confirmDelete(clientName, 'le client');
+    if (confirmed) {
       try {
         await clientService.deleteClient(clientId);
         alert(t('clients.deleteSuccess'));

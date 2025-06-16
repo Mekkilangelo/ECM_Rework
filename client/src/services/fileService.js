@@ -74,8 +74,7 @@ const fileService = {
       throw error;
     }
   },
-  
-  /**
+    /**
    * Télécharge un fichier ou ouvre son aperçu
    * @param {string|number} fileId - Identifiant du fichier à télécharger
    * @param {boolean} preview - Si true, ouvre un aperçu du fichier
@@ -85,7 +84,15 @@ const fileService = {
     if (preview) {
       url.searchParams.append('preview', 'true');
     }
-    window.open(url.toString(), '_blank');
+    
+    // Vérifier si nous sommes dans Electron
+    if (window.electronAPI) {
+      // Utiliser l'API Electron pour le téléchargement
+      window.electronAPI.downloadFile(url.toString(), fileId);
+    } else {
+      // Fallback pour navigateur web
+      window.open(url.toString(), '_blank');
+    }
   },
   
   /**

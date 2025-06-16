@@ -133,7 +133,7 @@ const Login = () => {
                     className="img-fluid mb-4" 
                     style={{ maxHeight: '80px' }} 
                   />
-                  <h2 className="h4 text-gray-900 mb-4">ECM Monitoring</h2>
+                  <h2 className="h4 text-gray-900 mb-4">ECM - Synergy</h2>
                 </div>
 
                 {error && (

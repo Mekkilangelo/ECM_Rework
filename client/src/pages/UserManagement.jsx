@@ -13,9 +13,11 @@ import Layout from '../components/layout/Layout';
 import { NavigationProvider } from '../context/NavigationContext';
 import { AuthContext } from '../context/AuthContext';
 import userService from '../services/userService';
+import useConfirmationDialog from '../hooks/useConfirmationDialog';
 
 const UserManagementContent = () => {
   const { user: currentUser } = useContext(AuthContext);
+  const { confirmDelete } = useConfirmationDialog();
   const [users, setUsers] = useState([]);
   const [editedUsers, setEditedUsers] = useState({});
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -153,9 +155,12 @@ const UserManagementContent = () => {
       setLoading(false);
     }
   };
-
   const deleteUser = async (userId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+    const userToDelete = users.find(u => u.id === userId);
+    const userName = userToDelete ? userToDelete.username : 'cet utilisateur';
+    
+    const confirmed = await confirmDelete(userName, 'l\'utilisateur');
+    if (confirmed) {
       try {
         setLoading(true);
         await userService.deleteUser(userId);

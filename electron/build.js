@@ -1,67 +1,97 @@
 const fs = require('fs-extra');
 const { execSync } = require('child_process');
 const path = require('path');
+const chalk = require('chalk');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const CLIENT_DIR = path.join(ROOT_DIR, 'client');
 const SERVER_DIR = path.join(ROOT_DIR, 'server');
 const ELECTRON_DIR = __dirname;
 const DIST_DIR = path.join(ELECTRON_DIR, 'dist');
-const RESOURCES_DIR = path.join(ELECTRON_DIR, 'resources');  // Changé pour correspondre à electron-builder.json
+const RESOURCES_DIR = path.join(ELECTRON_DIR, 'resources');
 
-console.log('__dirname:', __dirname);
-console.log('Server path (dev):', path.resolve(__dirname, '..', 'server', 'server.js'));
-console.log('Server path exists:', fs.existsSync(path.resolve(__dirname, '..', 'server', 'server.js')));
+// Utilitaires de logging avec couleurs
+const log = {
+  info: (msg) => console.log(chalk.blue('ℹ'), msg),
+  success: (msg) => console.log(chalk.green('✅'), msg),
+  warning: (msg) => console.log(chalk.yellow('⚠️'), msg),
+  error: (msg) => console.log(chalk.red('❌'), msg),
+  step: (step, total, msg) => console.log(chalk.cyan(`[${step}/${total}]`), msg)
+};
+
+// Validation des chemins requis
+const validatePaths = () => {
+  const requiredPaths = [
+    { path: CLIENT_DIR, name: 'Client directory' },
+    { path: SERVER_DIR, name: 'Server directory' },
+    { path: path.join(CLIENT_DIR, 'package.json'), name: 'Client package.json' },
+    { path: path.join(SERVER_DIR, 'package.json'), name: 'Server package.json' }
+  ];
+
+  for (const { path: checkPath, name } of requiredPaths) {
+    if (!fs.existsSync(checkPath)) {
+      log.error(`${name} not found at: ${checkPath}`);
+      process.exit(1);
+    }
+  }
+  log.success('All required paths validated');
+};
 
 async function build() {
   try {
-    // Nettoyer les dossiers de build existants
-    console.log('Cleaning build directories...');
+    log.info('🚀 Starting ECM Monitoring Electron build process...');
+    
+    // Étape 1: Validation
+    log.step(1, 6, 'Validating project structure...');
+    validatePaths();
+    
+    // Étape 2: Nettoyage
+    log.step(2, 6, 'Cleaning build directories...');
     fs.removeSync(DIST_DIR);
-    fs.removeSync(RESOURCES_DIR);  // Supprimer également le dossier resources s'il existe
+    fs.removeSync(RESOURCES_DIR);
     
     fs.mkdirSync(DIST_DIR, { recursive: true });
     fs.mkdirSync(RESOURCES_DIR, { recursive: true });
     fs.mkdirSync(path.join(RESOURCES_DIR, 'client'), { recursive: true });
     fs.mkdirSync(path.join(RESOURCES_DIR, 'server'), { recursive: true });
 
-    // Construire l'application React
-    console.log('Building React client...');
+    // Étape 3: Build du client React
+    log.step(3, 6, 'Building React client...');
     process.chdir(CLIENT_DIR);
     execSync('npm run build', { stdio: 'inherit' });
     
-    // Copier le build client vers le dossier de ressources
-    console.log('Copying client build to resources...');
+    log.info('Copying client build to resources...');
     fs.copySync(path.join(CLIENT_DIR, 'build'), path.join(RESOURCES_DIR, 'client/build'));
 
-    // Installer les dépendances du serveur et les copier
-    console.log('Installing server production dependencies...');
+    // Étape 4: Préparation du serveur
+    log.step(4, 6, 'Preparing server files...');
     process.chdir(SERVER_DIR);
+    
+    log.info('Installing server production dependencies...');
     execSync('npm install --omit=dev', { stdio: 'inherit' });
     
-    // Copier le code serveur
-    console.log('Copying server files to resources...');
+    log.info('Copying server files to resources...');
     fs.copySync(SERVER_DIR, path.join(RESOURCES_DIR, 'server'), {
       filter: (src, dest) => !src.includes('node_modules') && !src.includes('.git')
     });
     
-    // Copier les node_modules du serveur
+    log.info('Copying server dependencies...');
     fs.copySync(
       path.join(SERVER_DIR, 'node_modules'), 
       path.join(RESOURCES_DIR, 'server/node_modules')
     );
 
-    // Après la partie qui copie les fichiers du serveur
-    // Copier le fichier .env s'il existe
+    // Étape 5: Configuration et fichiers Electron
+    log.step(5, 6, 'Configuring Electron files...');
+    
+    // Copier ou créer le fichier .env
     const envFilePath = path.join(ROOT_DIR, '.env');
     if (fs.existsSync(envFilePath)) {
-      console.log('Copying .env file to server resources...');
+      log.info('Copying .env file to server resources...');
       fs.copySync(envFilePath, path.join(RESOURCES_DIR, 'server', '.env'));
     } else {
-      // Créer un fichier .env minimal si l'original n'existe pas
-      console.log('Creating default .env file for server...');
+      log.warning('Creating default .env file for server...');
       const userDataPathPlaceholder = '%APPDATA%\\ECM Monitoring';
-
       fs.writeFileSync(path.join(RESOURCES_DIR, 'server', '.env'), `
 PORT=5001
 NODE_ENV=production
@@ -78,51 +108,42 @@ LOG_PATH=${userDataPathPlaceholder}\\logs
       `.trim());
     }
 
-    // Dans build.js, après avoir copié les fichiers du serveur
-    // Créer les répertoires nécessaires
+    // Créer les répertoires nécessaires pour les uploads
     const serverDirs = ['uploads', 'uploads/temp'];
     for (const dir of serverDirs) {
       const dirPath = path.join(RESOURCES_DIR, 'server', dir);
-      console.log(`Creating directory: ${dirPath}`);
       fs.mkdirSync(dirPath, { recursive: true });
     }
 
-    // Après avoir copié les fichiers du serveur, ajoutez :
-    // Copier le preload.js
-    console.log('Copying preload.js to dist directory...');
-    fs.copySync(
-      path.join(ELECTRON_DIR, 'preload.js'),
-      path.join(DIST_DIR, 'preload.js')
-    );
+    // Copier les fichiers Electron principaux
+    log.info('Copying Electron files...');
+    fs.copySync(path.join(ELECTRON_DIR, 'main.js'), path.join(DIST_DIR, 'main.js'));
+    fs.copySync(path.join(ELECTRON_DIR, 'preload.js'), path.join(DIST_DIR, 'preload.js'));
 
-    // Vérifier le build client
-    const clientBuildPath = path.join(RESOURCES_DIR, 'client/build');
-    console.log('Verifying client build at:', clientBuildPath);
-    if (fs.existsSync(clientBuildPath)) {
-      console.log('Client build directory contains:');
-      const listClientFiles = (dir, indent = '') => {
-        fs.readdirSync(dir).forEach(file => {
-          const filePath = path.join(dir, file);
-          const isDir = fs.statSync(filePath).isDirectory();
-          console.log(`${indent}${file}${isDir ? '/' : ''}`);
-          if (isDir) listClientFiles(filePath, indent + '  ');
-        });
-      };
-      listClientFiles(clientBuildPath);
-    } else {
-      console.error('WARNING: Client build directory not found!');
+    // Étape 6: Validation finale
+    log.step(6, 6, 'Validating build output...');
+    const validationPaths = [
+      { path: path.join(RESOURCES_DIR, 'client/build'), name: 'Client build' },
+      { path: path.join(RESOURCES_DIR, 'server'), name: 'Server files' },
+      { path: path.join(DIST_DIR, 'main.js'), name: 'Main Electron file' },
+      { path: path.join(DIST_DIR, 'preload.js'), name: 'Preload script' }
+    ];
+
+    for (const { path: checkPath, name } of validationPaths) {
+      if (fs.existsSync(checkPath)) {
+        log.success(`${name} ✓`);
+      } else {
+        log.error(`${name} missing at: ${checkPath}`);
+        throw new Error(`Build validation failed: ${name} not found`);
+      }
     }
-
-    // Vérifier que les dossiers ont bien été créés
-    console.log('Resources directory contents:', fs.readdirSync(RESOURCES_DIR));
-    console.log('Client resources exist:', fs.existsSync(path.join(RESOURCES_DIR, 'client/build')));
-    console.log('Server resources exist:', fs.existsSync(path.join(RESOURCES_DIR, 'server')));
     
     // Revenir au dossier electron
     process.chdir(ELECTRON_DIR);
-    console.log('Build preparation completed successfully!');
+    log.success('🎉 Build preparation completed successfully!');
+    
   } catch (error) {
-    console.error('Build failed:', error);
+    log.error(`💥 Build failed: ${error.message}`);
     process.exit(1);
   }
 }

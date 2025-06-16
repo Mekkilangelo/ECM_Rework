@@ -12,12 +12,14 @@ import PartForm from '../form/PartForm';
 import partService from '../../../../services/partService';
 import '../../../../styles/dataList.css';
 import useModalState from '../../../../hooks/useModalState';
+import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const PartList = ({ orderId }) => {
   const { t } = useTranslation();
   const { navigateToLevel, navigateBack, hierarchyState } = useNavigation();
   const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
   const { user } = useContext(AuthContext);
+  const { confirmDelete } = useConfirmationDialog();
   const partFormRef = useRef(null);
   
   // Utilisation du hook useModalState pour gérer les modales
@@ -56,9 +58,12 @@ const PartList = ({ orderId }) => {
   const handleEditPart = (part) => {
     openEditModal(part);
   };
-
   const handleDeletePart = async (partId) => {
-    if (window.confirm(t('parts.deleteConfirmation'))) {
+    const partToDelete = data.find(p => p.id === partId);
+    const partName = partToDelete?.name || 'cette pièce';
+    
+    const confirmed = await confirmDelete(partName, 'la pièce');
+    if (confirmed) {
       try {
         await partService.deletePart(partId);
         alert(t('parts.deleteSuccess'));

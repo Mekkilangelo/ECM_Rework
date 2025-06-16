@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Row, Col, Button, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faFileImport } from '@fortawesome/free-solid-svg-icons';
+import * as XLSX from 'xlsx';
 import MicrographsSection from './modules/MicrographsSection';
 import ResultCurveSection from './modules/ResultCurveSection';
 import ControlLocationSection from './modules/ControlLocationSection';
@@ -30,11 +31,261 @@ const ResultsDataSection = ({
   selectStyles,
   test,
   handleFileAssociationNeeded,
-  viewMode = false,
-  readOnlyFieldStyle = {}
+  viewMode = false,  readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
+  const fileInputRef = useRef(null);
   
+  // Créer des refs pour chaque ResultCurveSection
+  const [curveSectionRefs, setCurveSectionRefs] = useState({});
+  // Obtenir ou créer une ref pour un ResultCurveSection spécifique
+  const getCurveSectionRef = (resultIndex, sampleIndex) => {
+    const key = `${resultIndex}-${sampleIndex}`;
+    if (!curveSectionRefs[key]) {
+      curveSectionRefs[key] = React.createRef();
+      setCurveSectionRefs({...curveSectionRefs, [key]: curveSectionRefs[key]});
+    }
+    return curveSectionRefs[key];
+  };
+
+    // Fonction pour traiter l'import Excel
+  const handleExcelImport = (event, resultIndex, sampleIndex) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        processExcelData(jsonData, resultIndex, sampleIndex);
+      } catch (error) {
+        console.error('Erreur lors de la lecture du fichier Excel:', error);
+        alert(t('tests.after.results.import.error'));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+      // Reset du input file
+    event.target.value = '';
+  };
+  // Fonction pour traiter les données Excel pour un échantillon spécifique
+  const processExcelData = async (data, resultIndex, sampleIndex) => {
+    if (!data || data.length === 0) return;
+
+    console.log('=== ANALYSE FICHIER EXCEL ===');
+    console.log(`Import pour résultat ${resultIndex}, échantillon ${sampleIndex}`);
+
+    const firstRow = data[0];
+    const dataRows = data.slice(1);
+    
+    // Analyser les filiations présentes - on ne prend que la première filiation trouvée
+    let selectedFiliation = null;
+    
+    // Chercher d'abord les filiations directes (colonnes 0-7 et 9-16)
+    if (firstRow[0] && typeof firstRow[0] === 'string' && !firstRow[0].startsWith('$')) {
+      console.log('Filiation 1 (Flank) détectée avec données directes');
+      selectedFiliation = {
+        index: 1,
+        locNameIndex: 0,
+        surfHvalIndex: 1,
+        chdIndex: 2,
+        baseIndex: 4,
+        distanceIndex: 5,
+        hvalueIndex: 6,
+        hscaleIndex: 7,
+        isDirect: true
+      };
+    } else if (firstRow[9] && typeof firstRow[9] === 'string' && !firstRow[9].startsWith('$')) {
+      console.log('Filiation 2 (Root) détectée avec données directes');
+      selectedFiliation = {
+        index: 2,
+        locNameIndex: 9,
+        surfHvalIndex: 10,
+        chdIndex: 11,
+        baseIndex: 13,
+        distanceIndex: 14,
+        hvalueIndex: 15,
+        hscaleIndex: 16,
+        isDirect: true
+      };
+    } else {
+      // Chercher les filiations avec marqueurs (3-7)
+      for (let i = 3; i <= 7; i++) {
+        const locNameIndex = firstRow.findIndex(cell => 
+          cell && cell.toString().includes(`$LOCNAME.L(${i})`)
+        );
+        
+        if (locNameIndex !== -1) {
+          const hasData = dataRows.some(row => 
+            row[locNameIndex] && 
+            row[locNameIndex] !== '' && 
+            !row[locNameIndex].toString().startsWith('$')
+          );
+          
+          if (hasData) {
+            selectedFiliation = {
+              index: i,
+              locNameIndex,
+              surfHvalIndex: firstRow.findIndex(cell => 
+                cell && cell.toString().includes(`$STAT.SURFHVAL.L(${i})`)
+              ),
+              chdIndex: firstRow.findIndex(cell => 
+                cell && cell.toString().includes(`$STAT.CHD${i}.L(${i})`)
+              ),
+              baseIndex: firstRow.findIndex(cell => 
+                cell && cell.toString().includes(`$STAT.BASE1.L(${i})`)
+              ),
+              distanceIndex: firstRow.findIndex(cell => 
+                cell && cell.toString().includes(`$DISTANCE.L(${i})`)
+              ),
+              hvalueIndex: firstRow.findIndex(cell => 
+                cell && cell.toString().includes(`$HVALUE.L(${i})`)
+              ),
+              hscaleIndex: firstRow.findIndex(cell => 
+                cell && cell.toString().includes(`$HSCALE.L(${i})`)
+              ),
+              isDirect: false
+            };
+            break;
+          }
+        }
+      }
+    }
+
+    if (!selectedFiliation) {
+      alert(t('tests.after.results.import.noData'));
+      return;
+    }
+
+    console.log('Filiation sélectionnée:', selectedFiliation);
+
+    // Extraire les données de base
+    let locationName, surfHval, chd, base, hscale;
+    
+    if (selectedFiliation.isDirect) {
+      locationName = firstRow[selectedFiliation.locNameIndex];
+      surfHval = firstRow[selectedFiliation.surfHvalIndex];
+      chd = firstRow[selectedFiliation.chdIndex];
+      base = firstRow[selectedFiliation.baseIndex];
+      hscale = firstRow[selectedFiliation.hscaleIndex];
+    } else {
+      const firstDataRow = dataRows[0];
+      locationName = firstDataRow[selectedFiliation.locNameIndex];
+      surfHval = firstDataRow[selectedFiliation.surfHvalIndex];
+      chd = firstDataRow[selectedFiliation.chdIndex];
+      base = firstDataRow[selectedFiliation.baseIndex];
+      hscale = firstDataRow[selectedFiliation.hscaleIndex];
+    }
+
+    console.log('Données extraites:', { locationName, surfHval, chd, base, hscale });
+
+    // Convertir les valeurs numériques
+    const surfHvalNum = surfHval ? parseFloat(surfHval.toString().replace(',', '.')) : '';
+    const chdNum = chd ? parseFloat(chd.toString().replace(',', '.')) : '';
+    const baseNum = base ? parseFloat(base.toString().replace(',', '.')) : '';
+
+    // Trouver l'option correspondante dans hardnessUnitOptions
+    const unitOption = hardnessUnitOptions.find(option => 
+      option.label === hscale || option.value === hscale
+    );
+
+    // 1. Ajouter un point de dureté
+    console.log('Ajout point de dureté...');
+    handleHardnessResultAdd(resultIndex, sampleIndex);
+    
+    // 2. Ajouter un point ECD
+    console.log('Ajout point ECD...');
+    handleEcdPositionAdd(resultIndex, sampleIndex);
+
+    // 3. Remplir les champs après un délai pour s'assurer que les éléments DOM sont créés
+    setTimeout(() => {
+      const currentResults = [...formData.resultsData.results];
+      const currentSample = currentResults[resultIndex].samples[sampleIndex];
+      const hardnessPointIndex = currentSample.hardnessPoints.length - 1;
+      
+      // Remplir le point de dureté
+      handleHardnessChange(resultIndex, sampleIndex, hardnessPointIndex, 'location', locationName || '');
+      handleHardnessChange(resultIndex, sampleIndex, hardnessPointIndex, 'value', surfHvalNum || '');
+      handleHardnessChange(resultIndex, sampleIndex, hardnessPointIndex, 'unit', unitOption || null);
+      if (chdNum) {
+        handleHardnessChange(resultIndex, sampleIndex, hardnessPointIndex, 'distance', chdNum);
+      }
+
+      // Remplir les données ECD
+      handleEcdChange(resultIndex, sampleIndex, 'hardnessValue', baseNum || '');
+      handleEcdChange(resultIndex, sampleIndex, 'hardnessUnit', unitOption || null);
+      
+      // Remplir le nom du point ECD
+      const ecdPointIndex = currentSample.ecd.ecdPoints.length - 1;
+      handleEcdPositionChange(resultIndex, sampleIndex, ecdPointIndex, 'name', locationName || '');
+
+      console.log('Points de dureté et ECD remplis');
+    }, 200);
+
+    // 4. Traiter les données de courbe
+    setTimeout(() => {
+      console.log(`Traitement courbe pour filiation ${selectedFiliation.index}`);
+      console.log(`Indices - distance: ${selectedFiliation.distanceIndex}, valeur: ${selectedFiliation.hvalueIndex}`);
+      
+      const curveData = [];
+      const columnName = locationName || `Position_${selectedFiliation.index}`;
+      
+      dataRows.forEach((row, rowIndex) => {
+        const distance = row[selectedFiliation.distanceIndex];
+        const hvalue = row[selectedFiliation.hvalueIndex];
+        
+        if (distance !== undefined && distance !== null && distance !== '' &&
+            hvalue !== undefined && hvalue !== null && hvalue !== '' &&
+            !distance.toString().startsWith('$') && 
+            !hvalue.toString().startsWith('$')) {
+          
+          const distanceNum = parseFloat(distance.toString().replace(',', '.'));
+          const hvalueNum = parseFloat(hvalue.toString().replace(',', '.'));
+          
+          if (!isNaN(distanceNum) && !isNaN(hvalueNum)) {
+            const pointData = {
+              distance: distanceNum
+            };
+            
+            // Ajouter la valeur selon le nom de la position
+            if (locationName) {
+              if (locationName.toLowerCase().includes('flank') || locationName.toLowerCase().includes('flanc')) {
+                pointData.flankHardness = hvalueNum;
+                pointData.Flank = hvalueNum;
+              } else if (locationName.toLowerCase().includes('root') || locationName.toLowerCase().includes('pied')) {
+                pointData.rootHardness = hvalueNum;
+                pointData.Root = hvalueNum;
+              }
+              pointData[columnName] = hvalueNum;
+            }
+            
+            curveData.push(pointData);
+            console.log(`Point courbe ajouté: distance=${distanceNum}, ${columnName}=${hvalueNum}`);
+          }
+        }
+      });
+
+      console.log(`Nombre de points de courbe trouvés: ${curveData.length}`);
+
+      // 5. Ajouter les points de courbe via le ResultCurveSection
+      if (curveData.length > 0) {
+        const curveSectionRef = getCurveSectionRef(resultIndex, sampleIndex);
+        if (curveSectionRef && curveSectionRef.current && curveSectionRef.current.addMultipleDataPoints) {
+          console.log('Ajout des points de courbe via ResultCurveSection...');
+          curveSectionRef.current.addMultipleDataPoints(curveData);
+        } else {
+          console.warn('Référence ResultCurveSection non disponible');
+        }
+      }
+
+      // Message de succès
+      alert(t('tests.after.results.import.success'));
+    }, 500);
+  };  
   // Fonctions de gestion des résultats internes au composant
   const handleResultChange = (resultIndex, field, value) => {
     const updatedResults = [...formData.resultsData.results];
@@ -167,20 +418,21 @@ const ResultsDataSection = ({
           </Form.Group>
 
           {/* Section des échantillons */}
-          <div className="mb-3">
-            <h6 className="mb-3 d-flex justify-content-between align-items-center">
-              <span>{t('tests.after.results.samples')}</span>
-              {!viewMode && (
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  onClick={() => handleSampleAdd(resultIndex)}
-                  disabled={loading}
-                >
-                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addSample')}
-                </Button>
-              )}
-            </h6>
+          <div className="mb-3">      <h6 className="mb-3 d-flex justify-content-between align-items-center">
+        <span>{t('tests.after.results.samples')}</span>
+        <div className="d-flex gap-2">
+          {!viewMode && (
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => handleSampleAdd(resultIndex)}
+              disabled={loading}
+            >
+              <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addSample')}
+            </Button>
+          )}
+        </div>
+      </h6>
 
             {result.samples?.map((sample, sampleIndex) => (
               <CollapsibleSection 
@@ -217,10 +469,32 @@ const ResultsDataSection = ({
                   />
                 </Form.Group>
                 
-                <Form.Group className="mb-3">
-                  <Form.Label className="d-flex justify-content-between align-items-center">
+                <Form.Group className="mb-3">                  <Form.Label className="d-flex justify-content-between align-items-center">
                     <span>{t('tests.after.results.hardness')}</span>
+                    <div className="d-flex gap-2">
+                      {!viewMode && (
+                        <>
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={loading}
+                          >
+                            <FontAwesomeIcon icon={faFileImport} className="me-1" /> {t('tests.after.results.import.button')}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </Form.Label>
+
+                  {/* Input file caché pour l'import Excel */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => handleExcelImport(e, resultIndex, sampleIndex)}
+                    accept=".xlsx,.xls"
+                    style={{ display: 'none' }}
+                  />
                   <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
                     <thead className="bg-light">
                       <tr>
@@ -449,8 +723,8 @@ const ResultsDataSection = ({
                   rememberState={true}
                   level={2}
                   className="mb-3"
-                >
-                  <ResultCurveSection
+                >                  <ResultCurveSection
+                    ref={getCurveSectionRef(resultIndex, sampleIndex)}
                     result={sample}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}

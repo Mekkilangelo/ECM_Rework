@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tab, Nav, Table, Form, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -28,7 +28,7 @@ const colorPalette = [
   { borderColor: 'rgb(255, 205, 86)', backgroundColor: 'rgba(255, 205, 86, 0.5)' }    // Jaune
 ];
 
-const ResultCurveSection = ({
+const ResultCurveSection = forwardRef(({
   result,
   resultIndex,
   sampleIndex,  // Ajout du sampleIndex
@@ -43,7 +43,7 @@ const ResultCurveSection = ({
   parentId,
   viewMode = false,
   readOnlyFieldStyle = {}
-}) => {
+}, ref) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('curve');
     // Structure de données pour les points de mesure
@@ -75,6 +75,13 @@ const ResultCurveSection = ({
   const [stepValue, setStepValue] = useState(0.1);
   const [specData, setSpecData] = useState([]);
   
+  // Exposer les méthodes au composant parent via ref
+  useImperativeHandle(ref, () => ({
+    addDataPoint,
+    addMultipleDataPoints,
+    removeDataPoint
+  }));
+
   // Récupérer l'unité de dureté à partir des données ECD
   const hardnessUnit = result.ecd?.hardnessUnit || "HV";
   
@@ -203,12 +210,11 @@ const ResultCurveSection = ({
     setDataPoints(sorted);
     updateParentFormData(sorted);
   };
-  
-  // Ajouter un nouveau point de données avec incrémentation automatique
-  const addDataPoint = () => {
+    // Ajouter un nouveau point de données avec incrémentation automatique
+  const addDataPoint = (customData = null) => {
     let nextDistance = '';
     // Calculer la prochaine distance en ajoutant le pas à la dernière valeur
-    if (dataPoints.length > 0) {
+    if (dataPoints.length > 0 && !customData) {
       const sortedPoints = [...dataPoints].sort((a, b) => {
         const distA = parseFloat(a.distance) || 0;
         const distB = parseFloat(b.distance) || 0;
@@ -220,7 +226,7 @@ const ResultCurveSection = ({
     
     // Créer un nouveau point avec champs pour toutes les positions ECD
     const newPoint = {
-      distance: nextDistance
+      distance: customData ? customData.distance : nextDistance
     };
       // Ajouter un champ pour chaque position ECD
     ecdPositions.forEach(position => {
@@ -228,13 +234,22 @@ const ResultCurveSection = ({
       const positionKey = position.name.toLowerCase();
       
       // Créer les deux formats
-      newPoint[fieldName] = '';
-      newPoint[positionKey] = '';
+      newPoint[fieldName] = customData && customData[fieldName] ? customData[fieldName] : '';
+      newPoint[positionKey] = customData && customData[positionKey] ? customData[positionKey] : '';
     });
     
     // Pour la compatibilité avec le format existant, conserver les champs flankHardness et rootHardness
-    newPoint.flankHardness = '';
-    newPoint.rootHardness = '';
+    newPoint.flankHardness = customData && customData.flankHardness ? customData.flankHardness : '';
+    newPoint.rootHardness = customData && customData.rootHardness ? customData.rootHardness : '';
+    
+    // Si des données personnalisées sont fournies, les utiliser
+    if (customData) {
+      Object.keys(customData).forEach(key => {
+        if (key !== 'distance') {
+          newPoint[key] = customData[key];
+        }
+      });
+    }
     
     // Utiliser le callback de setState pour éviter des mises à jour multiples
     setDataPoints(prevPoints => {
@@ -245,6 +260,59 @@ const ResultCurveSection = ({
     });
   };
   
+  // Ajouter plusieurs points de données en une fois (pour l'import Excel)
+  const addMultipleDataPoints = (pointsData) => {
+    if (!pointsData || pointsData.length === 0) return;
+    
+    console.log('Ajout de plusieurs points de courbe:', pointsData);
+    
+    const newPoints = pointsData.map(pointData => {
+      const newPoint = {
+        distance: pointData.distance || ''
+      };
+      
+      // Ajouter un champ pour chaque position ECD
+      ecdPositions.forEach(position => {
+        const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
+        const positionKey = position.name.toLowerCase();
+        
+        // Créer les deux formats
+        newPoint[fieldName] = pointData[fieldName] || pointData[positionKey] || '';
+        newPoint[positionKey] = pointData[positionKey] || pointData[fieldName] || '';
+      });
+      
+      // Pour la compatibilité avec le format existant
+      newPoint.flankHardness = pointData.flankHardness || pointData.Flank || '';
+      newPoint.rootHardness = pointData.rootHardness || pointData.Root || '';
+      
+      // Ajouter tous les autres champs personnalisés
+      Object.keys(pointData).forEach(key => {
+        if (!newPoint.hasOwnProperty(key)) {
+          newPoint[key] = pointData[key];
+        }
+      });
+      
+      return newPoint;
+    });
+    
+    // Fusionner avec les points existants
+    setDataPoints(prevPoints => {
+      const allPoints = [...prevPoints, ...newPoints];
+      // Trier par distance
+      const sortedPoints = allPoints.sort((a, b) => {
+        const distA = parseFloat(a.distance) || 0;
+        const distB = parseFloat(b.distance) || 0;
+        return distA - distB;
+      });
+      
+      setDisplayPoints(sortedPoints);
+      updateParentFormData(sortedPoints);
+      return sortedPoints;
+    });
+    
+    console.log(`${newPoints.length} points de courbe ajoutés avec succès`);
+  };
+
   // Supprimer un point de données
   const removeDataPoint = (index) => {
     const newPoints = dataPoints.filter((_, i) => i !== index);
@@ -555,8 +623,7 @@ const ResultCurveSection = ({
           )}
         </Tab.Pane>
       </Tab.Content>
-    </Tab.Container>
-  );
-};
+    </Tab.Container>  );
+});
 
 export default ResultCurveSection;

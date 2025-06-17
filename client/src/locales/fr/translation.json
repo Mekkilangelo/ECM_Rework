@@ -693,12 +693,11 @@
         "addResult": "Ajouter un résultat",
         "resultNumber": "Résultat #{{number}}",
         "description": "Description",        "samples": "Échantillons",
-        "addSample": "Ajouter un échantillon",
-        "import": {
+        "addSample": "Ajouter un échantillon",        "import": {
           "button": "Importer Excel",
           "error": "Erreur lors de la lecture du fichier Excel",
           "noData": "Aucune donnée de filiation trouvée dans le fichier",
-          "success": "Données importées avec succès"
+          "success": "{{count}} filiation(s) importée(s) avec succès"
         },
         "sampleNumber": "Échantillon {{number}}",
         "sampleDescription": "Description de l'échantillon",

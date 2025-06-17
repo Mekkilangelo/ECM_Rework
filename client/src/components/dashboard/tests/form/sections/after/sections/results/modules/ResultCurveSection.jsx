@@ -84,9 +84,11 @@ const ResultCurveSection = forwardRef(({
 
   // Récupérer l'unité de dureté à partir des données ECD
   const hardnessUnit = result.ecd?.hardnessUnit || "HV";
-  
-  // Positions ECD disponibles pour les colonnes
+    // Positions ECD disponibles pour les colonnes
   const ecdPositions = result.ecd?.ecdPoints || [];
+  
+  // Log pour debugger les colonnes dynamiques
+  console.log(`ResultCurveSection - Positions ECD disponibles:`, ecdPositions.length, ecdPositions.map(p => p.name));
     // Effet pour charger les spécifications ECD depuis l'API
   useEffect(() => {
     const fetchSpecData = async () => {
@@ -259,26 +261,39 @@ const ResultCurveSection = forwardRef(({
       return newPoints;
     });
   };
-  
-  // Ajouter plusieurs points de données en une fois (pour l'import Excel)
+    // Ajouter plusieurs points de données en une fois (pour l'import Excel)
   const addMultipleDataPoints = (pointsData) => {
     if (!pointsData || pointsData.length === 0) return;
     
     console.log('Ajout de plusieurs points de courbe:', pointsData);
+    console.log('ecdPositions disponibles lors de l\'ajout:', ecdPositions.length, ecdPositions.map(p => p.name));
     
     const newPoints = pointsData.map(pointData => {
       const newPoint = {
         distance: pointData.distance || ''
       };
       
-      // Ajouter un champ pour chaque position ECD
+      console.log('Traitement point avec données:', Object.keys(pointData));
+        // Ajouter un champ pour chaque position ECD
       ecdPositions.forEach(position => {
         const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
         const positionKey = position.name.toLowerCase();
+        const exactPositionKey = position.name; // Clé exacte avec la casse originale
+        
+        console.log(`Création champs pour position "${position.name}": ${fieldName}, ${positionKey}, ${exactPositionKey}`);
+        
+        // Chercher la valeur dans plusieurs formats possibles
+        const value = pointData[fieldName] || pointData[positionKey] || pointData[exactPositionKey] || '';
         
         // Créer les deux formats
-        newPoint[fieldName] = pointData[fieldName] || pointData[positionKey] || '';
-        newPoint[positionKey] = pointData[positionKey] || pointData[fieldName] || '';
+        newPoint[fieldName] = value;
+        newPoint[positionKey] = value;
+        
+        if (value) {
+          console.log(`Valeur trouvée pour ${position.name}:`, value);
+        } else {
+          console.log(`Aucune valeur trouvée pour ${position.name} dans:`, Object.keys(pointData));
+        }
       });
       
       // Pour la compatibilité avec le format existant

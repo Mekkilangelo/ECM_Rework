@@ -690,12 +690,11 @@
         "addResult": "Add result",
         "resultNumber": "Result #{{number}}",
         "description": "Description",        "samples": "Samples",
-        "addSample": "Add sample",
-        "import": {
+        "addSample": "Add sample",        "import": {
           "button": "Import Excel",
           "error": "Error reading Excel file",
           "noData": "No filiation data found in file",
-          "success": "Data imported successfully"
+          "success": "{{count}} filiation(s) imported successfully"
         },
         "sampleNumber": "Sample {{number}}",
         "sampleDescription": "Sample description",

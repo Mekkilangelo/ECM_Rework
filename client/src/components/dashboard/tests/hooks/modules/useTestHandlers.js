@@ -377,46 +377,49 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           results: updatedResults
         }
       }));
-    }  }, [formData, setFormData]);
-  
+    }
+  }, [formData, setFormData]);
   // Gestion des résultats de dureté (mis à jour pour les échantillons)
   const handleHardnessResultAdd = useCallback((resultIndex, sampleIndex) => {
-    const updatedResults = [...formData.resultsData.results];
-    
-    // Ajouter un nouveau point de dureté au bon échantillon
-    if (updatedResults[resultIndex]?.samples?.[sampleIndex]) {
-      updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = [
-        ...(updatedResults[resultIndex].samples[sampleIndex].hardnessPoints || []),
-        {
-          location: '',
-          value: '',
-          unit: formData.resultsData?.hardnessResultUnit || '' // Utiliser l'unité par défaut si disponible
+    // Utiliser le callback de setState pour être sûr de travailler avec les données les plus récentes
+    setFormData(prev => {
+      const updatedResults = [...(prev.resultsData?.results || [])];
+      
+      // Ajouter un nouveau point de dureté au bon échantillon
+      if (updatedResults[resultIndex]?.samples?.[sampleIndex]) {
+        updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = [
+          ...(updatedResults[resultIndex].samples[sampleIndex].hardnessPoints || []),
+          {
+            location: '',
+            value: '',
+            unit: prev.resultsData?.hardnessResultUnit || '' // Utiliser l'unité par défaut si disponible
+          }
+        ];
+      }
+      
+      return {
+        ...prev,
+        resultsData: {
+          ...prev.resultsData,
+          results: updatedResults
         }
-      ];
-    }
-    
-    handleChange({
-      target: {
-        name: 'resultsData.results',
-        value: updatedResults
-      }    });
-  }, [formData, handleChange]);
+      };
+    });
+  }, [setFormData]);
   
   const handleHardnessResultRemove = useCallback((resultIndex, sampleIndex, hardnessIndex) => {
-    const updatedResults = [...formData.resultsData.results];
-    
-    if (updatedResults[resultIndex]?.samples?.[sampleIndex]?.hardnessPoints?.length > 1) {
-      updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = 
-        updatedResults[resultIndex].samples[sampleIndex].hardnessPoints.filter((_, i) => i !== hardnessIndex);
-    }
-    
-    handleChange({
-      target: {
-        name: 'resultsData.results',
-        value: updatedResults
+    setFormData(prev => {
+      const updatedResults = [...(prev.resultsData?.results || [])];
+      
+      if (updatedResults[resultIndex]?.samples?.[sampleIndex]?.hardnessPoints?.length > 1) {
+        updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = 
+          updatedResults[resultIndex].samples[sampleIndex].hardnessPoints.filter((_, i) => i !== hardnessIndex);
       }
+      
+      return {
+        ...prev,      };
     });
-  }, [formData, handleChange]);
+  }, [setFormData]);
   // Nouvelle fonction pour gérer les positions ECD (mis à jour pour les échantillons)
   const handleEcdPositionAdd = useCallback((resultIndex, sampleIndex) => {
     const updatedResults = [...formData.resultsData.results];

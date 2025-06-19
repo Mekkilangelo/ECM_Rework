@@ -1,0 +1,86 @@
+/* Styles pour la section d'informations d'acier */
+.steel-info-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.steel-info-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.steel-info-container .info-item {
+  margin-bottom: 1rem;
+}
+
+.steel-info-container .info-item:last-child {
+  margin-bottom: 0;
+}
+
+.steel-info-container .info-value {
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 8px 12px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-break: break-word;
+  transition: border-color 0.2s ease;
+}
+
+.steel-info-container .info-value:hover {
+  border-color: #80bdff;
+}
+
+.steel-info-container .info-value small {
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.steel-info-container h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.steel-info-container .text-primary {
+  color: #0d6efd !important;
+}
+
+.steel-info-container .fas {
+  width: 16px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .steel-info-container .row > div {
+    margin-bottom: 1rem;
+  }
+  
+  .steel-info-container .info-value {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+    min-height: 34px;
+  }
+}
+
+/* Animation pour le loading */
+.steel-info-container .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Style pour les messages d'erreur ou d'information */
+.steel-info-container .text-muted {
+  color: #6c757d !important;
+}
+
+.steel-info-container .text-center {
+  padding: 1.5rem 1rem;
+}

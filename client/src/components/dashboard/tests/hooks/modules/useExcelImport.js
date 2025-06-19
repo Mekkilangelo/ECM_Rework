@@ -52,90 +52,74 @@ const useExcelImport = (
     
     // Reset du input file
     event.target.value = '';
-  };
-
-  // Fonction pour traiter les données Excel pour un échantillon spécifique
+  };  // Fonction pour traiter les données Excel pour un échantillon spécifique
   const processExcelData = async (data, resultIndex, sampleIndex) => {
     if (!data || data.length === 0) return;
 
     console.log('=== ANALYSE FICHIER EXCEL ===');
     console.log(`Import pour résultat ${resultIndex}, échantillon ${sampleIndex}`);
 
-    const firstRow = data[0];
-    const dataRows = data.slice(1);
+    /*
+    LOGIQUE DE TRAITEMENT SELON LES SPÉCIFICATIONS :
     
-    // Analyser toutes les filiations présentes
+    CAS NORMAL (pas de valeur dans $STAT.MEAN.L(i)) :
+    - Position hardnessResult : $LOCNAME.L(i)
+    - Valeur hardnessResult : $STAT.SURFHVAL.L(i)
+    - Valeur ECD (première filiation normale seulement) : $STAT.BASE1.L(i)
+    - Position ECD : $LOCNAME.L(i)
+    - Distance ECD : $STAT.CHD1.L(i)
+    - Distances courbe (première filiation normale seulement) : $DISTANCE.L(i)
+    - Valeurs courbe : $HVALUE.L(i)
+    
+    CAS CŒUR (valeur présente dans $STAT.MEAN.L(i)) :
+    - Position hardnessResult : $LOCNAME.L(i)
+    - Valeur hardnessResult : $STAT.MEAN.L(i)
+    - Passer à la filiation suivante (pas de traitement ECD/courbe)
+    */    // IMPORTANT : Dans votre fichier Excel, la première ligne contient directement les données,
+    // pas des en-têtes. Donc on utilise toutes les lignes comme données.
+    const dataRows = data; // Toutes les lignes sont des données
+    
+    // DIAGNOSTIC : afficher les premières lignes de données
+    console.log('=== DIAGNOSTIC STRUCTURE EXCEL ===');
+    console.log('Première ligne (données):', dataRows[0]);
+    console.log('Deuxième ligne (données):', dataRows[1]);
+    console.log('Troisième ligne (données):', dataRows[2]);
+    console.log('Nombre total de lignes de données:', dataRows.length);
+    // Analyser les 7 filiations fixes possibles
     const allFiliations = [];
     
-    // Chercher d'abord les filiations directes (colonnes 0-8 et 9-17)
-    if (firstRow[0] && typeof firstRow[0] === 'string' && !firstRow[0].startsWith('$')) {
-      console.log('Filiation 1 (directe) détectée');
-      allFiliations.push({
-        index: 1,
-        locNameIndex: 0,
-        surfHvalIndex: 1,
-        chdIndex: 2,
-        baseIndex: 4,
-        distanceIndex: 5,
-        hvalueIndex: 6,
-        hscaleIndex: 7,
-        isDirect: true
-      });
-    }
-    
-    if (firstRow[9] && typeof firstRow[9] === 'string' && !firstRow[9].startsWith('$')) {
-      console.log('Filiation 2 (directe) détectée');
-      allFiliations.push({
-        index: 2,
-        locNameIndex: 9,
-        surfHvalIndex: 10,
-        chdIndex: 11,
-        baseIndex: 13,
-        distanceIndex: 14,
-        hvalueIndex: 15,
-        hscaleIndex: 16,
-        isDirect: true
-      });
-    }
-
-    // Chercher les filiations avec marqueurs (1-7)
+    // Pattern des colonnes pour chaque filiation (8 colonnes + 1 séparateur)
+    // Filiation i: colonnes (i-1)*9 à (i-1)*9+7
     for (let i = 1; i <= 7; i++) {
-      const locNameIndex = firstRow.findIndex(cell => 
-        cell && cell.toString().includes(`$LOCNAME.L(${i})`)
-      );
+      const baseIndex = (i - 1) * 9; // Index de base pour cette filiation
+        // Vérifier si cette filiation contient des données (dans la première ligne principalement)
+      const locNameIndex = baseIndex;
+      const hasData = dataRows[0][locNameIndex] && 
+        dataRows[0][locNameIndex] !== '' && 
+        !dataRows[0][locNameIndex].toString().startsWith('$');
       
-      if (locNameIndex !== -1) {
-        const hasData = dataRows.some(row => 
-          row[locNameIndex] && 
-          row[locNameIndex] !== '' && 
-          !row[locNameIndex].toString().startsWith('$')
-        );
+      if (hasData) {
+        console.log(`Filiation ${i} détectée aux colonnes ${baseIndex}-${baseIndex + 7}`);
+          // Vérifier si c'est un cas "cœur" (STAT.MEAN.L(i) non vide)
+        // Chercher dans la première ligne de données principalement
+        const meanIndex = baseIndex + 3;
+        const isCore = dataRows[0][meanIndex] && 
+          dataRows[0][meanIndex] !== '' && 
+          !dataRows[0][meanIndex].toString().startsWith('$') &&
+          !isNaN(parseFloat(dataRows[0][meanIndex].toString().replace(',', '.')));
         
-        if (hasData) {
-          allFiliations.push({
-            index: i,
-            locNameIndex,
-            surfHvalIndex: firstRow.findIndex(cell => 
-              cell && cell.toString().includes(`$STAT.SURFHVAL.L(${i})`)
-            ),
-            chdIndex: firstRow.findIndex(cell => 
-              cell && (cell.toString().includes(`$STAT.CHD${i}.L(${i})`) || cell.toString().includes(`$STAT.CHD1.L(${i})`))
-            ),
-            baseIndex: firstRow.findIndex(cell => 
-              cell && cell.toString().includes(`$STAT.BASE1.L(${i})`)
-            ),
-            distanceIndex: firstRow.findIndex(cell => 
-              cell && cell.toString().includes(`$DISTANCE.L(${i})`)
-            ),
-            hvalueIndex: firstRow.findIndex(cell => 
-              cell && cell.toString().includes(`$HVALUE.L(${i})`)
-            ),
-            hscaleIndex: firstRow.findIndex(cell => 
-              cell && cell.toString().includes(`$HSCALE.L(${i})`)
-            ),
-            isDirect: false
-          });
-        }
+        allFiliations.push({
+          index: i,
+          locNameIndex: baseIndex,           // $LOCNAME.L(i)
+          surfHvalIndex: baseIndex + 1,      // $STAT.SURFHVAL.L(i)
+          chdIndex: baseIndex + 2,           // $STAT.CHD1.L(i)
+          meanIndex: baseIndex + 3,          // $STAT.MEAN.L(i)
+          baseIndex: baseIndex + 4,          // $STAT.BASE1.L(i)
+          distanceIndex: baseIndex + 5,      // $DISTANCE.L(i)
+          hvalueIndex: baseIndex + 6,        // $HVALUE.L(i)
+          hscaleIndex: baseIndex + 7,        // $HSCALE.L(i)
+          isCore: isCore
+        });
       }
     }
 
@@ -144,28 +128,37 @@ const useExcelImport = (
       return;
     }
 
-    console.log(`${allFiliations.length} filiations détectées:`, allFiliations);
-
-    // Map globale pour fusionner les données de courbe par distance
-    const globalCurveDataMap = new Map();
-
-    // ÉTAPE 1 : D'abord ajouter tous les points ECD nécessaires pour créer les colonnes dynamiques
+    console.log(`${allFiliations.length} filiations détectées:`, allFiliations.map(f => ({
+      index: f.index,
+      isCore: f.isCore
+    })));    // Map globale pour fusionner les données de courbe par distance
+    const globalCurveDataMap = new Map();    // Déterminer quelle filiation utiliser pour les distances de courbe et les données ECD
+    // Si la première filiation est un cœur, utiliser la première filiation normale
+    let distanceFiliation = allFiliations[0];
+    let ecdDataFiliation = allFiliations.find(f => !f.isCore) || allFiliations[0]; // Première filiation normale
+    
+    if (allFiliations[0].isCore) {
+      const firstNormalFiliation = allFiliations.find(f => !f.isCore);
+      if (firstNormalFiliation) {
+        distanceFiliation = firstNormalFiliation;
+        console.log('Première filiation est un cœur, utilisation de la première filiation normale pour les distances et données ECD');
+      }
+    }// ÉTAPE 1 : D'abord ajouter tous les points ECD nécessaires pour créer les colonnes dynamiques
+    // Ne pas ajouter de points ECD pour les cœurs
     console.log('=== ÉTAPE 1 : CRÉATION DES POINTS ECD ===');
-    for (let filiationIndex = 0; filiationIndex < allFiliations.length; filiationIndex++) {
-      const filiation = allFiliations[filiationIndex];
+    const nonCoreFilations = allFiliations.filter(f => !f.isCore);
+    console.log(`${nonCoreFilations.length} filiations non-cœur détectées pour les points ECD`);
+    
+    for (let filiationIndex = 0; filiationIndex < nonCoreFilations.length; filiationIndex++) {
+      const filiation = nonCoreFilations[filiationIndex];
       
       // Extraire le nom de la position pour cette filiation
-      let locationName;
-      if (filiation.isDirect) {
-        locationName = firstRow[filiation.locNameIndex];
-      } else {
-        const firstDataRow = dataRows[0];
-        locationName = firstDataRow[filiation.locNameIndex];
-      }
+      const firstDataRow = dataRows[0];
+      const locationName = firstDataRow[filiation.locNameIndex];
       
-      console.log(`ÉTAPE 1 - Ajout point ECD pour filiation ${filiation.index}: ${locationName}`);
+      console.log(`ÉTAPE 1 - Ajout point ECD pour filiation ${filiation.index}: ${locationName} (non-cœur)`);
       
-      // Ajouter un point ECD pour chaque filiation (sauf la première qui utilise les points existants)
+      // Ajouter un point ECD pour chaque filiation non-cœur (sauf la première qui utilise les points existants)
       if (filiationIndex > 0) {
         console.log(`ÉTAPE 1 - Ajout nouveau point ECD via handleEcdPositionAdd`);
         handleEcdPositionAdd(resultIndex, sampleIndex);
@@ -182,147 +175,164 @@ const useExcelImport = (
     // Délai pour s'assurer que tous les points ECD sont créés et que les colonnes dynamiques sont générées
     console.log('ÉTAPE 1 - Attente création colonnes dynamiques...');
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('ÉTAPE 1 - Terminée, colonnes dynamiques normalement créées');
-
-    // Traiter chaque filiation
+    console.log('ÉTAPE 1 - Terminée, colonnes dynamiques normalement créées');    // Traiter chaque filiation
     for (let filiationIndex = 0; filiationIndex < allFiliations.length; filiationIndex++) {
       const filiation = allFiliations[filiationIndex];
-      console.log(`=== TRAITEMENT FILIATION ${filiation.index} ===`);
+      console.log(`=== TRAITEMENT FILIATION ${filiation.index} ${filiation.isCore ? '(CŒUR)' : ''} ===`);      // Extraire les données de base depuis la première ligne de données valides
+      const firstDataRow = dataRows[0];
+      const locationName = firstDataRow[filiation.locNameIndex];
+      const surfHval = firstDataRow[filiation.surfHvalIndex];
+      const chd = firstDataRow[filiation.chdIndex];
+      const mean = firstDataRow[filiation.meanIndex]; // Valeur MEAN pour détecter le cœur
+      const base = firstDataRow[filiation.baseIndex];
+      const hscale = firstDataRow[filiation.hscaleIndex];
 
-      // Extraire les données de base
-      let locationName, surfHval, chd, base, hscale;
+      console.log(`Filiation ${filiation.index} - Données extraites brutes:`, { 
+        locationName, surfHval, chd, mean, base, hscale, isCore: filiation.isCore 
+      });
+
+      // Convertir les valeurs numériques en gérant les cas vides/undefined
+      const surfHvalNum = surfHval && surfHval !== '' && !surfHval.toString().startsWith('$') ? 
+        parseFloat(surfHval.toString().replace(',', '.')) : null;
+      const chdNum = chd && chd !== '' && !chd.toString().startsWith('$') ? 
+        parseFloat(chd.toString().replace(',', '.')) : null;
+      const baseNum = base && base !== '' && !base.toString().startsWith('$') ? 
+        parseFloat(base.toString().replace(',', '.')) : null;
+      const meanNum = mean && mean !== '' && !mean.toString().startsWith('$') ? 
+        parseFloat(mean.toString().replace(',', '.')) : null;
+        console.log(`Filiation ${filiation.index} - Valeurs numériques converties:`, { 
+        surfHvalNum, chdNum, baseNum, meanNum 
+      });
       
-      if (filiation.isDirect) {
-        locationName = firstRow[filiation.locNameIndex];
-        surfHval = firstRow[filiation.surfHvalIndex];
-        chd = firstRow[filiation.chdIndex];
-        base = firstRow[filiation.baseIndex];
-        hscale = firstRow[filiation.hscaleIndex];
-      } else {
-        const firstDataRow = dataRows[0];
-        locationName = firstDataRow[filiation.locNameIndex];
-        surfHval = firstDataRow[filiation.surfHvalIndex];
-        chd = firstDataRow[filiation.chdIndex];
-        base = firstDataRow[filiation.baseIndex];
-        hscale = firstDataRow[filiation.hscaleIndex];
+      // LOG DÉTAILLÉ POUR DIAGNOSTIC
+      console.log(`DIAGNOSTIC FILIATION ${filiation.index}:`);
+      console.log(`- locationName: "${locationName}"`);
+      console.log(`- surfHval brut: "${surfHval}" -> converti: ${surfHvalNum}`);
+      console.log(`- chd brut: "${chd}" -> converti: ${chdNum}`);
+      console.log(`- mean brut: "${mean}" -> converti: ${meanNum}`);
+      console.log(`- base brut: "${base}" -> converti: ${baseNum}`);
+      console.log(`- hscale: "${hscale}"`);
+      console.log(`- isCore: ${filiation.isCore}`);
+      
+      // Déterminer la valeur de dureté à utiliser pour le hardnessResult selon les spécifications
+      let hardnessResultValue = '';
+      if (filiation.isCore && meanNum !== null && !isNaN(meanNum)) {
+        // Cas cœur : utiliser MEAN pour le hardnessResult
+        hardnessResultValue = meanNum;
+        console.log(`Cœur détecté - Valeur hardnessResult (MEAN): ${hardnessResultValue}`);
+      } else if (!filiation.isCore && surfHvalNum !== null && !isNaN(surfHvalNum)) {
+        // Cas normal : utiliser SURFHVAL pour le hardnessResult
+        hardnessResultValue = surfHvalNum;
+        console.log(`Cas normal - Valeur hardnessResult (SURFHVAL): ${hardnessResultValue}`);
       }
-
-      console.log(`Filiation ${filiation.index} - Données extraites:`, { locationName, surfHval, chd, base, hscale });
-
-      // Convertir les valeurs numériques
-      const surfHvalNum = surfHval ? parseFloat(surfHval.toString().replace(',', '.')) : '';
-      const chdNum = chd ? parseFloat(chd.toString().replace(',', '.')) : '';
-      const baseNum = base ? parseFloat(base.toString().replace(',', '.')) : '';
 
       // Trouver l'option correspondante dans hardnessUnitOptions
       const unitOption = hardnessUnitOptions.find(option => 
         option.label === hscale || option.value === hscale
-      );
-
-      // Toutes les filiations vont dans le même échantillon
+      );      // Toutes les filiations vont dans le même échantillon
       let targetResultIndex = resultIndex;
       let targetSampleIndex = sampleIndex;
       
       // Délai pour permettre la mise à jour des éléments DOM
-      await new Promise(resolve => setTimeout(resolve, 200 * (filiationIndex + 1)));
+      await new Promise(resolve => setTimeout(resolve, 200 * (filiationIndex + 1)));      // Vérifier le nombre de points de dureté existants et ajouter seulement si nécessaire
+      const currentResultsCheck = [...formData.resultsData.results];
+      const currentSampleCheck = currentResultsCheck[targetResultIndex].samples[targetSampleIndex];
+      const currentHardnessPointsCount = currentSampleCheck.hardnessPoints.length;
+      const requiredPointIndex = filiationIndex; // L'index requis pour cette filiation
 
-      // Ajouter des points de dureté pour chaque filiation (sauf la première qui utilise les points existants)
-      if (filiationIndex > 0) {
-        // Ajouter un point de dureté pour les filiations suivantes
-        console.log(`Ajout point de dureté pour filiation ${filiation.index}...`);
+      if (requiredPointIndex >= currentHardnessPointsCount) {
+        // Ajouter un point de dureté seulement si on n'en a pas assez
+        console.log(`Ajout point de dureté pour filiation ${filiation.index} (index requis: ${requiredPointIndex}, disponibles: ${currentHardnessPointsCount})...`);
         handleHardnessResultAdd(targetResultIndex, targetSampleIndex);
         
         // Délai pour s'assurer que les éléments DOM sont créés
         await new Promise(resolve => setTimeout(resolve, 200));
-      }
-
-      // Remplir les champs après un délai pour s'assurer que les éléments DOM sont créés
+      } else {
+        console.log(`Point de dureté existant utilisé pour filiation ${filiation.index} (index: ${requiredPointIndex})`);
+      }      // Remplir les champs après un délai pour s'assurer que les éléments DOM sont créés
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      const currentResults = [...formData.resultsData.results];
-      const currentSample = currentResults[targetResultIndex].samples[targetSampleIndex];
+      const currentResultsForFill = [...formData.resultsData.results];
+      const currentSampleForFill = currentResultsForFill[targetResultIndex].samples[targetSampleIndex];
       
       let hardnessPointIndex, ecdPointIndex;
       
-      if (filiationIndex === 0) {
-        // Pour la première filiation, utiliser le premier point existant (index 0)
-        hardnessPointIndex = 0;
-        ecdPointIndex = 0;
-      } else {
-        // Pour les filiations suivantes, utiliser le point correspondant à l'index de filiation
-        hardnessPointIndex = filiationIndex;
-        ecdPointIndex = filiationIndex;
-        
-        // S'assurer que les points existent
-        if (hardnessPointIndex >= currentSample.hardnessPoints.length) {
-          hardnessPointIndex = currentSample.hardnessPoints.length - 1;
-        }
-        if (ecdPointIndex >= currentSample.ecd.ecdPoints.length) {
-          ecdPointIndex = currentSample.ecd.ecdPoints.length - 1;
-        }
+      // Utiliser directement l'index de la filiation pour les points de dureté
+      hardnessPointIndex = filiationIndex;
+      ecdPointIndex = filiationIndex;
+      
+      // S'assurer que les points existent (normalement ils devraient exister après l'ajout précédent)
+      if (hardnessPointIndex >= currentSampleForFill.hardnessPoints.length) {
+        hardnessPointIndex = currentSampleForFill.hardnessPoints.length - 1;
+      }
+      if (ecdPointIndex >= currentSampleForFill.ecd.ecdPoints.length) {
+        ecdPointIndex = currentSampleForFill.ecd.ecdPoints.length - 1;
       }
       
-      console.log(`Filiation ${filiation.index} - Using hardnessPointIndex: ${hardnessPointIndex}, ecdPointIndex: ${ecdPointIndex}`);
-      
-      // Remplir le point de dureté
+      console.log(`Filiation ${filiation.index} - Using hardnessPointIndex: ${hardnessPointIndex}, ecdPointIndex: ${ecdPointIndex}`);      // Remplir le point de dureté avec la valeur correspondante
       handleHardnessChange(targetResultIndex, targetSampleIndex, hardnessPointIndex, 'location', locationName || '');
-      handleHardnessChange(targetResultIndex, targetSampleIndex, hardnessPointIndex, 'value', surfHvalNum || '');
+      if (hardnessResultValue !== '') {
+        handleHardnessChange(targetResultIndex, targetSampleIndex, hardnessPointIndex, 'value', hardnessResultValue.toString());
+      }
       handleHardnessChange(targetResultIndex, targetSampleIndex, hardnessPointIndex, 'unit', unitOption || null);
 
-      // Remplir les données ECD générales (une seule fois pour la première filiation)
-      if (filiationIndex === 0) {
-        handleEcdChange(targetResultIndex, targetSampleIndex, 'hardnessValue', baseNum || '');
+      // Remplir les données ECD générales (seulement pour la première filiation normale)
+      if (!filiation.isCore && filiation === ecdDataFiliation) {
+        console.log(`Remplissage données ECD générales depuis première filiation normale ${filiation.index}`);
+        // Utiliser BASE1 pour la valeur de dureté ECD selon les spécifications
+        if (baseNum !== null && !isNaN(baseNum)) {
+          handleEcdChange(targetResultIndex, targetSampleIndex, 'hardnessValue', baseNum.toString());
+        }
         handleEcdChange(targetResultIndex, targetSampleIndex, 'hardnessUnit', unitOption || null);
-      }
-      
-      // Remplir le point ECD spécifique (le nom a déjà été rempli lors de la création)
-      if (chdNum) {
-        handleEcdPositionChange(targetResultIndex, targetSampleIndex, ecdPointIndex, 'distance', chdNum.toString());
+      }        // Remplir le point ECD spécifique (seulement pour les filiations non-cœur)
+      if (!filiation.isCore) {
+        // Trouver l'index ECD correct pour cette filiation non-cœur
+        const nonCoreIndex = nonCoreFilations.findIndex(f => f.index === filiation.index);
+        if (nonCoreIndex !== -1 && chdNum !== null && !isNaN(chdNum)) {
+          handleEcdPositionChange(targetResultIndex, targetSampleIndex, nonCoreIndex, 'distance', chdNum.toString());
+          console.log(`Distance ECD remplie pour filiation non-cœur ${filiation.index} à l'index ${nonCoreIndex}: ${chdNum}`);
+        }
+      } else {
+        console.log(`Point ECD ignoré pour filiation cœur ${filiation.index} - passage à la filiation suivante`);
       }
 
       console.log(`Points de dureté et ECD remplis pour filiation ${filiation.index}`);
 
       // 4. Traiter les données de courbe
-      console.log(`Traitement courbe pour filiation ${filiation.index}`);
-      console.log(`Indices - distance: ${filiation.distanceIndex}, valeur: ${filiation.hvalueIndex}`);
-      const curveData = [];
-      const columnName = locationName || `Position_${filiation.index}`;
-
-      // Pour les filiations directes, traiter toutes les lignes (y compris la première)
-      // Pour les filiations avec marqueurs, traiter seulement les lignes de données
-      const rowsToProcess = filiation.isDirect ? data : dataRows;
+      // Seulement pour les filiations normales (pas les cœurs)
+      const shouldProcessCurve = !filiation.isCore;
       
-      console.log(`Filiation ${filiation.index} (${filiation.isDirect ? 'directe' : 'avec marqueurs'})`);
-      console.log(`Nombre de lignes à traiter: ${rowsToProcess.length}`);
-      
-      rowsToProcess.forEach((row, rowIndex) => {
-        const distance = row[filiation.distanceIndex];
-        const hvalue = row[filiation.hvalueIndex];
+      if (shouldProcessCurve) {
+        console.log(`Traitement courbe pour filiation normale ${filiation.index}`);
+        console.log(`Indices - distance: ${filiation.distanceIndex}, valeur: ${filiation.hvalueIndex}`);
         
-        console.log(`Ligne ${rowIndex}: distance=${distance}, hvalue=${hvalue}`);
-        
-        if (distance !== undefined && distance !== null && distance !== '' &&
-            hvalue !== undefined && hvalue !== null && hvalue !== '' &&
-            !distance.toString().startsWith('$') && 
-            !hvalue.toString().startsWith('$')) {
-            
-          const distanceNum = parseFloat(distance.toString().replace(',', '.'));
-          const hvalueNum = parseFloat(hvalue.toString().replace(',', '.'));
-          
-          console.log(`  -> Valeurs converties: distance=${distanceNum}, hvalue=${hvalueNum}`);
-          
-          if (!isNaN(distanceNum) && !isNaN(hvalueNum)) {
-            // Arrondir la distance à 3 décimales pour éviter les problèmes de précision flottante
-            const roundedDistance = Math.round(distanceNum * 1000) / 1000;
+        const columnName = locationName || `Position_${filiation.index}`;
 
-            // Pour la première filiation, créer le point avec la distance
-            if (filiationIndex === 0) {
-              const pointData = {
-                distance: roundedDistance
-              };
+        dataRows.forEach((row, rowIndex) => {
+          const distance = row[filiation.distanceIndex];
+          const hvalue = row[filiation.hvalueIndex];
+          
+          if (distance !== undefined && distance !== null && distance !== '' &&
+              hvalue !== undefined && hvalue !== null && hvalue !== '' &&
+              !distance.toString().startsWith('$') && 
+              !hvalue.toString().startsWith('$')) {
               
-              // Ajouter la valeur selon le nom de la position
-              if (locationName) {
+            const distanceNum = parseFloat(distance.toString().replace(',', '.'));
+            const hvalueNum = parseFloat(hvalue.toString().replace(',', '.'));
+            
+            if (!isNaN(distanceNum) && !isNaN(hvalueNum)) {
+              // Arrondir la distance à 3 décimales pour éviter les problèmes de précision flottante
+              const roundedDistance = Math.round(distanceNum * 1000) / 1000;
+
+              // Si c'est la filiation de référence pour les distances, créer les points de base
+              if (filiation === distanceFiliation) {
+                if (!globalCurveDataMap.has(roundedDistance)) {
+                  globalCurveDataMap.set(roundedDistance, {
+                    distance: roundedDistance
+                  });
+                }
+                
+                const pointData = globalCurveDataMap.get(roundedDistance);
                 pointData[locationName] = hvalueNum;
                 
                 // Compatibilité avec les noms standards
@@ -333,18 +343,12 @@ const useExcelImport = (
                   pointData.rootHardness = hvalueNum;
                   pointData.Root = hvalueNum;
                 }
-              }
-              
-              // Ajouter ce point à la Map globale
-              globalCurveDataMap.set(roundedDistance, pointData);
-              
-              console.log(`Point courbe créé pour première filiation: distance=${roundedDistance}, ${locationName}=${hvalueNum}`);
-            } else {
-              // Pour les filiations suivantes, ajouter uniquement la valeur si la distance existe
-              if (globalCurveDataMap.has(roundedDistance)) {
-                const existingPoint = globalCurveDataMap.get(roundedDistance);
                 
-                if (locationName) {
+                console.log(`Point courbe créé/mis à jour: distance=${roundedDistance}, ${locationName}=${hvalueNum}`);
+              } else {
+                // Pour les autres filiations normales, ajouter la valeur HVALUE si la distance existe
+                if (globalCurveDataMap.has(roundedDistance)) {
+                  const existingPoint = globalCurveDataMap.get(roundedDistance);
                   existingPoint[locationName] = hvalueNum;
                   
                   // Compatibilité avec les noms standards
@@ -355,75 +359,17 @@ const useExcelImport = (
                     existingPoint.rootHardness = hvalueNum;
                     existingPoint.Root = hvalueNum;
                   }
+                  
+                  console.log(`Valeur HVALUE ajoutée à point existant: distance=${roundedDistance}, ${locationName}=${hvalueNum}`);
                 }
-                
-                console.log(`Valeur ajoutée à point existant: distance=${roundedDistance}, ${locationName}=${hvalueNum}`);
-              } else {
-                console.warn(`Distance ${roundedDistance} non trouvée dans première filiation - valeur ignorée`);
               }
             }
           }
-        }
-      });
+        });
 
-      console.log(`Courbe traitée pour filiation ${filiation.index}`);
-
-      // Ajouter les points de courbe via le ResultCurveSection
-      if (curveData.length > 0) {
-        // Attendre un délai supplémentaire pour s'assurer que le composant ResultCurveSection est bien monté
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        const curveSectionRef = getCurveSectionRef(targetResultIndex, targetSampleIndex);
-        console.log(`Tentative d'accès à la référence pour ${targetResultIndex}-${targetSampleIndex}:`, curveSectionRef);
-        
-        if (curveSectionRef && curveSectionRef.current && curveSectionRef.current.addMultipleDataPoints) {
-          console.log(`Ajout des points de courbe via ResultCurveSection pour filiation ${filiation.index}...`);
-          curveSectionRef.current.addMultipleDataPoints(curveData);
-        } else {
-          console.warn(`Référence ResultCurveSection non disponible pour filiation ${filiation.index}. Tentative alternative...`);
-          // Méthode alternative : mettre à jour directement les données via handleChange
-          const currentResultsForCurve = [...formData.resultsData.results];
-          const currentSampleForCurve = currentResultsForCurve[targetResultIndex].samples[targetSampleIndex];
-          
-          if (!currentSampleForCurve.curveData) {
-            currentSampleForCurve.curveData = { points: [] };
-          }
-          
-          // Fusionner les nouveaux points avec les existants
-          const existingPoints = currentSampleForCurve.curveData.points || [];
-          
-          // Pour chaque point de courbe, fusionner avec les points existants ayant la même distance
-          curveData.forEach(newPoint => {
-            const existingPointIndex = existingPoints.findIndex(
-              p => parseFloat(p.distance) === parseFloat(newPoint.distance)
-            );
-            
-            if (existingPointIndex !== -1) {
-              // Point existant trouvé, fusionner les données
-              existingPoints[existingPointIndex] = {
-                ...existingPoints[existingPointIndex],
-                ...newPoint
-              };
-            } else {
-              // Nouveau point, l'ajouter
-              existingPoints.push(newPoint);
-            }
-          });
-          
-          // Trier par distance
-          const sortedPoints = existingPoints.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-          
-          currentSampleForCurve.curveData.points = sortedPoints;
-          
-          handleChange({
-            target: {
-              name: 'resultsData.results',
-              value: currentResultsForCurve
-            }
-          });
-          
-          console.log(`Points de courbe fusionnés pour filiation ${filiation.index}:`, sortedPoints.length);
-        }
+        console.log(`Courbe traitée pour filiation normale ${filiation.index}`);
+      } else {
+        console.log(`Courbe ignorée pour filiation cœur ${filiation.index}`);
       }
     }
 

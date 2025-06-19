@@ -112,14 +112,17 @@
     "title": "Confirm closure",
     "unsavedChanges": "You have unsaved changes."
   },
-  
   "auth": {
     "login": "Login",
     "logout": "Logout",
+    "logoutSuccess": "Successfully logged out",
     "username": "Username",
     "password": "Password",
     "forgotPassword": "Forgot password?",
-    "sessionExpired": "Your session has expired. Please login again."
+    "sessionExpired": "Your session has expired. Please login again.",
+    "invalidCredentials": "Invalid username or password.",
+    "noAccess": "You don't have the necessary rights to access this section.",
+    "authenticationError": "Authentication error"
   },
   
   "navigation": {

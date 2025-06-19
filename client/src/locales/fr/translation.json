@@ -114,14 +114,17 @@
     "title": "Confirmer la fermeture",
     "unsavedChanges": "Vous avez des modifications non enregistrées."
   },
-  
   "auth": {
     "login": "Connexion",
     "logout": "Déconnexion",
+    "logoutSuccess": "Déconnexion réussie",
     "username": "Nom d'utilisateur",
     "password": "Mot de passe",
     "forgotPassword": "Mot de passe oublié ?",
-    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter."
+    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+    "invalidCredentials": "Nom d'utilisateur ou mot de passe incorrect.",
+    "noAccess": "Vous n'avez pas les droits nécessaires pour accéder à cette section.",
+    "authenticationError": "Erreur d'authentification"
   },
   
   "navigation": {

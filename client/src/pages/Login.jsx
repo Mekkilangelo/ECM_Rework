@@ -3,14 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Alert, Card, Container, Row, Col, Form, Button } from 'react-bootstrap';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../context/AuthContext';
 import authService from '../services/authService';
-
-// Schéma de validation avec Yup
-const LoginSchema = Yup.object().shape({
-  username: Yup.string().required('Le nom d\'utilisateur est requis'),
-  password: Yup.string().required('Le mot de passe est requis')
-});
+import LanguageSwitcher from '../components/layout/language_switch/LanguageSwitcher';
 
 const Login = () => {
   const [error, setError] = useState('');
@@ -18,6 +14,13 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useContext(AuthContext);
+  const { t } = useTranslation();
+
+  // Schéma de validation avec Yup - internationalisé
+  const LoginSchema = Yup.object().shape({
+    username: Yup.string().required(t('validation.required.name')),
+    password: Yup.string().required(t('auth.password') + ' requis')
+  });
 
   // Rediriger si déjà connecté
   useEffect(() => {
@@ -31,30 +34,27 @@ const Login = () => {
     // Récupérer les paramètres d'URL
     const params = new URLSearchParams(location.search);
     const errorParam = params.get('error');
-    const successParam = params.get('success');
-    
-    // Gérer les messages d'erreur
+    const successParam = params.get('success');      // Gérer les messages d'erreur
     if (errorParam) {
       switch (errorParam) {
         case 'invalid_credentials':
-          setError('Nom d\'utilisateur ou mot de passe incorrect.');
+          setError(t('auth.invalidCredentials'));
           break;
         case 'no_access':
-          setError('Vous n\'avez pas les droits nécessaires pour accéder à cette section.');
+          setError(t('auth.noAccess'));
           break;
         case 'session_expired':
-          setError('Votre session a expiré. Veuillez vous reconnecter.');
+          setError(t('auth.sessionExpired'));
           break;
         default:
           setError('');
       }
       // Effacer tout message de succès si on a une erreur
       setSuccessMessage('');
-    } else if (successParam) {
-      // Gérer les messages de succès
+    } else if (successParam) {      // Gérer les messages de succès
       switch (successParam) {
         case 'logout':
-          setSuccessMessage('Vous avez été déconnecté avec succès.');
+          setSuccessMessage(t('auth.logoutSuccess'));
           break;
         default:
           setSuccessMessage('');
@@ -66,7 +66,7 @@ const Login = () => {
       setError('');
       setSuccessMessage('');
     }
-  }, [location]);
+  }, [location, t]);
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       console.log('Tentative de connexion pour:', values.username);
@@ -85,10 +85,27 @@ const Login = () => {
       
       // Rediriger vers la page d'accueil ou la page demandée précédemment
       const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
-    } catch (error) {
+      navigate(from, { replace: true });    } catch (error) {
       console.error('Erreur de connexion:', error);
-      setError(error.response?.data?.message || error.message || 'Erreur d\'authentification');
+      
+      // Gérer les différents types d'erreurs d'authentification
+      if (error.response?.status === 401) {
+        setError(t('auth.invalidCredentials'));
+      } else if (error.response?.status === 403) {
+        setError(t('auth.noAccess'));
+      } else if (error.response?.data?.message) {
+        // Vérifier si le message contient des mots-clés spécifiques
+        const message = error.response.data.message.toLowerCase();
+        if (message.includes('password') || message.includes('username') || message.includes('credentials') || message.includes('mot de passe') || message.includes('utilisateur')) {
+          setError(t('auth.invalidCredentials'));
+        } else {
+          setError(error.response.data.message);
+        }
+      } else if (error.message) {
+        setError(t('auth.authenticationError'));
+      } else {
+        setError(t('errors.general'));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -118,8 +135,25 @@ const Login = () => {
           height: '100%',
           backgroundColor: 'rgb(185, 185, 185, 0.6)', // Ajuster l'opacité ici (0.6 = 60% d'opacité)
           zIndex: 1
+        }}      />
+        {/* Language Switcher - Positioned in top right corner */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          zIndex: 10
         }}
-      />
+      >
+        <ul className="navbar-nav" style={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+          borderRadius: '25px',
+          padding: '5px 10px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          <LanguageSwitcher />
+        </ul>
+      </div>
       
       <Container className="position-relative" style={{ zIndex: 2 }}>
         <Row className="justify-content-center">
@@ -154,9 +188,7 @@ const Login = () => {
                   >
                     {successMessage}
                   </Alert>
-                )}
-
-                <Formik
+                )}                <Formik
                   initialValues={{ username: '', password: '' }}
                   validationSchema={LoginSchema}
                   onSubmit={handleSubmit}
@@ -172,11 +204,11 @@ const Login = () => {
                   }) => (
                     <Form onSubmit={handleSubmit}>
                       <Form.Group className="mb-4">
-                        <Form.Label>Nom d'utilisateur</Form.Label>
+                        <Form.Label>{t('auth.username')}</Form.Label>
                         <Form.Control
                           type="text"
                           name="username"
-                          placeholder="Entrez votre nom d'utilisateur"
+                          placeholder={t('auth.username')}
                           value={values.username}
                           onChange={handleChange}
                           onBlur={handleBlur}
@@ -189,11 +221,11 @@ const Login = () => {
                       </Form.Group>
 
                       <Form.Group className="mb-4">
-                        <Form.Label>Mot de passe</Form.Label>
+                        <Form.Label>{t('auth.password')}</Form.Label>
                         <Form.Control
                           type="password"
                           name="password"
-                          placeholder="Entrez votre mot de passe"
+                          placeholder={t('auth.password')}
                           value={values.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
@@ -211,7 +243,7 @@ const Login = () => {
                         className="w-100 py-2 mt-3"
                         disabled={isSubmitting}
                       >
-                        {isSubmitting ? 'Connexion en cours...' : 'Se connecter'}
+                        {isSubmitting ? t('common.loading') : t('auth.login')}
                       </Button>
                     </Form>
                   )}

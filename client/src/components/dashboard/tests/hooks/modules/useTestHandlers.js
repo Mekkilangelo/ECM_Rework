@@ -581,6 +581,59 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     }));
   }, [setFormData, convertSecondsToHMS]);
   
+  // Fonction pour gérer les changements de dureté
+  const handleHardnessChange = useCallback((resultIndex, sampleIndex, hardnessIndex, field, value) => {
+    const updatedResults = [...formData.resultsData.results];
+    const updatedHardnessPoints = [...updatedResults[resultIndex].samples[sampleIndex].hardnessPoints];
+    if (field === 'unit') {
+      // Pour les champs select
+      updatedHardnessPoints[hardnessIndex] = {
+        ...updatedHardnessPoints[hardnessIndex],
+        [field]: value ? value.value : ''
+      };
+    } else {
+      // Pour les champs directs
+      updatedHardnessPoints[hardnessIndex] = {
+        ...updatedHardnessPoints[hardnessIndex],
+        [field]: value
+      };
+    }
+    updatedResults[resultIndex].samples[sampleIndex].hardnessPoints = updatedHardnessPoints;
+    handleChange({
+      target: {
+        name: 'resultsData.results',
+        value: updatedResults
+      }
+    });
+  }, [formData, handleChange]);
+
+  // Fonction pour gérer les changements ECD
+  const handleEcdChange = useCallback((resultIndex, sampleIndex, field, value) => {
+    const updatedResults = [...formData.resultsData.results];
+    
+    // S'assurer que l'objet ecd existe avec toutes ses propriétés
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd = {
+        hardnessValue: '',
+        hardnessUnit: '',
+        ecdPoints: [{ name: '', distance: '', unit: '' }]
+      };
+    }
+    
+    if (field === 'hardnessUnit') {
+      updatedResults[resultIndex].samples[sampleIndex].ecd[field] = value ? value.value : '';
+    } else if (field === 'hardnessValue') {
+      updatedResults[resultIndex].samples[sampleIndex].ecd[field] = value;
+    }
+    
+    handleChange({
+      target: {
+        name: 'resultsData.results',
+        value: updatedResults
+      }
+    });
+  }, [formData, handleChange]);
+  
   return {
     ...globalHandlers,
     handleThermalCycleAdd,
@@ -603,6 +656,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     handleEcdPositionAdd,
     handleEcdPositionRemove,
     handleEcdPositionChange,
+    handleHardnessChange,
+    handleEcdChange,
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,

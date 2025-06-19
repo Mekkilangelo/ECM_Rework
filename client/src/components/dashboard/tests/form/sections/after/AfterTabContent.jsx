@@ -5,7 +5,17 @@ import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 
-const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {} }) => {
+const AfterTabContent = ({ 
+  formData, 
+  errors, 
+  loading, 
+  formHandlers, 
+  test, 
+  handleFileAssociationNeeded, 
+  viewMode = false, 
+  readOnlyFieldStyle = {},
+  excelImportHandlers = {} 
+}) => {
   const { t } = useTranslation();
   
   return (
@@ -47,7 +57,8 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
           handleSelectChange={formHandlers.handleSelectChange}
           getSelectedOption={formHandlers.getSelectedOption}
           lengthUnitOptions={formHandlers.lengthUnitOptions}
-          hardnessUnitOptions={formHandlers.hardnessUnitOptions}          handleResultBlocAdd={formHandlers.handleResultBlocAdd}
+          hardnessUnitOptions={formHandlers.hardnessUnitOptions}
+          handleResultBlocAdd={formHandlers.handleResultBlocAdd}
           handleResultBlocRemove={formHandlers.handleResultBlocRemove}
           handleSampleAdd={formHandlers.handleSampleAdd}
           handleSampleRemove={formHandlers.handleSampleRemove}
@@ -56,11 +67,14 @@ const AfterTabContent = ({ formData, errors, loading, formHandlers, test, handle
           handleEcdPositionAdd={formHandlers.handleEcdPositionAdd}
           handleEcdPositionRemove={formHandlers.handleEcdPositionRemove}
           handleEcdPositionChange={formHandlers.handleEcdPositionChange}
-          loading={loading}          selectStyles={formHandlers.selectStyles}
+          loading={loading}
+          selectStyles={formHandlers.selectStyles}
           test={test}
           handleFileAssociationNeeded={handleFileAssociationNeeded}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}
+          // Passer les fonctions d'import Excel
+          excelImportHandlers={excelImportHandlers}
         />
       </CollapsibleSection>
     </>

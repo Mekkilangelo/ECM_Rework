@@ -90,6 +90,13 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
     confirmClose,
     cancelClose,
     saveAndClose,
+    // Extraire les fonctions d'import Excel
+    fileInputRef,
+    getCurveSectionRef,
+    handleExcelImport,
+    processExcelData,
+    handleEcdChange,
+    handleHardnessChange,
     ...formHandlers
   } = useTestForm(test, onClose, onTestCreated, onTestUpdated, viewMode);
 
@@ -211,6 +218,15 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                   handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
                   viewMode={viewMode}
                   readOnlyFieldStyle={readOnlyFieldStyle}
+                  // Passer les fonctions d'import Excel
+                  excelImportHandlers={{
+                    fileInputRef,
+                    getCurveSectionRef,
+                    handleExcelImport,
+                    processExcelData,
+                    handleEcdChange,
+                    handleHardnessChange
+                  }}
                 />
               </Tab>
               <Tab eventKey="report" title={renderTabTitle(t('tests.tabs.report'), "report")}>

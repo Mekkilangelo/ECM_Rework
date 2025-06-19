@@ -7,6 +7,7 @@ import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import useTestSubmission from './modules/useTestSubmission';
 import useTestData from './modules/useTestData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
+import useExcelImport from './modules/useExcelImport';
 
 const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
@@ -106,18 +107,36 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleGasQuenchSpeedAdd, handleGasQuenchSpeedRemove,
     handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
     handleResultBlocAdd, handleResultBlocRemove,
-    handleSampleAdd, handleSampleRemove,
-    handleHardnessResultAdd, handleHardnessResultRemove,
+    handleSampleAdd, handleSampleRemove,    handleHardnessResultAdd, handleHardnessResultRemove,
     handleCreateOption, // Ajouter le handler pour la création d'options
     handleEcdPositionAdd, // Nouvelles fonctions pour la gestion des positions ECD
     handleEcdPositionRemove,
     handleEcdPositionChange,
+    handleHardnessChange,
+    handleEcdChange,
     // Fonctions de gestion du temps
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,
     initializeTimeComponents
   } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
+
+  // Hook pour la gestion de l'import Excel
+  const {
+    fileInputRef,
+    getCurveSectionRef,
+    handleExcelImport,
+    processExcelData
+  } = useExcelImport(
+    formData,
+    handleChange,
+    handleHardnessResultAdd,
+    handleHardnessChange,
+    handleEcdPositionAdd,
+    handleEcdPositionChange,
+    handleEcdChange,
+    hardnessUnitOptions
+  );
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
@@ -256,7 +275,14 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     refreshUnitOptions,
     refreshAllOptions,
     // Ajouter setFileAssociationCallback à ce qui est retourné
-    setFileAssociationCallback
+    setFileAssociationCallback,
+    // Fonctions d'import Excel
+    fileInputRef,
+    getCurveSectionRef,
+    handleExcelImport,
+    processExcelData,
+    handleEcdChange,
+    handleHardnessChange
   };
 };
 

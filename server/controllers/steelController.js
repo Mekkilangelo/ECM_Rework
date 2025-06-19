@@ -153,6 +153,10 @@ const createSteel = async (req, res, next) => {
   try {
     const steelData = req.body;
     
+    logger.info('=== CONTROLLER CREATE STEEL ===');
+    logger.info('Données reçues du frontend:', JSON.stringify(steelData, null, 2));
+    logger.info('Equivalents dans les données:', JSON.stringify(steelData.equivalents, null, 2));
+    
     logger.info('Création d\'un nouvel acier', { 
       grade: steelData.grade,
       standard: steelData.standard 

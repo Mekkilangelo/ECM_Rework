@@ -1,10 +1,9 @@
 // src/components/reference/steels/SteelList.jsx
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { Table, Button, Spinner, Alert, Modal, Card, Badge, Row, Col } from 'react-bootstrap';
+import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faCodeBranch, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from '../../../../context/AuthContext';
-import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SteelForm from '../form/SteelForm';
 import steelService from '../../../../services/steelService';
@@ -21,8 +20,7 @@ const SteelList = () => {  const { t } = useTranslation();
   const [steels, setSteels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const steelFormRef = useRef(null);
+  const [searchQuery] = useState('');
   const limitSelectorRef = useRef(null);
   
   // Pagination state
@@ -235,9 +233,6 @@ const SteelList = () => {  const { t } = useTranslation();
                           <div className="item-name font-weight-bold text-primary">
                             {steelData.grade || t('steels.noGrade')}
                           </div>
-                          <div className="ml-2">
-                            <StatusBadge status={steel.data_status || steelData.data_status || 'active'} />
-                          </div>
                         </div>
                       </td>
                       <td className="text-center">{steelData.family || "-"}</td>
@@ -323,9 +318,7 @@ const SteelList = () => {  const { t } = useTranslation();
             }}
           />
         </Modal.Body>
-      </Modal>
-
-      {/* Modal pour éditer un acier */}
+      </Modal>      {/* Modal pour éditer un acier */}
       <Modal
         show={showEditForm}
         onHide={closeEditModal}
@@ -340,8 +333,13 @@ const SteelList = () => {  const { t } = useTranslation();
               steel={selectedSteel}
               onClose={closeEditModal}
               onSteelUpdated={() => {
+                // Forcer le rechargement de toutes les données
                 fetchSteels();
                 closeEditModal();
+                // Optionnel : ajouter un petit délai pour s'assurer que la base est à jour
+                setTimeout(() => {
+                  fetchSteels();
+                }, 500);
               }}
             />
           )}

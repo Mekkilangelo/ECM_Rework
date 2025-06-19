@@ -67,8 +67,7 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode =
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, setErrors);
-  
-  // Soumission du formulaire au serveur en utilisant le hook factorisé
+    // Soumission du formulaire au serveur en utilisant le hook factorisé
   // En mode lecture seule, la soumission est désactivée
   const { handleSubmit } = useSteelSubmission({
     formData, 

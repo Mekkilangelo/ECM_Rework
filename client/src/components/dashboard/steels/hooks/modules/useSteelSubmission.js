@@ -13,6 +13,7 @@ import steelService from '../../../../../services/steelService';
  * @param {Function} options.onCreated - Callback après création
  * @param {Function} options.onUpdated - Callback après mise à jour
  * @param {Function} options.onClose - Callback de fermeture
+ * @param {boolean} options.viewMode - Mode lecture seule
  */
 const useSteelSubmission = ({ 
   formData, 
@@ -23,7 +24,8 @@ const useSteelSubmission = ({
   setMessage, 
   onCreated,
   onUpdated, 
-  onClose
+  onClose,
+  viewMode = false
 }) => {
   const initialFormState = {
     grade: '',
@@ -66,8 +68,7 @@ const useSteelSubmission = ({
     
     return steelData;
   };
-  
-  return useApiSubmission({
+    return useApiSubmission({
     formData,
     setFormData,
     validate,
@@ -75,7 +76,23 @@ const useSteelSubmission = ({
     setLoading,
     setMessage,
     onCreated,
-    onUpdated,
+    onUpdated: (data) => {
+      // Appeler le callback original
+      if (onUpdated) {
+        onUpdated(data);
+      }
+      
+      // Log pour déboguer
+      console.log('Steel updated, triggering data refresh...');
+      
+      // Ajouter un petit délai pour s'assurer que toutes les mises à jour en base sont terminées
+      setTimeout(() => {
+        // Forcer un re-rendu en modifiant formData avec les nouvelles données
+        if (data && data.id) {
+          setFormData(prev => ({ ...prev, lastUpdated: Date.now() }));
+        }
+      }, 300);
+    },
     onClose,
     formatDataForApi,
     customApiService: {
@@ -83,7 +100,8 @@ const useSteelSubmission = ({
       update: steelService.updateSteel
     },
     entityType: 'Acier',
-    initialFormState
+    initialFormState,
+    viewMode
   });
 };
 

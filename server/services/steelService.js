@@ -14,6 +14,46 @@ const {
 const logger = require('../utils/logger');
 
 /**
+ * Standardise le format d'un équivalent
+ * @param {Object|number|string} equivalent - Équivalent à standardiser
+ * @returns {Object} Équivalent au format standardisé
+ */
+const standardizeEquivalent = (equivalent) => {
+  if (typeof equivalent === 'number' || typeof equivalent === 'string') {
+    return {
+      steel_id: parseInt(equivalent),
+      standard: ""
+    };
+  }
+  
+  if (typeof equivalent === 'object' && equivalent !== null) {
+    const steelId = equivalent.steel_id || equivalent.steelId || equivalent.id;
+    return {
+      steel_id: parseInt(steelId),
+      standard: equivalent.standard || ""
+    };
+  }
+  
+  throw new Error('Format d\'équivalent invalide');
+};
+
+/**
+ * Normalise une liste d'équivalents
+ * @param {Array} equivalents - Liste d'équivalents à normaliser
+ * @returns {Array} Liste d'équivalents normalisés
+ */
+const normalizeEquivalents = (equivalents) => {
+  if (!Array.isArray(equivalents)) {
+    return [];
+  }
+  
+  return equivalents
+    .filter(eq => eq !== null && eq !== undefined)
+    .map(standardizeEquivalent)
+    .filter(eq => !isNaN(eq.steel_id) && eq.steel_id > 0);
+};
+
+/**
  * Récupère tous les aciers avec pagination et filtrage
  * @param {Object} options - Options de pagination et filtrage
  * @returns {Promise<Object>} Liste paginée des aciers
@@ -178,6 +218,101 @@ const getSteelById = async (steelId) => {
 };
 
 /**
+ * Ajoute la réciprocité des équivalents
+ * @param {number} steelId - ID de l'acier
+ * @param {Array} equivalents - Liste des équivalents
+ * @param {Object} transaction - Transaction Sequelize
+ */
+const addReciprocalEquivalents = async (steelId, equivalents, transaction) => {
+  if (!equivalents || equivalents.length === 0) return;
+  
+  logger.info(`Ajout de réciprocité pour l'acier ${steelId} vers:`, equivalents.map(eq => eq.steel_id || eq.steelId || eq.id));
+  
+  for (const equivalent of equivalents) {
+    // Vérifier les différents formats possibles de l'ID
+    const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
+    
+    if (equivalentId) {
+      logger.info(`Traitement de l'équivalent ${equivalentId}...`);
+      
+      // Récupérer l'acier équivalent
+      const equivalentSteel = await Steel.findOne({
+        where: { node_id: equivalentId },
+        transaction
+      });
+      
+      if (equivalentSteel) {
+        let currentEquivalents = equivalentSteel.equivalents || [];
+        
+        logger.info(`Équivalents actuels de l'acier ${equivalentId}:`, currentEquivalents);
+        
+        // Vérifier si la réciprocité n'existe pas déjà
+        const alreadyExists = currentEquivalents.some(eq => {
+          const existingId = eq.steel_id || eq.steelId || eq.id;
+          return existingId == steelId;
+        });
+          if (!alreadyExists) {
+          currentEquivalents.push(standardizeEquivalent(steelId));
+          
+          logger.info(`Ajout de la réciprocité: acier ${equivalentId} -> acier ${steelId}`);
+          
+          // Utiliser une requête SQL directe pour forcer la mise à jour du JSON
+          await sequelize.query(
+            'UPDATE steels SET equivalents = ? WHERE node_id = ?',
+            {
+              replacements: [JSON.stringify(currentEquivalents), equivalentId],
+              type: sequelize.QueryTypes.UPDATE,
+              transaction
+            }
+          );
+        } else {
+          logger.info(`Réciprocité déjà existante: acier ${equivalentId} -> acier ${steelId}`);
+        }
+      } else {
+        logger.warn(`Acier équivalent ${equivalentId} non trouvé`);
+      }
+    }
+  }
+};
+
+/**
+ * Supprime la réciprocité des équivalents
+ * @param {number} steelId - ID de l'acier
+ * @param {Array} equivalents - Liste des équivalents à supprimer
+ * @param {Object} transaction - Transaction Sequelize
+ */
+const removeReciprocalEquivalents = async (steelId, equivalents, transaction) => {
+  if (!equivalents || equivalents.length === 0) return;
+  
+  for (const equivalent of equivalents) {
+    const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
+    
+    if (equivalentId) {
+      const equivalentSteel = await Steel.findOne({
+        where: { node_id: equivalentId },
+        transaction
+      });
+      
+      if (equivalentSteel && equivalentSteel.equivalents) {
+        const updatedEquivalents = equivalentSteel.equivalents.filter(
+          eq => eq.steel_id != steelId
+        );
+        
+        // Utiliser une requête SQL directe pour forcer la mise à jour du JSON
+        await sequelize.query(
+          'UPDATE steels SET equivalents = ? WHERE node_id = ?',
+          {
+            replacements: [JSON.stringify(updatedEquivalents), equivalentId],
+            type: sequelize.QueryTypes.UPDATE,
+            transaction
+          }
+        );
+      }
+    }
+  }
+};
+
+/**
  * Crée un nouvel acier
  * @param {Object} steelData - Données de l'acier
  * @returns {Promise<Object>} Acier créé
@@ -189,6 +324,9 @@ const createSteel = async (steelData) => {
   if (!name || !grade) {
     throw new ValidationError('Nom et grade requis');
   }
+  
+  // Normaliser les équivalents
+  const normalizedEquivalents = normalizeEquivalents(equivalents);
   
   // Vérifier si la nuance existe déjà
   const existingSteel = await Node.findOne({
@@ -226,10 +364,15 @@ const createSteel = async (steelData) => {
       grade,
       family,
       standard,
-      equivalents,
+      equivalents: normalizedEquivalents,
       chemistery,
       elements
     }, { transaction: t });
+    
+    // Ajouter la réciprocité des équivalents
+    if (normalizedEquivalents && normalizedEquivalents.length > 0) {
+      await addReciprocalEquivalents(newNode.id, normalizedEquivalents, t);
+    }
     
     return newNode;
   });
@@ -280,7 +423,53 @@ const updateSteel = async (steelId, steelData) => {
   }
   
   // Mettre à jour dans une transaction
-  await sequelize.transaction(async (t) => {
+  await sequelize.transaction(async (t) => {    // Gérer les équivalents si modifiés
+    if (steelData.equivalents !== undefined) {
+      const oldEquivalents = normalizeEquivalents(steel.Steel.equivalents || []);
+      const newEquivalents = normalizeEquivalents(steelData.equivalents || []);
+      
+      // Identifier les équivalents à ajouter et à supprimer
+      const oldEquivalentIds = oldEquivalents.map(eq => {
+        const id = eq.steel_id || eq.steelId || eq.id;
+        return id ? parseInt(id) : null;
+      }).filter(id => id !== null);
+      
+      const newEquivalentIds = newEquivalents.map(eq => {
+        const id = eq.steel_id || eq.steelId || eq.id;
+        return id ? parseInt(id) : null;
+      }).filter(id => id !== null);
+      
+      // Équivalents à supprimer (présents dans l'ancien mais pas dans le nouveau)
+      const equivalentsToRemove = oldEquivalents.filter(oldEq => {
+        const oldId = oldEq.steel_id || oldEq.steelId || oldEq.id;
+        const parsedOldId = oldId ? parseInt(oldId) : null;
+        return parsedOldId && !newEquivalentIds.includes(parsedOldId);
+      });
+      
+      // Équivalents à ajouter (présents dans le nouveau mais pas dans l'ancien)
+      const equivalentsToAdd = newEquivalents.filter(newEq => {
+        const newId = newEq.steel_id || newEq.steelId || newEq.id;
+        const parsedNewId = newId ? parseInt(newId) : null;
+        return parsedNewId && !oldEquivalentIds.includes(parsedNewId);
+      });
+      
+      logger.info(`Mise à jour des équivalents pour l'acier ${steelId}:`);
+      logger.info(`- Anciens équivalents: ${oldEquivalentIds.join(', ')}`);
+      logger.info(`- Nouveaux équivalents: ${newEquivalentIds.join(', ')}`);
+      logger.info(`- À supprimer: ${equivalentsToRemove.map(eq => eq.steel_id || eq.steelId || eq.id).join(', ')}`);
+      logger.info(`- À ajouter: ${equivalentsToAdd.map(eq => eq.steel_id || eq.steelId || eq.id).join(', ')}`);
+      
+      // Supprimer les réciprocités pour les équivalents supprimés
+      if (equivalentsToRemove.length > 0) {
+        await removeReciprocalEquivalents(steelId, equivalentsToRemove, t);
+      }
+      
+      // Ajouter les réciprocités pour les nouveaux équivalents
+      if (equivalentsToAdd.length > 0) {
+        await addReciprocalEquivalents(steelId, equivalentsToAdd, t);
+      }
+    }
+    
     // Mettre à jour le nœud si nécessaire
     if (steelData.name || steelData.description) {
       const nodeUpdates = {};
@@ -295,13 +484,12 @@ const updateSteel = async (steelId, steelData) => {
       
       await steel.update(nodeUpdates, { transaction: t });
     }
-    
-    // Mettre à jour les données Steel
+      // Mettre à jour les données Steel
     const steelUpdates = {};
     if (steelData.grade !== undefined) steelUpdates.grade = steelData.grade;
     if (steelData.family !== undefined) steelUpdates.family = steelData.family;
     if (steelData.standard !== undefined) steelUpdates.standard = steelData.standard;
-    if (steelData.equivalents !== undefined) steelUpdates.equivalents = steelData.equivalents;
+    if (steelData.equivalents !== undefined) steelUpdates.equivalents = normalizeEquivalents(steelData.equivalents);
     if (steelData.chemistery !== undefined) steelUpdates.chemistery = steelData.chemistery;
     if (steelData.elements !== undefined) steelUpdates.elements = steelData.elements;
     
@@ -348,11 +536,13 @@ const deleteSteel = async (steelId) => {
         required: true
       }]
     });
-    
-    // Chercher si l'acier à supprimer est référencé dans les équivalents
+      // Chercher si l'acier à supprimer est référencé dans les équivalents
     const referencingSteel = steelsWithEquivalents.find(s => {
       if (s.equivalents && Array.isArray(s.equivalents)) {
-        return s.equivalents.some(equiv => equiv.steelId == steelId);
+        return s.equivalents.some(equiv => {
+          const equivalentId = equiv.steel_id || equiv.steelId || equiv.id;
+          return equivalentId == steelId;
+        });
       }
       return false;
     });
@@ -364,9 +554,12 @@ const deleteSteel = async (steelId) => {
     }
     
     // 2. Vérifier si cet acier est utilisé par des pièces
-    // (À implémenter selon la structure de votre base de données)
-      // Supprimer dans une transaction
+    // (À implémenter selon la structure de votre base de données)    // Supprimer dans une transaction
     await sequelize.transaction(async (t) => {
+      // Supprimer les réciprocités avant de supprimer l'acier
+      const equivalents = steel.Steel.equivalents || [];
+      await removeReciprocalEquivalents(steelId, equivalents, t);
+      
       // 1. Supprimer les données Steel en premier (à cause de la clé étrangère)
       await Steel.destroy({
         where: { node_id: steelId },
@@ -392,6 +585,54 @@ const deleteSteel = async (steelId) => {
     return true;
   } catch (error) {
     logger.error(`Erreur lors de la suppression de l'acier #${steelId}: ${error.message}`, error);
+    throw error;  }
+};
+
+/**
+ * Fonction utilitaire pour nettoyer et standardiser tous les équivalents en base
+ * À utiliser pour la migration des données existantes
+ * @returns {Promise<Object>} Résultat de l'opération
+ */
+const cleanUpEquivalents = async () => {
+  try {
+    logger.info('Début du nettoyage des équivalents...');
+    
+    const steels = await Steel.findAll({
+      where: {
+        equivalents: {
+          [Op.ne]: null
+        }
+      }
+    });
+    
+    let updatedCount = 0;
+    
+    for (const steel of steels) {
+      const normalizedEquivalents = normalizeEquivalents(steel.equivalents);
+      
+      // Vérifier si il y a une différence
+      const originalJson = JSON.stringify(steel.equivalents);
+      const normalizedJson = JSON.stringify(normalizedEquivalents);
+      
+      if (originalJson !== normalizedJson) {
+        await sequelize.query(
+          'UPDATE steels SET equivalents = ? WHERE node_id = ?',
+          {
+            replacements: [normalizedJson, steel.node_id],
+            type: sequelize.QueryTypes.UPDATE
+          }
+        );
+        
+        updatedCount++;
+        logger.info(`Acier ${steel.node_id}: ${originalJson} -> ${normalizedJson}`);
+      }
+    }
+    
+    logger.info(`Nettoyage terminé. ${updatedCount} aciers mis à jour.`);
+    return { updated: updatedCount, total: steels.length };
+    
+  } catch (error) {
+    logger.error('Erreur lors du nettoyage des équivalents:', error);
     throw error;
   }
 };
@@ -402,5 +643,6 @@ module.exports = {
   getSteelById,
   createSteel,
   updateSteel,
-  deleteSteel
+  deleteSteel,
+  cleanUpEquivalents // Fonction utilitaire pour la migration
 };

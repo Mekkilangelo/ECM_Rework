@@ -7,8 +7,9 @@ import steelService from '../../../../../services/steelService';
  * @param {Function} setFormData - Fonction pour mettre à jour les données du formulaire
  * @param {Function} setMessage - Fonction pour définir les messages d'erreur/succès
  * @param {Function} setFetchingSteel - Fonction pour indiquer l'état de chargement
+ * @param {boolean} forceRefresh - Forcer le rechargement des données
  */
-const useSteelData = (steel, setFormData, setMessage, setFetchingSteel) => {
+const useSteelData = (steel, setFormData, setMessage, setFetchingSteel, forceRefresh = false) => {
   useEffect(() => {
     if (steel) {
       // Récupérer l'ID du steel, qui peut être à différents endroits selon la structure
@@ -82,13 +83,12 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel) => {
             setFetchingSteel(false);
           }
         };
-        
-        fetchSteelData();
+          fetchSteelData();
       } else {
         console.warn('No steel ID found for editing');
       }
     }
-  }, [steel, setFormData, setMessage, setFetchingSteel]);
+  }, [steel, setFormData, setMessage, setFetchingSteel, forceRefresh]);
 };
 
 export default useSteelData;

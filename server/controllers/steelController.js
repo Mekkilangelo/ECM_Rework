@@ -22,28 +22,36 @@ const getSteels = async (req, res, next) => {
     logger.info('req.query:', JSON.stringify(req.query, null, 2));
     logger.info('req.pagination:', JSON.stringify(req.pagination, null, 2));
     
-    const { search, filter } = req.query;
-    const { limit, offset, sortBy, sortOrder } = req.pagination || {
-      limit: 10,
-      offset: 0,
-      sortBy: 'grade',
-      sortOrder: 'ASC'
-    };
+    // Extraire directement de req.query au cas où le middleware pagination ne serait pas appliqué
+    const { 
+      search, 
+      filter,
+      limit = 10,
+      offset = 0,
+      sortBy = 'modified_at',
+      sortOrder = 'DESC'
+    } = req.query;
     
-    logger.info('Paramètres extraits du contrôleur:', { 
-      limit, 
-      offset, 
-      sortBy, 
-      sortOrder,
+    // Utiliser req.pagination si disponible, sinon les valeurs par défaut
+    const finalLimit = req.pagination?.limit || parseInt(limit);
+    const finalOffset = req.pagination?.offset || parseInt(offset);
+    const finalSortBy = req.pagination?.sortBy || sortBy;
+    const finalSortOrder = req.pagination?.sortOrder || sortOrder;
+    
+    logger.info('Paramètres finaux extraits du contrôleur:', { 
+      finalLimit, 
+      finalOffset, 
+      finalSortBy, 
+      finalSortOrder,
       search,
       filter
     });
     
     const serviceOptions = {
-      limit,
-      offset,
-      sortBy,
-      sortOrder,
+      limit: finalLimit,
+      offset: finalOffset,
+      sortBy: finalSortBy,
+      sortOrder: finalSortOrder,
       search,
       filter: filter ? JSON.parse(filter) : null
     };

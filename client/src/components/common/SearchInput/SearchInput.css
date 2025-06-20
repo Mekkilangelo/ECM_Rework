@@ -1,0 +1,92 @@
+/* Styles pour le composant SearchInput */
+.search-input-form {
+  margin-bottom: 0;
+}
+
+.search-input-group {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0.375rem;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.search-input-group:focus-within {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.search-input-group .search-icon {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-right: none;
+  color: #6c757d;
+}
+
+.search-input-group .search-input {
+  border: 1px solid #dee2e6;
+  border-left: none;
+  border-right: none;
+  box-shadow: none;
+  padding: 0.5rem 0.75rem;
+}
+
+.search-input-group .search-input:focus {
+  border-color: #dee2e6;
+  box-shadow: none;
+}
+
+.search-input-group .clear-button {
+  border: 1px solid #dee2e6;
+  border-left: none;
+  background-color: #fff;
+  color: #6c757d;
+  padding: 0.375rem 0.75rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.search-input-group .clear-button:hover {
+  background-color: #f8f9fa;
+  color: #dc3545;
+  border-color: #dee2e6;
+}
+
+.search-input-group .clear-button:focus {
+  box-shadow: none;
+  border-color: #dee2e6;
+}
+
+/* Responsive design */
+@media (max-width: 576px) {
+  .search-input-group {
+    font-size: 0.875rem;
+  }
+  
+  .search-input-group .search-input,
+  .search-input-group .clear-button {
+    padding: 0.375rem 0.5rem;
+  }
+}
+
+/* Animation pour le bouton clear */
+.clear-button {
+  opacity: 0.7;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.clear-button:hover {
+  opacity: 1;
+}
+
+/* Style pour les différentes tailles */
+.search-input-group.form-control-sm .search-icon,
+.search-input-group.form-control-sm .search-input,
+.search-input-group.form-control-sm .clear-button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.search-input-group.form-control-lg .search-icon,
+.search-input-group.form-control-lg .search-input,
+.search-input-group.form-control-lg .clear-button {
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem;
+}

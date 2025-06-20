@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from 'react';
-import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
+import { Button, Spinner, Alert, Modal, Card, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEye, faEdit, faArrowLeft, faFlask, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../../context/NavigationContext';
@@ -8,6 +8,8 @@ import { AuthContext } from '../../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
+import SortableTable from '../../../common/SortableTable';
+import SearchInput from '../../../common/SearchInput/SearchInput';
 import TestForm from '../form/TestForm';
 //import TestDetails from './TestDetails';
 import '../../../../styles/dataList.css';
@@ -16,9 +18,22 @@ import useModalState from '../../../../hooks/useModalState';
 import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const TestList = ({ partId }) => {
-  const { t } = useTranslation();
-  const { navigateBack } = useNavigation();
-  const { data, loading, error, updateItemStatus, refreshData, deleteItem } = useHierarchy();
+  const { t } = useTranslation();  const { navigateBack } = useNavigation();
+  const { 
+    data, 
+    loading, 
+    error, 
+    updateItemStatus, 
+    refreshData, 
+    deleteItem, 
+    handleSort, 
+    sortBy, 
+    sortOrder,
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    totalItems
+  } = useHierarchy();
   const { user } = useContext(AuthContext);
   const { confirmDelete } = useConfirmationDialog();
   const testFormRef = useRef(null);
@@ -69,9 +84,96 @@ const TestList = ({ partId }) => {
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
+  // Configuration des colonnes pour la table triable
+  const columns = [
+    {
+      key: 'name',
+      label: t('tests.testCode'),
+      style: { width: '25%' },
+      render: (test) => (
+        <div
+          onClick={() => handleTestClick(test)}
+          style={{ cursor: 'pointer' }}
+          className="d-flex align-items-center"
+        >
+          <div className="item-name font-weight-bold text-primary">
+            {test.name || t('tests.noName')}
+          </div>
+          <div className="ml-2">
+            <StatusBadge status={test.data_status} />
+          </div>
+        </div>
+      ),
+      sortValue: (test) => test.name || ''
+    },
+    {
+      key: 'Test.load_number',
+      label: t('tests.loadNumber'),
+      cellClassName: 'text-center',
+      render: (test) => test.Test?.load_number || "-",
+      sortValue: (test) => parseInt(test.Test?.load_number) || 0
+    },
+    {
+      key: 'Test.test_date',
+      label: t('tests.date'),
+      cellClassName: 'text-center',
+      render: (test) => test.Test?.test_date || t('tests.notDoneYet'),
+      sortValue: (test) => test.Test?.test_date ? new Date(test.Test?.test_date).getTime() : 0
+    },
+    {
+      key: 'Test.location',
+      label: t('tests.location'),
+      cellClassName: 'text-center',
+      render: (test) => test.Test?.location || "-",
+      sortValue: (test) => test.Test?.location || ''
+    },
+    {
+      key: 'modified_at',
+      label: t('common.modifiedAt'),
+      cellClassName: 'text-center',
+      render: (test) => test.modified_at
+        ? new Date(test.modified_at).toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+        : t('common.unknown'),
+      sortValue: (test) => test.modified_at ? new Date(test.modified_at).getTime() : 0
+    },
+    {
+      key: 'actions',
+      label: t('common.actions'),
+      style: { width: hasEditRights ? '180px' : '80px' },
+      cellClassName: 'text-center',
+      sortable: false,
+      render: (test) => (
+        <ActionButtons
+          itemId={test.id}
+          onView={(e, id) => {
+            openDetailModal(test);
+          }}
+          onEdit={hasEditRights ? (e, id) => {
+            openEditModal(test);
+          } : undefined}
+          onDelete={hasEditRights ? (e, id) => {
+            handleDeleteTest(test.id);
+          } : undefined}
+          hasEditRights={hasEditRights}
+          viewOnly={!hasEditRights}
+          labels={{
+            view: t('common.view'),
+            edit: t('common.edit'),
+            delete: t('common.delete')
+          }}
+        />
+      )
+    }
+  ];
+
   if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /><div>{t('common.loading')}</div></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
-
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -96,82 +198,58 @@ const TestList = ({ partId }) => {
             <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('tests.new')}
           </Button>
         )}
-      </div>{data.length > 0 ? (
-        <div className="data-list-container">
-          <Table hover responsive className="data-table border-bottom">
-            <thead>
-              <tr className="bg-light">
-                <th style={{ width: '25%' }}>{t('tests.testCode')}</th>
-                <th className="text-center">{t('tests.loadNumber')}</th>
-                <th className="text-center">{t('tests.date')}</th>
-                <th className="text-center">{t('tests.location')}</th>
-                <th className="text-center">{t('common.modifiedAt')}</th>
-                <th className="text-center" style={{ width: hasEditRights ? '180px' : '80px' }}>{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map(test => (
-                <tr key={test.id}>
-                  <td>
-                    <div
-                      onClick={() => handleTestClick(test)}
-                      style={{ cursor: 'pointer' }}
-                      className="d-flex align-items-center"
-                    >
-                      <div className="item-name font-weight-bold text-primary">
-                        {test.name || t('tests.noName')}
-                      </div>
-                      <div className="ml-2">
-                        <StatusBadge status={test.data_status} />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-center">{test.Test?.load_number || "-"}</td>
-                  <td className="text-center">{test.Test?.test_date || t('tests.notDoneYet')}</td>
-                  <td className="text-center">{test.Test?.location || "-"}</td>
-                  <td className="text-center">
-                    {test.modified_at
-                      ? new Date(test.modified_at).toLocaleString('fr-FR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                      : t('common.unknown')}
-                  </td>
-                  <td className="text-center">
-                    <ActionButtons
-                      itemId={test.id}
-                      onView={(e, id) => {
-                        openDetailModal(test);
-                      }}
-                      onEdit={hasEditRights ? (e, id) => {
-                        openEditModal(test);
-                      } : undefined}
-                      onDelete={hasEditRights ? (e, id) => {
-                        handleDeleteTest(test.id);
-                      } : undefined}
-                      hasEditRights={hasEditRights}
-                      viewOnly={!hasEditRights}
-                      labels={{
-                        view: t('common.view'),
-                        edit: t('common.edit'),
-                        delete: t('common.delete')
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+      </div>
+
+      {/* Barre de recherche */}
+      <Row className="mb-3">
+        <Col md={6}>
+          <SearchInput
+            onSearch={handleSearch}
+            onClear={clearSearch}
+            placeholder={t('tests.searchPlaceholder', 'Rechercher un test...')}
+            initialValue={searchQuery}
+            className="mb-0"
+          />
+        </Col>        {searchQuery && (
+          <Col md={6} className="d-flex align-items-center">
+            <small className="text-muted">
+              {t('common.searchResults', {
+                count: data.length,
+                total: totalItems,
+                defaultValue: `${data.length} résultat(s) trouvé(s)`
+              })}
+            </small>
+          </Col>
+        )}
+      </Row>      {data.length > 0 ? (
+        <div className="data-list-container">          <SortableTable
+            data={data}
+            columns={columns}
+            hover
+            responsive
+            className="data-table border-bottom"
+            serverSide={true}
+            onSort={handleSort}
+            currentSortBy={sortBy}
+            currentSortOrder={sortOrder}
+          />
         </div>
       ) : (
         <Card className="text-center p-5 bg-light">
           <Card.Body>
             <FontAwesomeIcon icon={faFlask} size="3x" className="text-secondary mb-3" />
-            <h4>{t('tests.noTests')}</h4>
-            <p className="text-muted">{t('tests.clickToAdd')}</p>
+            <h4>
+              {searchQuery 
+                ? t('tests.noResultsFound', 'Aucun test trouvé')
+                : t('tests.noTests')
+              }
+            </h4>
+            <p className="text-muted">
+              {searchQuery 
+                ? t('tests.tryDifferentSearch', 'Essayez une recherche différente')
+                : t('tests.clickToAdd')
+              }
+            </p>
           </Card.Body>
         </Card>
       )}

@@ -36,15 +36,28 @@ const getAllTests = async (options = {}) => {
   // Filtrage par parent direct
   if (parent_id) {
     whereCondition.parent_id = parent_id;
-  }
-    // Recherche textuelle
+  }  // Recherche textuelle - Simplifiée pour cohérence avec les autres services
   if (search) {
     whereCondition[Op.or] = [
       { name: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } },
-      sequelize.literal(`Test.test_code LIKE '%${search.replace(/'/g, "''")}%'`)
+      { description: { [Op.like]: `%${search}%` } }
     ];
   }
+  
+  // Mapping des champs de tri pour gérer les colonnes des tables associées
+  const getOrderClause = (sortBy, sortOrder) => {
+    const sortMapping = {
+      'name': ['name', sortOrder],
+      'load_number': [{ model: Test }, 'load_number', sortOrder],
+      'test_date': [{ model: Test }, 'test_date', sortOrder],
+      'location': [{ model: Test }, 'location', sortOrder],
+      'modified_at': ['modified_at', sortOrder],
+      'created_at': ['created_at', sortOrder]
+    };
+    
+    return sortMapping[sortBy] || ['modified_at', 'DESC'];
+  };
+    
     // Exécuter la requête
   const tests = await Node.findAll({
     where: whereCondition,
@@ -52,7 +65,7 @@ const getAllTests = async (options = {}) => {
       model: Test,
       attributes: ['test_code', 'load_number', 'test_date', 'status', 'location']
     }],
-    order: [[sortBy, sortOrder]],
+    order: [getOrderClause(sortBy, sortOrder)],
     limit: parseInt(limit),
     offset: parseInt(offset)
   });

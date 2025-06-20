@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from 'react';
-import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
+import { Button, Spinner, Alert, Modal, Card, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faBuilding } from '@fortawesome/free-solid-svg-icons';
 import { useNavigation } from '../../../../context/NavigationContext';
@@ -8,6 +8,8 @@ import { AuthContext } from '../../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
+import SortableTable from '../../../common/SortableTable';
+import SearchInput from '../../../common/SearchInput/SearchInput';
 import ClientForm from '../form/ClientForm';
 import clientService from '../../../../services/clientService';
 import '../../../../styles/dataList.css';
@@ -16,9 +18,21 @@ import useModalState from '../../../../hooks/useModalState';
 import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const ClientList = ({ onDataChanged }) => {
-  const { t } = useTranslation();
-  const { navigateToLevel } = useNavigation();
-  const { data, loading, error, updateItemStatus, refreshData } = useHierarchy();
+  const { t } = useTranslation();  const { navigateToLevel } = useNavigation();
+  const { 
+    data, 
+    loading, 
+    error, 
+    updateItemStatus, 
+    refreshData, 
+    handleSort, 
+    sortBy, 
+    sortOrder,
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    totalItems
+  } = useHierarchy();
   const { user } = useContext(AuthContext);
   const { confirmDelete } = useConfirmationDialog();
   const clientFormRef = useRef(null);
@@ -50,9 +64,95 @@ const ClientList = ({ onDataChanged }) => {
   } = useModalState({
     onRefreshData: handleRefreshData
   });
-
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   const isUserRole = user && user.role === 'user';
+
+  // Configuration des colonnes pour la table triable
+  const columns = [
+    {
+      key: 'name',
+      label: t('clients.name'),
+      style: { width: '30%' },
+      render: (client) => (
+        <div
+          onClick={() => handleClientClick(client)}
+          style={{ cursor: 'pointer' }}
+          className="d-flex align-items-center"
+        >
+          <div className="item-name font-weight-bold text-primary">
+            {client.name || t('clients.noName')}
+          </div>
+          <div className="ml-2">
+            <StatusBadge status={client.data_status} />
+          </div>
+        </div>
+      ),
+      sortValue: (client) => client.name || ''
+    },
+    {
+      key: 'Client.client_group',
+      label: t('clients.group'),
+      cellClassName: 'text-center',
+      render: (client) => client.Client?.client_group || "-",
+      sortValue: (client) => client.Client?.client_group || ''
+    },
+    {
+      key: 'Client.country',
+      label: t('clients.country'),
+      cellClassName: 'text-center',
+      render: (client) => client.Client?.country || "-",
+      sortValue: (client) => client.Client?.country || ''
+    },
+    {
+      key: 'Client.city',
+      label: t('clients.city'),
+      cellClassName: 'text-center',
+      render: (client) => client.Client?.city || "-",
+      sortValue: (client) => client.Client?.city || ''
+    },
+    {
+      key: 'modified_at',
+      label: t('common.modifiedAt'),
+      cellClassName: 'text-center',
+      render: (client) => client.modified_at
+        ? new Date(client.modified_at).toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+        : t('common.unknown'),
+      sortValue: (client) => client.modified_at ? new Date(client.modified_at).getTime() : 0
+    },
+    {
+      key: 'actions',
+      label: t('common.actions'),
+      style: { width: '150px' },
+      cellClassName: 'text-center',
+      sortable: false,
+      render: (client) => (
+        <ActionButtons
+          itemId={client.id}
+          onView={(e, id) => {
+            openDetailModal(client);
+          }}
+          onEdit={hasEditRights ? (e, id) => {
+            openEditModal(client);
+          } : undefined}
+          onDelete={hasEditRights ? (e, id) => {
+            handleDeleteClient(client.id);
+          } : undefined}
+          hasEditRights={hasEditRights}
+          labels={{
+            view: t('common.view'),
+            edit: t('common.edit'),
+            delete: t('common.delete')
+          }}
+        />
+      )
+    }
+  ];
 
   const handleClientClick = (client) => {
     if (client.data_status === 'new') {
@@ -80,7 +180,6 @@ const ClientList = ({ onDataChanged }) => {
 
   if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
-
   return (
     <>      <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">
@@ -97,81 +196,56 @@ const ClientList = ({ onDataChanged }) => {
         )}
       </div>
 
-      {data.length > 0 ? (
-        <div className="data-list-container">
-          <Table hover responsive className="data-table border-bottom">
-            <thead>
-              <tr className="bg-light">
-                <th style={{ width: '30%' }}>{t('clients.name')}</th>
-                <th className="text-center">{t('clients.group')}</th>
-                <th className="text-center">{t('clients.country')}</th>
-                <th className="text-center">{t('clients.city')}</th>
-                <th className="text-center">{t('common.modifiedAt')}</th>
-                <th className="text-center" style={{ width: '150px' }}>{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map(client => (
-                <tr key={client.id}>
-                  <td>
-                    <div
-                      onClick={() => handleClientClick(client)}
-                      style={{ cursor: 'pointer' }}
-                      className="d-flex align-items-center"
-                    >
-                      <div className="item-name font-weight-bold text-primary">
-                        {client.name || t('clients.noName')}
-                      </div>
-                      <div className="ml-2">
-                        <StatusBadge status={client.data_status} />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-center">{client.Client?.client_group || "-"}</td>
-                  <td className="text-center">{client.Client?.country || "-"}</td>
-                  <td className="text-center">{client.Client?.city || "-"}</td>
-                  <td className="text-center">
-                    {client.modified_at
-                      ? new Date(client.modified_at).toLocaleString('fr-FR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                      : t('common.unknown')}
-                  </td>
-                  <td className="text-center">
-                    <ActionButtons
-                      itemId={client.id}
-                      onView={(e, id) => {
-                        openDetailModal(client);
-                      }}
-                      onEdit={hasEditRights ? (e, id) => {
-                        openEditModal(client);
-                      } : undefined}
-                      onDelete={hasEditRights ? (e, id) => {
-                        handleDeleteClient(client.id);
-                      } : undefined}
-                      hasEditRights={hasEditRights}
-                      labels={{
-                        view: t('common.view'),
-                        edit: t('common.edit'),
-                        delete: t('common.delete')
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+      {/* Barre de recherche */}
+      <Row className="mb-3">
+        <Col md={6}>
+          <SearchInput
+            onSearch={handleSearch}
+            onClear={clearSearch}
+            placeholder={t('clients.searchPlaceholder', 'Rechercher un client...')}
+            initialValue={searchQuery}
+            className="mb-0"
+          />
+        </Col>        {searchQuery && (
+          <Col md={6} className="d-flex align-items-center">
+            <small className="text-muted">
+              {t('common.searchResults', {
+                count: data.length,
+                total: totalItems,
+                defaultValue: `${data.length} résultat(s) trouvé(s)`
+              })}
+            </small>
+          </Col>
+        )}
+      </Row>      {data.length > 0 ? (
+        <div className="data-list-container">          <SortableTable
+            data={data}
+            columns={columns}
+            hover
+            responsive
+            className="data-table border-bottom"
+            serverSide={true}
+            onSort={handleSort}
+            currentSortBy={sortBy}
+            currentSortOrder={sortOrder}
+          />
         </div>
       ) : (
         <Card className="text-center p-5 bg-light">
           <Card.Body>
             <FontAwesomeIcon icon={faBuilding} size="3x" className="text-secondary mb-3" />
-            <h4>{t('clients.noClientsFound')}</h4>
-            <p className="text-muted">{t('clients.clickToAddClient')}</p>
+            <h4>
+              {searchQuery 
+                ? t('clients.noResultsFound', 'Aucun client trouvé')
+                : t('clients.noClientsFound')
+              }
+            </h4>
+            <p className="text-muted">
+              {searchQuery 
+                ? t('clients.tryDifferentSearch', 'Essayez une recherche différente')
+                : t('clients.clickToAddClient')
+              }
+            </p>
           </Card.Body>
         </Card>
       )}

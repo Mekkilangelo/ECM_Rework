@@ -113,6 +113,20 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
       [Op.in]: descendantIds
     };
   }
+  // Mapping des champs de tri pour gérer les colonnes des tables associées
+  const getOrderClause = (sortBy, sortOrder) => {
+    const sortMapping = {
+      'name': ['name', sortOrder],
+      'client_designation': [{ model: Part }, 'client_designation', sortOrder],
+      'reference': [{ model: Part }, 'reference', sortOrder],
+      'steel': [{ model: Part }, 'steel', sortOrder],
+      'quantity': [{ model: Part }, 'quantity', sortOrder],
+      'modified_at': ['modified_at', sortOrder],
+      'created_at': ['created_at', sortOrder]
+    };
+    
+    return sortMapping[sortBy] || ['modified_at', 'DESC'];
+  };
   
   const parts = await Node.findAll({
     where: whereCondition,
@@ -120,7 +134,7 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
       model: Part,
       attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference', 'quantity']
     }],
-    order: [[sortBy, sortOrder]],
+    order: [getOrderClause(sortBy, sortOrder)],
     limit: parseInt(limit),
     offset: parseInt(offset)
   });

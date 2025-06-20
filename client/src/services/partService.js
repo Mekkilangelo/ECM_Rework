@@ -4,20 +4,33 @@ import api from './api';
  * Service de gestion des pièces
  * Fournit des méthodes pour interagir avec l'API REST pour les opérations CRUD sur les pièces
  */
-const partService = {
-  /**
-   * Récupère la liste des pièces avec pagination
+const partService = {  /**
+   * Récupère la liste des pièces avec pagination et recherche
    * @param {string|number} orderId - Identifiant de la commande associée (optionnel)
    * @param {number} page - Numéro de la page (commence à 1)
    * @param {number} limit - Nombre d'éléments par page
+   * @param {string} sortBy - Champ de tri
+   * @param {string} sortOrder - Ordre de tri (asc/desc)
+   * @param {string} search - Terme de recherche optionnel
    * @returns {Promise<Object>} Données des pièces et informations de pagination
    * @throws {Error} En cas d'échec de la requête
    */
-  getParts: async (orderId, page = 1, limit = 10) => {
+  getParts: async (orderId, page = 1, limit = 10, sortBy = 'modified_at', sortOrder = 'desc', search = '') => {
     try {
-      const response = await api.get('/parts', { 
-        params: { orderId, page, limit } 
-      });
+      const params = { 
+        orderId, 
+        page, 
+        limit, 
+        sortBy, 
+        sortOrder 
+      };
+      
+      // Ajouter le paramètre de recherche s'il est fourni
+      if (search && search.trim()) {
+        params.search = search.trim();
+      }
+      
+      const response = await api.get('/parts', { params });
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
         return {

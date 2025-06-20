@@ -4,21 +4,34 @@ import api from './api';
  * Service de gestion des tests
  * Fournit des méthodes pour interagir avec l'API REST pour les opérations CRUD sur les tests
  */
-const testService = {
-  /**
-   * Récupère la liste des tests avec pagination
+const testService = {  /**
+   * Récupère la liste des tests avec pagination et recherche
    * @param {string|number} parent_id - Identifiant de la pièce associée (optionnel)
    * @param {number} page - Numéro de la page (commence à 1)
    * @param {number} limit - Nombre d'éléments par page
+   * @param {string} sortBy - Champ de tri
+   * @param {string} sortOrder - Ordre de tri (asc/desc)
+   * @param {string} search - Terme de recherche optionnel
    * @returns {Promise<Object>} Données des tests et informations de pagination
    * @throws {Error} En cas d'échec de la requête
    */
-  getTests: async (parent_id, page = 1, limit = 10) => {
+  getTests: async (parent_id, page = 1, limit = 10, sortBy = 'modified_at', sortOrder = 'desc', search = '') => {
     try {
       const offset = (page - 1) * limit;
-      const response = await api.get('/tests', { 
-        params: { parent_id, offset, limit } 
-      });
+      const params = { 
+        parent_id, 
+        offset, 
+        limit, 
+        sortBy, 
+        sortOrder 
+      };
+      
+      // Ajouter le paramètre de recherche s'il est fourni
+      if (search && search.trim()) {
+        params.search = search.trim();
+      }
+      
+      const response = await api.get('/tests', { params });
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
         return {

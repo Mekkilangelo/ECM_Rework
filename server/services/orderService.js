@@ -34,15 +34,26 @@ const getAllOrders = async (options = {}) => {
   if (parent_id) {
     whereCondition.parent_id = parent_id;
   }
-  
-  // Recherche textuelle
+  // Recherche textuelle - Simplifiée pour cohérence avec les autres services
   if (search) {
     whereCondition[Op.or] = [
       { name: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } },
-      sequelize.literal(`Order.order_number LIKE '%${search.replace(/'/g, "''")}%'`)
+      { description: { [Op.like]: `%${search}%` } }
     ];
   }
+  
+  // Mapping des champs de tri pour gérer les colonnes des tables associées
+  const getOrderClause = (sortBy, sortOrder) => {
+    const sortMapping = {
+      'name': ['name', sortOrder],
+      'commercial': [{ model: Order }, 'commercial', sortOrder],
+      'order_date': [{ model: Order }, 'order_date', sortOrder],
+      'modified_at': ['modified_at', sortOrder],
+      'created_at': ['created_at', sortOrder]
+    };
+    
+    return sortMapping[sortBy] || ['modified_at', 'DESC'];
+  };
   
   // Exécuter la requête
   const orders = await Node.findAll({
@@ -51,7 +62,7 @@ const getAllOrders = async (options = {}) => {
       model: Order,
       attributes: ['order_number', 'order_date', 'commercial', 'contacts']
     }],
-    order: [[sortBy, sortOrder]],
+    order: [getOrderClause(sortBy, sortOrder)],
     limit: parseInt(limit),
     offset: parseInt(offset)
   });

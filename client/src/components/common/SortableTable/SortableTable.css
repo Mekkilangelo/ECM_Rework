@@ -1,0 +1,53 @@
+/* Styles pour la table triable */
+.sortable-table .sortable-header {
+  position: relative;
+  user-select: none;
+}
+
+.sortable-table .sortable-header.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sortable-table .sortable-header.clickable:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.sortable-table .sort-icon-container {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  min-width: 12px;
+}
+
+.sortable-table .sort-icon {
+  font-size: 0.8em;
+  transition: color 0.2s ease;
+}
+
+.sortable-table .sort-icon.inactive {
+  color: #dee2e6;
+}
+
+.sortable-table .sort-icon.active {
+  color: #dc3545; /* Couleur rouge pour correspondre au thème */
+}
+
+.sortable-table .clickable-row {
+  cursor: pointer;
+}
+
+.sortable-table .clickable-row:hover {
+  background-color: rgba(0, 0, 0, 0.025) !important;
+}
+
+/* Responsive: ajustement des icônes sur petits écrans */
+@media (max-width: 768px) {
+  .sortable-table .sort-icon-container {
+    margin-left: 4px;
+  }
+  
+  .sortable-table .sort-icon {
+    font-size: 0.7em;
+  }
+}

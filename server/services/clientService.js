@@ -43,13 +43,27 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
     whereClause.name = { [Op.like]: `%${search}%` };
   }
   
+  // Mapping des champs de tri pour gérer les colonnes des tables associées
+  const getOrderClause = (sortBy, sortOrder) => {
+    const sortMapping = {
+      'name': ['name', sortOrder],
+      'client_group': [{ model: Client }, 'client_group', sortOrder],
+      'country': [{ model: Client }, 'country', sortOrder],
+      'city': [{ model: Client }, 'city', sortOrder],
+      'modified_at': ['modified_at', sortOrder],
+      'created_at': ['created_at', sortOrder]
+    };
+    
+    return sortMapping[sortBy] || ['modified_at', 'DESC'];
+  };
+  
   const clients = await Node.findAll({
     where: whereClause,
     include: [{
       model: Client,
       attributes: ['client_code', 'country', 'city', 'client_group', 'address']
     }],
-    order: [[sortBy, sortOrder]],
+    order: [getOrderClause(sortBy, sortOrder)],
     limit: parseInt(limit),
     offset: parseInt(offset)
   });

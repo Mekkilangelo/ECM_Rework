@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
-const useHierarchy = () => {
+const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') => {
   const { 
     currentLevel, 
     hierarchyState, 
@@ -16,8 +16,30 @@ const useHierarchy = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [totalItems, setTotalItems] = useState(0);
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [sortOrder, setSortOrder] = useState(initialSortOrder);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   // Utiliser une référence pour éviter des rendus supplémentaires
   const isFetchingRef = useRef(false);
+  const debounceTimerRef = useRef(null);
+
+  // Débounce pour la recherche
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery]);
   
   const fetchData = async () => {
     // Empêcher les appels simultanés
@@ -27,47 +49,75 @@ const useHierarchy = () => {
     setLoading(true);
     setError(null);
     
-    try {
-      let url, params;
-      
-      switch(currentLevel) {
+    try {      let url, params;
+        switch(currentLevel) {
         case 'client':
           url = `${API_URL}/clients`;
           // Convertir page en offset pour l'API
           params = { 
             offset: (currentPage - 1) * itemsPerPage, 
-            limit: itemsPerPage 
+            limit: itemsPerPage,            sortBy: sortBy,
+            sortOrder: sortOrder
           };
+          // Ajouter la recherche si présente
+          if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+            params.search = debouncedSearchQuery.trim();
+          }
           break;
         case 'order':
           url = `${API_URL}/orders`;
           params = { 
             parent_id: hierarchyState.clientId, 
             offset: (currentPage - 1) * itemsPerPage, 
-            limit: itemsPerPage 
+            limit: itemsPerPage,
+            sortBy: sortBy,
+            sortOrder: sortOrder
           };
+          // Ajouter la recherche si présente
+          if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+            params.search = debouncedSearchQuery.trim();
+          }
           break;
         case 'part':
           url = `${API_URL}/parts`;
           params = { 
             parent_id: hierarchyState.orderId, 
             offset: (currentPage - 1) * itemsPerPage, 
-            limit: itemsPerPage 
+            limit: itemsPerPage,
+            sortBy: sortBy,
+            sortOrder: sortOrder
           };
+          // Ajouter la recherche si présente
+          if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+            params.search = debouncedSearchQuery.trim();
+          }
           break;
         case 'test':
           url = `${API_URL}/tests`;
           params = { 
             parent_id: hierarchyState.partId, 
             offset: (currentPage - 1) * itemsPerPage, 
-            limit: itemsPerPage 
+            limit: itemsPerPage,
+            sortBy: sortBy,
+            sortOrder: sortOrder
           };
+          // Ajouter la recherche si présente
+          if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+            params.search = debouncedSearchQuery.trim();
+          }
           break;
         default:
-          url = `${API_URL}/clients`;          params = { 
+          url = `${API_URL}/clients`;
+          params = { 
             offset: (currentPage - 1) * itemsPerPage, 
-            limit: itemsPerPage 
+            limit: itemsPerPage,
+            sortBy: sortBy,
+            sortOrder: sortOrder
           };
+          // Ajouter la recherche si présente
+          if (debouncedSearchQuery && debouncedSearchQuery.trim()) {
+            params.search = debouncedSearchQuery.trim();
+          }
       }
       
       const response = await axios.get(url, { params });
@@ -99,12 +149,52 @@ const useHierarchy = () => {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  };
-    // Recharger les données quand le niveau, la page ou les filtres changent
+  };  // Recharger les données quand le niveau, la page, les filtres ou la recherche changent
   useEffect(() => {
     fetchData();
   }, [currentLevel, hierarchyState.clientId, hierarchyState.orderId, 
-      hierarchyState.partId, currentPage, itemsPerPage]);
+      hierarchyState.partId, currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
+  
+  // Fonction pour gérer la recherche
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  // Fonction pour effacer la recherche
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
+  // Fonction pour gérer le tri
+  const handleSort = (columnKey, direction) => {
+    // Mapper les clés de colonnes vers les champs de base de données
+    const sortMapping = {
+      // Clients
+      'name': 'name',
+      'Client.client_group': 'client_group',
+      'Client.country': 'country', 
+      'Client.city': 'city',
+      // Orders
+      'Order.commercial': 'commercial',
+      'Order.order_date': 'order_date',
+      // Parts
+      'Part.client_designation': 'client_designation',
+      'Part.reference': 'reference',
+      'Part.steel': 'steel',
+      'Part.quantity': 'quantity',
+      // Tests
+      'Test.load_number': 'load_number',
+      'Test.test_date': 'test_date',
+      'Test.location': 'location',
+      // Commun
+      'modified_at': 'modified_at',
+      'created_at': 'created_at'
+    };
+    
+    const dbField = sortMapping[columnKey] || columnKey;
+    setSortBy(dbField);
+    setSortOrder(direction);
+  };
   
   // Mettre à jour le statut d'un élément (nouveau -> lu)
   const updateItemStatus = async (nodeId) => {
@@ -122,13 +212,20 @@ const useHierarchy = () => {
     } catch (err) {
       console.error('Erreur lors de la mise à jour du statut:', err);
     }
-  };
-  
-  return {
+  };    return {
     data,
     loading,
     error,
     totalItems,
+    // Fonctions de tri
+    sortBy,
+    sortOrder,
+    handleSort,
+    // Fonctions de recherche
+    searchQuery,
+    handleSearch,
+    clearSearch,
+    // Autres fonctions
     updateItemStatus,
     refreshData: fetchData
   };

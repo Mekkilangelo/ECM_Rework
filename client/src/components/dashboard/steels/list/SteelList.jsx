@@ -1,10 +1,12 @@
 // src/components/reference/steels/SteelList.jsx
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { Table, Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
+import { Button, Spinner, Alert, Modal, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faCodeBranch, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faCodeBranch } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from '../../../../context/AuthContext';
 import ActionButtons from '../../../common/ActionButtons';
+import SortableTable from '../../../common/SortableTable';
+import SearchInput from '../../../common/SearchInput/SearchInput';
 import SteelForm from '../form/SteelForm';
 import steelService from '../../../../services/steelService';
 import '../../../../styles/dataList.css';
@@ -14,27 +16,57 @@ import Pagination from '../../../common/Pagination';
 import LimitSelector from '../../../common/LimitSelector';
 import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
-const SteelList = () => {  const { t } = useTranslation();
+const SteelList = () => {
+  const { t } = useTranslation();
   const { user } = useContext(AuthContext);
   const { confirmDelete } = useConfirmationDialog();
   const [steels, setSteels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const limitSelectorRef = useRef(null);
+  const debounceTimerRef = useRef(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [total, setTotal] = useState(0);  // Déclarer fetchSteels avant de l'utiliser
+  const [total, setTotal] = useState(0);
+  
+  // État pour le tri côté serveur
+  const [sortBy, setSortBy] = useState('modified_at');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  // Débounce pour la recherche
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [searchQuery]);  // Déclarer fetchSteels avant de l'utiliser
   const fetchSteels = async () => {
     try {
       console.log('=== FRONTEND SteelList fetchSteels called ===');
-      console.log('Paramètres:', { currentPage, itemsPerPage });
+      console.log('Paramètres:', { currentPage, itemsPerPage, sortBy, sortOrder, search: debouncedSearchQuery });
       
       setLoading(true);
-      const response = await steelService.getSteels(currentPage, itemsPerPage);
+      const response = await steelService.getSteels(
+        currentPage, 
+        itemsPerPage, 
+        sortBy, 
+        sortOrder, 
+        debouncedSearchQuery.trim() || undefined
+      );
       
       console.log('Réponse complète steelService.getSteels:', response);
       
@@ -95,10 +127,12 @@ const SteelList = () => {  const { t } = useTranslation();
         setTotalPages(1);
       }
       
-      console.log('État final:', {
+      console.log('État final après tri:', {
         steelsCount: steels.length,
         total,
-        totalPages
+        totalPages,
+        sortBy,
+        sortOrder
       });
       
       setError(null);
@@ -128,13 +162,107 @@ const SteelList = () => {  const { t } = useTranslation();
     handleItemUpdated
   } = useModalState({
     onRefreshData: fetchSteels
-  });
-  // Vérification des droits utilisateur
+  });  // Vérification des droits utilisateur
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
-  useEffect(() => {
+  // Configuration des colonnes pour la table triable
+  const columns = [
+    {
+      key: 'Steel.grade',
+      label: t('steels.grade'),
+      style: { width: '30%' },
+      render: (steel) => {
+        const steelData = steel.Steel || steel;
+        return (
+          <div
+            onClick={() => handleViewDetails(steel)}
+            style={{ cursor: 'pointer' }}
+            className="d-flex align-items-center"
+          >
+            <div className="item-name font-weight-bold text-primary">
+              {steelData.grade || t('steels.noGrade')}
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'Steel.family',
+      label: t('steels.family'),
+      cellClassName: 'text-center',
+      render: (steel) => {
+        const steelData = steel.Steel || steel;
+        return steelData.family || "-";
+      }
+    },
+    {
+      key: 'Steel.standard',
+      label: t('steels.standard'),
+      cellClassName: 'text-center',
+      render: (steel) => {
+        const steelData = steel.Steel || steel;
+        return steelData.standard || "-";
+      }
+    },
+    {
+      key: 'modified_at',
+      label: t('common.modifiedAt'),
+      cellClassName: 'text-center',
+      render: (steel) => {
+        const steelData = steel.Steel || steel;
+        return (steel.modified_at || steelData.modified_at)
+          ? new Date(steel.modified_at || steelData.modified_at).toLocaleString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+          : "-";
+      }
+    },
+    {
+      key: 'actions',
+      label: t('common.actions'),
+      style: { width: hasEditRights ? '150px' : '80px' },
+      cellClassName: 'text-center',
+      sortable: false,
+      render: (steel) => (
+        <ActionButtons
+          itemId={steel.id || (steel.Steel && steel.Steel.id)}
+          onView={(e, id) => {
+            handleViewDetails(steel);
+          }}
+          onEdit={hasEditRights ? (e, id) => {
+            handleEditSteel(steel);
+          } : undefined}
+          onDelete={hasEditRights ? (e, id) => {
+            handleDeleteSteel(steel.id || (steel.Steel && steel.Steel.id));
+          } : undefined}
+          hasEditRights={hasEditRights}
+          labels={{
+            view: t('common.view'),
+            edit: t('common.edit'),
+            delete: t('common.delete')
+          }}
+        />
+      )
+    }
+  ];  useEffect(() => {
     fetchSteels();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
+
+  // Fonction pour gérer la recherche
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Réinitialiser à la première page lors de la recherche
+  };
+
+  // Fonction pour effacer la recherche
+  const clearSearch = () => {
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -144,6 +272,36 @@ const SteelList = () => {  const { t } = useTranslation();
   const handleLimitChange = (newLimit) => {
     setItemsPerPage(newLimit);
     setCurrentPage(1); // Réinitialiser à la première page lors du changement de limite
+  };
+  // Fonction pour gérer le tri côté serveur
+  const handleSort = (columnKey, direction) => {
+    console.log('=== SteelList handleSort called ===');
+    console.log('Tri demandé:', { columnKey, direction });
+    console.log('État actuel avant tri:', { sortBy, sortOrder, currentPage });
+    
+    // Mapper les clés de colonnes vers les champs de base de données
+    const sortMapping = {
+      'grade': 'grade',
+      'Steel.grade': 'grade',
+      'family': 'family', 
+      'Steel.family': 'family',
+      'standard': 'standard',
+      'Steel.standard': 'standard',
+      'modified_at': 'modified_at'
+    };
+    
+    const dbField = sortMapping[columnKey] || columnKey;
+    console.log('Mapping appliqué:', { columnKey, dbField });
+    
+    setSortBy(dbField);
+    setSortOrder(direction);
+    setCurrentPage(1); // Retourner à la première page lors du tri
+    
+    console.log('Nouveaux paramètres définis:', { 
+      newSortBy: dbField, 
+      newSortOrder: direction, 
+      newCurrentPage: 1 
+    });
   };
 
   const handleViewDetails = (steel) => {
@@ -170,10 +328,10 @@ const SteelList = () => {  const { t } = useTranslation();
   };
 
   if (loading && steels.length === 0) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
-  if (error) return <Alert variant="danger">{error}</Alert>;
-  return (
+  if (error) return <Alert variant="danger">{error}</Alert>;  return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-4">        <h2 className="mb-0">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">
           <FontAwesomeIcon icon={faCodeBranch} className="mr-2 text-danger" />
           {t('steels.title')}
         </h2>
@@ -186,6 +344,16 @@ const SteelList = () => {  const { t } = useTranslation();
             <FontAwesomeIcon icon={faPlus} className="mr-2" /> {t('steels.add')}
           </Button>
         )}
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="mb-3">
+        <SearchInput
+          value={searchQuery}
+          onSearch={handleSearch}
+          onClear={clearSearch}
+          placeholder={t('steels.searchPlaceholder', 'Rechercher des aciers...')}
+        />
       </div>
       
       {/* Contrôles de pagination */}
@@ -203,76 +371,28 @@ const SteelList = () => {  const { t } = useTranslation();
           onPageChange={handlePageChange}
         />
       </div>
-      
-      {steels.length > 0 ? (
+
+      {/* Affichage du nombre de résultats */}
+      {searchQuery && (
+        <div className="mb-3 text-muted">
+          {t('common.searchResults', { count: total, query: searchQuery })}
+        </div>
+      )}
+        {steels.length > 0 ? (
         <>
           <div className="data-list-container">
-            <Table hover responsive className="data-table border-bottom">
-              <thead>
-                <tr className="bg-light">
-                  <th style={{ width: '30%' }}>{t('steels.grade')}</th>
-                  <th className="text-center">{t('steels.family')}</th>
-                  <th className="text-center">{t('steels.standard')}</th>
-                  <th className="text-center">{t('common.modifiedAt')}</th>
-                  <th className="text-center" style={{ width: hasEditRights ? '150px' : '80px' }}>{t('common.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {steels.map(steel => {
-                  // Handle different response structures
-                  const steelData = steel.Steel || steel; // If it's nested under a Node object
-                  
-                  return (
-                    <tr key={steel.id || steelData.id}>
-                      <td>
-                        <div
-                          onClick={() => handleViewDetails(steel)}
-                          style={{ cursor: 'pointer' }}
-                          className="d-flex align-items-center"
-                        >
-                          <div className="item-name font-weight-bold text-primary">
-                            {steelData.grade || t('steels.noGrade')}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="text-center">{steelData.family || "-"}</td>
-                      <td className="text-center">{steelData.standard || "-"}</td>
-                      <td className="text-center">
-                        {steel.modified_at || steelData.modified_at
-                          ? new Date(steel.modified_at || steelData.modified_at).toLocaleString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })
-                          : "-"}
-                      </td>
-                      <td className="text-center">
-                        <ActionButtons
-                          itemId={steel.id || steelData.id}
-                          onView={(e, id) => {
-                            handleViewDetails(steel);
-                          }}
-                          onEdit={hasEditRights ? (e, id) => {
-                            handleEditSteel(steel);
-                          } : undefined}
-                          onDelete={hasEditRights ? (e, id) => {
-                            handleDeleteSteel(steel.id || steelData.id);
-                          } : undefined}
-                          hasEditRights={hasEditRights}
-                          labels={{
-                            view: t('common.view'),
-                            edit: t('common.edit'),
-                            delete: t('common.delete')
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>          </div>
+            <SortableTable
+              data={steels}
+              columns={columns}
+              hover
+              responsive
+              className="data-table border-bottom"
+              serverSide={true}
+              onSort={handleSort}
+              currentSortBy={sortBy}
+              currentSortOrder={sortOrder}
+            />
+          </div>
           {loading && <div className="text-center mt-3"><Spinner animation="border" size="sm" /></div>}
           
           {/* Pagination en bas de liste si besoin */}
@@ -283,19 +403,28 @@ const SteelList = () => {  const { t } = useTranslation();
               onPageChange={handlePageChange}
             />
           </div>
-          
-          <div className="text-muted text-center mt-2">
-            {t('steels.showing', { count: steels.length, total: total })}
+            <div className="text-muted text-center mt-2">
+            {searchQuery ? 
+              t('steels.showingSearchResults', { count: steels.length, total: total, query: searchQuery }) :
+              t('steels.showing', { count: steels.length, total: total })
+            }
           </div>
         </>
-      ) : (
-        <Card className="text-center p-5 bg-light">
+      ) : (        <Card className="text-center p-5 bg-light">
           <Card.Body>
             <FontAwesomeIcon icon={faCodeBranch} size="3x" className="text-secondary mb-3" />
-            <h4>{t('steels.noSteelsFound')}</h4>
+            <h4>{searchQuery ? t('steels.noResultsFound') : t('steels.noSteelsFound')}</h4>
             <p className="text-muted">
-              {searchQuery ? t('steels.noResultsFound') : t('steels.clickToAddSteel')}
+              {searchQuery ? 
+                t('steels.tryDifferentSearch') : 
+                t('steels.clickToAddSteel')
+              }
             </p>
+            {searchQuery && (
+              <Button variant="outline-secondary" onClick={clearSearch} className="mt-2">
+                {t('common.clearSearch')}
+              </Button>
+            )}
           </Card.Body>
         </Card>
       )}

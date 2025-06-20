@@ -5,20 +5,41 @@ import api from './api';
  * Fournit des méthodes pour interagir avec l'API REST pour les opérations CRUD et de recherche sur les aciers
  */
 const steelService = {  /**
-   * Récupère tous les aciers avec pagination
+   * Récupère tous les aciers avec pagination, tri et recherche
    * @param {number} page - Numéro de la page (commence à 1)
    * @param {number} limit - Nombre d'éléments par page
+   * @param {string} sortBy - Champ de tri (optionnel)
+   * @param {string} sortOrder - Ordre de tri: 'asc' ou 'desc' (optionnel)
+   * @param {string} search - Terme de recherche optionnel
    * @returns {Promise<Object>} Données des aciers et informations de pagination
    * @throws {Error} En cas d'échec de la requête
-   */
-  getSteels: async (page = 1, limit = 10) => {
+   */  
+  getSteels: async (page = 1, limit = 10, sortBy = null, sortOrder = 'asc', search = '') => {
     try {
       console.log('=== FRONTEND steelService.getSteels called ===');
-      console.log('Paramètres:', { page, limit, offset: (page - 1) * limit });
+      console.log('Paramètres reçus:', { page, limit, offset: (page - 1) * limit, sortBy, sortOrder, search });
       
-      const response = await api.get('/steels', { 
-        params: { limit, offset: (page - 1) * limit } 
-      });
+      const params = { 
+        limit, 
+        offset: (page - 1) * limit 
+      };
+      
+      // Ajouter les paramètres de tri si fournis
+      if (sortBy) {
+        params.sortBy = sortBy;
+        params.sortOrder = sortOrder;
+        console.log('Paramètres de tri ajoutés:', { sortBy, sortOrder });
+      }
+      
+      // Ajouter le paramètre de recherche s'il est fourni
+      if (search && search.trim()) {
+        params.search = search.trim();
+        console.log('Paramètre de recherche ajouté:', search.trim());
+      }
+      
+      console.log('Paramètres finaux envoyés à l\'API:', params);
+      
+      const response = await api.get('/steels', { params });
       
       console.log('Réponse brute de l\'API:', response);
       console.log('Données de la réponse:', response.data);

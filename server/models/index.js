@@ -2,20 +2,43 @@ const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
-const config = require('../config/database');
 const db = {};
+
+// Configuration de la base de données directement ici pour éviter les imports circulaires
+require('dotenv').config();
+
+const dbConfig = {
+  host: process.env.DB_HOST || '127.0.0.1',
+  database: process.env.DB_NAME || 'synergy',
+  port: process.env.DB_PORT || 3306,
+  username: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'root',
+  dialect: 'mysql',
+  logging: false, // Désactivé pour réduire le bruit
+  pool: {
+    max: 10,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  dialectOptions: {
+    multipleStatements: true,
+    decimalNumbers: true
+  }
+};
 
 // Création de l'instance Sequelize avec la configuration
 const sequelize = new Sequelize(
-  config.database, 
-  config.username, 
-  config.password, 
+  dbConfig.database, 
+  dbConfig.username, 
+  dbConfig.password, 
   {
-    host: config.host,
-    port: config.port,
-    dialect: config.dialect,
-    logging: config.logging,
-    pool: config.pool,
+    host: dbConfig.host,
+    port: dbConfig.port,
+    dialect: dbConfig.dialect,
+    logging: dbConfig.logging,
+    pool: dbConfig.pool,
+    dialectOptions: dbConfig.dialectOptions,
     define: {
       underscored: false
     }

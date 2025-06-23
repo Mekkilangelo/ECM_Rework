@@ -1,0 +1,252 @@
+/* Styles pour la page de logs */
+
+.log-entry {
+  transition: background-color 0.2s ease;
+}
+
+.log-entry:hover {
+  background-color: #f8f9fa;
+}
+
+.user-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  background-color: transparent;
+}
+
+.action-code {
+  font-size: 0.8rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* Styles pour les filtres */
+.filters-card {
+  border: 1px solid #e3e6f0;
+  border-radius: 0.35rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* Responsive pour le tableau */
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+  
+  .action-code {
+    font-size: 0.7rem;
+  }
+  
+  .user-badge {
+    font-size: 0.65rem;
+  }
+}
+
+/* Animation pour le chargement */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Styles pour les badges de niveau */
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+/* Styles pour améliorer la lisibilité */
+.log-timestamp {
+  white-space: nowrap;
+}
+
+.log-message {
+  word-break: break-word;
+}
+
+.log-ip {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+/* Styles pour les boutons d'action */
+.logs-actions {
+  gap: 0.5rem;
+}
+
+.logs-actions .btn {
+  border-radius: 0.25rem;
+}
+
+/* Styles pour la section vide */
+.no-logs-container {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.no-logs-container .fa-file-alt {
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+/* Styles pour les filtres avancés */
+.filters-container {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group {
+  margin-bottom: 1rem;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Styles pour les détails des logs */
+.log-details-btn {
+  transition: all 0.2s ease;
+}
+
+.log-details-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Amélioration de l'apparence du tableau */
+.table thead th {
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Styles pour les icônes de niveau */
+.level-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Styles pour l'en-tête de la page */
+.logs-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.logs-header h1 {
+  margin: 0;
+  font-weight: 300;
+}
+
+/* Animation pour les nouveaux logs */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.log-entry.new {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Styles pour l'état de chargement */
+.logs-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #6c757d;
+}
+
+.logs-loading .spinner-border {
+  margin-bottom: 1rem;
+}
+
+/* Styles pour les erreurs */
+.logs-error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin: 1rem;
+}
+
+/* Responsive design amélioré */
+@media (max-width: 1200px) {
+  .logs-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 992px) {
+  .filters-container .row {
+    margin: 0;
+  }
+  
+  .filters-container .col-md-6,
+  .filters-container .col-lg-3,
+  .filters-container .col-lg-2 {
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .logs-header {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .logs-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .table-responsive {
+    margin: 0 -0.5rem;
+  }
+  
+  .card-body.p-0 .table {
+    margin-bottom: 0;
+  }
+}

@@ -22,6 +22,7 @@ import Reference from './pages/Reference';
 import Archives from './pages/Archives';  
 import UserManagement from './pages/UserManagement';
 import Search from './pages/Search'; // Import de la nouvelle page de recherche
+import Logs from './pages/Logs'; // Import de la page de logs
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NavigationProvider } from './context/NavigationContext'; // Import du NavigationProvider
@@ -104,13 +105,21 @@ function App() {
                     </PrivateRouteComponent>
                   } 
                 />
-                
-                {/* Route pour la page de recherche */}
+                  {/* Route pour la page de recherche */}
                 <Route 
                   path="/search" 
                   element={
                     <PrivateRouteComponent>
                       <Search />
+                    </PrivateRouteComponent>
+                  } 
+                />
+                  {/* Route pour la page de logs - réservée aux admins et superusers */}
+                <Route 
+                  path="/logs" 
+                  element={
+                    <PrivateRouteComponent>
+                      <Logs />
                     </PrivateRouteComponent>
                   } 
                 />

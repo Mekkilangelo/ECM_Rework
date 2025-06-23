@@ -25,9 +25,16 @@ const chatbotRoutes = require('./routes/chatbot');
 const archiveRoutes = require('./routes/archives');
 const searchRoutes = require('./routes/search'); // Routes de recherche
 const systemRoutes = require('./routes/system'); // Routes de gestion système
+const logRoutes = require('./routes/logs'); // Routes des logs
+
+// Middlewares de logging
+const { logRequest, logAuthError, logError } = require('./middleware/logging');
 
 // Initialize express app
 const app = express();
+
+// Configurer Express pour faire confiance aux proxies (pour capturer l'IP correctement)
+app.set('trust proxy', true);
 
 // Middleware
 app.use(cors({
@@ -44,6 +51,10 @@ const requestIdMiddleware = require('./middleware/request-id');
 const responseLogger = require('./middleware/response-logger');
 app.use(responseLogger);
 app.use(requestIdMiddleware);
+
+// Middlewares de logging centralisé
+app.use(logRequest);
+app.use(logAuthError);
 
 // Log all requests
 app.use((req, res, next) => {
@@ -71,6 +82,7 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/archives', archiveRoutes);
 app.use('/api/search', searchRoutes); // Routes de recherche
 app.use('/api/system', systemRoutes); // Routes de gestion système
+app.use('/api/logs', logRoutes); // Routes des logs
 
 // Root route
 app.get('/api', (req, res) => {
@@ -148,6 +160,9 @@ if (process.env.NODE_ENV === 'production') {
 app.use('*', (req, res) => {
   res.status(404).json({ message: 'Resource not found' });
 });
+
+// Middleware de gestion des erreurs avec logging
+app.use(logError);
 
 // Global error handler
 app.use(errorHandler);

@@ -8,6 +8,7 @@ const { User } = require('../models');
 const { generateToken, verifyPassword, hashPassword, refreshToken } = require('../config/auth');
 const config = require('../config/config');
 const logger = require('../utils/logger');
+const loggingService = require('../services/loggingService');
 const apiResponse = require('../utils/apiResponse');
 const { AuthenticationError, NotFoundError } = require('../utils/errors');
 
@@ -28,19 +29,33 @@ const login = async (req, res, next) => {
 
     // Vérifier si l'utilisateur existe
     const user = await User.findOne({ where: { username } });
-    
-    if (!user || !(await verifyPassword(password, user.password_hash))) {
+      if (!user || !(await verifyPassword(password, user.password_hash))) {
       // Délai pour contrer les attaques par force brute
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       logger.warn(`Échec d'authentification pour l'utilisateur: ${username}`);
+      
+      // Logger l'échec de connexion
+      await loggingService.logUserLogin(null, username, false, {
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        sessionId: req.session?.id,
+        requestId: req.requestId
+      });
+      
       return apiResponse.error(res, 'Identifiants invalides', 401);
-    }    // Mise à jour de la date de dernière connexion
+    }// Mise à jour de la date de dernière connexion
     // Note: last_login field removed as it doesn't exist in the database
-    // Générer un token JWT
-    const token = generateToken(user);
-    
-    logger.info(`Connexion réussie pour l'utilisateur: ${username}`, { userId: user.id });
+    // Générer un token JWT    const token = generateToken(user);
+      logger.info(`Successful login for user: ${username}`, { userId: user.id });
+
+    // Log successful login
+    await loggingService.logUserLogin(user.id, username, true, {
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      sessionId: req.session?.id,
+      requestId: req.requestId
+    });
 
     // Journaliser le token (longueur et format) pour débogage
     logger.debug(`Token généré - longueur: ${token ? token.length : 0}, format valide: ${token && token.split('.').length === 3}`);
@@ -118,17 +133,14 @@ const refreshUserToken = async (req, res, next) => {
       },
       config.JWT.SECRET,
       { expiresIn: config.JWT.INACTIVITY_EXPIRE }
-    );
-      // Logs améliorés pour mieux comprendre le comportement
+    );    // Logs améliorés pour mieux comprendre le comportement
     if (process.env.NODE_ENV === 'development') {
       logger.debug(`[SERVER] 🔄 Rafraîchissement de token
       📋 DONNÉES:
       • Utilisateur: ${req.user.username} (ID: ${req.user.id})
       • Dernière activité: ${new Date(oldActivity).toLocaleString()}
       • Temps d'inactivité: ${Math.round(inactiveTime/1000)}s
-      • Inactivité maximale configurée: ${config.JWT.INACTIVITY_EXPIRE}
-      • Valeur du .env: JWT_INACTIVITY_EXPIRE=${process.env.JWT_INACTIVITY_EXPIRE || 'non définie'}
-      • Valeur du .env: JWT_REFRESH_BEFORE_EXPIRE=${process.env.JWT_REFRESH_BEFORE_EXPIRE || 'non définie'}`);
+      • Inactivité maximale configurée: ${config.JWT.INACTIVITY_EXPIRE}`);
     }
     
     // Renvoyer le nouveau token
@@ -142,6 +154,34 @@ const refreshUserToken = async (req, res, next) => {
     }, 'Token rafraîchi avec succès');
   } catch (error) {
     logger.error(`Erreur lors du rafraîchissement du token: ${error.message}`, error);
+    next(error);  }
+};
+
+/**
+ * Déconnexion d'un utilisateur
+ * @route POST /api/auth/logout
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Confirmation de déconnexion
+ */
+const logout = async (req, res, next) => {
+  try {
+    if (req.user) {
+      // Logger la déconnexion
+      await loggingService.logUserLogout(req.user.id, req.user.username, {
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        sessionId: req.session?.id,
+        requestId: req.requestId
+      });
+
+      logger.info(`Déconnexion de l'utilisateur: ${req.user.username}`, { userId: req.user.id });
+    }
+
+    return apiResponse.success(res, null, 'Déconnexion réussie');
+  } catch (error) {
+    logger.error(`Erreur lors de la déconnexion: ${error.message}`, error);
     next(error);
   }
 };
@@ -149,5 +189,6 @@ const refreshUserToken = async (req, res, next) => {
 module.exports = {
   login,
   getMe,
-  refreshUserToken
+  refreshUserToken,
+  logout
 };

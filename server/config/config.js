@@ -65,15 +65,12 @@ const config = {
   // Options de sécurité et d'accès
   ACCESS: {
     GLOBAL_READ_ONLY: process.env.GLOBAL_READ_ONLY === 'true',
-  },
-  // JSON Web Token
+  },  // JSON Web Token
   JWT: {
     SECRET: process.env.JWT_SECRET || 'default_jwt_secret_for_development_and_testing',
     EXPIRE: process.env.JWT_EXPIRE || '24h',
     // Durée d'inactivité configurée par la variable d'environnement ou 2 minutes par défaut
-    INACTIVITY_EXPIRE: process.env.JWT_INACTIVITY_EXPIRE || '2m', 
-    // Durée avant expiration pour déclencher un rafraîchissement (1/4 du temps d'inactivité par défaut)
-    REFRESH_BEFORE_EXPIRE: parseInt(process.env.JWT_REFRESH_BEFORE_EXPIRE || '30', 10) // En secondes
+    INACTIVITY_EXPIRE: process.env.JWT_INACTIVITY_EXPIRE || '2m'
   },
   
   // Python

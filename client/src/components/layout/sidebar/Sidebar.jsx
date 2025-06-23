@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHome, faUsers, faDatabase, faLayerGroup,
   faEraser, faChartLine, faUniversity, faBook,
-  faTicketAlt, faSearch, faUserCog
+  faTicketAlt, faSearch, faUserCog, faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
 // Ne pas importer les icônes qui causent des problèmes
 // import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
@@ -261,9 +261,7 @@ const Sidebar = ({ userRole }) => {
           <FontAwesomeIcon icon={faBook} className="fa-fw mr-2" />
           <span>{t('sidebar.archivesReference.reference')}</span>
         </Link>
-      </li>
-
-      {/* Support Section - only visible for superuser */}
+      </li>      {/* Support Section - only visible for superuser */}
       {isSuperUser && (
         <>
           <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.support.title')}</h6>
@@ -274,6 +272,22 @@ const Sidebar = ({ userRole }) => {
             >
               <FontAwesomeIcon icon={faTicketAlt} className="fa-fw mr-2" />
               <span>{t('sidebar.support.createTicket')}</span>
+            </Link>
+          </li>
+        </>
+      )}
+
+      {/* Logs Section - only visible for admin and superuser */}
+      {canManageUsers && (
+        <>
+          <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.logs.title')}</h6>
+          <li className="nav-item mb-3">
+            <Link
+              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/logs' ? 'active' : ''}`}
+              to="/logs"
+            >
+              <FontAwesomeIcon icon={faFileAlt} className="fa-fw mr-2" />
+              <span>{t('sidebar.logs.logs')}</span>
             </Link>
           </li>
         </>

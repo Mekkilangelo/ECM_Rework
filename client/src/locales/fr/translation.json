@@ -158,10 +158,13 @@
       "title": "Archives & Références",
       "archives": "Archives",
       "reference": "Référence"
-    },
-    "support": {
+    },    "support": {
       "title": "Support",
       "createTicket": "Créer un ticket"
+    },
+    "logs": {
+      "title": "Journaux d'Activité",
+      "logs": "Journaux"
     },
     "dataCleaning": {
       "confirmMessage": "Attention ! Cette action va supprimer définitivement toutes les données de l'application.\n\nÊtes-vous sûr de vouloir continuer ?",
@@ -793,8 +796,7 @@
       "delete": "Supprimer l'utilisateur",
       "edit": "Modifier le rôle"
     },
-    "messages": {
-      "noChanges": "Aucune modification à enregistrer",
+    "messages": {      "noChanges": "Aucune modification à enregistrer",
       "changesSaved": "Rôles des utilisateurs mis à jour avec succès",
       "changesReset": "Modifications annulées",
       "userCreated": "Utilisateur créé avec succès",
@@ -806,6 +808,57 @@
         "deleteUser": "Erreur lors de la suppression de l'utilisateur",
         "missingFields": "Nom d'utilisateur et mot de passe sont requis"
       }
+    }
+  },
+    "logs": {
+    "title": "Journaux d'Activité",
+    "filters": "Filtres",
+    "refresh": "Actualiser",
+    "export": "Exporter",
+    "dateFrom": "Date de début",
+    "dateTo": "Date de fin",
+    "level": "Niveau",
+    "action": "Action",
+    "user": "Utilisateur",
+    "allLevels": "Tous les niveaux",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "success": "Succès",
+    "info": "Information",
+    "actionPlaceholder": "Filtrer par action...",
+    "userPlaceholder": "Filtrer par utilisateur...",
+    "applyFilters": "Appliquer",
+    "resetFilters": "Réinitialiser",
+    "logHistory": "Historique des activités",
+    "entries": "entrées",
+    "lastUpdate": "Dernière mise à jour",
+    "loading": "Chargement des journaux...",
+    "noLogs": "Aucun journal disponible",
+    "timestamp": "Horodatage",
+    "message": "Message",
+    "ip": "Adresse IP",    "details": "Détails",
+    "viewDetails": "Voir les détails",
+    "detailsTitle": "Détails du Journal",
+    "technicalDetails": "Détails techniques",
+    "stats": {
+      "totalLogs": "Total des journaux",
+      "errors": "Erreurs",
+      "warnings": "Avertissements",
+      "today": "Aujourd'hui"
+    },
+    "pagination": {
+      "showing": "Affichage de",
+      "of": "sur",
+      "previous": "Précédent",
+      "next": "Suivant"
+    },
+    "messages": {
+      "refreshed": "Journaux actualisés",
+      "exported": "Journaux exportés avec succès"
+    },
+    "errors": {
+      "loadFailed": "Erreur lors du chargement des journaux",
+      "exportFailed": "Erreur lors de l'export des journaux"
     }
   },
   

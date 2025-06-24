@@ -24,7 +24,10 @@
     "unknown": "Inconnu",
     "user": "Utilisateur",
     "view": "Voir",
-    "yes": "Oui"
+    "yes": "Oui",
+    "hours": "heures",
+    "minutes": "minutes",
+    "seconds": "secondes"
   },
   
   "pagination": {
@@ -319,7 +322,8 @@
     "clickToAddClient": "Cliquez sur \"Ajouter un client\" pour créer un nouveau client",
     "deleteSuccess": "Client supprimé avec succès",
     "deleteError": "Une erreur est survenue lors de la suppression du client",
-    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.",
+    "searchPlaceholder": "Rechercher un client..."
   },
   
   "orders": {
@@ -359,7 +363,8 @@
     "generalInfo": {
       "requestDate": "Date de demande",
       "description": "Description"
-    }
+    },
+    "searchPlaceholder": "Rechercher une commande..."
   },
   
   "parts": {
@@ -533,7 +538,8 @@
       "noEcdSpecs": "Aucune spécification ECD définie",
       "hardness": "Dureté",
       "ecdHardness": "Dureté ECD"
-    }
+    },
+    "searchPlaceholder": "Rechercher une pièce..."
   },
   
   "steels": {
@@ -596,6 +602,7 @@
     "deleteError": "Une erreur est survenue lors de la suppression du test",
     "creating": "Création en cours...",
     "modifying": "Modification en cours...",
+    "searchPlaceholder": "Rechercher un test...",
     
     "sections": {
       "basicInfo": "Informations de base"
@@ -714,7 +721,11 @@
           "loadFilesError": "Erreur lors du chargement des fichiers:",
           "associateFilesError": "Erreur lors de l'association des fichiers:"
         },
-
+        
+        "previewChart": {
+          "title": "Prévisualisation du graphique"
+        },
+        
         "quenchData": {
           "title": "Données de trempe",
           "common": {

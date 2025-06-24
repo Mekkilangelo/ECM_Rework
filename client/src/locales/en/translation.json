@@ -11,7 +11,8 @@
     "loading": "Loading...",
     "max": "Max",
     "min": "Min",
-    "modifiedAt": "Modified on",    "name": "Name",
+    "modifiedAt": "Modified on",
+    "name": "Name",
     "no": "No",
     "save": "Save",
     "selectAll": "Select All",
@@ -22,7 +23,10 @@
     "user": "User",
     "view": "View",
     "yes": "Yes",
-    "addOption": "Add option"
+    "addOption": "Add option",
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds"
   },
   
   "pagination": {
@@ -317,7 +321,8 @@
     "clickToAddClient": "Click on \"Add client\" to create a new client",
     "deleteSuccess": "Client successfully deleted",
     "deleteError": "An error occurred while deleting the client",
-    "confirmDelete": "Are you sure you want to delete this client? This action is irreversible."
+    "confirmDelete": "Are you sure you want to delete this client? This action is irreversible.",
+    "searchPlaceholder": "Search for a client..."
   },
   
   "orders": {
@@ -357,7 +362,8 @@
     "generalInfo": {
       "requestDate": "Request date",
       "description": "Description"
-    }
+    },
+    "searchPlaceholder": "Search for an order..."
   },
   
   "parts": {
@@ -530,7 +536,8 @@
       "noEcdSpecs": "No ECD specifications defined",
       "hardness": "Hardness",
       "ecdHardness": "ECD Hardness"
-    }
+    },
+    "searchPlaceholder": "Search for a part..."
   },
   
   "steels": {
@@ -593,6 +600,7 @@
     "deleteError": "An error occurred while deleting the trial",
     "creating": "Creating...",
     "modifying": "Modifying...",
+    "searchPlaceholder": "Search for a test...",
     
     "sections": {
       "basicInfo": "Basic information"
@@ -711,7 +719,11 @@
           "loadFilesError": "Error while loading files:",
           "associateFilesError": "Error while associating files:"
         },
-
+        
+        "previewChart": {
+          "title": "Chart Preview"
+        },
+        
         "quenchData": {
           "title": "Quench Data",
           "common": {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import ReportPageHeader from './sections/ReportPageHeader';
 import CoverPageSection from './sections/CoverPageSection';
@@ -22,44 +22,64 @@ const ReportPreviewModal = ({
     MicrographySection,
     ControlSection,
     ReportFooter
-  } = sections;
-
-  // Récupérer l'ID de la pièce depuis reportData
+  } = sections;  // Récupérer l'ID de la pièce depuis reportData
   const partId = reportData?.partId;
-    console.log("ReportPreviewModal - ID de la pièce:", partId);
-  console.log("ReportPreviewModal - reportData:", reportData);
-  console.log("ReportPreviewModal - reportData structure:", Object.keys(reportData || {}));
-  console.log("ReportPreviewModal - selectedPhotos:", selectedPhotos);
 
-  // Préparation des photos pour les sections
-  const formattedPhotos = {};
-  if (selectedPhotos) {
-    // Transformation de la structure des photos
-    Object.keys(selectedPhotos).forEach(sectionKey => {
-      if (selectedPhotos[sectionKey]) {
-        // Pour les sections qui utilisent des sous-catégories
-        if (typeof selectedPhotos[sectionKey] === 'object' && !Array.isArray(selectedPhotos[sectionKey])) {
-          formattedPhotos[sectionKey] = [];
-          Object.keys(selectedPhotos[sectionKey]).forEach(subcategory => {
-            if (Array.isArray(selectedPhotos[sectionKey][subcategory])) {
-              formattedPhotos[sectionKey] = [
-                ...formattedPhotos[sectionKey],
-                ...selectedPhotos[sectionKey][subcategory]
-              ];
-            }
-          });
-        } else if (Array.isArray(selectedPhotos[sectionKey])) {
-          formattedPhotos[sectionKey] = selectedPhotos[sectionKey];
+  // Préparation des photos pour les sections (mise en cache avec useMemo)
+  const formattedPhotos = useMemo(() => {
+    const photos = {};
+    if (selectedPhotos) {
+      // Transformation de la structure des photos
+      Object.keys(selectedPhotos).forEach(sectionKey => {
+        if (selectedPhotos[sectionKey]) {
+          // Pour les sections qui utilisent des sous-catégories
+          if (typeof selectedPhotos[sectionKey] === 'object' && !Array.isArray(selectedPhotos[sectionKey])) {
+            photos[sectionKey] = [];
+            Object.keys(selectedPhotos[sectionKey]).forEach(subcategory => {
+              if (Array.isArray(selectedPhotos[sectionKey][subcategory])) {
+                photos[sectionKey] = [
+                  ...photos[sectionKey],
+                  ...selectedPhotos[sectionKey][subcategory]
+                ];
+              }
+            });
+          } else if (Array.isArray(selectedPhotos[sectionKey])) {
+            photos[sectionKey] = selectedPhotos[sectionKey];
+          }
         }
-      }
-    });
-  }
+      });
+    }
+    return photos;
+  }, [selectedPhotos]); // Ne recalculer que si selectedPhotos change
 
-  console.log("ReportPreviewModal - formattedPhotos:", formattedPhotos);
+  // Reformater les données de test avec toutes les données nécessaires (mise en cache avec useMemo)
+  const formattedTestData = useMemo(() => {
+    if (!reportData) return null;
+    return {
+      testCode: reportData.testCode || '',
+      processType: reportData.processType || '',
+      loadNumber: reportData.loadNumber || '',
+      testDate: reportData.testDate || null,
+      // Inclure toutes les données nécessaires pour les sections
+      quench_data: reportData.quenchData || null,
+      recipe_data: reportData.recipeData || null,
+      furnace_data: reportData.furnaceData || null,
+      results_data: reportData.resultsData || null,
+      load_data: reportData.loadData || null,
+      // Autres données utiles
+      testId: reportData.testId || '',
+      testName: reportData.testName || '',
+      location: reportData.location || '',
+      status: reportData.status || '',
+      mountingType: reportData.mountingType || '',
+      positionType: reportData.positionType || '',
+      preoxMedia: reportData.preoxMedia || ''
+    };
+  }, [reportData]); // Ne recalculer que si reportData change
 
-  // Console log pour déboguer
-  console.log("REPORT DATA:", reportData);
-  
+  // Extraire les données client pour l'en-tête
+  const clientData = reportData?.client || {};
+
   // Si les données du rapport ne sont pas chargées
   if (!reportData) {
     return (
@@ -74,18 +94,6 @@ const ReportPreviewModal = ({
       </Modal>
     );
   }
-
-  // Extraire les données client pour l'en-tête
-  const clientData = reportData.client || {};
-  // Reformater les données de test pour l'en-tête
-  const formattedTestData = {
-    testCode: reportData.testCode || '',
-    processType: reportData.processType || '',
-    loadNumber: reportData.loadNumber || '',
-    testDate: reportData.testDate || null
-  };
-
-  console.log("FORMATTED TEST DATA:", formattedTestData);
 
   return (
     <Modal show={show} onHide={handleClose} size="lg">
@@ -257,4 +265,4 @@ const ReportPreviewModal = ({
   );
 };
 
-export default ReportPreviewModal;
+export default React.memo(ReportPreviewModal);

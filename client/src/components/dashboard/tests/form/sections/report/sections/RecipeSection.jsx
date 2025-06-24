@@ -3,21 +3,89 @@ import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
 import { format } from 'date-fns';
 import fr from 'date-fns/locale/fr';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFlask, faCogs, faUser, faCalendarAlt, faThermometerHalf, faTachometerAlt, faClock, faChartLine } from '@fortawesome/free-solid-svg-icons';
 
-const RecipeSection = ({ testData, recipeData: passedRecipeData }) => {
+const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) => {
   const [totalThermalDuration, setTotalThermalDuration] = useState(0);
   const [totalChemicalDuration, setTotalChemicalDuration] = useState(0);
   const [chartData, setChartData] = useState(null);
-  
-  // Utiliser recipeData passé directement ou extrait de testData
+    // Utiliser recipeData passé directement ou extrait de testData
   const recipeData = passedRecipeData || 
     (typeof testData?.recipe_data === 'string' 
       ? JSON.parse(testData.recipe_data) 
       : testData?.recipe_data) || 
     (typeof testData?.recipeData === 'string'
       ? JSON.parse(testData.recipeData)
-      : testData?.recipeData) || {};
-  const quenchData = testData?.quench_data || {};
+      : testData?.recipeData) || {};  // Traitement amélioré des données quench avec parsing si nécessaire
+  const quenchData = (() => {
+    let rawQuenchData = testData?.quench_data || {};
+    
+    // Si c'est une string, essayer de la parser
+    if (typeof rawQuenchData === 'string') {
+      try {
+        rawQuenchData = JSON.parse(rawQuenchData);
+      } catch (e) {
+        console.error('Erreur lors du parsing des données quench:', e);
+        rawQuenchData = {};
+      }
+    }
+      // Vérification additionnelle pour la structure attendue
+    if (rawQuenchData && typeof rawQuenchData === 'object') {
+      // Si les données ont une structure inattendue, essayer de les normaliser
+      if (!rawQuenchData.oil_quench && !rawQuenchData.gas_quench) {
+          // Peut-être que les données sont directement au niveau racine
+        if (rawQuenchData.oilTemperature || rawQuenchData.oilQuenchSpeed || rawQuenchData.gasQuenchSpeed) {
+          // Convertir du format formulaire vers le format API attendu
+          const convertedData = {
+            oil_quench: {},
+            gas_quench: {}
+          };
+          
+          // Oil quench
+          if (rawQuenchData.oilTemperature) {
+            convertedData.oil_quench.temperature = {
+              value: rawQuenchData.oilTemperature,
+              unit: rawQuenchData.oilTempUnit || 'C'
+            };
+          }
+          
+          if (rawQuenchData.oilInertingPressure) {
+            convertedData.oil_quench.inerting_pressure = rawQuenchData.oilInertingPressure;
+          }
+          
+          if (rawQuenchData.oilInertingDelay) {
+            convertedData.oil_quench.inerting_delay = {
+              value: rawQuenchData.oilInertingDelay,
+              unit: rawQuenchData.oilInertingDelayUnit || 's'
+            };
+          }
+          
+          if (rawQuenchData.oilDrippingTime) {
+            convertedData.oil_quench.dripping_time = {
+              value: rawQuenchData.oilDrippingTime,
+              unit: rawQuenchData.oilDrippingTimeUnit || 's'
+            };
+          }
+          
+          if (Array.isArray(rawQuenchData.oilQuenchSpeed) && rawQuenchData.oilQuenchSpeed.length > 0) {
+            convertedData.oil_quench.speed_parameters = rawQuenchData.oilQuenchSpeed;
+          }
+          
+          // Gas quench
+          if (Array.isArray(rawQuenchData.gasQuenchSpeed) && rawQuenchData.gasQuenchSpeed.length > 0) {
+            convertedData.gas_quench.speed_parameters = rawQuenchData.gasQuenchSpeed;
+          }
+          
+          if (Array.isArray(rawQuenchData.gasQuenchPressure) && rawQuenchData.gasQuenchPressure.length > 0) {
+            convertedData.gas_quench.pressure_parameters = rawQuenchData.gasQuenchPressure;          }
+          rawQuenchData = convertedData;
+        }
+      }
+    }
+    
+    return rawQuenchData;
+  })();
   
   // Formater la date
   const formattedDate = testData?.testDate 
@@ -317,341 +385,773 @@ const chartOptions = {
       }
     }
   }
-};
-  
+  };
+
   // Fonction pour formater les données du quenchData
   const renderQuenchData = () => {
     const { gas_quench, oil_quench } = quenchData;
     
-    if (oil_quench && Object.keys(oil_quench).length > 0) {
+    // Vérification si quenchData pourrait être une string à parser
+    if (typeof testData?.quench_data === 'string') {
+      try {
+        const parsedQuench = JSON.parse(testData.quench_data);
+      } catch (e) {
+        console.error('Failed to parse quench_data string:', e);
+      }
+    }      // Priorité : oil_quench si il existe et a des données
+    if (oil_quench && (
+      oil_quench.temperature?.value || 
+      oil_quench.inerting_delay?.value || 
+      oil_quench.dripping_time?.value || 
+      oil_quench.pressure ||
+      oil_quench.inerting_pressure || // Nom alternatif possible
+      (Array.isArray(oil_quench.speed_parameters) && oil_quench.speed_parameters.length > 0)
+    )) {
       return (
         <div style={{ marginTop: '15px' }}>
-          <h4 style={{ fontSize: '16px', marginBottom: '10px' }}>Oil Quench</h4>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f8f9fa' }}>
-                <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #dee2e6' }}>Paramètre</th>
-                <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Valeur</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Temperature</td>
-                <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                  {oil_quench.temperature?.value || '-'} {oil_quench.temperature?.unit || ''}
-                </td>
-              </tr>
-              <tr>
-                <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Inerting Delay</td>
-                <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                  {oil_quench.inerting_delay?.value || '-'} {oil_quench.inerting_delay?.unit || ''}
-                </td>
-              </tr>
-              {oil_quench.dripping_time?.value && (
-                <tr>
-                  <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Dripping Time</td>
-                  <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                    {oil_quench.dripping_time.value} {oil_quench.dripping_time.unit || ''}
-                  </td>
-                </tr>
-              )}
-              {oil_quench.pressure && (
-                <tr>
-                  <td style={{ padding: '8px', border: '1px solid #dee2e6' }}>Pressure</td>
-                  <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                    {oil_quench.pressure}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <h4 style={{ 
+            fontSize: '18px', 
+            marginBottom: '15px',
+            color: '#1976d2',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <FontAwesomeIcon icon={faThermometerHalf} />
+            Oil Quench Parameters
+          </h4>
           
-          {oil_quench.speed_parameters?.length > 0 && (
-            <div style={{ marginTop: '10px' }}>
-              <h5 style={{ fontSize: '14px', marginBottom: '5px' }}>Paramètres de vitesse</h5>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          {/* Paramètres généraux */}
+          <div style={{ 
+            background: '#f8f9fa', 
+            borderRadius: '8px', 
+            overflow: 'hidden',
+            border: '1px solid #e0e0e0',
+            marginBottom: '15px'
+          }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ background: '#e3f2fd' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600', color: '#1565c0' }}>Parameter</th>
+                  <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {oil_quench.temperature?.value && (
+                  <tr style={{ backgroundColor: 'white' }}>
+                    <td style={{ padding: '10px 8px', border: '1px solid #e0e0e0' }}>Temperature</td>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '600' }}>
+                      {oil_quench.temperature.value} {oil_quench.temperature.unit || ''}
+                    </td>
+                  </tr>
+                )}
+                {oil_quench.inerting_delay?.value && (
+                  <tr style={{ backgroundColor: '#f9f9f9' }}>
+                    <td style={{ padding: '10px 8px', border: '1px solid #e0e0e0' }}>Inerting Delay</td>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '600' }}>
+                      {oil_quench.inerting_delay.value} {oil_quench.inerting_delay.unit || ''}
+                    </td>
+                  </tr>
+                )}
+                {oil_quench.dripping_time?.value && (
+                  <tr style={{ backgroundColor: 'white' }}>
+                    <td style={{ padding: '10px 8px', border: '1px solid #e0e0e0' }}>Dripping Time</td>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '600' }}>
+                      {oil_quench.dripping_time.value} {oil_quench.dripping_time.unit || ''}
+                    </td>
+                  </tr>
+                )}                {(oil_quench.pressure || oil_quench.inerting_pressure) && (
+                  <tr style={{ backgroundColor: '#f9f9f9' }}>
+                    <td style={{ padding: '10px 8px', border: '1px solid #e0e0e0' }}>Inerting Pressure</td>
+                    <td style={{ padding: '10px 8px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '600' }}>
+                      {oil_quench.pressure || oil_quench.inerting_pressure}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Paramètres de vitesse si disponibles */}
+          {Array.isArray(oil_quench.speed_parameters) && oil_quench.speed_parameters.length > 0 && (
+            <div>
+              <h5 style={{ 
+                fontSize: '16px', 
+                marginBottom: '10px', 
+                color: '#1976d2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <FontAwesomeIcon icon={faTachometerAlt} />
+                Speed Parameters
+              </h5>
+              <div style={{ 
+                background: '#f8f9fa', 
+                borderRadius: '8px', 
+                overflow: 'hidden',
+                border: '1px solid #e0e0e0'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ background: '#e3f2fd' }}>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Step</th>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Speed</th>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Duration (s)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {oil_quench.speed_parameters.map((param, index) => (
+                      <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '500' }}>
+                          {param.step || index + 1}
+                        </td>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                          {param.speed || '-'}
+                        </td>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                          {param.duration || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    } 
+    // Sinon, afficher gas_quench si il existe et a des données
+    else if (gas_quench && (
+      (Array.isArray(gas_quench.speed_parameters) && gas_quench.speed_parameters.length > 0) ||
+      (Array.isArray(gas_quench.pressure_parameters) && gas_quench.pressure_parameters.length > 0)
+    )) {
+      return (
+        <div style={{ marginTop: '15px' }}>
+          <h4 style={{ 
+            fontSize: '18px', 
+            marginBottom: '15px',
+            color: '#1976d2',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <FontAwesomeIcon icon={faTachometerAlt} />
+            Gas Quench Parameters
+          </h4>
+          
+          {/* Paramètres de vitesse */}
+          {Array.isArray(gas_quench.speed_parameters) && gas_quench.speed_parameters.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <h5 style={{ 
+                fontSize: '16px', 
+                marginBottom: '10px', 
+                color: '#1976d2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <FontAwesomeIcon icon={faTachometerAlt} />
+                Speed Parameters
+              </h5>
+              <div style={{ 
+                background: '#f8f9fa', 
+                borderRadius: '8px', 
+                overflow: 'hidden',
+                border: '1px solid #e0e0e0'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ background: '#e3f2fd' }}>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Step</th>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Speed</th>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Duration (s)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gas_quench.speed_parameters.map((param, index) => (
+                      <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '500' }}>
+                          {param.step || index + 1}
+                        </td>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                          {param.speed || '-'}
+                        </td>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                          {param.duration || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          
+          {/* Paramètres de pression */}
+          {Array.isArray(gas_quench.pressure_parameters) && gas_quench.pressure_parameters.length > 0 && (
+            <div>
+              <h5 style={{ 
+                fontSize: '16px', 
+                marginBottom: '10px', 
+                color: '#1976d2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <FontAwesomeIcon icon={faTachometerAlt} />
+                Pressure Parameters
+              </h5>
+              <div style={{ 
+                background: '#f8f9fa', 
+                borderRadius: '8px', 
+                overflow: 'hidden',
+                border: '1px solid #e0e0e0'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ background: '#e3f2fd' }}>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Step</th>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Pressure (mb)</th>
+                      <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '600', color: '#1565c0' }}>Duration (s)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gas_quench.pressure_parameters.map((param, index) => (
+                      <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0', fontWeight: '500' }}>
+                          {param.step || index + 1}
+                        </td>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                          {param.pressure || '-'}
+                        </td>
+                        <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid #e0e0e0' }}>
+                          {param.duration || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      );    } else {
+      return (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '40px',
+          color: '#666',
+          background: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px dashed #ccc'
+        }}>
+          <FontAwesomeIcon icon={faThermometerHalf} style={{ fontSize: '32px', color: '#ccc', marginBottom: '10px' }} />
+          <p style={{ margin: 0, fontSize: '16px' }}>No quench data available</p>
+        </div>
+      );
+    }
+  };
+  // Mise à jour de la gestion du rendu conditionnel
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+      padding: '20px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Header moderne avec gradient rouge/orange */}
+      <div style={{
+        background: 'linear-gradient(135deg, #d32f2f 0%, #f57c00 50%, #ff9800 100%)',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '30px',
+        boxShadow: '0 8px 32px rgba(211, 47, 47, 0.3)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Motif décoratif en arrière-plan */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '200px',
+          height: '100%',
+          background: 'linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+          borderRadius: '50%',
+          transform: 'translateX(50px)'
+        }}></div>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div>
+            <h1 style={{ 
+              color: 'white', 
+              fontSize: '28px', 
+              fontWeight: 'bold', 
+              margin: '0 0 5px 0',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <FontAwesomeIcon icon={faFlask} />
+              RECIPE
+            </h1>
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', fontWeight: '500' }}>
+              <FontAwesomeIcon icon={faCogs} style={{ marginRight: '8px' }} />
+              Recipe {recipeData?.number || 'N/A'}
+            </div>
+          </div>
+          
+          <div style={{ 
+            background: 'rgba(255,255,255,0.15)', 
+            borderRadius: '8px', 
+            padding: '15px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)'
+          }}>
+            <img 
+              src="/images/logoECM.png" 
+              alt="Logo ECM" 
+              style={{ height: '50px', width: 'auto', filter: 'brightness(0) invert(1)' }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'block';
+              }}
+            />
+            <div style={{ 
+              display: 'none', 
+              color: 'white', 
+              fontWeight: 'bold', 
+              fontSize: '20px',
+              textAlign: 'center',
+              padding: '15px'
+            }}>
+              ECM
+            </div>
+          </div>
+        </div>
+        
+        {/* Info dans le header */}
+        <div style={{ 
+          marginTop: '20px', 
+          display: 'flex', 
+          gap: '25px', 
+          flexWrap: 'wrap',
+          position: 'relative',
+          zIndex: 1,
+          fontSize: '14px'
+        }}>            <div style={{ color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FontAwesomeIcon icon={faUser} />
+              <span style={{ fontWeight: '600' }}>Client:</span>
+              <span>{clientData?.name || testData?.client_name || 'Not specified'}</span>
+              {(clientData?.country || testData?.client_country) && (
+                <>
+                  <span style={{ margin: '0 4px', opacity: 0.7 }}>•</span>
+                  <span>{clientData?.country || testData?.client_country}</span>
+                </>
+              )}
+            </div>
+          <div style={{ color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FontAwesomeIcon icon={faCogs} />
+            <span style={{ fontWeight: '600' }}>Treatment:</span>
+            <span>{testData?.processType || testData?.process_type || 'Not specified'}</span>
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FontAwesomeIcon icon={faFlask} />
+            <span style={{ fontWeight: '600' }}>Trial N°:</span>
+            <span>{testData?.testCode || testData?.test_code || 'Not specified'}</span>
+            <span style={{ margin: '0 4px', opacity: 0.7 }}>•</span>
+            <FontAwesomeIcon icon={faCalendarAlt} />
+            <span>
+              {testData?.testDate || testData?.test_date 
+                ? new Date(testData.testDate || testData.test_date).toLocaleDateString('en-US') 
+                : 'Not specified'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {Object.keys(recipeData).length === 0 ? (
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '60px',
+          textAlign: 'center',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px dashed #dee2e6'
+        }}>
+          <FontAwesomeIcon icon={faFlask} style={{ fontSize: '48px', color: '#ccc', marginBottom: '20px' }} />
+          <p style={{ color: '#666', fontSize: '18px', margin: 0 }}>No recipe data available</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '30px' }}>
+          {/* Section Paramètres généraux */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #ffebee'
+          }}>
+            <h3 style={{ 
+              color: '#d32f2f', 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <FontAwesomeIcon icon={faCogs} style={{ color: '#f44336' }} />
+              General Parameters
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+              <div style={{ 
+                background: '#fffbf0', 
+                borderRadius: '8px', 
+                padding: '15px',
+                border: '1px solid #ffe0b2'
+              }}>                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <FontAwesomeIcon icon={faTachometerAlt} style={{ fontSize: '16px', color: '#f57c00' }} />
+                  <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Wait Pressure</span>
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+                  {recipeData.wait_pressure?.value || '-'} {recipeData.wait_pressure?.unit || ''}
+                </div>
+              </div>
+              
+              <div style={{ 
+                background: '#fffbf0', 
+                borderRadius: '8px', 
+                padding: '15px',
+                border: '1px solid #ffe0b2'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <FontAwesomeIcon icon={faClock} style={{ fontSize: '16px', color: '#f57c00' }} />
+                  <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Wait Time</span>
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+                  {recipeData.wait_time?.value || '-'} {recipeData.wait_time?.unit || ''}
+                </div>
+              </div>
+              
+              <div style={{ 
+                background: '#fffbf0', 
+                borderRadius: '8px', 
+                padding: '15px',
+                border: '1px solid #ffe0b2'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <FontAwesomeIcon icon={faThermometerHalf} style={{ fontSize: '16px', color: '#f57c00' }} />
+                  <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Cell Temperature</span>
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+                  {recipeData.cell_temp?.value || '-'} {recipeData.cell_temp?.unit || ''}
+                </div>
+              </div>
+              
+              <div style={{ 
+                background: '#fffbf0', 
+                borderRadius: '8px', 
+                padding: '15px',
+                border: '1px solid #ffe0b2'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <FontAwesomeIcon icon={faClock} style={{ fontSize: '16px', color: '#f57c00' }} />
+                  <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Thermal Duration</span>
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
+                  {totalThermalDuration || '-'} min
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section Cycle Thermique */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #fff8e1'
+          }}>
+            <h3 style={{ 
+              color: '#f57c00', 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <FontAwesomeIcon icon={faThermometerHalf} style={{ color: '#ff9800' }} />
+              Thermal Cycle
+            </h3>
+            
+            <div style={{ 
+              background: '#fafafa', 
+              borderRadius: '8px', 
+              overflow: 'hidden',
+              border: '1px solid #e0e0e0'
+            }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Étape</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Vitesse</th>
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Durée (s)</th>
+                  <tr style={{ background: '#ffe0b2' }}>
+                    <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Step</th>
+                    <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Ramp Type</th>
+                    <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Temperature (°C)</th>
+                    <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Duration (min)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {oil_quench.speed_parameters.map((param, index) => (
-                    <tr key={index}>
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{param.step}</td>
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{param.speed || '-'}</td>
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{param.duration || '-'}</td>
+                  {recipeData.thermal_cycle?.map((step, index) => (
+                    <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>{step.step}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                        <span style={{
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          background: step.ramp === 'up' ? '#ffebee' : step.ramp === 'down' ? '#e3f2fd' : '#fff3e0',
+                          color: step.ramp === 'up' ? '#d32f2f' : step.ramp === 'down' ? '#1976d2' : '#f57c00'
+                        }}>
+                          {step.ramp === 'up' ? 'Heating' : 
+                           step.ramp === 'down' ? 'Cooling' : 
+                           step.ramp === 'continue' ? 'Hold' : step.ramp}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '600', color: '#333' }}>{step.setpoint}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', color: '#666' }}>{step.duration}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-      );
-    } else if (gas_quench && Object.keys(gas_quench).length > 0) {
-      return (
-        <div style={{ marginTop: '15px' }}>
-          <h4 style={{ fontSize: '16px', marginBottom: '10px' }}>Gas Quench</h4>
-          {gas_quench.speed_parameters && (
-            <div style={{ marginTop: '10px' }}>
-              <h5 style={{ fontSize: '14px', marginBottom: '5px' }}>Speed Parameters</h5>
-              <pre>{JSON.stringify(gas_quench.speed_parameters, null, 2)}</pre>
-            </div>
-          )}
-          {gas_quench.pressure_parameters && (
-            <div style={{ marginTop: '10px' }}>
-              <h5 style={{ fontSize: '14px', marginBottom: '5px' }}>Pressure Parameters</h5>
-              <pre>{JSON.stringify(gas_quench.pressure_parameters, null, 2)}</pre>
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      return <div className="text-muted">No quench data available</div>;
-    }
-  };
+          </div>
 
-  // Mise à jour de la gestion du rendu conditionnel
-  return (
-    <div className="report-section recipe-section" style={{ marginBottom: '30px' }}>
-      <h3 style={{ 
-        borderBottom: '2px solid #dc3545', 
-        paddingBottom: '5px', 
-        marginBottom: '15px',
-        color: '#c82333' 
-      }}>
-        Recipe
-      </h3>
-      
-      {Object.keys(recipeData).length === 0 ? (
-        <div className="text-center py-5 my-4" style={{ border: '1px dashed #dee2e6', borderRadius: '4px' }}>
-          <p className="text-muted mb-0">No recipe data available</p>
-        </div>
-      ) : (
-        <>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '15px',
-            padding: '10px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '4px' 
-          }}>            <div>
-              <strong>Recipe number:</strong> {recipeData.number || 'Not specified'}
-            </div>
-            <div>
-              <strong>Test date:</strong> {formattedDate}
-            </div>
-          </div>
-          
-          {/* Section des paramètres généraux */}
-          <div style={{ 
-            padding: '15px', 
-            border: '1px solid #dee2e6', 
-            borderRadius: '4px',
-            marginBottom: '20px',
-            backgroundColor: 'white' 
+          {/* Section Cycle Chimique */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #f3e5f5'
           }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              marginBottom: '15px', 
-              borderBottom: '1px solid #dee2e6',
-              paddingBottom: '5px' 
-            }}>
-              General parameters
-            </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div className="parameter">
-                <strong>Wait pressure:</strong> {recipeData.wait_pressure?.value || '-'} {recipeData.wait_pressure?.unit || ''}
-              </div>
-              <div className="parameter">
-                <strong>Wait time:</strong> {recipeData.wait_time?.value || '-'} {recipeData.wait_time?.unit || ''}
-              </div>
-              <div className="parameter">
-                <strong>Cell temperature:</strong> {recipeData.cell_temp?.value || '-'} {recipeData.cell_temp?.unit || ''}
-              </div>
-              <div className="parameter">
-                <strong>Thermal program duration:</strong> {totalThermalDuration || '-'} min
+            <h3 style={{ 
+              color: '#7b1fa2', 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>              <FontAwesomeIcon icon={faFlask} style={{ color: '#ab47bc' }} />
+              Chemical Cycle
+            </h3>
+            
+            <div style={{ marginBottom: '20px', padding: '15px', background: '#fafafa', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+              <div style={{ fontWeight: '600', color: '#7b1fa2', marginBottom: '5px' }}>Program Duration:</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#333' }}>
+                {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s
+                {recipeData.wait_time?.value && (
+                  <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+                    {' '}(including {recipeData.wait_time.value} {recipeData.wait_time.unit} wait time)
+                  </span>
+                )}
               </div>
             </div>
             
-            {/* Tableau du thermal cycle */}
-            <h5 style={{ fontSize: '14px', marginTop: '15px', marginBottom: '10px' }}>
-              Thermal cycle
-            </h5>
-            
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Step</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Ramp type</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Temperature (°C)</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Duration (min)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recipeData.thermal_cycle?.map((step, index) => (
-                  <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.step}</td>                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {step.ramp === 'up' ? 'Heating' : 
-                       step.ramp === 'down' ? 'Cooling' : 
-                       step.ramp === 'continue' ? 'Hold' : step.ramp}
-                    </td>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.setpoint}</td>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.duration}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Section du cycle chimique */}
-          <div style={{ 
-            padding: '15px', 
-            border: '1px solid #dee2e6', 
-            borderRadius: '4px',
-            marginBottom: '20px',
-            backgroundColor: 'white' 
-          }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              marginBottom: '15px', 
-              borderBottom: '1px solid #dee2e6',
-              paddingBottom: '5px' 
+            <div style={{ 
+              background: '#fafafa', 
+              borderRadius: '8px', 
+              overflow: 'hidden',
+              border: '1px solid #e0e0e0'
             }}>
-              Chemical cycle
-            </h4>
-            
-            {/* Affichage de la durée du programme chimique */}            <div style={{ marginBottom: '10px' }}>
-              <strong>Chemical program duration:</strong> {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s
-              {recipeData.wait_time?.value && (
-                <span> (including {recipeData.wait_time.value} {recipeData.wait_time.unit} wait time)</span>
-              )}
-            </div>
-            
-            {/* Table du cycle chimique avec colonnes pour chaque gaz */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-              <thead>                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Step</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Duration (s)</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Pressure (mbar)</th>
-                  {recipeData.selected_gas1 && (
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {recipeData.selected_gas1} (Nl/h)
-                    </th>
-                  )}
-                  {recipeData.selected_gas2 && (
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {recipeData.selected_gas2} (Nl/h)
-                    </th>
-                  )}
-                  {recipeData.selected_gas3 && (
-                    <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {recipeData.selected_gas3} (Nl/h)
-                    </th>
-                  )}
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Turbine</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recipeData.chemical_cycle?.map((step, index) => (
-                  <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.step}</td>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.time}</td>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.pressure}</td>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: '#e1bee7' }}>
+                    <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Step</th>
+                    <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Duration (s)</th>
+                    <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Pressure (mbar)</th>
                     {recipeData.selected_gas1 && (
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                        {step.gases?.find(g => g.gas === recipeData.selected_gas1)?.debit || '-'}
-                      </td>
+                      <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
+                        {recipeData.selected_gas1} (Nl/h)
+                      </th>
                     )}
                     {recipeData.selected_gas2 && (
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                        {step.gases?.find(g => g.gas === recipeData.selected_gas2)?.debit || '-'}
-                      </td>
+                      <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
+                        {recipeData.selected_gas2} (Nl/h)
+                      </th>
                     )}
                     {recipeData.selected_gas3 && (
-                      <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                        {step.gases?.find(g => g.gas === recipeData.selected_gas3)?.debit || '-'}
+                      <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
+                        {recipeData.selected_gas3} (Nl/h)
+                      </th>
+                    )}
+                    <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Turbine</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recipeData.chemical_cycle?.map((step, index) => (
+                    <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                      <td style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '500' }}>{step.step}</td>
+                      <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>{step.time}</td>
+                      <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>{step.pressure}</td>
+                      {recipeData.selected_gas1 && (
+                        <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>
+                          {step.gases?.find(g => g.gas === recipeData.selected_gas1)?.debit || '-'}
+                        </td>
+                      )}
+                      {recipeData.selected_gas2 && (
+                        <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>
+                          {step.gases?.find(g => g.gas === recipeData.selected_gas2)?.debit || '-'}
+                        </td>
+                      )}
+                      {recipeData.selected_gas3 && (
+                        <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>
+                          {step.gases?.find(g => g.gas === recipeData.selected_gas3)?.debit || '-'}
+                        </td>
+                      )}
+                      <td style={{ padding: '10px 6px', textAlign: 'center' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: '500',
+                          background: step.turbine ? '#e8f5e8' : '#ffebee',
+                          color: step.turbine ? '#2e7d32' : '#d32f2f'
+                        }}>
+                          {step.turbine ? 'Yes' : 'No'}
+                        </span>
                       </td>
-                    )}                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {step.turbine ? 'Yes' : 'No'}
+                    </tr>
+                  ))}
+                  <tr style={{ backgroundColor: '#e1bee7', fontWeight: 'bold' }}>
+                    <td style={{ padding: '12px 6px', textAlign: 'center', color: '#4a148c' }}>Total</td>
+                    <td style={{ padding: '12px 6px', textAlign: 'center', color: '#4a148c' }}>
+                      {recipeData.chemical_cycle?.reduce((total, step) => total + parseInt(step.time || 0), 0)} s
+                    </td>
+                    <td colSpan={recipeData.selected_gas3 ? 5 : recipeData.selected_gas2 ? 4 : 3} 
+                        style={{ padding: '12px 6px', textAlign: 'center', color: '#4a148c' }}>
+                      {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s (total including wait time)
                     </td>
                   </tr>
-                ))}
-                {/* Ligne de totaux */}
-                <tr style={{ backgroundColor: '#e9ecef', fontWeight: 'bold' }}>
-                  <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Total</td>
-                  <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                    {recipeData.chemical_cycle?.reduce((total, step) => total + parseInt(step.time || 0), 0)} s
-                  </td>
-                  <td colSpan={recipeData.selected_gas3 ? 5 : recipeData.selected_gas2 ? 4 : 3} 
-                      style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                    {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s (total including wait time)
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-          
-          {/* Section du graphique */}
-          <div style={{ 
-            padding: '15px', 
-            border: '1px solid #dee2e6', 
-            borderRadius: '4px',
-            marginBottom: '20px',
-            backgroundColor: 'white' 
+
+          {/* Section Graphique */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e8f5e8'
           }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              marginBottom: '15px', 
-              borderBottom: '1px solid #dee2e6',
-              paddingBottom: '5px' 
+            <h3 style={{ 
+              color: '#2e7d32', 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
             }}>
-              Process parameters evolution
-            </h4>
+              <FontAwesomeIcon icon={faChartLine} style={{ color: '#4caf50' }} />
+              Process Parameters Evolution
+            </h3>
             
-            <div style={{ height: '400px' }}>
+            <div style={{ 
+              height: '400px',
+              background: '#fafafa',
+              borderRadius: '8px',
+              padding: '20px',
+              border: '1px solid #e0e0e0'
+            }}>
               {chartData ? (
                 <Line data={chartData} options={chartOptions} />
               ) : (
                 <div style={{ 
                   height: '100%', 
                   display: 'flex', 
+                  flexDirection: 'column',
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  color: '#6c757d',
-                  border: '1px dashed #dee2e6',
-                  borderRadius: '4px'
+                  color: '#666',
+                  border: '1px dashed #ccc',
+                  borderRadius: '8px',
+                  background: 'white'
                 }}>
-                  Insufficient data to generate chart
+                  <FontAwesomeIcon icon={faChartLine} style={{ fontSize: '48px', color: '#ccc', marginBottom: '15px' }} />
+                  <span style={{ fontSize: '16px' }}>Insufficient data to generate chart</span>
                 </div>
               )}
             </div>
           </div>
-          
-          {/* Section de trempe */}
-          <div style={{ 
-            padding: '15px', 
-            border: '1px solid #dee2e6', 
-            borderRadius: '4px',
-            backgroundColor: 'white' 
+
+          {/* Section Trempe */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e3f2fd'
           }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              marginBottom: '15px', 
-              borderBottom: '1px solid #dee2e6',
-              paddingBottom: '5px' 
+            <h3 style={{ 
+              color: '#1976d2', 
+              fontSize: '20px', 
+              fontWeight: 'bold', 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
             }}>
-              Quench parameters (Cooling Media)
-            </h4>
+              <FontAwesomeIcon icon={faThermometerHalf} style={{ color: '#42a5f5' }} />
+              Quench Parameters (Cooling Media)
+            </h3>
             
-            {renderQuenchData()}
+            <div style={{ 
+              background: '#fafafa', 
+              borderRadius: '8px', 
+              padding: '20px',
+              border: '1px solid #e0e0e0'
+            }}>
+              {renderQuenchData()}
+            </div>
           </div>
-        </>
+        </div>
       )}
+
+      {/* Footer */}
+      <div style={{
+        marginTop: '40px',
+        paddingTop: '20px',
+        borderTop: '1px solid #e0e0e0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '12px',
+        color: '#666'
+      }}>
+        <div>
+          <strong>Recipe Parameters</strong> - ECM Industrial Analysis
+        </div>
+        <div>
+          {new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
+        <div>
+          Recipe Section
+        </div>
+      </div>
     </div>
   );
 };

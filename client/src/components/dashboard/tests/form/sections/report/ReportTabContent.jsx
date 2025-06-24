@@ -203,19 +203,12 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
         ...selectedSections,
         // Forcer identification pour récupérer les données client
         identification: true      };
-        const reportDataResponse = await testService.getTestReportData(testId, sectionsToFetch);
-
-      // Créer un nouvel objet de rapport avec toutes les données nécessaires
+        const reportDataResponse = await testService.getTestReportData(testId, sectionsToFetch);      // Créer un nouvel objet de rapport avec toutes les données nécessaires
       const completeReportData = {
         ...reportDataResponse,
         selectedPhotos: selectedPhotos,
         partId: parentNodeId
       };
-      
-      // Afficher les données dans la console pour débogage
-      console.log("ReportTabContent - Photos sélectionnées par section:", selectedPhotos);
-      console.log("ReportTabContent - ID de la pièce:", parentNodeId);
-      console.log("ReportTabContent - Données complètes du rapport:", completeReportData);
       
       setReportData(completeReportData);
       setShowPreview(true);
@@ -403,20 +396,15 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
             </Card>
           </Col>
         </Row>
-        
-        {/* Modal d'aperçu du rapport */}
+          {/* Modal d'aperçu du rapport */}
         <ReportPreviewModal
           show={showPreview}
           handleClose={() => setShowPreview(false)}
           generatePDF={generatePDF}
           reportRef={reportRef}
           selectedSections={selectedSections}
-          reportData={{
-            ...reportData,
-            partId: parentNodeId // S'assurer que l'ID est transmis
-          }}
-          selectedPhotos={selectedPhotos}
-          partId={parentNodeId} // Ajouter explicitement partId
+          reportData={reportData} // Données chargées seulement à l'ouverture du modal
+          selectedPhotos={selectedPhotos} // Mise à jour dynamique pour la sélection de photos
           sections={{
             ReportHeader,
             IdentificationSection,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tab, Nav, Table, Form, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -39,7 +39,7 @@ const ResultCurveSection = forwardRef(({
   loading,
   selectStyles,
   test,
-  formData,
+  // Ne pas passer formData entier, seulement les données nécessaires
   parentId,
   viewMode = false,
   readOnlyFieldStyle = {}
@@ -81,11 +81,15 @@ const ResultCurveSection = forwardRef(({
     addMultipleDataPoints,
     removeDataPoint
   }));
+  // Memoisation des positions ECD pour éviter les recalculs
+  const ecdPositions = useMemo(() => {
+    return result?.ecd?.ecdPoints || [];
+  }, [result?.ecd?.ecdPoints]);
 
-  // Récupérer l'unité de dureté à partir des données ECD
-  const hardnessUnit = result.ecd?.hardnessUnit || "HV";
-    // Positions ECD disponibles pour les colonnes
-  const ecdPositions = result.ecd?.ecdPoints || [];
+  // Memoisation de l'unité de dureté
+  const hardnessUnit = useMemo(() => {
+    return result?.ecd?.hardnessUnit || "HV";
+  }, [result?.ecd?.hardnessUnit]);
   
   // Log pour debugger les colonnes dynamiques
   console.log(`ResultCurveSection - Positions ECD disponibles:`, ecdPositions.length, ecdPositions.map(p => p.name));
@@ -173,145 +177,146 @@ const ResultCurveSection = forwardRef(({
     
     fetchSpecData();
   }, [test, parentId, t]);
-    // Mettre à jour le formData parent avec les nouvelles données
-  const updateParentFormData = (newPoints) => {
-    const updatedResults = [...formData.resultsData.results];
-    updatedResults[resultIndex].samples[sampleIndex].curveData = { points: newPoints };
-    handleChange({
+  // Mettre à jour le formData parent avec les nouvelles données (optimisé avec useCallback)
+  const updateParentFormData = useCallback((newPoints) => {
+    // Créer l'objet de changement pour le parent
+    const changeEvent = {
       target: {
-        name: 'resultsData.results',
-        value: updatedResults
+        name: `resultsData.results[${resultIndex}].samples[${sampleIndex}].curveData`,
+        value: { points: newPoints }
       }
+    };
+    handleChange(changeEvent);
+  }, [handleChange, resultIndex, sampleIndex]);
+    // Mise à jour d'un point de données (pendant la saisie) - optimisé avec useCallback
+  const handlePointChange = useCallback((index, field, value) => {
+    setDataPoints(prevPoints => {
+      const newPoints = [...prevPoints];
+      newPoints[index] = { ...newPoints[index], [field]: value };
+      updateParentFormData(newPoints);
+      return newPoints;
     });
-  };
-  
-  // Mise à jour d'un point de données (pendant la saisie)
-  const handlePointChange = (index, field, value) => {
-    const newPoints = [...dataPoints];
-    newPoints[index][field] = value;
-    setDataPoints(newPoints);
-    updateParentFormData(newPoints);
-  };
-  
-  // Gestion du changement de la valeur du pas
-  const handleStepChange = (e) => {
+  }, [updateParentFormData]);
+
+  // Gestion du changement de la valeur du pas - optimisé avec useCallback
+  const handleStepChange = useCallback((e) => {
     setStepValue(parseFloat(e.target.value) || 0.1);
-  };
-  
-  // Trier les données après la fin de la saisie
-  const handleBlur = () => {
-    // Trier les points par distance
-    const sorted = [...dataPoints].sort((a, b) => {
-      const distA = parseFloat(a.distance) || 0;
-      const distB = parseFloat(b.distance) || 0;
-      return distA - distB;
-    });
-    // Mettre à jour l'affichage
-    setDisplayPoints(sorted);
-    // Mettre à jour les données
-    setDataPoints(sorted);
-    updateParentFormData(sorted);
-  };
-    // Ajouter un nouveau point de données avec incrémentation automatique
-  const addDataPoint = (customData = null) => {
-    let nextDistance = '';
-    // Calculer la prochaine distance en ajoutant le pas à la dernière valeur
-    if (dataPoints.length > 0 && !customData) {
-      const sortedPoints = [...dataPoints].sort((a, b) => {
+  }, []);
+    // Trier les données après la fin de la saisie - optimisé avec useCallback
+  const handleBlur = useCallback(() => {
+    setDataPoints(prevPoints => {
+      // Trier les points par distance
+      const sorted = [...prevPoints].sort((a, b) => {
         const distA = parseFloat(a.distance) || 0;
         const distB = parseFloat(b.distance) || 0;
-        return distB - distA; // Tri décroissant pour avoir la plus grande valeur en premier
+        return distA - distB;
       });
-      const lastDistance = parseFloat(sortedPoints[0].distance) || 0;
-      nextDistance = (lastDistance + stepValue).toFixed(2); // Arrondir à 2 décimales
-    }
-    
-    // Créer un nouveau point avec champs pour toutes les positions ECD
-    const newPoint = {
-      distance: customData ? customData.distance : nextDistance
-    };
-      // Ajouter un champ pour chaque position ECD
-    ecdPositions.forEach(position => {
-      const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
-      const positionKey = position.name.toLowerCase();
       
-      // Créer les deux formats
-      newPoint[fieldName] = customData && customData[fieldName] ? customData[fieldName] : '';
-      newPoint[positionKey] = customData && customData[positionKey] ? customData[positionKey] : '';
+      // Mettre à jour l'affichage et les données parent
+      setDisplayPoints(sorted);
+      updateParentFormData(sorted);
+      return sorted;
     });
-    
-    // Pour la compatibilité avec le format existant, conserver les champs flankHardness et rootHardness
-    newPoint.flankHardness = customData && customData.flankHardness ? customData.flankHardness : '';
-    newPoint.rootHardness = customData && customData.rootHardness ? customData.rootHardness : '';
-    
-    // Si des données personnalisées sont fournies, les utiliser
-    if (customData) {
-      Object.keys(customData).forEach(key => {
-        if (key !== 'distance') {
-          newPoint[key] = customData[key];
-        }
-      });
-    }
-    
-    // Utiliser le callback de setState pour éviter des mises à jour multiples
+  }, [updateParentFormData]);  // Ajouter un nouveau point de données avec incrémentation automatique - optimisé avec useCallback
+  const addDataPoint = useCallback((customData = null) => {
     setDataPoints(prevPoints => {
+      let nextDistance = '';
+      // Calculer la prochaine distance en ajoutant le pas à la dernière valeur
+      if (prevPoints.length > 0 && !customData) {
+        const sortedPoints = [...prevPoints].sort((a, b) => {
+          const distA = parseFloat(a.distance) || 0;
+          const distB = parseFloat(b.distance) || 0;
+          return distB - distA; // Tri décroissant pour avoir la plus grande valeur en premier
+        });
+        const lastDistance = parseFloat(sortedPoints[0].distance) || 0;
+        nextDistance = (lastDistance + stepValue).toFixed(2); // Arrondir à 2 décimales
+      }
+      
+      // Créer un nouveau point avec champs pour toutes les positions ECD
+      const newPoint = {
+        distance: customData ? customData.distance : nextDistance
+      };
+      
+      // Ajouter un champ pour chaque position ECD
+      ecdPositions.forEach(position => {
+        const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
+        const positionKey = position.name.toLowerCase();
+        
+        // Créer les deux formats
+        newPoint[fieldName] = customData && customData[fieldName] ? customData[fieldName] : '';
+        newPoint[positionKey] = customData && customData[positionKey] ? customData[positionKey] : '';
+      });
+      
+      // Pour la compatibilité avec le format existant, conserver les champs flankHardness et rootHardness
+      newPoint.flankHardness = customData && customData.flankHardness ? customData.flankHardness : '';
+      newPoint.rootHardness = customData && customData.rootHardness ? customData.rootHardness : '';
+      
+      // Si des données personnalisées sont fournies, les utiliser
+      if (customData) {
+        Object.keys(customData).forEach(key => {
+          if (key !== 'distance') {
+            newPoint[key] = customData[key];
+          }
+        });
+      }
+      
       const newPoints = [...prevPoints, newPoint];
       setDisplayPoints(newPoints);
       updateParentFormData(newPoints);
       return newPoints;
     });
-  };
-    // Ajouter plusieurs points de données en une fois (pour l'import Excel)
-  const addMultipleDataPoints = (pointsData) => {
+  }, [ecdPositions, stepValue, updateParentFormData]);  // Ajouter plusieurs points de données en une fois (pour l'import Excel) - optimisé avec useCallback
+  const addMultipleDataPoints = useCallback((pointsData) => {
     if (!pointsData || pointsData.length === 0) return;
     
     console.log('Ajout de plusieurs points de courbe:', pointsData);
     console.log('ecdPositions disponibles lors de l\'ajout:', ecdPositions.length, ecdPositions.map(p => p.name));
     
-    const newPoints = pointsData.map(pointData => {
-      const newPoint = {
-        distance: pointData.distance || ''
-      };
-      
-      console.log('Traitement point avec données:', Object.keys(pointData));
-        // Ajouter un champ pour chaque position ECD
-      ecdPositions.forEach(position => {
-        const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
-        const positionKey = position.name.toLowerCase();
-        const exactPositionKey = position.name; // Clé exacte avec la casse originale
-        
-        console.log(`Création champs pour position "${position.name}": ${fieldName}, ${positionKey}, ${exactPositionKey}`);
-        
-        // Chercher la valeur dans plusieurs formats possibles
-        const value = pointData[fieldName] || pointData[positionKey] || pointData[exactPositionKey] || '';
-        
-        // Créer les deux formats
-        newPoint[fieldName] = value;
-        newPoint[positionKey] = value;
-        
-        if (value) {
-          console.log(`Valeur trouvée pour ${position.name}:`, value);
-        } else {
-          console.log(`Aucune valeur trouvée pour ${position.name} dans:`, Object.keys(pointData));
-        }
-      });
-      
-      // Pour la compatibilité avec le format existant
-      newPoint.flankHardness = pointData.flankHardness || pointData.Flank || '';
-      newPoint.rootHardness = pointData.rootHardness || pointData.Root || '';
-      
-      // Ajouter tous les autres champs personnalisés
-      Object.keys(pointData).forEach(key => {
-        if (!newPoint.hasOwnProperty(key)) {
-          newPoint[key] = pointData[key];
-        }
-      });
-      
-      return newPoint;
-    });
-    
-    // Fusionner avec les points existants
     setDataPoints(prevPoints => {
+      const newPoints = pointsData.map(pointData => {
+        const newPoint = {
+          distance: pointData.distance || ''
+        };
+        
+        console.log('Traitement point avec données:', Object.keys(pointData));
+        
+        // Ajouter un champ pour chaque position ECD
+        ecdPositions.forEach(position => {
+          const fieldName = `hardness_${position.name.replace(/\s+/g, '_').toLowerCase()}`;
+          const positionKey = position.name.toLowerCase();
+          const exactPositionKey = position.name; // Clé exacte avec la casse originale
+          
+          console.log(`Création champs pour position "${position.name}": ${fieldName}, ${positionKey}, ${exactPositionKey}`);
+          
+          // Chercher la valeur dans plusieurs formats possibles
+          const value = pointData[fieldName] || pointData[positionKey] || pointData[exactPositionKey] || '';
+          
+          // Créer les deux formats
+          newPoint[fieldName] = value;
+          newPoint[positionKey] = value;
+          
+          if (value) {
+            console.log(`Valeur trouvée pour ${position.name}:`, value);
+          } else {
+            console.log(`Aucune valeur trouvée pour ${position.name} dans:`, Object.keys(pointData));
+          }
+        });
+        
+        // Pour la compatibilité avec le format existant
+        newPoint.flankHardness = pointData.flankHardness || pointData.Flank || '';
+        newPoint.rootHardness = pointData.rootHardness || pointData.Root || '';
+        
+        // Ajouter tous les autres champs personnalisés
+        Object.keys(pointData).forEach(key => {
+          if (!newPoint.hasOwnProperty(key)) {
+            newPoint[key] = pointData[key];
+          }
+        });
+        
+        return newPoint;
+      });
+      
+      // Fusionner avec les points existants
       const allPoints = [...prevPoints, ...newPoints];
       // Trier par distance
       const sortedPoints = allPoints.sort((a, b) => {
@@ -322,26 +327,26 @@ const ResultCurveSection = forwardRef(({
       
       setDisplayPoints(sortedPoints);
       updateParentFormData(sortedPoints);
+      
+      console.log(`${newPoints.length} points de courbe ajoutés avec succès`);
       return sortedPoints;
     });
-    
-    console.log(`${newPoints.length} points de courbe ajoutés avec succès`);
-  };
+  }, [ecdPositions, updateParentFormData]);
 
-  // Supprimer un point de données
-  const removeDataPoint = (index) => {
-    const newPoints = dataPoints.filter((_, i) => i !== index);
-    setDataPoints(newPoints);
-    setDisplayPoints(newPoints);
-    updateParentFormData(newPoints);
-  };
-  
-  // Génère un nom de champ unique pour chaque position ECD
-  const getFieldNameForPosition = (positionName) => {
+  // Supprimer un point de données - optimisé avec useCallback
+  const removeDataPoint = useCallback((index) => {
+    setDataPoints(prevPoints => {
+      const newPoints = prevPoints.filter((_, i) => i !== index);
+      setDisplayPoints(newPoints);
+      updateParentFormData(newPoints);
+      return newPoints;
+    });
+  }, [updateParentFormData]);
+    // Génère un nom de champ unique pour chaque position ECD - optimisé avec useCallback
+  const getFieldNameForPosition = useCallback((positionName) => {
     return `hardness_${positionName.replace(/\s+/g, '_').toLowerCase()}`;
-  };
-    // Obtenir la valeur de dureté pour une position et un point donné
-  const getHardnessForPosition = (point, positionName) => {
+  }, []);  // Obtenir la valeur de dureté pour une position et un point donné - optimisé avec useCallback
+  const getHardnessForPosition = useCallback((point, positionName) => {
     const fieldName = getFieldNameForPosition(positionName);
     
     // Si le champ avec le format hardness_xxx existe, utiliser cette valeur
@@ -364,9 +369,8 @@ const ResultCurveSection = forwardRef(({
     }
     
     return '';
-  };
-    // Mettre à jour la valeur de dureté pour une position et un point donné
-  const setHardnessForPosition = (index, positionName, value) => {
+  }, [getFieldNameForPosition]);  // Mettre à jour la valeur de dureté pour une position et un point donné - optimisé avec useCallback
+  const setHardnessForPosition = useCallback((index, positionName, value) => {
     const fieldName = getFieldNameForPosition(positionName);
     const positionKey = positionName.toLowerCase();
     
@@ -381,10 +385,9 @@ const ResultCurveSection = forwardRef(({
     if (positionName.toLowerCase().includes('pied')) {
       handlePointChange(index, 'rootHardness', value);
     }
-  };
-  
-  // Préparer les données pour le graphique
-  const prepareChartData = () => {
+  }, [getFieldNameForPosition, handlePointChange]);
+    // Préparer les données pour le graphique - optimisé avec useMemo
+  const chartData = useMemo(() => {
     // Utiliser des points triés pour le graphique
     const sortedPoints = [...dataPoints].sort((a, b) => {
       const distA = parseFloat(a.distance) || 0;
@@ -442,7 +445,9 @@ const ResultCurveSection = forwardRef(({
           tension: 0.1
         });
       }
-    }      // Ajouter les courbes de spécification si disponibles
+    }
+
+    // Ajouter les courbes de spécification si disponibles
     if (specData && specData.length > 0) {
       console.log('Ajout des données de spécification à la courbe:', specData);
       
@@ -462,13 +467,10 @@ const ResultCurveSection = forwardRef(({
       });
     }
     
-    return {
-      datasets
-    };
-  };
-  
-  // Options pour le graphique
-  const chartOptions = {
+    return { datasets };
+  }, [dataPoints, ecdPositions, getHardnessForPosition, specData, t]);
+    // Options pour le graphique - optimisé avec useMemo
+  const chartOptions = useMemo(() => ({
     responsive: true,
     scales: {
       x: {
@@ -486,7 +488,7 @@ const ResultCurveSection = forwardRef(({
         }
       }
     }
-  };
+  }), [t, hardnessUnit]);
   
   // Générer les en-têtes dynamiques pour le tableau
   const renderTableHeaders = () => {
@@ -586,11 +588,10 @@ const ResultCurveSection = forwardRef(({
           <Nav.Link eventKey="data">{t('tests.after.results.resultCurve.data')}</Nav.Link>
         </Nav.Item>
       </Nav>
-      <Tab.Content>
-        <Tab.Pane eventKey="curve">
+      <Tab.Content>        <Tab.Pane eventKey="curve">
           <div style={{ height: '400px' }}>
             {dataPoints.length > 0 && (
-              <Line data={prepareChartData()} options={chartOptions} />
+              <Line data={chartData} options={chartOptions} />
             )}
           </div>
         </Tab.Pane>
@@ -641,4 +642,4 @@ const ResultCurveSection = forwardRef(({
     </Tab.Container>  );
 });
 
-export default ResultCurveSection;
+export default React.memo(ResultCurveSection);

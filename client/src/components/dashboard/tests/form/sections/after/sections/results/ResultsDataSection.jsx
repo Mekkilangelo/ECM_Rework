@@ -446,7 +446,6 @@ const ResultsDataSection = ({
                     loading={loading}
                     selectStyles={selectStyles}
                     test={test}
-                    formData={formData}
                     parentId={parentId}
                     viewMode={viewMode}
                     readOnlyFieldStyle={readOnlyFieldStyle}

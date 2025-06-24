@@ -559,9 +559,7 @@ const getTestReportData = async (testId, sections = []) => {
       }
     } catch (hierarchyError) {
       logger.warn(`Impossible de récupérer la hiérarchie pour le test #${testId}: ${hierarchyError.message}`);
-    }
-
-    // Préparer les données selon les sections demandées
+    }    // Préparer les données selon les sections demandées
     const reportData = {
       testId: test.id,
       testName: test.name,
@@ -569,17 +567,109 @@ const getTestReportData = async (testId, sections = []) => {
       testCode: test.Test ? test.Test.test_code : null,
       // Ajouter toutes les données du test
       loadNumber: test.Test ? test.Test.load_number : null,
-      status: test.Test ? test.Test.status : null,
-      location: test.Test ? test.Test.location : null,
-      furnaceData: test.Test ? test.Test.furnace_data : null,
-      loadData: test.Test ? test.Test.load_data : null,
-      recipeData: test.Test ? test.Test.recipe_data : null,
-      quenchData: test.Test ? test.Test.quench_data : null,
-      resultsData: test.Test ? test.Test.results_data : null,
+      status: test.Test ? test.Test.status : null,      location: test.Test ? test.Test.location : null,
+      furnaceData: test.Test ? (() => {
+        try {
+          let furnaceData = test.Test.furnace_data;
+          logger.info(`Raw furnace_data pour test #${testId}:`, furnaceData);
+          logger.info(`Type de furnace_data:`, typeof furnaceData);
+          
+          if (typeof furnaceData === 'string') {
+            const parsed = JSON.parse(furnaceData);
+            logger.info(`Furnace_data parsé:`, parsed);
+            return parsed;
+          }
+          
+          logger.info(`Furnace_data retourné tel quel:`, furnaceData);
+          return furnaceData;
+        } catch (parseError) {
+          logger.warn(`Erreur lors du parsing des données de four pour le test #${testId}: ${parseError.message}`);
+          logger.warn(`Données brutes:`, test.Test.furnace_data);
+          return test.Test.furnace_data;
+        }
+      })() : null,      loadData: test.Test ? (() => {
+        try {
+          let loadData = test.Test.load_data;
+          logger.info(`Raw load_data pour test #${testId}:`, loadData);
+          logger.info(`Type de load_data:`, typeof loadData);
+          
+          if (typeof loadData === 'string') {
+            const parsed = JSON.parse(loadData);
+            logger.info(`Load_data parsé:`, parsed);
+            return parsed;
+          }
+          
+          logger.info(`Load_data retourné tel quel:`, loadData);
+          return loadData;
+        } catch (parseError) {
+          logger.warn(`Erreur lors du parsing des données de charge pour le test #${testId}: ${parseError.message}`);
+          logger.warn(`Données brutes:`, test.Test.load_data);
+          return test.Test.load_data;
+        }
+      })() : null,      recipeData: test.Test ? (() => {
+        try {
+          let recipeData = test.Test.recipe_data;
+          logger.info(`Raw recipe_data pour test #${testId}:`, recipeData);
+          logger.info(`Type de recipe_data:`, typeof recipeData);
+          
+          if (typeof recipeData === 'string') {
+            const parsed = JSON.parse(recipeData);
+            logger.info(`Recipe_data parsé:`, parsed);
+            return parsed;
+          }
+          
+          logger.info(`Recipe_data retourné tel quel:`, recipeData);
+          return recipeData;
+        } catch (parseError) {
+          logger.warn(`Erreur lors du parsing des données de recette pour le test #${testId}: ${parseError.message}`);
+          logger.warn(`Données brutes:`, test.Test.recipe_data);
+          return test.Test.recipe_data;
+        }
+      })() : null,
+      quenchData: test.Test ? (() => {
+        try {
+          let quenchData = test.Test.quench_data;
+          logger.info(`Raw quench_data pour test #${testId}:`, quenchData);
+          logger.info(`Type de quench_data:`, typeof quenchData);
+          
+          if (typeof quenchData === 'string') {
+            const parsed = JSON.parse(quenchData);
+            logger.info(`Quench_data parsé:`, parsed);
+            return parsed;
+          }
+          
+          logger.info(`Quench_data retourné tel quel:`, quenchData);
+          return quenchData;
+        } catch (parseError) {
+          logger.warn(`Erreur lors du parsing des données de trempe pour le test #${testId}: ${parseError.message}`);
+          logger.warn(`Données brutes:`, test.Test.quench_data);
+          return test.Test.quench_data;
+        }
+      })() : null,
+      resultsData: test.Test ? (() => {
+        try {
+          let resultsData = test.Test.results_data;
+          logger.info(`Raw results_data pour test #${testId}:`, resultsData);
+          logger.info(`Type de results_data:`, typeof resultsData);
+          
+          if (typeof resultsData === 'string') {
+            const parsed = JSON.parse(resultsData);
+            logger.info(`Results_data parsé:`, parsed);
+            return parsed;
+          }
+          
+          logger.info(`Results_data retourné tel quel:`, resultsData);
+          return resultsData;
+        } catch (parseError) {
+          logger.warn(`Erreur lors du parsing des données de résultats pour le test #${testId}: ${parseError.message}`);
+          logger.warn(`Données brutes:`, test.Test.results_data);
+          return test.Test.results_data;
+        }
+      })() : null,
       mountingType: test.Test ? test.Test.mounting_type : null,
       positionType: test.Test ? test.Test.position_type : null,
       processType: test.Test ? test.Test.process_type : null,
-      preoxMedia: test.Test ? test.Test.preox_media : null,      // Ajouter les données de la pièce
+      preoxMedia: test.Test ? test.Test.preox_media : null,// Ajouter les données de la pièce
       part: partNode ? {
         id: partNode.id,
         name: partNode.name,
@@ -588,20 +678,74 @@ const getTestReportData = async (testId, sections = []) => {
         reference: partNode.Part ? partNode.Part.reference : null,
         quantity: partNode.Part ? partNode.Part.quantity : null,
         steel: partNode.Part ? partNode.Part.steel : null,
-        material: partNode.Part ? partNode.Part.material : null,        specifications: partNode.Part && partNode.Part.specifications ? 
+        material: partNode.Part ? partNode.Part.material : null,
+        specifications: partNode.Part && partNode.Part.specifications ? 
           (() => {
             try {
+              let specs = null;
               if (typeof partNode.Part.specifications === 'string') {
-                const parsed = JSON.parse(partNode.Part.specifications);
+                specs = JSON.parse(partNode.Part.specifications);
                 logger.info(`Spécifications parsées avec succès pour la pièce #${partNode.id}`);
-                return parsed;
               } else if (typeof partNode.Part.specifications === 'object') {
+                specs = partNode.Part.specifications;
                 logger.info(`Spécifications déjà sous forme d'objet pour la pièce #${partNode.id}`);
-                return partNode.Part.specifications;
-              } else {
-                logger.warn(`Type de spécifications inattendu pour la pièce #${partNode.id}: ${typeof partNode.Part.specifications}`);
-                return partNode.Part.specifications;
               }
+              
+              // Restructurer les spécifications selon le format attendu par usePartSubmission
+              // Format: { hardnessSpecs: [], ecdSpecs: [] }
+              if (specs) {
+                // Si c'est déjà dans le bon format
+                if (specs.hardnessSpecs !== undefined || specs.ecdSpecs !== undefined) {
+                  return specs;
+                }
+                // Si c'est l'ancien format, le convertir
+                const convertedSpecs = {
+                  hardnessSpecs: [],
+                  ecdSpecs: []
+                };                // Convertir chaque spécification
+                Object.entries(specs).forEach(([key, value]) => {
+                  logger.info(`Traitement de la spécification: ${key}`, value);
+                  
+                  const spec = {
+                    parameter: key,
+                    target_value: value.target || value.value || '',
+                    min_value: value.min !== undefined ? value.min : '',
+                    max_value: value.max !== undefined ? value.max : '',
+                    unit: value.unit || ''
+                  };
+                  
+                  // Classer les spécifications par type
+                  // Les spécifications ECD ont une structure différente avec depth/hardness
+                  if (key.toLowerCase().includes('ecd') || 
+                      key.toLowerCase().includes('pdd') ||
+                      key.toLowerCase().includes('case') ||
+                      key.toLowerCase().includes('depth') ||
+                      (typeof value === 'object' && (value.depthMin !== undefined || value.depthMax !== undefined || value.hardness !== undefined))) {
+                    
+                    // Pour les spécifications ECD, restructurer les données
+                    const ecdSpec = {
+                      parameter: key,
+                      hardness: value.hardness || value.target || value.value || '',
+                      depthMin: value.depthMin || value.min || '',
+                      depthMax: value.depthMax || value.max || '',
+                      hardnessUnit: value.hardnessUnit || value.unit || 'HV',
+                      depthUnit: 'mm'
+                    };
+                    convertedSpecs.ecdSpecs.push(ecdSpec);
+                    logger.info(`Spécification ECD ajoutée:`, ecdSpec);
+                  } else {
+                    // Spécifications de dureté standard
+                    convertedSpecs.hardnessSpecs.push(spec);
+                    logger.info(`Spécification de dureté ajoutée:`, spec);
+                  }
+                });
+                
+                logger.info(`Conversion terminée - Dureté: ${convertedSpecs.hardnessSpecs.length}, ECD: ${convertedSpecs.ecdSpecs.length}`);
+                
+                return convertedSpecs;
+              }
+              
+              return null;
             } catch (parseError) {
               logger.warn(`Erreur lors du parsing des spécifications de la pièce #${partNode.id}: ${parseError.message}`);
               return partNode.Part.specifications;
@@ -660,10 +804,20 @@ const getTestReportData = async (testId, sections = []) => {
 
     if (selectedSections.includes('recipe') || selectedSections.length === 0) {
       reportData.data.recipe = test.Test ? test.Test.recipe_data : null;
-    }
-
-    if (selectedSections.includes('load') || selectedSections.length === 0) {
-      reportData.data.load = test.Test ? test.Test.load_data : null;
+    }    if (selectedSections.includes('load') || selectedSections.length === 0) {
+      // Parser aussi les données de charge dans data.load pour cohérence
+      reportData.data.load = test.Test ? (() => {
+        try {
+          let loadData = test.Test.load_data;
+          if (typeof loadData === 'string') {
+            return JSON.parse(loadData);
+          }
+          return loadData;
+        } catch (parseError) {
+          logger.warn(`Erreur lors du parsing des données de charge (data.load) pour le test #${testId}: ${parseError.message}`);
+          return test.Test.load_data;
+        }
+      })() : null;
     }
 
     if (selectedSections.includes('curves') || selectedSections.length === 0) {
@@ -805,17 +959,22 @@ const getTestReportData = async (testId, sections = []) => {
       logger.warn(`Impossible de récupérer les fichiers pour le test #${testId}: ${fileError.message}`);
       logger.error('Stack trace:', fileError.stack);
       reportData.files = {};
-    }
-
-    logger.info(`Données de rapport récupérées avec succès pour test #${testId}`);
+    }    logger.info(`Données de rapport récupérées avec succès pour test #${testId}`);
     logger.info('Structure des données retournées:', {
       testId: reportData.testId,
       testCode: reportData.testCode,
       sectionsIncluded: selectedSections,
       dataKeys: Object.keys(reportData.data),
       hasPartData: !!reportData.part,
-      hasClientData: !!reportData.client
+      hasClientData: !!reportData.client,
+      loadDataKeys: reportData.loadData ? Object.keys(reportData.loadData) : 'null',
+      rawTestDataKeys: test.Test ? Object.keys(test.Test.dataValues) : 'null'
     });
+    
+    // Log spécifique pour les données de charge
+    if (test.Test && test.Test.load_data) {
+      logger.info('Données de charge brutes dans Test.load_data:', test.Test.load_data);
+    }
     return reportData;
   } catch (error) {
     logger.error(`Erreur lors de la récupération des données de rapport pour le test #${testId}: ${error.message}`, error);

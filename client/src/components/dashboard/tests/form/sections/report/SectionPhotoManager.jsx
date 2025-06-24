@@ -67,79 +67,16 @@ const SectionPhotoManager = ({
             description: tSafe('parts.photos.manager.sections.identification.descriptions.other', 'Autres angles et vues')
           }
         ]
-      },
-      micrography: {
+      },      micrography: {
         nodeId: testNodeId,
         title: tSafe('parts.photos.manager.sections.micrography.title', 'Micrographies'),
         description: tSafe('parts.photos.manager.sections.micrography.description', 'Images micrographiques par résultat et échantillon'),
-        sources: [
-          // Résultat 0
-          { 
-            category: 'micrographs-result-0-sample-0', 
-            subcategory: 'x50',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.x50', 'x50')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.x50', 'Micrographies au grossissement x50'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          { 
-            category: 'micrographs-result-0-sample-0', 
-            subcategory: 'x500',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.x500', 'x500')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.x500', 'Micrographies au grossissement x500'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          { 
-            category: 'micrographs-result-0-sample-0', 
-            subcategory: 'x1000',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.x1000', 'x1000')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.x1000', 'Micrographies au grossissement x1000'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          { 
-            category: 'micrographs-result-0-sample-0', 
-            subcategory: 'other',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.other', 'Autres')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.other', 'Autres micrographies'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 1 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          // Résultat 1
-          { 
-            category: 'micrographs-result-1-sample-0', 
-            subcategory: 'x50',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.x50', 'x50')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.x50', 'Micrographies au grossissement x50'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          { 
-            category: 'micrographs-result-1-sample-0', 
-            subcategory: 'x500',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.x500', 'x500')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.x500', 'Micrographies au grossissement x500'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          { 
-            category: 'micrographs-result-1-sample-0', 
-            subcategory: 'x1000',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.x1000', 'x1000')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.x1000', 'Micrographies au grossissement x1000'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          },
-          { 
-            category: 'micrographs-result-1-sample-0', 
-            subcategory: 'other',
-            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })} - ${tSafe('parts.photos.manager.sections.micrography.magnifications.other', 'Autres')}`,
-            description: tSafe('parts.photos.manager.sections.micrography.descriptions.other', 'Autres micrographies'),
-            group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: 2 }),
-            subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: 1 })
-          }
-        ]
+        // Configuration dynamique - sera générée dans loadPhotosForSection
+        sources: [],
+        isDynamic: true, // Flag pour indiquer que les sources doivent être générées dynamiquement
+        maxResults: 5, // Réduit à 5 pour optimiser (était 10)
+        maxSamples: 3,  // Réduit à 3 pour optimiser (était 5)
+        magnifications: ['x50', 'x500', 'x1000', 'other'] // Grossissements disponibles
       },
       load: {
         nodeId: testNodeId,
@@ -180,12 +117,114 @@ const SectionPhotoManager = ({
           { 
             category: 'furnace_report', 
             subcategory: 'alarms',
-            label: tSafe('parts.photos.manager.sections.curves.categories.alarms', 'Alarmes'),
-            description: tSafe('parts.photos.manager.sections.curves.descriptions.alarms', 'Rapports d\'alarmes et événements')
+            label: tSafe('parts.photos.manager.sections.curves.categories.alarms', 'Alarmes'),            description: tSafe('parts.photos.manager.sections.curves.descriptions.alarms', 'Rapports d\'alarmes et événements')
           }
         ]
       }
     };
+  };  // Générer dynamiquement les sources pour la section micrography
+  const generateMicrographySources = async (nodeId, config) => {
+    const sources = [];
+    const { maxResults = 10, maxSamples = 5, magnifications = ['x50', 'x500', 'x1000', 'other'] } = config;
+    
+    // Fonction helper pour les traductions avec fallback
+    const tSafe = (key, fallback, options = {}) => {
+      try {
+        const translated = t(key, options);
+        return translated !== key ? translated : fallback;
+      } catch (error) {
+        console.warn(`Translation error for key "${key}":`, error);
+        return fallback;
+      }
+    };
+
+    console.log(`Recherche optimisée de micrographies pour le node ${nodeId}...`);
+
+    // Approche optimisée : une seule passe avec traitement en parallèle
+    const promises = [];
+    
+    for (let resultIndex = 0; resultIndex < maxResults; resultIndex++) {
+      for (let sampleIndex = 0; sampleIndex < maxSamples; sampleIndex++) {
+        for (const magnification of magnifications) {
+          const baseCategory = `micrographs-result-${resultIndex}-sample-${sampleIndex}`;
+          
+          // Créer une promesse pour chaque combinaison
+          const promise = fileService.getNodeFiles(
+            nodeId,
+            { category: baseCategory, subcategory: magnification }
+          ).then(response => {
+            if (response.data && response.data.success !== false) {
+              const files = response.data.data?.files || response.data.files || [];
+              if (files.length > 0) {
+                return {
+                  category: baseCategory,
+                  subcategory: magnification,
+                  label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
+                  description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
+                  group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 }),
+                  subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 }),
+                  filesCount: files.length,
+                  resultIndex,
+                  sampleIndex
+                };
+              }
+            }
+            return null;
+          }).catch(error => {
+            // Ignorer silencieusement les combinaisons qui n'existent pas
+            return null;
+          });
+          
+          promises.push(promise);
+        }
+      }
+    }
+      console.log(`Lancement de ${promises.length} requêtes en parallèle...`);
+    
+    // Exécuter les promesses par lots pour éviter de surcharger le serveur
+    const batchSize = 20; // Traiter 20 requêtes à la fois
+    const allResults = [];
+    
+    for (let i = 0; i < promises.length; i += batchSize) {
+      const batch = promises.slice(i, i + batchSize);
+      console.log(`Traitement du lot ${Math.floor(i/batchSize) + 1}/${Math.ceil(promises.length/batchSize)} (${batch.length} requêtes)...`);
+      
+      const batchResults = await Promise.all(batch);
+      allResults.push(...batchResults);
+      
+      // Petite pause entre les lots pour éviter de surcharger le serveur
+      if (i + batchSize < promises.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    // Filtrer les résultats valides et les ajouter aux sources
+    const validSources = allResults.filter(result => result !== null);
+    sources.push(...validSources);
+    
+    console.log(`Génération terminée: ${sources.length} sources trouvées en une seule passe`);
+    
+    // Afficher un résumé des résultats et échantillons trouvés
+    if (sources.length > 0) {
+      const foundCombinations = new Set(sources.map(s => s.category));
+      const combinationsList = Array.from(foundCombinations).sort();
+      console.log(`Combinaisons résultat/échantillon avec photos (${combinationsList.length}):`, combinationsList);
+      
+      // Statistiques par résultat
+      const statsByResult = {};
+      sources.forEach(source => {
+        const key = `Résultat ${source.resultIndex + 1}`;
+        if (!statsByResult[key]) statsByResult[key] = new Set();
+        statsByResult[key].add(source.sampleIndex + 1);
+      });
+      
+      Object.keys(statsByResult).forEach(result => {
+        const samples = Array.from(statsByResult[result]).sort((a, b) => a - b);
+        console.log(`${result}: Échantillons ${samples.join(', ')}`);
+      });
+    }
+    
+    return sources;
   };
 
   // Charger les photos au montage du composant
@@ -228,7 +267,6 @@ const SectionPhotoManager = ({
       setPhotoOrder({});
     }
   }, [initialSelectedPhotos, sectionType]);
-
   // Charger les photos pour la section
   const loadPhotosForSection = async () => {
     setLoading(true);
@@ -248,9 +286,17 @@ const SectionPhotoManager = ({
         return;
       }
       
+      let sources = config.sources;
+      
+      // Si c'est une section dynamique (comme micrography), générer les sources
+      if (config.isDynamic && sectionType === 'micrography') {
+        sources = await generateMicrographySources(nodeId, config);
+        console.log(`Sources dynamiques générées pour micrography:`, sources);
+      }
+      
       const organizedPhotos = {};
       
-      for (const source of config.sources) {
+      for (const source of sources) {
         try {
           const response = await fileService.getNodeFiles(
             nodeId,
@@ -443,14 +489,11 @@ const SectionPhotoManager = ({
       [sectionKey]: !prev[sectionKey]
     }));
   };
-
   // Affichage du chargement
   if (loading) {
     return (
       <div className="text-center p-3">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">{t('parts.photos.manager.loading')}</span>
-        </div>
+        <div className="spinner-border text-primary" role="status"></div>
       </div>
     );
   }

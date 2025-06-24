@@ -22,7 +22,7 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData }) => {
   // Formater la date
   const formattedDate = testData?.testDate 
     ? format(new Date(testData.testDate), 'd MMMM yyyy', { locale: fr }) 
-    : 'Non spécifiée';
+    : 'Not specified';
 
   // Correction pour la gestion des durées dans useEffect
   useEffect(() => {
@@ -285,7 +285,7 @@ const chartOptions = {
     },
     title: {
       display: true,
-      text: 'Évolution de la température et des débits de gaz',
+      text: 'Temperature and gas flow evolution',
       font: {
         size: 16
       },
@@ -410,7 +410,7 @@ const chartOptions = {
         </div>
       );
     } else {
-      return <div className="text-muted">Aucune donnée de trempe disponible</div>;
+      return <div className="text-muted">No quench data available</div>;
     }
   };
 
@@ -423,12 +423,12 @@ const chartOptions = {
         marginBottom: '15px',
         color: '#c82333' 
       }}>
-        Recette
+        Recipe
       </h3>
       
       {Object.keys(recipeData).length === 0 ? (
         <div className="text-center py-5 my-4" style={{ border: '1px dashed #dee2e6', borderRadius: '4px' }}>
-          <p className="text-muted mb-0">Aucune donnée de recette disponible</p>
+          <p className="text-muted mb-0">No recipe data available</p>
         </div>
       ) : (
         <>
@@ -440,12 +440,11 @@ const chartOptions = {
             padding: '10px',
             backgroundColor: '#f8f9fa',
             borderRadius: '4px' 
-          }}>
-            <div>
-              <strong>Numéro de recette:</strong> {recipeData.number || 'Non spécifié'}
+          }}>            <div>
+              <strong>Recipe number:</strong> {recipeData.number || 'Not specified'}
             </div>
             <div>
-              <strong>Date de l'essai:</strong> {formattedDate}
+              <strong>Test date:</strong> {formattedDate}
             </div>
           </div>
           
@@ -463,46 +462,43 @@ const chartOptions = {
               borderBottom: '1px solid #dee2e6',
               paddingBottom: '5px' 
             }}>
-              Paramètres généraux
+              General parameters
             </h4>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div className="parameter">
-                <strong>Pression d'attente:</strong> {recipeData.wait_pressure?.value || '-'} {recipeData.wait_pressure?.unit || ''}
+                <strong>Wait pressure:</strong> {recipeData.wait_pressure?.value || '-'} {recipeData.wait_pressure?.unit || ''}
               </div>
               <div className="parameter">
-                <strong>Temps d'attente:</strong> {recipeData.wait_time?.value || '-'} {recipeData.wait_time?.unit || ''}
+                <strong>Wait time:</strong> {recipeData.wait_time?.value || '-'} {recipeData.wait_time?.unit || ''}
               </div>
               <div className="parameter">
-                <strong>Température cellule:</strong> {recipeData.cell_temp?.value || '-'} {recipeData.cell_temp?.unit || ''}
+                <strong>Cell temperature:</strong> {recipeData.cell_temp?.value || '-'} {recipeData.cell_temp?.unit || ''}
               </div>
               <div className="parameter">
-                <strong>Durée du programme thermique:</strong> {totalThermalDuration || '-'} min
+                <strong>Thermal program duration:</strong> {totalThermalDuration || '-'} min
               </div>
             </div>
             
             {/* Tableau du thermal cycle */}
             <h5 style={{ fontSize: '14px', marginTop: '15px', marginBottom: '10px' }}>
-              Cycle thermique
+              Thermal cycle
             </h5>
             
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Étape</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Type de rampe</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Température (°C)</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Durée (min)</th>
+              <thead>                <tr style={{ backgroundColor: '#f8f9fa' }}>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Step</th>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Ramp type</th>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Temperature (°C)</th>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Duration (min)</th>
                 </tr>
               </thead>
               <tbody>
                 {recipeData.thermal_cycle?.map((step, index) => (
                   <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.step}</td>
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {step.ramp === 'up' ? 'Montée' : 
-                       step.ramp === 'down' ? 'Descente' : 
-                       step.ramp === 'continue' ? 'Pallier' : step.ramp}
+                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.step}</td>                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
+                      {step.ramp === 'up' ? 'Heating' : 
+                       step.ramp === 'down' ? 'Cooling' : 
+                       step.ramp === 'continue' ? 'Hold' : step.ramp}
                     </td>
                     <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.setpoint}</td>
                     <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>{step.duration}</td>
@@ -526,24 +522,22 @@ const chartOptions = {
               borderBottom: '1px solid #dee2e6',
               paddingBottom: '5px' 
             }}>
-              Cycle chimique
+              Chemical cycle
             </h4>
             
-            {/* Affichage de la durée du programme chimique */}
-            <div style={{ marginBottom: '10px' }}>
-              <strong>Durée du programme chimique:</strong> {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s
+            {/* Affichage de la durée du programme chimique */}            <div style={{ marginBottom: '10px' }}>
+              <strong>Chemical program duration:</strong> {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s
               {recipeData.wait_time?.value && (
-                <span> (incluant {recipeData.wait_time.value} {recipeData.wait_time.unit} de temps d'attente)</span>
+                <span> (including {recipeData.wait_time.value} {recipeData.wait_time.unit} wait time)</span>
               )}
             </div>
             
             {/* Table du cycle chimique avec colonnes pour chaque gaz */}
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Étape</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Durée (s)</th>
-                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Pression (mbar)</th>
+              <thead>                <tr style={{ backgroundColor: '#f8f9fa' }}>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Step</th>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Duration (s)</th>
+                  <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>Pressure (mbar)</th>
                   {recipeData.selected_gas1 && (
                     <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
                       {recipeData.selected_gas1} (Nl/h)
@@ -582,9 +576,8 @@ const chartOptions = {
                       <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
                         {step.gases?.find(g => g.gas === recipeData.selected_gas3)?.debit || '-'}
                       </td>
-                    )}
-                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                      {step.turbine ? 'Oui' : 'Non'}
+                    )}                    <td style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
+                      {step.turbine ? 'Yes' : 'No'}
                     </td>
                   </tr>
                 ))}
@@ -596,7 +589,7 @@ const chartOptions = {
                   </td>
                   <td colSpan={recipeData.selected_gas3 ? 5 : recipeData.selected_gas2 ? 4 : 3} 
                       style={{ padding: '8px', textAlign: 'center', border: '1px solid #dee2e6' }}>
-                    {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s (total incluant temps d'attente)
+                    {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s (total including wait time)
                   </td>
                 </tr>
               </tbody>
@@ -617,7 +610,7 @@ const chartOptions = {
               borderBottom: '1px solid #dee2e6',
               paddingBottom: '5px' 
             }}>
-              Évolution des paramètres du procédé
+              Process parameters evolution
             </h4>
             
             <div style={{ height: '400px' }}>
@@ -633,7 +626,7 @@ const chartOptions = {
                   border: '1px dashed #dee2e6',
                   borderRadius: '4px'
                 }}>
-                  Données insuffisantes pour générer le graphique
+                  Insufficient data to generate chart
                 </div>
               )}
             </div>
@@ -652,7 +645,7 @@ const chartOptions = {
               borderBottom: '1px solid #dee2e6',
               paddingBottom: '5px' 
             }}>
-              Paramètres de trempe (Cooling Media)
+              Quench parameters (Cooling Media)
             </h4>
             
             {renderQuenchData()}

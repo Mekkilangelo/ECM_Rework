@@ -14,10 +14,11 @@
     "max": "Max",
     "min": "Min",
     "modifiedAt": "Modifié le",
-    "modifying": "Modification en cours...",
-    "name": "Nom",
+    "modifying": "Modification en cours...",    "name": "Nom",
     "no": "Non",
     "save": "Enregistrer",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout désélectionner",
     "selectUnit": "Sélectionner une unité",
     "unit": "Unité",
     "unknown": "Inconnu",
@@ -395,8 +396,7 @@
       "diameterIn": "Diamètre int.",
       "diameterOut": "Diamètre ext.",
       "weight": "Poids"
-    },
-    "photos": {
+    },    "photos": {
       "views": {
         "front": "Vue de face",
         "profile": "Vue de profil",
@@ -405,7 +405,85 @@
       },
       "upload": "Importer une {{view}}",
       "loadError": "Erreur lors du chargement des fichiers:",
-      "associationError": "Erreur lors de l'association des fichiers:"
+      "associationError": "Erreur lors de l'association des fichiers:",
+      "manager": {
+        "title": "Gestionnaire de photos",
+        "loading": "Chargement...",
+        "selectAll": "Tout sélectionner",
+        "deselectAll": "Tout désélectionner",
+        "refresh": "Actualiser",
+        "noPhotosAvailable": "Aucune photo disponible",
+        "noPhotosMessage": "Aucune photo n'a été trouvée pour cette section.",
+        "verifyPhotosMessage": "Vérifiez que vous avez bien ajouté des photos à la pièce.",
+        "verifyFilesMessage": "Vérifiez que vous avez bien associé des fichiers au test.",
+        "configurationMissing": "Configuration manquante",
+        "idMissing": "Impossible de charger les photos : ID de {{type}} manquant.",
+        "selectedCount": "{{count}}/{{total}} sélectionnées",
+        "selectionMessage": "{{count}} image(s) sélectionnée(s) pour inclusion dans le rapport. L'ordre de sélection détermine l'ordre d'apparition.",
+        "imageNotAvailable": "Image non disponible",
+        "sections": {
+          "identification": {
+            "title": "Photos de la pièce",
+            "description": "Différentes vues de la pièce",
+            "categories": {
+              "front": "Vue de face",
+              "profile": "Vue de profil",
+              "quarter": "Vue en trois-quarts",
+              "other": "Autres vues"
+            },
+            "descriptions": {
+              "front": "Photos prises de face",
+              "profile": "Photos prises de profil",
+              "quarter": "Photos prises en trois-quarts",
+              "other": "Autres angles et vues"
+            }
+          },
+          "micrography": {
+            "title": "Micrographies",
+            "description": "Images micrographiques par résultat et échantillon",
+            "result": "Résultat {{number}}",
+            "sample": "Échantillon {{number}}",
+            "magnifications": {
+              "x50": "x50",
+              "x500": "x500",
+              "x1000": "x1000",
+              "other": "Autres"
+            },
+            "descriptions": {
+              "x50": "Micrographies au grossissement x50",
+              "x500": "Micrographies au grossissement x500",
+              "x1000": "Micrographies au grossissement x1000",
+              "other": "Autres micrographies"
+            }
+          },
+          "load": {
+            "title": "Photos de charge",
+            "description": "Disposition et configuration de la charge",
+            "categories": {
+              "load_design": "Configuration de charge"
+            },
+            "descriptions": {
+              "load_design": "Photos de la disposition de la charge"
+            }
+          },
+          "curves": {
+            "title": "Rapports de four",
+            "description": "Courbes et rapports de température",
+            "categories": {
+              "heating": "Courbes de chauffe",
+              "cooling": "Courbes de refroidissement",
+              "datapaq": "Données Datapaq",
+              "alarms": "Alarmes"
+            },
+            "descriptions": {
+              "heating": "Graphiques de montée en température",
+              "cooling": "Graphiques de refroidissement",
+              "datapaq": "Relevés des capteurs Datapaq",
+              "alarms": "Rapports d'alarmes et événements"
+            }
+          }
+        }
+      }
     },
     "steel": {
       "title": "Acier",
@@ -859,13 +937,50 @@
     "errors": {
       "loadFailed": "Erreur lors du chargement des journaux",
       "exportFailed": "Erreur lors de l'export des journaux"
-    }
-  },
+    }  },
   
   "fileHandling": {
     "loadError": "Erreur lors du chargement des fichiers:",
     "associateError": "Erreur lors de l'association des fichiers:",
     "responseMessage": "Réponse de récupération des fichiers",
     "import": "Importer {{name}}"
+  },
+
+  "report": {
+    "title": "Rapport d'essai",
+    "actions": {
+      "preview": "Prévisualiser",
+      "downloadPdf": "PDF"
+    },
+    "sections": {
+      "title": "Sections du rapport",
+      "identification": {
+        "label": "Identification",
+        "description": "Informations d'identification du test et de la pièce"
+      },
+      "recipe": {
+        "label": "Recette",
+        "description": "Paramètres de la recette utilisée"
+      },
+      "load": {
+        "label": "Charge",
+        "description": "Information sur la charge et le positionnement"
+      },
+      "curves": {
+        "label": "Courbes",
+        "description": "Graphiques et courbes de température/puissance"
+      },
+      "micrography": {
+        "label": "Micrographie",
+        "description": "Images et analyses micrographiques"
+      },
+      "control": {
+        "label": "Contrôle",
+        "description": "Résultats de mesures et contrôles"
+      }
+    },
+    "photos": {
+      "title": "Photos à inclure dans le rapport"
+    }
   }
 }

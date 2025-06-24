@@ -42,12 +42,16 @@ const login = async (req, res, next) => {
         sessionId: req.session?.id,
         requestId: req.requestId
       });
-      
-      return apiResponse.error(res, 'Identifiants invalides', 401);
-    }// Mise à jour de la date de dernière connexion
+        return apiResponse.error(res, 'Identifiants invalides', 401);
+    }
+
+    // Mise à jour de la date de dernière connexion
     // Note: last_login field removed as it doesn't exist in the database
-    // Générer un token JWT    const token = generateToken(user);
-      logger.info(`Successful login for user: ${username}`, { userId: user.id });
+    
+    // Générer un token JWT
+    const token = generateToken(user);
+    
+    logger.info(`Successful login for user: ${username}`, { userId: user.id });
 
     // Log successful login
     await loggingService.logUserLogin(user.id, username, true, {

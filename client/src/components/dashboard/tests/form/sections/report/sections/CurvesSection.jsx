@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import fileService from '../../../../../../../services/fileService';
 
 const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
-  // Vérification de sécurité pour les données du test
+  // Safety check for test data
   const safeTestData = testData || {};
   
-  // Fonction plus intelligente pour organiser les photos par sous-catégorie
+  // Smarter function to organize photos by subcategory
   const getCurvesPhotosByCategory = () => {
     const result = {
       heating: [],
@@ -17,10 +17,9 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
     if (!selectedPhotos || !selectedPhotos.curves) return result;
     
     const curvesPhotos = selectedPhotos.curves;
-    
-    // Si c'est un objet avec structure hiérarchique
+      // If it's an object with hierarchical structure
     if (typeof curvesPhotos === 'object' && !Array.isArray(curvesPhotos)) {
-      // Récupérer directement les photos par sous-catégorie
+      // Retrieve photos directly by subcategory
       Object.entries(curvesPhotos).forEach(([subcategory, photos]) => {
         if (subcategory === 'heating' && Array.isArray(photos)) {
           result.heating = photos;
@@ -33,7 +32,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
         }
       });
     }
-    // Si c'est un tableau plat, diviser équitablement (comme avant)
+    // If it's a flat array, divide equally (as before)
     else if (Array.isArray(curvesPhotos)) {
       const quarterLen = Math.ceil(curvesPhotos.length / 4);
       result.heating = curvesPhotos.slice(0, quarterLen);
@@ -45,11 +44,10 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
     console.log("Organized curves photos:", result);
     return result;
   };
-
-  // Utiliser la fonction pour organiser les photos
+  // Use the function to organize photos
   const groupedPhotos = getCurvesPhotosByCategory();
   
-  // Créer un tableau plat de toutes les photos si nécessaire
+  // Create a flat array of all photos if needed
   const curvesPhotos = [
     ...groupedPhotos.heating,
     ...groupedPhotos.cooling,
@@ -57,18 +55,18 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
     ...groupedPhotos.alarms
   ];
   
-  // Fonction pour obtenir l'URL d'une photo
+  // Function to get photo URL
   const getPhotoUrl = (photoId) => {
     return fileService.getFilePreviewUrl(photoId);
   };
 
-  // Déboguer les informations sur les photos
+  // Debug photo information
   console.log("CurvesSection - testData:", testData);
   console.log("CurvesSection - selectedPhotos:", selectedPhotos);
-  console.log("CurvesSection - curvesPhotos (après traitement):", curvesPhotos);
+  console.log("CurvesSection - curvesPhotos (after processing):", curvesPhotos);
   
   if (curvesPhotos.length > 0) {
-    console.log(`URL pour la première image des courbes:`, getPhotoUrl(curvesPhotos[0]));
+    console.log(`URL for first curve image:`, getPhotoUrl(curvesPhotos[0]));
   }
   
   return (
@@ -79,7 +77,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
         marginBottom: '20px',
         color: '#138496' 
       }}>
-        Courbes de traitement
+        Treatment Curves
       </h3>
       
       <div style={{ 
@@ -88,10 +86,9 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
         borderRadius: '6px',
         backgroundColor: '#fff',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-      }}>
-        {curvesPhotos.length > 0 ? (
+      }}>        {curvesPhotos.length > 0 ? (
           <>
-            {/* Photos de courbes de chauffage */}
+            {/* Heating curve photos */}
             {groupedPhotos.heating.length > 0 && (
               <div style={{ marginBottom: '30px' }}>
                 <h4 style={{ 
@@ -101,7 +98,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   borderBottom: '1px solid #e9ecef',
                   paddingBottom: '8px'
                 }}>
-                  Courbe de chauffage
+                  Heating Curve
                 </h4>
                 <div style={{ 
                   display: 'grid',
@@ -118,7 +115,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                     }}>
                       <img 
                         src={getPhotoUrl(photoId)}
-                        alt={`Courbe de chauffage ${index + 1}`}
+                        alt={`Heating curve ${index + 1}`}
                         style={{
                           width: '100%',
                           height: '220px',
@@ -146,9 +143,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   ))}
                 </div>
               </div>
-            )}
-
-            {/* Photos de courbes de refroidissement */}
+            )}            {/* Cooling curve photos */}
             {groupedPhotos.cooling.length > 0 && (
               <div style={{ marginBottom: '30px' }}>
                 <h4 style={{ 
@@ -158,7 +153,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   borderBottom: '1px solid #e9ecef',
                   paddingBottom: '8px'
                 }}>
-                  Courbe de refroidissement
+                  Cooling Curve
                 </h4>
                 <div style={{ 
                   display: 'grid',
@@ -175,7 +170,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                     }}>
                       <img 
                         src={getPhotoUrl(photoId)}
-                        alt={`Courbe de refroidissement ${index + 1}`}
+                        alt={`Cooling curve ${index + 1}`}
                         style={{
                           width: '100%',
                           height: '220px',
@@ -215,7 +210,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   borderBottom: '1px solid #e9ecef',
                   paddingBottom: '8px'
                 }}>
-                  Résultats Datapaq
+                  Datapaq Results
                 </h4>
                 <div style={{ 
                   display: 'grid',
@@ -272,7 +267,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   borderBottom: '1px solid #e9ecef',
                   paddingBottom: '8px'
                 }}>
-                  Journal d'alarmes
+                  Alarm Log
                 </h4>
                 <div style={{ 
                   display: 'grid',
@@ -288,7 +283,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                     }}>
                       <img 
                         src={getPhotoUrl(photoId)}
-                        alt={`Journal d'alarmes ${index + 1}`}
+                        alt={`Alarm log ${index + 1}`}
                         style={{
                           width: '100%',
                           height: '220px',
@@ -319,10 +314,9 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
             )}
           </>
         ) : (
-          <>
-            {/* Zone pour graphique de température quand il n'y a pas de photos */}
+          <>            {/* Temperature chart area when there are no photos */}
             <div style={{ marginBottom: '20px' }}>
-              <h4 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>Courbe de température</h4>
+              <h4 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>Temperature Curve</h4>
               <div style={{ 
                 height: '200px', 
                 backgroundColor: '#f8f9fa', 
@@ -333,17 +327,16 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                 alignItems: 'center'
               }}>
                 <div style={{ textAlign: 'center', color: '#6c757d' }}>
-                  <div>Graphique de température vs temps</div>
+                  <div>Temperature vs time chart</div>
                   <div style={{ fontSize: '12px', marginTop: '5px' }}>
-                    (Les données réelles de la courbe seront intégrées ici)
+                    (Actual curve data will be integrated here)
                   </div>
                 </div>
               </div>
             </div>
-              {/* Zone pour graphique de potentiel carbone */}
+              {/* Carbon potential chart area */}
             {safeTestData.processType && safeTestData.processType.toLowerCase().includes("cémentation") && (
-              <div>
-                <h4 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>Potentiel carbone</h4>
+              <div>                <h4 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>Carbon Potential</h4>
                 <div style={{ 
                   height: '150px', 
                   backgroundColor: '#f8f9fa', 
@@ -354,9 +347,9 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   alignItems: 'center'
                 }}>
                   <div style={{ textAlign: 'center', color: '#6c757d' }}>
-                    <div>Graphique de potentiel carbone vs temps</div>
+                    <div>Carbon potential vs time chart</div>
                     <div style={{ fontSize: '12px', marginTop: '5px' }}>
-                      (Les données réelles de la courbe seront intégrées ici)
+                      (Actual curve data will be integrated here)
                     </div>
                   </div>
                 </div>

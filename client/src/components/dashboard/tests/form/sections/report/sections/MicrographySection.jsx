@@ -1,19 +1,18 @@
 import React from 'react';
 import fileService from '../../../../../../../services/fileService';
 
-const MicrographySection = ({ testData, selectedPhotos = {} }) => {
-  // Récupération des photos sélectionnées pour cette section avec meilleure robustesse
+const MicrographySection = ({ testData, selectedPhotos = {} }) => {  // Retrieve selected photos for this section with improved robustness
   let micrographyPhotos = [];
   
   if (selectedPhotos) {
     if (selectedPhotos.micrography) {
-      // Si c'est déjà un tableau
+      // If it's already an array
       if (Array.isArray(selectedPhotos.micrography)) {
         micrographyPhotos = selectedPhotos.micrography;
       }
-      // Si c'est un objet avec sous-catégories
+      // If it's an object with subcategories
       else if (typeof selectedPhotos.micrography === 'object') {
-        // Rassembler toutes les photos de toutes les sous-catégories
+        // Gather all photos from all subcategories
         Object.values(selectedPhotos.micrography).forEach(subcategoryPhotos => {
           if (Array.isArray(subcategoryPhotos)) {
             micrographyPhotos = [...micrographyPhotos, ...subcategoryPhotos];
@@ -22,43 +21,41 @@ const MicrographySection = ({ testData, selectedPhotos = {} }) => {
       }
     }
   }
-  
-  // Fonction pour obtenir l'URL d'une photo
+    // Function to get photo URL
   const getPhotoUrl = (photoId) => {
     return fileService.getFilePreviewUrl(photoId);
   };
   
-  // Déboguer les informations sur les photos
+  // Debug photo information
   console.log("MicrographySection - testData:", testData);
   console.log("MicrographySection - selectedPhotos:", selectedPhotos);
-  console.log("MicrographySection - micrographyPhotos (après traitement):", micrographyPhotos);
-  
-  if (micrographyPhotos.length > 0) {
-    console.log(`URL pour la première image:`, getPhotoUrl(micrographyPhotos[0]));
+  console.log("MicrographySection - micrographyPhotos (after processing):", micrographyPhotos);
+    if (micrographyPhotos.length > 0) {
+    console.log(`URL for first image:`, getPhotoUrl(micrographyPhotos[0]));
   }
   
-  // Le reste du composant reste inchangé...
+  // The rest of the component remains unchanged...
   
-  // Organiser les photos par grossissement (pour la démonstration)
+  // Organize photos by magnification (for demonstration)
   const organizePhotos = (photos) => {
     if (photos.length === 0) return [];
     
-    // Division simple pour la démonstration
+    // Simple division for demonstration
     const photosPerGroup = Math.max(1, Math.ceil(photos.length / 3));
     const groups = [
       {
         id: 'G1',
-        title: 'Grossissement x50',
+        title: 'Magnification x50',
         photos: photos.slice(0, photosPerGroup)
       },
       {
         id: 'G2',
-        title: 'Grossissement x500', 
+        title: 'Magnification x500', 
         photos: photos.slice(photosPerGroup, 2 * photosPerGroup)
       },
       {
         id: 'G3',
-        title: 'Grossissement x1000',
+        title: 'Magnification x1000',
         photos: photos.slice(2 * photosPerGroup)
       }
     ].filter(group => group.photos.length > 0);
@@ -77,7 +74,7 @@ const MicrographySection = ({ testData, selectedPhotos = {} }) => {
         marginBottom: '20px',
         color: '#6f42c1' 
       }}>
-        Micrographies
+        Micrographs
       </h3>
       
       <div style={{ 
@@ -121,10 +118,9 @@ const MicrographySection = ({ testData, selectedPhotos = {} }) => {
                       backgroundColor: '#fff',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
                     }}>
-                      <div style={{ position: 'relative' }}>
-                        <img 
+                      <div style={{ position: 'relative' }}>                        <img 
                           src={getPhotoUrl(photoId)}
-                          alt={`Micrographie ${group.title} - ${photoIndex + 1}`}
+                          alt={`Micrograph ${group.title} - ${photoIndex + 1}`}
                           style={{
                             width: '100%',
                             height: '180px',
@@ -132,20 +128,20 @@ const MicrographySection = ({ testData, selectedPhotos = {} }) => {
                             backgroundColor: '#f8f9fa'
                           }}
                           onError={(e) => {
-                            console.error(`Erreur de chargement d'image: ${e.target.src}`);
+                            console.error(`Image loading error: ${e.target.src}`);
                             
-                            // Tentative avec une URL alternative
+                            // Try with alternative URL
                             const alternateUrl = `/api/files/${photoId}`;
                             
-                            // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
+                            // If current URL is not the alternative URL, try this one
                             if (e.target.src !== alternateUrl) {
-                              console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                              console.log(`Trying alternative URL: ${alternateUrl}`);
                               e.target.src = alternateUrl;
                               return;
                             }
                             
                             e.target.onerror = null;
-                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+';
                           }}
                         />
                       </div>
@@ -155,9 +151,8 @@ const MicrographySection = ({ testData, selectedPhotos = {} }) => {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
-                      }}>
-                        <div style={{ fontSize: '13px', color: '#495057', fontWeight: '500' }}>
-                          Échantillon {photoIndex + 1}
+                      }}>                        <div style={{ fontSize: '13px', color: '#495057', fontWeight: '500' }}>
+                          Sample {photoIndex + 1}
                         </div>
                         <div style={{ 
                           fontSize: '12px', 
@@ -184,12 +179,11 @@ const MicrographySection = ({ testData, selectedPhotos = {} }) => {
             border: '1px dashed #dee2e6',
             borderRadius: '6px',
             marginTop: '10px'
-          }}>
-            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '10px' }}>
-              Aucune micrographie disponible
+          }}>            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '10px' }}>
+              No micrographs available
             </div>
             <div style={{ fontSize: '14px' }}>
-              Aucune analyse métallographique n'a été effectuée pour ce test.
+              No metallographic analysis was performed for this test.
             </div>
           </div>
         )}

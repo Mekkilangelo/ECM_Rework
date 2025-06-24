@@ -61,7 +61,7 @@ const ControlSection = ({ testData, partData }) => {
     // Créer les datasets pour les mesures
     const datasets = [
       {
-        label: 'Dureté flanc',
+        label: 'Flank hardness',
         data: sortedPoints
           .filter(p => p.distance && p.flank_hardness)
           .map(p => ({
@@ -75,7 +75,7 @@ const ControlSection = ({ testData, partData }) => {
         borderWidth: 2
       },
       {
-        label: 'Dureté racine',
+        label: 'Root hardness',
         data: sortedPoints
           .filter(p => p.distance && p.root_hardness)
           .map(p => ({
@@ -92,9 +92,8 @@ const ControlSection = ({ testData, partData }) => {
     
     // Ajouter la courbe de spécification si disponible
     if (ecdPoints && ecdPoints.length > 0) {
-      console.log("Adding ECD points from backend:", ecdPoints);
-      datasets.push({
-        label: 'Spécification ECD',
+      console.log("Adding ECD points from backend:", ecdPoints);      datasets.push({
+        label: 'ECD Specification',
         data: ecdPoints.map(p => ({
           x: parseFloat(p.distance), 
           y: parseFloat(p.value)
@@ -169,7 +168,7 @@ const ControlSection = ({ testData, partData }) => {
         y: {
           title: {
             display: true,
-            text: `Dureté (${hardnessUnit || 'HV'})`
+            text: `Hardness (${hardnessUnit || 'HV'})`
           },
           min: yMin,
           max: yMax,
@@ -214,16 +213,16 @@ const ControlSection = ({ testData, partData }) => {
           border: '1px solid #dee2e6',
           borderRadius: '4px'
         }}>
-          <h5 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>Spécifications:</h5>
+          <h5 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '10px' }}>Specifications:</h5>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
             {specs.surfaceHardness && (
               <div style={{ flex: '1', minWidth: '200px' }}>
-                <strong>Dureté surface:</strong> {specs.surfaceHardness.min}-{specs.surfaceHardness.max} {specs.surfaceHardness.unit || 'HV'}
+                <strong>Surface hardness:</strong> {specs.surfaceHardness.min}-{specs.surfaceHardness.max} {specs.surfaceHardness.unit || 'HV'}
               </div>
             )}
             {specs.coreHardness && (
               <div style={{ flex: '1', minWidth: '200px' }}>
-                <strong>Dureté cœur:</strong> {specs.coreHardness.min}-{specs.coreHardness.max} {specs.coreHardness.unit || 'HV'}
+                <strong>Core hardness:</strong> {specs.coreHardness.min}-{specs.coreHardness.max} {specs.coreHardness.unit || 'HV'}
               </div>
             )}
             {specs.ecd && (
@@ -247,7 +246,7 @@ const ControlSection = ({ testData, partData }) => {
               borderRadius: '4px',
               borderLeft: '4px solid #20c997'
             }}>
-              Résultat #{result.step || index + 1} {result.description && `- ${result.description}`}
+              Result #{result.step || index + 1} {result.description && `- ${result.description}`}
             </h4>
             
             <div style={{ 
@@ -258,17 +257,16 @@ const ControlSection = ({ testData, partData }) => {
               backgroundColor: 'white' 
             }}>
               {/* Partie des résultats de mesure */}
-              <h5 style={{ fontSize: '16px', marginBottom: '15px' }}>Mesures de dureté</h5>
+              <h5 style={{ fontSize: '16px', marginBottom: '15px' }}>Hardness measurements</h5>
               
               {/* Points de dureté individuels */}
               {result.hardness_points && result.hardness_points.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
                     <thead>
-                      <tr style={{ backgroundColor: '#f8f9fa' }}>
-                        <th style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>Position</th>
-                        <th style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>Valeur</th>
-                        <th style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>Unité</th>
+                      <tr style={{ backgroundColor: '#f8f9fa' }}>                        <th style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>Position</th>
+                        <th style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>Value</th>
+                        <th style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>Unit</th>
                       </tr>
                     </thead>
                     <tbody>

@@ -11,10 +11,11 @@
     "loading": "Loading...",
     "max": "Max",
     "min": "Min",
-    "modifiedAt": "Modified on",
-    "name": "Name",
+    "modifiedAt": "Modified on",    "name": "Name",
     "no": "No",
     "save": "Save",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
     "selectUnit": "Select a unit",
     "unit": "Unit",
     "unknown": "Unknown",
@@ -393,9 +394,7 @@
       "diameterIn": "Inner diameter",
       "diameterOut": "Outer diameter",
       "weight": "Weight"
-    },
-
-    "photos": {
+    },    "photos": {
       "views": {
         "front": "Front view",
         "profile": "Side view",
@@ -404,7 +403,85 @@
       },
       "upload": "Upload {{view}}",
       "loadError": "Error loading files:",
-      "associationError": "Error associating files:"
+      "associationError": "Error associating files:",
+      "manager": {
+        "title": "Photo Manager",
+        "loading": "Loading...",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "refresh": "Refresh",
+        "noPhotosAvailable": "No photos available",
+        "noPhotosMessage": "No photos were found for this section.",
+        "verifyPhotosMessage": "Please verify that you have added photos to the part.",
+        "verifyFilesMessage": "Please verify that you have associated files with the test.",
+        "configurationMissing": "Configuration missing",
+        "idMissing": "Unable to load photos: {{type}} ID missing.",
+        "selectedCount": "{{count}}/{{total}} selected",
+        "selectionMessage": "{{count}} image(s) selected for inclusion in the report. Selection order determines display order.",
+        "imageNotAvailable": "Image not available",
+        "sections": {
+          "identification": {
+            "title": "Part Photos",
+            "description": "Different views of the part",
+            "categories": {
+              "front": "Front view",
+              "profile": "Side view",
+              "quarter": "Three-quarter view",
+              "other": "Other views"
+            },
+            "descriptions": {
+              "front": "Front-facing photographs",
+              "profile": "Side-facing photographs",
+              "quarter": "Three-quarter angle photographs",
+              "other": "Other angles and views"
+            }
+          },
+          "micrography": {
+            "title": "Micrographs",
+            "description": "Micrographic images by result and sample",
+            "result": "Result {{number}}",
+            "sample": "Sample {{number}}",
+            "magnifications": {
+              "x50": "x50",
+              "x500": "x500",
+              "x1000": "x1000",
+              "other": "Other"
+            },
+            "descriptions": {
+              "x50": "Micrographs at x50 magnification",
+              "x500": "Micrographs at x500 magnification",
+              "x1000": "Micrographs at x1000 magnification",
+              "other": "Other micrographs"
+            }
+          },
+          "load": {
+            "title": "Load Photos",
+            "description": "Load arrangement and configuration",
+            "categories": {
+              "load_design": "Load Configuration"
+            },
+            "descriptions": {
+              "load_design": "Load arrangement photographs"
+            }
+          },
+          "curves": {
+            "title": "Furnace Reports",
+            "description": "Temperature curves and reports",
+            "categories": {
+              "heating": "Heating Curves",
+              "cooling": "Cooling Curves",
+              "datapaq": "Datapaq Data",
+              "alarms": "Alarms"
+            },
+            "descriptions": {
+              "heating": "Temperature rise graphs",
+              "cooling": "Cooling graphs",
+              "datapaq": "Datapaq sensor readings",
+              "alarms": "Alarm and event reports"
+            }
+          }
+        }
+      }
     },
     "steel": {
       "title": "Steel",
@@ -851,13 +928,50 @@
     "errors": {
       "loadFailed": "Error loading logs",
       "exportFailed": "Error exporting logs"
-    }
-  },
+    }  },
   
   "fileHandling": {
     "loadError": "Error while loading files:",
     "associateError": "Error while associating files:",
     "responseMessage": "Files retrieval response",
     "import": "Import {{name}}"
+  },
+
+  "report": {
+    "title": "Test Report",
+    "actions": {
+      "preview": "Preview",
+      "downloadPdf": "PDF"
+    },
+    "sections": {
+      "title": "Report Sections",
+      "identification": {
+        "label": "Identification",
+        "description": "Test and part identification information"
+      },
+      "recipe": {
+        "label": "Recipe",
+        "description": "Recipe parameters used"
+      },
+      "load": {
+        "label": "Load",
+        "description": "Load and positioning information"
+      },
+      "curves": {
+        "label": "Curves",
+        "description": "Temperature/power charts and curves"
+      },
+      "micrography": {
+        "label": "Micrography",
+        "description": "Micrographic images and analysis"
+      },
+      "control": {
+        "label": "Control",
+        "description": "Measurement and control results"
+      }
+    },
+    "photos": {
+      "title": "Photos to include in report"
+    }
   }
 }

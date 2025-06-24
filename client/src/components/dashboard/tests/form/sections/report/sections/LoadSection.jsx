@@ -52,7 +52,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
         marginBottom: '20px',
         color: '#e0a800' 
       }}>
-        Charge
+        Load
       </h3>
       
       {/* Disposition principale améliorée */}
@@ -82,13 +82,12 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}>
               <tbody>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '10px', textAlign: 'left', width: '40%', borderBottom: '1px solid #dee2e6' }}>Paramètre</th>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Valeur</th>
+                <tr style={{ backgroundColor: '#f8f9fa' }}>                  <th style={{ padding: '10px', textAlign: 'left', width: '40%', borderBottom: '1px solid #dee2e6' }}>Parameter</th>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Value</th>
                 </tr>
                 {loadData.loadType && (
                   <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Type de charge</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Load type</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.loadType}</td>
                   </tr>
                 )}
@@ -100,19 +99,19 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                 )}
                 {loadData.part_count && (
                   <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Nombre de pièces</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Number of parts</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.part_count}</td>
                   </tr>
                 )}
                 {loadData.floor_count && (
                   <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Nombre d'étages</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Number of floors</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.floor_count}</td>
                   </tr>
                 )}
                 {loadData.weight && (
                   <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Poids total</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Total weight</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>
                       {loadData.weight.unit && loadData.weight.unit.toLowerCase() === 'g' 
                         ? `${(loadData.weight.value / 1000).toFixed(2)} kg`
@@ -130,7 +129,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                 )}
                 {loadData.positioning && (
                   <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Positionnement</td>
+                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Positioning</td>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.positioning}</td>
                   </tr>
                 )}
@@ -151,7 +150,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
               }}>
                 <img 
                   src={getPhotoUrl(loadPhotos[0])} 
-                  alt="Photo de charge"
+                  alt="Load photo"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -180,7 +179,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                 />
               </div>
               <div style={{ fontSize: '13px', color: '#6c757d', textAlign: 'center', marginTop: '10px', fontStyle: 'italic' }}>
-                Vue principale de la charge
+                Main view of the load
               </div>
             </div>
           ) : (
@@ -196,7 +195,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                 marginBottom: '10px'
               }}>
                 <div style={{ color: '#6c757d', fontSize: '14px', textAlign: 'center' }}>
-                  Image de la charge
+                  Load image
                 </div>
               </div>
               <div style={{ alignSelf: 'stretch', fontSize: '12px', color: '#6c757d', textAlign: 'center' }}>
@@ -240,21 +239,20 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                 {loadData.size.length && (
                   <tr>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Longueur</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.value || 'Non spécifié'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.value || 'Not specified'}</td>
                     <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.unit || 'mm'}</td>
                   </tr>
                 )}
                 {loadData.size.width && (
                   <tr style={{ backgroundColor: '#f8f9fa' }}>
                     <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Largeur</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.value || 'Non spécifié'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.value || 'Not specified'}</td>
                     <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.unit || 'mm'}</td>
                   </tr>
                 )}
                 {loadData.size.height && (
-                  <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Hauteur</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.value || 'Non spécifié'}</td>
+                  <tr>                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Height</td>
+                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.value || 'Not specified'}</td>
                     <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.unit || 'mm'}</td>
                   </tr>
                 )}
@@ -276,7 +274,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
               fontWeight: '600',
               color: '#555'
             }}>
-              Photos supplémentaires de la charge
+              Additional load photos
             </h4>
             <div style={{ 
               display: 'grid', 
@@ -295,7 +293,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                 }}>
                   <img 
                     src={getPhotoUrl(photoId)}
-                    alt={`Photo de charge ${index + 2}`}
+                    alt={`Load photo ${index + 2}`}
                     style={{
                       width: '100%',
                       height: '100%',
@@ -303,14 +301,14 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
                       backgroundColor: '#f8f9fa'
                     }}
                     onError={(e) => {
-                      console.error(`Erreur de chargement d'image supplémentaire: ${e.target.src}`);
+                      console.error(`Additional image loading error: ${e.target.src}`);
                       
                       // Tentative avec une URL alternative 
                       const alternateUrl = `/api/files/${photoId}`;
                       
                       // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                       if (e.target.src !== alternateUrl) {
-                        console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                        console.log(`Attempting with alternative URL: ${alternateUrl}`);
                         e.target.src = alternateUrl;
                         return;
                       }

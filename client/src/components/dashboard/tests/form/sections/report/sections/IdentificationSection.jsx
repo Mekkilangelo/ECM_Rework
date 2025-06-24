@@ -49,7 +49,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
       dimensionItems.push(`Ø: ${dimensions.diameter.value} ${dimensions.diameter.unit || 'mm'}`);
     }
     
-    return dimensionItems.length > 0 ? dimensionItems.join(', ') : 'Non spécifiées';
+    return dimensionItems.length > 0 ? dimensionItems.join(', ') : 'Not specified';
   };
 
   // Format pour le poids
@@ -65,10 +65,9 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
         value = value / 1000;
         unit = 'kg';
       }
-      
-      return `${value} ${unit}`;
+        return `${value} ${unit}`;
     }
-    return 'Non spécifié';
+    return 'Not specified';
   };
 
   // Fonction pour récupérer les photos sélectionnées pour cette section
@@ -140,33 +139,32 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
         fontSize: '18px',
         fontWeight: '600'
       }}>
-        Identification de la pièce
+        Identification of the part
       </h3>
       
       <div className="section-content">
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-          <tbody>
-            <tr>
-              <td style={{ padding: '8px', fontWeight: 'bold', width: '30%', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Désignation:</td>
+          <tbody>            <tr>
+              <td style={{ padding: '8px', fontWeight: 'bold', width: '30%', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Designation:</td>
               <td style={{ padding: '8px', border: '1px solid #ddd' }}>
                 {part.designation} 
                 {part.clientDesignation && <span style={{ color: '#666', fontStyle: 'italic' }}> ({part.clientDesignation})</span>}
               </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Référence:</td>
-              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.reference || 'Non spécifiée'}</td>
+              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Reference:</td>
+              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.reference || 'Not specified'}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Quantité:</td>
-              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.quantity || 'Non spécifiée'}</td>
+              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Quantity:</td>
+              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.quantity || 'Not specified'}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Matériau:</td>
-              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.steel || 'Non spécifié'}</td>
+              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Material:</td>
+              <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.steel || 'Not specified'}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Poids:</td>
+              <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Weight:</td>
               <td style={{ padding: '8px', border: '1px solid #ddd' }}>{formatWeight()}</td>
             </tr>
             <tr>
@@ -175,7 +173,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
             </tr>
             {part.comments && (
               <tr>
-                <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Commentaires:</td>
+                <td style={{ padding: '8px', fontWeight: 'bold', backgroundColor: '#f9f9f9', border: '1px solid #ddd' }}>Comments:</td>
                 <td style={{ padding: '8px', border: '1px solid #ddd' }}>{part.comments}</td>
               </tr>
             )}
@@ -197,7 +195,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
               fontWeight: '600',
               color: '#555'
             }}>
-              Commentaires
+              Comments
             </h4>
             <p style={{ margin: 0, color: '#333' }}>
               {test.loadData.comments}
@@ -238,22 +236,21 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
                       objectFit: 'contain',
                       backgroundColor: '#f8f9fa'
                     }}
-                    onError={(e) => {
-                      console.error(`Erreur de chargement d'image: ${e.target.src}`);
+                    onError={(e) => {                      console.error(`Image loading error: ${e.target.src}`);
                       
                       // Tentative avec une URL alternative
                       const alternateUrl = `/api/files/${photoId}`;
                       
                       // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                       if (e.target.src !== alternateUrl) {
-                        console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                        console.log(`Attempting with alternative URL: ${alternateUrl}`);
                         e.target.src = alternateUrl;
                         return;
                       }
                       
                       // Si l'alternative échoue aussi, afficher l'image par défaut
                       e.target.onerror = null;
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+';
                     }}
                   />
                 </div>

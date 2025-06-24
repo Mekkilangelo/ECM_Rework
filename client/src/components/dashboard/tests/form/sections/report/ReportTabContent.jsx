@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, Row, Col, Button, Badge, ListGroup, Tooltip, OverlayTrigger, Tabs, Tab } from 'react-bootstrap';
+import { Card, Row, Col, Button, Badge, ListGroup, Tooltip, OverlayTrigger, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faFileDownload, faIdCard, faList, faCubes, faChartLine, faMicroscope, faClipboardCheck, faToggleOn, faToggleOff, faImages } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import testService from '../../../../../../services/testService';
@@ -21,6 +22,8 @@ import ControlSection from './sections/ControlSection';
 import ReportFooter from './sections/ReportFooter';
 
 const ReportTabContent = ({ testId, testData, partData, partId }) => {
+  const { t } = useTranslation();
+  
   // Utilisez partId directement si disponible, sinon essayez de le récupérer de partData
   const [parentNodeId, setParentNodeId] = useState(partId || partData?.id || null);
 
@@ -31,43 +34,42 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
       console.log("ID de pièce défini:", partData.id);
     }
   }, [partData]);
-
   // Configuration des sections avec métadonnées pour une meilleure UI
   const sectionConfig = {
     identification: { 
-      label: 'Identification', 
+      label: t('report.sections.identification.label', 'Identification'), 
       icon: faIdCard, 
-      description: 'Informations d\'identification du test et de la pièce',
+      description: t('report.sections.identification.description', 'Informations d\'identification du test et de la pièce'),
       hasPhotos: true
     },
     recipe: { 
-      label: 'Recette', 
+      label: t('report.sections.recipe.label', 'Recette'), 
       icon: faList, 
-      description: 'Paramètres de la recette utilisée',
+      description: t('report.sections.recipe.description', 'Paramètres de la recette utilisée'),
       hasPhotos: false
     },
     load: { 
-      label: 'Charge', 
+      label: t('report.sections.load.label', 'Charge'), 
       icon: faCubes, 
-      description: 'Information sur la charge et le positionnement',
+      description: t('report.sections.load.description', 'Information sur la charge et le positionnement'),
       hasPhotos: true
     },
     curves: { 
-      label: 'Courbes', 
+      label: t('report.sections.curves.label', 'Courbes'), 
       icon: faChartLine, 
-      description: 'Graphiques et courbes de température/puissance',
+      description: t('report.sections.curves.description', 'Graphiques et courbes de température/puissance'),
       hasPhotos: true
     },
     micrography: { 
-      label: 'Micrographie', 
+      label: t('report.sections.micrography.label', 'Micrographie'), 
       icon: faMicroscope, 
-      description: 'Images et analyses micrographiques',
+      description: t('report.sections.micrography.description', 'Images et analyses micrographiques'),
       hasPhotos: true
     },
     control: { 
-      label: 'Contrôle', 
+      label: t('report.sections.control.label', 'Contrôle'), 
       icon: faClipboardCheck, 
-      description: 'Résultats de mesures et contrôles',
+      description: t('report.sections.control.description', 'Résultats de mesures et contrôles'),
       hasPhotos: false
     },
   };
@@ -88,8 +90,7 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
   const [error, setError] = useState(null);
   const reportRef = useRef(null);
   
-  
-  // État pour l'onglet de gestion de photos actif
+    // État pour l'onglet de gestion de photos actif
   const [activePhotoSection, setActivePhotoSection] = useState('identification');
   
   // État pour les photos sélectionnées organisées par section
@@ -99,6 +100,9 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
     load: [],
     curves: []
   });
+
+  // État pour stocker les gestionnaires de photos de chaque section
+  const [photoManagers, setPhotoManagers] = useState({});
   
   // Charger l'ID du nœud parent (pièce) au montage
   useEffect(() => {
@@ -251,22 +255,43 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
   const photoSections = Object.entries(sectionConfig)
     .filter(([_, config]) => config.hasPhotos)
     .map(([key, _]) => key);
-  
-  return (
-    <Card className="mt-3 shadow-sm">
-      <Card.Header as="h5" className="bg-danger text-white d-flex justify-content-between align-items-center">
-        <span>Rapport d'essai</span>
-        <Badge bg="light" text="dark" className="py-2 px-3">
-          Test: {testData?.testCode || testData?.Test?.test_code || reportData?.test?.testCode || 'Nouveau test'}
-        </Badge>
+  return (    <Card className="mt-3 shadow-sm">
+      <Card.Header as="h5" className="bg-danger text-light d-flex justify-content-between align-items-center">
+        <span className="fw-bold">{t('report.title', 'Rapport d\'essai')}</span>
+        <div className="d-flex gap-2">
+          <Button
+            variant="warning"
+            size="sm"
+            onClick={handlePreview}
+            disabled={loading}
+            className="d-flex align-items-center"
+          >
+            {loading ? (
+              <Spinner animation="border" size="sm" className="me-1" />
+            ) : (
+              <FontAwesomeIcon icon={faEye} className="me-1" />
+            )}
+            {loading ? t('common.loading', 'Chargement...') : t('report.actions.preview', 'Prévisualiser')}
+          </Button>
+          
+          <Button
+            variant="outline-warning"
+            size="sm"
+            onClick={generatePDF}
+            disabled={!reportData || loading}
+            className="d-flex align-items-center"
+          >
+            <FontAwesomeIcon icon={faFileDownload} className="me-1" />
+            {t('report.actions.downloadPdf', 'PDF')}
+          </Button>
+        </div>
       </Card.Header>
       <Card.Body>
         <Row className="mb-4">
-          <Col lg={8}>
-            <Card className="border-0 shadow-sm mb-3">
-              <Card.Header className="bg-light">
+          <Col lg={12}>
+            <Card className="border-0 shadow-sm mb-3">              <Card.Header className="bg-light">
                 <div className="d-flex justify-content-between align-items-center">
-                  <h6 className="mb-0 fw-bold">Sections du rapport</h6>
+                  <h6 className="mb-0 fw-bold">{t('report.sections.title', 'Sections du rapport')}</h6>
                   <div>
                     <Button 
                       size="sm" 
@@ -278,7 +303,7 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
                       }}
                       type="button"
                     >
-                      Tout sélectionner
+                      {t('common.selectAll', 'Tout sélectionner')}
                     </Button>
                     <Button 
                       size="sm" 
@@ -289,7 +314,7 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
                       }}
                       type="button"
                     >
-                      Tout désélectionner
+                      {t('common.deselectAll', 'Tout désélectionner')}
                     </Button>
                   </div>
                 </div>
@@ -313,21 +338,20 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
                           icon={config.icon} 
                           className={`me-3 ${selectedSections[key] ? 'text-danger' : 'text-muted'}`}
                           fixedWidth
-                        />
-                        <span className={selectedSections[key] ? 'fw-bold' : 'text-muted'}>
+                        />                        <span className={selectedSections[key] ? 'fw-bold mr-1' : 'text-muted mr-1'}>
                           {config.label}
                         </span>
                         {config.hasPhotos && (
                           <Badge 
-                            bg="info" 
-                            className="ms-2" 
+                            bg="warning" 
+                            text="dark"
+                            className="ms-auto fs-6 px-2 py-1"
                             pill
                             onClick={(e) => {
                               e.stopPropagation();
                               setActivePhotoSection(key);
-                            }}
-                          >
-                            <FontAwesomeIcon icon={faImages} className="me-1" />
+                            }}                          >
+                            <FontAwesomeIcon icon={faImages} className="me-1 mr-1" />
                             {selectedPhotos[key]?.length || 0}
                           </Badge>
                         )}
@@ -350,93 +374,31 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
                 ))}
               </ListGroup>
             </Card>
-            
-            {/* Gestionnaire de photos par section */}
-            <Card className="border-0 shadow-sm mt-4">
+              {/* Gestionnaire de photos par section */}            <Card className="border-0 shadow-sm mt-4">
               <Card.Header className="bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h6 className="mb-0 fw-bold">
-                    <FontAwesomeIcon icon={faImages} className="me-2" />
-                    Photos à inclure dans le rapport
-                  </h6>
-                </div>
+                <h6 className="mb-0 fw-bold">
+                  <FontAwesomeIcon icon={faImages} className="me-2" />
+                  {t('report.photos.title', 'Photos à inclure dans le rapport')}
+                </h6>
               </Card.Header>
               <Card.Body>
-                <Tabs
-                  activeKey={activePhotoSection}
-                  onSelect={(key) => setActivePhotoSection(key)}
-                  className="mb-3"
-                >
-                  {photoSections.map(section => (
-                    <Tab 
-                      key={section} 
-                      eventKey={section} 
-                      title={
-                        <span>
-                          {sectionConfig[section].label}
-                          <Badge 
-                            bg="primary" 
-                            className="ms-2" 
-                            pill
-                          >
-                            {selectedPhotos[section]?.length || 0}
-                          </Badge>
-                        </span>
-                      }
-                    >
-                      <SectionPhotoManager
-                        testNodeId={testId}
-                        partNodeId={parentNodeId}
-                        sectionType={section}
-                        onChange={handlePhotoSelectionChange}
-                        initialSelectedPhotos={selectedPhotos}
-                        show={activePhotoSection === section}
-                      />
-                    </Tab>
-                  ))}
-                </Tabs>
-              </Card.Body>
-            </Card>
-          </Col>
-          
-          <Col lg={4} className="mt-3 mt-lg-0">
-            <Card className="border-0 shadow-sm h-100">
-              <Card.Body className="d-flex flex-column justify-content-between">
-                <div>
-                  <h6 className="fw-bold mb-3">Actions</h6>
-                  <p className="text-muted mb-4">
-                    Prévisualisez ou téléchargez votre rapport personnalisé au format PDF.
-                  </p>
-                  {error && <p className="text-danger">{error}</p>}
-                </div>
-                
-                <div className="d-grid gap-2">
-                  <Button
-                    variant="outline-danger"
-                    size="lg"
-                    onClick={handlePreview}
-                    disabled={loading}
-                    className="mb-2 d-flex align-items-center justify-content-center"
-                  >
-                    {loading ? 'Chargement...' : (
-                      <>
-                        <FontAwesomeIcon icon={faEye} className="me-2" />
-                        Prévisualiser le rapport
-                      </>
-                    )}
-                  </Button>
-                  
-                  <Button
-                    variant="danger"
-                    size="lg"
-                    onClick={generatePDF}
-                    disabled={!reportData || loading}
-                    className="d-flex align-items-center justify-content-center"
-                  >
-                    <FontAwesomeIcon icon={faFileDownload} className="me-2" />
-                    Télécharger en PDF
-                  </Button>
-                </div>
+                {error && (
+                  <div className="alert alert-danger mb-3">{error}</div>
+                )}
+                  {/* Affichage de tous les gestionnaires de photos */}
+                {photoSections.map(section => (
+                  <div key={section} className="mb-3">
+                    <SectionPhotoManager
+                      key={`${section}-${testId}-${parentNodeId}`}
+                      testNodeId={testId}
+                      partNodeId={parentNodeId}
+                      sectionType={section}
+                      onChange={handlePhotoSelectionChange}
+                      initialSelectedPhotos={selectedPhotos}
+                      show={true}
+                    />
+                  </div>
+                ))}
               </Card.Body>
             </Card>
           </Col>

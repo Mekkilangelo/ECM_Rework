@@ -11,12 +11,11 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
       console.log("ECD direct:", partData.ecd);
     }
   }, [partData]);
-  
-  // Vérifier que les données nécessaires sont présentes
+    // Vérifier que les données nécessaires sont présentes
   if (!testData || !partData) {
     return (
       <div className="text-center p-5">
-        <p>Données insuffisantes pour afficher la page de garde</p>
+        <p>Insufficient data to display the cover page</p>
       </div>
     );
   }
@@ -71,10 +70,9 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
         value = (value / 1000).toFixed(2);
         unit = 'kg';
       }
-      
-      return `${value} ${unit}`;
+        return `${value} ${unit}`;
     }
-    return 'Non spécifié';
+    return 'Not specified';
   };
   
   // Obtenir le poids formaté
@@ -104,16 +102,15 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
     }
     return value;
   };
-
   // Fonction utilitaire pour formater les noms de paramètres
   const formatParameterName = (paramName) => {
-    if (!paramName) return 'Paramètre';
+    if (!paramName) return 'Parameter';
     
     // Convertir les nomenclatures spéciales
-    if (paramName.toLowerCase().includes('surface')) return 'Dureté Surface';
-    if (paramName.toLowerCase().includes('coeur') || paramName.toLowerCase().includes('core')) return 'Dureté Coeur';
-    if (paramName.toLowerCase().includes('pdd') || paramName.toLowerCase().includes('pied')) return 'Dureté PdD';
-    if (paramName.toLowerCase() === 'toothhardness') return 'Dureté PdD'; // Ajout explicite pour toothHardness
+    if (paramName.toLowerCase().includes('surface')) return 'Surface Hardness';
+    if (paramName.toLowerCase().includes('coeur') || paramName.toLowerCase().includes('core')) return 'Core Hardness';
+    if (paramName.toLowerCase().includes('pdd') || paramName.toLowerCase().includes('pied')) return 'Case Depth Hardness';
+    if (paramName.toLowerCase() === 'toothhardness') return 'Case Depth Hardness'; // Ajout explicite pour toothHardness
     if (paramName.toLowerCase() === 'ecd') return 'ECD';
     
     // Formater les paramètres ordinaires avec une première lettre majuscule
@@ -123,40 +120,37 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
   return (
     <div className="cover-page" style={{ minHeight: '100%', position: 'relative', padding: '15px' }}>
       {/* En-tête du rapport */}
-      <ReportPageHeader testData={formattedTestData} clientData={clientData} />
-
-      {/* Titre centré */}
+      <ReportPageHeader testData={formattedTestData} clientData={clientData} />      {/* Titre centré */}
       <div className="text-center mb-5 mt-4">
         <h1 style={{ fontSize: '28px', color: '#dc3545', fontWeight: 'bold', borderBottom: '2px solid #dc3545', paddingBottom: '10px', display: 'inline-block' }}>
-          RAPPORT D'ESSAI
+          TEST REPORT
         </h1>
       </div>
 
       {/* Section principale */}
       <Row className="mb-5">
         {/* Informations de la pièce (côté gauche) */}
-        <Col md={6}>
-          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+        <Col md={6}>          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
             <h4 style={{ color: '#dc3545', borderBottom: '2px solid #dc3545', paddingBottom: '8px', marginBottom: '20px', fontWeight: 'bold' }}>
-              Pièce
+              Part
             </h4>
             <table className="table table-borderless">
               <tbody>
                 <tr>
-                  <td className="fw-bold" style={{ width: '40%', color: '#495057' }}>Désignation:</td>
-                  <td>{partData.designation || 'Non spécifiée'}</td>
+                  <td className="fw-bold" style={{ width: '40%', color: '#495057' }}>Designation:</td>
+                  <td>{partData.designation || 'Not specified'}</td>
                 </tr>
                 <tr>
-                  <td className="fw-bold" style={{ color: '#495057' }}>Désignation client:</td>
-                  <td>{partData.clientDesignation || partData.client_designation || 'Non spécifiée'}</td>
+                  <td className="fw-bold" style={{ color: '#495057' }}>Client designation:</td>
+                  <td>{partData.clientDesignation || partData.client_designation || 'Not specified'}</td>
                 </tr>
                 <tr>
-                  <td className="fw-bold" style={{ color: '#495057' }}>Acier:</td>
-                  <td>{partData.steel?.designation || 'Non spécifié'}</td>
+                  <td className="fw-bold" style={{ color: '#495057' }}>Steel:</td>
+                  <td>{partData.steel?.designation || 'Not specified'}</td>
                 </tr>
                 {partData.reference && (
                   <tr>
-                    <td className="fw-bold" style={{ color: '#495057' }}>Référence:</td>
+                    <td className="fw-bold" style={{ color: '#495057' }}>Reference:</td>
                     <td>{partData.reference}</td>
                   </tr>
                 )}
@@ -166,32 +160,31 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
         </Col>
 
         {/* Informations de la charge (côté droit) */}
-        <Col md={6}>
-          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+        <Col md={6}>          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
             <h4 style={{ color: '#dc3545', borderBottom: '2px solid #dc3545', paddingBottom: '8px', marginBottom: '20px', fontWeight: 'bold' }}>
-              Charge
+              Load
             </h4>
             <table className="table table-borderless">
               <tbody>
                 <tr>
-                  <td className="fw-bold" style={{ width: '40%', color: '#495057' }}>Numéro de test:</td>
-                  <td>{testData.testCode || testData.test_code || 'Non spécifié'}</td>
+                  <td className="fw-bold" style={{ width: '40%', color: '#495057' }}>Test number:</td>
+                  <td>{testData.testCode || testData.test_code || 'Not specified'}</td>
                 </tr>
                 <tr>
-                  <td className="fw-bold" style={{ color: '#495057' }}>Date du test:</td>
+                  <td className="fw-bold" style={{ color: '#495057' }}>Test date:</td>
                   <td>
                     {testData.testDate || testData.test_date 
-                      ? new Date(testData.testDate || testData.test_date).toLocaleDateString('fr-FR') 
-                      : 'Non spécifiée'}
+                      ? new Date(testData.testDate || testData.test_date).toLocaleDateString('en-US') 
+                      : 'Not specified'}
                   </td>
                 </tr>
                 <tr>
-                  <td className="fw-bold" style={{ color: '#495057' }}>Poids (kg):</td>
+                  <td className="fw-bold" style={{ color: '#495057' }}>Weight (kg):</td>
                   <td>{loadWeight}</td>
                 </tr>
                 <tr>
-                  <td className="fw-bold" style={{ color: '#495057' }}>Client:</td>
-                  <td>{clientData?.name || 'Non spécifié'}</td>
+                  <td className="fw-bold" style={{ color: '#495057' }}>Customer:</td>
+                  <td>{clientData?.name || 'Not specified'}</td>
                 </tr>
               </tbody>
             </table>
@@ -202,10 +195,9 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
       {/* Section inférieure */}
       <Row className="mt-5">
         {/* Spécifications (bas gauche) */}
-        <Col md={6}>
-          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+        <Col md={6}>          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
             <h4 style={{ color: '#dc3545', borderBottom: '2px solid #dc3545', paddingBottom: '8px', marginBottom: '20px', fontWeight: 'bold' }}>
-              Spécifications
+              Specifications
             </h4>
             
             {/* Section pour les spécifications spéciales comme dans ControlSection */}
@@ -214,17 +206,17 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {partData.surfaceHardness && (
                     <div style={{ flex: '1', minWidth: '200px' }}>
-                      <strong>Dureté Surface:</strong> {partData.surfaceHardness.min || ''}-{partData.surfaceHardness.max || ''} {partData.surfaceHardness.unit || 'HV'}
+                      <strong>Surface Hardness:</strong> {partData.surfaceHardness.min || ''}-{partData.surfaceHardness.max || ''} {partData.surfaceHardness.unit || 'HV'}
                     </div>
                   )}
                   {partData.coreHardness && (
                     <div style={{ flex: '1', minWidth: '200px' }}>
-                      <strong>Dureté Coeur:</strong> {partData.coreHardness.min || ''}-{partData.coreHardness.max || ''} {partData.coreHardness.unit || 'HV'}
+                      <strong>Core Hardness:</strong> {partData.coreHardness.min || ''}-{partData.coreHardness.max || ''} {partData.coreHardness.unit || 'HV'}
                     </div>
                   )}
                   {partData.toothHardness && (
                     <div style={{ flex: '1', minWidth: '200px' }}>
-                      <strong>Dureté PdD:</strong> {partData.toothHardness.min || ''}-{partData.toothHardness.max || ''} {partData.toothHardness.unit || 'HV'}
+                      <strong>Case Depth Hardness:</strong> {partData.toothHardness.min || ''}-{partData.toothHardness.max || ''} {partData.toothHardness.unit || 'HV'}
                     </div>
                   )}
                 </div>
@@ -232,13 +224,12 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                 {/* Bloc ECD sous forme de tableau aligné avec le reste */}
                 {(partData.ecd || (partData.specifications && partData.specifications.ecd)) && (
                   <div style={{ marginTop: '15px' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>                      <thead>
                         <tr style={{ backgroundColor: '#e9ecef' }}>
-                          <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'left', fontWeight: 'bold' }}>Paramètre</th>
+                          <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'left', fontWeight: 'bold' }}>Parameter</th>
                           <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Min</th>
                           <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Max</th>
-                          <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Unité</th>
+                          <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -264,13 +255,12 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
             
             {specs && specs.length > 0 ? (
               <div>
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
-                  <thead>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>                  <thead>
                     <tr style={{ backgroundColor: '#e9ecef' }}>
-                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Paramètre</th>
+                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Parameter</th>
                       <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Min</th>
                       <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Max</th>
-                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Unité</th>
+                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -301,25 +291,23 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                 </table>
               </div>
             ) : (
-              <p className="text-muted fst-italic text-center p-4">Aucune spécification disponible</p>
+              <p className="text-muted fst-italic text-center p-4">No specifications available</p>
             )}
           </div>
         </Col>
 
         {/* Résultats (bas droite) */}
         <Col md={6}>
-          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-            <h4 style={{ color: '#dc3545', borderBottom: '2px solid #dc3545', paddingBottom: '8px', marginBottom: '20px', fontWeight: 'bold' }}>
-              Résultats
+          <div className="p-3 border rounded h-100" style={{ backgroundColor: '#f8f9fa', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>            <h4 style={{ color: '#dc3545', borderBottom: '2px solid #dc3545', paddingBottom: '8px', marginBottom: '20px', fontWeight: 'bold' }}>
+              Results
             </h4>
             {results && results.length > 0 ? (
               <div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
-                  <thead>
-                    <tr style={{ backgroundColor: '#e9ecef' }}>
-                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Paramètre</th>
-                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Valeur mesurée</th>
-                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Conformité</th>
+                  <thead>                    <tr style={{ backgroundColor: '#e9ecef' }}>
+                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Parameter</th>
+                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Measured value</th>
+                      <th style={{ padding: '10px', border: '1px solid #dee2e6', textAlign: 'center', fontWeight: 'bold' }}>Conformity</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -337,14 +325,13 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                                   JSON.stringify(result.value) : 
                                   result.value) 
                                 : '-'}
-                            </td>
-                            <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
+                            </td>                            <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
                               {result.conformity === true || result.conformity === 'conforme' ? (
-                                <span style={{ color: '#28a745', fontWeight: 'bold' }}>Conforme</span>
+                                <span style={{ color: '#28a745', fontWeight: 'bold' }}>Compliant</span>
                               ) : result.conformity === false || result.conformity === 'non-conforme' ? (
-                                <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non conforme</span>
+                                <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non-compliant</span>
                               ) : (
-                                <span style={{ color: '#6c757d' }}>Non évalué</span>
+                                <span style={{ color: '#6c757d' }}>Not evaluated</span>
                               )}
                             </td>
                           </tr>
@@ -354,23 +341,21 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                       // Pour les résultats qui contiennent des points de dureté (comme dans ControlSection)
                       if (result.hardness_points && result.hardness_points.length > 0) {
                         return result.hardness_points.map((point, pointIdx) => (
-                          <tr key={`${index}-${pointIdx}`} style={{ backgroundColor: (index + pointIdx) % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                            <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
-                              {point.location === 'surface' ? 'Dureté Surface' : 
-                               point.location === 'pdd' ? 'Dureté PdD' : 
-                               point.location === 'coeur' ? 'Dureté Coeur' : 
-                               point.location || 'Point de dureté'}
+                          <tr key={`${index}-${pointIdx}`} style={{ backgroundColor: (index + pointIdx) % 2 === 0 ? 'white' : '#f8f9fa' }}>                            <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
+                              {point.location === 'surface' ? 'Surface Hardness' : 
+                               point.location === 'pdd' ? 'Case Depth Hardness' : 
+                               point.location === 'coeur' ? 'Core Hardness' : 
+                               point.location || 'Hardness Point'}
                             </td>
                             <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
                               {point.value !== undefined ? point.value : '-'} {point.unit || result.hardness_unit || 'HV'}
-                            </td>
-                            <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
+                            </td>                            <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
                               {point.conformity === true ? (
-                                <span style={{ color: '#28a745', fontWeight: 'bold' }}>Conforme</span>
+                                <span style={{ color: '#28a745', fontWeight: 'bold' }}>Compliant</span>
                               ) : point.conformity === false ? (
-                                <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non conforme</span>
+                                <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non-compliant</span>
                               ) : (
-                                <span style={{ color: '#6c757d' }}>Non évalué</span>
+                                <span style={{ color: '#6c757d' }}>Not evaluated</span>
                               )}
                             </td>
                           </tr>
@@ -381,39 +366,35 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                       if (result.ecd) {
                         return [
                           result.ecd.tooth_flank && (
-                            <tr key={`${index}-flank`} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
-                                ECD Flanc de dent
+                            <tr key={`${index}-flank`} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
+                                ECD Tooth Flank
                               </td>
                               <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
                                 {result.ecd.tooth_flank.distance !== undefined ? result.ecd.tooth_flank.distance : '-'} {result.ecd.tooth_flank.unit || 'mm'}
-                              </td>
-                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
+                              </td>                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
                                 {result.ecd.tooth_flank.conformity === true ? (
-                                  <span style={{ color: '#28a745', fontWeight: 'bold' }}>Conforme</span>
+                                  <span style={{ color: '#28a745', fontWeight: 'bold' }}>Compliant</span>
                                 ) : result.ecd.tooth_flank.conformity === false ? (
-                                  <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non conforme</span>
+                                  <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non-compliant</span>
                                 ) : (
-                                  <span style={{ color: '#6c757d' }}>Non évalué</span>
+                                  <span style={{ color: '#6c757d' }}>Not evaluated</span>
                                 )}
                               </td>
                             </tr>
                           ),
                           result.ecd.tooth_root && (
-                            <tr key={`${index}-root`} style={{ backgroundColor: (index + 1) % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
-                                ECD Racine de dent
+                            <tr key={`${index}-root`} style={{ backgroundColor: (index + 1) % 2 === 0 ? 'white' : '#f8f9fa' }}>                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
+                                ECD Tooth Root
                               </td>
                               <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
                                 {result.ecd.tooth_root.distance !== undefined ? result.ecd.tooth_root.distance : '-'} {result.ecd.tooth_root.unit || 'mm'}
                               </td>
-                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>
-                                {result.ecd.tooth_root.conformity === true ? (
-                                  <span style={{ color: '#28a745', fontWeight: 'bold' }}>Conforme</span>
+                              <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }}>                                {result.ecd.tooth_root.conformity === true ? (
+                                  <span style={{ color: '#28a745', fontWeight: 'bold' }}>Compliant</span>
                                 ) : result.ecd.tooth_root.conformity === false ? (
-                                  <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non conforme</span>
+                                  <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Non-compliant</span>
                                 ) : (
-                                  <span style={{ color: '#6c757d' }}>Non évalué</span>
+                                  <span style={{ color: '#6c757d' }}>Not evaluated</span>
                                 )}
                               </td>
                             </tr>
@@ -423,9 +404,8 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                       
                       // Si aucun format spécifique n'est reconnu
                       return (
-                        <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>
-                          <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
-                            Résultat #{index + 1}
+                        <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa' }}>                          <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'left' }}>
+                            Result #{index + 1}
                           </td>
                           <td style={{ padding: '8px', border: '1px solid #dee2e6', textAlign: 'center' }} colSpan="2">
                             {typeof result === 'object' ? JSON.stringify(result).substring(0, 50) + '...' : result}
@@ -437,7 +417,7 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
                 </table>
               </div>
             ) : (
-              <p className="text-muted fst-italic text-center p-4">Aucun résultat disponible</p>
+              <p className="text-muted fst-italic text-center p-4">No results available</p>
             )}
           </div>
         </Col>

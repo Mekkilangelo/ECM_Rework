@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Modal, Button, Spinner } from 'react-bootstrap';
-import ReportPageHeader from './sections/ReportPageHeader';
 import CoverPageSection from './sections/CoverPageSection';
 
 const ReportPreviewModal = ({ 
@@ -14,17 +13,14 @@ const ReportPreviewModal = ({
   sections
 }) => {
   const {
-    ReportHeader,
     IdentificationSection,
     RecipeSection,
     LoadSection,
     CurvesSection,
     MicrographySection,
-    ControlSection,
-    ReportFooter
+    ControlSection
   } = sections;  // Récupérer l'ID de la pièce depuis reportData
   const partId = reportData?.partId;
-
   // Préparation des photos pour les sections (mise en cache avec useMemo)
   const formattedPhotos = useMemo(() => {
     const photos = {};
@@ -32,8 +28,12 @@ const ReportPreviewModal = ({
       // Transformation de la structure des photos
       Object.keys(selectedPhotos).forEach(sectionKey => {
         if (selectedPhotos[sectionKey]) {
-          // Pour les sections qui utilisent des sous-catégories
-          if (typeof selectedPhotos[sectionKey] === 'object' && !Array.isArray(selectedPhotos[sectionKey])) {
+          // Pour la section curves, préserver la structure hiérarchique
+          if (sectionKey === 'curves' && typeof selectedPhotos[sectionKey] === 'object' && !Array.isArray(selectedPhotos[sectionKey])) {
+            photos[sectionKey] = selectedPhotos[sectionKey]; // Préserver la structure
+          }
+          // Pour les autres sections qui utilisent des sous-catégories
+          else if (typeof selectedPhotos[sectionKey] === 'object' && !Array.isArray(selectedPhotos[sectionKey])) {
             photos[sectionKey] = [];
             Object.keys(selectedPhotos[sectionKey]).forEach(subcategory => {
               if (Array.isArray(selectedPhotos[sectionKey][subcategory])) {
@@ -123,8 +123,6 @@ const ReportPreviewModal = ({
               position: 'relative',
               pageBreakAfter: 'always' 
             }}>
-              {/* En-tête principal */}
-              <ReportHeader testData={formattedTestData} clientData={clientData} />
               
               {/* Section Identification */}              <div style={{ marginTop: '30px' }}>
                 <IdentificationSection 
@@ -147,22 +145,19 @@ const ReportPreviewModal = ({
               position: 'relative',
               pageBreakAfter: 'always' 
             }}>
-              <ReportPageHeader testData={formattedTestData} clientData={clientData} />
               <RecipeSection 
                 testData={formattedTestData} 
                 recipeData={reportData.recipe_data || reportData.recipeData}
               />
             </div>
           )}
-          
-          {/* Section Load sur une nouvelle page */}
+            {/* Section Load sur une nouvelle page */}
           {selectedSections.load && (
             <div className="report-page" style={{ 
               padding: '20px', 
               minHeight: '297mm', 
               position: 'relative',
               pageBreakAfter: 'always'            }}>
-              <ReportPageHeader testData={formattedTestData} clientData={clientData} />
               <LoadSection 
                 testData={formattedTestData} 
                 selectedPhotos={formattedPhotos || selectedPhotos}  // Utiliser les photos formatées
@@ -170,35 +165,30 @@ const ReportPreviewModal = ({
               />
             </div>
           )}
-          
-          {/* Section Curves sur une nouvelle page */}
+            {/* Section Curves sur une nouvelle page */}
           {selectedSections.curves && (
             <div className="report-page" style={{ 
               padding: '20px', 
               minHeight: '297mm', 
               position: 'relative',
               pageBreakAfter: 'always' 
-            }}>
-              <ReportPageHeader testData={formattedTestData} clientData={clientData} />              <CurvesSection 
+            }}>              <CurvesSection 
                 testData={formattedTestData} 
-                selectedPhotos={formattedPhotos || selectedPhotos}  // Ajouter ici
-                partId={partId}  // Ajout de l'ID de la pièce
+                selectedPhotos={formattedPhotos || selectedPhotos}
+                clientData={reportData?.client}
               />
             </div>
           )}
-          
-          {/* Section Micrography sur une nouvelle page */}
+            {/* Section Micrography sur une nouvelle page */}
           {selectedSections.micrography && (
             <div className="report-page" style={{ 
               padding: '20px', 
               minHeight: '297mm', 
               position: 'relative',
-              pageBreakAfter: 'always'            }}>
-              <ReportPageHeader testData={formattedTestData} clientData={clientData} />
-              <MicrographySection 
+              pageBreakAfter: 'always'            }}>              <MicrographySection 
                 testData={formattedTestData} 
-                selectedPhotos={formattedPhotos || selectedPhotos}  // Ajouter ici
-                partId={partId}  // Ajout de l'ID de la pièce
+                selectedPhotos={formattedPhotos || selectedPhotos}
+                clientData={clientData}
               />
             </div>
           )}
@@ -210,14 +200,12 @@ const ReportPreviewModal = ({
                 console.log(`Result ${index} - Part Data:`, reportData.part);
                 console.log(`Result ${index} - Specifications:`, reportData.part?.specifications);
                 
-                return (
-                  <div key={`result-${index}`} className="report-page" style={{ 
+                return (                  <div key={`result-${index}`} className="report-page" style={{ 
                     padding: '20px', 
                     minHeight: '297mm', 
                     position: 'relative',
                     pageBreakAfter: 'always' 
                   }}>
-                    <ReportPageHeader testData={formattedTestData} clientData={clientData} />
                     <h3 style={{ 
                       borderBottom: '2px solid #20c997', 
                       paddingBottom: '5px', 
@@ -234,23 +222,9 @@ const ReportPreviewModal = ({
                     />
                   </div>
                 );
-              })}
-            </>
+              })}            </>
           )}
           
-        {/* Pied de page seulement s'il y a au moins une section sélectionnée */}
-          {(selectedSections.identification || 
-            selectedSections.recipe || selectedSections.load || 
-            selectedSections.curves || selectedSections.micrography || 
-            selectedSections.control) && (
-            <div className="report-page" style={{ 
-              padding: '20px', 
-              position: 'relative'
-            }}>
-              <ReportPageHeader testData={formattedTestData} clientData={clientData} />
-              <ReportFooter />
-            </div>
-          )}
         </div>
       </Modal.Body>
       <Modal.Footer>

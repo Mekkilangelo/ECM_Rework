@@ -77,15 +77,17 @@ const SteelSection = ({
       if (!selectedOption || !selectedOption.nodeId) {
         setSelectedSteelInfo(null);
         return;
-      }
-
-      try {
+      }      try {
         setFetchingSteelInfo(true);
-        console.log('🔍 Fetching steel details for nodeId:', selectedOption.nodeId);
+        const isDev = process.env.NODE_ENV === 'development';
+        if (isDev) {
+          console.log('🔍 Fetching steel details for nodeId:', selectedOption.nodeId);
+        }
         
         // Utiliser getSteel au lieu de getSteelById
         const response = await steelService.getSteel(selectedOption.nodeId);
-        console.log('📦 Steel response:', response);        if (response) {
+        
+        if (response) {
           // La structure de la réponse : { success: true, data: { id, name, Steel: {...} } }
           let steelData = null;
           
@@ -103,11 +105,11 @@ const SteelSection = ({
             steelData = response;
           }
           
-          console.log('🔧 Steel data:', steelData);
-          console.log('🧪 Chemistry data:', steelData?.chemistery);
-          console.log('🔗 Equivalents data:', steelData?.equivalents);
+          if (isDev && steelData) {
+            console.log('🔧 Steel loaded:', steelData.grade || 'Unknown grade');
+          }
 
-          if (steelData) {          // Formatter la composition chimique depuis le champ chemistery (JSON)
+          if (steelData) {// Formatter la composition chimique depuis le champ chemistery (JSON)
           let composition = '';
           if (steelData.chemistery && Array.isArray(steelData.chemistery) && steelData.chemistery.length > 0) {
             // Le format est un tableau d'objets avec { element, value, min_value, max_value }

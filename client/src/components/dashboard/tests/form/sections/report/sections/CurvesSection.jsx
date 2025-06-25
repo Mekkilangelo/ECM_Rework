@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartLine, faThermometerHalf, faChartArea, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import fileService from '../../../../../../../services/fileService';
+import SectionHeader from './common/SectionHeader';
 
-const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
+const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) => {
   // Safety check for test data
   const safeTestData = testData || {};
+    // Function to get photo URL with support for both ID and metadata object
+  const getPhotoUrl = (photo) => {
+    // If photo is an object with metadata
+    if (photo && typeof photo === 'object' && photo.id) {
+      return fileService.getFilePreviewUrl(photo.id);
+    }
+    // If photo is just an ID
+    return fileService.getFilePreviewUrl(photo);
+  };
   
-  // Smarter function to organize photos by subcategory
+  // Function to get photo ID from photo object or ID
+  const getPhotoId = (photo) => {
+    return photo && typeof photo === 'object' ? photo.id : photo;
+  };// Function to organize photos by subcategory based on metadata from SectionPhotoManager
   const getCurvesPhotosByCategory = () => {
     const result = {
       heating: [],
@@ -14,37 +29,61 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
       alarms: []
     };
     
-    if (!selectedPhotos || !selectedPhotos.curves) return result;
+    if (!selectedPhotos || !selectedPhotos.curves) {
+      console.log("No curves photos selected");
+      return result;
+    }
     
     const curvesPhotos = selectedPhotos.curves;
-      // If it's an object with hierarchical structure
+    console.log("Raw selectedPhotos.curves:", curvesPhotos);
+    
+    // The new format from SectionPhotoManager should be objects with metadata
     if (typeof curvesPhotos === 'object' && !Array.isArray(curvesPhotos)) {
-      // Retrieve photos directly by subcategory
+      console.log("Processing new format with metadata from SectionPhotoManager");
+      
+      // Direct mapping from organized data by SectionPhotoManager
       Object.entries(curvesPhotos).forEach(([subcategory, photos]) => {
-        if (subcategory === 'heating' && Array.isArray(photos)) {
-          result.heating = photos;
-        } else if (subcategory === 'cooling' && Array.isArray(photos)) {
-          result.cooling = photos;
-        } else if (subcategory === 'datapaq' && Array.isArray(photos)) {
-          result.datapaq = photos;
-        } else if (subcategory === 'alarms' && Array.isArray(photos)) {
-          result.alarms = photos;
+        console.log(`Processing subcategory: ${subcategory}, photos:`, photos);
+        
+        if (Array.isArray(photos)) {
+          // Photos now have metadata, extract just the photo objects for display
+          const photoObjects = photos.map(photo => {
+            // If it's already a metadata object, keep it
+            if (photo && typeof photo === 'object' && photo.id) {
+              return photo;
+            }
+            // If it's just an ID, create a basic object
+            return { id: photo };
+          });
+          
+          if (subcategory === 'heating') {
+            result.heating = photoObjects;
+          } else if (subcategory === 'cooling') {
+            result.cooling = photoObjects;
+          } else if (subcategory === 'datapaq') {
+            result.datapaq = photoObjects;
+          } else if (subcategory === 'alarms') {
+            result.alarms = photoObjects;
+          }
         }
       });
     }
-    // If it's a flat array, divide equally (as before)
+    // Legacy fallback: if it's still a flat array or other format
     else if (Array.isArray(curvesPhotos)) {
-      const quarterLen = Math.ceil(curvesPhotos.length / 4);
-      result.heating = curvesPhotos.slice(0, quarterLen);
-      result.cooling = curvesPhotos.slice(quarterLen, 2 * quarterLen);
-      result.datapaq = curvesPhotos.slice(2 * quarterLen, 3 * quarterLen);
-      result.alarms = curvesPhotos.slice(3 * quarterLen);
+      console.log("Processing legacy flat array format");
+      
+      curvesPhotos.forEach((photo, index) => {
+        const photoObj = typeof photo === 'object' ? photo : { id: photo };
+        // Simple distribution for fallback
+        const categoryIndex = index % 4;
+        const categories = ['heating', 'cooling', 'datapaq', 'alarms'];
+        result[categories[categoryIndex]].push(photoObj);
+      });
     }
     
-    console.log("Organized curves photos:", result);
+    console.log("Final organized curves photos with metadata:", result);
     return result;
-  };
-  // Use the function to organize photos
+  };// Use the function to organize photos
   const groupedPhotos = getCurvesPhotosByCategory();
   
   // Create a flat array of all photos if needed
@@ -54,11 +93,6 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
     ...groupedPhotos.datapaq,
     ...groupedPhotos.alarms
   ];
-  
-  // Function to get photo URL
-  const getPhotoUrl = (photoId) => {
-    return fileService.getFilePreviewUrl(photoId);
-  };
 
   // Debug photo information
   console.log("CurvesSection - testData:", testData);
@@ -68,57 +102,67 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
   if (curvesPhotos.length > 0) {
     console.log(`URL for first curve image:`, getPhotoUrl(curvesPhotos[0]));
   }
-  
-  return (
-    <div className="report-section curves-section" style={{ marginBottom: '30px' }}>
-      <h3 style={{ 
-        borderBottom: '2px solid #17a2b8', 
-        paddingBottom: '8px', 
-        marginBottom: '20px',
-        color: '#138496' 
-      }}>
-        Treatment Curves
-      </h3>
+    return (
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+      padding: '20px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Header avec informations */}
+      <SectionHeader
+        title="TREATMENT CURVES"
+        subtitle="Temperature and process curves analysis"
+        icon={faChartLine}
+        testData={testData}
+        clientData={clientData}
+        sectionType="curves"
+        showSubtitle={true}
+      />
       
-      <div style={{ 
-        padding: '20px', 
-        border: '1px solid #dee2e6', 
-        borderRadius: '6px',
-        backgroundColor: '#fff',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '25px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        border: '1px solid #e3f2fd'
       }}>        {curvesPhotos.length > 0 ? (
-          <>
-            {/* Heating curve photos */}
+          <>            {/* Heating curve photos */}
             {groupedPhotos.heating.length > 0 && (
               <div style={{ marginBottom: '30px' }}>
-                <h4 style={{ 
+                <h3 style={{ 
+                  color: '#1976d2', 
                   fontSize: '18px', 
-                  margin: '0 0 15px 0',
-                  color: '#495057',
-                  borderBottom: '1px solid #e9ecef',
-                  paddingBottom: '8px'
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}>
-                  Heating Curve
-                </h4>
+                  <FontAwesomeIcon icon={faThermometerHalf} style={{ color: '#42a5f5' }} />                  Heating Curve
+                </h3>
                 <div style={{ 
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '20px',
-                  marginBottom: '10px'
-                }}>
-                  {groupedPhotos.heating.map((photoId, index) => (
-                    <div key={`heating-${index}`} style={{ 
-                      border: '1px solid #dee2e6',
-                      borderRadius: '6px',
+                  gridTemplateColumns: groupedPhotos.heating.length === 1 
+                    ? '1fr' 
+                    : groupedPhotos.heating.length === 2 
+                      ? 'repeat(2, 1fr)' 
+                      : 'repeat(auto-fill, minmax(450px, 1fr))',
+                  gap: '25px',
+                  marginBottom: '10px'                }}>{groupedPhotos.heating.map((photo, index) => (
+                    <div key={`heating-${getPhotoId(photo)}-${index}`} style={{ 
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.08)'
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.2s ease',
+                      background: 'white'
                     }}>
                       <img 
-                        src={getPhotoUrl(photoId)}
-                        alt={`Heating curve ${index + 1}`}
+                        src={getPhotoUrl(photo)}                        alt={`Heating curve ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: '220px',
+                          height: '320px',
                           objectFit: 'contain',
                           backgroundColor: '#f8f9fa'
                         }}
@@ -126,7 +170,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                           console.error(`Erreur de chargement d'image: ${e.target.src}`);
                           
                           // Tentative avec une URL alternative
-                          const alternateUrl = `/api/files/${photoId}`;
+                          const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
@@ -146,34 +190,38 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
             )}            {/* Cooling curve photos */}
             {groupedPhotos.cooling.length > 0 && (
               <div style={{ marginBottom: '30px' }}>
-                <h4 style={{ 
+                <h3 style={{ 
+                  color: '#1976d2', 
                   fontSize: '18px', 
-                  margin: '0 0 15px 0',
-                  color: '#495057',
-                  borderBottom: '1px solid #e9ecef',
-                  paddingBottom: '8px'
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}>
-                  Cooling Curve
-                </h4>
+                  <FontAwesomeIcon icon={faChartArea} style={{ color: '#42a5f5' }} />                  Cooling Curve
+                </h3>
                 <div style={{ 
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '20px',
+                  gridTemplateColumns: groupedPhotos.cooling.length === 1 
+                    ? '1fr' 
+                    : groupedPhotos.cooling.length === 2 
+                      ? 'repeat(2, 1fr)' 
+                      : 'repeat(auto-fill, minmax(450px, 1fr))',
+                  gap: '25px',
                   marginBottom: '10px'
-                }}>
-                  {groupedPhotos.cooling.map((photoId, index) => (
-                    <div key={`cooling-${index}`} style={{ 
+                }}>                  {groupedPhotos.cooling.map((photo, index) => (
+                    <div key={`cooling-${getPhotoId(photo)}-${index}`} style={{ 
                       border: '1px solid #dee2e6',
                       borderRadius: '6px',
                       overflow: 'hidden',
                       boxShadow: '0 2px 5px rgba(0,0,0,0.08)'
                     }}>
                       <img 
-                        src={getPhotoUrl(photoId)}
-                        alt={`Cooling curve ${index + 1}`}
+                        src={getPhotoUrl(photo)}                        alt={`Cooling curve ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: '220px',
+                          height: '320px',
                           objectFit: 'contain',
                           backgroundColor: '#f8f9fa'
                         }}
@@ -181,7 +229,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                           console.error(`Erreur de chargement d'image: ${e.target.src}`);
                           
                           // Tentative avec une URL alternative
-                          const alternateUrl = `/api/files/${photoId}`;
+                          const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
@@ -198,39 +246,42 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   ))}
                 </div>
               </div>
-            )}
-
-            {/* Photos Datapaq */}
+            )}            {/* Photos Datapaq */}
             {groupedPhotos.datapaq.length > 0 && (
               <div style={{ marginBottom: '30px' }}>
-                <h4 style={{ 
+                <h3 style={{ 
+                  color: '#1976d2', 
                   fontSize: '18px', 
-                  margin: '0 0 15px 0',
-                  color: '#495057',
-                  borderBottom: '1px solid #e9ecef',
-                  paddingBottom: '8px'
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}>
-                  Datapaq Results
-                </h4>
+                  <FontAwesomeIcon icon={faChartLine} style={{ color: '#42a5f5' }} />                  Datapaq Results
+                </h3>
                 <div style={{ 
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '20px',
+                  gridTemplateColumns: groupedPhotos.datapaq.length === 1 
+                    ? '1fr' 
+                    : groupedPhotos.datapaq.length === 2 
+                      ? 'repeat(2, 1fr)' 
+                      : 'repeat(auto-fill, minmax(450px, 1fr))',
+                  gap: '25px',
                   marginBottom: '10px'
-                }}>
-                  {groupedPhotos.datapaq.map((photoId, index) => (
-                    <div key={`datapaq-${index}`} style={{ 
-                      border: '1px solid #dee2e6',
-                      borderRadius: '6px',
+                }}>                  {groupedPhotos.datapaq.map((photo, index) => (                    <div key={`datapaq-${getPhotoId(photo)}-${index}`} style={{ 
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.08)'
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.2s ease',
+                      background: 'white'
                     }}>
                       <img 
-                        src={getPhotoUrl(photoId)}
-                        alt={`Datapaq ${index + 1}`}
+                        src={getPhotoUrl(photo)}                        alt={`Datapaq ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: '220px',
+                          height: '320px',
                           objectFit: 'contain',
                           backgroundColor: '#f8f9fa'
                         }}
@@ -238,7 +289,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                           console.error(`Erreur de chargement d'image: ${e.target.src}`);
                           
                           // Tentative avec une URL alternative
-                          const alternateUrl = `/api/files/${photoId}`;
+                          const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
@@ -255,38 +306,41 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                   ))}
                 </div>
               </div>
-            )}
-
-            {/* Photos d'alarmes */}
+            )}            {/* Photos d'alarmes */}
             {groupedPhotos.alarms.length > 0 && (
               <div>
-                <h4 style={{ 
+                <h3 style={{ 
+                  color: '#1976d2', 
                   fontSize: '18px', 
-                  margin: '0 0 15px 0',
-                  color: '#495057',
-                  borderBottom: '1px solid #e9ecef',
-                  paddingBottom: '8px'
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
                 }}>
-                  Alarm Log
-                </h4>
+                  <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: '#f57c00' }} />                  Alarm Log
+                </h3>
                 <div style={{ 
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '20px'
-                }}>
-                  {groupedPhotos.alarms.map((photoId, index) => (
-                    <div key={`alarm-${index}`} style={{ 
-                      border: '1px solid #dee2e6',
-                      borderRadius: '6px',
+                  gridTemplateColumns: groupedPhotos.alarms.length === 1 
+                    ? '1fr' 
+                    : groupedPhotos.alarms.length === 2 
+                      ? 'repeat(2, 1fr)' 
+                      : 'repeat(auto-fill, minmax(450px, 1fr))',
+                  gap: '25px'
+                }}>                  {groupedPhotos.alarms.map((photo, index) => (                    <div key={`alarm-${getPhotoId(photo)}-${index}`} style={{ 
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '12px',
                       overflow: 'hidden',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.08)'
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.2s ease',
+                      background: 'white'
                     }}>
                       <img 
-                        src={getPhotoUrl(photoId)}
-                        alt={`Alarm log ${index + 1}`}
+                        src={getPhotoUrl(photo)}                        alt={`Alarm log ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: '220px',
+                          height: '320px',
                           objectFit: 'contain',
                           backgroundColor: '#f8f9fa'
                         }}
@@ -294,7 +348,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                           console.error(`Erreur de chargement d'image: ${e.target.src}`);
                           
                           // Tentative avec une URL alternative
-                          const alternateUrl = `/api/files/${photoId}`;
+                          const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
@@ -353,10 +407,32 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {} }) => {
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>            )}
           </>
         )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        marginTop: '30px',
+        paddingTop: '15px',
+        borderTop: '1px solid #e0e0e0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '11px',
+        color: '#666'
+      }}>
+        <div>
+          <strong>Treatment Curves</strong> - ECM Industrial Analysis
+        </div>
+        <div>
+          {new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
       </div>
     </div>
   );

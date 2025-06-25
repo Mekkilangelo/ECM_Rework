@@ -33,13 +33,14 @@ const PhotosSection = ({
     if (partNodeId) {
       loadExistingFiles();
     }
-  }, [partNodeId]);
-  const loadExistingFiles = async () => {
+  }, [partNodeId]);  const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(partNodeId, { category: 'photos' });
       
-
-      console.log('Réponse de récupération des fichiers', response.data);
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev && response.data?.data?.files) {
+        console.log('📸 Photos loaded:', response.data.data.files.length);
+      }
 
       // Vérifier que la requête a réussi
       if (!response.data || response.data.success === false) {
@@ -144,7 +145,7 @@ const PhotosSection = ({
               onFilesUploaded={handleFilesUploaded(view.id)}
               onUploaderReady={handleUploaderReady(view.id)}
               maxFiles={5}
-              acceptedFileTypes="image/*"
+              acceptedFileTypes={{ 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp'] }}
               title={t('parts.photos.upload', { view: view.name.toLowerCase() })}
               fileIcon={faImage}
               height="150px"

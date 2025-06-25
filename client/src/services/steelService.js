@@ -13,11 +13,13 @@ const steelService = {  /**
    * @param {string} search - Terme de recherche optionnel
    * @returns {Promise<Object>} Données des aciers et informations de pagination
    * @throws {Error} En cas d'échec de la requête
-   */  
-  getSteels: async (page = 1, limit = 10, sortBy = null, sortOrder = 'asc', search = '') => {
+   */    getSteels: async (page = 1, limit = 10, sortBy = null, sortOrder = 'asc', search = '') => {
     try {
-      console.log('=== FRONTEND steelService.getSteels called ===');
-      console.log('Paramètres reçus:', { page, limit, offset: (page - 1) * limit, sortBy, sortOrder, search });
+      // Logs condensés uniquement en mode debug
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev && search) {
+        console.log('🔍 Recherche aciers:', { search, page, limit });
+      }
       
       const params = { 
         limit, 
@@ -28,35 +30,23 @@ const steelService = {  /**
       if (sortBy) {
         params.sortBy = sortBy;
         params.sortOrder = sortOrder;
-        console.log('Paramètres de tri ajoutés:', { sortBy, sortOrder });
       }
       
       // Ajouter le paramètre de recherche s'il est fourni
       if (search && search.trim()) {
         params.search = search.trim();
-        console.log('Paramètre de recherche ajouté:', search.trim());
       }
-      
-      console.log('Paramètres finaux envoyés à l\'API:', params);
       
       const response = await api.get('/steels', { params });
       
-      console.log('Réponse brute de l\'API:', response);
-      console.log('Données de la réponse:', response.data);
-      
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
-        console.log('Réponse API formatée:', {
-          steels: response.data.data,
-          pagination: response.data.pagination
-        });
         return {
           steels: response.data.data,
           pagination: response.data.pagination
         };
       }
       
-      console.log('Retour des données brutes:', response.data);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des aciers:', error);

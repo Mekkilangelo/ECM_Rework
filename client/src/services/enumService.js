@@ -50,28 +50,23 @@ const enumService = {
    * @param {string} columnName - Nom de la colonne
    * @returns {Promise<Array>} Valeurs d'énumération de la colonne spécifiée
    * @throws {Error} En cas d'échec de la requête
-   */
-  getEnumValues: async (tableName, columnName) => {
+   */  getEnumValues: async (tableName, columnName) => {
     try {
-      console.log(`[EnumService] Récupération des valeurs ENUM pour ${tableName}.${columnName}`);
-      const url = `${API_URL}/table/${tableName}/column/${columnName}`;
-      console.log(`[EnumService] URL de la requête: ${url}`);
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev) {
+        console.log(`[EnumService] Fetching ${tableName}.${columnName}`);
+      }
       
+      const url = `${API_URL}/table/${tableName}/column/${columnName}`;
       const response = await api.get(url);
-      console.log(`[EnumService] Réponse brute de l'API:`, response);
-      console.log(`[EnumService] Data de la réponse:`, response.data);
       
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
-        console.log(`[EnumService] Réponse avec success=true, data:`, response.data.data);
         return response.data.data;
       }
       
-      console.log(`[EnumService] Réponse sans format success, retour direct:`, response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`[EnumService] Erreur lors de la récupération des valeurs d'énumération pour ${tableName}.${columnName}:`, error);
-      console.error(`[EnumService] Stack trace:`, error.stack);
+      return response.data;    } catch (error) {
+      console.error(`[EnumService] Error fetching ${tableName}.${columnName}:`, error.message);
       throw error;
     }
   },

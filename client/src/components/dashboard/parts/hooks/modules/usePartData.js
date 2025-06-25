@@ -13,11 +13,14 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
   useEffect(() => {
     if (part && part.id) {
       const fetchPartDetails = async () => {
-        setFetchingPart(true);
-        try {
+        setFetchingPart(true);        try {
           // Utilisation du service refactorisé
           const partData = await partService.getPart(part.id);
-            console.log('Raw part data received from API:', partData);
+          
+          const isDev = process.env.NODE_ENV === 'development';
+          if (isDev) {
+            console.log('🔧 Part data loaded:', partData?.name || 'Unknown part');
+          }
           
           // Vérifier si les données sont dans la propriété Part ou directement dans partData
           const data = partData.Part || partData;
@@ -128,17 +131,17 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             
             // Nouvelles spécifications dynamiques
             hardnessSpecs: hardnessSpecs,
-            ecdSpecs: ecdSpecs,
-          };
+            ecdSpecs: ecdSpecs,          };
           
-          console.log('Setting form data to:', formValues);
+          if (isDev) {
+            console.log('📝 Form data initialized');
+          }
           
           // Mettre à jour l'état du formulaire
           setFormData(formValues);
             // Conserver parentId pour permettre l'édition
           if (data.parent_id || partData.parent_id) {
             setParentId(data.parent_id || partData.parent_id);
-            console.log('Setting parent_id to:', data.parent_id || partData.parent_id);
           }
         } catch (error) {
           console.error('Erreur lors de la récupération des détails de la pièce:', error);

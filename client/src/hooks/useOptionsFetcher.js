@@ -165,11 +165,15 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   
   const fetchElementOptions = useCallback(async () => {
     await fetchEnumValues('steels', 'elements', setElementOptions);
-  }, [fetchEnumValues]);
-  // Fonction pour récupérer les aciers
+  }, [fetchEnumValues]);  // Fonction pour récupérer les aciers
   const fetchSteelOptions = useCallback(async () => {
     try {
-      console.log("Récupération des aciers en cours...");
+      // Log condensé uniquement en mode debug
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev) {
+        console.log("⚙️ Fetching steels...");
+      }
+      
       // Utilisation de la méthode renommée getSteels au lieu de getAllSteels
       const response = await steelService.getSteels();
       
@@ -300,11 +304,13 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   
   const fetchQuenchCellOptions = useCallback(async () => {
     await fetchEnumValues('furnaces', 'quench_cell', setQuenchCellOptions);
-  }, [fetchEnumValues]);
-  // Fonction pour récupérer les unités
+  }, [fetchEnumValues]);  // Fonction pour récupérer les unités
   const fetchUnitOptions = useCallback(async () => {
     try {
-      console.log("Récupération des unités en cours...");
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev) {
+        console.log("📏 Fetching units...");
+      }
       
       let allUnitOptions = [];
       
@@ -371,11 +377,12 @@ const useOptionsFetcher = (setLoading, options = {}) => {
         type: 'hardness'
       }));
       allUnitOptions = [...allUnitOptions, ...hardnessUnits];
-      
-      setUnitOptions(allUnitOptions);
-      console.log("Unités récupérées avec succès:", allUnitOptions);
+        setUnitOptions(allUnitOptions);
+      if (isDev && allUnitOptions.length > 0) {
+        console.log(`✅ Units loaded: ${allUnitOptions.length} types`);
+      }
     } catch (error) {
-      console.error('Erreur lors de la récupération des unités:', error);
+      console.error('Error fetching units:', error);
       setUnitOptions([]);
     }
   }, []);

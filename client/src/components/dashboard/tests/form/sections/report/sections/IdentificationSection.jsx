@@ -3,6 +3,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faIdCard, faRuler, faWeight, faTag, faCogs, faImage, faBox, faUser, faCalendarAlt, faFlask, faTachometerAlt } from '@fortawesome/free-solid-svg-icons';
 import fileService from '../../../../../../../services/fileService';
+import SectionHeader from './common/SectionHeader';
 
 const IdentificationSection = ({ testData, partData, clientData, selectedPhotos = {} }) => {
   // Vérification de sécurité pour éviter les erreurs
@@ -90,17 +91,10 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
   
   // Récupérer les photos de pièce principales (vues de face)
   const frontPhotos = getSelectedPhotosForSection('part', 'front');
-  const profilePhotos = getSelectedPhotosForSection('part', 'profile');
-  
-  // Fonction pour obtenir l'URL d'une photo
-  const getPhotoUrl = (photoId) => {
-    return `/api/files/${photoId}`;
-  };
-  
+  const profilePhotos = getSelectedPhotosForSection('part', 'profile');  
   // Obtenir les photos sélectionnées pour cette section
   const sectionPhotos = selectedPhotos.identification || [];
-  
-  // Récupération des photos sélectionnées pour cette section (même logique que LoadSection)
+    // Récupération des photos sélectionnées pour cette section (avec support des métadonnées)
   let identificationPhotos = [];
   
   if (selectedPhotos) {
@@ -109,7 +103,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
       if (Array.isArray(selectedPhotos.identification)) {
         identificationPhotos = selectedPhotos.identification;
       }
-      // Si c'est un objet avec sous-catégories
+      // Si c'est un objet avec sous-catégories (nouvelle structure avec métadonnées)
       else if (typeof selectedPhotos.identification === 'object') {
         // Rassembler toutes les photos de toutes les sous-catégories
         Object.values(selectedPhotos.identification).forEach(subcategoryPhotos => {
@@ -121,10 +115,19 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
     }
   }
   
-  // Fonction pour obtenir l'URL d'une photo avec débogage
-  const getPhotoUrlWithDebug = (photoId) => {
-    // Utiliser le service de fichier pour obtenir l'URL
-    return fileService.getFilePreviewUrl(photoId);
+  // Fonction pour obtenir l'URL d'une photo avec support des métadonnées et débogage
+  const getPhotoUrlWithDebug = (photo) => {
+    // Si c'est un objet avec métadonnées
+    if (photo && typeof photo === 'object' && photo.id) {
+      return fileService.getFilePreviewUrl(photo.id);
+    }
+    // Si c'est juste un ID
+    return fileService.getFilePreviewUrl(photo);
+  };
+  
+  // Fonction pour obtenir l'ID d'une photo
+  const getPhotoId = (photo) => {
+    return photo && typeof photo === 'object' ? photo.id : photo;
   };
   // Déboguer les informations sur les photos
   console.log("IdentificationSection - selectedPhotos:", selectedPhotos);
@@ -179,119 +182,16 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
           fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto'
         }}
-      >
-        {/* Header avec informations (affiché sur chaque page) */}
-        <div style={{
-          background: 'linear-gradient(135deg, #d32f2f 0%, #f57c00 50%, #ff9800 100%)',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '30px',
-          boxShadow: '0 8px 32px rgba(211, 47, 47, 0.3)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Motif décoratif */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '200px',
-            height: '100%',
-            background: 'linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-            borderRadius: '50%',
-            transform: 'translateX(50px)'
-          }}></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-            <div>
-              <h1 style={{ 
-                color: 'white', 
-                fontSize: '28px', 
-                fontWeight: 'bold', 
-                margin: '0 0 5px 0',
-                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <FontAwesomeIcon icon={faIdCard} />
-                PART IDENTIFICATION
-              </h1>
-              {isFirstPage && (
-                <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', fontWeight: '500' }}>
-                  <FontAwesomeIcon icon={faBox} style={{ marginRight: '8px' }} />
-                  {part.designation || 'Part designation not specified'}
-                </div>
-              )}
-            </div>
-            
-            <div style={{ 
-              background: 'rgba(255,255,255,0.15)', 
-              borderRadius: '8px', 
-              padding: '15px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              <img 
-                src="/images/logoECM.png" 
-                alt="Logo ECM" 
-                style={{ height: '50px', width: 'auto', filter: 'brightness(0) invert(1)' }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
-                }}
-              />
-              <div style={{ 
-                display: 'none', 
-                color: 'white', 
-                fontWeight: 'bold', 
-                fontSize: '20px',
-                textAlign: 'center',
-                padding: '15px'
-              }}>
-                ECM
-              </div>
-            </div>
-          </div>
-          
-          {/* Info dans le header comme CoverPage */}
-          <div style={{ 
-            marginTop: '20px', 
-            display: 'flex', 
-            gap: '25px', 
-            flexWrap: 'wrap',
-            position: 'relative',
-            zIndex: 1,
-            fontSize: '14px'
-          }}>            <div style={{ color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FontAwesomeIcon icon={faUser} />
-              <span style={{ fontWeight: '600' }}>Client:</span>
-              <span>{clientData?.name || testData?.client_name || 'Not specified'}</span>
-              {(clientData?.country || testData?.client_country) && (
-                <>
-                  <span style={{ margin: '0 4px', opacity: 0.7 }}>•</span>
-                  <span>{clientData?.country || testData?.client_country}</span>
-                </>
-              )}
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FontAwesomeIcon icon={faCogs} />
-              <span style={{ fontWeight: '600' }}>Treatment:</span>
-              <span>{testData?.processType || testData?.process_type || 'Not specified'}</span>
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FontAwesomeIcon icon={faFlask} />
-              <span style={{ fontWeight: '600' }}>Trial N°:</span>
-              <span>{testData?.testCode || testData?.test_code || 'Not specified'}</span>
-              <span style={{ margin: '0 4px', opacity: 0.7 }}>•</span>
-              <FontAwesomeIcon icon={faCalendarAlt} />
-              <span>
-                {testData?.testDate || testData?.test_date 
-                  ? new Date(testData.testDate || testData.test_date).toLocaleDateString('en-US') 
-                  : 'Not specified'}
-              </span>
-            </div>
-          </div>
-        </div>
+      >        {/* Header avec informations (affiché sur chaque page) */}
+        <SectionHeader
+          title="PART IDENTIFICATION"
+          subtitle={part.designation || 'Part designation not specified'}
+          icon={faIdCard}
+          testData={testData}
+          clientData={clientData}
+          sectionType="identification"
+          showSubtitle={isFirstPage}
+        />
 
         {/* Informations détaillées (première page uniquement) */}
         {isFirstPage && (
@@ -527,9 +427,8 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
               gridTemplateColumns: `repeat(${cols}, 1fr)`,
               gap: '20px',
               justifyItems: 'center'
-            }}>
-              {pagePhotos.map((photoId, index) => (
-                <div key={photoId} style={{
+            }}>              {pagePhotos.map((photo, index) => (
+                <div key={getPhotoId(photo)} style={{
                   width: '100%',
                   maxWidth: cols === 1 ? '400px' : cols === 2 ? '300px' : '250px',
                   border: '2px solid #e0e0e0',
@@ -540,19 +439,18 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
                   background: 'white'
                 }}>
                   <img 
-                    src={getPhotoUrlWithDebug(photoId)}
-                    alt={`Part photo ${(pageIndex * photosPerPage) + index + 1}`} 
+                    src={getPhotoUrlWithDebug(photo)}
+                    alt={`Part photo ${(pageIndex * photosPerPage) + index + 1}`}
                     style={{
                       width: '100%',
                       height: photoHeight,
                       objectFit: 'contain',
                       backgroundColor: '#f8f9fa',
                       display: 'block'
-                    }}
-                    onError={(e) => {
+                    }}                    onError={(e) => {
                       console.error(`Image loading error: ${e.target.src}`);
                       
-                      const alternateUrl = `/api/files/${photoId}`;
+                      const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                       if (e.target.src !== alternateUrl) {
                         console.log(`Attempting with alternative URL: ${alternateUrl}`);
                         e.target.src = alternateUrl;

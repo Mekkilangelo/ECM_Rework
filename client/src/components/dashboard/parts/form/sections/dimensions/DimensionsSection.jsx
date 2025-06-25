@@ -69,14 +69,18 @@ const DimensionsSection = ({
   const handleCreateDiameterUnit = (inputValue) => {
     return handleCreateOption(inputValue, 'diameterUnit', 'units', 'length_units');
   };
-  
-  const handleCreateWeightUnit = (inputValue) => {
+    const handleCreateWeightUnit = (inputValue) => {
     return handleCreateOption(inputValue, 'weightUnit', 'units', 'weight_units');
   };
 
-  // Utiliser directement les options passées en props
-  console.log("DimensionsSection - lengthUnitOptions:", lengthUnitOptions);
-  console.log("DimensionsSection - weightUnitOptions:", weightUnitOptions);
+  // Debug logs uniquement en mode développement et si les options sont vides
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev && (!lengthUnitOptions.length || !weightUnitOptions.length)) {
+    console.log("🔍 DimensionsSection - Missing options:", {
+      lengthUnits: lengthUnitOptions.length,
+      weightUnits: weightUnitOptions.length
+    });
+  }
 
   return (
     <>

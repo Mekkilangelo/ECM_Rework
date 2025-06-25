@@ -15,20 +15,17 @@ const useFileSelection = (files, setFiles, maxFiles, acceptedFileTypes, setError
         });
       }
       return file;
-    });
-      setFiles(prev => {
+    });      setFiles(prev => {
       const newFiles = [...prev, ...filesWithPreviews].slice(0, maxFiles);
-      console.log("📁 [useFileSelection] Fichiers ajoutés:", {
-        acceptedFilesCount: acceptedFiles.length,
-        acceptedFilesNames: acceptedFiles.map(f => f.name),
-        totalFilesAfter: newFiles.length,
-        allFilesNames: newFiles.map(f => f.name),
-        standbyMode
-      });
+      
+      // Log condensé uniquement en mode debug et s'il y a vraiment des fichiers ajoutés
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev && acceptedFiles.length > 0) {
+        console.log("📁 Files added:", acceptedFiles.length, acceptedFiles.map(f => f.name));
+      }
       
       // En mode standby, notifier immédiatement le parent
       if (standbyMode && onFilesUploaded && newFiles.length > 0) {
-        console.log("📤 [useFileSelection] Notifying parent in standby mode");
         setTimeout(() => {
           onFilesUploaded(newFiles, null, 'standby');
         }, 0);

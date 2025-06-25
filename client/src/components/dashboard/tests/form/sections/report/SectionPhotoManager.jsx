@@ -250,11 +250,33 @@ const SectionPhotoManager = ({
     
     loadPhotosForSection();
   }, [sectionType, testNodeId, partNodeId, t]);
-
   // Initialiser les photos sélectionnées
   useEffect(() => {
     if (initialSelectedPhotos && initialSelectedPhotos[sectionType]) {
-      const initSelected = initialSelectedPhotos[sectionType] || [];
+      let initSelected = [];
+      const initialData = initialSelectedPhotos[sectionType];
+      
+      // Si c'est déjà un tableau d'IDs
+      if (Array.isArray(initialData)) {
+        initSelected = initialData.filter(item => {
+          // Supporter les IDs simples et les objets avec métadonnées
+          return typeof item === 'string' || (item && item.id);
+        }).map(item => typeof item === 'string' ? item : item.id);
+      }
+      // Si c'est un objet avec sous-catégories (structure avec métadonnées)
+      else if (typeof initialData === 'object') {
+        Object.values(initialData).forEach(subcategoryData => {
+          if (Array.isArray(subcategoryData)) {
+            subcategoryData.forEach(item => {
+              const id = typeof item === 'string' ? item : (item && item.id);
+              if (id) {
+                initSelected.push(id);
+              }
+            });
+          }
+        });
+      }
+      
       setSelectedPhotoIds(initSelected);
       
       const initOrder = {};
@@ -366,6 +388,79 @@ const SectionPhotoManager = ({
       });
     });
     return flatPhotos;
+  };  // Fonction pour organiser les photos sélectionnées avec leurs métadonnées
+  const organizeSelectedPhotosWithMetadata = (selectedIds) => {
+    const organized = {};
+    
+    // Parcourir toutes les photos disponibles et récupérer les métadonnées des photos sélectionnées
+    Object.keys(availablePhotos).forEach(groupKey => {
+      Object.keys(availablePhotos[groupKey]).forEach(subgroupKey => {
+        const photos = availablePhotos[groupKey][subgroupKey];        
+        photos.forEach(photo => {
+          if (selectedIds.includes(photo.id)) {
+            // Créer un objet avec toutes les métadonnées
+            const photoWithMetadata = {
+              id: photo.id,
+              name: photo.name || '',
+              category: photo.category || photo.sourceCategory || groupKey,
+              subcategory: photo.subcategory || photo.sourceSubcategory || subgroupKey,
+              viewPath: photo.viewPath,
+              // Ajouter d'autres métadonnées si nécessaires
+              originalData: photo
+            };
+            
+            // Pour la section curves, organiser par sous-catégorie réelle
+            if (sectionType === 'curves') {
+              const realSubcategory = photo.sourceSubcategory || photo.subcategory || subgroupKey;
+              
+              console.log(`Photo ${photo.id} (${photo.name}):`, {
+                sourceSubcategory: photo.sourceSubcategory,
+                subcategory: photo.subcategory,
+                subgroupKey: subgroupKey,
+                realSubcategory: realSubcategory,
+                category: photo.category,
+                sourceCategory: photo.sourceCategory
+              });
+              
+              // Mapper vers nos catégories attendues
+              let targetCategory = realSubcategory;
+              if (!['heating', 'cooling', 'datapaq', 'alarms'].includes(realSubcategory)) {
+                // Si la sous-catégorie n'est pas reconnue, essayer de deviner par le nom
+                const photoName = photo.name?.toLowerCase() || '';
+                if (photoName.includes('heat') || photoName.includes('chauff') || photoName.includes('montee')) {
+                  targetCategory = 'heating';
+                } else if (photoName.includes('cool') || photoName.includes('refroid') || photoName.includes('descent')) {
+                  targetCategory = 'cooling';
+                } else if (photoName.includes('datapaq') || photoName.includes('sensor') || photoName.includes('capteur')) {
+                  targetCategory = 'datapaq';
+                } else if (photoName.includes('alarm') || photoName.includes('alert') || photoName.includes('erreur')) {
+                  targetCategory = 'alarms';
+                } else {
+                  // Fallback : mettre dans heating par défaut
+                  console.warn(`Photo ${photo.id} avec sous-catégorie inconnue "${realSubcategory}" - placée dans heating`);
+                  targetCategory = 'heating';
+                }
+              }
+              
+              if (!organized[targetCategory]) {
+                organized[targetCategory] = [];
+              }
+              organized[targetCategory].push(photoWithMetadata);
+            } else {
+              // Pour les autres sections, organiser par catégorie ou garder une liste plate
+              const categoryKey = photo.category || photo.sourceCategory || groupKey;
+              if (!organized[categoryKey]) {
+                organized[categoryKey] = [];
+              }
+              organized[categoryKey].push(photoWithMetadata);
+            }
+          }
+        });
+      });
+    });
+    
+    console.log("Organized selected photos with metadata:", organized);
+    return organized;
   };
 
   // Réorganiser l'ordre après suppression
@@ -394,15 +489,14 @@ const SectionPhotoManager = ({
           newSelected = prevSelected.filter(id => id !== photoId);
           newOrder = reorderPhotos(photoId, prevOrder);
         } else {
-          newSelected = [...prevSelected, photoId];
-          newOrder = {
+          newSelected = [...prevSelected, photoId];          newOrder = {
             ...prevOrder,
-            [photoId]: Object.keys(prevOrder).length + 1
-          };
+            [photoId]: Object.keys(prevOrder).length + 1          };
         }
         
         if (onChange) {
-          onChange(sectionType, newSelected);
+          const organizedPhotos = organizeSelectedPhotosWithMetadata(newSelected);
+          onChange(sectionType, organizedPhotos);
         }
         
         return newOrder;
@@ -443,11 +537,11 @@ const SectionPhotoManager = ({
               newSelected = newSelected.filter(id => id !== photoId);
               newOrder = reorderPhotos(photoId, newOrder);
             }
-          });
-        }
+          });        }
         
         if (onChange) {
-          onChange(sectionType, newSelected);
+          const organizedPhotos = organizeSelectedPhotosWithMetadata(newSelected);
+          onChange(sectionType, organizedPhotos);
         }
         
         return newOrder;
@@ -472,13 +566,12 @@ const SectionPhotoManager = ({
       allPhotoIds.forEach((photoId, index) => {
         newOrder[photoId] = index + 1;
       });
-    }
-    
-    setSelectedPhotoIds(newSelected);
+    }    setSelectedPhotoIds(newSelected);
     setPhotoOrder(newOrder);
     
     if (onChange) {
-      onChange(sectionType, newSelected);
+      const organizedPhotos = organizeSelectedPhotosWithMetadata(newSelected);
+      onChange(sectionType, organizedPhotos);
     }
   };
 

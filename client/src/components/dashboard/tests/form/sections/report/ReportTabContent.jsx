@@ -11,7 +11,6 @@ import SectionPhotoManager from './SectionPhotoManager';
 import './ReportStyles.css';
 
 // Importer les sections de rapport
-import ReportHeader from './sections/ReportPageHeader';
 import CoverPageSection from './sections/CoverPageSection';
 import IdentificationSection from './sections/IdentificationSection';
 import RecipeSection from './sections/RecipeSection';
@@ -19,7 +18,6 @@ import LoadSection from './sections/LoadSection';
 import CurvesSection from './sections/CurvesSection';
 import MicrographySection from './sections/MicrographySection';
 import ControlSection from './sections/ControlSection';
-import ReportFooter from './sections/ReportFooter';
 
 const ReportTabContent = ({ testId, testData, partData, partId }) => {
   const { t } = useTranslation();
@@ -406,14 +404,12 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
           reportData={reportData} // Données chargées seulement à l'ouverture du modal
           selectedPhotos={selectedPhotos} // Mise à jour dynamique pour la sélection de photos
           sections={{
-            ReportHeader,
             IdentificationSection,
             RecipeSection,
             LoadSection,
             CurvesSection,
             MicrographySection,
-            ControlSection,
-            ReportFooter
+            ControlSection
           }}
         />
       </Card.Body>

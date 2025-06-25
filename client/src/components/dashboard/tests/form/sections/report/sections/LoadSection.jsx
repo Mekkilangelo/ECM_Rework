@@ -1,14 +1,17 @@
 import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWeightHanging, faUser, faCalendarAlt, faFlask, faCogs, faImage, faBox, faRuler, faWeight, faLayerGroup, faArrowsAlt } from '@fortawesome/free-solid-svg-icons';
 import fileService from '../../../../../../../services/fileService';
+import SectionHeader from './common/SectionHeader';
 
-const LoadSection = ({ testData, selectedPhotos = {} }) => {
+const LoadSection = ({ testData, partData, clientData, selectedPhotos = {} }) => {
   // Vérification de sécurité pour éviter les erreurs si testData est undefined
   const test = testData || {};
+  const part = partData || {};
 
   // Récupérer les données de loadData depuis l'objet test
   const loadData = test.loadData || {};
-
-  // Récupération des photos sélectionnées pour cette section
+  // Récupération des photos sélectionnées pour cette section (avec support des métadonnées)
   let loadPhotos = [];
   
   if (selectedPhotos) {
@@ -17,7 +20,7 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
       if (Array.isArray(selectedPhotos.load)) {
         loadPhotos = selectedPhotos.load;
       }
-      // Si c'est un objet avec sous-catégories
+      // Si c'est un objet avec sous-catégories (nouvelle structure avec métadonnées)
       else if (typeof selectedPhotos.load === 'object') {
         // Rassembler toutes les photos de toutes les sous-catégories
         Object.values(selectedPhotos.load).forEach(subcategoryPhotos => {
@@ -29,10 +32,19 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
     }
   }
 
-  // Fonction pour obtenir l'URL d'une photo avec débogage
-  const getPhotoUrl = (photoId) => {
-    // Utiliser l'URL qui fonctionne
-    return fileService.getFilePreviewUrl(photoId);
+  // Fonction pour obtenir l'URL d'une photo avec support des métadonnées et débogage
+  const getPhotoUrlWithDebug = (photo) => {
+    // Si c'est un objet avec métadonnées
+    if (photo && typeof photo === 'object' && photo.id) {
+      return fileService.getFilePreviewUrl(photo.id);
+    }
+    // Si c'est juste un ID
+    return fileService.getFilePreviewUrl(photo);
+  };
+  
+  // Fonction pour obtenir l'ID d'une photo
+  const getPhotoId = (photo) => {
+    return photo && typeof photo === 'object' ? photo.id : photo;
   };
 
   // Déboguer les informations sur les photos et les URLs
@@ -41,290 +53,391 @@ const LoadSection = ({ testData, selectedPhotos = {} }) => {
   console.log("LoadSection - loadPhotos (après traitement):", loadPhotos);
   
   if (loadPhotos.length > 0) {
-    console.log(`URL pour la première image:`, getPhotoUrl(loadPhotos[0]));
+    console.log(`URL pour la première image:`, getPhotoUrlWithDebug(loadPhotos[0]));
   }
+  // Calculer le nombre de photos par page pour optimiser l'affichage A4
+  const calculatePhotosPerPage = (totalPhotos) => {
+    if (totalPhotos === 0) return { pages: 0, photosPerPage: 0 };
+    
+    // Pour la section load, privilégier moins de photos mais plus grandes
+    // - 1 photo : très grande (350px de hauteur)
+    // - 2 photos : grandes (280px de hauteur) 
+    // - 3-4 photos : moyennes (220px de hauteur)
+    
+    const maxPhotosPerPage = 4; // Maximum pour avoir des photos plus grandes
+    const pages = Math.ceil(totalPhotos / maxPhotosPerPage);
+    const photosPerPage = Math.ceil(totalPhotos / pages);
+    
+    return { pages, photosPerPage };
+  };
+  
+  const { pages: totalPages, photosPerPage } = calculatePhotosPerPage(loadPhotos.length);
+  
+  // Diviser les photos en pages
+  const photoPages = [];
+  for (let i = 0; i < totalPages; i++) {
+    const startIndex = i * photosPerPage;
+    const endIndex = Math.min(startIndex + photosPerPage, loadPhotos.length);
+    photoPages.push(loadPhotos.slice(startIndex, endIndex));
+  }
+  
+  // Fonction pour déterminer la taille des photos selon leur nombre sur la page
+  const getPhotoSize = (photosOnPage) => {
+    if (photosOnPage === 1) return { height: '350px', cols: 1 };
+    if (photosOnPage === 2) return { height: '280px', cols: 2 };
+    return { height: '220px', cols: 2 }; // 3-4 photos
+  };
 
-  return (
-    <div className="report-section load-section" style={{ marginBottom: '30px' }}>
-      <h3 style={{ 
-        borderBottom: '2px solid #ffc107', 
-        paddingBottom: '8px', 
-        marginBottom: '20px',
-        color: '#e0a800' 
-      }}>
-        Load
-      </h3>
+  // Fonction pour formater le poids de la charge
+  const formatLoadWeight = () => {
+    if (loadData.weight && loadData.weight.value !== undefined) {
+      let value = loadData.weight.value;
+      let unit = loadData.weight.unit || 'kg';
       
-      {/* Disposition principale améliorée */}
-      <div className="load-section-content" style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        gap: '20px', 
-        backgroundColor: '#fff',
-        borderRadius: '6px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-      }}>
-        {/* Section 1: Infos charge et photo principale */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '20px', 
-          flexWrap: 'wrap',
-          padding: '20px'
-        }}>
-          {/* Table avec les données de chargement */}
-          <div style={{ flex: '1', minWidth: '300px' }}>
-            <table style={{ 
-              width: '100%', 
-              borderCollapse: 'collapse', 
-              border: '1px solid #dee2e6',
-              borderRadius: '4px',
-              overflow: 'hidden',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}>
-              <tbody>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>                  <th style={{ padding: '10px', textAlign: 'left', width: '40%', borderBottom: '1px solid #dee2e6' }}>Parameter</th>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Value</th>
-                </tr>
-                {loadData.loadType && (
-                  <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Load type</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.loadType}</td>
-                  </tr>
-                )}
-                {loadData.loadConfiguration && (
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Configuration</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.loadConfiguration}</td>
-                  </tr>
-                )}
-                {loadData.part_count && (
-                  <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Number of parts</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.part_count}</td>
-                  </tr>
-                )}
-                {loadData.floor_count && (
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Number of floors</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.floor_count}</td>
-                  </tr>
-                )}
-                {loadData.weight && (
-                  <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Total weight</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>
-                      {loadData.weight.unit && loadData.weight.unit.toLowerCase() === 'g' 
-                        ? `${(loadData.weight.value / 1000).toFixed(2)} kg`
-                        : `${loadData.weight.value} ${loadData.weight.unit}`}
-                    </td>
-                  </tr>
-                )}
-                {loadData.dimensions && (
-                  <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Dimensions</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>
-                      {`${loadData.dimensions.length}×${loadData.dimensions.width}×${loadData.dimensions.height} ${loadData.dimensions.unit}`}
-                    </td>
-                  </tr>
-                )}
-                {loadData.positioning && (
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Positioning</td>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{loadData.positioning}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          
-          {/* Photo principale avec gestion d'erreur améliorée */}
-          {loadPhotos.length > 0 ? (
-            <div style={{ flex: '1', minWidth: '220px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ 
-                width: '220px', 
-                height: '180px', 
-                border: '1px solid #dee2e6',
-                borderRadius: '4px',
-                overflow: 'hidden',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+      // Si l'unité est en grammes, convertir en kg si nécessaire
+      if (unit.toLowerCase() === 'g' && value >= 1000) {
+        value = (value / 1000).toFixed(2);
+        unit = 'kg';
+      }
+      return `${value} ${unit}`;
+    }
+    return 'Not specified';
+  };
+
+  // Fonction pour formater les dimensions de la charge
+  const formatLoadDimensions = () => {
+    if (loadData.dimensions) {
+      const { length, width, height, unit } = loadData.dimensions;
+      return `${length}×${width}×${height} ${unit || 'mm'}`;
+    }
+    if (loadData.size) {
+      const dimensions = [];
+      if (loadData.size.length) {
+        dimensions.push(`L: ${loadData.size.length.value} ${loadData.size.length.unit || 'mm'}`);
+      }
+      if (loadData.size.width) {
+        dimensions.push(`W: ${loadData.size.width.value} ${loadData.size.width.unit || 'mm'}`);
+      }
+      if (loadData.size.height) {
+        dimensions.push(`H: ${loadData.size.height.value} ${loadData.size.height.unit || 'mm'}`);
+      }
+      return dimensions.length > 0 ? dimensions.join(', ') : 'Not specified';
+    }
+    return 'Not specified';
+  };
+
+  // Render d'une page avec les informations en haut et les photos en bas
+  const renderPage = (pagePhotos, pageIndex, isFirstPage = false) => {
+    const { height: photoHeight, cols } = getPhotoSize(pagePhotos.length);
+    
+    return (
+      <div 
+        key={`page-${pageIndex}`}
+        style={{ 
+          minHeight: '100vh', 
+          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+          padding: '20px',
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto'
+        }}
+      >        {/* Header avec informations */}
+        <SectionHeader
+          title="LOAD CONFIGURATION"
+          subtitle={loadData.loadType || 'Load configuration details'}
+          icon={faWeightHanging}
+          testData={testData}
+          clientData={clientData}
+          sectionType="load"
+          showSubtitle={isFirstPage}
+        />
+
+        {/* Informations détaillées de la charge (première page uniquement) */}
+        {isFirstPage && (
+          <div style={{ marginBottom: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '25px' }}>
+              {/* Colonne gauche - Configuration de charge */}
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '25px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                border: '1px solid #fff8e1'
               }}>
-                <img 
-                  src={getPhotoUrl(loadPhotos[0])} 
-                  alt="Load photo"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    backgroundColor: '#f8f9fa'
-                  }}
-                  onError={(e) => {
-                    console.error(`Erreur de chargement d'image: ${e.target.src}`);
-                    
-                    // Tentative avec une URL alternative
-                    const photoId = loadPhotos[0];
-                    const alternateUrl = `/api/files/${photoId}`;
-                    
-                    console.log(`Tentative avec URL alternative: ${alternateUrl}`);
-                    
-                    // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
-                    if (e.target.src !== alternateUrl) {
-                      e.target.src = alternateUrl;
-                      return;
-                    }
-                    
-                    // Si l'alternative échoue aussi, afficher l'image par défaut
-                    e.target.onerror = null;
-                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
-                  }}
-                />
-              </div>
-              <div style={{ fontSize: '13px', color: '#6c757d', textAlign: 'center', marginTop: '10px', fontStyle: 'italic' }}>
-                Main view of the load
-              </div>
-            </div>
-          ) : (
-            <div style={{ flex: '1', minWidth: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ 
-                width: '200px', 
-                height: '150px', 
-                border: '1px dashed #dee2e6',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#f8f9fa',
-                marginBottom: '10px'
-              }}>
-                <div style={{ color: '#6c757d', fontSize: '14px', textAlign: 'center' }}>
-                  Load image
+                <h3 style={{ 
+                  color: '#f57c00', 
+                  fontSize: '18px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}>
+                  <FontAwesomeIcon icon={faLayerGroup} style={{ color: '#ff9800' }} />
+                  Load Configuration
+                </h3>
+                
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {loadData.loadType && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                      <span style={{ fontWeight: '600', color: '#424242' }}>Load Type:</span>
+                      <span style={{ color: '#666', maxWidth: '60%', textAlign: 'right' }}>{loadData.loadType}</span>
+                    </div>
+                  )}
+                  {loadData.loadConfiguration && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                      <span style={{ fontWeight: '600', color: '#424242' }}>Configuration:</span>
+                      <span style={{ color: '#666', maxWidth: '60%', textAlign: 'right' }}>{loadData.loadConfiguration}</span>
+                    </div>
+                  )}
+                  {loadData.part_count && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                      <span style={{ fontWeight: '600', color: '#424242' }}>Parts Count:</span>
+                      <span style={{ color: '#666', maxWidth: '60%', textAlign: 'right' }}>{loadData.part_count}</span>
+                    </div>
+                  )}
+                  {loadData.floor_count && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+                      <span style={{ fontWeight: '600', color: '#424242' }}>Floors Count:</span>
+                      <span style={{ color: '#666', maxWidth: '60%', textAlign: 'right' }}>{loadData.floor_count}</span>
+                    </div>
+                  )}
+                  {loadData.positioning && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                      <span style={{ fontWeight: '600', color: '#424242' }}>Positioning:</span>
+                      <span style={{ color: '#666', maxWidth: '60%', textAlign: 'right' }}>{loadData.positioning}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div style={{ alignSelf: 'stretch', fontSize: '12px', color: '#6c757d', textAlign: 'center' }}>
-                Aucune photo disponible
+
+              {/* Colonne droite - Dimensions et poids de la charge */}
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '25px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                border: '1px solid #fff3e0'
+              }}>
+                <h3 style={{ 
+                  color: '#ff6f00', 
+                  fontSize: '18px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}>
+                  <FontAwesomeIcon icon={faArrowsAlt} style={{ color: '#ff8f00' }} />
+                  Physical Properties
+                </h3>
+                
+                {/* Section Poids de la charge */}
+                <div style={{ 
+                  background: '#fffbf0', 
+                  borderRadius: '8px', 
+                  padding: '15px', 
+                  marginBottom: '15px',
+                  border: '1px solid #ffe0b2'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <FontAwesomeIcon icon={faWeight} style={{ fontSize: '16px', color: '#ff6f00' }} />
+                    <span style={{ fontWeight: '700', color: '#e65100', fontSize: '15px' }}>Total Weight</span>
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: '600', color: '#333' }}>
+                    {formatLoadWeight()}
+                  </div>
+                </div>
+
+                {/* Section Dimensions de la charge */}
+                <div style={{ 
+                  background: '#fffbf0', 
+                  borderRadius: '8px', 
+                  padding: '15px',
+                  border: '1px solid #ffe0b2'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <FontAwesomeIcon icon={faRuler} style={{ fontSize: '16px', color: '#ff6f00' }} />
+                    <span style={{ fontWeight: '700', color: '#e65100', fontSize: '15px' }}>Load Dimensions</span>
+                  </div>
+                  
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: '#333' }}>
+                    {formatLoadDimensions()}
+                  </div>
+                </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Section Dimensions avec tableau détaillé */}
-        {loadData.size && (
-          <div style={{ 
-            padding: '20px',
-            borderTop: '1px solid #eee',
-            backgroundColor: '#f9f9f9'
-          }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              marginBottom: '15px',
-              fontWeight: '600',
-              color: '#555'
-            }}>
-              Dimensions détaillées
-            </h4>
-            <table style={{ 
-              width: '100%', 
-              borderCollapse: 'collapse', 
-              border: '1px solid #dee2e6',
-              borderRadius: '4px',
-              overflow: 'hidden',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Dimension</th>
-                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Valeur</th>
-                  <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Unité</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadData.size.length && (
-                  <tr>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Longueur</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.value || 'Not specified'}</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.length.unit || 'mm'}</td>
-                  </tr>
-                )}
-                {loadData.size.width && (
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Largeur</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.value || 'Not specified'}</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.width.unit || 'mm'}</td>
-                  </tr>
-                )}
-                {loadData.size.height && (
-                  <tr>                    <td style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>Height</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.value || 'Not specified'}</td>
-                    <td style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>{loadData.size.height.unit || 'mm'}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            {/* Commentaires de la charge (si présents) */}
+            {loadData.comments && (
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '25px',
+                marginBottom: '25px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                border: '1px solid #f3e5f5'
+              }}>
+                <h3 style={{ 
+                  color: '#7b1fa2', 
+                  fontSize: '18px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}>
+                  <FontAwesomeIcon icon={faCogs} style={{ color: '#ab47bc' }} />
+                  Load Comments
+                </h3>
+                
+                <div style={{ 
+                  padding: '15px',
+                  background: '#fafafa',
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0'
+                }}>
+                  <p style={{ margin: 0, color: '#555', fontSize: '14px' }}>{loadData.comments}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Section 2: Photos supplémentaires avec présentation améliorée */}
-        {loadPhotos.length > 1 && (
-          <div style={{ 
-            padding: '20px',
-            borderTop: '1px solid #eee',
-            backgroundColor: '#f9f9f9'
+        {/* Section des photos */}
+        {pagePhotos.length > 0 && (
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e8f5e8',
+            flex: 1
           }}>
-            <h4 style={{ 
-              fontSize: '16px', 
-              marginBottom: '15px',
-              fontWeight: '600',
-              color: '#555'
+            <h3 style={{ 
+              color: '#2e7d32', 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
             }}>
-              Additional load photos
-            </h4>
+              <FontAwesomeIcon icon={faImage} style={{ color: '#4caf50' }} />
+              Load Photos
+              {totalPages > 1 && (
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 'normal', 
+                  color: '#666',
+                  background: '#e8f5e8',
+                  padding: '2px 8px',
+                  borderRadius: '12px'
+                }}>
+                  Page {pageIndex + 1} of {totalPages}
+                </span>
+              )}
+            </h3>
+            
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-              gap: '15px'
-            }}>
-              {loadPhotos.slice(1).map((photoId, index) => (
-                <div key={index} style={{ 
-                  border: '1px solid #dee2e6',
-                  borderRadius: '6px',
+              gridTemplateColumns: `repeat(${cols}, 1fr)`,
+              gap: '20px',
+              justifyItems: 'center'
+            }}>              {pagePhotos.map((photo, index) => (
+                <div key={getPhotoId(photo)} style={{
+                  width: '100%',
+                  maxWidth: cols === 1 ? '450px' : '350px',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '12px',
                   overflow: 'hidden',
-                  backgroundColor: '#fff',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-                  transition: 'transform 0.2s',
-                  height: '150px'
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.2s ease',
+                  background: 'white'
                 }}>
                   <img 
-                    src={getPhotoUrl(photoId)}
-                    alt={`Load photo ${index + 2}`}
+                    src={getPhotoUrlWithDebug(photo)}
+                    alt={`Load photo ${(pageIndex * photosPerPage) + index + 1}`}
                     style={{
                       width: '100%',
-                      height: '100%',
+                      height: photoHeight,
                       objectFit: 'contain',
-                      backgroundColor: '#f8f9fa'
-                    }}
-                    onError={(e) => {
-                      console.error(`Additional image loading error: ${e.target.src}`);
+                      backgroundColor: '#f8f9fa',
+                      display: 'block'
+                    }}                    onError={(e) => {
+                      console.error(`Image loading error: ${e.target.src}`);
                       
-                      // Tentative avec une URL alternative 
-                      const alternateUrl = `/api/files/${photoId}`;
-                      
-                      // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
+                      const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                       if (e.target.src !== alternateUrl) {
                         console.log(`Attempting with alternative URL: ${alternateUrl}`);
                         e.target.src = alternateUrl;
                         return;
                       }
                       
-                      // Si l'alternative échoue aussi, afficher l'image par défaut
                       e.target.onerror = null;
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==';
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YwZjBmMCIgc3Ryb2tlPSIjZGRkIiBzdHJva2Utd2lkdGg9IjIiLz48dGV4dCB4PSIxNTAiIHk9Ijg1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPjxmYXJlYW0gZGF0YS1mYS1pPSJmYS1pbWFnZSI+8J+MhTwvdGV4dD48dGV4dCB4PSIxNTAiIHk9IjExMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5Ij5JbWFnZSBub3QgYXZhaWxhYmxlPC90ZXh0Pjx0ZXh0IHg9IjE1MCIgeT0iMTMwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNjY2MiPlBob3RvIElEOiAnICsgcGhvdG9JZCArICc8L3RleHQ+PC9zdmc+';
                     }}
                   />
+                  <div style={{
+                    padding: '10px',
+                    background: '#f8f9fa',
+                    textAlign: 'center',
+                    borderTop: '1px solid #e0e0e0'
+                  }}>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#666',
+                      fontWeight: '500'
+                    }}>
+                      Photo {(pageIndex * photosPerPage) + index + 1}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Footer */}
+        <div style={{
+          marginTop: '30px',
+          paddingTop: '15px',
+          borderTop: '1px solid #e0e0e0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '11px',
+          color: '#666'
+        }}>
+          <div>
+            <strong>Load Configuration</strong> - ECM Industrial Analysis
+          </div>
+          <div>
+            {new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </div>
+          <div>
+            Page {pageIndex + 1} {totalPages > 1 && `of ${totalPages}`}
+          </div>
+        </div>
       </div>
-    </div>
+    );
+  };
+  
+  // Si pas de photos, afficher une seule page avec les informations
+  if (loadPhotos.length === 0) {
+    return renderPage([], 0, true);
+  }
+  
+  // Sinon, afficher toutes les pages nécessaires
+  return (
+    <>
+      {photoPages.map((pagePhotos, pageIndex) => 
+        renderPage(pagePhotos, pageIndex, pageIndex === 0)
+      )}
+    </>
   );
 };
 

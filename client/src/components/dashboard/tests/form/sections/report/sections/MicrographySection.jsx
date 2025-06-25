@@ -140,14 +140,19 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
   const organizedPhotos = organizePhotosByHierarchy(micrographyPhotos);
   const hasPhotos = Object.keys(organizedPhotos).length > 0;
 
-  console.log("Photos organized by hierarchy:", organizedPhotos);
-    return (
+  console.log("Photos organized by hierarchy:", organizedPhotos);    return (
     <div style={{ 
-      minHeight: '100vh', 
+      minHeight: '297mm', // Format A4 exact
+      maxHeight: '297mm',
+      width: '210mm',
       background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-      padding: '20px',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>      {/* Header with information */}
+      padding: '10mm', // Marges réduites mais professionnelles
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      pageBreakAfter: 'always',
+      pageBreakInside: 'avoid',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>{/* Header with information */}
       <SectionHeader
         title="MICROGRAPHIC ANALYSIS"
         subtitle="Metallographic examination and microstructural analysis"

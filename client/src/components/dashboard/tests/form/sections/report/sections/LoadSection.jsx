@@ -126,21 +126,26 @@ const LoadSection = ({ testData, partData, clientData, selectedPhotos = {} }) =>
     return 'Not specified';
   };
 
-  // Render d'une page avec les informations en haut et les photos en bas
-  const renderPage = (pagePhotos, pageIndex, isFirstPage = false) => {
+  // Render d'une page avec les informations en haut et les photos en bas  
+    const renderPage = (pagePhotos, pageIndex, isFirstPage = false) => {
     const { height: photoHeight, cols } = getPhotoSize(pagePhotos.length);
     
     return (
       <div 
         key={`page-${pageIndex}`}
         style={{ 
-          minHeight: '100vh', 
+          minHeight: '297mm', // Format A4 exact
+          maxHeight: '297mm',
+          width: '210mm',
           background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-          padding: '20px',
+          padding: '10mm', // Marges réduites mais professionnelles
           fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto'
+          pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto',
+          pageBreakInside: 'avoid',
+          boxSizing: 'border-box',          overflow: 'hidden'
         }}
-      >        {/* Header avec informations */}
+      >
+        {/* Header avec informations */}
         <SectionHeader
           title="LOAD CONFIGURATION"
           subtitle={loadData.loadType || 'Load configuration details'}

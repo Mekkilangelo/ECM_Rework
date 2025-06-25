@@ -171,18 +171,22 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
   // Render d'une page avec les informations en haut et les photos en bas
   const renderPage = (pagePhotos, pageIndex, isFirstPage = false) => {
     const { height: photoHeight, cols } = getPhotoSize(pagePhotos.length);
-    
-    return (
+      return (
       <div 
         key={`page-${pageIndex}`}
         style={{ 
-          minHeight: '100vh', 
+          minHeight: '297mm', // Format A4 exact
+          maxHeight: '297mm',
+          width: '210mm',
           background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-          padding: '20px',
+          padding: '10mm', // Marges réduites mais professionnelles
           fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto'
+          pageBreakAfter: pageIndex < totalPages - 1 ? 'always' : 'auto',
+          pageBreakInside: 'avoid',
+          boxSizing: 'border-box',
+          overflow: 'hidden'
         }}
-      >        {/* Header avec informations (affiché sur chaque page) */}
+      >{/* Header avec informations (affiché sur chaque page) */}
         <SectionHeader
           title="PART IDENTIFICATION"
           subtitle={part.designation || 'Part designation not specified'}

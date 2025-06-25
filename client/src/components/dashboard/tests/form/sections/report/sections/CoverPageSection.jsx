@@ -225,14 +225,19 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
     
     // Formater les paramètres ordinaires avec une première lettre majuscule
     return paramName.charAt(0).toUpperCase() + paramName.slice(1);
-  };
-  return (
+  };  return (
     <div style={{ 
-      minHeight: '100vh', 
+      minHeight: '297mm', // Format A4 exact
+      maxHeight: '297mm',
+      width: '210mm',
       background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-      padding: '20px',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>      {/* Header moderne avec gradient rouge/jaune */}
+      padding: '10mm', // Marges réduites mais professionnelles
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      pageBreakAfter: 'always',
+      pageBreakInside: 'avoid',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>{/* Header moderne avec gradient rouge/jaune */}
       <div style={{
         background: 'linear-gradient(135deg, #d32f2f 0%, #f57c00 50%, #ff9800 100%)',
         borderRadius: '12px',

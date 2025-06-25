@@ -654,14 +654,20 @@ const chartOptions = {
       );
     }
   };
-  // Mise à jour de la gestion du rendu conditionnel
-  return (
+  // Mise à jour de la gestion du rendu conditionnel  
+    return (
     <div style={{ 
-      minHeight: '100vh', 
+      minHeight: '297mm', // Format A4 exact
+      maxHeight: '297mm',
+      width: '210mm',
       background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-      padding: '20px',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>      {/* Header moderne avec gradient rouge/orange */}
+      padding: '10mm', // Marges réduites mais professionnelles
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      pageBreakAfter: 'always',
+      pageBreakInside: 'avoid',
+      boxSizing: 'border-box',      overflow: 'hidden'
+    }}>
+      {/* Header moderne avec gradient rouge/orange */}
       <SectionHeader
         title="RECIPE"
         subtitle={`Recipe ${recipeData?.number || 'N/A'}`}

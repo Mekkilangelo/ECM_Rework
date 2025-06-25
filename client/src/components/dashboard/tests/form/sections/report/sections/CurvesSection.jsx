@@ -101,13 +101,18 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
   
   if (curvesPhotos.length > 0) {
     console.log(`URL for first curve image:`, getPhotoUrl(curvesPhotos[0]));
-  }
-    return (
+  }    return (
     <div style={{ 
-      minHeight: '100vh', 
+      minHeight: '297mm', // Format A4 exact
+      maxHeight: '297mm',
+      width: '210mm',
       background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-      padding: '20px',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      padding: '10mm', // Marges réduites mais professionnelles
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      pageBreakAfter: 'always',
+      pageBreakInside: 'avoid',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }}>
       {/* Header avec informations */}
       <SectionHeader

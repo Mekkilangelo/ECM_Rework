@@ -3,8 +3,6 @@ import { Card, Row, Col, Button, Badge, ListGroup, Tooltip, OverlayTrigger, Spin
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faFileDownload, faIdCard, faList, faCubes, faChartLine, faMicroscope, faClipboardCheck, faToggleOn, faToggleOff, faImages } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import testService from '../../../../../../services/testService';
 import ReportPreviewModal from './ReportPreviewModal';
 import SectionPhotoManager from './SectionPhotoManager';
@@ -215,32 +213,7 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
       setError("Impossible de charger les données du rapport");
     } finally {
       setLoading(false);
-    }
-  };
-  
-  // Générer le PDF
-  const generatePDF = () => {
-    if (!reportRef.current) return;
-    
-    html2canvas(reportRef.current, { 
-      scale: 2,
-      useCORS: true,
-      logging: false 
-    }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
-      
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`rapport-test-${testData?.testCode || reportData?.test?.testCode || 'nouveau'}.pdf`);
-    });
-  };
+    }  };
 
   // Déterminer quelles sections ont des photos disponibles
   const photoSections = Object.entries(sectionConfig)
@@ -264,13 +237,12 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
             )}
             {loading ? t('common.loading', 'Chargement...') : t('report.actions.preview', 'Prévisualiser')}
           </Button>
-          
-          <Button
+            <Button
             variant="outline-warning"
             size="sm"
-            onClick={generatePDF}
-            disabled={!reportData || loading}
+            disabled={true}
             className="d-flex align-items-center"
+            title={t('report.actions.pdfFromPreview', 'Utilisez la prévisualisation pour générer le PDF')}
           >
             <FontAwesomeIcon icon={faFileDownload} className="me-1" />
             {t('report.actions.downloadPdf', 'PDF')}
@@ -393,12 +365,10 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
               </Card.Body>
             </Card>
           </Col>
-        </Row>
-          {/* Modal d'aperçu du rapport */}
+        </Row>          {/* Modal d'aperçu du rapport */}
         <ReportPreviewModal
           show={showPreview}
           handleClose={() => setShowPreview(false)}
-          generatePDF={generatePDF}
           reportRef={reportRef}
           selectedSections={selectedSections}
           reportData={reportData} // Données chargées seulement à l'ouverture du modal

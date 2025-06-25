@@ -136,3 +136,70 @@
   page-break-inside: avoid;
   margin-bottom: 20px;
 }
+
+/* Styles pour une pagination intelligente */
+.report-page-intelligent {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Éviter de couper les éléments importants */
+.no-page-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Styles pour les éléments qui peuvent être coupés de manière intelligente */
+.allow-page-break {
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+/* Forcer un saut de page avant un élément */
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
+/* Éviter les veuves et orphelines */
+.avoid-orphans {
+  orphans: 3;
+  widows: 3;
+}
+
+/* Styles pour les tableaux et listes */
+.report-table {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.report-table tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Styles pour les images */
+.report-image {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Styles pour les groupes d'éléments liés */
+.report-group {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Style pour les sections avec contenu dynamique */
+.report-section-content {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Amélioration pour les graphiques et diagrammes */
+.chart-container {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}

@@ -17,7 +17,7 @@ import CurvesSection from './sections/CurvesSection';
 import MicrographySection from './sections/MicrographySection';
 import ControlSection from './sections/ControlSection';
 
-const ReportTabContent = ({ testId, testData, partData, partId }) => {
+const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => {
   const { t } = useTranslation();
   
   // Utilisez partId directement si disponible, sinon essayez de le récupérer de partData
@@ -27,7 +27,9 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
   useEffect(() => {
     if (partData && partData.id) {
       setParentNodeId(partData.id);
-      console.log("ID de pièce défini:", partData.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("ID de pièce défini:", partData.id);
+      }
     }
   }, [partData]);
   // Configuration des sections avec métadonnées pour une meilleure UI
@@ -99,8 +101,7 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
 
   // État pour stocker les gestionnaires de photos de chaque section
   const [photoManagers, setPhotoManagers] = useState({});
-  
-  // Charger l'ID du nœud parent (pièce) au montage
+    // Charger l'ID du nœud parent (pièce) au montage (optimisé)
   useEffect(() => {
     const loadPartNodeId = async () => {
       if (!testId) return;
@@ -116,10 +117,14 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
             try {
               const nodeResponse = await testService.getNodeById(testResponse.data.parent_id);
               if (nodeResponse.data && nodeResponse.data.type === 'part') {
-                console.log("Found part node:", nodeResponse.data);
+                if (process.env.NODE_ENV === 'development') {
+                  console.log("Found part node:", nodeResponse.data);
+                }
                 setParentNodeId(nodeResponse.data.id);
               } else {
-                console.log("Parent is not a part, searching part in ancestors");
+                if (process.env.NODE_ENV === 'development') {
+                  console.log("Parent is not a part, searching part in ancestors");
+                }
                 // TODO: Ajouter une API pour trouver l'ancêtre de type pièce
               }
             } catch (nodeError) {
@@ -128,7 +133,9 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
           } 
           // Si nous avons l'information de part_id directement
           else if (testResponse.data.part_id) {
-            console.log("Using part_id directly:", testResponse.data.part_id);
+            if (process.env.NODE_ENV === 'development') {
+              console.log("Using part_id directly:", testResponse.data.part_id);
+            }
             setParentNodeId(testResponse.data.part_id);
           }
         }
@@ -166,7 +173,9 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
   
   // Gérer les changements de sélection de photos pour une section
   const handlePhotoSelectionChange = (section, selectedIds) => {
-    console.log(`PhotoSelectionChange - section: ${section}, selectedIds:`, selectedIds);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`PhotoSelectionChange - section: ${section}, selectedIds:`, selectedIds);
+    }
     
     // NOUVELLE APPROCHE: Préserver la structure hiérarchique des photos
     setSelectedPhotos(prev => ({
@@ -382,9 +391,10 @@ const ReportTabContent = ({ testId, testData, partData, partId }) => {
             ControlSection
           }}
         />
-      </Card.Body>
-    </Card>
+      </Card.Body>    </Card>
   );
-};
+});
+
+ReportTabContent.displayName = 'ReportTabContent';
 
 export default ReportTabContent;

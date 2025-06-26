@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo, useCallback } from 'react';
+import React from 'react';
+import { useState, useEffect, useImperativeHandle, forwardRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tab, Nav, Table, Form, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,6 +7,7 @@ import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import testService from '../../../../../../../../../services/testService';
+import { useRenderTracker } from '../../../../../../../../../utils/performanceMonitor';
 
 // Enregistrement des composants nécessaires pour Chart.js
 ChartJS.register(
@@ -28,7 +30,7 @@ const colorPalette = [
   { borderColor: 'rgb(255, 205, 86)', backgroundColor: 'rgba(255, 205, 86, 0.5)' }    // Jaune
 ];
 
-const ResultCurveSection = forwardRef(({
+const ResultCurveSection = React.memo(forwardRef(({
   result,
   resultIndex,
   sampleIndex,  // Ajout du sampleIndex
@@ -45,32 +47,56 @@ const ResultCurveSection = forwardRef(({
   readOnlyFieldStyle = {}
 }, ref) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('curve');
-    // Structure de données pour les points de mesure
+  
+  // Tracking des re-renders avec le hook existant
+  useRenderTracker('ResultCurveSection');
+  
+  const [activeTab, setActiveTab] = useState('curve');// Structure de données pour les points de mesure
   const [dataPoints, setDataPoints] = useState([]);
   
   // État séparé pour l'affichage du tableau (données triées)
   const [displayPoints, setDisplayPoints] = useState([]);
+    // Ref pour gérer le timeout de mise à jour du parent
+  const updateParentTimeoutRef = React.useRef(null);
   
-  // Effet pour synchroniser les données quand result change
-  useEffect(() => {
+  // Nettoyage des timeouts au démontage du composant
+  React.useEffect(() => {
+    return () => {
+      if (updateParentTimeoutRef.current) {
+        clearTimeout(updateParentTimeoutRef.current);
+        updateParentTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  // Effet pour synchroniser les données quand result change (optimisé avec useMemo)
+  const synchronizedData = useMemo(() => {
     if (result && result.curveData && result.curveData.points) {
-      console.log('Mise à jour des données de courbe:', result.curveData.points);
-      setDataPoints([...result.curveData.points]);
+      if (process.env.NODE_ENV === 'development') {
+        // Mise à jour des données de courbe
+      }
+      const points = [...result.curveData.points];
       
       // Trier les points pour l'affichage
-      const sortedPoints = [...result.curveData.points].sort((a, b) => {
+      const sortedPoints = [...points].sort((a, b) => {
         const distA = parseFloat(a.distance) || 0;
         const distB = parseFloat(b.distance) || 0;
         return distA - distB;
       });
-      setDisplayPoints(sortedPoints);
+      
+      return { points, sortedPoints };
     } else {
-      console.log('Aucune donnée de courbe trouvée dans result:', result);
-      setDataPoints([]);
-      setDisplayPoints([]);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Aucune donnée de courbe trouvée dans result:', result);
+      }
+      return { points: [], sortedPoints: [] };
     }
-  }, [result]);
+  }, [result?.curveData?.points]);
+  // Effet pour mettre à jour les états locaux uniquement quand synchronizedData change
+  useEffect(() => {
+    setDataPoints(synchronizedData.points);
+    setDisplayPoints(synchronizedData.sortedPoints);
+  }, [synchronizedData.points, synchronizedData.sortedPoints]); // Dépendances plus spécifiques
     // Ajout du state pour le pas d'incrémentation
   const [stepValue, setStepValue] = useState(0.1);
   const [specData, setSpecData] = useState([]);
@@ -80,8 +106,7 @@ const ResultCurveSection = forwardRef(({
     addDataPoint,
     addMultipleDataPoints,
     removeDataPoint
-  }));
-  // Memoisation des positions ECD pour éviter les recalculs
+  }));  // Memoisation des positions ECD pour éviter les recalculs
   const ecdPositions = useMemo(() => {
     return result?.ecd?.ecdPoints || [];
   }, [result?.ecd?.ecdPoints]);
@@ -90,37 +115,50 @@ const ResultCurveSection = forwardRef(({
   const hardnessUnit = useMemo(() => {
     return result?.ecd?.hardnessUnit || "HV";
   }, [result?.ecd?.hardnessUnit]);
-  
-  // Log pour debugger les colonnes dynamiques
-  console.log(`ResultCurveSection - Positions ECD disponibles:`, ecdPositions.length, ecdPositions.map(p => p.name));
-    // Effet pour charger les spécifications ECD depuis l'API
+  // Log pour debugger les colonnes dynamiques (uniquement en dev et seulement si les positions changent)
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && ecdPositions.length > 0) {
+      // Mise à jour des positions ECD disponibles
+    }
+  }, [ecdPositions]);
+  
+  // Memoizer la clé de cache pour les spécifications
+  const specsKey = useMemo(() => {
+    return test?.id && parentId ? `${test.id}-${parentId}` : null;
+  }, [test?.id, parentId]);
+    // Effet pour charger les spécifications ECD depuis l'API (avec deps optimisées)
+  useEffect(() => {
+    if (!specsKey) return;
+    
     const fetchSpecData = async () => {
-      if (test && test.id && parentId) {
-        try {
-          // Appeler la nouvelle méthode du service pour récupérer les spécifications
-          const response = await testService.getTestSpecs(test.id, parentId);
-          console.log('Réponse du service getTestSpecs pour ResultCurveSection:', response);
+      try {
+        // Appeler la nouvelle méthode du service pour récupérer les spécifications
+        const response = await testService.getTestSpecs(test.id, parentId);
+        if (process.env.NODE_ENV === 'development') {
+          // Réponse du service getTestSpecs reçue
+        }
+        
+        let specifications = null;
+        
+        // Extraction des spécifications selon la structure de réponse
+        if (response && response.specifications) {
+          specifications = typeof response.specifications === 'string' 
+            ? JSON.parse(response.specifications) 
+            : response.specifications;
+        } else if (response && response.data && response.data.specifications) {
+          specifications = typeof response.data.specifications === 'string'
+            ? JSON.parse(response.data.specifications)
+            : response.data.specifications;
+        }
+        
+        if (specifications) {
+          const specLines = [];
           
-          let specifications = null;
-          
-          // Extraction des spécifications selon la structure de réponse
-          if (response && response.specifications) {
-            specifications = typeof response.specifications === 'string' 
-              ? JSON.parse(response.specifications) 
-              : response.specifications;
-          } else if (response && response.data && response.data.specifications) {
-            specifications = typeof response.data.specifications === 'string'
-              ? JSON.parse(response.data.specifications)
-              : response.data.specifications;
-          }
-          
-          if (specifications) {
-            const specLines = [];
-            
-            // Nouveau format : traitement des spécifications ECD multiples
-            if (specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs)) {
-              console.log('Spécifications ECD multiples trouvées:', specifications.ecdSpecs);
+          // Nouveau format : traitement des spécifications ECD multiples
+          if (specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs)) {
+              if (process.env.NODE_ENV === 'development') {
+                // Spécifications ECD multiples trouvées
+              }
               
               specifications.ecdSpecs.forEach((ecdSpec, index) => {
                 if (ecdSpec.hardness && (ecdSpec.depthMin !== undefined || ecdSpec.depthMax !== undefined)) {
@@ -144,7 +182,9 @@ const ResultCurveSection = forwardRef(({
             }
             // Format ancien : compatibilité avec l'ancien format ECD unique
             else if (specifications.ecd && specifications.ecd.hardness) {
-              console.log('Spécification ECD unique trouvée (format ancien):', specifications.ecd);
+              if (process.env.NODE_ENV === 'development') {
+                console.log('Spécification ECD unique trouvée (format ancien):', specifications.ecd);
+              }
               
               const depthMin = parseFloat(specifications.ecd.depthMin) || 0.0;
               const depthMax = parseFloat(specifications.ecd.depthMax) || 1.0;
@@ -158,11 +198,11 @@ const ResultCurveSection = forwardRef(({
                 ],
                 unit: specifications.ecd.unit || 'HV'
               };
-              
-              specLines.push(specLine);
+                specLines.push(specLine);
             }
-            
-            console.log('Lignes de spécification générées:', specLines);
+              if (process.env.NODE_ENV === 'development') {
+                // Lignes de spécification générées
+              }
             setSpecData(specLines);
           } else {
             console.warn('Aucune spécification trouvée dans la réponse');
@@ -172,13 +212,41 @@ const ResultCurveSection = forwardRef(({
           console.error(t('tests.after.results.resultCurve.specError'), error);
           setSpecData([]);
         }
-      }
-    };
+      };
     
     fetchSpecData();
-  }, [test, parentId, t]);
+  }, [specsKey, t]); // Dépendances optimisées  // Fonction utilitaire pour comparer les arrays de points sans références circulaires
+  const arePointsEqual = useCallback((points1, points2) => {
+    if (!points1 && !points2) return true;
+    if (!points1 || !points2) return false;
+    if (points1.length !== points2.length) return false;
+    
+    return points1.every((point1, index) => {
+      const point2 = points2[index];
+      if (!point1 && !point2) return true;
+      if (!point1 || !point2) return false;
+      
+      // Comparer seulement les propriétés importantes, pas les références DOM
+      const keys = Object.keys(point1).filter(key => 
+        !key.startsWith('__') && 
+        typeof point1[key] !== 'function' &&
+        typeof point1[key] !== 'object' ||
+        point1[key] === null
+      );
+      
+      return keys.every(key => point1[key] === point2[key]);
+    });
+  }, []);
+
   // Mettre à jour le formData parent avec les nouvelles données (optimisé avec useCallback)
   const updateParentFormData = useCallback((newPoints) => {
+    // Éviter les mises à jour en boucle en vérifiant si les données ont vraiment changé
+    const currentPoints = result?.curveData?.points || [];
+    
+    if (arePointsEqual(currentPoints, newPoints)) {
+      return; // Pas de changement, éviter la mise à jour
+    }
+    
     // Créer l'objet de changement pour le parent
     const changeEvent = {
       target: {
@@ -186,14 +254,33 @@ const ResultCurveSection = forwardRef(({
         value: { points: newPoints }
       }
     };
-    handleChange(changeEvent);
-  }, [handleChange, resultIndex, sampleIndex]);
-    // Mise à jour d'un point de données (pendant la saisie) - optimisé avec useCallback
+    
+    // Appeler handleChange directement sans setTimeout pour éviter les boucles
+    try {
+      handleChange(changeEvent);
+    } catch (error) {
+      console.error('Error updating parent form data:', error);
+    }
+  }, [handleChange, resultIndex, sampleIndex, arePointsEqual]);  // Mise à jour d'un point de données (pendant la saisie) - optimisé avec useCallback et throttle
   const handlePointChange = useCallback((index, field, value) => {
     setDataPoints(prevPoints => {
       const newPoints = [...prevPoints];
+      
+      // Vérifier si la valeur a vraiment changé
+      if (newPoints[index] && newPoints[index][field] === value) {
+        return prevPoints; // Pas de changement, éviter la mise à jour
+      }
+      
       newPoints[index] = { ...newPoints[index], [field]: value };
-      updateParentFormData(newPoints);
+      
+      // Débouncer la mise à jour du parent pour éviter trop de mises à jour
+      if (updateParentTimeoutRef.current) {
+        clearTimeout(updateParentTimeoutRef.current);
+      }
+      updateParentTimeoutRef.current = setTimeout(() => {
+        updateParentFormData(newPoints);
+      }, 500); // Augmenter le délai à 500ms pour plus de stabilité
+      
       return newPoints;
     });
   }, [updateParentFormData]);
@@ -201,9 +288,14 @@ const ResultCurveSection = forwardRef(({
   // Gestion du changement de la valeur du pas - optimisé avec useCallback
   const handleStepChange = useCallback((e) => {
     setStepValue(parseFloat(e.target.value) || 0.1);
-  }, []);
-    // Trier les données après la fin de la saisie - optimisé avec useCallback
+  }, []);    // Trier les données après la fin de la saisie - optimisé avec useCallback
   const handleBlur = useCallback(() => {
+    // Annuler le timeout en cours et mettre à jour immédiatement
+    if (updateParentTimeoutRef.current) {
+      clearTimeout(updateParentTimeoutRef.current);
+      updateParentTimeoutRef.current = null;
+    }
+    
     setDataPoints(prevPoints => {
       // Trier les points par distance
       const sorted = [...prevPoints].sort((a, b) => {
@@ -212,7 +304,7 @@ const ResultCurveSection = forwardRef(({
         return distA - distB;
       });
       
-      // Mettre à jour l'affichage et les données parent
+      // Mettre à jour l'affichage et les données parent immédiatement
       setDisplayPoints(sorted);
       updateParentFormData(sorted);
       return sorted;
@@ -262,15 +354,21 @@ const ResultCurveSection = forwardRef(({
       
       const newPoints = [...prevPoints, newPoint];
       setDisplayPoints(newPoints);
-      updateParentFormData(newPoints);
+      
+      // Utiliser un timeout pour éviter les conflits avec d'autres mises à jour
+      setTimeout(() => {
+        updateParentFormData(newPoints);
+      }, 100);
+      
       return newPoints;
     });
-  }, [ecdPositions, stepValue, updateParentFormData]);  // Ajouter plusieurs points de données en une fois (pour l'import Excel) - optimisé avec useCallback
+  }, [ecdPositions, stepValue, updateParentFormData]);// Ajouter plusieurs points de données en une fois (pour l'import Excel) - optimisé avec useCallback
   const addMultipleDataPoints = useCallback((pointsData) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Ajout de plusieurs points de courbe:', pointsData);
+      console.log('ecdPositions disponibles lors de l\'ajout:', ecdPositions.length, ecdPositions.map(p => p.name));
+    }
     if (!pointsData || pointsData.length === 0) return;
-    
-    console.log('Ajout de plusieurs points de courbe:', pointsData);
-    console.log('ecdPositions disponibles lors de l\'ajout:', ecdPositions.length, ecdPositions.map(p => p.name));
     
     setDataPoints(prevPoints => {
       const newPoints = pointsData.map(pointData => {
@@ -278,7 +376,9 @@ const ResultCurveSection = forwardRef(({
           distance: pointData.distance || ''
         };
         
-        console.log('Traitement point avec données:', Object.keys(pointData));
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Traitement point avec données:', Object.keys(pointData));
+        }
         
         // Ajouter un champ pour chaque position ECD
         ecdPositions.forEach(position => {
@@ -286,7 +386,9 @@ const ResultCurveSection = forwardRef(({
           const positionKey = position.name.toLowerCase();
           const exactPositionKey = position.name; // Clé exacte avec la casse originale
           
-          console.log(`Création champs pour position "${position.name}": ${fieldName}, ${positionKey}, ${exactPositionKey}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Création champs pour position "${position.name}": ${fieldName}, ${positionKey}, ${exactPositionKey}`);
+          }
           
           // Chercher la valeur dans plusieurs formats possibles
           const value = pointData[fieldName] || pointData[positionKey] || pointData[exactPositionKey] || '';
@@ -296,9 +398,13 @@ const ResultCurveSection = forwardRef(({
           newPoint[positionKey] = value;
           
           if (value) {
-            console.log(`Valeur trouvée pour ${position.name}:`, value);
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`Valeur trouvée pour ${position.name}:`, value);
+            }
           } else {
-            console.log(`Aucune valeur trouvée pour ${position.name} dans:`, Object.keys(pointData));
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`Aucune valeur trouvée pour ${position.name} dans:`, Object.keys(pointData));
+            }
           }
         });
         
@@ -328,17 +434,23 @@ const ResultCurveSection = forwardRef(({
       setDisplayPoints(sortedPoints);
       updateParentFormData(sortedPoints);
       
-      console.log(`${newPoints.length} points de courbe ajoutés avec succès`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`${newPoints.length} points de courbe ajoutés avec succès`);
+      }
       return sortedPoints;
     });
   }, [ecdPositions, updateParentFormData]);
-
   // Supprimer un point de données - optimisé avec useCallback
   const removeDataPoint = useCallback((index) => {
     setDataPoints(prevPoints => {
       const newPoints = prevPoints.filter((_, i) => i !== index);
       setDisplayPoints(newPoints);
-      updateParentFormData(newPoints);
+      
+      // Utiliser un timeout pour éviter les conflits avec d'autres mises à jour
+      setTimeout(() => {
+        updateParentFormData(newPoints);
+      }, 100);
+      
       return newPoints;
     });
   }, [updateParentFormData]);
@@ -449,7 +561,9 @@ const ResultCurveSection = forwardRef(({
 
     // Ajouter les courbes de spécification si disponibles
     if (specData && specData.length > 0) {
-      console.log('Ajout des données de spécification à la courbe:', specData);
+      if (process.env.NODE_ENV === 'development') {
+        // Ajout des données de spécification à la courbe
+      }
       
       specData.forEach((spec, index) => {
         if (spec.points && spec.points.length > 0) {
@@ -638,8 +752,19 @@ const ResultCurveSection = forwardRef(({
             </>
           )}
         </Tab.Pane>
-      </Tab.Content>
-    </Tab.Container>  );
+      </Tab.Content>    </Tab.Container>  );
+}), (prevProps, nextProps) => {
+  // Custom comparison function pour optimiser les re-rendus
+  // Ne re-rendre que si les props qui nous intéressent ont changé
+  return (
+    prevProps.result === nextProps.result &&
+    prevProps.resultIndex === nextProps.resultIndex &&
+    prevProps.sampleIndex === nextProps.sampleIndex &&
+    prevProps.loading === nextProps.loading &&
+    prevProps.viewMode === nextProps.viewMode &&
+    prevProps.test?.id === nextProps.test?.id &&
+    prevProps.parentId === nextProps.parentId
+  );
 });
 
-export default React.memo(ResultCurveSection);
+export default ResultCurveSection;

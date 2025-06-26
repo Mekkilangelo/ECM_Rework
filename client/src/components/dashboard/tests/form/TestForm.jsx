@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import useTestForm from '../hooks/useTestForm';
 import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
 import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
+import { useRenderTracker } from '../../../../utils/performanceMonitor';
 
 // Sections importées
 import BasicInfoSection from './sections/common/BasicInfoSection';
@@ -13,16 +14,16 @@ import ReportTabContent from './sections/report/ReportTabContent';
 
 const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
-
-  // État pour stocker la fonction d'association de fichiers
+  
+  // Tracker les performances
+  useRenderTracker('TestForm');
+  // État pour stocker la fonction d'association de fichiers (memoized)
   const [fileAssociationMethods, setFileAssociationMethods] = useState({
     before: null,
     after: null
   });
-
-  // Gestionnaires pour recevoir les fonctions d'association des fichiers
+  // Gestionnaires pour recevoir les fonctions d'association des fichiers (optimisés)
   const handleBeforeFileAssociationNeeded = useCallback((associateFilesFunc) => {
-    console.log("Before tab file association function received in TestForm");
     setFileAssociationMethods(prev => ({
       ...prev,
       before: associateFilesFunc
@@ -30,31 +31,25 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
   }, []);
   
   const handleAfterFileAssociationNeeded = useCallback((associateFilesFunc) => {
-    console.log("After tab file association function received in TestForm");
     setFileAssociationMethods(prev => ({
       ...prev,
       after: associateFilesFunc
     }));
   }, []);
-
-  // Combiner toutes les fonctions d'association de fichiers
-  const combineFileAssociations = React.useCallback(async (nodeId) => {
-    console.log("Combining all file associations for nodeId:", nodeId);
+  // Combiner toutes les fonctions d'association de fichiers (optimisé)
+  const combineFileAssociations = useCallback(async (nodeId) => {
     const promises = [];
     let results = { success: true };
     
     // Parcourir toutes les méthodes d'association disponibles
     Object.entries(fileAssociationMethods).forEach(([tab, method]) => {
       if (method) {
-        console.log(`Calling file association method for tab: ${tab}`);
         promises.push(method(nodeId));
       }
-    });
-    
+    });    
     if (promises.length > 0) {
       try {
         const associationResults = await Promise.all(promises);
-        console.log("All association results:", associationResults);
         // Si l'un des résultats est false, on considère que l'opération a échoué
         if (associationResults.some(result => result === false)) {
           results.success = false;
@@ -64,8 +59,6 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
         results.success = false;
         results.error = error;
       }
-    } else {
-      console.log("No file associations to process");
     }
     
     return results.success;
@@ -120,15 +113,12 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
         {title}
       </span>
     );
-  };
-
-  // Mettre à jour le callback d'association de fichiers dans le hook quand il change
+  };  // Mettre à jour le callback d'association de fichiers dans le hook quand il change (optimisé)
   useEffect(() => {
     if (setFileAssociationCallback) {
-      console.log("Setting combined file association callback in TestForm");
       setFileAssociationCallback(() => combineFileAssociations); // Utiliser une fonction qui retourne combineFileAssociations
     }
-  }, [combineFileAssociations, setFileAssociationCallback]);
+  }, [combineFileAssociations, setFileAssociationCallback]); // Dépendances précises
 
   // État pour gérer l'onglet actif
   const [activeTab, setActiveTab] = useState('before');
@@ -257,7 +247,6 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
               </Button>
             ) : (
               <>                <Button variant="secondary" onClick={() => {
-                  console.log('🟢 Cancel button clicked in TestForm');
                   handleCloseRequest();
                 }} className="mr-2">
                   {t('common.cancel')}

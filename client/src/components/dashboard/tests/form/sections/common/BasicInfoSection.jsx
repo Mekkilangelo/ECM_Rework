@@ -3,7 +3,7 @@ import { Row, Col, Form } from 'react-bootstrap';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
 
-const BasicInfoSection = ({
+const BasicInfoSection = React.memo(({
   formData,
   errors,
   handleChange,
@@ -31,7 +31,7 @@ const BasicInfoSection = ({
               name="loadNumber"
               value={formData.loadNumber || ''}
               onChange={handleChange}
-              autocomplete="off"
+              autoComplete="off"
               readOnly={viewMode}
               style={viewMode ? readOnlyFieldStyle : {}}
             />
@@ -126,9 +126,10 @@ const BasicInfoSection = ({
             />
           </Form.Group>
         </Col>
-      </Row>
-    </>
+      </Row>    </>
   );
-};
+});
+
+BasicInfoSection.displayName = 'BasicInfoSection';
 
 export default BasicInfoSection;

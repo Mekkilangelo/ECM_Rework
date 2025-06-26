@@ -301,19 +301,12 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   const fetchFurnaceSizeOptions = useCallback(async () => {
     await fetchEnumValues('furnaces', 'furnace_size', setFurnaceSizeOptions);
   }, [fetchEnumValues]);
-  
-  const fetchQuenchCellOptions = useCallback(async () => {
+    const fetchQuenchCellOptions = useCallback(async () => {
     await fetchEnumValues('furnaces', 'quench_cell', setQuenchCellOptions);
-  }, [fetchEnumValues]);  // Fonction pour récupérer les unités
+  }, [fetchEnumValues]);
+  // Fonction pour récupérer les unités
   const fetchUnitOptions = useCallback(async () => {
     try {
-      const isDev = process.env.NODE_ENV === 'development';
-      if (isDev) {
-        console.log("📏 Fetching units...");
-      }
-      
-      let allUnitOptions = [];
-      
       // Fonction d'aide pour extraire les valeurs de l'énumération
       const extractEnumValues = (enumData) => {
         if (enumData && enumData.values) {
@@ -324,63 +317,58 @@ const useOptionsFetcher = (setLoading, options = {}) => {
         return [];
       };
       
-      // Récupérer les unités de longueur
-      const lengthUnitsResponse = await enumService.getEnumValues('units', 'length_units');
-      const lengthUnits = extractEnumValues(lengthUnitsResponse).map(unit => ({
-        value: unit,
-        label: unit,
-        type: 'length'
-      }));
-      allUnitOptions = [...allUnitOptions, ...lengthUnits];
+      // Récupérer tous les types d'unités en parallèle pour optimiser les performances
+      const [
+        lengthUnitsResponse,
+        weightUnitsResponse,
+        timeUnitsResponse,
+        temperatureUnitsResponse,
+        pressureUnitsResponse,
+        hardnessUnitsResponse
+      ] = await Promise.all([
+        enumService.getEnumValues('units', 'length_units'),
+        enumService.getEnumValues('units', 'weight_units'),
+        enumService.getEnumValues('units', 'time_units'),
+        enumService.getEnumValues('units', 'temperature_units'),
+        enumService.getEnumValues('units', 'pressure_units'),
+        enumService.getEnumValues('units', 'hardness_units')
+      ]);
       
-      // Récupérer les unités de poids
-      const weightUnitsResponse = await enumService.getEnumValues('units', 'weight_units');
-      const weightUnits = extractEnumValues(weightUnitsResponse).map(unit => ({
-        value: unit,
-        label: unit,
-        type: 'weight'
-      }));
-      allUnitOptions = [...allUnitOptions, ...weightUnits];
+      // Traiter toutes les réponses et construire les options
+      const allUnitOptions = [
+        ...extractEnumValues(lengthUnitsResponse).map(unit => ({
+          value: unit,
+          label: unit,
+          type: 'length'
+        })),
+        ...extractEnumValues(weightUnitsResponse).map(unit => ({
+          value: unit,
+          label: unit,
+          type: 'weight'
+        })),
+        ...extractEnumValues(timeUnitsResponse).map(unit => ({
+          value: unit,
+          label: unit,
+          type: 'time'
+        })),
+        ...extractEnumValues(temperatureUnitsResponse).map(unit => ({
+          value: unit,
+          label: unit,
+          type: 'temperature'
+        })),
+        ...extractEnumValues(pressureUnitsResponse).map(unit => ({
+          value: unit,
+          label: unit,
+          type: 'pressure'
+        })),
+        ...extractEnumValues(hardnessUnitsResponse).map(unit => ({
+          value: unit,
+          label: unit,
+          type: 'hardness'
+        }))
+      ];
       
-      // Récupérer les unités de temps
-      const timeUnitsResponse = await enumService.getEnumValues('units', 'time_units');
-      const timeUnits = extractEnumValues(timeUnitsResponse).map(unit => ({
-        value: unit,
-        label: unit,
-        type: 'time'
-      }));
-      allUnitOptions = [...allUnitOptions, ...timeUnits];
-      
-      // Récupérer les unités de température
-      const temperatureUnitsResponse = await enumService.getEnumValues('units', 'temperature_units');
-      const tempUnits = extractEnumValues(temperatureUnitsResponse).map(unit => ({
-        value: unit,
-        label: unit,
-        type: 'temperature'
-      }));
-      allUnitOptions = [...allUnitOptions, ...tempUnits];
-      
-      // Récupérer les unités de pression
-      const pressureUnitsResponse = await enumService.getEnumValues('units', 'pressure_units');
-      const pressureUnits = extractEnumValues(pressureUnitsResponse).map(unit => ({
-        value: unit,
-        label: unit,
-        type: 'pressure'
-      }));
-      allUnitOptions = [...allUnitOptions, ...pressureUnits];
-      
-      // Récupérer les unités de dureté
-      const hardnessUnitsResponse = await enumService.getEnumValues('units', 'hardness_units');
-      const hardnessUnits = extractEnumValues(hardnessUnitsResponse).map(unit => ({
-        value: unit,
-        label: unit,
-        type: 'hardness'
-      }));
-      allUnitOptions = [...allUnitOptions, ...hardnessUnits];
-        setUnitOptions(allUnitOptions);
-      if (isDev && allUnitOptions.length > 0) {
-        console.log(`✅ Units loaded: ${allUnitOptions.length} types`);
-      }
+      setUnitOptions(allUnitOptions);
     } catch (error) {
       console.error('Error fetching units:', error);
       setUnitOptions([]);
@@ -480,8 +468,7 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   }, [hardnessUnitOptions]);
 
   // ------ EFFET PRINCIPAL DE CHARGEMENT ------
-  
-  useEffect(() => {
+    useEffect(() => {
     // Éviter les mises à jour d'état après démontage du composant
     let isMounted = true;
     
@@ -492,38 +479,45 @@ const useOptionsFetcher = (setLoading, options = {}) => {
         // Indiquer que le chargement commence
         if (setLoading) setLoading(true);
         
+        // Batch toutes les requêtes nécessaires pour éviter les appels multiples
+        const fetchPromises = [];
+        
         // Déterminons quelles options doivent être chargées
         // Par défaut, toutes les options sont chargées sauf si explicitement désactivées
         
         // Clients
         if (options.fetchClientOptions !== false) {
-          await refreshClientOptions();
+          fetchPromises.push(refreshClientOptions());
         }
         
         // Aciers
         if (options.fetchSteelOptions !== false) {
-          await refreshSteelOptions();
+          fetchPromises.push(refreshSteelOptions());
         }
         
         // Pièces (Désignations)
         if (options.fetchPartOptions !== false) {
-          await fetchDesignationOptions();
+          fetchPromises.push(fetchDesignationOptions());
         }
         
         // Tests
         if (options.fetchTestOptions !== false) {
-          await refreshTestOptions();
+          fetchPromises.push(refreshTestOptions());
         }
         
         // Fours
         if (options.fetchFurnaceOptions !== false) {
-          await refreshFurnaceOptions();
+          fetchPromises.push(refreshFurnaceOptions());
         }
         
         // Unités (presque toujours nécessaires)
         if (options.fetchUnitOptions !== false) {
-          await fetchUnitOptions();
+          fetchPromises.push(fetchUnitOptions());
         }
+        
+        // Exécuter toutes les promesses en parallèle pour optimiser les performances
+        await Promise.all(fetchPromises);
+        
       } catch (error) {
         console.error('Erreur générale lors du chargement des options:', error);
       } finally {
@@ -539,8 +533,7 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     // Nettoyage pour éviter les mises à jour sur les composants démontés
     return () => {
       isMounted = false;
-    };
-  }, [
+    };  }, [
     setLoading,
     refreshClientOptions,
     refreshSteelOptions,
@@ -549,8 +542,12 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     refreshFurnaceOptions,
     fetchUnitOptions,
     refreshCounter,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    JSON.stringify(options) // Option simplifiée pour comparer les options
+    options?.fetchClientOptions,
+    options?.fetchSteelOptions,
+    options?.fetchPartOptions,
+    options?.fetchTestOptions,
+    options?.fetchFurnaceOptions,
+    options?.fetchUnitOptions
   ]);
 
   // ------ OBJET RETOURNÉ AVEC TOUTES LES OPTIONS ET FONCTIONS ------

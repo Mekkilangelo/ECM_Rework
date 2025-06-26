@@ -948,12 +948,12 @@
     "responseMessage": "Files retrieval response",
     "import": "Import {{name}}"
   },
-
   "report": {
     "title": "Test Report",
     "actions": {
       "preview": "Preview",
-      "downloadPdf": "PDF"
+      "downloadPdf": "PDF",
+      "pdfFromPreview": "Use preview to generate PDF"
     },
     "sections": {
       "title": "Report Sections",

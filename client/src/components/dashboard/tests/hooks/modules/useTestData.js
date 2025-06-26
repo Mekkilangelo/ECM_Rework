@@ -36,18 +36,15 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
         try {
           // Récupération des données du test avec la méthode refactorisée
           const testData = await testService.getTest(test.id);
-          
-          // Check if data is in the Test property or directly in testData
+            // Check if data is in the Test property or directly in testData
           const data = testData.Test || testData;
-          
-          console.log('Raw test data from API:', data);
           
           // Parse JSON strings if necessary
           const furnaceData = typeof data.furnace_data === 'string' 
             ? JSON.parse(data.furnace_data) 
             : (data.furnace_data || {});
             
-          const loadData = typeof data.load_data === 'string' 
+          const loadData = typeof data.load_data === 'string'
             ? JSON.parse(data.load_data) 
             : (data.load_data || {});
             
@@ -71,12 +68,10 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             furnaceData, 
             loadData, 
             recipeData, 
-            quenchData, 
-            resultsData 
+            quenchData,            resultsData 
           });
           
-          console.log('Raw results_data structure:', resultsData);
-          console.log('Results array:', resultsData?.results);// Map from API structure to form structure
+          // Map from API structure to form structure
           setFormData({
             // Basic information
             name: data.test_code || '',
@@ -306,18 +301,15 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                           }
                           
                           // Si aucun point n'existe, créer au moins un point vide
-                          if (ecdData.ecdPoints.length === 0) {
-                            ecdData.ecdPoints.push({
+                          if (ecdData.ecdPoints.length === 0) {                            ecdData.ecdPoints.push({
                               name: '',
                               distance: '',
                               unit: ''
                             });
                           }
-                            console.log('Processing sample:', sample);
-                          console.log('Sample curve_data:', sample.curve_data);
                           
                           // Traiter les données de courbe avec prise en compte des positions dynamiques
-                          const curvePoints = Array.isArray(sample.curve_data?.points) 
+                          const curvePoints = Array.isArray(sample.curve_data?.points)
                             ? sample.curve_data.points.map(point => {
                                 // Créer un objet de base avec la distance
                                 const curvePoint = {
@@ -344,11 +336,8 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                                 // Conserver l'ancien format pour la rétrocompatibilité
                                 curvePoint.flankHardness = point.flank_hardness || '';
                                 curvePoint.rootHardness = point.root_hardness || '';
-                                
-                                return curvePoint;                              })
+                                  return curvePoint;                              })
                             : [];
-                            
-                          console.log('Processed curve points:', curvePoints);
                             
                           return {
                             step: sample.step || 1,
@@ -397,10 +386,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                       comment: ''
                     }]
                   }]
-            }          });
-          
-          console.log('FormData set successfully');
-          
+            }          });          
         } catch (error) {
           console.error('Error while fetching test details:', error);
           console.error('Error details:', error.response?.data || error.message);

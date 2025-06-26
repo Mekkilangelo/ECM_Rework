@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 
@@ -15,18 +15,24 @@ const useExcelImport = (
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   
-  // Créer des refs pour chaque ResultCurveSection
-  const [curveSectionRefs, setCurveSectionRefs] = useState({});
+  // Utiliser useRef pour stocker les refs sans causer de re-rendus
+  const curveSectionRefsRef = useRef({});
 
   // Obtenir ou créer une ref pour un ResultCurveSection spécifique
-  const getCurveSectionRef = (resultIndex, sampleIndex) => {
+  const getCurveSectionRef = useCallback((resultIndex, sampleIndex) => {
     const key = `${resultIndex}-${sampleIndex}`;
-    if (!curveSectionRefs[key]) {
-      curveSectionRefs[key] = React.createRef();
-      setCurveSectionRefs({...curveSectionRefs, [key]: curveSectionRefs[key]});
+    
+    // Si la ref existe déjà, la retourner
+    if (curveSectionRefsRef.current[key]) {
+      return curveSectionRefsRef.current[key];
     }
-    return curveSectionRefs[key];
-  };
+    
+    // Créer une nouvelle ref et la stocker
+    const newRef = React.createRef();
+    curveSectionRefsRef.current[key] = newRef;
+    
+    return newRef;
+  }, []); // Pas de dépendances pour éviter les re-créations
 
   // Fonction pour traiter l'import Excel
   const handleExcelImport = (event, resultIndex, sampleIndex) => {

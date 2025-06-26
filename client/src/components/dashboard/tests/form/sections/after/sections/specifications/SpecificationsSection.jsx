@@ -17,9 +17,10 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
       }      try {
         setLoading(true);
         const response = await testService.getTestSpecs(testNodeId, parentId);
-        
-        // Log la réponse pour le débogage
-        console.log('Réponse du service getTestSpecs:', response);
+          // Log la réponse pour le débogage (development only)
+        if (process.env.NODE_ENV === 'development') {
+          // Réponse du service getTestSpecs reçue
+        }
           // Vérifiez si la réponse a la structure attendue
         // Si response est un objet avec la propriété 'specifications'
         if (response && response.specifications) {

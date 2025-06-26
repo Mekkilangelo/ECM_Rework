@@ -956,12 +956,12 @@
     "responseMessage": "Réponse de récupération des fichiers",
     "import": "Importer {{name}}"
   },
-
   "report": {
     "title": "Rapport d'essai",
     "actions": {
       "preview": "Prévisualiser",
-      "downloadPdf": "PDF"
+      "downloadPdf": "PDF",
+      "pdfFromPreview": "Utilisez la prévisualisation pour générer le PDF"
     },
     "sections": {
       "title": "Sections du rapport",

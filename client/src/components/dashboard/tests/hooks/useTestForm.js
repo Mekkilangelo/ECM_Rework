@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigation } from '../../../../context/NavigationContext';
 import useFormState from './modules/useFormState';
 import useTestHandlers from './modules/useTestHandlers';
@@ -33,9 +33,8 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
 
   // State for fetching test
   const [fetchingTest, setFetchingTest] = useState(false);
-
-  // Utiliser useRef pour éviter la recréation des options à chaque rendu
-  const optionsConfig = useRef({
+  // Configuration stable pour les options (éviter les re-renders)
+  const optionsConfig = useMemo(() => ({
     // Activer uniquement les options nécessaires pour les tests
     fetchClientOptions: false,
     fetchSteelOptions: false,
@@ -43,7 +42,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     fetchTestOptions: true,      // Activer les options de test
     fetchFurnaceOptions: true,   // Activer les options de four
     fetchUnitOptions: true       // Activer les options d'unité
-  }).current;
+  }), []);
 
   // Load test data in edit mode
   useTestData(

@@ -5,7 +5,7 @@ import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 
-const AfterTabContent = ({ 
+const AfterTabContent = React.memo(({ 
   formData, 
   errors, 
   loading, 
@@ -76,9 +76,10 @@ const AfterTabContent = ({
           // Passer les fonctions d'import Excel
           excelImportHandlers={excelImportHandlers}
         />
-      </CollapsibleSection>
-    </>
+      </CollapsibleSection>    </>
   );
-};
+});
+
+AfterTabContent.displayName = 'AfterTabContent';
 
 export default AfterTabContent;

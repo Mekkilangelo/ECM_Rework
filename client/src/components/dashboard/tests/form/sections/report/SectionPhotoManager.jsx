@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faImage, faTimes, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -15,14 +15,24 @@ const SectionPhotoManager = ({
   show = false
 }) => {
   const { t } = useTranslation();
+  const abortControllerRef = useRef(null);
   
   // États
   const [availablePhotos, setAvailablePhotos] = useState({});
   const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
   const [photoOrder, setPhotoOrder] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [expandedSections, setExpandedSections] = useState({});
+  const [error, setError] = useState(null);  const [expandedSections, setExpandedSections] = useState({});
+  
+  // Cleanup lors du démontage
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+  
   // Configuration des sections avec i18n
   const getSectionConfig = () => {
     // Fonction helper pour les traductions avec fallback
@@ -138,7 +148,9 @@ const SectionPhotoManager = ({
       }
     };
 
-    console.log(`Recherche optimisée de micrographies pour le node ${nodeId}...`);
+    if (process.env.NODE_ENV === 'development') {
+      // Recherche optimisée de micrographies
+    }
 
     // Approche optimisée : une seule passe avec traitement en parallèle
     const promises = [];
@@ -178,34 +190,65 @@ const SectionPhotoManager = ({
           promises.push(promise);
         }
       }
+    }    if (process.env.NODE_ENV === 'development') {
+      // Lancement des requêtes en parallèle
     }
-      console.log(`Lancement de ${promises.length} requêtes en parallèle...`);
+    
+    // Annuler les requêtes précédentes si elles existent
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Créer un nouveau contrôleur d'annulation
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
     
     // Exécuter les promesses par lots pour éviter de surcharger le serveur
-    const batchSize = 20; // Traiter 20 requêtes à la fois
+    const batchSize = 10; // Réduit de 20 à 10 pour moins de charge
     const allResults = [];
     
-    for (let i = 0; i < promises.length; i += batchSize) {
-      const batch = promises.slice(i, i + batchSize);
-      console.log(`Traitement du lot ${Math.floor(i/batchSize) + 1}/${Math.ceil(promises.length/batchSize)} (${batch.length} requêtes)...`);
-      
-      const batchResults = await Promise.all(batch);
-      allResults.push(...batchResults);
-      
-      // Petite pause entre les lots pour éviter de surcharger le serveur
-      if (i + batchSize < promises.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+      for (let i = 0; i < promises.length; i += batchSize) {
+        // Vérifier si l'opération a été annulée
+        if (signal.aborted) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Opération de chargement des photos annulée');
+          }
+          return;
+        }
+        
+        const batch = promises.slice(i, i + batchSize);
+        if (process.env.NODE_ENV === 'development') {
+          // Traitement en lots pour éviter la surcharge
+        }
+        
+        const batchResults = await Promise.all(batch);
+        allResults.push(...batchResults);
+        
+        // Pause plus longue entre les lots pour réduire la charge
+        if (i + batchSize < promises.length) {
+          await new Promise(resolve => setTimeout(resolve, 200)); // Augmenté de 100ms à 200ms
+        }
       }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Requêtes de photos annulées');
+        }
+        return;
+      }
+      throw error;
     }
     
     // Filtrer les résultats valides et les ajouter aux sources
     const validSources = allResults.filter(result => result !== null);
     sources.push(...validSources);
+      if (process.env.NODE_ENV === 'development') {
+      // Génération terminée avec succès
+    }
     
-    console.log(`Génération terminée: ${sources.length} sources trouvées en une seule passe`);
-    
-    // Afficher un résumé des résultats et échantillons trouvés
-    if (sources.length > 0) {
+    // Afficher un résumé des résultats et échantillons trouvés (development only)
+    if (process.env.NODE_ENV === 'development' && sources.length > 0) {
       const foundCombinations = new Set(sources.map(s => s.category));
       const combinationsList = Array.from(foundCombinations).sort();
       console.log(`Combinaisons résultat/échantillon avec photos (${combinationsList.length}):`, combinationsList);
@@ -309,11 +352,20 @@ const SectionPhotoManager = ({
       }
       
       let sources = config.sources;
-      
-      // Si c'est une section dynamique (comme micrography), générer les sources
+        // Si c'est une section dynamique (comme micrography), générer les sources
       if (config.isDynamic && sectionType === 'micrography') {
         sources = await generateMicrographySources(nodeId, config);
-        console.log(`Sources dynamiques générées pour micrography:`, sources);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Sources dynamiques générées pour micrography:`, sources);
+        }
+      }
+
+      // Vérifier que sources est toujours valide après annulation potentielle
+      if (!sources || !Array.isArray(sources)) {
+        console.warn(`Sources non valides après génération dynamique pour ${sectionType}:`, sources);
+        setAvailablePhotos({});
+        setLoading(false);
+        return;
       }
       
       const organizedPhotos = {};
@@ -412,15 +464,16 @@ const SectionPhotoManager = ({
             // Pour la section curves, organiser par sous-catégorie réelle
             if (sectionType === 'curves') {
               const realSubcategory = photo.sourceSubcategory || photo.subcategory || subgroupKey;
-              
-              console.log(`Photo ${photo.id} (${photo.name}):`, {
-                sourceSubcategory: photo.sourceSubcategory,
-                subcategory: photo.subcategory,
-                subgroupKey: subgroupKey,
-                realSubcategory: realSubcategory,
-                category: photo.category,
-                sourceCategory: photo.sourceCategory
-              });
+                if (process.env.NODE_ENV === 'development') {
+                console.log(`Photo ${photo.id} (${photo.name}):`, {
+                  sourceSubcategory: photo.sourceSubcategory,
+                  subcategory: photo.subcategory,
+                  subgroupKey: subgroupKey,
+                  realSubcategory: realSubcategory,
+                  category: photo.category,
+                  sourceCategory: photo.sourceCategory
+                });
+              }
               
               // Mapper vers nos catégories attendues
               let targetCategory = realSubcategory;
@@ -459,7 +512,9 @@ const SectionPhotoManager = ({
       });
     });
     
-    console.log("Organized selected photos with metadata:", organized);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Organized selected photos with metadata:", organized);
+    }
     return organized;
   };
 
@@ -893,8 +948,7 @@ const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t 
               }}>                {selectedPhotoIds.includes(photo.id) ? (
                   <span style={{ color: 'white' }}>
                     {photoOrder[photo.id]}
-                  </span>
-                ) : (
+                  </span>                ) : (
                   <span style={{ color: '#999', fontSize: '16px', fontWeight: 'bold' }}>+</span>
                 )}
               </div>
@@ -919,8 +973,7 @@ const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t 
               </div>
             </Card.Body>
           </Card>
-        </Col>
-      ))}
+        </Col>      ))}
     </Row>
   );
 };

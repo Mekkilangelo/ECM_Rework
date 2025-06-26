@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import Chart from 'chart.js/auto';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-bootstrap';
 
-const RecipePreviewChart = ({ formData }) => {
+const RecipePreviewChart = React.memo(({ formData }) => {
   const { t } = useTranslation();
   const [chartData, setChartData] = useState(null);
   const [error, setError] = useState(null);
@@ -22,47 +22,68 @@ const RecipePreviewChart = ({ formData }) => {
     return colors[gas] || colors.default;
   };
 
-  // Fonction pour générer les données du graphique avec useCallback pour éviter les re-rendus inutiles
-  const generateChartData = useCallback(() => {
+  // Memoization des données pertinentes pour éviter les re-calculs inutiles
+  const relevantRecipeData = useMemo(() => {
+    if (!formData?.recipeData) return null;
+    
+    return {
+      thermalCycle: formData.recipeData.thermalCycle,
+      chemicalCycle: formData.recipeData.chemicalCycle,
+      cellTemp: formData.recipeData.cellTemp,
+      waitTime: formData.recipeData.waitTime,
+      waitTimeUnit: formData.recipeData.waitTimeUnit,
+      selectedGas1: formData.recipeData.selectedGas1,
+      selectedGas2: formData.recipeData.selectedGas2,
+      selectedGas3: formData.recipeData.selectedGas3
+    };
+  }, [
+    formData?.recipeData?.thermalCycle,
+    formData?.recipeData?.chemicalCycle,
+    formData?.recipeData?.cellTemp,
+    formData?.recipeData?.waitTime,
+    formData?.recipeData?.waitTimeUnit,
+    formData?.recipeData?.selectedGas1,
+    formData?.recipeData?.selectedGas2,
+    formData?.recipeData?.selectedGas3
+  ]);  const generateChartData = useCallback(() => {
     try {
       // Vérification des données disponibles
-      if (!formData || !formData.recipeData) {
+      if (!relevantRecipeData) {
         setError("Aucune donnée de recette disponible.");
         return;
       }
 
       // Convertir les données du formulaire au format attendu par le graphique
-      const thermalCycle = formData.recipeData.thermalCycle ? 
-        formData.recipeData.thermalCycle.map(cycle => ({
+      const thermalCycle = relevantRecipeData.thermalCycle ? 
+        relevantRecipeData.thermalCycle.map(cycle => ({
           step: cycle.step,
           ramp: cycle.ramp,
           setpoint: cycle.setpoint,
           duration: cycle.duration
         })) : [];
 
-      const chemicalCycle = formData.recipeData.chemicalCycle ? 
-        formData.recipeData.chemicalCycle.map(cycle => {
+      const chemicalCycle = relevantRecipeData.chemicalCycle ? 
+        relevantRecipeData.chemicalCycle.map(cycle => {
           const gases = [];
           
-          if (formData.recipeData.selectedGas1 && cycle.debit1) {
+          if (relevantRecipeData.selectedGas1 && cycle.debit1) {
             gases.push({
-              gas: formData.recipeData.selectedGas1,
+              gas: relevantRecipeData.selectedGas1,
               debit: cycle.debit1,
               index: 1
             });
-          }
-          
-          if (formData.recipeData.selectedGas2 && cycle.debit2) {
+          }          
+          if (relevantRecipeData.selectedGas2 && cycle.debit2) {
             gases.push({
-              gas: formData.recipeData.selectedGas2,
+              gas: relevantRecipeData.selectedGas2,
               debit: cycle.debit2,
               index: 2
             });
           }
           
-          if (formData.recipeData.selectedGas3 && cycle.debit3) {
+          if (relevantRecipeData.selectedGas3 && cycle.debit3) {
             gases.push({
-              gas: formData.recipeData.selectedGas3,
+              gas: relevantRecipeData.selectedGas3,
               debit: cycle.debit3,
               index: 3
             });
@@ -87,13 +108,12 @@ const RecipePreviewChart = ({ formData }) => {
       
       // Points pour la courbe de température
       let temperaturePoints = [];
-      
-      // La température commence à la température cellule, pas à zéro
-      const cellTemp = parseInt(formData.recipeData.cellTemp) || 20;
+        // La température commence à la température cellule, pas à zéro
+      const cellTemp = parseInt(relevantRecipeData.cellTemp) || 20;
       
       // Temps d'attente avant le cycle thermique (en minutes)
-      const waitTime = parseInt(formData.recipeData.waitTime) || 0;
-      const waitTimeInMinutes = formData.recipeData.waitTimeUnit === 'min' 
+      const waitTime = parseInt(relevantRecipeData.waitTime) || 0;
+      const waitTimeInMinutes = relevantRecipeData.waitTimeUnit === 'min'
         ? waitTime 
         : waitTime / 60;
       
@@ -153,12 +173,11 @@ const RecipePreviewChart = ({ formData }) => {
       
       // Construire les courbes de débit de gaz
       const gasDatasets = {};
-      
-      // Initialiser les datasets pour chaque gaz potentiellement utilisé
+        // Initialiser les datasets pour chaque gaz potentiellement utilisé
       const gasTypes = [
-        formData.recipeData.selectedGas1, 
-        formData.recipeData.selectedGas2, 
-        formData.recipeData.selectedGas3
+        relevantRecipeData.selectedGas1, 
+        relevantRecipeData.selectedGas2, 
+        relevantRecipeData.selectedGas3
       ].filter(Boolean);
       
       // Parcourir le cycle chimique et créer des segments horizontaux pour chaque gaz
@@ -235,12 +254,11 @@ const RecipePreviewChart = ({ formData }) => {
       
       setChartData({
         datasets
-      });
-    } catch (err) {
+      });    } catch (err) {
       console.error("Erreur lors de la génération du graphique:", err);
       setError("Une erreur est survenue lors de la génération du graphique. Vérifiez vos données.");
     }
-  }, [formData]);
+  }, [relevantRecipeData]);
 
   // Options pour le graphique - ajustement des échelles
   const chartOptions = {
@@ -269,7 +287,7 @@ const RecipePreviewChart = ({ formData }) => {
           text: 'Température (°C)'
         },
         min: 0,
-        suggestedMax: parseInt(formData.recipeData?.cellTemp || 0) * 1.1 || 1000,
+        suggestedMax: parseInt(relevantRecipeData?.cellTemp || 0) * 1.1 || 1000,
         grid: {
           color: 'rgba(220, 53, 69, 0.1)'
         },
@@ -346,23 +364,10 @@ const RecipePreviewChart = ({ formData }) => {
         }
       }
     }
-  };
-
-  // Utilisation de JSON.stringify pour détecter les changements dans les objets formData profondément imbriqués
+  };  // Optimized useEffect - only regenerate when relevant recipe data changes
   useEffect(() => {
-    console.log("FormData changed, regenerating chart...");
     generateChartData();
-  }, [
-    generateChartData,
-    JSON.stringify(formData?.recipeData?.thermalCycle),
-    JSON.stringify(formData?.recipeData?.chemicalCycle),
-    formData?.recipeData?.cellTemp,
-    formData?.recipeData?.waitTime,
-    formData?.recipeData?.waitTimeUnit,
-    formData?.recipeData?.selectedGas1,
-    formData?.recipeData?.selectedGas2,
-    formData?.recipeData?.selectedGas3
-  ]);
+  }, [generateChartData]);
 
   return (
     <div>
@@ -388,9 +393,30 @@ const RecipePreviewChart = ({ formData }) => {
             {error || "Remplissez les cycles thermique et chimique pour voir la prévisualisation du graphique"}
           </div>
         )}
-      </div>
-    </div>
+      </div>    </div>
+  );
+});
+
+// Fonction de comparaison personnalisée pour React.memo
+const arePropsEqual = (prevProps, nextProps) => {
+  // Comparer seulement les données de recette pertinentes
+  const prevRecipe = prevProps.formData?.recipeData;
+  const nextRecipe = nextProps.formData?.recipeData;
+  
+  if (!prevRecipe && !nextRecipe) return true;
+  if (!prevRecipe || !nextRecipe) return false;
+  
+  // Comparer les propriétés pertinentes pour le graphique
+  return (
+    prevRecipe.thermalCycle === nextRecipe.thermalCycle &&
+    prevRecipe.chemicalCycle === nextRecipe.chemicalCycle &&
+    prevRecipe.cellTemp === nextRecipe.cellTemp &&
+    prevRecipe.waitTime === nextRecipe.waitTime &&
+    prevRecipe.waitTimeUnit === nextRecipe.waitTimeUnit &&
+    prevRecipe.selectedGas1 === nextRecipe.selectedGas1 &&
+    prevRecipe.selectedGas2 === nextRecipe.selectedGas2 &&
+    prevRecipe.selectedGas3 === nextRecipe.selectedGas3
   );
 };
 
-export default RecipePreviewChart;
+export default React.memo(RecipePreviewChart, arePropsEqual);

@@ -56,38 +56,52 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
     }
     
     return cleanTechnicalProperties(data);
-  }, []);
-  
-  // Fonction pour nettoyer les propriétés techniques qui ne doivent pas être comparées
-  const cleanTechnicalProperties = useCallback((data) => {
+  }, []);    // Fonction pour nettoyer les propriétés techniques qui ne doivent pas être comparées
+  const cleanTechnicalProperties = useCallback((data, visited = new Set(), depth = 0) => {
     if (!data || typeof data !== 'object') return data;
     
+    // Limiter la profondeur de récursion pour éviter les débordements de pile
+    if (depth > 10) {
+      return '[Max Depth Reached]';
+    }
+    
+    // Éviter les références circulaires
+    if (visited.has(data)) {
+      return '[Circular Reference]';
+    }
+    visited.add(data);
+    
     const cleaned = {};
-    for (const [key, value] of Object.entries(data)) {
-      // Ignorer les propriétés techniques
-      if (key.startsWith('_') || 
-          key === 'id' || 
-          key === 'createdAt' || 
-          key === 'updatedAt' ||
-          key === 'created_at' || 
-          key === 'updated_at' ||
-          key === 'modified_at' ||
-          key === 'node_id') {
-        continue;
+    try {
+      for (const [key, value] of Object.entries(data)) {
+        // Ignorer les propriétés techniques
+        if (key.startsWith('_') || 
+            key === 'id' || 
+            key === 'createdAt' || 
+            key === 'updatedAt' ||
+            key === 'created_at' || 
+            key === 'updated_at' ||
+            key === 'modified_at' ||
+            key === 'node_id') {
+          continue;
+        }
+        
+        // Traitement récursif pour les objets et tableaux
+        if (Array.isArray(value)) {
+          cleaned[key] = value.map(item => 
+            typeof item === 'object' && item !== null 
+              ? cleanTechnicalProperties(item, new Set(visited), depth + 1)              : item
+          );        } else if (typeof value === 'object' && value !== null) {
+          cleaned[key] = cleanTechnicalProperties(value, new Set(visited), depth + 1);
+        } else {
+          cleaned[key] = value;
+        }
       }
-      
-      // Traitement récursif pour les objets et tableaux
-      if (Array.isArray(value)) {
-        cleaned[key] = value.map(item => 
-          typeof item === 'object' && item !== null 
-            ? cleanTechnicalProperties(item) 
-            : item
-        );
-      } else if (typeof value === 'object' && value !== null) {
-        cleaned[key] = cleanTechnicalProperties(value);
-      } else {
-        cleaned[key] = value;
-      }
+    } catch (error) {
+      console.error('Error in cleanTechnicalProperties:', error);
+      return data; // Retourner les données originales en cas d'erreur
+    } finally {
+      visited.delete(data);
     }
     
     return cleaned;

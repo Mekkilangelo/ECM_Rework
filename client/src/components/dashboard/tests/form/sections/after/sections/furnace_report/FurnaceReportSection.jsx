@@ -38,7 +38,9 @@ const FurnaceReportSection = ({
     const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(testNodeId, { category: 'furnace_report' });
-      console.log(t('tests.after.furnaceReport.filesResponse'), response.data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(t('tests.after.furnaceReport.filesResponse'), response.data);
+      }
       
       // Vérifier que la requête a réussi
       if (!response.data || response.data.success === false) {

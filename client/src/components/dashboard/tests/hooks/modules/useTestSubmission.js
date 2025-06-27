@@ -321,7 +321,7 @@ const useTestSubmission = (
       results: formData.resultsData.results.map(result => {
         // Formatage des échantillons
         const samples = result.samples && result.samples.length > 0 ? 
-          result.samples.map(sample => {
+          result.samples.map((sample, sampleIdx) => {
             // Formatage des points de dureté
             const hardnessPoints = sample.hardnessPoints?.length > 0 && 
               sample.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
@@ -344,40 +344,25 @@ const useTestSubmission = (
             } : null;
             
             // Formatage des données de courbe
+            // Correction : toujours prendre la donnée depuis sample.curveData (camelCase) et la mapper vers curve_data (snake_case)
             const curveData = sample.curveData && sample.curveData.points && sample.curveData.points.length > 0 ? {
               points: sample.curveData.points.map(point => {
-                // Structure de base avec la distance
-                const formattedPoint = {
-                  distance: point.distance || null
-                };
-                
-                // Ajouter les valeurs des positions ECD dynamiques si elles existent
-                if (sample.ecd && Array.isArray(sample.ecd.ecdPoints)) {
-                  sample.ecd.ecdPoints.forEach(ecdPosition => {
-                    if (ecdPosition.name) {
-                      // Convertir le nom de position en clé valide pour l'API (snake_case)
-                      const positionKey = ecdPosition.name.toLowerCase().replace(/\s+/g, '_');
-                      // Récupérer la valeur depuis le point de la courbe
-                      const fieldName = `hardness_${positionKey}`;
-                      formattedPoint[positionKey] = point[fieldName] || null;
-                    }
-                  });
-                }
-                
-                // Conserver les champs historiques pour la compatibilité
-                formattedPoint.flank_hardness = point.flankHardness || null;
-                formattedPoint.root_hardness = point.rootHardness || null;
-                
+                const formattedPoint = { distance: point.distance || null };
+                Object.keys(point).forEach(key => {
+                  if (key !== 'distance') formattedPoint[key] = point[key];
+                });
                 return formattedPoint;
               })
             } : null;
-            
+            // DEBUG LOG pour visualiser la donnée courbe importée et mappée
+            console.log(`[DEBUG][Result ${result.step}][Sample ${sample.step}] sample.curveData:`, sample.curveData);
+            console.log(`[DEBUG][Result ${result.step}][Sample ${sample.step}] mapped curve_data:`, curveData);
             return {
               step: sample.step,
               description: sample.description || null,
               hardness_points: hardnessPoints,
               ecd: ecdData,
-              curve_data: curveData
+              curve_data: curveData // snake_case pour l'API
             };
           }) : null;        return {
           step: result.step,
@@ -426,13 +411,24 @@ const useTestSubmission = (
     if (e) {
       e.preventDefault();
     }
-    
+
+    // AVANT DE CONTINUER :
+    // Si tu utilises des refs sur ResultCurveSection, appelle ici flushCurveDataToParent() sur chaque ref !
+    // Exemple :
+    // if (curveSectionRefs) {
+    //   curveSectionRefs.forEach(ref => ref.current && ref.current.flushCurveDataToParent && ref.current.flushCurveDataToParent());
+    // }
+    // Cela garantit que les données locales sont bien propagées dans formData avant la soumission.
+
     // Empêcher les soumissions multiples
     if (loading) return;
     
     // Valider le formulaire
     const validationResults = validate(formData);
-    
+
+    // DEBUG: Afficher la structure complète de formData juste avant soumission
+    console.log('[DEBUG][handleSubmit] formData juste avant soumission:', JSON.parse(JSON.stringify(formData)));
+
     if (!validationResults.isValid) {
       console.log("Validation errors:", validationResults.errors);
       return;

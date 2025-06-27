@@ -38,7 +38,7 @@ class PerformanceMonitor {
     
     // Alerter si trop de re-renders
     if (count > 10) {
-      console.warn(`🔄 Render Warning: ${componentName} has rendered ${count} times. Check for unnecessary re-renders.`);
+      // console.warn(`🔄 Render Warning: ${componentName} has rendered ${count} times. Check for unnecessary re-renders.`);
     }
   }
 

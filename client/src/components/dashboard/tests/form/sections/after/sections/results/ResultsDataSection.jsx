@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Row, Col, Button, Table } from 'react-bootstrap';
 import Select from 'react-select';
@@ -9,7 +9,7 @@ import ResultCurveSection from './modules/ResultCurveSection';
 import ControlLocationSection from './modules/ControlLocationSection';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
 
-const ResultsDataSection = ({
+const ResultsDataSection = forwardRef(({
   formData,
   parentId,
   handleChange,
@@ -32,17 +32,20 @@ const ResultsDataSection = ({
   handleFileAssociationNeeded,
   viewMode = false,
   readOnlyFieldStyle = {},
-  excelImportHandlers = {}
-}) => {
+  excelImportHandlers = {},
+  // Ajout : ref pour la soumission globale (optionnel)
+  onFlushAllCurves = null
+}, ref) => {
   const { t } = useTranslation();
+  // Créer un tableau de refs pour toutes les sections courbe (résultat/échantillon)
+  const curveSectionRefs = useRef([]);
   
-  // Créer une ref par défaut au niveau du composant
+  // Define a default file input ref if not provided
   const defaultFileInputRef = useRef(null);
-  
+
   // Utiliser les fonctions d'import Excel passées en props ou créer des valeurs par défaut
   const {
     fileInputRef = defaultFileInputRef,
-    getCurveSectionRef = () => null,
     handleExcelImport = () => {},
     processExcelData = () => {},
     handleEcdChange = () => {},
@@ -76,6 +79,27 @@ const ResultsDataSection = ({
   };
   // S'assurer que le tableau de résultats existe
   const results = formData.resultsData?.results || [];
+
+  // Helper pour fournir la ref à chaque ResultCurveSection
+  const getCurveSectionRef = (resultIndex, sampleIndex) => (el) => {
+    if (!curveSectionRefs.current) curveSectionRefs.current = [];
+    curveSectionRefs.current[`${resultIndex}-${sampleIndex}`] = el;
+  };
+
+  // Ajout d'une méthode pour flusher toutes les courbes (à utiliser avant la soumission)
+  const flushAllCurves = () => {
+    if (curveSectionRefs.current) {
+      Object.values(curveSectionRefs.current).forEach(ref => {
+        if (ref && ref.flushCurveDataToParent) ref.flushCurveDataToParent();
+      });
+    }
+    if (onFlushAllCurves) onFlushAllCurves();
+  };
+
+  // Expose flushAllCurves via ref
+  useImperativeHandle(ref, () => ({
+    flushAllCurves
+  }));
 
   return (
     <div>
@@ -434,7 +458,8 @@ const ResultsDataSection = ({
                   rememberState={true}
                   level={2}
                   className="mb-3"
-                >                  <ResultCurveSection
+                >
+                  <ResultCurveSection
                     ref={getCurveSectionRef(resultIndex, sampleIndex)}
                     result={sample}
                     resultIndex={resultIndex}
@@ -489,8 +514,10 @@ const ResultsDataSection = ({
           </div>
         </CollapsibleSection>
       ))}
+      {/* Exposer la méthode flushAllCurves pour le parent (ex: bouton de soumission) */}
+      <input type="hidden" data-flush-all-curves-trigger onClick={flushAllCurves} />
     </div>
   );
-};
+});
 
 export default ResultsDataSection;

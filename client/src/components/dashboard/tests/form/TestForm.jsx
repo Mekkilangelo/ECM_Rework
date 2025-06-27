@@ -1,4 +1,4 @@
-import React, { useState, useCallback, forwardRef, useEffect, useImperativeHandle } from 'react';
+import React, { useState, useCallback, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import useTestForm from '../hooks/useTestForm';
@@ -130,6 +130,18 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
 
   // Détermine si nous sommes en mode édition
   const isEditMode = Boolean(test);
+  const afterTabContentRef = useRef();
+
+  // Wrapper for form submit to flush curves before submit
+  const handleFormSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    // Flush all curves before submit
+    if (afterTabContentRef.current && afterTabContentRef.current.flushAllCurves) {
+      await afterTabContentRef.current.flushAllCurves();
+    }
+    // Now call the real handleSubmit
+    handleSubmit(e);
+  };
 
   if (fetchingTest) {
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
@@ -156,7 +168,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
           </div>
         )}
         
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleFormSubmit}>
 
           <CollapsibleSection 
             title={t('tests.sections.basicInfo')}
@@ -199,7 +211,8 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                   readOnlyFieldStyle={readOnlyFieldStyle}
                 />
               </Tab>              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
-                <AfterTabContent 
+                <AfterTabContent
+                  ref={afterTabContentRef}
                   formData={formData}
                   errors={errors}
                   loading={loading}

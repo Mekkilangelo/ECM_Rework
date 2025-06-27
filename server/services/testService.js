@@ -368,6 +368,33 @@ const updateTest = async (testId, testData) => {
     for (const field of testFields) {
       if (testData[field] !== undefined) {
         testUpdates[field] = testData[field];
+        
+        // Debug : tracer les mises à jour de results_data
+        if (field === 'results_data' && process.env.NODE_ENV === 'development') {
+          console.log('=== DEBUG SERVICE - RESULTS DATA UPDATE ===');
+          console.log('Field:', field);
+          console.log('Type of data:', typeof testData[field]);
+          
+          if (testData[field] && testData[field].results) {
+            console.log('Number of results:', testData[field].results.length);
+            
+            testData[field].results.forEach((result, resultIndex) => {
+              if (result.samples) {
+                result.samples.forEach((sample, sampleIndex) => {
+                  if (sample.curveData) {
+                    console.log(`Result ${resultIndex}, Sample ${sampleIndex} - CurveData found:`, {
+                      hasPoints: !!sample.curveData.points,
+                      pointsCount: sample.curveData.points ? sample.curveData.points.length : 0,
+                      pointsStructure: sample.curveData.points ? sample.curveData.points[0] : 'No points'
+                    });
+                  } else {
+                    console.log(`Result ${resultIndex}, Sample ${sampleIndex} - No curveData found`);
+                  }
+                });
+              }
+            });
+          }
+        }
       }
     }
     

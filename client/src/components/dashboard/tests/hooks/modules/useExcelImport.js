@@ -15,22 +15,24 @@ const useExcelImport = (
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
   
+  // Fonction utilitaire pour normaliser le nom d'une position
+  const normalizePositionName = (positionName) => {
+    return positionName.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
+  };
+  
   // Utiliser useRef pour stocker les refs sans causer de re-rendus
   const curveSectionRefsRef = useRef({});
 
   // Obtenir ou créer une ref pour un ResultCurveSection spécifique
   const getCurveSectionRef = useCallback((resultIndex, sampleIndex) => {
     const key = `${resultIndex}-${sampleIndex}`;
-    
     // Si la ref existe déjà, la retourner
     if (curveSectionRefsRef.current[key]) {
       return curveSectionRefsRef.current[key];
     }
-    
     // Créer une nouvelle ref et la stocker
     const newRef = React.createRef();
     curveSectionRefsRef.current[key] = newRef;
-    
     return newRef;
   }, []); // Pas de dépendances pour éviter les re-créations
 
@@ -339,15 +341,26 @@ const useExcelImport = (
                 }
                 
                 const pointData = globalCurveDataMap.get(roundedDistance);
-                pointData[locationName] = hvalueNum;
+                
+                // Ajouter la valeur avec tous les formats possibles pour compatibilité
+                const normalizedPositionName = normalizePositionName(locationName);
+                const hardnessFieldName = `hardness_${normalizedPositionName}`;
+                const positionKey = locationName.toLowerCase();
+                
+                pointData[normalizedPositionName] = hvalueNum;
+                pointData[hardnessFieldName] = hvalueNum;
+                pointData[positionKey] = hvalueNum;
+                pointData[locationName] = hvalueNum; // Nom exact
                 
                 // Compatibilité avec les noms standards
                 if (locationName.toLowerCase().includes('flank') || locationName.toLowerCase().includes('flanc')) {
                   pointData.flankHardness = hvalueNum;
                   pointData.Flank = hvalueNum;
+                  pointData.flank = hvalueNum;
                 } else if (locationName.toLowerCase().includes('root') || locationName.toLowerCase().includes('pied')) {
                   pointData.rootHardness = hvalueNum;
                   pointData.Root = hvalueNum;
+                  pointData.root = hvalueNum;
                 }
                 
                 console.log(`Point courbe créé/mis à jour: distance=${roundedDistance}, ${locationName}=${hvalueNum}`);
@@ -355,15 +368,26 @@ const useExcelImport = (
                 // Pour les autres filiations normales, ajouter la valeur HVALUE si la distance existe
                 if (globalCurveDataMap.has(roundedDistance)) {
                   const existingPoint = globalCurveDataMap.get(roundedDistance);
-                  existingPoint[locationName] = hvalueNum;
+                  
+                  // Ajouter la valeur avec tous les formats possibles pour compatibilité
+                  const normalizedPositionName = normalizePositionName(locationName);
+                  const hardnessFieldName = `hardness_${normalizedPositionName}`;
+                  const positionKey = locationName.toLowerCase();
+                  
+                  existingPoint[normalizedPositionName] = hvalueNum;
+                  existingPoint[hardnessFieldName] = hvalueNum;
+                  existingPoint[positionKey] = hvalueNum;
+                  existingPoint[locationName] = hvalueNum; // Nom exact
                   
                   // Compatibilité avec les noms standards
                   if (locationName.toLowerCase().includes('flank') || locationName.toLowerCase().includes('flanc')) {
                     existingPoint.flankHardness = hvalueNum;
                     existingPoint.Flank = hvalueNum;
+                    existingPoint.flank = hvalueNum;
                   } else if (locationName.toLowerCase().includes('root') || locationName.toLowerCase().includes('pied')) {
                     existingPoint.rootHardness = hvalueNum;
                     existingPoint.Root = hvalueNum;
+                    existingPoint.root = hvalueNum;
                   }
                   
                   console.log(`Valeur HVALUE ajoutée à point existant: distance=${roundedDistance}, ${locationName}=${hvalueNum}`);
@@ -393,8 +417,23 @@ const useExcelImport = (
         parseFloat(a.distance) - parseFloat(b.distance)
       );
       
-      console.log('ÉTAPE 3 - Données fusionnées à ajouter:', fusedCurveData.slice(0, 3)); // Log des 3 premiers points  
-      console.log('ÉTAPE 3 - Clés disponibles dans les données:', Object.keys(fusedCurveData[0] || {}));
+      // Nettoyer et normaliser les données avant l'ajout
+      // Correction : ne garder que les clés normalisées des positions ECD
+      const ecdPositionNames = nonCoreFilations.map(f => normalizePositionName(dataRows[0][f.locNameIndex]));
+      const cleanedCurveData = fusedCurveData.map(point => {
+        const cleanedPoint = {
+          distance: point.distance
+        };
+        ecdPositionNames.forEach(posName => {
+          if (point[posName] !== undefined && point[posName] !== null && !isNaN(point[posName])) {
+            cleanedPoint[posName] = Number(point[posName]);
+          }
+        });
+        return cleanedPoint;
+      });
+      
+      console.log('ÉTAPE 3 - Données fusionnées à ajouter:', cleanedCurveData.slice(0, 3)); // Log des 3 premiers points  
+      console.log('ÉTAPE 3 - Clés disponibles dans les données:', Object.keys(cleanedCurveData[0] || {}));
       
       // Attendre un délai pour s'assurer que le composant ResultCurveSection est bien monté
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -404,8 +443,8 @@ const useExcelImport = (
       
       if (curveSectionRef && curveSectionRef.current && curveSectionRef.current.addMultipleDataPoints) {
         console.log(`Ajout des points de courbe fusionnés via ResultCurveSection...`);
-        curveSectionRef.current.addMultipleDataPoints(fusedCurveData);
-        console.log(`${fusedCurveData.length} points de courbe fusionnés ajoutés avec succès`);
+        curveSectionRef.current.addMultipleDataPoints(cleanedCurveData);
+        console.log(`${cleanedCurveData.length} points de courbe fusionnés ajoutés avec succès`);
       } else {
         console.warn(`Référence ResultCurveSection non disponible. Tentative alternative...`);
         
@@ -417,8 +456,8 @@ const useExcelImport = (
           currentSampleForCurve.curveData = { points: [] };
         }
         
-        // Remplacer les points existants par les nouveaux points fusionnés
-        currentSampleForCurve.curveData.points = fusedCurveData;
+        // Remplacer les points existants par les nouveaux points fusionnés (structure propre)
+        currentSampleForCurve.curveData.points = cleanedCurveData;
         
         handleChange({
           target: {
@@ -427,7 +466,7 @@ const useExcelImport = (
           }
         });
         
-        console.log(`${fusedCurveData.length} points de courbe fusionnés ajoutés en méthode alternative`);
+        console.log(`${cleanedCurveData.length} points de courbe fusionnés ajoutés en méthode alternative`);
       }
     }
 

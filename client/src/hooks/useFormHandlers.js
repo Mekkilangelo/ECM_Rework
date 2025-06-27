@@ -7,6 +7,18 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     
+    // Debug : tracer les mises à jour des données curve
+    if (process.env.NODE_ENV === 'development' && name && name.includes('curveData')) {
+      console.log('=== DEBUG FORM HANDLERS - CURVE DATA UPDATE ===');
+      console.log('Field name:', name);
+      console.log('Value type:', typeof value);
+      console.log('Value structure:', value);
+      if (value && value.points) {
+        console.log('Number of points:', value.points.length);
+        console.log('First point example:', value.points[0]);
+      }
+    }
+    
     // Gestion des propriétés imbriquées (avec notation par point)
     if (name.includes('.')) {
       const parts = name.split('.');
@@ -24,6 +36,15 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
         
         // Définit la valeur à la propriété finale
         current[parts[parts.length - 1]] = value;
+        
+        // Debug : vérifier que les données curve ont été mises à jour
+        if (process.env.NODE_ENV === 'development' && name && name.includes('curveData')) {
+          console.log('=== VERIFICATION APRES MISE A JOUR ===');
+          console.log('Updated path:', parts.join('.'));
+          console.log('Final value set:', current[parts[parts.length - 1]]);
+          console.log('Full data structure at update point:', newData);
+        }
+        
         return newData;
       });
     } else {

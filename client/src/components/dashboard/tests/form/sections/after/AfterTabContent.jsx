@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import ResultsDataSection from './sections/results/ResultsDataSection';
 import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 
-const AfterTabContent = React.memo(({ 
+const AfterTabContent = forwardRef(({
   formData, 
   errors, 
   loading, 
@@ -15,9 +15,19 @@ const AfterTabContent = React.memo(({
   viewMode = false, 
   readOnlyFieldStyle = {},
   excelImportHandlers = {} 
-}) => {
+}, ref) => {
   const { t } = useTranslation();
-  
+  const resultsDataSectionRef = useRef();
+
+  // Expose flushAllCurves to parent
+  useImperativeHandle(ref, () => ({
+    flushAllCurves: () => {
+      if (resultsDataSectionRef.current && resultsDataSectionRef.current.flushAllCurves) {
+        resultsDataSectionRef.current.flushAllCurves();
+      }
+    }
+  }));
+
   return (
     <>
       <CollapsibleSection
@@ -51,6 +61,7 @@ const AfterTabContent = React.memo(({
         level={0}
       >
         <ResultsDataSection
+          ref={resultsDataSectionRef}
           formData={formData}
           parentId={formHandlers.parentId}
           handleChange={formHandlers.handleChange}
@@ -82,4 +93,4 @@ const AfterTabContent = React.memo(({
 
 AfterTabContent.displayName = 'AfterTabContent';
 
-export default AfterTabContent;
+export default React.memo(AfterTabContent);

@@ -34,6 +34,7 @@ const ResultCurveSection = React.memo(forwardRef(({
   result,
   resultIndex,
   sampleIndex,  // Ajout du sampleIndex
+  curveData, // Nouvelle prop pour les données de courbe directes
   handleChange,
   handleSelectChange,
   getSelectedOption,
@@ -50,6 +51,19 @@ const ResultCurveSection = React.memo(forwardRef(({
   
   // Tracking des re-renders avec le hook existant
   useRenderTracker('ResultCurveSection');
+  
+  // Debug du prop result
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`=== RESULT PROP CHANGE [${resultIndex}-${sampleIndex}] ===`);
+      console.log('result prop:', result);
+      console.log('result.curveData:', result?.curveData);
+      console.log('result.curveData.points length:', result?.curveData?.points?.length || 0);
+      if (result?.curveData?.points?.length > 0) {
+        console.log('First curve point:', result.curveData.points[0]);
+      }
+    }
+  }, [result, resultIndex, sampleIndex]);
   
   // Memoisation des positions ECD pour éviter les recalculs - DOIT ÊTRE DÉCLARÉ EN PREMIER
   const ecdPositions = useMemo(() => {
@@ -111,20 +125,23 @@ const ResultCurveSection = React.memo(forwardRef(({
 
   // Effet pour synchroniser les données quand result change (optimisé avec useMemo)
   const synchronizedData = useMemo(() => {
-    // Supporte curveData (camelCase) ou curve_data (snake_case)
-    const curveData = result?.curveData || result?.curve_data;
-    if (curveData && curveData.points) {
+    // Utiliser la prop curveData directe en priorité, puis fallback sur result
+    const curveDataSource = curveData || result?.curveData || result?.curve_data;
+    
+    if (curveDataSource && curveDataSource.points) {
       if (process.env.NODE_ENV === 'development') {
         console.log('=== SYNCHRONISATION CURVE DATA ===');
-        console.log('Points bruts chargés:', curveData.points.length);
-        if (curveData.points.length > 0) {
-          const filteredKeys = Object.keys(curveData.points[0]);
-          console.log('Exemple de point brut:', curveData.points[0]);
+        console.log(`ResultIndex: ${resultIndex}, SampleIndex: ${sampleIndex}`);
+        console.log('Points bruts chargés:', curveDataSource.points.length);
+        console.log('Source utilisée:', curveData ? 'curveData prop' : 'result prop');
+        if (curveDataSource.points.length > 0) {
+          const filteredKeys = Object.keys(curveDataSource.points[0]);
+          console.log('Exemple de point brut:', curveDataSource.points[0]);
           console.log('Clés dans le point brut:', filteredKeys);
         }
       }
       // --- Synchronisation simple : ne pas nettoyer, juste copier les points ---
-      const points = curveData.points.map(point => ({ ...point }));
+      const points = curveDataSource.points.map(point => ({ ...point }));
       // Trier les points pour l'affichage
       const sortedPoints = [...points].sort((a, b) => {
         const distA = parseFloat(a.distance) || 0;
@@ -141,16 +158,32 @@ const ResultCurveSection = React.memo(forwardRef(({
       return { points, sortedPoints };
     } else {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Aucune donnée de courbe trouvée dans result:', result);
+        console.log(`=== AUCUNE DONNÉE DE COURBE [${resultIndex}-${sampleIndex}] ===`);
+        console.log('curveData prop:', curveData);
+        console.log('result reçu:', result);
+        console.log('result.curveData:', result?.curveData);
+        console.log('result.curve_data:', result?.curve_data);
       }
       return { points: [], sortedPoints: [] };
     }
-  }, [result?.curveData, result?.curve_data]);
+  }, [curveData, result?.curveData, result?.curve_data, resultIndex, sampleIndex]);
   // Effet pour mettre à jour les états locaux uniquement quand synchronizedData change
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`=== EFFECT UPDATE DATA POINTS [${resultIndex}-${sampleIndex}] ===`);
+      console.log('synchronizedData.points:', synchronizedData.points);
+      console.log('Nombre de points:', synchronizedData.points.length);
+      console.log('Current dataPoints length:', dataPoints.length);
+      console.log('Points equal?', JSON.stringify(synchronizedData.points) === JSON.stringify(dataPoints));
+    }
+    
     setDataPoints(synchronizedData.points);
     setDisplayPoints(synchronizedData.sortedPoints);
-  }, [synchronizedData.points, synchronizedData.sortedPoints]); // Dépendances plus spécifiques
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Updated dataPoints length:', synchronizedData.points.length);
+    }
+  }, [synchronizedData.points, synchronizedData.sortedPoints, resultIndex, sampleIndex]); // Ajout deps pour debug
     // Ajout du state pour le pas d'incrémentation
   const [stepValue, setStepValue] = useState(0.1);
   const [specData, setSpecData] = useState([]);
@@ -328,6 +361,7 @@ useEffect(() => {
     // Debug : vérifier le format des données avant sauvegarde
     if (process.env.NODE_ENV === 'development' && normalizedPoints.length > 0) {
       console.log('=== DEBUG SAUVEGARDE CURVE DATA ===');
+      console.log(`Path: resultsData.results[${resultIndex}].samples[${sampleIndex}].curveData`);
       console.log('Nombre de points:', normalizedPoints.length);
       console.log('Exemple de point normalisé (premier):', normalizedPoints[0]);
       console.log('Clés disponibles dans le point normalisé:', Object.keys(normalizedPoints[0]));
@@ -364,6 +398,7 @@ useEffect(() => {
       console.log('resultIndex:', resultIndex);
       console.log('sampleIndex:', sampleIndex);
       console.log('Points being sent:', normalizedPoints.length);
+      console.log('First point being sent:', normalizedPoints[0]);
     }
     
     // Appeler handleChange directement sans setTimeout pour éviter les boucles
@@ -376,7 +411,8 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('Error updating parent form data:', error);
-    }  }, [handleChange, resultIndex, sampleIndex, arePointsEqual, ecdPositions, normalizePositionName, normalizePointsForSave]);
+    }
+  }, [handleChange, resultIndex, sampleIndex, arePointsEqual, ecdPositions, normalizePositionName, normalizePointsForSave, result?.curveData?.points]);
 
   // Mise à jour d'un point de données (pendant la saisie) - optimisé avec useCallback et throttle
   const handlePointChange = useCallback((index, field, value) => {

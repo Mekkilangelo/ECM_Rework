@@ -213,7 +213,22 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
               </Tab>              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
                 <AfterTabContent
                   ref={afterTabContentRef}
-                  formData={formData}
+                  formData={(() => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('=== TESTFORM -> AFTERTABCONTENT ===');
+                      console.log('formData being passed:', formData);
+                      console.log('formData.resultsData:', formData.resultsData);
+                      if (formData.resultsData?.results?.length > 0) {
+                        console.log('First result samples:', formData.resultsData.results[0].samples?.length || 0);
+                        if (formData.resultsData.results[0].samples?.length > 0) {
+                          const firstSample = formData.resultsData.results[0].samples[0];
+                          console.log('First sample curveData from TestForm:', firstSample.curveData);
+                          console.log('First sample curveData points from TestForm:', firstSample.curveData?.points?.length || 0);
+                        }
+                      }
+                    }
+                    return formData;
+                  })()}
                   errors={errors}
                   loading={loading}
                   formHandlers={formHandlers}

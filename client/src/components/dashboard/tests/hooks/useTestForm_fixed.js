@@ -28,25 +28,6 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     setMessage 
   } = useFormState();
 
-  // Exposer setFormData pour l'import Excel via une méthode globale temporaire
-  useEffect(() => {
-    window.setFormDataForCurveImport = setFormData;
-    
-    // Listener pour les mises à jour forcées de formData
-    const handleForceUpdate = (event) => {
-      console.log('=== RECEIVED FORCE FORMDATA UPDATE EVENT ===');
-      console.log('New formData:', event.detail.formData);
-      setFormData(event.detail.formData);
-    };
-    
-    window.addEventListener('forceFormDataUpdate', handleForceUpdate);
-    
-    return () => {
-      delete window.setFormDataForCurveImport;
-      window.removeEventListener('forceFormDataUpdate', handleForceUpdate);
-    };
-  }, [setFormData]);
-
   // Gestion des fichiers temporaires
   const [tempFileId, setTempFileId] = useState(null);
 

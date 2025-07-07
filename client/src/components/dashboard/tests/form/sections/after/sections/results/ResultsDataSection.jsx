@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Row, Col, Button, Table } from 'react-bootstrap';
 import Select from 'react-select';
@@ -37,6 +37,24 @@ const ResultsDataSection = forwardRef(({
   onFlushAllCurves = null
 }, ref) => {
   const { t } = useTranslation();
+
+  // Debug pour tracer les changements de formData
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('=== RESULTS DATA SECTION FORMDATA CHANGE ===');
+      console.log('formData.resultsData:', formData.resultsData);
+      console.log('Number of results:', formData.resultsData?.results?.length || 0);
+      if (formData.resultsData?.results?.length > 0) {
+        console.log('First result samples:', formData.resultsData.results[0].samples?.length || 0);
+        if (formData.resultsData.results[0].samples?.length > 0) {
+          const firstSample = formData.resultsData.results[0].samples[0];
+          console.log('First sample curveData:', firstSample.curveData);
+          console.log('First sample curveData points:', firstSample.curveData?.points?.length || 0);
+        }
+      }
+    }
+  }, [formData.resultsData]);
+
   // Créer un tableau de refs pour toutes les sections courbe (résultat/échantillon)
   const curveSectionRefs = useRef([]);
   
@@ -464,6 +482,43 @@ const ResultsDataSection = forwardRef(({
                     result={sample}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}
+                    // Passer directement les données de courbe pour forcer le re-render
+                    curveData={(() => {
+                      const curveData = formData.resultsData?.results?.[resultIndex]?.samples?.[sampleIndex]?.curveData;
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log(`=== PASSING CURVE DATA TO COMPONENT [${resultIndex}-${sampleIndex}] ===`);
+                        console.log('formData received in ResultsDataSection:', formData);
+                        console.log('formData.resultsData:', formData.resultsData);
+                        console.log('Specific path check:', formData.resultsData?.results?.[resultIndex]?.samples?.[sampleIndex]);
+                        console.log('curveData being passed:', curveData);
+                        console.log('points count:', curveData?.points?.length || 0);
+                        console.log('formData path:', `resultsData.results[${resultIndex}].samples[${sampleIndex}].curveData`);
+                        if (curveData?.points?.length > 0) {
+                          console.log('First point being passed:', curveData.points[0]);
+                        }
+                        
+                        // Debug complet de la structure
+                        console.log('=== STRUCTURE COMPLETE DEBUG ===');
+                        console.log('formData keys:', Object.keys(formData));
+                        if (formData.resultsData) {
+                          console.log('resultsData keys:', Object.keys(formData.resultsData));
+                          if (formData.resultsData.results) {
+                            console.log('results length:', formData.resultsData.results.length);
+                            if (formData.resultsData.results[resultIndex]) {
+                              console.log(`result[${resultIndex}] keys:`, Object.keys(formData.resultsData.results[resultIndex]));
+                              if (formData.resultsData.results[resultIndex].samples) {
+                                console.log(`result[${resultIndex}].samples length:`, formData.resultsData.results[resultIndex].samples.length);
+                                if (formData.resultsData.results[resultIndex].samples[sampleIndex]) {
+                                  console.log(`sample[${sampleIndex}] keys:`, Object.keys(formData.resultsData.results[resultIndex].samples[sampleIndex]));
+                                  console.log(`sample[${sampleIndex}].curveData:`, formData.resultsData.results[resultIndex].samples[sampleIndex].curveData);
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                      return curveData;
+                    })()}
                     handleChange={handleChange}
                     handleSelectChange={handleSelectChange}
                     getSelectedOption={getSelectedOption}

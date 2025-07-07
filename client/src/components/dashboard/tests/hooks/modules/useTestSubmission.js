@@ -28,6 +28,7 @@ const convertHMSToSeconds = (hours, minutes, seconds) => {
  * @param {Function} onClose - Callback de fermeture
  * @param {Function} fileAssociationCallback - Callback pour associer des fichiers
  * @param {boolean} viewMode - Mode lecture seule
+ * @param {Function} flushAllCurveData - Fonction pour flusher les données de courbe avant soumission
  */
 const useTestSubmission = (
   formData, 
@@ -41,7 +42,8 @@ const useTestSubmission = (
   onTestUpdated, 
   onClose,
   fileAssociationCallback,
-  viewMode = false
+  viewMode = false,
+  flushAllCurveData = null
 ) => {const defaultFormState = {
     name: '',
     location: '',
@@ -354,9 +356,21 @@ const useTestSubmission = (
                 return formattedPoint;
               })
             } : null;
+            
             // DEBUG LOG pour visualiser la donnée courbe importée et mappée
-            console.log(`[DEBUG][Result ${result.step}][Sample ${sample.step}] sample.curveData:`, sample.curveData);
-            console.log(`[DEBUG][Result ${result.step}][Sample ${sample.step}] mapped curve_data:`, curveData);
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`=== FORMATAGE SOUMISSION [Result ${result.step}][Sample ${sample.step}] ===`);
+              console.log('sample.curveData:', sample.curveData);
+              console.log('Points dans curveData:', sample.curveData?.points?.length || 0);
+              if (sample.curveData?.points?.length > 0) {
+                console.log('Premier point curveData:', sample.curveData.points[0]);
+                console.log('Clés premier point:', Object.keys(sample.curveData.points[0]));
+              }
+              console.log('Données formatées pour API (curve_data):', curveData);
+              if (curveData?.points?.length > 0) {
+                console.log('Premier point formaté pour API:', curveData.points[0]);
+              }
+            }
             return {
               step: sample.step,
               description: sample.description || null,
@@ -412,13 +426,26 @@ const useTestSubmission = (
       e.preventDefault();
     }
 
-    // AVANT DE CONTINUER :
-    // Si tu utilises des refs sur ResultCurveSection, appelle ici flushCurveDataToParent() sur chaque ref !
-    // Exemple :
-    // if (curveSectionRefs) {
-    //   curveSectionRefs.forEach(ref => ref.current && ref.current.flushCurveDataToParent && ref.current.flushCurveDataToParent());
-    // }
-    // Cela garantit que les données locales sont bien propagées dans formData avant la soumission.
+    console.log('=== DÉBUT SOUMISSION TEST ===');
+    
+    // ÉTAPE 1 : FLUSHER LES DONNÉES DE COURBE AVANT VALIDATION
+    if (flushAllCurveData && typeof flushAllCurveData === 'function') {
+      console.log('Flushing curve data before submission...');
+      try {
+        const flushed = flushAllCurveData();
+        if (flushed) {
+          console.log('Curve data flushed successfully');
+          // Délai pour permettre la mise à jour du formData
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } else {
+          console.warn('Failed to flush curve data');
+        }
+      } catch (error) {
+        console.error('Error flushing curve data:', error);
+      }
+    } else {
+      console.log('No curve data flush function provided');
+    }
 
     // Empêcher les soumissions multiples
     if (loading) return;

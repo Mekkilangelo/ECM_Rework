@@ -448,23 +448,62 @@ const useExcelImport = (
       } else {
         console.warn(`Référence ResultCurveSection non disponible. Tentative alternative...`);
         
-        // Méthode alternative : mettre à jour directement les données via handleChange
-        const currentResultsForCurve = [...formData.resultsData.results];
-        const currentSampleForCurve = currentResultsForCurve[resultIndex].samples[sampleIndex];
+        // Méthode alternative améliorée : utiliser handleChange pour mettre à jour le formData
+        // ET forcer la synchronisation du composant ResultCurveSection
+        const changeEvent = {
+          target: {
+            name: `resultsData.results[${resultIndex}].samples[${sampleIndex}].curveData`,
+            value: { points: cleanedCurveData }
+          }
+        };
         
-        if (!currentSampleForCurve.curveData) {
-          currentSampleForCurve.curveData = { points: [] };
+        console.log('=== IMPORT EXCEL - MÉTHODE ALTERNATIVE ===');
+        console.log('Change event:', changeEvent);
+        console.log('Points à importer:', cleanedCurveData.length);
+        
+        handleChange(changeEvent);
+        
+        // NOUVELLE APPROCHE : Forcer une mise à jour directe du formData avec une nouvelle référence
+        console.log('=== FORCING FORMDATA UPDATE AFTER EXCEL IMPORT ===');
+        
+        // Récupérer le formData actuel et créer une nouvelle référence complète
+        const currentFormData = { ...formData };
+        if (!currentFormData.resultsData) currentFormData.resultsData = { results: [] };
+        if (!currentFormData.resultsData.results[resultIndex]) {
+          currentFormData.resultsData.results[resultIndex] = { samples: [] };
+        }
+        if (!currentFormData.resultsData.results[resultIndex].samples[sampleIndex]) {
+          currentFormData.resultsData.results[resultIndex].samples[sampleIndex] = {};
         }
         
-        // Remplacer les points existants par les nouveaux points fusionnés (structure propre)
-        currentSampleForCurve.curveData.points = cleanedCurveData;
+        // Mettre à jour avec une nouvelle référence
+        currentFormData.resultsData.results[resultIndex].samples[sampleIndex].curveData = { 
+          points: [...cleanedCurveData] 
+        };
         
-        handleChange({
-          target: {
-            name: 'resultsData.results',
-            value: currentResultsForCurve
+        // Force new reference for the entire formData
+        const newFormData = JSON.parse(JSON.stringify(currentFormData));
+        
+        console.log('Forcing setFormData with new reference...');
+        console.log('New curveData points:', newFormData.resultsData.results[resultIndex].samples[sampleIndex].curveData.points.length);
+        
+        // Utiliser setFormData directement pour forcer le re-render
+        try {
+          // Tenter d'accéder à setFormData via le contexte ou les props
+          if (window.setFormDataForCurveImport) {
+            window.setFormDataForCurveImport(newFormData);
+          } else {
+            // Fallback: déclencher un événement personnalisé
+            window.dispatchEvent(new CustomEvent('forceFormDataUpdate', { 
+              detail: { formData: newFormData } 
+            }));
           }
-        });
+        } catch (error) {
+          console.error('Error forcing formData update:', error);
+        }
+        
+        // Délai supplémentaire pour permettre la synchronisation
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         console.log(`${cleanedCurveData.length} points de courbe fusionnés ajoutés en méthode alternative`);
       }

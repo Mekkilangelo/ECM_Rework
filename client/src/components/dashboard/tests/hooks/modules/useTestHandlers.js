@@ -633,6 +633,19 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
       }
     });
   }, [formData, handleChange]);
+
+  // Fonction pour forcer la synchronisation des données de courbe avant soumission
+  const flushAllCurveData = useCallback((resultsSectionRef) => {
+    console.log('=== FLUSH ALL CURVE DATA ===');
+    if (resultsSectionRef && resultsSectionRef.current && resultsSectionRef.current.flushAllCurves) {
+      console.log('Flushing all curve data via ResultsDataSection...');
+      resultsSectionRef.current.flushAllCurves();
+      return true;
+    } else {
+      console.warn('ResultsDataSection ref not available for flushing curve data');
+      return false;
+    }
+  }, []);
   
   return {
     ...globalHandlers,
@@ -658,6 +671,7 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     handleEcdPositionChange,
     handleHardnessChange,
     handleEcdChange,
+    flushAllCurveData,
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,

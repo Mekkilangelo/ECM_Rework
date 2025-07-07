@@ -43,6 +43,15 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
           console.log('Updated path:', parts.join('.'));
           console.log('Final value set:', current[parts[parts.length - 1]]);
           console.log('Full data structure at update point:', newData);
+          
+          // FORCER UN NOUVEAU RENDU POUR LES DONNEES DE COURBE
+          console.log('=== FORCING DEEP CLONE FOR CURVE DATA ===');
+          console.log('Creating new reference for resultsData to force re-render...');
+        }
+        
+        // Pour les données de courbe, forcer un deep clone pour garantir le re-render
+        if (name && name.includes('curveData')) {
+          return JSON.parse(JSON.stringify(newData));
         }
         
         return newData;

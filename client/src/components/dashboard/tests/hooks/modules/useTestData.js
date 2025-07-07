@@ -283,17 +283,37 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                           const curvePoints = Array.isArray(sample.curve_data?.points)
                             ? sample.curve_data.points.map(point => {
                                 const curvePoint = { distance: point.distance || '' };
+                                
+                                // Ajouter toutes les propriétés du point (pas seulement les positions ECD connues)
+                                Object.keys(point).forEach(key => {
+                                  if (key !== 'distance') {
+                                    curvePoint[key] = point[key];
+                                  }
+                                });
+                                
+                                // Si on a des positions ECD définies, s'assurer qu'elles existent dans le point
                                 if (Array.isArray(sample.ecd?.positions)) {
                                   sample.ecd.positions.forEach(pos => {
                                     if (pos.name) {
                                       const normalizedKey = pos.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
-                                      curvePoint[normalizedKey] = point[normalizedKey] !== undefined ? point[normalizedKey] : '';
+                                      if (curvePoint[normalizedKey] === undefined) {
+                                        curvePoint[normalizedKey] = point[normalizedKey] || point[pos.name] || '';
+                                      }
                                     }
                                   });
                                 }
+                                
                                 return curvePoint;
                               })
                             : [];
+
+                          // Debug log pour vérifier les données de courbe chargées
+                          if (process.env.NODE_ENV === 'development' && curvePoints.length > 0) {
+                            console.log(`=== CHARGEMENT CURVE DATA [Result ${resultBlock.step}][Sample ${sample.step}] ===`);
+                            console.log('Points chargés depuis API:', curvePoints.length);
+                            console.log('Premier point:', curvePoints[0]);
+                            console.log('Clés disponibles:', Object.keys(curvePoints[0]));
+                          }
                           
                           return {
                             step: sample.step || 1,

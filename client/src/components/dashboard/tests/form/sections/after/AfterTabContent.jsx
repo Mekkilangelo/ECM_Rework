@@ -62,7 +62,22 @@ const AfterTabContent = forwardRef(({
       >
         <ResultsDataSection
           ref={resultsDataSectionRef}
-          formData={formData}
+          formData={(() => {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('=== AFTERTABCONTENT -> RESULTSDATASECTION ===');
+              console.log('formData being passed:', formData);
+              console.log('formData.resultsData:', formData.resultsData);
+              if (formData.resultsData?.results?.length > 0) {
+                console.log('First result samples:', formData.resultsData.results[0].samples?.length || 0);
+                if (formData.resultsData.results[0].samples?.length > 0) {
+                  const firstSample = formData.resultsData.results[0].samples[0];
+                  console.log('First sample curveData from AfterTabContent:', firstSample.curveData);
+                  console.log('First sample curveData points from AfterTabContent:', firstSample.curveData?.points?.length || 0);
+                }
+              }
+            }
+            return formData;
+          })()}
           parentId={formHandlers.parentId}
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}

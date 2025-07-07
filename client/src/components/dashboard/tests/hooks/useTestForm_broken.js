@@ -28,24 +28,29 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     setMessage 
   } = useFormState();
 
-  // Exposer setFormData pour l'import Excel via une méthode globale temporaire
-  useEffect(() => {
-    window.setFormDataForCurveImport = setFormData;
-    
-    // Listener pour les mises à jour forcées de formData
-    const handleForceUpdate = (event) => {
-      console.log('=== RECEIVED FORCE FORMDATA UPDATE EVENT ===');
-      console.log('New formData:', event.detail.formData);
-      setFormData(event.detail.formData);
-    };
-    
-    window.addEventListener('forceFormDataUpdate', handleForceUpdate);
-    
-    return () => {
-      delete window.setFormDataForCurveImport;
-      window.removeEventListener('forceFormDataUpdate', handleForceUpdate);
-    };
-  }, [setFormData]);
+  // Gestion des fichiers temporaires
+  const [tempFileId, setTempFileId] = useState(null);
+
+  // State for fetching test
+  const [fetchingTest, setFetchingTest] = useState(false);
+
+  // Référence pour la section des résultats (pour flusher les données de courbe)
+  const resultsSectionRef = useRef(null);
+  
+  // État pour stocker la fonction de rappel d'association de fichiers
+  const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
+  
+  // État du formulaire et initialisation
+  const { 
+    formData, 
+    setFormData, 
+    errors, 
+    setErrors, 
+    loading, 
+    setLoading, 
+    message, 
+    setMessage 
+  } = useFormState();
 
   // Gestion des fichiers temporaires
   const [tempFileId, setTempFileId] = useState(null);
@@ -55,15 +60,15 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
 
   // Référence pour la section des résultats (pour flusher les données de courbe)
   const resultsSectionRef = useRef(null);
-
   // Configuration stable pour les options (éviter les re-renders)
   const optionsConfig = useMemo(() => ({
+    // Activer uniquement les options nécessaires pour les tests
     fetchClientOptions: false,
     fetchSteelOptions: false,
     fetchPartOptions: false,
-    fetchTestOptions: true,
-    fetchFurnaceOptions: true,
-    fetchUnitOptions: true
+    fetchTestOptions: true,      // Activer les options de test
+    fetchFurnaceOptions: true,   // Activer les options de four
+    fetchUnitOptions: true       // Activer les options d'unité
   }), []);
 
   // Load test data in edit mode
@@ -81,12 +86,14 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     coolingMediaOptions, furnaceSizeOptions, quenchCellOptions, gasOptions, rampOptions,
     selectStyles, getSelectedOption, lengthUnitOptions, weightUnitOptions, 
     timeUnitOptions, temperatureUnitOptions, pressureUnitOptions, hardnessUnitOptions,
+    // Fonctions d'accès aux unités
     getLengthUnitOptions, 
     getWeightUnitOptions, 
     getTimeUnitOptions, 
     getTemperatureUnitOptions, 
     getPressureUnitOptions, 
     getHardnessUnitOptions,
+    // Fonctions de rafraîchissement
     refreshLocationOptions,
     refreshStatusOptions,
     refreshMountingTypeOptions,
@@ -118,25 +125,23 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     refreshUnitOptions,
     refreshAllOptions
   };
-
-  // Handlers pour le formulaire
+    // Handlers pour le formulaire
   const { 
     handleChange, handleSelectChange, 
     handleThermalCycleAdd, handleThermalCycleRemove, handleThermalCycleChange,
     handleChemicalCycleAdd, handleChemicalCycleRemove,
     handleGasQuenchSpeedAdd, handleGasQuenchSpeedRemove,
-    handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,
-    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
+    handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
     handleResultBlocAdd, handleResultBlocRemove,
-    handleSampleAdd, handleSampleRemove,
-    handleHardnessResultAdd, handleHardnessResultRemove,
-    handleCreateOption,
-    handleEcdPositionAdd,
+    handleSampleAdd, handleSampleRemove,    handleHardnessResultAdd, handleHardnessResultRemove,
+    handleCreateOption, // Ajouter le handler pour la création d'options
+    handleEcdPositionAdd, // Nouvelles fonctions pour la gestion des positions ECD
     handleEcdPositionRemove,
     handleEcdPositionChange,
     handleHardnessChange,
     handleEcdChange,
     flushAllCurveData, // Nouvelle fonction pour flusher les données de courbe
+    // Fonctions de gestion du temps
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,
@@ -162,8 +167,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
-
-  // Soumission du formulaire au serveur
+    // Soumission du formulaire au serveur
   const { handleSubmit } = useTestSubmission(
     formData, 
     setFormData, 
@@ -173,11 +177,10 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     setLoading, 
     setMessage, 
     onTestCreated,
-    onTestUpdated, 
+    onTestUpdated,
     onClose,
     fileAssociationCallback,
-    viewMode,
-    () => flushAllCurveData(resultsSectionRef) // Passer une fonction qui utilise la ref
+    viewMode // Transmettre le mode lecture seule
   );
   
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
@@ -190,14 +193,13 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
-    saveAndClose 
-  } = useCloseConfirmation(
-    formData,
-    loading,
-    fetchingTest,
-    handleSubmit,
-    onClose,
-    viewMode
+    saveAndClose   } = useCloseConfirmation(
+    formData,        // État actuel du formulaire 
+    loading,         // État de chargement
+    fetchingTest,    // État de récupération des données
+    handleSubmit,    // Fonction de soumission
+    onClose,         // Fonction de fermeture
+    viewMode         // Mode lecture seule
   );
 
   // Réinitialiser l'état initial après une sauvegarde réussie
@@ -206,19 +208,14 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
       resetInitialState();
     }
   }, [message, resetInitialState]);
-
+  
   return {
-    // États du formulaire
     formData,
-    setFormData,
     errors,
-    setErrors,
     loading,
-    message,
-    setMessage,
     fetchingTest,
-    
-    // Options et styles pour les selects
+    message,
+    parentId,
     locationOptions,
     statusOptions,
     mountingTypeOptions,
@@ -232,12 +229,17 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     quenchCellOptions,
     gasOptions,
     rampOptions,
+    handleChange,
+    handleSelectChange,
+    handleSubmit,
+    getSelectedOption,
     lengthUnitOptions,
     weightUnitOptions,
     timeUnitOptions,
     temperatureUnitOptions,
     pressureUnitOptions,
     hardnessUnitOptions,
+    // Fonctions d'accès aux unités
     getLengthUnitOptions, 
     getWeightUnitOptions, 
     getTimeUnitOptions, 
@@ -245,11 +247,9 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     getPressureUnitOptions, 
     getHardnessUnitOptions,
     selectStyles,
-    
     // Nouvelle gestion des fichiers
     tempFileId,
     setTempFileId,
-    
     // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
     showConfirmModal, 
     pendingClose,
@@ -259,18 +259,10 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     confirmClose, 
     cancelClose, 
     saveAndClose,
-    
-    // Handlers
-    handleChange,
-    handleSelectChange,
-    handleSubmit,
-    getSelectedOption,
-    
     // Thermal cycle
     handleThermalCycleAdd,
     handleThermalCycleRemove,
-    handleThermalCycleChange,
-    
+    handleThermalCycleChange, // Ajout de la fonction pour gérer la logique de rampe automatique
     // Chemical cycle
     handleChemicalCycleAdd,
     handleChemicalCycleRemove,
@@ -278,25 +270,23 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleGasQuenchSpeedRemove,
     handleGasQuenchPressureAdd,
     handleGasQuenchPressureRemove,
-    handleOilQuenchSpeedAdd,
-    handleOilQuenchSpeedRemove,
+    handleOilQuenchSpeedAdd,    handleOilQuenchSpeedRemove,
     handleResultBlocAdd,
     handleResultBlocRemove,
     handleSampleAdd,
     handleSampleRemove,
     handleHardnessResultAdd,
     handleHardnessResultRemove,
-    handleEcdPositionAdd,
-    handleEcdPositionRemove,
+    // Nouvelles fonctions pour la gestion des positions ECD
+    handleEcdPositionAdd,    handleEcdPositionRemove,
     handleEcdPositionChange,
+    // Ajout du handler pour créer de nouvelles options
     handleCreateOption,
-    
     // Fonctions de gestion du temps
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,
     initializeTimeComponents,
-    
     // Fonctions de rafraîchissement
     refreshLocationOptions,
     refreshStatusOptions,
@@ -311,10 +301,8 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     refreshQuenchCellOptions,
     refreshUnitOptions,
     refreshAllOptions,
-    
-    // Gestion des fichiers
+    // Ajouter setFileAssociationCallback à ce qui est retourné
     setFileAssociationCallback,
-    
     // Fonctions d'import Excel
     fileInputRef,
     getCurveSectionRef,
@@ -322,7 +310,6 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     processExcelData,
     handleEcdChange,
     handleHardnessChange,
-    
     // Référence et fonction pour la gestion des données de courbe
     resultsSectionRef,
     flushAllCurveData

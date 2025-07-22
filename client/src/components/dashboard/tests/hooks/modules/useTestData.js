@@ -172,42 +172,9 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
               selectedGas2: selectedGas2,
               selectedGas3: selectedGas3,
                 // Other recipe parameters
+              // Charger directement les valeurs en minutes sans conversion
               waitTime: recipeData.wait_time?.value || '',
               waitTimeUnit: recipeData.wait_time?.unit || '',
-              // Convertir le temps d'attente en champs décomposés si la valeur est en secondes
-              ...(recipeData.wait_time?.value && recipeData.wait_time?.unit === 'seconds' 
-                ? (() => {
-                    const { hours, minutes, seconds } = convertSecondsToHMS(recipeData.wait_time.value);
-                    return {
-                      waitTimeHours: hours,
-                      waitTimeMinutes: minutes,
-                      waitTimeSeconds: seconds
-                    };
-                  })() 
-                : {
-                    waitTimeHours: '',
-                    waitTimeMinutes: '',
-                    waitTimeSeconds: ''
-                  }
-              ),
-              programDuration: recipeData.program_duration?.value || '',
-              programDurationUnit: recipeData.program_duration?.unit || '',
-              // Convertir la durée du programme en champs décomposés si la valeur est en secondes
-              ...(recipeData.program_duration?.value && recipeData.program_duration?.unit === 'seconds' 
-                ? (() => {
-                    const { hours, minutes, seconds } = convertSecondsToHMS(recipeData.program_duration.value);
-                    return {
-                      programDurationHours: hours,
-                      programDurationMinutes: minutes,
-                      programDurationSeconds: seconds
-                    };
-                  })() 
-                : {
-                    programDurationHours: '',
-                    programDurationMinutes: '',
-                    programDurationSeconds: ''
-                  }
-              ),
               cellTemp: recipeData.cell_temp?.value || '',
               cellTempUnit: recipeData.cell_temp?.unit || '',
               waitPressure: recipeData.wait_pressure?.value || '',

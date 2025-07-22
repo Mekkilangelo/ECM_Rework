@@ -72,6 +72,7 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated, viewMo
     entity: client,
     setLoading,
     setMessage,
+    setErrors,
     onCreated: onClientCreated,
     onUpdated: onClientUpdated,
     onClose,

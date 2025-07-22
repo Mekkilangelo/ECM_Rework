@@ -8,7 +8,7 @@ import LoadDataSection from './sections/load_data/LoadDataSection';
 import RecipeDataSection from './sections/recipe/RecipeDataSection';
 import LoadDesignSection from './sections/load_design/LoadDesignSection';
 
-const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {} }) => {
+const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {}, calculateProgramDuration }) => {
   const { t } = useTranslation();
   
   // États pour stocker les fonctions d'association de fichiers des sous-sections
@@ -149,7 +149,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
           handleThermalCycleAdd={formHandlers.handleThermalCycleAdd}
           handleThermalCycleRemove={formHandlers.handleThermalCycleRemove}
           handleThermalCycleChange={formHandlers.handleThermalCycleChange}
-          handleTimeComponentChange={formHandlers.handleTimeComponentChange}
+          calculateProgramDuration={calculateProgramDuration}
           handleChemicalCycleAdd={formHandlers.handleChemicalCycleAdd}
           handleChemicalCycleRemove={formHandlers.handleChemicalCycleRemove}
           handleGasQuenchSpeedAdd={formHandlers.handleGasQuenchSpeedAdd}

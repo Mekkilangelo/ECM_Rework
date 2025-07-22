@@ -20,7 +20,7 @@ const RecipeDataSection = ({
   handleThermalCycleAdd,
   handleThermalCycleRemove,
   handleThermalCycleChange,
-  handleTimeComponentChange,
+  calculateProgramDuration,
   handleChemicalCycleAdd,
   handleChemicalCycleRemove,
   handleGasQuenchSpeedAdd,
@@ -88,7 +88,7 @@ const RecipeDataSection = ({
           handleThermalCycleAdd={handleThermalCycleAdd}
           handleThermalCycleRemove={handleThermalCycleRemove}
           handleThermalCycleChange={handleThermalCycleChange}
-          handleTimeComponentChange={handleTimeComponentChange}
+          calculateProgramDuration={calculateProgramDuration}
           loading={loading}
           selectStyles={selectStyles}
           viewMode={viewMode}

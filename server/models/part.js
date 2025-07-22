@@ -12,7 +12,7 @@ module.exports = (sequelize) => {
       }
     },
     designation: {
-      type: DataTypes.ENUM('InGear', 'OutGear', 'Ring', 'Shaft', 'Gear', 'Other'),
+      type: DataTypes.ENUM('Other','Gear','Hub','Clip','Tool','Misc','Housing','Ring','Shaft','Sample','Bushing','Piston'),
       allowNull: true
     },
     client_designation: {

@@ -90,6 +90,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
     processExcelData,
     handleEcdChange,
     handleHardnessChange,
+    calculateProgramDuration,
     ...formHandlers
   } = useTestForm(test, onClose, onTestCreated, onTestUpdated, viewMode);
 
@@ -209,6 +210,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                   handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
                   viewMode={viewMode}
                   readOnlyFieldStyle={readOnlyFieldStyle}
+                  calculateProgramDuration={calculateProgramDuration}
                 />
               </Tab>              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
                 <AfterTabContent
@@ -265,6 +267,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                 handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
                 viewMode={viewMode}
                 readOnlyFieldStyle={readOnlyFieldStyle}
+                calculateProgramDuration={calculateProgramDuration}
               />
             </div>
           )}          {/* Boutons de soumission */}

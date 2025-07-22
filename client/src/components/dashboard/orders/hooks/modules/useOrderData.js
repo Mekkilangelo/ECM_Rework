@@ -1,7 +1,6 @@
 // src/components/hooks/useOrderData.js
 import { useEffect } from 'react';
 import orderService from '../../../../../services/orderService';
-import { analyzeObjectStructure } from '../../../../../utils/debugUtils';
 
 /**
  * Hook pour récupérer et formater les données d'une commande
@@ -22,9 +21,6 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
           
           // Récupération des données de la commande avec la méthode refactorisée
           const orderData = await orderService.getOrder(order.id);
-          
-          // Analyser la structure des données pour le débogage
-          analyzeObjectStructure(orderData, 'Order Data');
           
           // Traitement du champ contacts JSON
           let contacts = [];

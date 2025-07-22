@@ -9,6 +9,16 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
   // Extraire la fonction handleChange de globalHandlers
   const { handleChange } = globalHandlers;
   
+  // Fonction pour calculer la durée totale du programme (waitTime + somme des durées du cycle thermique)
+  const calculateProgramDuration = useCallback(() => {
+    const waitTime = parseInt(formData.recipeData?.waitTime || 0);
+    const thermalCycleDurations = formData.recipeData?.thermalCycle?.reduce((sum, cycle) => {
+      return sum + parseInt(cycle.duration || 0);
+    }, 0) || 0;
+    
+    return waitTime + thermalCycleDurations;
+  }, [formData.recipeData?.waitTime, formData.recipeData?.thermalCycle]);
+  
   // Fonction pour déterminer automatiquement la direction de la rampe en fonction des températures
   const determineRampDirection = (currentTemp, previousTemp) => {
     if (!previousTemp) return 'up'; // Par défaut, commencer avec une rampe montante
@@ -649,6 +659,7 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
   
   return {
     ...globalHandlers,
+    calculateProgramDuration,
     handleThermalCycleAdd,
     handleThermalCycleRemove,
     handleThermalCycleChange,

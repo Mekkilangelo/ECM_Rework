@@ -1,0 +1,986 @@
+[
+  {
+    "name": "AGCO",
+    "country": "GERMANY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ALFALAVAL",
+    "country": "ITALY",
+    "city": "ALONTE",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "AMERICAN AXLE",
+    "country": "USA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "AMES",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ARAYMOND",
+    "country": "FRANCE",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ATLAS EPIROC",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "nan",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ATLAS COPCO ROCK DRILLS AB",
+    "country": "SWEDEN",
+    "city": "Örebro",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FAW - VW",
+    "country": "CHINA",
+    "city": "-",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "DAIMLER STUTTGART",
+    "country": "OTHER",
+    "city": "Stuttgart",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FAW",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GIMA",
+    "country": "FRANCE",
+    "city": "Beauvais",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GM USA",
+    "country": "USA",
+    "city": "MILFORD",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "INDICARB",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "INDCARB",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "SCANIA",
+    "country": "SWEDEN",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "AVIOAERO",
+    "country": "ITALY",
+    "city": "Turin",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "AYZAR",
+    "country": "SPAIN",
+    "city": "Vitoria-Gasteiz",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BHAVANI INDUSTRIES",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BHAVANI",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BIC",
+    "country": "SPAIN",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BODYCOTE",
+    "country": "CHINA",
+    "city": "Wuxy",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BOSCH",
+    "country": "GERMANY",
+    "city": "Blaichach",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BOSCH TILBURG",
+    "country": "NETHERLANDS",
+    "city": "Tilburg",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BURGESS NORTON",
+    "country": "ITALY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "BYD",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CANELA",
+    "country": "SPAIN",
+    "city": "BADALONA",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CARRARO",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CASTINGS TECHNOLOGY INTERNATIONAL",
+    "country": "OTHER",
+    "city": "Rotherham",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CATERPILLAR",
+    "country": "OTHER",
+    "city": "-",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CETIM",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CHENTA TAÏWAN",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CNH INDUSTRIAL",
+    "country": "BELGIUM",
+    "city": "Antwerp",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "COMER INDUSTRIES",
+    "country": "ITALY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CTB (SILCO)",
+    "country": "ITALY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "DANA",
+    "country": "BELGIUM",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "DKTEC - HYUNDAI",
+    "country": "SOUTH_KOREA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "MUSASHI",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "DKTEC KCI",
+    "country": "SOUTH_KOREA",
+    "city": "SEOUL",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "DONGBO",
+    "country": "SOUTH_KOREA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECHNOLGIE",
+    "country": "FRANCE",
+    "city": "GRENOBLE",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECHNOLOGIES - 2020",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECHNOLOGIES",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECH",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "-",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECHNOLOGIE (FRANÇOIS ZAMORA)",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECHNOLOGIE",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ECM TECHNOLOGIE (PHILIPPE JOURNET)",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CETRA MÉCANIQUE",
+    "country": "OTHER",
+    "city": "26 Rue Jean Vaujany",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "SARL EDEROD",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ENGINETECH SYSTEMS PVT.LTD.",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "EPIROC",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ER MAKINA",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "ETZINGER AG",
+    "country": "LIECHTENSTEIN",
+    "city": "FL-9492 ESCHEN",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "EUROCOPTER",
+    "country": "FRANCE",
+    "city": "Marignane",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FAST",
+    "country": "CHINA",
+    "city": "Xian",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FAURECIA",
+    "country": "FRANCE",
+    "city": "61100   CALIGNY",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FIAT CHINE",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FIAT",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FIAT CHINA",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FIAT POWER TRAIN (IVECO)",
+    "country": "ITALY",
+    "city": "Turin",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "CENTRO RICHERCHE FIAT",
+    "country": "ITALY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FIAT CRF - SILCO",
+    "country": "ITALY",
+    "city": "Rivalta",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FISCHER BARGOIN",
+    "country": "FRANCE",
+    "city": "Thiers",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FLASH ELECTRONICS",
+    "country": "INDIA",
+    "city": "-",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FORD LIVONIA",
+    "country": "USA",
+    "city": "LIVONIA",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FORVIA",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "FY120",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GALVANOTECHNIK",
+    "country": "ITALY",
+    "city": "25063 GARDONE",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GALVANOTECHNICK",
+    "country": "ITALY",
+    "city": "25063 GARDONE",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GEELY",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "EMA (GEELY)",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GETRAG S.P.A.",
+    "country": "ITALY",
+    "city": "Modugno - Bari",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GKN",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GKN DRIVELINE",
+    "country": "SWEDEN",
+    "city": "Köping",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GLOBAL PMX",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GLOCK",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GM - GAX",
+    "country": "USA",
+    "city": "MILFORD",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "GRIMONPREZ TRANSMISSION GEARS",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HAERTHA",
+    "country": "ITALY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HARBIN BEARING",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HARDIN BEARING",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HIWIN TECHNOLOGIES CORP.",
+    "country": "OTHER",
+    "city": "Yunlin County",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HOGANAS",
+    "country": "SWEDEN",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HÖGANÄSA B.",
+    "country": "SWEDEN",
+    "city": "Höganäs",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HÖGANÄS A.B.",
+    "country": "SWEDEN",
+    "city": "Höganäs",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HÖGANÄS AB.",
+    "country": "SWEDEN",
+    "city": "Höganäs",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HORSE",
+    "country": "PORTUGAL",
+    "city": "CACIA",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HUACHUANG - 3416",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HUSQVARNA",
+    "country": "SWEDEN",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HYUNDAI DYMOS",
+    "country": "SOUTH_KOREA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HYUNDAI POWER TRAIN",
+    "country": "SOUTH_KOREA",
+    "city": "SEOUL",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "HYUNDAI TRANSYS USA",
+    "country": "SOUTH_KOREA",
+    "city": "Chungnam",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "IM GEAR",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "INDO-MIM",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "INDO- US MIM",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "INDO-US MIM TEC. PVT. LTD.",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "IRT",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "IRT- WP3",
+    "country": "FRANCE",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "IRT M2P (WP3)",
+    "country": "FRANCE",
+    "city": "Metz",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "IRT M2P TTA",
+    "country": "FRANCE",
+    "city": "Metz",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "IRT M2P TTA - WP3 AUTO",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "JJE",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "KALYANI TECHNOFORGE",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "KINEX",
+    "country": "SLOVAKIA",
+    "city": "Bytča",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "KONECRANES",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "KRONE",
+    "country": "GERMANY",
+    "city": ". Spelle",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "KUHN SA",
+    "country": "FRANCE",
+    "city": "Savernes",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "L'ORANGE",
+    "country": "GERMANY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LEAX",
+    "country": "SWEDEN",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LENZE",
+    "country": "GERMANY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LIEBHER",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LIEBHERR",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LINDE HYDRAULICS",
+    "country": "GERMANY",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LAKSHMI RING TRAVELLERS - LRT",
+    "country": "INDIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LUK",
+    "country": "GERMANY",
+    "city": "Malsch",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "LUOYANG BEARING",
+    "country": "OTHER",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "METAFRAM",
+    "country": "OTHER",
+    "city": "Oloron",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "MIBA",
+    "country": "AUSTRIA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "NGC CHINE",
+    "country": "CHINA",
+    "city": null,
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "NISSAN",
+    "country": "SPAIN",
+    "city": "Barcelone",
+    "client_group": null,
+    "address": null,
+    "description": null
+  },
+  {
+    "name": "NRB TAIWAN",
+    "country": "OTHER",
+    "city": "TAIPEI CITY, 100",
+    "client_group": null,
+    "address": null,
+    "description": null
+  }
+]

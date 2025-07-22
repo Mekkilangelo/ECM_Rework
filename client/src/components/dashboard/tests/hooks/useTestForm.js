@@ -140,7 +140,8 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,
-    initializeTimeComponents
+    initializeTimeComponents,
+    calculateProgramDuration
   } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
 
   // Hook pour la gestion de l'import Excel
@@ -296,6 +297,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     convertHMSToSeconds,
     handleTimeComponentChange,
     initializeTimeComponents,
+    calculateProgramDuration,
     
     // Fonctions de rafraîchissement
     refreshLocationOptions,

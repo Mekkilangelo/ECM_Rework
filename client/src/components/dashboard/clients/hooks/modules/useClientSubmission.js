@@ -10,6 +10,7 @@ import clientService from '../../../../../services/clientService';
  * @param {Object} client - Client existant (pour le mode édition)
  * @param {Function} setLoading - Fonction pour définir l'état de chargement
  * @param {Function} setMessage - Fonction pour définir les messages
+ * @param {Function} setErrors - Fonction pour définir les erreurs de champs
  * @param {Function} onClientCreated - Callback après création
  * @param {Function} onClientUpdated - Callback après mise à jour
  * @param {Function} onClose - Callback de fermeture
@@ -21,7 +22,8 @@ const useClientSubmission = ({
   validate, 
   entity, 
   setLoading, 
-  setMessage, 
+  setMessage,
+  setErrors,
   onCreated,
   onUpdated, 
   onClose
@@ -43,6 +45,7 @@ const useClientSubmission = ({
     entity,
     setLoading,
     setMessage,
+    setErrors,
     onCreated,
     onUpdated,
     onClose,

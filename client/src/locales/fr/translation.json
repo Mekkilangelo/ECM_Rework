@@ -27,7 +27,8 @@
     "yes": "Oui",
     "hours": "heures",
     "minutes": "minutes",
-    "seconds": "secondes"
+    "seconds": "secondes",
+    "calculated": "Calculé automatiquement"
   },
   
   "pagination": {
@@ -698,6 +699,7 @@
           "waitTime": "Temps d'attente",
           "unit": "Unité",
           "programDuration": "Durée du programme",
+          "calculatedField": "Champ calculé automatiquement",
           "cellTemp": "Température cellule",
           "waitPressure": "Pression d'attente"
         },

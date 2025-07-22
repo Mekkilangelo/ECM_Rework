@@ -14,6 +14,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
  * @param {string} options.entityId - ID de l'entité (si différent de entity.id)
  * @param {Function} options.setLoading - Fonction pour définir l'état de chargement
  * @param {Function} options.setMessage - Fonction pour définir les messages
+ * @param {Function} options.setErrors - Fonction pour définir les erreurs de champs
  * @param {Function} options.onCreated - Callback après création
  * @param {Function} options.onUpdated - Callback après mise à jour
  * @param {Function} options.onClose - Callback de fermeture
@@ -31,6 +32,7 @@ const useApiSubmission = ({
   entityId,
   setLoading,
   setMessage,
+  setErrors,
   onCreated,
   onUpdated,
   onClose,
@@ -153,16 +155,44 @@ const useApiSubmission = ({
       }
     } catch (error) {
       console.error(`Erreur lors de l'opération sur ${entityType}:`, error);
+      
+      // Gérer les erreurs de validation avec détails
+      let errorMessage = error.response?.data?.message || 
+        t('api.error.' + (entity ? 'update' : 'create'), { entityType });
+      
+      // Si l'erreur contient des détails de validation, les afficher
+      if (error.response?.data?.errors && typeof error.response.data.errors === 'object') {
+        const validationErrors = error.response.data.errors;
+        const errorMessages = Object.entries(validationErrors)
+          .map(([field, message]) => `${field}: ${message}`)
+          .join(', ');
+        errorMessage = `${errorMessage} - ${errorMessages}`;
+        
+        // Mettre à jour les erreurs de champs spécifiques si setErrors est disponible
+        if (setErrors) {
+          const fieldErrors = {};
+          Object.entries(validationErrors).forEach(([field, message]) => {
+            // Convertir les messages en clés de traduction si possible
+            if (field === 'name') {
+              fieldErrors.name = 'validation.required.clientName';
+            } else if (field === 'country') {
+              fieldErrors.country = 'validation.required.country';
+            } else {
+              fieldErrors[field] = message;
+            }
+          });
+          setErrors(fieldErrors);
+        }
+      }
+      
       setMessage({
         type: 'danger',
-        text: error.response?.data?.message || 
-          t('api.error.' + (entity ? 'update' : 'create'), { entityType })
+        text: errorMessage
       });
       
       // Afficher l'erreur dans un toast
       if (toast && toast.error) {
-        toast.error(error.response?.data?.message || 
-          t('api.error.' + (entity ? 'update' : 'create'), { entityType }));
+        toast.error(errorMessage);
       }
     } finally {
       setLoading(false);

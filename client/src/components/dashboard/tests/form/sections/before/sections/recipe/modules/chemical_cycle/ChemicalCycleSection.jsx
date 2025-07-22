@@ -12,12 +12,32 @@ const ChemicalCycleSection = ({
   getSelectedOption,
   handleChemicalCycleAdd,
   handleChemicalCycleRemove,
+  calculateProgramDuration,
   loading,
   selectStyles,
   viewMode = false,
   readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
+  
+  // Fonction pour calculer la durée totale du cycle chimique en minutes (incluant waitTime)
+  const calculateChemicalCycleDurationMinutes = () => {
+    if (!formData.recipeData?.chemicalCycle) return 0;
+    
+    // Somme des temps du cycle chimique en secondes
+    const totalSeconds = formData.recipeData.chemicalCycle.reduce((total, step) => {
+      return total + (parseInt(step.time) || 0);
+    }, 0);
+    
+    // Convertir en minutes
+    let totalMinutes = totalSeconds / 60;
+    
+    // Ajouter le waitTime s'il existe
+    const waitTime = parseInt(formData.recipeData?.waitTime) || 0;
+    totalMinutes += waitTime;
+    
+    return Math.round(totalMinutes); // Arrondi à la minute la plus proche (valeur entière)
+  };
   
   const gasOptions = [
     { value: 'N2', label: 'N2' },
@@ -275,6 +295,28 @@ const ChemicalCycleSection = ({
           </Button>
         </div>
       )}
+      
+      {/* Champ calculé pour la durée totale du cycle chimique */}
+      <div className="row mb-3">
+        <div className="col-md-6">
+          <label className="form-label">{t('Durée totale du cycle chimique (minutes)')}</label>
+          <input
+            type="text"
+            className="form-control"
+            value={calculateChemicalCycleDurationMinutes()}
+            readOnly
+            style={{
+              ...readOnlyFieldStyle,
+              backgroundColor: calculateProgramDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDurationMinutes()) < 0.1 
+                ? '#d4edda' // Vert si égal (avec tolérance de 0.1)
+                : '#f8d7da', // Rouge si différent
+              borderColor: calculateProgramDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDurationMinutes()) < 0.1 
+                ? '#c3e6cb' 
+                : '#f5c6cb'
+            }}
+          />
+        </div>
+      </div>
     </>
   );
 };

@@ -113,9 +113,8 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       
       // Temps d'attente avant le cycle thermique (en minutes)
       const waitTime = parseInt(relevantRecipeData.waitTime) || 0;
-      const waitTimeInMinutes = relevantRecipeData.waitTimeUnit === 'min'
-        ? waitTime 
-        : waitTime / 60;
+      // Le waitTime est maintenant directement en minutes
+      const waitTimeInMinutes = waitTime;
       
       // Ajouter le point initial au temps 0 et à la température cellule
       temperaturePoints.push({ x: 0, y: cellTemp });
@@ -187,13 +186,17 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       gasTypes.forEach(gas => {
         gasDatasets[gas] = {
           label: `Débit ${gas} (Nl/h)`,
-          data: [],
+          data: [
+            // Commencer à zéro au début du cycle chimique
+            { x: waitTimeInMinutes, y: 0 }
+          ],
           borderColor: getGasColor(gas),
           backgroundColor: getGasColor(gas, 0.2),
           borderWidth: 2,
           pointRadius: 0,
           yAxisID: 'y1',
           fill: false,
+          stepped: true, // Créer des échelons
           segment: {
             borderColor: ctx => getGasColor(gas),
             borderWidth: 2
@@ -202,22 +205,47 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       });
       
       // Parcourir chaque étape du cycle chimique
-      chemicalCycle.forEach(step => {
+      chemicalCycle.forEach((step, stepIndex) => {
         const stepTime = (parseInt(step.time) || 0) / 60; // Convertir secondes en minutes
+        const stepStart = chemTimeOffset;
         const stepEnd = chemTimeOffset + stepTime;
         
-        // Pour chaque gaz actif dans cette étape
-        if (step.gases && Array.isArray(step.gases)) {
-          step.gases.forEach(gas => {
-            const debit = parseInt(gas.debit) || 0;
-            
-            if (debit > 0 && gasDatasets[gas.gas]) {
-              // Ajouter seulement deux points pour cette section - début et fin
-              gasDatasets[gas.gas].data.push({ x: chemTimeOffset, y: debit });
-              gasDatasets[gas.gas].data.push({ x: stepEnd, y: debit });
+        // Pour chaque gaz défini, créer les échelons
+        gasTypes.forEach(gasType => {
+          const gasData = gasDatasets[gasType];
+          if (!gasData) return;
+          
+          // Trouver le débit pour ce gaz dans cette étape
+          let currentDebit = 0;
+          if (step.gases && Array.isArray(step.gases)) {
+            const gasInfo = step.gases.find(g => g.gas === gasType);
+            currentDebit = gasInfo ? (parseInt(gasInfo.debit) || 0) : 0;
+          }
+          
+          // Si c'est la première étape ou si le débit change, ajouter les points d'échelon
+          const lastPoint = gasData.data[gasData.data.length - 1];
+          const previousDebit = lastPoint ? lastPoint.y : 0;
+          
+          // Si on est au début ou si le débit change
+          if (stepIndex === 0 || previousDebit !== currentDebit) {
+            // Si ce n'est pas le premier point et que le débit précédent n'était pas zéro,
+            // d'abord descendre à zéro puis monter au nouveau débit
+            if (stepIndex > 0 && previousDebit > 0 && currentDebit !== previousDebit) {
+              gasData.data.push({ x: stepStart, y: 0 });
             }
-          });
-        }
+            
+            // Ajouter le début de l'échelon
+            gasData.data.push({ x: stepStart, y: currentDebit });
+          }
+          
+          // Ajouter la fin de l'échelon
+          gasData.data.push({ x: stepEnd, y: currentDebit });
+          
+          // Si c'est la dernière étape et que le débit n'est pas zéro, redescendre à zéro
+          if (stepIndex === chemicalCycle.length - 1 && currentDebit > 0) {
+            gasData.data.push({ x: stepEnd, y: 0 });
+          }
+        });
         
         chemTimeOffset = stepEnd;
       });
@@ -319,6 +347,10 @@ const RecipePreviewChart = React.memo(({ formData }) => {
     elements: {
       line: {
         tension: 0 // Lignes droites pour les segments
+      },
+      point: {
+        radius: 0, // Masquer les points sur les courbes chimiques pour un effet échelon plus net
+        hoverRadius: 4
       }
     },
     plugins: {

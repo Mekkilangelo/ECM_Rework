@@ -38,6 +38,25 @@ const RecipeDataSection = ({
 }) => {
   const { t } = useTranslation();
   
+  // Fonction pour calculer la durée totale du cycle chimique en minutes (incluant waitTime)
+  const calculateChemicalCycleDuration = () => {
+    if (!formData.recipeData?.chemicalCycle) return 0;
+    
+    // Somme des temps du cycle chimique en secondes
+    const totalSeconds = formData.recipeData.chemicalCycle.reduce((total, step) => {
+      return total + (parseInt(step.time) || 0);
+    }, 0);
+    
+    // Convertir en minutes
+    let totalMinutes = totalSeconds / 60;
+    
+    // Ajouter le waitTime s'il existe
+    const waitTime = parseInt(formData.recipeData?.waitTime) || 0;
+    totalMinutes += waitTime;
+    
+    return Math.round(totalMinutes); // Arrondi à la minute la plus proche (valeur entière)
+  };
+  
   return (
     <>    
       {/* Recipe Number */}
@@ -89,6 +108,7 @@ const RecipeDataSection = ({
           handleThermalCycleRemove={handleThermalCycleRemove}
           handleThermalCycleChange={handleThermalCycleChange}
           calculateProgramDuration={calculateProgramDuration}
+          calculateChemicalCycleDuration={calculateChemicalCycleDuration}
           loading={loading}
           selectStyles={selectStyles}
           viewMode={viewMode}
@@ -110,6 +130,7 @@ const RecipeDataSection = ({
           getSelectedOption={getSelectedOption}
           handleChemicalCycleAdd={handleChemicalCycleAdd}
           handleChemicalCycleRemove={handleChemicalCycleRemove}
+          calculateProgramDuration={calculateProgramDuration}
           loading={loading}
           selectStyles={selectStyles}
           viewMode={viewMode}

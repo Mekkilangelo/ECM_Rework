@@ -17,6 +17,7 @@ const ThermalCycleSection = ({
   handleThermalCycleRemove,
   handleThermalCycleChange,
   calculateProgramDuration,
+  calculateChemicalCycleDuration,
   loading,
   selectStyles,
   viewMode = false,
@@ -182,8 +183,12 @@ const ThermalCycleSection = ({
               readOnly
               disabled
               style={{
-                backgroundColor: '#e9ecef',
-                border: '1px solid #ced4da',
+                backgroundColor: calculateChemicalCycleDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDuration()) < 0.1 
+                  ? '#d4edda' // Vert si égal (avec tolérance de 0.1)
+                  : '#f8d7da', // Rouge si différent
+                borderColor: calculateChemicalCycleDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDuration()) < 0.1 
+                  ? '#c3e6cb' 
+                  : '#f5c6cb',
                 cursor: 'not-allowed',
                 color: '#6c757d'
               }}

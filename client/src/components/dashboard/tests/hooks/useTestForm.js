@@ -147,18 +147,11 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
   // Hook pour la gestion de l'import Excel
   const {
     fileInputRef,
-    getCurveSectionRef,
     handleExcelImport,
     processExcelData
   } = useExcelImport(
     formData,
-    handleChange,
-    handleHardnessResultAdd,
-    handleHardnessChange,
-    handleEcdPositionAdd,
-    handleEcdPositionChange,
-    handleEcdChange,
-    hardnessUnitOptions
+    handleChange
   );
   
   // Validation du formulaire
@@ -319,11 +312,8 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     
     // Fonctions d'import Excel
     fileInputRef,
-    getCurveSectionRef,
     handleExcelImport,
     processExcelData,
-    handleEcdChange,
-    handleHardnessChange,
     
     // Référence et fonction pour la gestion des données de courbe
     resultsSectionRef,

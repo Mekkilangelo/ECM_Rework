@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Form, Button, Card, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
 import MicrographsSection from './modules/MicrographsSection';
 import ControlLocationSection from './modules/ControlLocationSection';
@@ -40,7 +40,10 @@ const ResultsDataSection = forwardRef(({
   test,
   handleFileAssociationNeeded,
   viewMode = false,
-  readOnlyFieldStyle = {}
+  readOnlyFieldStyle = {},
+  fileInputRef,
+  handleExcelImport,
+  processExcelData
 }, ref) => {
   const { t } = useTranslation();
 
@@ -373,6 +376,29 @@ const ResultsDataSection = forwardRef(({
                     placeholder={t('tests.after.results.enterSampleDescription')}
                   />
                 </Form.Group>
+
+                {/* Bouton d'import Excel pour l'échantillon */}
+                {!viewMode && fileInputRef && handleExcelImport && (
+                  <div className="mb-3">
+                    <Button
+                      variant="outline-success"
+                      size="sm"
+                      onClick={() => handleExcelImport(resultIndex, sampleIndex)}
+                      disabled={loading}
+                      className="me-2"
+                    >
+                      <FontAwesomeIcon icon={faFileExcel} className="me-1" />
+                      {t('tests.after.results.import.button')}
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={processExcelData}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                )}
 
                 {/* Section des points de dureté - Version améliorée */}
                 <Card className="mb-3">

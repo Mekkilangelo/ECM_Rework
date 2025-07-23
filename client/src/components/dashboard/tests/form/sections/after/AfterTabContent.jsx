@@ -79,6 +79,9 @@ const AfterTabContent = forwardRef(({
           handleFileAssociationNeeded={handleFileAssociationNeeded}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}
+          fileInputRef={excelImportHandlers.fileInputRef}
+          handleExcelImport={excelImportHandlers.handleExcelImport}
+          processExcelData={excelImportHandlers.processExcelData}
         />
       </CollapsibleSection>    </>
   );

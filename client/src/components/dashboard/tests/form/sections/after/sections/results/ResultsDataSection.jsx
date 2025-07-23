@@ -155,10 +155,20 @@ const ResultsDataSection = forwardRef(({
   // Fonction pour la gestion des positions ECD
   const handleEcdPositionChange = (resultIndex, sampleIndex, ecdIndex, field, value) => {
     const updatedResults = [...results];
-    const ecdPositions = updatedResults[resultIndex].samples[sampleIndex].ecdPositions || [];
     
-    ecdPositions[ecdIndex] = { ...ecdPositions[ecdIndex], [field]: value };
-    updatedResults[resultIndex].samples[sampleIndex].ecdPositions = ecdPositions;
+    // S'assurer que la structure ecd existe
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd = {
+        hardnessValue: '',
+        hardnessUnit: '',
+        ecdPoints: []
+      };
+    }
+    
+    const ecdPoints = updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints || [];
+    
+    ecdPoints[ecdIndex] = { ...ecdPoints[ecdIndex], [field]: value };
+    updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = ecdPoints;
     
     handleChange({
       target: {
@@ -171,17 +181,26 @@ const ResultsDataSection = forwardRef(({
   // Fonction pour ajouter une position ECD
   const addEcdPosition = (resultIndex, sampleIndex) => {
     const updatedResults = [...results];
-    const ecdPositions = updatedResults[resultIndex].samples[sampleIndex].ecdPositions || [];
+    
+    // S'assurer que la structure ecd existe
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd = {
+        hardnessValue: '',
+        hardnessUnit: '',
+        ecdPoints: []
+      };
+    }
+    
+    const ecdPoints = updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints || [];
     
     // Ajouter une nouvelle position vide
     const newPosition = {
       position: '',
-      distance: '',
-      unit: 'mm'
+      distance: ''
     };
     
-    ecdPositions.push(newPosition);
-    updatedResults[resultIndex].samples[sampleIndex].ecdPositions = ecdPositions;
+    ecdPoints.push(newPosition);
+    updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = ecdPoints;
     
     handleChange({
       target: {
@@ -194,11 +213,17 @@ const ResultsDataSection = forwardRef(({
   // Fonction pour supprimer une position ECD
   const removeEcdPosition = (resultIndex, sampleIndex, ecdIndex) => {
     const updatedResults = [...results];
-    const ecdPositions = updatedResults[resultIndex].samples[sampleIndex].ecdPositions || [];
+    
+    // S'assurer que la structure ecd existe
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      return;
+    }
+    
+    const ecdPoints = updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints || [];
     
     // Supprimer la position à l'index spécifié
-    ecdPositions.splice(ecdIndex, 1);
-    updatedResults[resultIndex].samples[sampleIndex].ecdPositions = ecdPositions;
+    ecdPoints.splice(ecdIndex, 1);
+    updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = ecdPoints;
     
     handleChange({
       target: {
@@ -209,14 +234,23 @@ const ResultsDataSection = forwardRef(({
   };
 
   // Fonction pour s'assurer qu'il y a toujours au moins une position ECD
-  const ensureMinimumEcdPositions = (resultIndex, sampleIndex) => {
+  const ensureMinimumEcdPoints = (resultIndex, sampleIndex) => {
     const updatedResults = [...results];
-    if (!updatedResults[resultIndex].samples[sampleIndex].ecdPositions || 
-        updatedResults[resultIndex].samples[sampleIndex].ecdPositions.length === 0) {
-      updatedResults[resultIndex].samples[sampleIndex].ecdPositions = [{
+    
+    // S'assurer que la structure ecd existe
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd = {
+        hardnessValue: '',
+        hardnessUnit: '',
+        ecdPoints: []
+      };
+    }
+    
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints || 
+        updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints.length === 0) {
+      updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = [{
         position: '',
-        distance: '',
-        unit: 'mm'
+        distance: ''
       }];
       
       handleChange({
@@ -513,13 +547,13 @@ const ResultsDataSection = forwardRef(({
                   <Card.Body>
                     {(() => {
                       // S'assurer qu'il y a toujours au moins une position
-                      const ecdPositions = sample.ecdPositions?.length > 0 
-                        ? sample.ecdPositions 
-                        : [{ position: '', distance: '', unit: 'mm' }];
+                      const ecdPoints = sample.ecd?.ecdPoints?.length > 0 
+                        ? sample.ecd.ecdPoints 
+                        : [{ position: '', distance: '' }];
                       
                       // Si le sample n'a pas de positions, les initialiser
-                      if (!sample.ecdPositions || sample.ecdPositions.length === 0) {
-                        ensureMinimumEcdPositions(resultIndex, sampleIndex);
+                      if (!sample.ecd?.ecdPoints || sample.ecd.ecdPoints.length === 0) {
+                        ensureMinimumEcdPoints(resultIndex, sampleIndex);
                       }
 
                       return (
@@ -538,7 +572,7 @@ const ResultsDataSection = forwardRef(({
                             </tr>
                           </thead>
                           <tbody>
-                            {ecdPositions.map((position, ecdIndex) => (
+                            {ecdPoints.map((position, ecdIndex) => (
                               <tr key={ecdIndex}>
                                 <td>
                                   <Form.Control
@@ -565,7 +599,7 @@ const ResultsDataSection = forwardRef(({
                                   />
                                 </td>
                                 <td className="text-center">
-                                  {!viewMode && ecdPositions.length > 1 && (
+                                  {!viewMode && ecdPoints.length > 1 && (
                                     <Button
                                       variant="outline-danger"
                                       size="sm"

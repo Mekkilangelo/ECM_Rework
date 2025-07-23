@@ -101,7 +101,7 @@ const useTestSubmission = (
               ecd: { 
                 hardnessValue: '', 
                 hardnessUnit: '', 
-                ecdPoints: [{ name: '', distance: '', unit: '' }]
+                ecdPoints: [{ position: '', distance: '' }]
               },
               hardnessUnit: 'HV',
               curveData: { points: [] }
@@ -292,7 +292,7 @@ const useTestSubmission = (
       (result.samples && result.samples.some(sample =>
         sample.description ||
         (sample.hardnessPoints && sample.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
-        (sample.ecd && sample.ecd.ecdPoints && sample.ecd.ecdPoints.some(p => p.distance || p.name)) ||
+        (sample.ecd && sample.ecd.ecdPoints && sample.ecd.ecdPoints.some(p => p.distance || p.position)) ||
         (sample.curveData && (
           (sample.curveData.points && sample.curveData.points.length > 0) ||
           (sample.curveData.distances && sample.curveData.series && 
@@ -319,9 +319,8 @@ const useTestSubmission = (
               hardness_unit: sample.ecd.hardnessUnit || null,
               positions: Array.isArray(sample.ecd.ecdPoints) && sample.ecd.ecdPoints.length > 0 ? 
                 sample.ecd.ecdPoints.map(point => ({
-                  name: point.name || null,
-                  distance: point.distance || null,
-                  unit: point.unit || null
+                  position: point.position || null,
+                  distance: point.distance || null
                 })) : null
             } : null;
             

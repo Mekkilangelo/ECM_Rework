@@ -131,32 +131,35 @@ const useFormState = () => {
         {
           step: 1,
           description: '',
-          hardnessPoints: [
+          samples: [
             {
-              location: '',
-              value: '',
-              unit: ''
+              step: 1,
+              description: '',
+              hardnessPoints: [
+                {
+                  location: '',
+                  value: '',
+                  unit: ''
+                }
+              ],
+              ecd: {
+                hardnessValue: '',
+                hardnessUnit: '',
+                ecdPoints: [
+                  {
+                    position: '',
+                    distance: ''
+                  }
+                ]
+              },
+              comment: '',
+              hardnessUnit: 'HV',
+              curveData: {
+                distances: [],
+                series: []
+              }
             }
-          ],
-          ecd: {
-            hardnessValue: '',
-            hardnessUnit: '',
-            toothFlank: {
-              distance: '',
-              unit: ''
-            },
-            toothRoot: {
-              distance: '',
-              unit: ''
-            }
-          },
-          comment: '',
-          
-          hardnessUnit: 'HV',
-          curveData: {
-            distances: [],
-            series: []
-          }
+          ]
         }
       ]
     }

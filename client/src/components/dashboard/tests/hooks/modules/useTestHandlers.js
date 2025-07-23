@@ -285,14 +285,6 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           ecd: {
             hardnessValue: '',
             hardnessUnit: '',
-            toothFlank: {
-              distance: '',
-              unit: ''
-            },
-            toothRoot: {
-              distance: '',
-              unit: ''
-            },
             ecdPoints: [{ name: '', distance: '', unit: '' }]
           },
           hardnessUnit: 'HV',
@@ -343,14 +335,6 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
       ecd: {
         hardnessValue: '',
         hardnessUnit: '',
-        toothFlank: {
-          distance: '',
-          unit: ''
-        },
-        toothRoot: {
-          distance: '',
-          unit: ''
-        },
         ecdPoints: [{ name: '', distance: '', unit: '' }]
       },
       hardnessUnit: 'HV',

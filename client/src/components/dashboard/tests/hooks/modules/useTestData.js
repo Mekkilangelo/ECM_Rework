@@ -241,9 +241,8 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                             hardnessUnit: sample.ecd?.hardness_unit || '',
                             ecdPoints: Array.isArray(sample.ecd?.positions)
                               ? sample.ecd.positions.map(pos => ({
-                                  name: pos.name || '',
-                                  distance: pos.distance || '',
-                                  unit: pos.unit || ''
+                                  position: pos.position || pos.name || '',
+                                  distance: pos.distance || ''
                                 }))
                               : []
                           };
@@ -344,7 +343,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                       ecd: {
                         hardnessValue: '',
                         hardnessUnit: '',
-                        ecdPoints: [{ name: '', distance: '', unit: '' }]
+                        ecdPoints: [{ position: '', distance: '' }]
                       },
                       hardnessUnit: '',
                       curveData: { distances: [], series: [] }, // Nouveau format par défaut

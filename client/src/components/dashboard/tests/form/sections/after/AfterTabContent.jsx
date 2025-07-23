@@ -62,22 +62,7 @@ const AfterTabContent = forwardRef(({
       >
         <ResultsDataSection
           ref={resultsDataSectionRef}
-          formData={(() => {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('=== AFTERTABCONTENT -> RESULTSDATASECTION ===');
-              console.log('formData being passed:', formData);
-              console.log('formData.resultsData:', formData.resultsData);
-              if (formData.resultsData?.results?.length > 0) {
-                console.log('First result samples:', formData.resultsData.results[0].samples?.length || 0);
-                if (formData.resultsData.results[0].samples?.length > 0) {
-                  const firstSample = formData.resultsData.results[0].samples[0];
-                  console.log('First sample curveData from AfterTabContent:', firstSample.curveData);
-                  console.log('First sample curveData points from AfterTabContent:', firstSample.curveData?.points?.length || 0);
-                }
-              }
-            }
-            return formData;
-          })()}
+          formData={formData}
           parentId={formHandlers.parentId}
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
@@ -88,19 +73,12 @@ const AfterTabContent = forwardRef(({
           handleResultBlocRemove={formHandlers.handleResultBlocRemove}
           handleSampleAdd={formHandlers.handleSampleAdd}
           handleSampleRemove={formHandlers.handleSampleRemove}
-          handleHardnessResultAdd={formHandlers.handleHardnessResultAdd}
-          handleHardnessResultRemove={formHandlers.handleHardnessResultRemove}
-          handleEcdPositionAdd={formHandlers.handleEcdPositionAdd}
-          handleEcdPositionRemove={formHandlers.handleEcdPositionRemove}
-          handleEcdPositionChange={formHandlers.handleEcdPositionChange}
           loading={loading}
           selectStyles={formHandlers.selectStyles}
           test={test}
           handleFileAssociationNeeded={handleFileAssociationNeeded}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}
-          // Passer les fonctions d'import Excel
-          excelImportHandlers={excelImportHandlers}
         />
       </CollapsibleSection>    </>
   );

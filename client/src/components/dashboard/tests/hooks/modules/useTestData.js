@@ -68,7 +68,9 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             furnaceData, 
             loadData, 
             recipeData, 
-            quenchData,            resultsData 
+            quenchData,            
+            resultsData,
+            rawResultsData: data.results_data
           });
           
           // Map from API structure to form structure
@@ -246,40 +248,60 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                               : []
                           };
                           
-                          // Traiter les données de courbe avec prise en compte des positions dynamiques
-                          const curvePoints = Array.isArray(sample.curve_data?.points)
-                            ? sample.curve_data.points.map(point => {
-                                const curvePoint = { distance: point.distance || '' };
-                                
-                                // Ajouter toutes les propriétés du point (pas seulement les positions ECD connues)
+                          // Traiter les données de courbe - NOUVEAU FORMAT PRIORITAIRE
+                          let curveData = { distances: [], series: [] };
+                          
+                          if (sample.curve_data) {
+                            // NOUVEAU FORMAT: distances + series (prioritaire)
+                            // Vérifier la présence des propriétés, pas leur truthiness
+                            if (sample.curve_data.hasOwnProperty('distances') && sample.curve_data.hasOwnProperty('series')) {
+                              console.log(`✅ NOUVEAU FORMAT détecté pour [Result ${resultBlock.step}][Sample ${sample.step}]`);
+                              console.log('Données brutes curve_data:', sample.curve_data);
+                              curveData = {
+                                distances: Array.isArray(sample.curve_data.distances) ? sample.curve_data.distances : [],
+                                series: Array.isArray(sample.curve_data.series) ? sample.curve_data.series : []
+                              };
+                              console.log('Données après parsing:', curveData);
+                            }
+                            // ANCIEN FORMAT: points (conversion)
+                            else if (Array.isArray(sample.curve_data.points) && sample.curve_data.points.length > 0) {
+                              console.log(`🔄 ANCIEN FORMAT détecté, conversion vers nouveau format pour [Result ${resultBlock.step}][Sample ${sample.step}]`);
+                              
+                              // Extraire les distances uniques
+                              const distances = [...new Set(sample.curve_data.points.map(p => p.distance))].sort((a, b) => a - b);
+                              const seriesNames = new Set();
+                              
+                              // Découvrir tous les noms de séries
+                              sample.curve_data.points.forEach(point => {
                                 Object.keys(point).forEach(key => {
                                   if (key !== 'distance') {
-                                    curvePoint[key] = point[key];
+                                    seriesNames.add(key);
                                   }
                                 });
-                                
-                                // Si on a des positions ECD définies, s'assurer qu'elles existent dans le point
-                                if (Array.isArray(sample.ecd?.positions)) {
-                                  sample.ecd.positions.forEach(pos => {
-                                    if (pos.name) {
-                                      const normalizedKey = pos.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w]/g, '');
-                                      if (curvePoint[normalizedKey] === undefined) {
-                                        curvePoint[normalizedKey] = point[normalizedKey] || point[pos.name] || '';
-                                      }
-                                    }
-                                  });
-                                }
-                                
-                                return curvePoint;
-                              })
-                            : [];
+                              });
+                              
+                              // Créer les séries
+                              const series = Array.from(seriesNames).map(seriesName => ({
+                                name: seriesName,
+                                values: distances.map(distance => {
+                                  const point = sample.curve_data.points.find(p => p.distance === distance);
+                                  return point && point[seriesName] !== undefined ? point[seriesName] : '';
+                                })
+                              }));
+                              
+                              curveData = { distances, series };
+                            }
+                          }
 
                           // Debug log pour vérifier les données de courbe chargées
-                          if (process.env.NODE_ENV === 'development' && curvePoints.length > 0) {
+                          if (process.env.NODE_ENV === 'development' && (curveData.distances?.length > 0 || curveData.series?.length > 0)) {
                             console.log(`=== CHARGEMENT CURVE DATA [Result ${resultBlock.step}][Sample ${sample.step}] ===`);
-                            console.log('Points chargés depuis API:', curvePoints.length);
-                            console.log('Premier point:', curvePoints[0]);
-                            console.log('Clés disponibles:', Object.keys(curvePoints[0]));
+                            console.log('Format final:', curveData.distances?.length > 0 ? 'NOUVEAU (distances+series)' : 'vide');
+                            console.log('Distances:', curveData.distances?.length || 0);
+                            console.log('Séries:', curveData.series?.length || 0);
+                            if (curveData.series?.length > 0) {
+                              console.log('Première série:', curveData.series[0]);
+                            }
                           }
                           
                           return {
@@ -288,7 +310,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                             hardnessPoints: hardnessPoints,
                             ecd: ecdData,
                             hardnessUnit: sample.hardness_unit || '',
-                            curveData: { points: curvePoints },
+                            curveData: curveData, // Nouveau format directement
                             comment: sample.comment || ''
                           };
                         })
@@ -302,7 +324,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                             ecdPoints: []
                           },
                           hardnessUnit: '',
-                          curveData: { points: [] },
+                          curveData: { distances: [], series: [] }, // Nouveau format par défaut
                           comment: ''
                         }];
 
@@ -325,11 +347,19 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                         ecdPoints: [{ name: '', distance: '', unit: '' }]
                       },
                       hardnessUnit: '',
-                      curveData: { points: [] },
+                      curveData: { distances: [], series: [] }, // Nouveau format par défaut
                       comment: ''
                     }]
                   }]
-            }          });          
+            }          
+          });
+          
+          console.log('🚀 DONNÉES FINALES TRANSMISES À setFormData:', {
+            hasResultsData: !!(resultsData?.results),
+            resultsCount: resultsData?.results?.length || 0,
+            firstResultSamples: resultsData?.results?.[0]?.samples?.length || 0,
+            firstSampleCurveData: resultsData?.results?.[0]?.samples?.[0]?.curveData
+          });
         } catch (error) {
           console.error('Error while fetching test details:', error);
           console.error('Error details:', error.response?.data || error.message);

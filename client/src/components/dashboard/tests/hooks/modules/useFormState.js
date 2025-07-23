@@ -154,7 +154,8 @@ const useFormState = () => {
           
           hardnessUnit: 'HV',
           curveData: {
-            points: []
+            distances: [],
+            series: []
           }
         }
       ]

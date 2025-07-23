@@ -225,7 +225,16 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                         if (formData.resultsData.results[0].samples?.length > 0) {
                           const firstSample = formData.resultsData.results[0].samples[0];
                           console.log('First sample curveData from TestForm:', firstSample.curveData);
-                          console.log('First sample curveData points from TestForm:', firstSample.curveData?.points?.length || 0);
+                          console.log('First sample curveData NOUVEAU FORMAT - distances:', firstSample.curveData?.distances?.length || 0);
+                          console.log('First sample curveData NOUVEAU FORMAT - series:', firstSample.curveData?.series?.length || 0);
+                          console.log('First sample curveData ANCIEN FORMAT - points:', firstSample.curveData?.points?.length || 0);
+                          if (firstSample.curveData?.distances?.length > 0 || firstSample.curveData?.series?.length > 0) {
+                            console.log('✅ TestForm détecte des données de courbe au NOUVEAU FORMAT');
+                          } else if (firstSample.curveData?.points?.length > 0) {
+                            console.log('⚠️ TestForm détecte des données de courbe à l\'ANCIEN FORMAT');
+                          } else {
+                            console.log('❌ TestForm ne détecte AUCUNE donnée de courbe');
+                          }
                         }
                       }
                     }

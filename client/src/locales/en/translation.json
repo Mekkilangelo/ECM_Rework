@@ -26,7 +26,8 @@
     "addOption": "Add option",
     "hours": "hours",
     "minutes": "minutes",
-    "seconds": "seconds"
+    "seconds": "seconds",
+    "comingSoon": "Coming Soon"
   },
   
   "pagination": {
@@ -709,7 +710,8 @@
           "flowRate": "Flow Rate",
           "pressure": "Pressure",
           "turbine": "Turbine",
-          "addStep": "Add step"
+          "addStep": "Add step",
+          "totalCycleDuration": "Total chemical cycle duration (minutes)"
         },
         
         "graphs": {
@@ -753,6 +755,10 @@
             "drippingUnit": "Dripping Unit"
           }
         }
+      },
+      
+      "chemicalCycle": {
+        "totalCycleDuration": "Total chemical cycle duration (minutes)"
       }
     },
 
@@ -784,15 +790,21 @@
         "resultsLabel": "Results",
         "addResult": "Add result",
         "resultNumber": "Result #{{number}}",
-        "description": "Description",        "samples": "Samples",
-        "addSample": "Add sample",        "import": {
+        "description": "Description",
+        "enterDescription": "Enter a description",
+        "samples": "Samples",
+        "addSample": "Add sample",
+        "sampleNumber": "Sample {{number}}",
+        "sampleDescription": "Sample description",
+        "enterSampleDescription": "Enter a sample description",
+        "ecdPosition": "ECD Positions",
+        "addPosition": "Add Position",
+        "import": {
           "button": "Import Excel",
           "error": "Error reading Excel file",
           "noData": "No filiation data found in file",
           "success": "{{count}} filiation(s) imported successfully"
         },
-        "sampleNumber": "Sample {{number}}",
-        "sampleDescription": "Sample description",
         "hardness": "Hardness",
         "position": "Position",
         "value": "Value",
@@ -845,6 +857,14 @@
           "addPoint": "Add a point",
           "hardnessWithUnit": "Hardness ({{unit}})",
           "specError": "Error retrieving ECD specifications:"
+        },
+        "curves": {
+          "title": "Hardness Curves",
+          "hardness": "Hardness",
+          "series": "Series", 
+          "points": "Points",
+          "noDataToDisplay": "No data to display",
+          "addDataToSeeChart": "Add data in the table to see the chart"
         }
       }
     }

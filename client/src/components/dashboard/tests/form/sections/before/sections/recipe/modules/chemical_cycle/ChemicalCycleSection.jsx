@@ -299,7 +299,7 @@ const ChemicalCycleSection = ({
       {/* Champ calculé pour la durée totale du cycle chimique */}
       <div className="row mb-3">
         <div className="col-md-6">
-          <label className="form-label">{t('Durée totale du cycle chimique (minutes)')}</label>
+          <label className="form-label">{t('tests.before.chemicalCycle.totalCycleDuration')}</label>
           <input
             type="text"
             className="form-control"

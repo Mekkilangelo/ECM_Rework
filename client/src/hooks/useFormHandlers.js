@@ -7,15 +7,42 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     
-    // Debug : tracer les mises à jour des données curve
-    if (process.env.NODE_ENV === 'development' && name && name.includes('curveData')) {
-      console.log('=== DEBUG FORM HANDLERS - CURVE DATA UPDATE ===');
-      console.log('Field name:', name);
-      console.log('Value type:', typeof value);
-      console.log('Value structure:', value);
-      if (value && value.points) {
-        console.log('Number of points:', value.points.length);
-        console.log('First point example:', value.points[0]);
+    // Debug : tracer les mises à jour des données curve et resultsData
+    if (process.env.NODE_ENV === 'development' && (name === 'resultsData' || (name && name.includes('curveData')))) {
+      console.log('🔧 useFormHandlers - handleChange reçu:', {
+        fieldName: name,
+        valueType: typeof value,
+        isResultsData: name === 'resultsData',
+        isCurveData: name && name.includes('curveData'),
+        hasValue: !!value
+      });
+      
+      if (name === 'resultsData' && value) {
+        console.log('📊 Analyse des données resultsData reçues:', {
+          hasResults: !!value.results,
+          resultsCount: value.results?.length || 0,
+          firstResultSamples: value.results?.[0]?.samples?.length || 0
+        });
+        
+        // Vérifier les curveData dans chaque sample
+        if (value.results) {
+          value.results.forEach((result, rIndex) => {
+            if (result.samples) {
+              result.samples.forEach((sample, sIndex) => {
+                if (sample.curveData) {
+                  console.log(`📈 CurveData trouvée [${rIndex}][${sIndex}]:`, {
+                    hasDistances: !!sample.curveData.distances,
+                    hasSeries: !!sample.curveData.series,
+                    hasPoints: !!sample.curveData.points,
+                    distancesCount: sample.curveData.distances?.length || 0,
+                    seriesCount: sample.curveData.series?.length || 0,
+                    pointsCount: sample.curveData.points?.length || 0
+                  });
+                }
+              });
+            }
+          });
+        }
       }
     }
     

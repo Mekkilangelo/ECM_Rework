@@ -28,7 +28,8 @@
     "hours": "heures",
     "minutes": "minutes",
     "seconds": "secondes",
-    "calculated": "Calculé automatiquement"
+    "calculated": "Calculé automatiquement",
+    "comingSoon": "Prochainement"
   },
   
   "pagination": {
@@ -713,7 +714,8 @@
           "flowRate": "Débit",
           "pressure": "Pression",
           "turbine": "Turbine",
-          "addStep": "Ajouter une étape"
+          "addStep": "Ajouter une étape",
+          "totalCycleDuration": "Durée totale du cycle chimique (minutes)"
         },
         
         "graphs": {
@@ -757,6 +759,10 @@
             "drippingUnit": "Unité d'égouttage"
           }
         }
+      },
+      
+      "chemicalCycle": {
+        "totalCycleDuration": "Durée totale du cycle chimique (minutes)"
       }
     },
 
@@ -789,15 +795,21 @@
         "resultsLabel": "Résultats",
         "addResult": "Ajouter un résultat",
         "resultNumber": "Résultat #{{number}}",
-        "description": "Description",        "samples": "Échantillons",
-        "addSample": "Ajouter un échantillon",        "import": {
+        "description": "Description",
+        "enterDescription": "Entrer une description",
+        "samples": "Échantillons",
+        "addSample": "Ajouter un échantillon",
+        "sampleNumber": "Échantillon {{number}}",
+        "sampleDescription": "Description de l'échantillon",
+        "enterSampleDescription": "Entrer une description de l'échantillon",
+        "ecdPosition": "Positions ECD",
+        "addPosition": "Ajouter Position",
+        "import": {
           "button": "Importer Excel",
           "error": "Erreur lors de la lecture du fichier Excel",
           "noData": "Aucune donnée de filiation trouvée dans le fichier",
           "success": "{{count}} filiation(s) importée(s) avec succès"
         },
-        "sampleNumber": "Échantillon {{number}}",
-        "sampleDescription": "Description de l'échantillon",
         "hardness": "Dureté",
         "position": "Position",
         "value": "Valeur",
@@ -852,6 +864,14 @@
           "hardnessWithUnit": "Dureté ({{unit}})",
           "specError": "Erreur lors de la récupération des spécifications ECD:",
           "noPositions": "Veuillez définir des positions ECD dans la section précédente pour générer les données de courbe"
+        },
+        "curves": {
+          "title": "Courbes de dureté",
+          "hardness": "Dureté", 
+          "series": "Séries",
+          "points": "Points",
+          "noDataToDisplay": "Aucune donnée à afficher",
+          "addDataToSeeChart": "Ajoutez des données dans le tableau pour voir le graphique"
         }
       }
     }

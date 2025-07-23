@@ -29,7 +29,12 @@
     "seconds": "seconds",
     "comingSoon": "Coming Soon",
     "searchResults": "{{count}} result(s) found for \"{{query}}\"",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "confirmClose": "Confirm close",
+    "unsavedChangesMessage": "You have unsaved changes. What would you like to do?",
+    "stay": "Stay",
+    "dontSave": "Don't save",
+    "saveAndClose": "Save"
   },
   
   "pagination": {

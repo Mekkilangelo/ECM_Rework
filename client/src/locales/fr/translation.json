@@ -31,7 +31,12 @@
     "calculated": "Calculé automatiquement",
     "comingSoon": "Prochainement",
     "searchResults": "{{count}} résultat(s) trouvé(s) pour \"{{query}}\"",
-    "clearSearch": "Effacer la recherche"
+    "clearSearch": "Effacer la recherche",
+    "confirmClose": "Confirmer la fermeture",
+    "unsavedChangesMessage": "Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?",
+    "stay": "Rester",
+    "dontSave": "Ne pas enregistrer",
+    "saveAndClose": "Enregistrer"
   },
   
   "pagination": {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import './CloseConfirmationModal.css';
 
 /**
@@ -29,11 +30,11 @@ const CloseConfirmationModal = ({
   onCancel,
   onContinue,
   onSave,
-  title = "Confirmer la fermeture",
-  message = "Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?",
-  cancelText = "Rester",
-  continueText = "Ne pas enregistrer",
-  saveText = "Enregistrer",
+  title,
+  message,
+  cancelText,
+  continueText,
+  saveText,
   showSaveButton = true,
   size = "sm",
   modalClassName = "",
@@ -41,6 +42,14 @@ const CloseConfirmationModal = ({
   continueButtonVariant = "outline-danger",
   cancelButtonVariant = "outline-secondary",  icon = null
 }) => {
+  const { t } = useTranslation();
+  
+  // Utiliser les traductions comme valeurs par défaut
+  const defaultTitle = title || t('common.confirmClose');
+  const defaultMessage = message || t('common.unsavedChangesMessage');
+  const defaultCancelText = cancelText || t('common.stay');
+  const defaultContinueText = continueText || t('common.dontSave');
+  const defaultSaveText = saveText || t('common.saveAndClose');
   return (
     <Modal 
       show={show} 
@@ -55,7 +64,7 @@ const CloseConfirmationModal = ({
       <Modal.Header className="border-0 pb-0">
         <Modal.Title className="modal-title">
           {icon && <span className="modal-icon me-2">{icon}</span>}
-          {title}
+          {defaultTitle}
         </Modal.Title>
         <button 
           type="button" 
@@ -65,7 +74,7 @@ const CloseConfirmationModal = ({
         />
       </Modal.Header>
       <Modal.Body className="pt-2 pb-3">
-        <p className="modal-message">{message}</p>
+        <p className="modal-message">{defaultMessage}</p>
       </Modal.Body>
       <Modal.Footer className="border-0 pt-0 d-flex justify-content-between w-100">
         <Button 
@@ -73,14 +82,14 @@ const CloseConfirmationModal = ({
           onClick={onCancel}
           className="btn-cancel flex-grow-1 mx-1"
         >
-          {cancelText}
+          {defaultCancelText}
         </Button>
         <Button 
           variant={continueButtonVariant}
           onClick={onContinue}
           className="btn-continue flex-grow-1 mx-1"
         >
-          {continueText}
+          {defaultContinueText}
         </Button>
         {showSaveButton && (
           <Button 
@@ -88,7 +97,7 @@ const CloseConfirmationModal = ({
             onClick={onSave}
             className="btn-save flex-grow-1 mx-1"
           >
-            {saveText}
+            {defaultSaveText}
           </Button>
         )}
       </Modal.Footer>

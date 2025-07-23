@@ -29,7 +29,9 @@
     "minutes": "minutes",
     "seconds": "secondes",
     "calculated": "Calculé automatiquement",
-    "comingSoon": "Prochainement"
+    "comingSoon": "Prochainement",
+    "searchResults": "{{count}} résultat(s) trouvé(s) pour \"{{query}}\"",
+    "clearSearch": "Effacer la recherche"
   },
   
   "pagination": {
@@ -190,6 +192,7 @@
     "button": "Rechercher",
     "loading": "Recherche en cours...",
     "resultsCount": "{{count}} résultats trouvés pour \"{{query}}\"",
+    "totalResults": "{{count}} résultat(s) trouvé(s)",
     "noResults": "Aucun résultat pour \"{{query}}\"",
     "noResultsTitle": "Aucun résultat trouvé",
     "noResultsMessage": "Nous n'avons trouvé aucun résultat pour \"{{query}}\"",
@@ -325,7 +328,9 @@
     "deleteSuccess": "Client supprimé avec succès",
     "deleteError": "Une erreur est survenue lors de la suppression du client",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.",
-    "searchPlaceholder": "Rechercher un client..."
+    "searchPlaceholder": "Rechercher un client...",
+    "noResultsFound": "Aucun client trouvé",
+    "tryDifferentSearch": "Essayez une recherche différente"
   },
   
   "orders": {
@@ -346,6 +351,8 @@
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette demande d'essai ? Cette action est irréversible.",
     "modifying": "Modification en cours...",
     "creating": "Création en cours...",
+    "noResultsFound": "Aucune demande d'essai trouvée",
+    "tryDifferentSearch": "Essayez une recherche différente",
     "sections": {
       "basicInfo": "Informations de base",
       "contacts": "Contacts",
@@ -541,7 +548,9 @@
       "hardness": "Dureté",
       "ecdHardness": "Dureté ECD"
     },
-    "searchPlaceholder": "Rechercher une pièce..."
+    "searchPlaceholder": "Rechercher une pièce...",
+    "noResultsFound": "Aucune pièce trouvée",
+    "tryDifferentSearch": "Essayez une recherche différente"
   },
   
   "steels": {
@@ -579,7 +588,12 @@
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet acier ? Cette action est irréversible.",
     "deleteSuccess": "Acier supprimé avec succès",
     "deleteError": "Une erreur est survenue lors de la suppression de l'acier",
-    "showing": "Affichage de {{count}} sur {{total}} aciers"
+    "showing": "Affichage de {{count}} sur {{total}} aciers",
+    "noResultsFound": "Aucun acier trouvé",
+    "tryDifferentSearch": "Essayez une recherche différente",
+    "searchPlaceholder": "Rechercher des aciers...",
+    "showingSearchResults": "Affichage de {{count}} sur {{total}} aciers pour \"{{query}}\"",
+    "clickToAddSteel": "Cliquez sur \"Ajouter un acier\" pour en créer un"
   },
   
   "tests": {
@@ -605,6 +619,8 @@
     "creating": "Création en cours...",
     "modifying": "Modification en cours...",
     "searchPlaceholder": "Rechercher un test...",
+    "noResultsFound": "Aucun essai trouvé",
+    "tryDifferentSearch": "Essayez une recherche différente",
     
     "sections": {
       "basicInfo": "Informations de base"

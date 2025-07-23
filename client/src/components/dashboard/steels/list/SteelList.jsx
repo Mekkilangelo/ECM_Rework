@@ -24,9 +24,7 @@ const SteelList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const limitSelectorRef = useRef(null);
-  const debounceTimerRef = useRef(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,28 +34,11 @@ const SteelList = () => {
   
   // État pour le tri côté serveur
   const [sortBy, setSortBy] = useState('modified_at');
-  const [sortOrder, setSortOrder] = useState('desc');
-
-  // Débounce pour la recherche
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchQuery]);  // Déclarer fetchSteels avant de l'utiliser
+  const [sortOrder, setSortOrder] = useState('desc');  // Déclarer fetchSteels avant de l'utiliser
   const fetchSteels = async () => {
     try {
       console.log('=== FRONTEND SteelList fetchSteels called ===');
-      console.log('Paramètres:', { currentPage, itemsPerPage, sortBy, sortOrder, search: debouncedSearchQuery });
+      console.log('Paramètres:', { currentPage, itemsPerPage, sortBy, sortOrder, search: searchQuery });
       
       setLoading(true);
       const response = await steelService.getSteels(
@@ -65,7 +46,7 @@ const SteelList = () => {
         itemsPerPage, 
         sortBy, 
         sortOrder, 
-        debouncedSearchQuery.trim() || undefined
+        searchQuery.trim() || undefined
       );
       
       console.log('Réponse complète steelService.getSteels:', response);
@@ -250,12 +231,14 @@ const SteelList = () => {
     }
   ];  useEffect(() => {
     fetchSteels();
-  }, [currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
+  }, [currentPage, itemsPerPage, sortBy, sortOrder]);
 
   // Fonction pour gérer la recherche
   const handleSearch = (query) => {
     setSearchQuery(query);
     setCurrentPage(1); // Réinitialiser à la première page lors de la recherche
+    // Déclencher la recherche immédiatement
+    fetchSteels();
   };
 
   // Fonction pour effacer la recherche
@@ -375,7 +358,7 @@ const SteelList = () => {
       {/* Affichage du nombre de résultats */}
       {searchQuery && (
         <div className="mb-3 text-muted">
-          {t('common.searchResults', { count: total, query: searchQuery })}
+          {t('steels.showingSearchResults', { count: total, total: total, query: searchQuery })}
         </div>
       )}
         {steels.length > 0 ? (

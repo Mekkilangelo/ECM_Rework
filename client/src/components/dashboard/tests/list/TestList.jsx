@@ -213,10 +213,8 @@ const TestList = ({ partId }) => {
         </Col>        {searchQuery && (
           <Col md={6} className="d-flex align-items-center">
             <small className="text-muted">
-              {t('common.searchResults', {
-                count: data.length,
-                total: totalItems,
-                defaultValue: `${data.length} résultat(s) trouvé(s)`
+              {t('search.totalResults', {
+                count: data.length
               })}
             </small>
           </Col>

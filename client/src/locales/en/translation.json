@@ -27,7 +27,9 @@
     "hours": "hours",
     "minutes": "minutes",
     "seconds": "seconds",
-    "comingSoon": "Coming Soon"
+    "comingSoon": "Coming Soon",
+    "searchResults": "{{count}} result(s) found for \"{{query}}\"",
+    "clearSearch": "Clear search"
   },
   
   "pagination": {
@@ -188,6 +190,7 @@
     "button": "Search",
     "loading": "Searching...",
     "resultsCount": "{{count}} results found for \"{{query}}\"",
+    "totalResults": "{{count}} result(s) found",
     "noResults": "No results for \"{{query}}\"",
     "noResultsTitle": "No results found",
     "noResultsMessage": "We couldn't find any results for \"{{query}}\"",
@@ -323,7 +326,9 @@
     "deleteSuccess": "Client successfully deleted",
     "deleteError": "An error occurred while deleting the client",
     "confirmDelete": "Are you sure you want to delete this client? This action is irreversible.",
-    "searchPlaceholder": "Search for a client..."
+    "searchPlaceholder": "Search for a client...",
+    "noResultsFound": "No clients found",
+    "tryDifferentSearch": "Try a different search"
   },
   
   "orders": {
@@ -344,6 +349,8 @@
     "confirmDelete": "Are you sure you want to delete this trial request? This action is irreversible.",
     "modifying": "Modifying...",
     "creating": "Creating...",
+    "noResultsFound": "No trial requests found",
+    "tryDifferentSearch": "Try a different search",
     "sections": {
       "basicInfo": "Basic information",
       "contacts": "Contacts",
@@ -538,7 +545,9 @@
       "hardness": "Hardness",
       "ecdHardness": "ECD Hardness"
     },
-    "searchPlaceholder": "Search for a part..."
+    "searchPlaceholder": "Search for a part...",
+    "noResultsFound": "No parts found",
+    "tryDifferentSearch": "Try a different search"
   },
   
   "steels": {
@@ -576,7 +585,12 @@
     "confirmDelete": "Are you sure you want to delete this steel? This action is irreversible.",
     "deleteSuccess": "Steel successfully deleted",
     "deleteError": "An error occurred while deleting the steel",
-    "showing": "Showing {{count}} of {{total}} steels"
+    "showing": "Showing {{count}} of {{total}} steels",
+    "noResultsFound": "No steels found",
+    "tryDifferentSearch": "Try a different search",
+    "searchPlaceholder": "Search for steels...",
+    "showingSearchResults": "Showing {{count}} of {{total}} steels for \"{{query}}\"",
+    "clickToAddSteel": "Click \"Add steel\" to create one"
   },
   
   "tests": {
@@ -602,6 +616,8 @@
     "creating": "Creating...",
     "modifying": "Modifying...",
     "searchPlaceholder": "Search for a test...",
+    "noResultsFound": "No tests found",
+    "tryDifferentSearch": "Try a different search",
     
     "sections": {
       "basicInfo": "Basic information"

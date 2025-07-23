@@ -11,32 +11,16 @@ const SearchInput = ({
   onClear, 
   placeholder, 
   initialValue = '', 
-  debounceMs = 300,
   className = '',
   size = 'md'
 }) => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState(initialValue);
-  const [debounceTimer, setDebounceTimer] = useState(null);
 
-  // Débounce de la recherche pour éviter trop d'appels API
+  // Synchroniser avec la valeur initiale quand elle change
   useEffect(() => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    const timer = setTimeout(() => {
-      onSearch(searchTerm);
-    }, debounceMs);
-
-    setDebounceTimer(timer);
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [searchTerm, debounceMs, onSearch]);
+    setSearchTerm(initialValue);
+  }, [initialValue]);
 
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
@@ -54,12 +38,21 @@ const SearchInput = ({
     onSearch(searchTerm);
   };
 
+  const handleSearchClick = () => {
+    onSearch(searchTerm);
+  };
+
   return (
     <Form onSubmit={handleSubmit} className={`search-input-form ${className}`}>
       <InputGroup size={size} className="search-input-group">
-        <InputGroup.Text className="search-icon">
+        <Button 
+          variant="outline-secondary" 
+          className="search-button"
+          onClick={handleSearchClick}
+          type="button"
+        >
           <FontAwesomeIcon icon={faSearch} />
-        </InputGroup.Text>
+        </Button>
         <Form.Control
           type="text"
           placeholder={placeholder || t('common.search')}
@@ -87,7 +80,6 @@ SearchInput.propTypes = {
   onClear: PropTypes.func,
   placeholder: PropTypes.string,
   initialValue: PropTypes.string,
-  debounceMs: PropTypes.number,
   className: PropTypes.string,
   size: PropTypes.oneOf(['sm', 'md', 'lg'])
 };

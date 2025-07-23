@@ -34,7 +34,13 @@
     "unsavedChangesMessage": "You have unsaved changes. What would you like to do?",
     "stay": "Stay",
     "dontSave": "Don't save",
-    "saveAndClose": "Save"
+    "saveAndClose": "Save",
+    "addNewValue": "Add new value",
+    "editValue": "Edit value",
+    "deleteAndReplaceValue": "Delete and replace value",
+    "noValuesFound": "No values found",
+    "clickToAddValues": "Click \"Add new value\" to add values to this enumeration",
+    "valueUsedWarning": "This value is used in {{count}} record(s). Modification will update all these records."
   },
   
   "pagination": {

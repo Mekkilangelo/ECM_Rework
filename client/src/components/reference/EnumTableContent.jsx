@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus, faList, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 import enumService from '../../services/enumService';
 import '../../styles/dataList.css';
 import useConfirmationDialog from '../../hooks/useConfirmationDialog';
 
 const EnumTableContent = ({ table, column }) => {
+  const { t } = useTranslation();
   const { confirmDelete } = useConfirmationDialog();
   const [values, setValues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -189,7 +191,7 @@ const EnumTableContent = ({ table, column }) => {
           onClick={handleAdd}
           className="d-flex align-items-center"
         >
-          <FontAwesomeIcon icon={faPlus} className="me-2" /> Ajouter une nouvelle valeur
+          <FontAwesomeIcon icon={faPlus} className="me-2" /> {t('common.addNewValue')}
         </Button>
       </div>
 
@@ -240,8 +242,8 @@ const EnumTableContent = ({ table, column }) => {
         <Card className="text-center p-5 bg-light empty-state">
           <Card.Body>
             <FontAwesomeIcon icon={faList} size="3x" className="text-secondary mb-3 empty-state-icon" />
-            <h4>Aucune valeur trouvée</h4>
-            <p className="text-muted">Cliquez sur "Ajouter une nouvelle valeur" pour ajouter des valeurs à cette énumération</p>
+            <h4>{t('common.noValuesFound')}</h4>
+            <p className="text-muted">{t('common.clickToAddValues')}</p>
           </Card.Body>
         </Card>
       )}      {/* Modal for Add/Edit/Delete with Replacement */}
@@ -255,10 +257,10 @@ const EnumTableContent = ({ table, column }) => {
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>
             {modalMode === 'add' 
-              ? 'Ajouter une nouvelle valeur' 
+              ? t('common.addNewValue')
               : modalMode === 'edit' 
-                ? 'Modifier la valeur' 
-                : 'Supprimer et remplacer la valeur'
+                ? t('common.editValue')
+                : t('common.deleteAndReplaceValue')
             }
           </Modal.Title>
         </Modal.Header>
@@ -266,7 +268,7 @@ const EnumTableContent = ({ table, column }) => {
           {showUsageWarning && modalMode === 'edit' && (
             <Alert variant="warning">
               <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-              Cette valeur est utilisée dans {usageCount} enregistrement(s). La modification mettra à jour tous ces enregistrements.
+              {t('common.valueUsedWarning', { count: usageCount })}
             </Alert>
           )}
             <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>

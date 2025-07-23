@@ -36,7 +36,13 @@
     "unsavedChangesMessage": "Vous avez des modifications non enregistrées. Que souhaitez-vous faire ?",
     "stay": "Rester",
     "dontSave": "Ne pas enregistrer",
-    "saveAndClose": "Enregistrer"
+    "saveAndClose": "Enregistrer",
+    "addNewValue": "Ajouter une nouvelle valeur",
+    "editValue": "Modifier la valeur",
+    "deleteAndReplaceValue": "Supprimer et remplacer la valeur",
+    "noValuesFound": "Aucune valeur trouvée",
+    "clickToAddValues": "Cliquez sur \"Ajouter une nouvelle valeur\" pour ajouter des valeurs à cette énumération",
+    "valueUsedWarning": "Cette valeur est utilisée dans {{count}} enregistrement(s). La modification mettra à jour tous ces enregistrements."
   },
   
   "pagination": {

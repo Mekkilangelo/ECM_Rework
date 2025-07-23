@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { Tab, Nav, Container, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faIndustry, faFire, faCogs, faRuler } from '@fortawesome/free-solid-svg-icons';
+import { faIndustry, faFire, faCogs, faRuler, faToolbox } from '@fortawesome/free-solid-svg-icons';
 import SteelsSection from '../components/reference/sections/SteelsSection';
 import FurnacesSection from '../components/reference/sections/FurnacesSection';
 import PartsSection from '../components/reference/sections/PartsSection';
 import UnitsSection from '../components/reference/sections/UnitsSection';
+import ProcessSection from '../components/reference/sections/ProcessSection';
 import Layout from '../components/layout/Layout';
 import { NavigationProvider } from '../context/NavigationContext';
 
@@ -48,6 +49,12 @@ const ReferenceContent = () => {
                     Units
                     </Nav.Link>
                 </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link eventKey="process">
+                    <FontAwesomeIcon icon={faToolbox} className="mr-2" />
+                    Process
+                    </Nav.Link>
+                </Nav.Item>
                 </Nav>
 
                 <Tab.Content className="mt-3">
@@ -65,6 +72,10 @@ const ReferenceContent = () => {
                 
                 <Tab.Pane eventKey="units">
                     <UnitsSection />
+                </Tab.Pane>
+                
+                <Tab.Pane eventKey="process">
+                    <ProcessSection />
                 </Tab.Pane>
                 </Tab.Content>
             </Tab.Container>

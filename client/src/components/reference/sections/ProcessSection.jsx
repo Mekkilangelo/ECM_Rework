@@ -13,6 +13,9 @@ const ProcessSection = () => {
           <Nav.Link eventKey="mounting_type">Mounting Type</Nav.Link>
         </Nav.Item>
         <Nav.Item>
+          <Nav.Link eventKey="position_type">Position Type</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
           <Nav.Link eventKey="process_type">Process Type</Nav.Link>
         </Nav.Item>
       </Nav>
@@ -22,6 +25,14 @@ const ProcessSection = () => {
           <Card>
             <Card.Body>
               <EnumTableContent table="tests" column="mounting_type" />
+            </Card.Body>
+          </Card>
+        </Tab.Pane>
+
+        <Tab.Pane eventKey="position_type">
+          <Card>
+            <Card.Body>
+              <EnumTableContent table="tests" column="position_type" />
             </Card.Body>
           </Card>
         </Tab.Pane>

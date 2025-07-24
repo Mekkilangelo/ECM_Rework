@@ -136,10 +136,10 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
   const estimateSectionHeight = (sectionType, data) => {
     switch (sectionType) {
       case 'resultHeader':
-        return 35; // Header du résultat encore plus compact
+        return 100; // Header du résultat
       
       case 'sampleHeader':
-        return 30; // Header de l'échantillon encore plus compact
+        return 80; // Header de l'échantillon
       
       case 'magnificationGroup':
         if (!data || !data.photos) return 0;
@@ -147,30 +147,26 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
         const photosCount = data.photos.length;
         let photoHeight = 0;
         
-        // Calcul optimisé et plus précis de la hauteur basée sur le nombre de photos
+        // Calcul de la hauteur basée sur le nombre de photos
         if (photosCount === 1) {
-          photoHeight = 250; // 220px photo + 30px caption
+          photoHeight = 450; // 400px photo + padding + caption
         } else if (photosCount === 2) {
-          photoHeight = 190; // 160px photo + 30px caption
-        } else if (photosCount <= 4) {
-          photoHeight = 180; // 140px photo + 40px caption, disposition 2x2
-        } else if (photosCount <= 6) {
-          photoHeight = 170; // Grid 3x2, hauteur optimisée
+          photoHeight = 300; // 250px photo + padding + caption
         } else {
-          photoHeight = 160; // Grid dense 3x3
+          photoHeight = 300; // Grid view, 250px par ligne
         }
         
-        // Nombre de lignes nécessaires pour la grille optimisé
+        // Nombre de lignes nécessaires pour la grille
         const cols = photosCount === 1 ? 1 : photosCount === 2 ? 2 : 3;
         const rows = Math.ceil(photosCount / cols);
         
-        return Math.max(20, rows * photoHeight); // Minimum 20px, pas de header magnification
+        return 80 + (rows * photoHeight); // Header magnification + photos
       
       case 'emptyState':
         return 200;
       
       default:
-        return 100;
+        return 150;
     }
   };
 
@@ -232,7 +228,7 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
 
   // Logique de découpage intelligent en pages avec useMemo
   const organizeContentInPages = useMemo(() => {
-    const maxPageHeight = 900; // Augmenté pour mieux utiliser l'espace A4
+    const maxPageHeight = 800;
     const headerHeight = 120;
     const footerHeight = 60;
     const availableHeight = maxPageHeight - headerHeight - footerHeight;
@@ -241,34 +237,59 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
     const pages = [];
     let currentPage = { sections: [], estimatedHeight: 0 };
     
-    sections.forEach((section, index) => {
+    sections.forEach(section => {
       const sectionHeight = estimateSectionHeight(section.type, section.data);
       
       if (sectionHeight === 0) return;
       
-      // Logique simplifiée : si la section ne rentre pas, créer une nouvelle page
-      const wouldExceedPage = currentPage.estimatedHeight + sectionHeight > availableHeight;
-      const hasContent = currentPage.sections.length > 0;
+      // Si l'ajout de cette section dépasse la hauteur disponible et qu'on a déjà du contenu
+      if (currentPage.estimatedHeight + sectionHeight > availableHeight && currentPage.sections.length > 0) {
+        pages.push(currentPage);
+        currentPage = { sections: [], estimatedHeight: 0 };
+      }
       
-      if (wouldExceedPage && hasContent) {
-        // Vérifier si la section actuelle est petite et peut être forcée sur la page actuelle
-        if (sectionHeight <= availableHeight * 0.3 && currentPage.estimatedHeight <= availableHeight * 0.8) {
-          // Force la section sur la page actuelle si elle est petite
-          currentPage.sections.push(section);
-          currentPage.estimatedHeight += sectionHeight + 20; // Espacement réduit
-        } else {
-          // Sinon, créer une nouvelle page
-          pages.push(currentPage);
-          currentPage = { sections: [section], estimatedHeight: sectionHeight + 20 };
+      // Gestion spéciale pour les groupes de magnification avec beaucoup de photos
+      if (section.type === 'magnificationGroup' && section.data.photos.length > 6) {
+        const photosPerPage = 6;
+        const photoPages = Math.ceil(section.data.photos.length / photosPerPage);
+        
+        for (let i = 0; i < photoPages; i++) {
+          const startIndex = i * photosPerPage;
+          const endIndex = Math.min(startIndex + photosPerPage, section.data.photos.length);
+          const pagePhotos = section.data.photos.slice(startIndex, endIndex);
+          
+          const pageSection = {
+            ...section,
+            data: {
+              ...section.data,
+              photos: pagePhotos,
+              pageIndex: i,
+              totalPhotoPages: photoPages
+            }
+          };
+          
+          const pageHeight = estimateSectionHeight('magnificationGroup', pageSection.data);
+          
+          if (currentPage.estimatedHeight + pageHeight > availableHeight && currentPage.sections.length > 0) {
+            pages.push(currentPage);
+            currentPage = { sections: [], estimatedHeight: 0 };
+          }
+          
+          currentPage.sections.push(pageSection);
+          currentPage.estimatedHeight += pageHeight + 30;
+          
+          // Si c'est la dernière page de photos ou si on approche de la limite, finir cette page
+          if (i === photoPages - 1 || currentPage.estimatedHeight > availableHeight * 0.8) {
+            pages.push(currentPage);
+            currentPage = { sections: [], estimatedHeight: 0 };
+          }
         }
       } else {
-        // La section rentre dans la page actuelle
         currentPage.sections.push(section);
-        currentPage.estimatedHeight += sectionHeight + 20; // Espacement réduit entre sections
+        currentPage.estimatedHeight += sectionHeight + 30;
       }
     });
     
-    // Ajouter la dernière page si elle contient du contenu
     if (currentPage.sections.length > 0) {
       pages.push(currentPage);
     }
@@ -349,26 +370,26 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
   // Fonction de rendu pour header de résultat
   const renderResultHeader = (resultData) => (
     <div style={{
-      marginBottom: '8px',
-      padding: '6px 15px',
+      marginBottom: '25px',
+      padding: '15px 20px',
       background: 'linear-gradient(135deg, #388e3c 0%, #66bb6a 100%)',
-      borderRadius: '4px',
+      borderRadius: '8px',
       color: 'white',
-      boxShadow: '0 2px 4px rgba(56, 142, 60, 0.3)'
+      boxShadow: '0 2px 8px rgba(56, 142, 60, 0.3)'
     }}>
       <h2 style={{
         margin: 0,
-        fontSize: '16px',
+        fontSize: '20px',
         fontWeight: '600',
         display: 'flex',
         alignItems: 'center',
-        gap: '6px'
+        gap: '10px'
       }}>
         <FontAwesomeIcon icon={faMicroscope} />
         Result {resultData.resultIndex + 1}
         {resultData.description && (
           <span style={{ 
-            fontSize: '13px', 
+            fontSize: '16px', 
             fontWeight: '400',
             opacity: 0.9
           }}>
@@ -382,25 +403,25 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
   // Fonction de rendu pour header d'échantillon
   const renderSampleHeader = (sampleData) => (
     <div style={{
-      marginBottom: '8px',
-      padding: '4px 12px',
+      marginBottom: '20px',
+      padding: '12px 18px',
       background: 'linear-gradient(135deg, #5e35b1 0%, #7e57c2 100%)',
-      borderRadius: '4px',
+      borderRadius: '6px',
       color: 'white',
-      boxShadow: '0 1px 3px rgba(94, 53, 177, 0.3)'
+      boxShadow: '0 2px 6px rgba(94, 53, 177, 0.3)'
     }}>
       <h3 style={{
         margin: 0,
-        fontSize: '14px',
+        fontSize: '18px',
         fontWeight: '600'
       }}>
         Sample {sampleData.sampleIndex + 1}
         {sampleData.description && (
           <span style={{ 
-            fontSize: '12px', 
+            fontSize: '14px', 
             fontWeight: '400',
             opacity: 0.9,
-            marginLeft: '6px'
+            marginLeft: '10px'
           }}>
             - {sampleData.description}
           </span>
@@ -414,28 +435,60 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
     const { magnification, photos, resultData, sampleData, pageIndex = 0, totalPhotoPages = 1 } = data;
     
     return (
-      <div style={{ marginBottom: '8px' }}>
-        {/* Photo grid for this magnification - titre supprimé car redondant avec le badge sur chaque image */}
+      <div style={{ marginBottom: '25px' }}>
+        {/* Magnification title */}
+        <h4 style={{ 
+          fontSize: '16px', 
+          margin: '0 0 15px 0',
+          color: '#1976d2',
+          borderBottom: '2px solid #e3f2fd',
+          paddingBottom: '8px',
+          background: 'linear-gradient(90deg, #e3f2fd 0%, transparent 100%)',
+          padding: '8px 15px',
+          borderRadius: '4px'
+        }}>
+          {formatMagnificationName(magnification)}
+          <span style={{ 
+            fontSize: '14px', 
+            color: '#666',
+            fontWeight: 'normal',
+            marginLeft: '10px'
+          }}>
+            ({photos.length} image{photos.length > 1 ? 's' : ''})
+            {totalPhotoPages > 1 && (
+              <span style={{ 
+                fontSize: '12px', 
+                color: '#666',
+                background: '#e3f2fd',
+                padding: '2px 6px',
+                borderRadius: '8px',
+                marginLeft: '8px'
+              }}>
+                Page {pageIndex + 1}/{totalPhotoPages}
+              </span>
+            )}
+          </span>
+        </h4>
+        
+        {/* Photo grid for this magnification */}
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: photos.length === 1 
             ? '1fr' 
             : photos.length === 2 
               ? 'repeat(2, 1fr)' 
-              : photos.length <= 4
-                ? 'repeat(2, 1fr)'
-                : 'repeat(3, 1fr)',
-          gap: '10px',
-          marginBottom: '8px'
+              : 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+          marginBottom: '20px'
         }}>
           {photos.map((photo, photoIndex) => (
             <div key={`${getPhotoId(photo)}-${photoIndex}`} 
                  style={{ 
-                   border: '1px solid #e0e0e0',
-                   borderRadius: '6px',
+                   border: '2px solid #e0e0e0',
+                   borderRadius: '12px',
                    overflow: 'hidden',
                    backgroundColor: '#fff',
-                   boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
                  }}>
               <div style={{ position: 'relative' }}>
@@ -444,7 +497,7 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
                   alt={`Micrograph ${formatMagnificationName(magnification)} - Result ${resultData.resultIndex + 1} - Sample ${sampleData.sampleIndex + 1} - ${photoIndex + 1}`}
                   style={{
                     width: '100%',
-                    height: photos.length === 1 ? '220px' : photos.length === 2 ? '160px' : '140px',
+                    height: photos.length === 1 ? '400px' : '250px',
                     objectFit: 'contain',
                     backgroundColor: '#f8f9fa'
                   }}
@@ -466,32 +519,40 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
                 />
               </div>
               <div style={{ 
-                padding: '6px 8px', 
+                padding: '12px 15px', 
                 borderTop: '1px solid #e0e0e0',
                 background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)'
               }}>
                 <div style={{ 
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  marginBottom: '5px'
                 }}>
                   <div style={{ 
-                    fontSize: '11px', 
+                    fontSize: '14px', 
                     color: '#333', 
                     fontWeight: '600' 
                   }}>
-                    R{resultData.resultIndex + 1}-S{sampleData.sampleIndex + 1}-{photoIndex + 1}
+                    Image {photoIndex + 1}
                   </div>
                   <div style={{ 
-                    fontSize: '9px', 
+                    fontSize: '12px', 
                     color: '#fff', 
                     backgroundColor: '#1976d2',
-                    padding: '1px 4px',
-                    borderRadius: '8px',
+                    padding: '3px 8px',
+                    borderRadius: '12px',
                     fontWeight: '500'
                   }}>
                     {magnification}
                   </div>
+                </div>
+                <div style={{
+                  fontSize: '12px', 
+                  color: '#666',
+                  lineHeight: '1.4'
+                }}>
+                  R{resultData.resultIndex + 1} - S{sampleData.sampleIndex + 1}
                 </div>
               </div>
             </div>
@@ -587,7 +648,7 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
             <div style={{ 
               flex: 1,
               display: 'grid', 
-              gap: '15px', // Réduit de 20px à 15px
+              gap: '20px',
               alignContent: 'start',
               overflow: 'hidden'
             }}>

@@ -568,62 +568,47 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
   const estimateSectionHeight = (sectionType, data) => {
     switch (sectionType) {
       case 'generalParams':
-        return 120;
+        return 200;
       
       case 'thermalCycle':
         if (!data || !data.thermal_cycle) return 0;
         const thermalRows = data.thermal_cycle.length;
-        return 120 + (thermalRows * 25); // Réduit encore plus
+        return 250 + (thermalRows * 35);
       
       case 'chemicalCycle':
         if (!data || !data.chemical_cycle) return 0;
         const chemicalRows = data.chemical_cycle.length;
-        return 100 + (chemicalRows * 23); // Réduit encore plus
+        return 250 + (chemicalRows * 35);
       
       case 'chart':
-        return 380;
+        return 500;
       
       case 'quench':
         if (!quenchData || (!quenchData.oil_quench && !quenchData.gas_quench)) return 0;
-        let quenchHeight = 150;
+        let quenchHeight = 200;
         
         if (quenchData.oil_quench && Object.keys(quenchData.oil_quench).length > 0) {
-          quenchHeight += 250;
+          quenchHeight += 300;
           if (quenchData.oil_quench.speed_parameters?.length > 0) {
-            quenchHeight += 120 + (quenchData.oil_quench.speed_parameters.length * 25);
+            quenchHeight += 150 + (quenchData.oil_quench.speed_parameters.length * 30);
           }
         }
         
         if (quenchData.gas_quench && Object.keys(quenchData.gas_quench).length > 0) {
-          quenchHeight += 250;
+          quenchHeight += 300;
           if (quenchData.gas_quench.speed_parameters?.length > 0) {
-            quenchHeight += 120 + (quenchData.gas_quench.speed_parameters.length * 25);
+            quenchHeight += 150 + (quenchData.gas_quench.speed_parameters.length * 30);
           }
           if (quenchData.gas_quench.pressure_parameters?.length > 0) {
-            quenchHeight += 120 + (quenchData.gas_quench.pressure_parameters.length * 25);
+            quenchHeight += 150 + (quenchData.gas_quench.pressure_parameters.length * 30);
           }
         }
         
         return quenchHeight;
       
       default:
-        return 100;
+        return 150;
     }
-  };
-
-  // Fonction pour calculer combien de lignes de tableau peuvent tenir dans l'espace disponible
-  const calculateMaxTableRows = (availableHeight, hasHeader = true, hasTotal = false) => {
-    const headerHeight = hasHeader ? 35 : 0;
-    const totalRowHeight = hasTotal ? 35 : 0;
-    const baseHeight = 80; // Pour le container, padding, titre de section
-    const rowHeight = 23; // Hauteur d'une ligne (réduite)
-    
-    const usableHeight = availableHeight - headerHeight - totalRowHeight - baseHeight;
-    const maxRows = Math.floor(usableHeight / rowHeight);
-    
-    console.log(`calculateMaxTableRows: available=${availableHeight}, usable=${usableHeight}, maxRows=${maxRows}`);
-    
-    return Math.max(0, maxRows);
   };
 
   // Logique de découpage intelligent en pages
@@ -656,143 +641,13 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
       
       if (sectionHeight === 0) return;
       
-      // Logique spéciale pour les tableaux volumineux
-      if ((section.type === 'thermalCycle' || section.type === 'chemicalCycle') && section.data) {
-        const tableData = section.type === 'thermalCycle' ? section.data.thermal_cycle : section.data.chemical_cycle;
-        if (tableData && tableData.length > 0) {
-          const remainingHeight = availableHeight - currentPage.estimatedHeight;
-          const maxRows = calculateMaxTableRows(remainingHeight, true, section.type === 'chemicalCycle');
-          const maxRowsForPage = calculateMaxTableRows(availableHeight, true, section.type === 'chemicalCycle');
-          console.log(`${section.type}: remainingHeight=${remainingHeight}, maxRows=${maxRows}, tableLength=${tableData.length}`);
-
-          // NOUVEAU : Si le tableau complet tient dans l'espace restant, l'ajouter à la page courante
-          if (tableData.length <= maxRows) {
-            currentPage.sections.push({
-              type: section.type,
-              tableStart: 0,
-              tableEnd: tableData.length,
-              isPartial: false,
-              isContinuation: false
-            });
-            currentPage.estimatedHeight += 120 + (tableData.length * 25);
-            return; // Passer à la section suivante
-          }
-
-          // Si on peut mettre au moins 2 lignes ET qu'il y a déjà des sections sur la page
-          if (maxRows >= 2 && currentPage.sections.length > 0) {
-            // Découper le tableau - mettre le maximum possible sur cette page
-            const firstPartRows = Math.min(maxRows, tableData.length);
-            const remainingRows = tableData.length - firstPartRows;
-            console.log(`Splitting table: firstPart=${firstPartRows}, remaining=${remainingRows}`);
-            // Ajouter la première partie du tableau à la page actuelle
-            currentPage.sections.push({
-              type: section.type,
-              tableStart: 0,
-              tableEnd: firstPartRows,
-              isPartial: remainingRows > 0
-            });
-            currentPage.estimatedHeight += 120 + (firstPartRows * 25);
-            // Finaliser la page actuelle
-            pages.push(currentPage);
-            // Si il reste des lignes, créer de nouvelles pages
-            if (remainingRows > 0) {
-              let startRow = firstPartRows;
-              while (startRow < tableData.length) {
-                const newPageMaxRows = calculateMaxTableRows(availableHeight, true, section.type === 'chemicalCycle');
-                const endRow = Math.min(startRow + newPageMaxRows, tableData.length);
-                const newPage = {
-                  sections: [{
-                    type: section.type,
-                    tableStart: startRow,
-                    tableEnd: endRow,
-                    isPartial: endRow < tableData.length,
-                    isContinuation: true
-                  }],
-                  estimatedHeight: 120 + ((endRow - startRow) * 25)
-                };
-                pages.push(newPage);
-                startRow = endRow;
-              }
-            }
-            // Recommencer une nouvelle page
-            currentPage = { sections: [], estimatedHeight: 0 };
-            return; // Passer à la section suivante
-          }
-
-          // Si on ne peut pas mettre suffisamment de lignes sur la page actuelle
-          if (currentPage.sections.length > 0 && maxRows < 2) {
-            pages.push(currentPage);
-            currentPage = { sections: [], estimatedHeight: 0 };
-          }
-
-          // Mettre le tableau complet sur une nouvelle page (ou découper)
-          if (tableData.length <= maxRowsForPage) {
-            // Le tableau complet tient sur une page
-            currentPage.sections.push({
-              type: section.type,
-              tableStart: 0,
-              tableEnd: tableData.length,
-              isPartial: false,
-              isContinuation: false
-            });
-            currentPage.estimatedHeight += 120 + (tableData.length * 25);
-          } else {
-            // Le tableau ne tient pas sur une page, le découper
-            let startRow = 0;
-            while (startRow < tableData.length) {
-              const maxRowsForNewPage = calculateMaxTableRows(availableHeight, true, section.type === 'chemicalCycle');
-              const endRow = Math.min(startRow + maxRowsForNewPage, tableData.length);
-              if (currentPage.sections.length === 0) {
-                // Utiliser la page actuelle
-                currentPage.sections.push({
-                  type: section.type,
-                  tableStart: startRow,
-                  tableEnd: endRow,
-                  isPartial: endRow < tableData.length,
-                  isContinuation: startRow > 0
-                });
-                currentPage.estimatedHeight += 120 + ((endRow - startRow) * 25);
-                if (endRow < tableData.length) {
-                  pages.push(currentPage);
-                  currentPage = { sections: [], estimatedHeight: 0 };
-                }
-              } else {
-                // Créer une nouvelle page
-                const newPage = {
-                  sections: [{
-                    type: section.type,
-                    tableStart: startRow,
-                    tableEnd: endRow,
-                    isPartial: endRow < tableData.length,
-                    isContinuation: startRow > 0
-                  }],
-                  estimatedHeight: 120 + ((endRow - startRow) * 25)
-                };
-                pages.push(newPage);
-              }
-              startRow = endRow;
-            }
-          }
-          return; // Passer à la section suivante
-        }
+      if (currentPage.estimatedHeight + sectionHeight > availableHeight && currentPage.sections.length > 0) {
+        pages.push(currentPage);
+        currentPage = { sections: [], estimatedHeight: 0 };
       }
       
-      // Logique pour les autres sections (chart, quench, etc.)
-      const margin = currentPage.sections.length > 0 ? 30 : 0;
-      if (currentPage.estimatedHeight + sectionHeight + margin <= availableHeight) {
-        // La section tient dans l'espace restant, on l'ajoute à la page courante
-        currentPage.sections.push(section.type);
-        currentPage.estimatedHeight += sectionHeight + margin;
-      } else {
-        // La section ne tient pas, on termine la page et on commence une nouvelle
-        if (currentPage.sections.length > 0) {
-          pages.push(currentPage);
-          currentPage = { sections: [], estimatedHeight: 0 };
-        }
-        // On ajoute la section à la nouvelle page (pas de marge pour la première section)
-        currentPage.sections.push(section.type);
-        currentPage.estimatedHeight += sectionHeight;
-      }
+      currentPage.sections.push(section.type);
+      currentPage.estimatedHeight += sectionHeight + 30;
     });
     
     if (currentPage.sections.length > 0) {
@@ -875,81 +730,81 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
   const renderGeneralParams = () => (
     <div style={{
       background: 'white',
-      borderRadius: '8px',
-      padding: '15px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      borderRadius: '12px',
+      padding: '25px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
       border: '1px solid #ffebee'
     }}>
       <h3 style={{ 
         color: '#d32f2f', 
-        fontSize: '16px', 
+        fontSize: '20px', 
         fontWeight: 'bold', 
-        marginBottom: '12px',
+        marginBottom: '20px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px'
+        gap: '10px'
       }}>
-        <FontAwesomeIcon icon={faCogs} style={{ color: '#f44336', fontSize: '14px' }} />
+        <FontAwesomeIcon icon={faCogs} style={{ color: '#f44336' }} />
         General Parameters
       </h3>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
         <div style={{ 
           background: '#fffbf0', 
-          borderRadius: '6px', 
-          padding: '10px',
-          border: '1px solid #ffe0b2',
-          textAlign: 'center'
+          borderRadius: '8px', 
+          padding: '15px',
+          border: '1px solid #ffe0b2'
         }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#e65100', marginBottom: '4px' }}>
-            Wait Pressure
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <FontAwesomeIcon icon={faTachometerAlt} style={{ fontSize: '16px', color: '#f57c00' }} />
+            <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Wait Pressure</span>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
             {recipeData.wait_pressure?.value || '-'} {recipeData.wait_pressure?.unit || ''}
           </div>
         </div>
         
         <div style={{ 
           background: '#fffbf0', 
-          borderRadius: '6px', 
-          padding: '10px',
-          border: '1px solid #ffe0b2',
-          textAlign: 'center'
+          borderRadius: '8px', 
+          padding: '15px',
+          border: '1px solid #ffe0b2'
         }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#e65100', marginBottom: '4px' }}>
-            Wait Time
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <FontAwesomeIcon icon={faClock} style={{ fontSize: '16px', color: '#f57c00' }} />
+            <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Wait Time</span>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
             {recipeData.wait_time?.value || '-'} {recipeData.wait_time?.unit || ''}
           </div>
         </div>
         
         <div style={{ 
           background: '#fffbf0', 
-          borderRadius: '6px', 
-          padding: '10px',
-          border: '1px solid #ffe0b2',
-          textAlign: 'center'
+          borderRadius: '8px', 
+          padding: '15px',
+          border: '1px solid #ffe0b2'
         }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#e65100', marginBottom: '4px' }}>
-            Cell Temperature
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <FontAwesomeIcon icon={faThermometerHalf} style={{ fontSize: '16px', color: '#f57c00' }} />
+            <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Cell Temperature</span>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
             {recipeData.cell_temp?.value || '-'} {recipeData.cell_temp?.unit || ''}
           </div>
         </div>
         
         <div style={{ 
           background: '#fffbf0', 
-          borderRadius: '6px', 
-          padding: '10px',
-          border: '1px solid #ffe0b2',
-          textAlign: 'center'
+          borderRadius: '8px', 
+          padding: '15px',
+          border: '1px solid #ffe0b2'
         }}>
-          <div style={{ fontSize: '12px', fontWeight: '600', color: '#e65100', marginBottom: '4px' }}>
-            Thermal Duration
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <FontAwesomeIcon icon={faClock} style={{ fontSize: '16px', color: '#f57c00' }} />
+            <span style={{ fontWeight: '700', color: '#e65100', fontSize: '14px' }}>Thermal Duration</span>
           </div>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#333' }}>
             {totalThermalDuration || '-'} min
           </div>
         </div>
@@ -957,225 +812,210 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
     </div>
   );
 
-  const renderThermalCycle = (tableStart = 0, tableEnd = null, isContinuation = false) => {
-    const thermalData = recipeData.thermal_cycle || [];
-    const dataToShow = tableEnd ? thermalData.slice(tableStart, tableEnd) : thermalData.slice(tableStart);
-    
-    return (
-      <div style={{
-        background: 'white',
-        borderRadius: '8px',
-        padding: '15px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        border: '1px solid #fff8e1'
+  const renderThermalCycle = () => (
+    <div style={{
+      background: 'white',
+      borderRadius: '12px',
+      padding: '25px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      border: '1px solid #fff8e1'
+    }}>
+      <h3 style={{ 
+        color: '#f57c00', 
+        fontSize: '20px', 
+        fontWeight: 'bold', 
+        marginBottom: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
       }}>
-        <h3 style={{ 
-          color: '#f57c00', 
-          fontSize: '16px', 
-          fontWeight: 'bold', 
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <FontAwesomeIcon icon={faThermometerHalf} style={{ color: '#ff9800', fontSize: '14px' }} />
-          Thermal Cycle {isContinuation ? '(continued)' : ''}
-        </h3>
-        
-        <div style={{ 
-          background: '#fafafa', 
-          borderRadius: '8px', 
-          overflow: 'hidden',
-          border: '1px solid #e0e0e0'
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-            <thead>
-              <tr style={{ background: '#ffe0b2' }}>
-                <th style={{ padding: '8px 6px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Step</th>
-                <th style={{ padding: '8px 6px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Ramp Type</th>
-                <th style={{ padding: '8px 6px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Temperature (°C)</th>
-                <th style={{ padding: '8px 6px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Duration (min)</th>
+        <FontAwesomeIcon icon={faThermometerHalf} style={{ color: '#ff9800' }} />
+        Thermal Cycle
+      </h3>
+      
+      <div style={{ 
+        background: '#fafafa', 
+        borderRadius: '8px', 
+        overflow: 'hidden',
+        border: '1px solid #e0e0e0'
+      }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+          <thead>
+            <tr style={{ background: '#ffe0b2' }}>
+              <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Step</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Ramp Type</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Temperature (°C)</th>
+              <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '600', color: '#e65100' }}>Duration (min)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recipeData.thermal_cycle?.map((step, index) => (
+              <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '500' }}>{step.step}</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                  <span style={{
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    background: step.ramp === 'up' ? '#ffebee' : step.ramp === 'down' ? '#e3f2fd' : '#fff3e0',
+                    color: step.ramp === 'up' ? '#d32f2f' : step.ramp === 'down' ? '#1976d2' : '#f57c00'
+                  }}>
+                    {step.ramp === 'up' ? 'Heating' : 
+                     step.ramp === 'down' ? 'Cooling' : 
+                     step.ramp === 'continue' ? 'Hold' : step.ramp}
+                  </span>
+                </td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', fontWeight: '600', color: '#333' }}>{step.setpoint}</td>
+                <td style={{ padding: '10px 8px', textAlign: 'center', color: '#666' }}>{step.duration}</td>
               </tr>
-            </thead>
-            <tbody>
-              {dataToShow.map((step, index) => (
-                <tr key={tableStart + index} style={{ backgroundColor: (tableStart + index) % 2 === 0 ? 'white' : '#f9f9f9' }}>
-                  <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '500' }}>{step.step}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'center' }}>
-                    <span style={{
-                      padding: '2px 6px',
-                      borderRadius: '8px',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      background: step.ramp === 'up' ? '#ffebee' : step.ramp === 'down' ? '#e3f2fd' : '#fff3e0',
-                      color: step.ramp === 'up' ? '#d32f2f' : step.ramp === 'down' ? '#1976d2' : '#f57c00'
-                    }}>
-                      {step.ramp === 'up' ? 'Heat' : 
-                       step.ramp === 'down' ? 'Cool' : 
-                       step.ramp === 'continue' ? 'Hold' : step.ramp}
-                    </span>
-                  </td>
-                  <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '600', color: '#333' }}>{step.setpoint}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'center', color: '#666' }}>{step.duration}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderChemicalCycle = () => (
+    <div style={{
+      background: 'white',
+      borderRadius: '12px',
+      padding: '25px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      border: '1px solid #f3e5f5'
+    }}>
+      <h3 style={{ 
+        color: '#7b1fa2', 
+        fontSize: '20px', 
+        fontWeight: 'bold', 
+        marginBottom: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+      }}>
+        <FontAwesomeIcon icon={faFlask} style={{ color: '#ab47bc' }} />
+        Chemical Cycle
+      </h3>
+      
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#fafafa', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+        <div style={{ fontWeight: '600', color: '#7b1fa2', marginBottom: '5px' }}>Program Duration:</div>
+        <div style={{ fontSize: '18px', fontWeight: '700', color: '#333' }}>
+          {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s
+          {recipeData.wait_time?.value && (
+            <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+              {' '}(including {recipeData.wait_time.value} {recipeData.wait_time.unit} wait time)
+            </span>
+          )}
         </div>
       </div>
-    );
-  };
-
-  const renderChemicalCycle = (tableStart = 0, tableEnd = null, isContinuation = false, showTotal = true) => {
-    const chemicalData = recipeData.chemical_cycle || [];
-    const dataToShow = tableEnd ? chemicalData.slice(tableStart, tableEnd) : chemicalData.slice(tableStart);
-    const isLastPart = !tableEnd || tableEnd >= chemicalData.length;
-    
-    return (
-      <div style={{
-        background: 'white',
-        borderRadius: '8px',
-        padding: '15px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        border: '1px solid #f3e5f5'
+      
+      <div style={{ 
+        background: '#fafafa', 
+        borderRadius: '8px', 
+        overflow: 'hidden',
+        border: '1px solid #e0e0e0'
       }}>
-        <h3 style={{ 
-          color: '#7b1fa2', 
-          fontSize: '16px', 
-          fontWeight: 'bold', 
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <FontAwesomeIcon icon={faFlask} style={{ color: '#ab47bc', fontSize: '14px' }} />
-          Chemical Cycle {isContinuation ? '(continued)' : ''}
-        </h3>
-        
-        {!isContinuation && (
-          <div style={{ marginBottom: '12px', padding: '8px', background: '#fafafa', borderRadius: '6px', border: '1px solid #e0e0e0' }}>
-            <div style={{ fontWeight: '600', color: '#7b1fa2', marginBottom: '2px', fontSize: '12px' }}>Program Duration:</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#333' }}>
-              {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s
-              {recipeData.wait_time?.value && (
-                <span style={{ fontSize: '11px', color: '#666', fontWeight: 'normal' }}>
-                  {' '}(including {recipeData.wait_time.value} {recipeData.wait_time.unit} wait time)
-                </span>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <thead>
+            <tr style={{ background: '#e1bee7' }}>
+              <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Step</th>
+              <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Duration (s)</th>
+              <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Pressure (mbar)</th>
+              {recipeData.selected_gas1 && (
+                <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
+                  {recipeData.selected_gas1} (Nl/h)
+                </th>
               )}
-            </div>
-          </div>
-        )}
-        
-        <div style={{ 
-          background: '#fafafa', 
-          borderRadius: '8px', 
-          overflow: 'hidden',
-          border: '1px solid #e0e0e0'
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-            <thead>
-              <tr style={{ background: '#e1bee7' }}>
-                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Step</th>
-                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Duration (s)</th>
-                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Pressure (mbar)</th>
+              {recipeData.selected_gas2 && (
+                <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
+                  {recipeData.selected_gas2} (Nl/h)
+                </th>
+              )}
+              {recipeData.selected_gas3 && (
+                <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
+                  {recipeData.selected_gas3} (Nl/h)
+                </th>
+              )}
+              <th style={{ padding: '12px 6px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Turbine</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recipeData.chemical_cycle?.map((step, index) => (
+              <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9f9f9' }}>
+                <td style={{ padding: '10px 6px', textAlign: 'center', fontWeight: '500' }}>{step.step}</td>
+                <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>{step.time}</td>
+                <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>{step.pressure}</td>
                 {recipeData.selected_gas1 && (
-                  <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
-                    {recipeData.selected_gas1} (Nl/h)
-                  </th>
+                  <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>
+                    {step.gases?.find(g => g.gas === recipeData.selected_gas1)?.debit || '-'}
+                  </td>
                 )}
                 {recipeData.selected_gas2 && (
-                  <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
-                    {recipeData.selected_gas2} (Nl/h)
-                  </th>
+                  <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>
+                    {step.gases?.find(g => g.gas === recipeData.selected_gas2)?.debit || '-'}
+                  </td>
                 )}
                 {recipeData.selected_gas3 && (
-                  <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>
-                    {recipeData.selected_gas3} (Nl/h)
-                  </th>
+                  <td style={{ padding: '10px 6px', textAlign: 'center', color: '#666' }}>
+                    {step.gases?.find(g => g.gas === recipeData.selected_gas3)?.debit || '-'}
+                  </td>
                 )}
-                <th style={{ padding: '8px 4px', textAlign: 'center', fontWeight: '600', color: '#4a148c' }}>Turbine</th>
+                <td style={{ padding: '10px 6px', textAlign: 'center' }}>
+                  <span style={{
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    background: step.turbine ? '#e8f5e8' : '#ffebee',
+                    color: step.turbine ? '#2e7d32' : '#d32f2f'
+                  }}>
+                    {step.turbine ? 'Yes' : 'No'}
+                  </span>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {dataToShow.map((step, index) => (
-                <tr key={tableStart + index} style={{ backgroundColor: (tableStart + index) % 2 === 0 ? 'white' : '#f9f9f9' }}>
-                  <td style={{ padding: '6px 4px', textAlign: 'center', fontWeight: '500' }}>{step.step}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'center', color: '#666' }}>{step.time}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'center', color: '#666' }}>{step.pressure}</td>
-                  {recipeData.selected_gas1 && (
-                    <td style={{ padding: '6px 4px', textAlign: 'center', color: '#666' }}>
-                      {step.gases?.find(g => g.gas === recipeData.selected_gas1)?.debit || '-'}
-                    </td>
-                  )}
-                  {recipeData.selected_gas2 && (
-                    <td style={{ padding: '6px 4px', textAlign: 'center', color: '#666' }}>
-                      {step.gases?.find(g => g.gas === recipeData.selected_gas2)?.debit || '-'}
-                    </td>
-                  )}
-                  {recipeData.selected_gas3 && (
-                    <td style={{ padding: '6px 4px', textAlign: 'center', color: '#666' }}>
-                      {step.gases?.find(g => g.gas === recipeData.selected_gas3)?.debit || '-'}
-                    </td>
-                  )}
-                  <td style={{ padding: '6px 4px', textAlign: 'center' }}>
-                    <span style={{
-                      padding: '1px 6px',
-                      borderRadius: '8px',
-                      fontSize: '9px',
-                      fontWeight: '500',
-                      background: step.turbine ? '#e8f5e8' : '#ffebee',
-                      color: step.turbine ? '#2e7d32' : '#d32f2f'
-                    }}>
-                      {step.turbine ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {showTotal && isLastPart && (
-                <tr style={{ backgroundColor: '#e1bee7', fontWeight: 'bold' }}>
-                  <td style={{ padding: '8px 4px', textAlign: 'center', color: '#4a148c' }}>Total</td>
-                  <td style={{ padding: '8px 4px', textAlign: 'center', color: '#4a148c' }}>
-                    {recipeData.chemical_cycle?.reduce((total, step) => total + parseInt(step.time || 0), 0)} s
-                  </td>
-                  <td colSpan={recipeData.selected_gas3 ? 5 : recipeData.selected_gas2 ? 4 : 3} 
-                      style={{ padding: '8px 4px', textAlign: 'center', color: '#4a148c' }}>
-                    {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s (total including wait time)
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            ))}
+            <tr style={{ backgroundColor: '#e1bee7', fontWeight: 'bold' }}>
+              <td style={{ padding: '12px 6px', textAlign: 'center', color: '#4a148c' }}>Total</td>
+              <td style={{ padding: '12px 6px', textAlign: 'center', color: '#4a148c' }}>
+                {recipeData.chemical_cycle?.reduce((total, step) => total + parseInt(step.time || 0), 0)} s
+              </td>
+              <td colSpan={recipeData.selected_gas3 ? 5 : recipeData.selected_gas2 ? 4 : 3} 
+                  style={{ padding: '12px 6px', textAlign: 'center', color: '#4a148c' }}>
+                {Math.floor(totalChemicalDuration / 60)} min {totalChemicalDuration % 60} s (total including wait time)
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    );
-  };
+    </div>
+  );
 
   const renderChart = () => (
     <div style={{
       background: 'white',
-      borderRadius: '8px',
-      padding: '15px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      borderRadius: '12px',
+      padding: '25px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
       border: '1px solid #e8f5e8'
     }}>
       <h3 style={{ 
         color: '#2e7d32', 
-        fontSize: '16px', 
+        fontSize: '20px', 
         fontWeight: 'bold', 
-        marginBottom: '12px',
+        marginBottom: '20px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px'
+        gap: '10px'
       }}>
-        <FontAwesomeIcon icon={faChartLine} style={{ color: '#4caf50', fontSize: '14px' }} />
+        <FontAwesomeIcon icon={faChartLine} style={{ color: '#4caf50' }} />
         Process Parameters Evolution
       </h3>
       
       <div style={{ 
-        height: '280px',
+        height: '350px',
         background: '#fafafa',
-        borderRadius: '6px',
-        padding: '15px',
+        borderRadius: '8px',
+        padding: '20px',
         border: '1px solid #e0e0e0'
       }}>
         {chartData ? (
@@ -1217,40 +1057,15 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
   );
 
   // Fonction de rendu de section par type
-  const renderSectionByType = (section) => {
-    if (typeof section === 'string') {
-      // Ancienne logique pour les sections simples
-      switch (section) {
-        case 'generalParams': return renderGeneralParams();
-        case 'thermalCycle': return renderThermalCycle();
-        case 'chemicalCycle': return renderChemicalCycle();
-        case 'chart': return renderChart();
-        case 'quench': return renderQuench();
-        case 'empty': return renderEmptyState();
-        default: return null;
-      }
-    } else {
-      // Nouvelle logique pour les sections avec découpage de tableau
-      switch (section.type) {
-        case 'thermalCycle': 
-          return renderThermalCycle(
-            section.tableStart || 0, 
-            section.tableEnd, 
-            section.isContinuation || false
-          );
-        case 'chemicalCycle': 
-          return renderChemicalCycle(
-            section.tableStart || 0, 
-            section.tableEnd, 
-            section.isContinuation || false,
-            !section.isPartial // Afficher le total seulement sur la dernière partie
-          );
-        case 'generalParams': return renderGeneralParams();
-        case 'chart': return renderChart();
-        case 'quench': return renderQuench();
-        case 'empty': return renderEmptyState();
-        default: return null;
-      }
+  const renderSectionByType = (sectionType) => {
+    switch (sectionType) {
+      case 'generalParams': return renderGeneralParams();
+      case 'thermalCycle': return renderThermalCycle();
+      case 'chemicalCycle': return renderChemicalCycle();
+      case 'chart': return renderChart();
+      case 'quench': return renderQuench();
+      case 'empty': return renderEmptyState();
+      default: return null;
     }
   };
 
@@ -1279,13 +1094,13 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
           <div style={{ 
             flex: 1,
             display: 'grid', 
-            gap: '15px', // Réduit de 20px à 15px
+            gap: '20px',
             alignContent: 'start',
             overflow: 'hidden'
           }}>
-            {page.sections.map((section, sectionIndex) => (
-              <div key={`${typeof section === 'string' ? section : section.type}-${sectionIndex}`}>
-                {renderSectionByType(section)}
+            {page.sections.map((sectionType, sectionIndex) => (
+              <div key={`${sectionType}-${sectionIndex}`}>
+                {renderSectionByType(sectionType)}
               </div>
             ))}
           </div>

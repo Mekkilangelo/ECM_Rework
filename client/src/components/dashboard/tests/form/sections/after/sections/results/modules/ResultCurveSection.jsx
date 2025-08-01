@@ -233,7 +233,7 @@ const ResultCurveSection = forwardRef(({
         />
       </CollapsibleSection>
 
-      {/* Section du graphique */}
+      {/* Section du graphique - Correction de l'échelle X */}
       <CollapsibleSection
         title="Visualisation"
         isExpandedByDefault={true}
@@ -243,37 +243,68 @@ const ResultCurveSection = forwardRef(({
         className="mt-3"
       >
         <CurveChart
-          curveData={curveData}
+          curveData={{
+            ...curveData,
+            // Correction: s'assurer que les distances sont numériques et triées
+            distances: Array.isArray(curveData.distances) 
+              ? curveData.distances.map(d => Number(d)).sort((a, b) => a - b)
+              : [],
+            series: Array.isArray(curveData.series)
+              ? curveData.series.map(serie => ({
+                  ...serie,
+                  // Créer les données avec les vraies distances comme coordonnées X
+                  data: curveData.distances.map((distance, i) => {
+                    const numDistance = Number(distance);
+                    const value = serie.values[i];
+                    const numValue = value === '' || value === null || value === undefined ? 0 : Number(value);
+                    
+                    return {
+                      x: numDistance, // Utilise la vraie distance
+                      y: numValue
+                    };
+                  }).filter(point => !isNaN(point.x)) // Filtrer les distances invalides
+                }))
+              : []
+          }}
           title="Courbes de dureté"
           unit={unit}
           height={400}
           t={t}
+          // Ajout d'options pour forcer l'échelle proportionnelle
+          options={{
+            scales: {
+              x: {
+                type: 'linear', // Force un axe linéaire (pas catégoriel)
+                position: 'bottom',
+                title: {
+                  display: true,
+                  text: 'Distance (mm)'
+                },
+                // S'assurer que l'échelle est proportionnelle
+                beginAtZero: false, // Ne pas forcer à commencer à 0 si ce n'est pas nécessaire
+                ticks: {
+                  // Optionnel : forcer un nombre de ticks pour une meilleure lisibilité
+                  maxTicksLimit: 10
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: `Dureté (${unit})`
+                }
+              }
+            },
+            elements: {
+              line: {
+                tension: 0.1 // Légère courbure pour une meilleure visualisation
+              },
+              point: {
+                radius: 4 // Points plus visibles
+              }
+            }
+          }}
         />
       </CollapsibleSection>
-
-      {/* Section d'informations */}
-      {!viewMode && (
-        <div className="mt-3">
-          <Card className="border-info">
-            <Card.Body className="py-2">
-              <div className="row align-items-center">
-                <div className="col-md-8">
-                  <small className="text-info">
-                    <strong>Compatible Excel:</strong>{' '}
-                    Cette structure est optimisée pour l'import/export Excel. Les distances en colonnes, les séries en lignes.
-                  </small>
-                </div>
-                <div className="col-md-4 text-end">
-                  <small className="text-muted">
-                    {curveData.distances?.length || 0} distances × {' '}
-                    {curveData.series?.length || 0} séries
-                  </small>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </div>
-      )}
     </div>
   );
 });

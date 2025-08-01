@@ -699,16 +699,6 @@ const ResultsDataSection = forwardRef(({
                     viewMode={viewMode}
                   />
                 </CollapsibleSection>
-
-                {/* Placeholder pour les fonctionnalités futures */}
-                <div className="mt-4">
-                  <div className="alert alert-info">
-                    <h6>{t('common.comingSoon', 'Prochainement')}</h6>
-                    <ul className="mb-0">
-                      <li>{t('tests.after.results.import.button', 'Import Excel')}</li>
-                    </ul>
-                  </div>
-                </div>
               </CollapsibleSection>
             ))}
           </div>

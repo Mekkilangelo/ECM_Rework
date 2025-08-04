@@ -268,6 +268,67 @@ const updateOrder = async (orderId, orderData) => {
     if (orderData.name) nodeUpdates.name = orderData.name;
     if (orderData.description) nodeUpdates.description = orderData.description;
     
+    // Vérifier si la date de commande a changé pour mettre à jour le nom du nœud
+    if (orderData.order_date && orderNode.Order && orderNode.Order.order_date) {
+      const currentDate = new Date(orderNode.Order.order_date);
+      const newDate = new Date(orderData.order_date);
+      
+      // Si la date a changé et que le nom du nœud suit le format TRQ_
+      if (currentDate.getTime() !== newDate.getTime() && orderNode.name.startsWith('TRQ_')) {
+        // Générer le nouveau nom basé sur la nouvelle date
+        const formattedNewDate = newDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        
+        // Fonction pour générer le nouveau nom avec indice si nécessaire
+        async function generateUpdatedNodeName() {
+          const baseName = `TRQ_${formattedNewDate}`;
+          
+          // Trouver toutes les commandes du même jour (exclure la commande actuelle)
+          const existingNodes = await Node.findAll({
+            where: {
+              parent_id: orderNode.parent_id,
+              type: 'order',
+              id: { [Op.ne]: orderId }, // Exclure la commande actuelle
+              name: {
+                [Op.like]: `${baseName}%`
+              }
+            },
+            transaction
+          });
+          
+          if (existingNodes.length === 0) {
+            return baseName;
+          }
+          
+          // Trouver le plus grand indice
+          let maxIndex = 0;
+          
+          existingNodes.forEach(node => {
+            const nameMatch = node.name.match(`${baseName}\\((\\d+)\\)`);
+            if (nameMatch) {
+              const index = parseInt(nameMatch[1], 10);
+              if (index > maxIndex) {
+                maxIndex = index;
+              }
+            }
+          });
+          
+          return `${baseName}(${maxIndex + 1})`;
+        }
+        
+        // Générer le nouveau nom et mettre à jour le chemin
+        const newNodeName = await generateUpdatedNodeName();
+        nodeUpdates.name = newNodeName;
+        
+        // Mettre à jour le chemin aussi si nécessaire
+        if (orderNode.parent_id) {
+          const parentNode = await Node.findByPk(orderNode.parent_id, { transaction });
+          if (parentNode) {
+            nodeUpdates.path = `${parentNode.path}/${newNodeName}`;
+          }
+        }
+      }
+    }
+    
     // Mettre à jour la date de modification
     nodeUpdates.modified_at = new Date();
     

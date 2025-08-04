@@ -2,7 +2,6 @@ import React from 'react';
 import Header from './header/Header';
 import Footer from './footer/Footer';
 import Sidebar from './sidebar/Sidebar';
-import Chatbot from './chatbot/Chatbot';
 
 const Layout = ({ children }) => {
   return (
@@ -17,7 +16,6 @@ const Layout = ({ children }) => {
         </div>
         <Footer />
       </div>
-      <Chatbot />
     </div>
   );
 };

@@ -12,6 +12,7 @@ services:
       - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
 
   backend:
     build: ./server

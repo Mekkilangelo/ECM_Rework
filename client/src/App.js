@@ -10,7 +10,6 @@ import './styles/sb-admin-2.min.css';
 import './styles/custom-overrides.css'; // Ajouté pour corriger l'avertissement color-adjust
 import './styles/darkTheme.css'; // Import des styles du thème sombre
 
-// import './styles/chatbot.css';
 import './styles/sidebar.css';
 
 import { useTranslation } from 'react-i18next'; 

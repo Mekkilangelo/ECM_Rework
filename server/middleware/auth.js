@@ -394,8 +394,8 @@ const requireSuperUser = (req, res, next) => {
  * @returns {void}
  */
 const requireEditRights = (req, res, next) => {
-  // Vérifie si l'utilisateur a des droits d'édition
-  if (req.user.role !== 'admin' && req.user.role !== 'superuser') {
+  // Vérifie si l'utilisateur existe et a des droits d'édition
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'superuser')) {
     return res.status(403).json({
       success: false,
       message: 'Accès refusé. Mode lecture seule actif.'

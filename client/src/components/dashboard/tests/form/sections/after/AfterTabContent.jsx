@@ -1,9 +1,10 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ResultsDataSection from './sections/results/ResultsDataSection';
 import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
+import testService from '../../../../../../services/testService';
 
 const AfterTabContent = forwardRef(({
   formData, 
@@ -18,6 +19,49 @@ const AfterTabContent = forwardRef(({
 }, ref) => {
   const { t } = useTranslation();
   const resultsDataSectionRef = useRef();
+  const [specifications, setSpecifications] = useState(null);
+
+  // Récupérer les spécifications de la pièce parente pour les passer aux courbes
+  useEffect(() => {
+    const fetchSpecifications = async () => {
+      if (!test || !test.id || !test.parent_id) {
+        return;
+      }
+
+      try {
+        const response = await testService.getTestSpecs(test.id, test.parent_id);
+        
+        console.log('🔍 AfterTabContent - Réponse testService:', response);
+        
+        if (response && response.specifications !== undefined && response.specifications !== null) {
+          let specs = response.specifications;
+          
+          // Parser si c'est une chaîne JSON
+          if (typeof specs === 'string') {
+            try {
+              specs = JSON.parse(specs);
+              console.log('🔍 AfterTabContent - Specs parsées:', specs);
+            } catch (parseError) {
+              console.error('Erreur parsing specs dans AfterTabContent:', parseError);
+              specs = { hardnessSpecs: [], ecdSpecs: [] };
+            }
+          } else if (!specs || typeof specs !== 'object') {
+            specs = { hardnessSpecs: [], ecdSpecs: [] };
+          }
+          
+          console.log('🔍 AfterTabContent - Specs finales à passer aux courbes:', specs);
+          console.log('🔍 AfterTabContent - EcdSpecs trouvées:', specs.ecdSpecs);
+          
+          setSpecifications(specs);
+        }
+      } catch (error) {
+        console.error('Erreur récupération specs dans AfterTabContent:', error);
+        setSpecifications({ hardnessSpecs: [], ecdSpecs: [] });
+      }
+    };
+
+    fetchSpecifications();
+  }, [test]);
 
   // Expose flushAllCurves to parent
   useImperativeHandle(ref, () => ({
@@ -37,7 +81,7 @@ const AfterTabContent = forwardRef(({
         rememberState={false}
       >        <SpecificationsSection
           testNodeId={test ? test.id : null}
-          parentId={formHandlers.parentId}
+          parentId={test ? test.parent_id : null}
           viewMode={viewMode}
         />
       </CollapsibleSection>
@@ -82,6 +126,7 @@ const AfterTabContent = forwardRef(({
           fileInputRef={excelImportHandlers.fileInputRef}
           handleExcelImport={excelImportHandlers.handleExcelImport}
           processExcelData={excelImportHandlers.processExcelData}
+          specifications={specifications}
         />
       </CollapsibleSection>    </>
   );

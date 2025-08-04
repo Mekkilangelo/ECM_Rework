@@ -42,22 +42,13 @@ const ResultCurveSection = forwardRef(({
   handleChange,
   viewMode = false,
   readOnlyFieldStyle = {},
-  unit = 'HV'
+  unit = 'HV',
+  specifications
 }, ref) => {
   const { t } = useTranslation();
 
   // Mémoriser le callback pour éviter les re-créations inutiles
   const handleCurveDataChange = useCallback((newData) => {
-    console.log('🔄 ResultCurveSection - handleCurveDataChange appelé:', {
-      resultIndex,
-      sampleIndex,
-      newData,
-      hasFormData: !!formData,
-      hasResultsData: !!formData?.resultsData,
-      hasResults: !!formData?.resultsData?.results,
-      resultsLength: formData?.resultsData?.results?.length || 0
-    });
-    
     if (handleChange) {
       // Utiliser une approche directe plutôt que la notation par point
       // pour gérer correctement les indices de tableau
@@ -81,12 +72,6 @@ const ResultCurveSection = forwardRef(({
           return result;
         })
       };
-      
-      console.log('📤 Envoi des données mises à jour via handleChange:', {
-        path: 'resultsData',
-        updatedData: updatedResultsData,
-        targetCurveData: updatedResultsData.results?.[resultIndex]?.samples?.[sampleIndex]?.curveData
-      });
       
       handleChange({
         target: {
@@ -117,47 +102,19 @@ const ResultCurveSection = forwardRef(({
 
   // Initialiser les données depuis formData lors du premier rendu UNIQUEMENT
   React.useEffect(() => {
-    console.log('🚀 ResultCurveSection useEffect triggered:', {
-      resultIndex,
-      sampleIndex,
-      formDataExists: !!formData,
-      resultsDataExists: !!formData?.resultsData,
-      resultsLength: formData?.resultsData?.results?.length,
-      fullFormDataPath: formData?.resultsData?.results?.[resultIndex]?.samples?.[sampleIndex],
-      fullFormDataStructure: formData?.resultsData
-    });
-    
     const existingCurveData = formData?.resultsData?.results?.[resultIndex]?.samples?.[sampleIndex]?.curveData;
-    
-    console.log('🔍 ResultCurveSection - Initialisation des données:', {
-      resultIndex,
-      sampleIndex,
-      existingCurveData,
-      existingCurveDataType: typeof existingCurveData,
-      existingFormat: existingCurveData ? (existingCurveData.distances && existingCurveData.series ? 'NOUVEAU (distances+series)' : existingCurveData.points ? 'ancien (points)' : 'format inconnu') : 'pas de données',
-      localDataEmpty: !curveData.distances?.length && !curveData.series?.length,
-      localCurveData: curveData,
-      shouldLoad: !!existingCurveData
-    });
     
     // TOUJOURS charger les données si elles existent, même si des données locales sont présentes
     if (existingCurveData) {
       // Les données devraient maintenant être directement au nouveau format
       // Utiliser hasOwnProperty pour vérifier la présence des propriétés, pas leur contenu
       if (existingCurveData.hasOwnProperty('distances') && existingCurveData.hasOwnProperty('series')) {
-        console.log('✅ Données déjà au nouveau format, chargement forcé');
-        console.log('Données à charger:', existingCurveData);
-        console.log('Distances trouvées:', existingCurveData.distances);
-        console.log('Séries trouvées:', existingCurveData.series);
         setCurveData({
           distances: Array.isArray(existingCurveData.distances) ? existingCurveData.distances : [],
           series: Array.isArray(existingCurveData.series) ? existingCurveData.series : []
         });
-        console.log('✅ Données chargées dans setCurveData');
       } else if (existingCurveData.points) {
         // Migration des anciennes données (cas transitoire)
-        console.log('🔄 Migration des anciennes données vers le nouveau format');
-        
         const distances = [...new Set(existingCurveData.points.map(p => p.distance))].sort((a, b) => a - b);
         const seriesNames = new Set();
         
@@ -178,7 +135,6 @@ const ResultCurveSection = forwardRef(({
         }));
         
         const convertedData = { distances, series };
-        console.log('✅ Données migrées:', convertedData);
         setCurveData(convertedData);
       }
     }
@@ -270,6 +226,7 @@ const ResultCurveSection = forwardRef(({
           unit={unit}
           height={400}
           t={t}
+          specifications={specifications}
           // Ajout d'options pour forcer l'échelle proportionnelle
           options={{
             scales: {

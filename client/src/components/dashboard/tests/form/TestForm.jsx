@@ -215,31 +215,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
               </Tab>              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
                 <AfterTabContent
                   ref={afterTabContentRef}
-                  formData={(() => {
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('=== TESTFORM -> AFTERTABCONTENT ===');
-                      console.log('formData being passed:', formData);
-                      console.log('formData.resultsData:', formData.resultsData);
-                      if (formData.resultsData?.results?.length > 0) {
-                        console.log('First result samples:', formData.resultsData.results[0].samples?.length || 0);
-                        if (formData.resultsData.results[0].samples?.length > 0) {
-                          const firstSample = formData.resultsData.results[0].samples[0];
-                          console.log('First sample curveData from TestForm:', firstSample.curveData);
-                          console.log('First sample curveData NOUVEAU FORMAT - distances:', firstSample.curveData?.distances?.length || 0);
-                          console.log('First sample curveData NOUVEAU FORMAT - series:', firstSample.curveData?.series?.length || 0);
-                          console.log('First sample curveData ANCIEN FORMAT - points:', firstSample.curveData?.points?.length || 0);
-                          if (firstSample.curveData?.distances?.length > 0 || firstSample.curveData?.series?.length > 0) {
-                            console.log('✅ TestForm détecte des données de courbe au NOUVEAU FORMAT');
-                          } else if (firstSample.curveData?.points?.length > 0) {
-                            console.log('⚠️ TestForm détecte des données de courbe à l\'ANCIEN FORMAT');
-                          } else {
-                            console.log('❌ TestForm ne détecte AUCUNE donnée de courbe');
-                          }
-                        }
-                      }
-                    }
-                    return formData;
-                  })()}
+                  formData={formData}
                   errors={errors}
                   loading={loading}
                   formHandlers={formHandlers}

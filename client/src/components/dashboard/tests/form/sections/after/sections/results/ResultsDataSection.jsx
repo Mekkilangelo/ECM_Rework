@@ -43,7 +43,8 @@ const ResultsDataSection = forwardRef(({
   readOnlyFieldStyle = {},
   fileInputRef,
   handleExcelImport,
-  processExcelData
+  processExcelData,
+  specifications
 }, ref) => {
   const { t } = useTranslation();
 
@@ -663,6 +664,7 @@ const ResultsDataSection = forwardRef(({
                     viewMode={viewMode}
                     readOnlyFieldStyle={readOnlyFieldStyle}
                     unit="HV"
+                    specifications={specifications}
                   />
                 </CollapsibleSection>
 

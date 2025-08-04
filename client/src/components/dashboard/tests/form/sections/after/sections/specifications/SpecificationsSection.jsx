@@ -12,36 +12,86 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
   useEffect(() => {
     const fetchSpecifications = async () => {
       if (!testNodeId || !parentId) {
+        console.log('🔍 SpecificationsSection - Paramètres manquants:', { testNodeId, parentId });
         setLoading(false);
         return;
-      }      try {
+      }
+
+      console.log('🔍 SpecificationsSection - Début de fetchSpecifications avec:', { testNodeId, parentId });
+
+      try {
         setLoading(true);
         const response = await testService.getTestSpecs(testNodeId, parentId);
-          // Log la réponse pour le débogage (development only)
-        if (process.env.NODE_ENV === 'development') {
-          // Réponse du service getTestSpecs reçue
-        }
-          // Vérifiez si la réponse a la structure attendue
+        
+        console.log('🔍 SpecificationsSection - Réponse RAW complète:', response);
+        console.log('🔍 SpecificationsSection - Type de response:', typeof response);
+        console.log('🔍 SpecificationsSection - Clés de response:', Object.keys(response || {}));
+        console.log('🔍 SpecificationsSection - response.specifications:', response?.specifications);
+        console.log('🔍 SpecificationsSection - Type de specifications:', typeof response?.specifications);
+        console.log('🔍 SpecificationsSection - response.data:', response?.data);
+        console.log('🔍 SpecificationsSection - response.data?.specifications:', response?.data?.specifications);
+
+        // Vérifiez si la réponse a la structure attendue
         // Si response est un objet avec la propriété 'specifications'
-        if (response && response.specifications) {
-          // Assurez-vous que specifications est un objet et non une chaîne
-          const specs = typeof response.specifications === 'string' 
-            ? JSON.parse(response.specifications) 
-            : response.specifications;
+        if (response && response.specifications !== undefined && response.specifications !== null) {
+          console.log('🔍 SpecificationsSection - Branche: response.specifications détectée');
+          
+          let specs = response.specifications;
+          
+          // Si c'est une chaîne JSON, la parser (comme dans usePartData)
+          if (typeof specs === 'string') {
+            console.log('🔍 SpecificationsSection - Parsing string JSON:', specs);
+            try {
+              specs = JSON.parse(specs);
+              console.log('🔍 SpecificationsSection - Specs parsées avec succès:', specs);
+            } catch (parseError) {
+              console.error('🔍 SpecificationsSection - Erreur parsing JSON:', parseError);
+              specs = { hardnessSpecs: [], ecdSpecs: [] };
+            }
+          } else if (specs && typeof specs === 'object') {
+            console.log('🔍 SpecificationsSection - Specs déjà parsées (objet):', specs);
+          } else {
+            console.log('🔍 SpecificationsSection - Specs vides ou null, initialisation par défaut');
+            specs = { hardnessSpecs: [], ecdSpecs: [] };
+          }
+          
+          console.log('🔍 SpecificationsSection - hardnessSpecs trouvées:', specs?.hardnessSpecs);
+          console.log('🔍 SpecificationsSection - ecdSpecs trouvées:', specs?.ecdSpecs);
+          
           setSpecifications(specs);
         } 
         // Si la réponse contient response.data.specifications
-        else if (response && response.data && response.data.specifications) {
-          // Assurez-vous que specifications est un objet et non une chaîne
-          const specs = typeof response.data.specifications === 'string'
-            ? JSON.parse(response.data.specifications)
-            : response.data.specifications;
+        else if (response && response.data && response.data.specifications !== undefined && response.data.specifications !== null) {
+          console.log('🔍 SpecificationsSection - Branche: response.data.specifications détectée');
+          
+          let specs = response.data.specifications;
+          
+          // Si c'est une chaîne JSON, la parser
+          if (typeof specs === 'string') {
+            console.log('🔍 SpecificationsSection - Parsing string JSON (data):', specs);
+            try {
+              specs = JSON.parse(specs);
+              console.log('🔍 SpecificationsSection - Specs parsées avec succès (data):', specs);
+            } catch (parseError) {
+              console.error('🔍 SpecificationsSection - Erreur parsing JSON (data):', parseError);
+              specs = { hardnessSpecs: [], ecdSpecs: [] };
+            }
+          } else if (specs && typeof specs === 'object') {
+            console.log('🔍 SpecificationsSection - Specs déjà parsées (objet, data):', specs);
+          } else {
+            console.log('🔍 SpecificationsSection - Specs vides ou null (data), initialisation par défaut');
+            specs = { hardnessSpecs: [], ecdSpecs: [] };
+          }
+          
           setSpecifications(specs);
         } 
-        // Sinon, initialisez avec un objet vide
+        // Sinon, initialisez avec un objet vide avec la nouvelle structure
         else {
-          console.warn('La réponse ne contient pas de spécifications, initialisation avec valeurs par défaut');
-          setSpecifications({});
+          console.warn('🔍 SpecificationsSection - Aucune spécification trouvée dans response:', response);
+          setSpecifications({
+            hardnessSpecs: [],
+            ecdSpecs: []
+          });
         }
         
         setLoading(false);
@@ -121,50 +171,9 @@ const SpecificationsSection = ({ testNodeId, parentId, viewMode = false }) => {
         ))
       )}
 
-      {/* Support pour l'ancien format de spécifications (rétrocompatibilité) */}
-      {specifications.ecd && !Array.isArray(specifications.ecdSpecs) && (
-        <ListGroup.Item className="py-2">
-          <span className="d-flex justify-content-between">
-            <span>{t('tests.after.specifications.ecd', { hardness: specifications.ecd.hardness, unit: specifications.ecd.unit })}</span>
-            <span className="text-primary">{formatRange(specifications.ecd.depthMin, specifications.ecd.depthMax)} mm</span>
-          </span>
-        </ListGroup.Item>
-      )}
-      {specifications.surfaceHardness && !Array.isArray(specifications.hardnessSpecs) && (
-        <ListGroup.Item className="py-2">
-          <span className="d-flex justify-content-between">
-            <span>{t('tests.after.specifications.surfaceHardness')}</span>
-            <span className="text-primary">
-              {formatRange(specifications.surfaceHardness.min, specifications.surfaceHardness.max)} {specifications.surfaceHardness.unit}
-            </span>
-          </span>
-        </ListGroup.Item>
-      )}
-      {specifications.coreHardness && !Array.isArray(specifications.hardnessSpecs) && (
-        <ListGroup.Item className="py-2">
-          <span className="d-flex justify-content-between">
-            <span>{t('tests.after.specifications.coreHardness')}</span>
-            <span className="text-primary">
-              {formatRange(specifications.coreHardness.min, specifications.coreHardness.max)} {specifications.coreHardness.unit}
-            </span>
-          </span>
-        </ListGroup.Item>
-      )}
-      {specifications.toothHardness && !Array.isArray(specifications.hardnessSpecs) && (
-        <ListGroup.Item className="py-2">
-          <span className="d-flex justify-content-between">
-            <span>{t('tests.after.specifications.toothHardness')}</span>
-            <span className="text-primary">
-              {formatRange(specifications.toothHardness.min, specifications.toothHardness.max)} {specifications.toothHardness.unit}
-            </span>
-          </span>
-        </ListGroup.Item>
-      )}
-
       {/* Message si aucune spécification n'est disponible */}
       {(!specifications.hardnessSpecs || specifications.hardnessSpecs.length === 0) &&
-       (!specifications.ecdSpecs || specifications.ecdSpecs.length === 0) &&
-       !specifications.ecd && !specifications.surfaceHardness && !specifications.coreHardness && !specifications.toothHardness && (
+       (!specifications.ecdSpecs || specifications.ecdSpecs.length === 0) && (
         <ListGroup.Item className="py-2 text-center">
           <span className="text-muted small">{t('tests.after.specifications.noSpecifications')}</span>
         </ListGroup.Item>

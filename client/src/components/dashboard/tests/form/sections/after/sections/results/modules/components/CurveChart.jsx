@@ -32,15 +32,22 @@ const CurveChart = ({
   height = 400,
   t,
   options = {},
-  showStats = true // Nouvelle option pour afficher/masquer les statistiques
+  showStats = true, // Nouvelle option pour afficher/masquer les statistiques
+  specifications
 }) => {
+  console.log('🔍 CurveChart - Specifications reçues:', specifications);
+  console.log('🔍 CurveChart - Options reçues:', options);
+  
   const chartOptions = {
     title: title || t('tests.after.results.curves.chartTitle', 'Courbes de dureté'),
     unit: unit,
     yAxisLabel: `${t('tests.after.results.curves.hardness', 'Dureté')} (${unit})`,
     beginAtZero: false,
+    specifications: specifications,
     ...options
   };
+  
+  console.log('🔍 CurveChart - ChartOptions avec specs:', chartOptions);
 
   const { 
     chartData, 

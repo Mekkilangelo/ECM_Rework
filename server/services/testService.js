@@ -179,11 +179,15 @@ const getTestSpecs = async (testId, parent_id) => {
       
       if (parentNode && parentNode.Part && parentNode.Part.specifications) {
         specifications = parentNode.Part.specifications;
+        
         logger.info(`Spécifications de la pièce parente récupérées pour le test #${testId}`);
       } else {
         logger.warn(`Aucune spécification trouvée pour la pièce parente #${parent_id}`);
-        specifications = {};
+        specifications = { hardnessSpecs: [], ecdSpecs: [] };
       }
+    } else {
+      logger.warn(`Aucun parent_id fourni, initialisation avec spécifications vides`);
+      specifications = { hardnessSpecs: [], ecdSpecs: [] };
     }
     
     const result = {

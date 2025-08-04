@@ -64,15 +64,6 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
             ? JSON.parse(data.results_data) 
             : (data.results_data || {});
           
-          console.log('Parsed test data:', { 
-            furnaceData, 
-            loadData, 
-            recipeData, 
-            quenchData,            
-            resultsData,
-            rawResultsData: data.results_data
-          });
-          
           // Map from API structure to form structure
           setFormData({
             // Basic information
@@ -254,17 +245,13 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                             // NOUVEAU FORMAT: distances + series (prioritaire)
                             // Vérifier la présence des propriétés, pas leur truthiness
                             if (sample.curve_data.hasOwnProperty('distances') && sample.curve_data.hasOwnProperty('series')) {
-                              console.log(`✅ NOUVEAU FORMAT détecté pour [Result ${resultBlock.step}][Sample ${sample.step}]`);
-                              console.log('Données brutes curve_data:', sample.curve_data);
                               curveData = {
                                 distances: Array.isArray(sample.curve_data.distances) ? sample.curve_data.distances : [],
                                 series: Array.isArray(sample.curve_data.series) ? sample.curve_data.series : []
                               };
-                              console.log('Données après parsing:', curveData);
                             }
                             // ANCIEN FORMAT: points (conversion)
                             else if (Array.isArray(sample.curve_data.points) && sample.curve_data.points.length > 0) {
-                              console.log(`🔄 ANCIEN FORMAT détecté, conversion vers nouveau format pour [Result ${resultBlock.step}][Sample ${sample.step}]`);
                               
                               // Extraire les distances uniques
                               const distances = [...new Set(sample.curve_data.points.map(p => p.distance))].sort((a, b) => a - b);
@@ -289,17 +276,6 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                               }));
                               
                               curveData = { distances, series };
-                            }
-                          }
-
-                          // Debug log pour vérifier les données de courbe chargées
-                          if (process.env.NODE_ENV === 'development' && (curveData.distances?.length > 0 || curveData.series?.length > 0)) {
-                            console.log(`=== CHARGEMENT CURVE DATA [Result ${resultBlock.step}][Sample ${sample.step}] ===`);
-                            console.log('Format final:', curveData.distances?.length > 0 ? 'NOUVEAU (distances+series)' : 'vide');
-                            console.log('Distances:', curveData.distances?.length || 0);
-                            console.log('Séries:', curveData.series?.length || 0);
-                            if (curveData.series?.length > 0) {
-                              console.log('Première série:', curveData.series[0]);
                             }
                           }
                           
@@ -351,13 +327,6 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
                     }]
                   }]
             }          
-          });
-          
-          console.log('🚀 DONNÉES FINALES TRANSMISES À setFormData:', {
-            hasResultsData: !!(resultsData?.results),
-            resultsCount: resultsData?.results?.length || 0,
-            firstResultSamples: resultsData?.results?.[0]?.samples?.length || 0,
-            firstSampleCurveData: resultsData?.results?.[0]?.samples?.[0]?.curveData
           });
         } catch (error) {
           console.error('Error while fetching test details:', error);

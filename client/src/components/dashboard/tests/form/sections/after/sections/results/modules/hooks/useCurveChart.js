@@ -132,10 +132,130 @@ export const useCurveChart = (curveData, options = {}) => {
       };
     });
 
+    // Ajouter les lignes de spécification ECD si disponibles
+    if (options.specifications && options.specifications.ecdSpecs && Array.isArray(options.specifications.ecdSpecs)) {
+      console.log('🔍 useCurveChart - Traitement des specs ECD:', options.specifications.ecdSpecs);
+      
+      // Couleurs originales plus foncées pour les lignes ECD
+      const ecdColors = [
+        '#2c3e50', // Bleu foncé
+        '#34495e', // Gris foncé
+        '#1a252f', // Noir bleuté
+        '#27292d', // Noir grisâtre
+        '#1e1e1e', // Noir profond
+      ];
+
+      // Calculer l'étendue des données existantes pour dessiner les lignes ECD
+      let minX = Infinity;
+      let maxX = -Infinity;
+      
+      datasets.forEach(dataset => {
+        dataset.data.forEach(point => {
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+        });
+      });
+
+      console.log('🔍 useCurveChart - Étendue X des données:', { minX, maxX });
+
+      // Si pas de données principales, utiliser une étendue par défaut
+      if (minX === Infinity || maxX === -Infinity) {
+        minX = 0;
+        maxX = 10;
+        console.log('🔍 useCurveChart - Pas de données principales, utilisation étendue par défaut:', { minX, maxX });
+      }
+
+      // Ajouter chaque spécification ECD comme ligne horizontale
+      options.specifications.ecdSpecs.forEach((ecdSpec, index) => {
+        console.log('🔍 useCurveChart - Traitement ECD spec:', ecdSpec, 'index:', index);
+        
+        // Adapter le format des données ECD
+        let yValue = null;
+        let range = '';
+        let depthMin = null;
+        let depthMax = null;
+        
+        // Essayer de récupérer la valeur Y (hardness)
+        if (ecdSpec.hardness) {
+          yValue = ecdSpec.hardness;
+        } else if (ecdSpec.yValue) {
+          yValue = ecdSpec.yValue;
+        }
+        
+        // Essayer de récupérer les valeurs min et max de profondeur
+        if (ecdSpec.depthMin !== undefined && ecdSpec.depthMin !== null) {
+          depthMin = parseFloat(ecdSpec.depthMin);
+        }
+        if (ecdSpec.depthMax !== undefined && ecdSpec.depthMax !== null) {
+          depthMax = parseFloat(ecdSpec.depthMax);
+        }
+        
+        // Essayer de construire le range
+        if (depthMin !== null && depthMax !== null) {
+          range = `${depthMin}-${depthMax}${ecdSpec.depthUnit || 'mm'}`;
+        } else if (ecdSpec.range) {
+          range = ecdSpec.range;
+          
+          // Si on a le range au format texte mais pas les valeurs numériques,
+          // essayer de les extraire (ex: "0.6-0.9mm")
+          if (depthMin === null || depthMax === null) {
+            const rangeMatch = ecdSpec.range.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+            if (rangeMatch) {
+              depthMin = parseFloat(rangeMatch[1]);
+              depthMax = parseFloat(rangeMatch[2]);
+            }
+          }
+        }
+        
+        console.log('🔍 useCurveChart - Valeurs adaptées:', { yValue, depthMin, depthMax, range });
+        
+        if (yValue !== null && depthMin !== null && depthMax !== null) {
+          const colorIndex = index % ecdColors.length;
+          const color = ecdColors[colorIndex];
+          
+          // Créer le label avec le format "ECD: 0.6-0.9mm at 555 HRC"
+          const unit = ecdSpec.hardnessUnit || options.unit || 'HV';
+          const label = `ECD${index > 0 ? index + 1 : ''}: ${range} at ${yValue} ${unit}`;
+          
+          console.log('🔍 useCurveChart - Création ligne ECD limitée:', { label, yValue, depthMin, depthMax, color });
+          
+          // Créer une ligne horizontale UNIQUEMENT entre depthMin et depthMax
+          const ecdDataset = {
+            label: label,
+            data: [
+              { x: depthMin, y: parseFloat(yValue) },
+              { x: depthMax, y: parseFloat(yValue) }
+            ],
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 2.5, // Épaisseur légèrement augmentée pour meilleure visibilité
+            borderDash: [8, 4], // Pointillés discrets
+            pointRadius: 0, // Pas de points visibles
+            pointHoverRadius: 0,
+            tension: 0,
+            fill: false,
+            showLine: true,
+            spanGaps: false,
+            order: 10, // Dessiner après les courbes principales
+            hidden: false
+          };
+          
+          console.log('🔍 useCurveChart - Dataset ECD créé:', ecdDataset);
+          datasets.push(ecdDataset);
+        } else {
+          console.warn('🔍 useCurveChart - ECD spec invalide, yValue ou range manquant:', { yValue, range, originalSpec: ecdSpec });
+        }
+      });
+      
+      console.log('🔍 useCurveChart - Datasets finaux avec ECD:', datasets);
+    } else {
+      console.log('🔍 useCurveChart - Pas de specs ECD trouvées dans options:', options);
+    }
+
     return {
       datasets
     };
-  }, [curveData]);
+  }, [curveData, options.specifications]);
 
   // Options du graphique avec axe X linéaire
   const chartOptions = useMemo(() => ({

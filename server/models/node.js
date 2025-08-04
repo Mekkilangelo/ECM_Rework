@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'Nodes',
+        model: 'nodes',
         key: 'id'
       }
     },

@@ -193,15 +193,17 @@ async function startServer() {
     // Disable foreign key checks during sync to avoid reference errors
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
     
-    try {
-      // Force creation of all tables
+    // Check if DB_SYNC_ALTER is enabled
+    const shouldAlter = process.env.DB_SYNC_ALTER === 'true';
+    
+    if (shouldAlter) {
+      // Only alter if explicitly enabled
       await sequelize.sync({ force: false, alter: true });
-      logger.info('Tables synchronized successfully');
-    } catch (syncError) {
-      // If alter fails, try force creation
-      logger.warn('Alter sync failed, trying force creation:', syncError.message);
-      await sequelize.sync({ force: true });
-      logger.info('Tables synchronized with force: true');
+      logger.info('Tables synchronized with alter: true');
+    } else {
+      // Safe sync without altering existing tables
+      await sequelize.sync({ force: false });
+      logger.info('Tables synchronized safely without alter');
     }
     
     // Re-enable foreign key checks

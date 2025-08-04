@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: synergy
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+
+  backend:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: database
+      DB_NAME: synergy
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_SYNC_ALTER: "true"
+      JWT_SECRET: your-secret-key
+      CLIENT_URL: http://localhost
+    volumes:
+      - ./server/uploads:/app/uploads
+    ports:
+      - "5001:5001"
+    depends_on:
+      - database
+
+  frontend:
+    build: ./client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

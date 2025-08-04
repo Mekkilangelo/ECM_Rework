@@ -19,7 +19,39 @@ const { ValidationError, AuthorizationError } = require('../utils/errors');
 const register = async (req, res, next) => {
   try {
     const userData = req.body;
-    const currentUser = req.user;
+    const currentUser = req.user; // Peut être undefined pour le premier utilisateur
+    
+    // Vérifier s'il y a déjà des utilisateurs dans le système
+    const userCount = await userService.getUserCount();
+    
+    // Si c'est le premier utilisateur et aucun utilisateur connecté, permettre la création
+    if (userCount === 0 && !currentUser) {
+      // S'assurer que le premier utilisateur est un superuser
+      userData.role = 'superuser';
+      
+      logger.info('Création du premier utilisateur (superuser)', { 
+        username: userData.username,
+        role: userData.role
+      });
+      
+      // Créer le premier utilisateur sans vérification de currentUser
+      const newUser = await userService.createFirstUser(userData);
+      
+      return apiResponse.success(
+        res,
+        newUser,
+        'Premier utilisateur créé avec succès',
+        201
+      );
+    }
+    
+    // Si ce n'est pas le premier utilisateur, l'authentification est requise
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentification requise pour créer un utilisateur'
+      });
+    }
     
     logger.info('Création d\'un nouvel utilisateur', { 
       username: userData.username,

@@ -16,6 +16,55 @@ const {
 const { validateUserData, userExists } = require('../utils/validators');
 
 /**
+ * Compte le nombre total d'utilisateurs
+ * @returns {Promise<number>} Nombre d'utilisateurs
+ */
+const getUserCount = async () => {
+  const count = await User.count();
+  return count;
+};
+
+/**
+ * Crée le premier utilisateur (sans vérification d'authentification)
+ * @param {Object} userData - Données du premier utilisateur
+ * @returns {Promise<Object>} Utilisateur créé
+ */
+const createFirstUser = async (userData) => {
+  // Validation des données
+  const validationResult = validateUserData({...userData, isNew: true});
+  if (!validationResult.isValid) {
+    throw new ValidationError('Données utilisateur invalides', validationResult.errors);
+  }
+  
+  const { username, password, role } = userData;
+  
+  // S'assurer que le premier utilisateur est un superuser
+  const finalRole = 'superuser';
+  
+  // Vérification que l'utilisateur n'existe pas déjà
+  const exists = await userExists(username);
+  if (exists) {
+    throw new ConflictError('Ce nom d\'utilisateur existe déjà');
+  }
+  
+  // Création de l'utilisateur
+  const newUser = await User.create({
+    username,
+    password_hash: password, // Ne pas hacher ici, le hook beforeCreate du modèle le fera
+    role: finalRole,
+    created_at: new Date()
+  });
+  
+  // Retourner l'utilisateur sans le mot de passe
+  return {
+    id: newUser.id,
+    username: newUser.username,
+    role: newUser.role,
+    created_at: newUser.created_at
+  };
+};
+
+/**
  * Récupère tous les utilisateurs avec pagination
  * @param {Object} options - Options de pagination et filtrage
  * @returns {Promise<Object>} Liste paginée des utilisateurs
@@ -249,6 +298,8 @@ const updateUsersRoles = async (userRoles, currentUser) => {
 };
 
 module.exports = {
+  getUserCount,
+  createFirstUser,
   getAllUsers,
   getUserById,
   createUser,

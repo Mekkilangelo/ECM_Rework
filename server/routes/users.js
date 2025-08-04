@@ -43,7 +43,7 @@ router.get('/', adminAccess, paginate, userController.getUsers);
 router.get('/:userId', adminAccess, userController.getUserById);
 
 // Routes de modification des utilisateurs (administrateurs uniquement, vérification mode lecture seule)
-router.post('/register', adminWriteAccess, userController.register);
+router.post('/register', userController.register);
 router.post('/:userId/reset-password', adminWriteAccess, userController.resetPassword);
 router.put('/roles', adminWriteAccess, userController.updateUsersRoles);
 router.delete('/:userId', adminWriteAccess, userController.deleteUser);

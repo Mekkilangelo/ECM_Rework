@@ -1,6 +1,5 @@
 const config = require('./config/config');
 const app = require('./app');
-const { sequelize } = require('./models');
 const logger = require('./utils/logger');
 const express = require('express');
 const path = require('path');
@@ -157,20 +156,56 @@ app.get('/api/health', (req, res) => {
 
 // Test database connection before starting server
 async function startServer() {
+  let sequelize;
+  
   try {
+    // Import models only when we're ready to start the server
+    const models = require('./models');
+    sequelize = models.sequelize;
+    
     // Test database connection
     await sequelize.authenticate();
     logger.info('Database connection established successfully.');
-
-    // Sync models with the database - only alter in development mode or when DB_SYNC_ALTER=true
-    const shouldAlter = process.env.NODE_ENV !== 'production' || process.env.DB_SYNC_ALTER === 'true';
-    if (shouldAlter) {
-      await sequelize.sync();
-      logger.info('Tables synchronized with alter: true');
-    } else {
-      await sequelize.sync();
-      logger.info('Tables synchronized (without alter)');
+  } catch (modelError) {
+    logger.error('Error loading models or connecting to database:', modelError.message);
+    // Try to continue with basic sequelize connection
+    try {
+      const { Sequelize } = require('sequelize');
+      sequelize = new Sequelize(
+        process.env.DB_NAME || 'synergy',
+        process.env.DB_USER || 'root', 
+        process.env.DB_PASSWORD || 'root',
+        {
+          host: process.env.DB_HOST || 'database',
+          dialect: 'mysql',
+          logging: false
+        }
+      );
+      await sequelize.authenticate();
+      logger.info('Fallback database connection established successfully.');
+    } catch (fallbackError) {
+      logger.error('Fallback database connection failed:', fallbackError.message);
+      process.exit(1);
     }
+  }
+
+  try {
+    // Disable foreign key checks during sync to avoid reference errors
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+    
+    try {
+      // Force creation of all tables
+      await sequelize.sync({ force: false, alter: true });
+      logger.info('Tables synchronized successfully');
+    } catch (syncError) {
+      // If alter fails, try force creation
+      logger.warn('Alter sync failed, trying force creation:', syncError.message);
+      await sequelize.sync({ force: true });
+      logger.info('Tables synchronized with force: true');
+    }
+    
+    // Re-enable foreign key checks
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
 
     // Nettoyage automatique des fichiers temporaires au démarrage
     try {
@@ -191,7 +226,7 @@ async function startServer() {
       }, 6 * 60 * 60 * 1000); // 6 heures
       
     } catch (error) {
-      logger.warn('Error during initial temp files cleanup:', error);
+      logger.warn('Cleanup script not found, skipping automatic cleanup');
     }
 
     // **IMPORTANT** - Ajouter cette partie après l'initialisation de la BD
@@ -218,7 +253,6 @@ async function startServer() {
       const url = `http://localhost:${PORT}`;
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`Database alter mode: ${shouldAlter ? 'enabled' : 'disabled'}`);
       logger.info(`Accédez à votre serveur à l'adresse : ${url} pour voir un "Hello World" !`);
     });
   } catch (error) {

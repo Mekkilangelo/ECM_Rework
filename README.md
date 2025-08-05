@@ -69,10 +69,9 @@ Par défaut, les workflows GitHub Actions sont configurés pour effectuer unique
    - `PROD_HOST`, `PROD_USERNAME`, `PROD_SSH_KEY` - Pour la connexion SSH
 
 Pour plus de détails, consultez:
-- [Guide de déploiement](./DEPLOYMENT_GUIDE.md) - Instructions pour déployer l'application
-- [Guide détaillé de déploiement](./DETAILED_DEPLOYMENT.md) - Explication détaillée du processus
-- [GitFlow](./GITFLOW.md) - Workflow Git et processus de développement
-- [Configuration GitHub](./GITHUB_SETUP.md) - Configuration des règles de protection des branches
+- [Guide de déploiement](./DEPLOYMENT.md) - Instructions pour déployer l'application
+- [Guide CI/CD](./CI_CD_GUIDE.md) - Explication détaillée du processus CI/CD
+- [Guide de contribution](./CONTRIBUTING.md) - Workflow Git et processus de développement
 - [Dépannage](./TROUBLESHOOTING.md) - Solutions aux problèmes courants
 
 ## Architecture

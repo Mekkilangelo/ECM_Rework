@@ -1,0 +1,64 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Build and tag images
+        run: |
+          docker-compose build
+          docker tag ecm-monitoring-frontend:latest registry.example.com/ecm-monitoring/frontend:${{ github.sha }}
+          docker tag ecm-monitoring-backend:latest registry.example.com/ecm-monitoring/backend:${{ github.sha }}
+      
+      # Si vous utilisez un Docker registry privé
+      - name: Login to Docker Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: registry.example.com
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      # Push des images vers le registry
+      - name: Push images
+        if: github.event_name != 'pull_request' && env.PUSH_TO_REGISTRY == 'true'
+        run: |
+          docker push registry.example.com/ecm-monitoring/frontend:${{ github.sha }}
+          docker push registry.example.com/ecm-monitoring/backend:${{ github.sha }}
+          docker tag registry.example.com/ecm-monitoring/frontend:${{ github.sha }} registry.example.com/ecm-monitoring/frontend:latest
+          docker tag registry.example.com/ecm-monitoring/backend:${{ github.sha }} registry.example.com/ecm-monitoring/backend:latest
+          docker push registry.example.com/ecm-monitoring/frontend:latest
+          docker push registry.example.com/ecm-monitoring/backend:latest
+        env:
+          PUSH_TO_REGISTRY: ${{ secrets.PUSH_TO_REGISTRY || 'false' }}
+      
+      # Vérification du build réussi sans déploiement (pour les tests initiaux)
+      - name: Build Verification Success
+        if: success() && (env.PUSH_TO_REGISTRY != 'true' || env.DEPLOY_TO_PRODUCTION != 'true')
+        run: echo "✅ Build successful! Les images ont été construites avec succès. Pour activer le push au registry et le déploiement, configurez les secrets PUSH_TO_REGISTRY et DEPLOY_TO_PRODUCTION."
+      
+      # Cette étape ne s'exécute que si DEPLOY_TO_PRODUCTION est true
+      - name: Deploy to production
+        if: success() && env.DEPLOY_TO_PRODUCTION == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /path/to/deployment
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
+        env:
+          DEPLOY_TO_PRODUCTION: ${{ secrets.DEPLOY_TO_PRODUCTION || 'false' }}

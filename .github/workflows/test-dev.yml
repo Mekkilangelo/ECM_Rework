@@ -1,0 +1,39 @@
+name: Test Dev Branch
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  test-dev:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Build images
+        run: docker-compose build
+      
+      - name: Start services
+        run: docker-compose up -d
+      
+      - name: Wait for services to start
+        run: sleep 30
+      
+      - name: Run backend tests
+        run: docker-compose exec -T backend npm test
+      
+      - name: Application Info
+        run: |
+          echo "✅ Tests passed successfully!"
+          echo "Pour tester l'application manuellement:"
+          echo "1. Clonez le dépôt"
+          echo "2. Exécutez docker-compose up -d"
+          echo "3. Accédez à http://localhost pour le frontend"
+          echo "4. L'API est disponible sur http://localhost:5001"
+      
+      - name: Stop services
+        run: docker-compose down

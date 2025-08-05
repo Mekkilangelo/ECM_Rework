@@ -922,8 +922,21 @@
     },
     "tooltips": {
       "delete": "Delete User",
-      "edit": "Edit Role"
+      "edit": "Edit Role",
+      "resetPassword": "Reset Password"
     },
+    "placeholders": {
+      "username": "Enter username",
+      "password": "Enter password"
+    },
+    "passwordHelp": "Click on",
+    "passwordHelpEnd": "to generate a new password.",
+    "resetPassword": "Reset Password",
+    "resetPasswordConfirm": "You are about to reset the password for user",
+    "newPassword": "New password",
+    "securePasswordNote": "Make sure to communicate this password securely to the user.",
+    "resetPasswordWarning": "This action will generate a random new password and the old password will no longer be valid.",
+    "reset": "Reset",
     "messages": {
       "noChanges": "No changes to save",
       "changesSaved": "User roles updated successfully",
@@ -935,8 +948,10 @@
         "updatingRoles": "Error updating roles",
         "createUser": "Error creating user",
         "deleteUser": "Error deleting user",
-        "missingFields": "Username and password are required"
-      }
+        "missingFields": "Username and password are required",
+        "resetPassword": "Error resetting password"
+      },
+      "passwordReset": "Password reset successfully"
     }  },
   
   "logs": {

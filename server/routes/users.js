@@ -10,7 +10,8 @@
  * - GET /api/users/me - Récupère les informations de l'utilisateur connecté
  * - GET /api/users - Récupère tous les utilisateurs (admin seulement)
  * - GET /api/users/:userId - Récupère un utilisateur spécifique (admin seulement)
- * - POST /api/users/register - Crée un nouvel utilisateur (admin seulement)
+ * - POST /api/users/first-user - Crée le premier utilisateur (superuser) uniquement si aucun utilisateur n'existe
+ * - POST /api/users/register - Crée un nouvel utilisateur (admin/superuser seulement)
  * - PUT /api/users/roles - Met à jour les rôles des utilisateurs (admin seulement)
  * - POST /api/users/:userId/reset-password - Réinitialise le mot de passe (admin seulement)
  * - DELETE /api/users/:userId - Supprime un utilisateur (admin seulement)
@@ -18,7 +19,8 @@
  * Contrôle d'accès:
  * - GET /me est disponible pour tous les utilisateurs authentifiés
  * - Les routes de consultation nécessitent des droits admin (adminAccess)
- * - Les routes de modification nécessitent des droits admin et vérifient
+ * - La route /first-user est la seule non protégée mais elle ne fonctionne que si aucun utilisateur n'existe
+ * - Toutes les autres routes de modification nécessitent des droits admin et vérifient
  *   le mode lecture seule global (adminWriteAccess)
  * 
  * Note de sécurité:
@@ -43,7 +45,8 @@ router.get('/', adminAccess, paginate, userController.getUsers);
 router.get('/:userId', adminAccess, userController.getUserById);
 
 // Routes de modification des utilisateurs (administrateurs uniquement, vérification mode lecture seule)
-router.post('/register', userController.register);
+router.post('/first-user', userController.createFirstUser);     // Route non protégée uniquement pour le premier utilisateur
+router.post('/register', adminWriteAccess, userController.register); // Route protégée pour la page Manage Users
 router.post('/:userId/reset-password', adminWriteAccess, userController.resetPassword);
 router.put('/roles', adminWriteAccess, userController.updateUsersRoles);
 router.delete('/:userId', adminWriteAccess, userController.deleteUser);

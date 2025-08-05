@@ -14,39 +14,32 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       
-      - name: Install Docker Compose
-        run: |
-          # Vérifier si Docker Compose est déjà installé
-          if ! docker compose version &> /dev/null; then
-            # Installer Docker Compose v2 directement
-            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-            mkdir -p $DOCKER_CONFIG/cli-plugins
-            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-          fi
-          # Vérifier l'installation
-          docker compose version
+      # Docker Compose est préinstallé sur GitHub Actions runners
+      # Si nous rencontrons des problèmes avec la commande 'docker compose' (sans tiret),
+      # utilisons la commande docker-compose avec tiret
+      - name: Check Docker Compose Installation
+        run: docker compose version || docker-compose version
       
-      - name: Build images
-        run: docker compose build
+      - name: Build images for testing
+        run: docker-compose build --build-arg NODE_ENV=test
       
       - name: Start services
-        run: docker compose up -d
+        run: docker-compose up -d
       
       - name: Wait for services to start
         run: sleep 30
       
       - name: Run backend tests
-        run: docker compose exec -T backend npm test
+        run: docker-compose exec -T backend npm test
       
       - name: Application Info
         run: |
           echo "✅ Tests passed successfully!"
           echo "Pour tester l'application manuellement:"
           echo "1. Clonez le dépôt"
-          echo "2. Exécutez docker compose up -d"
+          echo "2. Exécutez docker-compose up -d"
           echo "3. Accédez à http://localhost pour le frontend"
           echo "4. L'API est disponible sur http://localhost:5001"
       
       - name: Stop services
-        run: docker compose down
+        run: docker-compose down

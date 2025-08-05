@@ -9,8 +9,10 @@ Application de surveillance pour les processus de traitement thermique.
 cp .env.example .env
 # Éditer .env selon votre environnement
 
-# Démarrer les conteneurs
-docker-compose up -d
+# Démarrer les conteneurs (utiliser la commande disponible sur votre système)
+docker-compose up -d    # Ancienne syntaxe avec tiret
+# OU
+docker compose up -d    # Nouvelle syntaxe sans tiret (Docker v20.10+)
 ```
 
 ## Accès aux services
@@ -20,6 +22,17 @@ docker-compose up -d
 
 ## Commandes Docker
 
+Selon votre version de Docker, utilisez l'une des syntaxes suivantes:
+
+### Docker récent (v20.10+)
+```bash
+docker compose up -d        # Démarrer les services
+docker compose down         # Arrêter les services
+docker compose logs -f      # Afficher les logs en temps réel
+docker compose build        # Reconstruire les images
+```
+
+### Docker plus ancien
 ```bash
 docker-compose up -d        # Démarrer les services
 docker-compose down         # Arrêter les services
@@ -60,6 +73,7 @@ Pour plus de détails, consultez:
 - [Guide détaillé de déploiement](./DETAILED_DEPLOYMENT.md) - Explication détaillée du processus
 - [GitFlow](./GITFLOW.md) - Workflow Git et processus de développement
 - [Configuration GitHub](./GITHUB_SETUP.md) - Configuration des règles de protection des branches
+- [Dépannage](./TROUBLESHOOTING.md) - Solutions aux problèmes courants
 
 ## Architecture
 

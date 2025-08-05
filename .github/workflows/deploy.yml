@@ -14,15 +14,42 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
         
-      # Docker Compose est préinstallé sur GitHub Actions runners
-      # Si nous rencontrons des problèmes avec la commande 'docker compose' (sans tiret),
-      # utilisons la commande docker-compose avec tiret
-      - name: Check Docker Compose Installation
-        run: docker compose version || docker-compose version
+      # Installer Docker Compose v2
+      - name: Install Docker Compose v2
+        run: |
+          # Vérifier d'abord si docker compose fonctionne déjà
+          if docker compose version; then
+            echo "Docker Compose v2 est déjà installé."
+          else
+            echo "Installation de Docker Compose v2..."
+            # Méthode 1: Installation depuis les dépôts (peut échouer sur certains runners)
+            sudo apt-get update || true
+            sudo apt-get install -y docker-compose-plugin || true
+            
+            # Méthode 2: Si la méthode 1 a échoué, installation manuelle
+            if ! docker compose version; then
+              echo "Installation manuelle de Docker Compose v2..."
+              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+              mkdir -p $DOCKER_CONFIG/cli-plugins
+              COMPOSE_VERSION="v2.23.3"
+              sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+            fi
+          fi
+          
+          # Vérifier l'installation - utiliser docker compose ou docker-compose selon ce qui est disponible
+          docker compose version || docker-compose version
       
       - name: Build and tag images
         run: |
-          docker-compose build
+          # Utiliser la commande qui fonctionne
+          if docker compose version &> /dev/null; then
+            docker compose build
+          else
+            docker-compose build
+          fi
+          
           docker tag ecm-monitoring-frontend:latest registry.example.com/ecm-monitoring/frontend:${{ github.sha }}
           docker tag ecm-monitoring-backend:latest registry.example.com/ecm-monitoring/backend:${{ github.sha }}
       
@@ -63,8 +90,15 @@ jobs:
           key: ${{ secrets.PROD_SSH_KEY }}
           script: |
             cd /path/to/deployment
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d
+            # Sur le serveur de production, vérifions aussi quelle commande fonctionne
+            if command -v docker compose &> /dev/null; then
+              docker compose pull
+              docker compose down
+              docker compose up -d
+            else
+              docker-compose pull
+              docker-compose down
+              docker-compose up -d
+            fi
         env:
           DEPLOY_TO_PRODUCTION: ${{ secrets.DEPLOY_TO_PRODUCTION || 'false' }}

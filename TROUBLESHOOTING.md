@@ -54,13 +54,39 @@ Ce document décrit les problèmes courants que vous pourriez rencontrer lors du
 
 ## Problèmes de déploiement
 
+### Erreur: "repository name must be lowercase"
+
+**Problème**: Les noms de repository Docker doivent être en minuscules.
+
+**Solution**:
+- Toujours utiliser des noms en minuscules pour les repositories Docker
+- Par exemple, utiliser `ghcr.io/mekkilangelo/ecm_rework-frontend:latest` au lieu de `ghcr.io/Mekkilangelo/ECM_Rework-frontend:latest`
+
+### Erreur: "no such host" lors de la connexion au registry
+
+**Problème**: L'erreur suivante indique que le nom d'hôte du registry Docker n'existe pas ou n'est pas accessible:
+```
+Error: Error response from daemon: Get "https://registry.example.com/v2/": dial tcp: lookup registry.example.com on 127.0.0.53:53: no such host
+```
+
+**Solution**:
+1. Vérifier que l'URL du registry est correcte et accessible
+2. Pour GitHub Container Registry, utilisez `ghcr.io` comme nom d'hôte
+3. Si vous utilisez un registry personnalisé, assurez-vous qu'il est accessible depuis l'environnement CI/CD
+4. Vérifier que les paramètres de proxy et DNS sont correctement configurés
+
 ### Identification du Docker Registry échoue
 
 **Problème**: Impossible de se connecter au Docker Registry lors du déploiement.
 
 **Solution**:
-1. Vérifier que les secrets `REGISTRY_USERNAME` et `REGISTRY_PASSWORD` sont correctement configurés dans les paramètres GitHub.
-2. S'assurer que le secret `PUSH_TO_REGISTRY` est défini sur "true".
+1. Pour GitHub Container Registry:
+   - Assurez-vous d'utiliser `${{ github.token }}` ou un Personal Access Token avec les permissions `packages:read` et `packages:write`
+   - Configurez les permissions dans le workflow: `permissions: contents: read, packages: write`
+
+2. Pour un registry personnalisé:
+   - Vérifier que les secrets `REGISTRY_USERNAME` et `REGISTRY_PASSWORD` sont correctement configurés
+   - S'assurer que le secret `PUSH_TO_REGISTRY` est défini sur "true"
 
 ### Déploiement SSH échoue
 

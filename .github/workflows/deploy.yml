@@ -1,0 +1,104 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        
+      # Installer Docker Compose v2
+      - name: Install Docker Compose v2
+        run: |
+          # Vérifier d'abord si docker compose fonctionne déjà
+          if docker compose version; then
+            echo "Docker Compose v2 est déjà installé."
+          else
+            echo "Installation de Docker Compose v2..."
+            # Méthode 1: Installation depuis les dépôts (peut échouer sur certains runners)
+            sudo apt-get update || true
+            sudo apt-get install -y docker-compose-plugin || true
+            
+            # Méthode 2: Si la méthode 1 a échoué, installation manuelle
+            if ! docker compose version; then
+              echo "Installation manuelle de Docker Compose v2..."
+              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+              mkdir -p $DOCKER_CONFIG/cli-plugins
+              COMPOSE_VERSION="v2.23.3"
+              sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+            fi
+          fi
+          
+          # Vérifier l'installation - utiliser docker compose ou docker-compose selon ce qui est disponible
+          docker compose version || docker-compose version
+      
+      - name: Build and tag images
+        run: |
+          # Utiliser la commande qui fonctionne
+          if docker compose version &> /dev/null; then
+            docker compose build
+          else
+            docker-compose build
+          fi
+          
+          docker tag ecm-monitoring-frontend:latest registry.example.com/ecm-monitoring/frontend:${{ github.sha }}
+          docker tag ecm-monitoring-backend:latest registry.example.com/ecm-monitoring/backend:${{ github.sha }}
+      
+      # Si vous utilisez un Docker registry privé
+      - name: Login to Docker Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: registry.example.com
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      # Push des images vers le registry
+      - name: Push images
+        if: github.event_name != 'pull_request' && env.PUSH_TO_REGISTRY == 'true'
+        run: |
+          docker push registry.example.com/ecm-monitoring/frontend:${{ github.sha }}
+          docker push registry.example.com/ecm-monitoring/backend:${{ github.sha }}
+          docker tag registry.example.com/ecm-monitoring/frontend:${{ github.sha }} registry.example.com/ecm-monitoring/frontend:latest
+          docker tag registry.example.com/ecm-monitoring/backend:${{ github.sha }} registry.example.com/ecm-monitoring/backend:latest
+          docker push registry.example.com/ecm-monitoring/frontend:latest
+          docker push registry.example.com/ecm-monitoring/backend:latest
+        env:
+          PUSH_TO_REGISTRY: ${{ secrets.PUSH_TO_REGISTRY || 'false' }}
+      
+      # Vérification du build réussi sans déploiement (pour les tests initiaux)
+      - name: Build Verification Success
+        if: success() && (env.PUSH_TO_REGISTRY != 'true' || env.DEPLOY_TO_PRODUCTION != 'true')
+        run: echo "✅ Build successful! Les images ont été construites avec succès. Pour activer le push au registry et le déploiement, configurez les secrets PUSH_TO_REGISTRY et DEPLOY_TO_PRODUCTION."
+      
+      # Cette étape ne s'exécute que si DEPLOY_TO_PRODUCTION est true
+      - name: Deploy to production
+        if: success() && env.DEPLOY_TO_PRODUCTION == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /path/to/deployment
+            # Sur le serveur de production, vérifions aussi quelle commande fonctionne
+            if command -v docker compose &> /dev/null; then
+              docker compose pull
+              docker compose down
+              docker compose up -d
+            else
+              docker-compose pull
+              docker-compose down
+              docker-compose up -d
+            fi
+        env:
+          DEPLOY_TO_PRODUCTION: ${{ secrets.DEPLOY_TO_PRODUCTION || 'false' }}

@@ -1,0 +1,88 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ dev, main ]
+  pull_request:
+    branches: [ dev, main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      # Installer Docker Compose v2
+      - name: Install Docker Compose v2
+        run: |
+          # Vérifier d'abord si docker compose fonctionne déjà
+          if docker compose version; then
+            echo "Docker Compose v2 est déjà installé."
+          else
+            echo "Installation de Docker Compose v2..."
+            # Méthode 1: Installation depuis les dépôts (peut échouer sur certains runners)
+            sudo apt-get update || true
+            sudo apt-get install -y docker-compose-plugin || true
+            
+            # Méthode 2: Si la méthode 1 a échoué, installation manuelle
+            if ! docker compose version; then
+              echo "Installation manuelle de Docker Compose v2..."
+              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+              mkdir -p $DOCKER_CONFIG/cli-plugins
+              COMPOSE_VERSION="v2.23.3"
+              sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+            fi
+          fi
+          
+          # Vérifier l'installation - utiliser docker compose ou docker-compose selon ce qui est disponible
+          docker compose version || docker-compose version
+      
+      - name: Build images for testing
+        run: |
+          # Utiliser la commande qui fonctionne (docker compose ou docker-compose)
+          if docker compose version &> /dev/null; then
+            docker compose build --build-arg NODE_ENV=test
+          else
+            docker-compose build --build-arg NODE_ENV=test
+          fi
+      
+      - name: Start services
+        run: |
+          # Utiliser la commande qui fonctionne
+          if docker compose version &> /dev/null; then
+            docker compose up -d
+          else
+            docker-compose up -d
+          fi
+      
+      - name: Wait for services to start
+        run: sleep 30
+      
+      # Test the backend
+      - name: Run backend tests
+        run: |
+          # Utiliser la commande qui fonctionne
+          if docker compose version &> /dev/null; then
+            docker compose exec -T backend npm test
+          else
+            docker-compose exec -T backend npm test
+          fi
+        
+      # Optionally run frontend tests if configured
+      # - name: Run frontend tests
+      #   run: docker compose exec -T frontend npm test
+      
+      - name: Stop services
+        run: |
+          # Utiliser la commande qui fonctionne
+          if docker compose version &> /dev/null; then
+            docker compose down
+          else
+            docker-compose down
+          fi

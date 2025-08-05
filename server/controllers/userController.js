@@ -9,7 +9,57 @@ const logger = require('../utils/logger');
 const { ValidationError, AuthorizationError } = require('../utils/errors');
 
 /**
- * Enregistre un nouvel utilisateur
+ * Création du premier utilisateur du système (sans authentification)
+ * @route POST /api/users/first-user
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Premier utilisateur créé
+ */
+const createFirstUser = async (req, res, next) => {
+  try {
+    const userData = req.body;
+    
+    // Vérifier s'il y a déjà des utilisateurs dans le système
+    const userCount = await userService.getUserCount();
+    
+    // Cette route ne fonctionne que s'il n'y a aucun utilisateur dans la base
+    if (userCount > 0) {
+      logger.warn('Tentative de création du premier utilisateur alors que des utilisateurs existent déjà', {
+        ip: req.ip
+      });
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Impossible de créer le premier utilisateur : des utilisateurs existent déjà'
+      });
+    }
+    
+    // S'assurer que le premier utilisateur est un superuser
+    userData.role = 'superuser';
+    
+    logger.info('Création du premier utilisateur (superuser)', { 
+      username: userData.username,
+      role: userData.role
+    });
+    
+    // Créer le premier utilisateur
+    const newUser = await userService.createFirstUser(userData);
+    
+    return apiResponse.success(
+      res,
+      newUser,
+      'Premier utilisateur créé avec succès',
+      201
+    );
+  } catch (error) {
+    logger.error(`Erreur lors de la création du premier utilisateur: ${error.message}`, error);
+    next(error);
+  }
+};
+
+/**
+ * Enregistre un nouvel utilisateur (nécessite des droits admin/superuser)
  * @route POST /api/users/register
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
@@ -19,37 +69,13 @@ const { ValidationError, AuthorizationError } = require('../utils/errors');
 const register = async (req, res, next) => {
   try {
     const userData = req.body;
-    const currentUser = req.user; // Peut être undefined pour le premier utilisateur
+    const currentUser = req.user;
     
-    // Vérifier s'il y a déjà des utilisateurs dans le système
-    const userCount = await userService.getUserCount();
-    
-    // Si c'est le premier utilisateur et aucun utilisateur connecté, permettre la création
-    if (userCount === 0 && !currentUser) {
-      // S'assurer que le premier utilisateur est un superuser
-      userData.role = 'superuser';
-      
-      logger.info('Création du premier utilisateur (superuser)', { 
-        username: userData.username,
-        role: userData.role
-      });
-      
-      // Créer le premier utilisateur sans vérification de currentUser
-      const newUser = await userService.createFirstUser(userData);
-      
-      return apiResponse.success(
-        res,
-        newUser,
-        'Premier utilisateur créé avec succès',
-        201
-      );
-    }
-    
-    // Si ce n'est pas le premier utilisateur, l'authentification est requise
-    if (!currentUser) {
-      return res.status(401).json({
+    // Cette route est protégée par adminWriteAccess, donc currentUser existe forcément
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'superuser')) {
+      return res.status(403).json({
         success: false,
-        message: 'Authentification requise pour créer un utilisateur'
+        message: 'Droits administrateur requis pour créer un utilisateur'
       });
     }
     
@@ -60,11 +86,11 @@ const register = async (req, res, next) => {
     });
     
     // Déléguer au service
-    const newUser = await userService.createUser(userData, currentUser);
+    const createdUser = await userService.createUser(userData, currentUser);
     
     return apiResponse.success(
       res,
-      newUser,
+      createdUser,
       'Utilisateur enregistré avec succès',
       201
     );
@@ -309,6 +335,7 @@ const resetPassword = async (req, res, next) => {
 
 module.exports = {
   register,
+  createFirstUser,
   getUsers,
   getUserById,
   updateUsersRoles,

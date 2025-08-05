@@ -174,11 +174,8 @@
       "manageUsers": "Gérer les utilisateurs"
     },
     "archivesReference": {
-      "title": "Archives & Références",
-      "archives": "Archives",
       "reference": "Référence"
     },    "support": {
-      "title": "Support",
       "createTicket": "Créer un ticket"
     },
     "logs": {
@@ -932,9 +929,23 @@
     },
     "tooltips": {
       "delete": "Supprimer l'utilisateur",
-      "edit": "Modifier le rôle"
+      "edit": "Modifier le rôle",
+      "resetPassword": "Réinitialiser le mot de passe"
     },
-    "messages": {      "noChanges": "Aucune modification à enregistrer",
+    "placeholders": {
+      "username": "Entrez le nom d'utilisateur",
+      "password": "Entrez le mot de passe"
+    },
+    "passwordHelp": "Cliquez sur",
+    "passwordHelpEnd": "pour générer un nouveau mot de passe.",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "resetPasswordConfirm": "Vous êtes sur le point de réinitialiser le mot de passe de l'utilisateur",
+    "newPassword": "Nouveau mot de passe",
+    "securePasswordNote": "Assurez-vous de communiquer ce mot de passe à l'utilisateur de manière sécurisée.",
+    "resetPasswordWarning": "Cette action générera un nouveau mot de passe aléatoire et l'ancien mot de passe ne sera plus valide.",
+    "reset": "Réinitialiser",
+    "messages": {
+      "noChanges": "Aucune modification à enregistrer",
       "changesSaved": "Rôles des utilisateurs mis à jour avec succès",
       "changesReset": "Modifications annulées",
       "userCreated": "Utilisateur créé avec succès",
@@ -944,8 +955,10 @@
         "updatingRoles": "Erreur lors de la mise à jour des rôles",
         "createUser": "Erreur lors de la création de l'utilisateur",
         "deleteUser": "Erreur lors de la suppression de l'utilisateur",
-        "missingFields": "Nom d'utilisateur et mot de passe sont requis"
-      }
+        "missingFields": "Nom d'utilisateur et mot de passe sont requis",
+        "resetPassword": "Erreur lors de la réinitialisation du mot de passe"
+      },
+      "passwordReset": "Mot de passe réinitialisé avec succès"
     }
   },
     "logs": {

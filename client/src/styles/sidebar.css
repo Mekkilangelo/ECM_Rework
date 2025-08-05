@@ -45,28 +45,44 @@
 /* Style des liens améliorés */
 #accordionSidebar.sidebar .nav-item .nav-link {
     color: rgba(255, 255, 255, 0.8) !important;
-    padding: 0.9rem 1.5rem !important; /* Plus grand pour être plus visible */
+    padding: 1rem 1.5rem !important; /* Plus grand pour être plus visible */
     display: flex !important;
     align-items: center !important;
     transition: all 0.2s ease-in-out !important;
-    font-size: 0.95rem !important; /* Police plus grande */
+    font-size: 1rem !important; /* Police plus grande */
     font-weight: 500 !important;
-    margin: 0.1rem 0.5rem !important;
+    margin: 0.5rem 0.75rem !important; /* Espacement augmenté */
     border-radius: 0.5rem !important;
 }
 
 /* Hover et état actif des liens */
 #accordionSidebar.sidebar .nav-item .nav-link:hover {
     color: #fff !important;
-    background-color: rgba(255, 193, 7, 0.15) !important;
+    background: linear-gradient(90deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.05) 100%) !important;
     transform: translateX(3px) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease-out !important;
 }
 
 #accordionSidebar.sidebar .nav-item .nav-link.active {
     color: #fff !important;
-    background: linear-gradient(90deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0) 100%) !important;
+    background: linear-gradient(90deg, rgba(255, 193, 7, 0.25) 0%, rgba(255, 193, 7, 0.1) 100%) !important;
     border-left: 3px solid #ffc107 !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    transform: translateX(5px) !important;
     font-weight: 600 !important;
+    animation: activateMenuItem 0.3s ease-in-out !important;
+}
+
+@keyframes activateMenuItem {
+    0% {
+        opacity: 0.6;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(5px);
+    }
 }
 
 /* Icônes plus grandes et mieux positionnées */
@@ -93,26 +109,36 @@
     opacity: 0.5 !important;
 }
 
+/* Wrapper du bouton toggle */
+.sidebar-toggler-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 1rem 0 2rem !important;
+    padding: 0.5rem 0 !important;
+}
+
 /* Bouton toggle du sidebar */
 #accordionSidebar #sidebarToggle {
-    background-color: rgba(255, 255, 255, 0.1);
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    margin: 1rem auto;
-    border: none;
-    padding: 0; /* Enlever le padding qui pourrait causer l'espace vide */
-    outline: none; /* Supprime le contour qui pourrait causer des problèmes */
+    background-color: #1e2b38 !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ffc107 !important;
+    padding: 0 !important; /* Enlever le padding qui pourrait causer l'espace vide */
+    outline: none !important; /* Supprime le contour qui pourrait causer des problèmes */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 #accordionSidebar #sidebarToggle:hover {
     background-color: #ffc107 !important;
     color: #212529 !important;
-    transform: rotate(180deg) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.5) !important;
 }
 
 /* S'assurer que l'icône est bien centrée sans espaces */

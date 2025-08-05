@@ -9,6 +9,7 @@ import {
   faEdit, faTrash, faCheck, faKey 
 } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import Layout from '../components/layout/Layout';
 import { NavigationProvider } from '../context/NavigationContext';
 import { AuthContext } from '../context/AuthContext';
@@ -16,6 +17,7 @@ import userService from '../services/userService';
 import useConfirmationDialog from '../hooks/useConfirmationDialog';
 
 const UserManagementContent = () => {
+  const { t } = useTranslation();
   const { user: currentUser } = useContext(AuthContext);
   const { confirmDelete } = useConfirmationDialog();
   const [users, setUsers] = useState([]);
@@ -54,7 +56,7 @@ const UserManagementContent = () => {
       
       setLoading(false);
     } catch (error) {
-      toast.error('Erreur lors du chargement des utilisateurs');
+      toast.error(t('userManagement.messages.error.loadingUsers'));
       console.error('Error fetching users:', error);
       setLoading(false);
     }
@@ -86,16 +88,16 @@ const UserManagementContent = () => {
         }));
       
       if (changedUsers.length === 0) {
-        toast.info('Aucune modification à enregistrer');
+        toast.info(t('userManagement.messages.noChanges'));
         setLoading(false);
         return;
       }
 
       await userService.updateUsersRoles(changedUsers);
-      toast.success('Rôles des utilisateurs mis à jour avec succès');
+      toast.success(t('userManagement.messages.changesSaved'));
       fetchUsers();
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour des rôles');
+      toast.error(t('userManagement.messages.error.updatingRoles'));
       console.error('Error updating user roles:', error);
       setLoading(false);
     }
@@ -108,7 +110,7 @@ const UserManagementContent = () => {
       initialEditedState[user.id] = { ...user };
     });
     setEditedUsers(initialEditedState);
-    toast.info('Modifications annulées');
+    toast.info(t('userManagement.messages.changesReset'));
   };
 
   const generatePassword = () => {
@@ -124,8 +126,8 @@ const UserManagementContent = () => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedPassword)
-      .then(() => toast.success('Mot de passe copié dans le presse-papier'))
-      .catch(() => toast.error('Impossible de copier le mot de passe'));
+      .then(() => toast.success(t('userManagement.passwordCopied')))
+      .catch(() => toast.error(t('userManagement.passwordNotCopied')));
   };
 
   const handleNewUserChange = (e) => {
@@ -138,19 +140,19 @@ const UserManagementContent = () => {
   const createUser = async () => {
     try {
       if (!newUser.username || !newUser.password) {
-        toast.error('Nom d\'utilisateur et mot de passe sont requis');
+        toast.error(t('userManagement.messages.error.missingFields'));
         return;
       }
 
       setLoading(true);
       await userService.createUser(newUser);
-      toast.success('Utilisateur créé avec succès');
+      toast.success(t('userManagement.messages.userCreated'));
       setShowCreateModal(false);
       setNewUser({ username: '', password: '', role: 'user' });
       setGeneratedPassword('');
       fetchUsers();
     } catch (error) {
-      toast.error('Erreur lors de la création de l\'utilisateur');
+      toast.error(t('userManagement.messages.error.createUser'));
       console.error('Error creating user:', error);
       setLoading(false);
     }
@@ -164,10 +166,10 @@ const UserManagementContent = () => {
       try {
         setLoading(true);
         await userService.deleteUser(userId);
-        toast.success('Utilisateur supprimé avec succès');
+        toast.success(t('userManagement.messages.userDeleted'));
         fetchUsers();
       } catch (error) {
-        toast.error('Erreur lors de la suppression de l\'utilisateur');
+        toast.error(t('userManagement.messages.error.deleteUser'));
         console.error('Error deleting user:', error);
         setLoading(false);
       }
@@ -182,9 +184,9 @@ const UserManagementContent = () => {
         ...resetPasswordData,
         newPassword: response.newPassword,
       });
-      toast.success('Mot de passe réinitialisé avec succès');
+      toast.success(t('userManagement.messages.passwordReset', 'Mot de passe réinitialisé avec succès'));
     } catch (error) {
-      toast.error('Erreur lors de la réinitialisation du mot de passe');
+      toast.error(t('userManagement.messages.error.resetPassword', 'Erreur lors de la réinitialisation du mot de passe'));
       console.error('Error resetting password:', error);
     } finally {
       setLoading(false);
@@ -193,8 +195,8 @@ const UserManagementContent = () => {
 
   const copyNewPasswordToClipboard = () => {
     navigator.clipboard.writeText(resetPasswordData.newPassword)
-      .then(() => toast.success('Mot de passe copié dans le presse-papier'))
-      .catch(() => toast.error('Impossible de copier le mot de passe'));
+      .then(() => toast.success(t('userManagement.passwordCopied')))
+      .catch(() => toast.error(t('userManagement.passwordNotCopied')));
   };
 
   const openResetPasswordModal = (user) => {
@@ -319,7 +321,7 @@ const UserManagementContent = () => {
     <Layout>
       <Container fluid>
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
-          <h1 className="h3 mb-0 text-gray-800">Gestion des Utilisateurs</h1>
+          <h1 className="h3 mb-0 text-gray-800">{t('userManagement.title')}</h1>
           <Button 
             variant="primary" 
             className="d-flex align-items-center" 
@@ -329,13 +331,13 @@ const UserManagementContent = () => {
             }}
           >
             <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
-            Ajouter un utilisateur
+            {t('userManagement.addUser')}
           </Button>
         </div>
 
         <Card className="shadow mb-4">
           <Card.Header className="py-3 d-flex justify-content-between align-items-center">
-            <h6 className="m-0 font-weight-bold text-primary">Liste des utilisateurs</h6>
+            <h6 className="m-0 font-weight-bold text-primary">{t('userManagement.userList')}</h6>
             <div>
               <Button 
                 variant="success" 
@@ -344,7 +346,7 @@ const UserManagementContent = () => {
                 disabled={loading}
               >
                 <FontAwesomeIcon icon={faSave} className="mr-2" />
-                Enregistrer
+                {t('userManagement.saveChanges')}
               </Button>
               <Button 
                 variant="secondary" 
@@ -352,7 +354,7 @@ const UserManagementContent = () => {
                 disabled={loading}
               >
                 <FontAwesomeIcon icon={faTimes} className="mr-2" />
-                Annuler
+                {t('userManagement.cancel')}
               </Button>
             </div>
           </Card.Header>
@@ -360,18 +362,18 @@ const UserManagementContent = () => {
             {loading ? (
               <div className="text-center my-3">
                 <div className="spinner-border text-primary" role="status">
-                  <span className="sr-only">Chargement...</span>
+                  <span className="sr-only">{t('common.loading', 'Chargement...')}</span>
                 </div>
               </div>
             ) : (
               <Table responsive hover>
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Nom d'utilisateur</th>
-                    <th>Rôle</th>
-                    <th>Date de création</th>
-                    <th>Actions</th>
+                    <th>{t('userManagement.userId')}</th>
+                    <th>{t('userManagement.username')}</th>
+                    <th>{t('userManagement.role')}</th>
+                    <th>{t('userManagement.createdAt')}</th>
+                    <th>{t('userManagement.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -389,7 +391,7 @@ const UserManagementContent = () => {
                           >
                             {getAvailableRoles().map(role => (
                               <option key={role} value={role}>
-                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                                {t(`userManagement.roles.${role}`)}
                               </option>
                             ))}
                           </Form.Control>
@@ -403,7 +405,7 @@ const UserManagementContent = () => {
                           {canResetPassword(user) && (
                             <OverlayTrigger
                               placement="top"
-                              overlay={<Tooltip>Réinitialiser le mot de passe</Tooltip>}
+                              overlay={<Tooltip>{t('userManagement.tooltips.resetPassword', 'Réinitialiser le mot de passe')}</Tooltip>}
                             >
                               <Button 
                                 variant="warning" 
@@ -419,7 +421,7 @@ const UserManagementContent = () => {
                           {canModifyUser(user) && (
                             <OverlayTrigger
                               placement="top"
-                              overlay={<Tooltip>Supprimer l'utilisateur</Tooltip>}
+                              overlay={<Tooltip>{t('userManagement.tooltips.delete')}</Tooltip>}
                             >
                               <Button 
                                 variant="danger" 
@@ -444,23 +446,23 @@ const UserManagementContent = () => {
         {/* Create User Modal */}
         <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Nouvel Utilisateur</Modal.Title>
+            <Modal.Title>{t('userManagement.createUser')}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form>
               <Form.Group>
-                <Form.Label>Nom d'utilisateur</Form.Label>
+                <Form.Label>{t('userManagement.username')}</Form.Label>
                 <Form.Control
                   type="text"
                   name="username"
                   value={newUser.username}
                   onChange={handleNewUserChange}
-                  placeholder="Entrez le nom d'utilisateur"
+                  placeholder={t('userManagement.placeholders.username', 'Entrez le nom d\'utilisateur')}
                 />
               </Form.Group>
               
               <Form.Group>
-                <Form.Label>Rôle</Form.Label>
+                <Form.Label>{t('userManagement.role')}</Form.Label>
                 <Form.Control
                   as="select"
                   name="role"
@@ -469,21 +471,21 @@ const UserManagementContent = () => {
                 >
                   {getAvailableRoles().map(role => (
                     <option key={role} value={role}>
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                      {t(`userManagement.roles.${role}`)}
                     </option>
                   ))}
                 </Form.Control>
               </Form.Group>
               
               <Form.Group>
-                <Form.Label>Mot de passe</Form.Label>
+                <Form.Label>{t('userManagement.password')}</Form.Label>
                 <div className="input-group">
                   <Form.Control
                     type="text"
                     name="password"
                     value={newUser.password}
                     onChange={handleNewUserChange}
-                    placeholder="Entrez le mot de passe"
+                    placeholder={t('userManagement.placeholders.password', 'Entrez le mot de passe')}
                     readOnly
                   />
                   <div className="input-group-append">
@@ -496,18 +498,18 @@ const UserManagementContent = () => {
                   </div>
                 </div>
                 <Form.Text className="text-muted">
-                  Cliquez sur <FontAwesomeIcon icon={faEdit} /> pour générer un nouveau mot de passe.
+                  {t('userManagement.passwordHelp', 'Cliquez sur')}{' '}<FontAwesomeIcon icon={faEdit} />{' '}{t('userManagement.passwordHelpEnd', 'pour générer un nouveau mot de passe.')}
                 </Form.Text>
               </Form.Group>
             </Form>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-              Annuler
+              {t('userManagement.cancel')}
             </Button>
             <Button variant="primary" onClick={createUser} disabled={loading}>
               <FontAwesomeIcon icon={faCheck} className="mr-2" />
-              Créer
+              {t('common.create', 'Créer')}
             </Button>
           </Modal.Footer>
         </Modal>
@@ -515,15 +517,15 @@ const UserManagementContent = () => {
         {/* Reset Password Modal */}
         <Modal show={resetPasswordData.showModal} onHide={closeResetPasswordModal}>
           <Modal.Header closeButton>
-            <Modal.Title>Réinitialiser le mot de passe</Modal.Title>
+            <Modal.Title>{t('userManagement.resetPassword', 'Réinitialiser le mot de passe')}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p>Vous êtes sur le point de réinitialiser le mot de passe de l'utilisateur <strong>{resetPasswordData.username}</strong>.</p>
+            <p>{t('userManagement.resetPasswordConfirm', 'Vous êtes sur le point de réinitialiser le mot de passe de l\'utilisateur')} <strong>{resetPasswordData.username}</strong>.</p>
             
             {resetPasswordData.newPassword ? (
               <div className="mt-3">
                 <div className="alert alert-success">
-                  <h6 className="mb-2">Nouveau mot de passe :</h6>
+                  <h6 className="mb-2">{t('userManagement.newPassword', 'Nouveau mot de passe')}:</h6>
                   <div className="input-group">
                     <Form.Control
                       type="text"
@@ -537,19 +539,19 @@ const UserManagementContent = () => {
                     </div>
                   </div>
                   <small className="text-muted mt-2 d-block">
-                    Assurez-vous de communiquer ce mot de passe à l'utilisateur de manière sécurisée.
+                    {t('userManagement.securePasswordNote', 'Assurez-vous de communiquer ce mot de passe à l\'utilisateur de manière sécurisée.')}
                   </small>
                 </div>
               </div>
             ) : (
               <div className="alert alert-warning">
-                <p className="mb-0">Cette action générera un nouveau mot de passe aléatoire et l'ancien mot de passe ne sera plus valide.</p>
+                <p className="mb-0">{t('userManagement.resetPasswordWarning', 'Cette action générera un nouveau mot de passe aléatoire et l\'ancien mot de passe ne sera plus valide.')}</p>
               </div>
             )}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={closeResetPasswordModal}>
-              {resetPasswordData.newPassword ? 'Fermer' : 'Annuler'}
+              {resetPasswordData.newPassword ? t('common.close', 'Fermer') : t('userManagement.cancel')}
             </Button>
             {!resetPasswordData.newPassword && (
               <Button 
@@ -558,7 +560,7 @@ const UserManagementContent = () => {
                 disabled={loading}
               >
                 <FontAwesomeIcon icon={faKey} className="mr-2" />
-                Réinitialiser
+                {t('userManagement.reset', 'Réinitialiser')}
               </Button>
             )}
           </Modal.Footer>

@@ -1,0 +1,89 @@
+/* Menu separator styling */
+.menu-item-container {
+  position: relative;
+  margin-bottom: 0 !important;
+  padding-bottom: 0.75rem !important;
+  padding-top: 0.75rem !important;
+  transition: background-color 0.2s ease-out;
+}
+
+.menu-item-container:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.menu-item-container:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.25) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  margin: 0 auto;
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.menu-item-container .nav-item {
+  margin-bottom: 0 !important;
+}
+
+.menu-item-container .nav-link {
+  margin-bottom: 0 !important;
+}
+
+/* Ajustement du premier élément pour un espacement uniforme depuis le haut */
+.menu-item-container:first-child {
+  padding-top: 0.5rem !important;
+}
+
+/* Ajustement du dernier élément pour un espacement uniforme vers le bas */
+.menu-item-container:last-child {
+  padding-bottom: 0.5rem !important;
+}
+
+/* Space for the admin section */
+.admin-section-space {
+  height: 1.5rem !important;
+  position: relative;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.admin-section-space::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 6%;
+  right: 6%;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    rgba(255, 193, 7, 0) 0%, 
+    rgba(255, 193, 7, 0.8) 50%, 
+    rgba(255, 193, 7, 0) 100%);
+  margin: 0 auto;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+}
+
+/* Label for admin section */
+.admin-section-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #2c3e50;
+  color: #ffc107;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.15rem 0.9rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.07rem;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.2);
+  z-index: 2;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}

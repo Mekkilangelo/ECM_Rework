@@ -21,7 +21,6 @@ const furnaceRoutes = require('./routes/furnaces');
 const userRoutes = require('./routes/users'); 
 const enumRoutes = require('./routes/enums');
 const hierarchyRoutes = require('./routes/hierarchy');
-const archiveRoutes = require('./routes/archives');
 const searchRoutes = require('./routes/search'); // Routes de recherche
 const systemRoutes = require('./routes/system'); // Routes de gestion système
 const logRoutes = require('./routes/logs'); // Routes des logs
@@ -77,7 +76,6 @@ app.use('/api/furnaces', furnaceRoutes);
 app.use('/api/users', userRoutes); 
 app.use('/api/enums', enumRoutes);
 app.use('/api/nodes', hierarchyRoutes);
-app.use('/api/archives', archiveRoutes);
 app.use('/api/search', searchRoutes); // Routes de recherche
 app.use('/api/system', systemRoutes); // Routes de gestion système
 app.use('/api/logs', logRoutes); // Routes des logs

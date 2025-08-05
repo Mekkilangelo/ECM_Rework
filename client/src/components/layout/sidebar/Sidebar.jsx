@@ -2,9 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faHome, faUsers, faDatabase, faLayerGroup,
-  faEraser, faChartLine, faUniversity, faBook,
-  faTicketAlt, faSearch, faUserCog, faFileAlt
+  faHome, faUsers, faBook,
+  faSearch, faUserCog, faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
 // Ne pas importer les icônes qui causent des problèmes
 // import { faAngleLeft, faAngleRight } from '@fortawesome/free-solid-svg-icons';
@@ -13,51 +12,22 @@ import {
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
-import nodeService from '../../../services/nodeService';
-import { toast } from 'react-toastify';
 import '../../../styles/sidebar.css';
+import '../../../styles/menu-separator.css';
 import { AuthContext } from '../../../context/AuthContext';
-import useConfirmationDialog from '../../../hooks/useConfirmationDialog';
 
 const Sidebar = ({ userRole }) => {
   const { t } = useTranslation();
-  const { confirmDestructiveAction } = useConfirmationDialog();
   const location = useLocation();
   const [allClients, setAllClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [isToggled, setIsToggled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);  const { user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   // Check if user is superuser or admin, with null check to prevent errors
   const isSuperUser = user && user.role === "superuser";
   const isAdmin = user && user.role === "admin";
   const canManageUsers = isSuperUser || isAdmin;
-  // Fonction pour gérer le nettoyage des données
-  const handleDataCleaning = async (e) => {
-    e.preventDefault();
-    // Confirmation avant suppression
-    const isConfirmed = await confirmDestructiveAction(
-      t('sidebar.dataCleaning.confirmMessage'),
-      t('sidebar.dataCleaning.title')
-    );
-    if (!isConfirmed) return;
-
-    try {
-      setIsLoading(true);
-      // Appel de l'API pour nettoyer les données
-      const result = await nodeService.cleanData();
-      // Afficher un message de succès
-      toast.success(result.message || t('sidebar.dataCleaning.success'));
-      // Attendre 2 secondes avant de recharger la page
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    } catch (error) {
-      // Afficher un message d'erreur
-      toast.error(error.message || t('sidebar.dataCleaning.error'));
-      setIsLoading(false);
-    }
-  };
 
   // Correction du toggle pour réduire complètement la sidebar
   const handleToggleSidebar = () => {
@@ -157,153 +127,106 @@ const Sidebar = ({ userRole }) => {
         <img className="img-fluid" src="/images/logoECM.png" alt="Logo ECM GROUP" width="140" height="60" />
       </a>
       <hr className="border-secondary mx-3" />
+      <div className="py-2"></div> {/* Espace supplémentaire */}
 
+      {/* Navigation items - All items in a single flow with elegant separators */}
       {/* Dashboard - visible to all users */}
-      <li className="nav-item">
-        <Link
-          className={`nav-link d-flex align-items-center px-3 ${isHomePage ? 'active' : ''}`}
-          to="/dashboard"
-        >
-          <FontAwesomeIcon icon={faHome} className="fa-fw mr-2" />
-          <span>{t('sidebar.dashboard')}</span>
-        </Link>
-      </li>
+      <div className="menu-item-container">
+        <li className="nav-item">
+          <Link
+            className={`nav-link d-flex align-items-center px-3 ${isHomePage || location.pathname === '/dashboard' ? 'active' : ''}`}
+            to="/dashboard"
+          >
+            <FontAwesomeIcon icon={faHome} className="fa-fw mr-3" />
+            <span>{t('sidebar.dashboard')}</span>
+          </Link>
+        </li>
+      </div>
       
       {/* Search - visible to all users */}
-      <li className="nav-item">
-        <Link
-          className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/search' ? 'active' : ''}`}
-          to="/search"
-        >
-          <FontAwesomeIcon icon={faSearch} className="fa-fw mr-2" />
-          <span>{t('sidebar.search')}</span>
-        </Link>
-      </li>
-      <hr className="border-secondary mx-3" />
+      <div className="menu-item-container">
+        <li className="nav-item">
+          <Link
+            className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/search' ? 'active' : ''}`}
+            to="/search"
+          >
+            <FontAwesomeIcon icon={faSearch} className="fa-fw mr-3" />
+            <span>{t('sidebar.search')}</span>
+          </Link>
+        </li>
+      </div>
 
-      {/* Data Management Section - only visible for superuser */}
-      {isSuperUser && (
-        <>
-          <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-1 mb-2">{t('sidebar.dataManagement.title')}</h6>
-          <li className="nav-item">
-            <Link
-              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/data-pump' ? 'active' : ''}`}
-              to="/data-pump"
-            >
-              <FontAwesomeIcon icon={faDatabase} className="fa-fw mr-2" />
-              <span>{t('sidebar.dataManagement.dataPump')}</span>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/indexing' ? 'active' : ''}`}
-              to="/indexing"
-            >
-              <FontAwesomeIcon icon={faLayerGroup} className="fa-fw mr-2" />
-              <span>{t('sidebar.dataManagement.indexing')}</span>
-            </Link>
-          </li>
-          <li className="nav-item">
-            <a
-              className="nav-link d-flex align-items-center px-3"
-              href="#"
-              onClick={handleDataCleaning}
-              style={{ cursor: isLoading ? 'wait' : 'pointer' }}
-            >
-              <FontAwesomeIcon icon={faEraser} className="fa-fw mr-2" />
-              <span>{isLoading ? t('sidebar.dataManagement.cleaningInProgress') : t('sidebar.dataManagement.dataCleaning')}</span>
-            </a>
-          </li>
-          <li className="nav-item">
-            <Link
-              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/analysis' ? 'active' : ''}`}
-              to="/analysis"
-            >
-              <FontAwesomeIcon icon={faChartLine} className="fa-fw mr-2" />
-              <span>{t('sidebar.dataManagement.analysis')}</span>
-            </Link>
-          </li>
-        </>
-      )}
-
-      {/* User Management Section - only visible for admin and superuser */}
+      {/* Reference - visible to all users */}
+      <div className="menu-item-container">
+        <li className="nav-item">
+          <Link
+            className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/reference' ? 'active' : ''}`}
+            to="/reference"
+          >
+            <FontAwesomeIcon icon={faBook} className="fa-fw mr-3" />
+            <span>{t('sidebar.archivesReference.reference')}</span>
+          </Link>
+        </li>
+      </div>
+      
+      {/* Admin section - conditionally rendered */}
       {canManageUsers && (
         <>
-          <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.userManagement.title') || "Gestion des utilisateurs"}</h6>
-          <li className="nav-item">
-            <Link
-              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/users' ? 'active' : ''}`}
-              to="/users"
-            >
-              <FontAwesomeIcon icon={faUserCog} className="fa-fw mr-2" />
-              <span>{t('sidebar.userManagement.manageUsers') || "Gérer les utilisateurs"}</span>
-            </Link>
-          </li>
+          {/* Extra space between user and admin sections with enhanced separator */}
+          <div className="admin-section-space">
+            <div className="admin-section-label">Admin</div>
+          </div>
+          
+          {/* User Management - only visible for admin and superuser */}
+          <div className="menu-item-container">
+            <li className="nav-item">
+              <Link
+                className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/users' ? 'active' : ''}`}
+                to="/users"
+              >
+                <FontAwesomeIcon icon={faUserCog} className="fa-fw mr-3" />
+                <span>{t('sidebar.userManagement.manageUsers')}</span>
+              </Link>
+            </li>
+          </div>
+
+          {/* Logs - only visible for admin and superuser */}
+          <div className="menu-item-container">
+            <li className="nav-item">
+              <Link
+                className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/logs' ? 'active' : ''}`}
+                to="/logs"
+              >
+                <FontAwesomeIcon icon={faFileAlt} className="fa-fw mr-3" />
+                <span>{t('sidebar.logs.logs')}</span>
+              </Link>
+            </li>
+          </div>
         </>
       )}
 
-      {/* Archives Section - visible to all users */}
-      <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.archivesReference.title')}</h6>
-      <li className="nav-item">
-        <Link
-          className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/archives' ? 'active' : ''}`}
-          to="/archives"
-        >
-          <FontAwesomeIcon icon={faUniversity} className="fa-fw mr-2" />
-          <span>{t('sidebar.archivesReference.archives')}</span>
-        </Link>
-      </li>
-      <li className="nav-item">
-        <Link
-          className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/reference' ? 'active' : ''}`}
-          to="/reference"
-        >
-          <FontAwesomeIcon icon={faBook} className="fa-fw mr-2" />
-          <span>{t('sidebar.archivesReference.reference')}</span>
-        </Link>
-      </li>      {/* Support Section - only visible for superuser */}
-      {isSuperUser && (
-        <>
-          <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.support.title')}</h6>
-          <li className="nav-item mb-3">
-            <Link
-              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/ticket' ? 'active' : ''}`}
-              to="/ticket"
-            >
-              <FontAwesomeIcon icon={faTicketAlt} className="fa-fw mr-2" />
-              <span>{t('sidebar.support.createTicket')}</span>
-            </Link>
-          </li>
-        </>
-      )}
+      {/* Extra space before the toggler */}
+      <div className="mt-4"></div>
 
-      {/* Logs Section - only visible for admin and superuser */}
-      {canManageUsers && (
-        <>
-          <h6 className="sidebar-heading text-uppercase text-white-50 px-3 mt-4 mb-2">{t('sidebar.logs.title')}</h6>
-          <li className="nav-item mb-3">
-            <Link
-              className={`nav-link d-flex align-items-center px-3 ${location.pathname === '/logs' ? 'active' : ''}`}
-              to="/logs"
-            >
-              <FontAwesomeIcon icon={faFileAlt} className="fa-fw mr-2" />
-              <span>{t('sidebar.logs.logs')}</span>
-            </Link>
-          </li>
-        </>
-      )}
-
-      {/* Sidebar Toggler - version avec HTML classique */}
-      <div className="sidebar-toggler-wrapper">
+      {/* Sidebar Toggler - version améliorée */}
+      <div className="sidebar-toggler-wrapper mt-auto">
         <button
           type="button"
           id="sidebarToggle"
-          className="sidebar-toggle-btn"
+          className="sidebar-toggle-btn shadow-sm"
           onClick={handleToggleSidebar}
           aria-label="Toggle Sidebar"
           style={{
-            backgroundColor: '#2c3e50', // Couleur explicite
-            color: 'white' // Texte blanc
+            backgroundColor: '#1e2b38', // Couleur plus sombre
+            color: '#ffc107', // Jaune pour plus de visibilité
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            border: '2px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            transition: 'all 0.2s'
           }}
         >
           <i className={isToggled ? "fas fa-angle-right" : "fas fa-angle-left"}></i>

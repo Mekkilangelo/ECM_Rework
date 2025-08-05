@@ -18,7 +18,6 @@ import { useTranslation } from 'react-i18next';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Reference from './pages/Reference';
-import Archives from './pages/Archives';  
 import UserManagement from './pages/UserManagement';
 import Search from './pages/Search'; // Import de la nouvelle page de recherche
 import Logs from './pages/Logs'; // Import de la page de logs
@@ -82,15 +81,6 @@ function App() {
                   element={
                     <PrivateRouteComponent>
                       <Reference />
-                    </PrivateRouteComponent>
-                  } 
-                />
-
-                <Route 
-                  path="/archives" 
-                  element={
-                    <PrivateRouteComponent>
-                      <Archives />
                     </PrivateRouteComponent>
                   } 
                 />

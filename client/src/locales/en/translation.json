@@ -172,11 +172,8 @@
       "manageUsers": "Manage users"
     },
     "archivesReference": {
-      "title": "Archives & References",
-      "archives": "Archives",
       "reference": "Reference"
     },    "support": {
-      "title": "Support",
       "createTicket": "Create ticket"
     },
     "logs": {

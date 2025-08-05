@@ -10,7 +10,7 @@ cp .env.example .env
 # Éditer .env selon votre environnement
 
 # Démarrer les conteneurs
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Accès aux services
@@ -21,11 +21,13 @@ docker-compose up -d
 ## Commandes Docker
 
 ```bash
-docker-compose up -d        # Démarrer les services
-docker-compose down         # Arrêter les services
-docker-compose logs -f      # Afficher les logs en temps réel
-docker-compose build        # Reconstruire les images
+docker compose up -d        # Démarrer les services
+docker compose down         # Arrêter les services
+docker compose logs -f      # Afficher les logs en temps réel
+docker compose build        # Reconstruire les images
 ```
+
+> **Note**: Cette application utilise la nouvelle syntaxe `docker compose` (sans tiret) plutôt que l'ancienne commande `docker-compose`. Si vous utilisez une ancienne version de Docker, vous devrez peut-être installer le plugin Docker Compose ou utiliser `docker-compose` à la place.
 
 ## Développement local
 

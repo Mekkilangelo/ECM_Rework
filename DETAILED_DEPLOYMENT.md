@@ -16,11 +16,11 @@ cd server && npm run dev  # Pour le backend
 
 ```bash
 # Construire et démarrer les conteneurs
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 
 # Vérifier les logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ## 2. Intégration continue avec GitHub Actions
@@ -32,19 +32,19 @@ Lorsque vous poussez du code sur la branche `dev` ou créez une pull request ver
 1. **Construction des images Docker** :
    ```yaml
    - name: Build images
-     run: docker-compose build
+     run: docker compose build
    ```
 
 2. **Démarrage des services** :
    ```yaml
    - name: Start services
-     run: docker-compose up -d
+     run: docker compose up -d
    ```
 
 3. **Exécution des tests** :
    ```yaml
    - name: Run backend tests
-     run: docker-compose exec -T backend npm test
+     run: docker compose exec -T backend npm test
    ```
 
 Vous pouvez suivre l'exécution de ce workflow dans l'onglet "Actions" de GitHub. S'il échoue, vous devriez corriger les problèmes avant de continuer.
@@ -96,7 +96,7 @@ Lorsque le code est poussé sur la branche `main` (généralement via une PR fus
    ```yaml
    - name: Build and tag images
      run: |
-       docker-compose build
+       docker compose build
        docker tag ecm-monitoring-frontend:latest registry.example.com/ecm-monitoring/frontend:${{ github.sha }}
        docker tag ecm-monitoring-backend:latest registry.example.com/ecm-monitoring/backend:${{ github.sha }}
    ```
@@ -129,9 +129,9 @@ Lorsque le code est poussé sur la branche `main` (généralement via une PR fus
        key: ${{ secrets.PROD_SSH_KEY }}
        script: |
          cd /chemin/vers/application
-         docker-compose pull
-         docker-compose down
-         docker-compose up -d
+         docker compose pull
+         docker compose down
+         docker compose up -d
    ```
 
 ## 4. Configuration nécessaire chez le client
@@ -156,10 +156,15 @@ Lorsque le code est poussé sur la branche `main` (généralement via une PR fus
    sh get-docker.sh
    ```
 
-2. **Installation de Docker Compose** :
+2. **Installation du plugin Docker Compose** :
    ```bash
-   curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-   chmod +x /usr/local/bin/docker-compose
+   # Docker Compose est maintenant inclus comme plugin dans Docker
+   # Vérifier qu'il est correctement installé
+   docker compose version
+   
+   # Si ce n'est pas le cas, installer le plugin
+   apt-get update
+   apt-get install -y docker-compose-plugin
    ```
 
 3. **Configuration SSH pour le déploiement** :
@@ -174,7 +179,7 @@ Lorsque le code est poussé sur la branche `main` (généralement via une PR fus
    ```
 
 5. **Configuration du docker-compose.yml et .env** :
-   - Copier le docker-compose.yml sur le serveur
+   - Copier le fichier docker-compose.yml sur le serveur
    - Créer un fichier .env avec les configurations de production
 
 ## 5. Flux de déploiement complet
@@ -220,9 +225,9 @@ Implémentez une stratégie de rollback :
     key: ${{ secrets.PROD_SSH_KEY }}
     script: |
       cd /chemin/vers/application
-      docker-compose pull previous-tag
-      docker-compose down
-      docker-compose up -d
+      docker compose pull previous-tag
+      docker compose down
+      docker compose up -d
 ```
 
 ### Monitoring et alertes

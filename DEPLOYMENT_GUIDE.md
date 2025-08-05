@@ -65,10 +65,10 @@ cp .env.example .env
 nano .env  # Modifier selon l'environnement
 
 # Démarrer l'application
-docker-compose up -d
+docker compose up -d
 
 # Vérifier les logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Déploiement via CI/CD
@@ -100,23 +100,23 @@ Le workflow CI/CD est configuré pour suivre ces étapes:
 ```bash
 cd <chemin_du_projet>
 git pull
-docker-compose down
-docker-compose build
-docker-compose up -d
+docker compose down
+docker compose build
+docker compose up -d
 ```
 
 ## Sauvegarde et restauration
 
 ### Sauvegarde de la base de données
 ```bash
-docker-compose exec database sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" synergy > /tmp/backup.sql'
-docker cp $(docker-compose ps -q database):/tmp/backup.sql ./backup_$(date +%Y%m%d).sql
+docker compose exec database sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" synergy > /tmp/backup.sql'
+docker cp $(docker compose ps -q database):/tmp/backup.sql ./backup_$(date +%Y%m%d).sql
 ```
 
 ### Restauration
 ```bash
-docker cp ./backup.sql $(docker-compose ps -q database):/tmp/backup.sql
-docker-compose exec database sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" synergy < /tmp/backup.sql'
+docker cp ./backup.sql $(docker compose ps -q database):/tmp/backup.sql
+docker compose exec database sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" synergy < /tmp/backup.sql'
 ```
 
 ## Support et maintenance

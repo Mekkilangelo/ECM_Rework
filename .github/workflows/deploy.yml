@@ -16,8 +16,15 @@ jobs:
         
       - name: Install Docker Compose
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
+          # Vérifier si Docker Compose est déjà installé
+          if ! docker compose version &> /dev/null; then
+            # Installer Docker Compose v2 directement
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+            chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+          fi
+          # Vérifier l'installation
           docker compose version
       
       - name: Build and tag images

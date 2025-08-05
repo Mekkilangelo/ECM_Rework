@@ -18,12 +18,19 @@ Cette erreur se produit car les runners GitHub Actions récents utilisent la nou
 
 Nous avons mis à jour tous les workflows GitHub Actions pour:
 
-1. **Installer explicitement le plugin Docker Compose**:
+1. **Installer explicitement Docker Compose V2 comme plugin CLI**:
    ```yaml
    - name: Install Docker Compose
      run: |
-       sudo apt-get update
-       sudo apt-get install -y docker-compose-plugin
+       # Vérifier si Docker Compose est déjà installé
+       if ! docker compose version &> /dev/null; then
+         # Installer Docker Compose v2 directement
+         DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+         mkdir -p $DOCKER_CONFIG/cli-plugins
+         curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+         chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+       fi
+       # Vérifier l'installation
        docker compose version
    ```
 

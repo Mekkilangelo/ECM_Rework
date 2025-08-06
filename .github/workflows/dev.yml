@@ -74,11 +74,19 @@ jobs:
           Write-Host "Checking service health..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml ps
           
-      - name: Run tests
+      - name: Run backend tests
         run: |
-          Write-Host "Running tests (optional)..."
-          # Tests sont optionnels pour éviter les blocages
-          Write-Host "Tests skipped for now"
+          Write-Host "Running backend tests..."
+          
+          # Lancer les tests unitaires d'abord (plus rapides)
+          Write-Host "Executing unit tests..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:unit
+          
+          # Puis les tests d'intégration
+          Write-Host "Executing integration tests..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:integration
+          
+          Write-Host "All backend tests completed successfully!"
           
       - name: Deployment success
         run: |

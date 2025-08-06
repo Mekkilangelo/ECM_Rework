@@ -1,0 +1,59 @@
+name: Production - Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check if production secrets are configured
+        run: |
+          if (-not "${{ secrets.PROD_HOST }}" -or -not "${{ secrets.PROD_USERNAME }}" -or -not "${{ secrets.PROD_SSH_KEY }}") {
+            Write-Host "❌ Secrets PRODUCTION manquants!"
+            Write-Host "Pour le déploiement chez le client, configurez:"
+            Write-Host "- PROD_HOST (IP du serveur client)"
+            Write-Host "- PROD_USERNAME (utilisateur SSH)"  
+            Write-Host "- PROD_SSH_KEY (clé privée SSH)"
+            Write-Host ""
+            Write-Host "💡 En attendant, vous pouvez tester localement avec:"
+            Write-Host "docker compose --env-file .env.prod -f docker-compose.prod.yml up -d"
+            exit 1
+          }
+      
+      - name: Deploy to client server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            # Aller dans le répertoire de l'app
+            cd /opt/ecm-monitoring || exit 1
+            
+            # Pull les changements
+            git pull origin main
+            
+            # Mise à jour des secrets de production
+            if [ -n "${{ secrets.MYSQL_ROOT_PASSWORD_PROD }}" ]; then
+              sed -i 's/MYSQL_ROOT_PASSWORD=CHANGE_ME_STRONG_PASSWORD/MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_PROD }}/' .env.prod
+              sed -i 's/DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD/DB_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD_PROD }}/' .env.prod
+            fi
+            
+            if [ -n "${{ secrets.JWT_SECRET_PROD }}" ]; then
+              sed -i 's/JWT_SECRET=CHANGE_ME_VERY_STRONG_SECRET_KEY/JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}/' .env.prod
+            fi
+            
+            # Rebuild et redémarrer avec le bon fichier d'environnement
+            docker compose --env-file .env.prod -f docker-compose.prod.yml down
+            docker compose --env-file .env.prod -f docker-compose.prod.yml build --no-cache
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+            
+            echo "✅ Déploiement terminé!"
+            echo "🌐 Frontend: https://app.entreprise.local"
+            echo "🔧 API: https://api.entreprise.local"

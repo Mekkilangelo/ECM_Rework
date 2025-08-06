@@ -1,0 +1,26 @@
+# Frontend - Interface utilisateur
+app.entreprise.local {
+    reverse_proxy frontend:80
+    encode gzip
+    
+    # Headers de sécurité
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}
+
+# Backend API
+api.entreprise.local {
+    reverse_proxy backend:5001
+    encode gzip
+    
+    # Headers de sécurité pour l'API
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Access-Control-Allow-Origin "https://app.entreprise.local"
+    }
+}

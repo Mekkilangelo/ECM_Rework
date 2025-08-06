@@ -8,6 +8,10 @@ jobs:
   deploy:
     runs-on: self-hosted
     
+    defaults:
+      run:
+        shell: pwsh
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,7 +27,9 @@ jobs:
             Write-Host ""
             Write-Host "💡 En attendant, vous pouvez tester localement avec:"
             Write-Host "docker compose --env-file .env.prod -f docker-compose.prod.yml up -d"
-            exit 1
+            throw "Secrets manquants"
+          } else {
+            Write-Host "✅ Secrets configurés, déploiement en cours..."
           }
       
       - name: Deploy to client server

@@ -9,6 +9,10 @@ services:
       - mysql_data_prod:/var/lib/mysql
       - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
     networks:
       - app-network
 
@@ -33,7 +37,8 @@ services:
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     networks:
       - app-network
 

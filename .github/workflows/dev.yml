@@ -18,10 +18,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
+      - name: Clean up any existing containers
+        run: |
+          Write-Host "🧹 Cleaning up existing containers and networks..."
+          docker container prune -f
+          docker network prune -f
+      
       - name: Stop existing containers
         run: |
           Write-Host "🛑 Stopping existing containers..."
-          docker compose --env-file .env.dev -f docker-compose.dev.yml down 2>$null
+          docker compose --env-file .env.dev -f docker-compose.dev.yml down
           Write-Host "Containers stopped (if any were running)"
           
       - name: Build with dev environment
@@ -47,7 +53,7 @@ jobs:
       - name: Run tests
         run: |
           Write-Host "🧪 Running tests..."
-          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm test 2>$null
+          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm test
           Write-Host "Tests completed"
           
       - name: Deployment success

@@ -8,6 +8,9 @@ yarn.lock
 .env
 **/.env
 .env.local
+.env.dev
+.env.prod
+.env.*.local
 .env.development
 .env.test
 .env.production

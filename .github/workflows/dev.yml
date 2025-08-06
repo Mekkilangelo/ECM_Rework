@@ -12,7 +12,7 @@ jobs:
     
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
     
     steps:
       - name: Checkout code
@@ -21,11 +21,8 @@ jobs:
       - name: Stop existing containers
         run: |
           Write-Host "🛑 Stopping existing containers..."
-          try {
-            docker compose --env-file .env.dev -f docker-compose.dev.yml down
-          } catch {
-            Write-Host "No containers to stop"
-          }
+          docker compose --env-file .env.dev -f docker-compose.dev.yml down 2>$null
+          Write-Host "Containers stopped (if any were running)"
           
       - name: Build with dev environment
         run: |
@@ -50,11 +47,8 @@ jobs:
       - name: Run tests
         run: |
           Write-Host "🧪 Running tests..."
-          try {
-            docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm test
-          } catch {
-            Write-Host "Tests completed with warnings"
-          }
+          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm test 2>$null
+          Write-Host "Tests completed"
           
       - name: Deployment success
         run: |

@@ -196,7 +196,7 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
               <Button variant="secondary" onClick={handleCloseRequest} className="mr-2">
                 {t('common.cancel')}
               </Button>
-              <Button variant="warning" type="submit" disabled={loading}>
+              <Button variant="primary" type="submit" disabled={loading}>
                 {loading 
                   ? (client ? t('clients.modifying') : t('clients.creating')) 
                   : (client ? t('common.edit') : t('common.create'))

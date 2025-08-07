@@ -10,15 +10,38 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     
-    defaults:
-      run:
-        shell: powershell
-    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
-      - name: Create .env.dev from secrets
+      - name: Create .env.dev from secrets (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Creating .env.dev from GitHub secrets..."
+          cat > .env.dev << 'EOF'
+          NODE_ENV=development
+          TAG=dev
+          MYSQL_ROOT_PASSWORD=${{ secrets.DEV_MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=synergy
+          DB_HOST=database
+          DB_USER=root
+          DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
+          DB_SYNC_ALTER=true
+          JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}
+          JWT_EXPIRE=24h
+          JWT_INACTIVITY_EXPIRE=10m
+          API_URL=http://localhost:5001/api
+          CLIENT_URL=http://localhost:3000
+          REACT_APP_API_URL=http://localhost:5001/api
+          DB_PORT=3306
+          SERVER_PORT=5001
+          CLIENT_PORT=3000
+          EOF
+          echo ".env.dev created successfully"
+        shell: bash
+        
+      - name: Create .env.dev from secrets (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Creating .env.dev from GitHub secrets..."
           @"
@@ -41,40 +64,106 @@ jobs:
           CLIENT_PORT=3000
           "@ | Out-File -FilePath ".env.dev" -Encoding UTF8
           Write-Host ".env.dev created successfully"
+        shell: pwsh
       
-      - name: Clean up any existing containers
+      - name: Clean up any existing containers (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Cleaning up existing containers and networks..."
+          docker container prune -f || true
+          docker network prune -f || true
+        shell: bash
+        
+      - name: Clean up any existing containers (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Cleaning up existing containers and networks..."
           docker container prune -f
           docker network prune -f
+        shell: pwsh
       
-      - name: Stop existing containers
+      - name: Stop existing containers (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Stopping existing containers..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml down || true
+          echo "Containers stopped (if any were running)"
+        shell: bash
+        
+      - name: Stop existing containers (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Stopping existing containers..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml down
           Write-Host "Containers stopped (if any were running)"
+        shell: pwsh
           
-      - name: Build with dev environment
+      - name: Build with dev environment (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Building with dev environment..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml build --no-cache
+        shell: bash
+        
+      - name: Build with dev environment (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Building with dev environment..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml build --no-cache
+        shell: pwsh
           
-      - name: Start services
+      - name: Start services (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Starting services..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
+        shell: bash
+        
+      - name: Start services (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Starting services..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
+        shell: pwsh
           
       - name: Wait for services
         run: |
-          Write-Host "Waiting for services to start..."
-          Start-Sleep -Seconds 30
+          echo "Waiting for services to start..."
+          sleep 30
+        shell: bash
           
-      - name: Health check
+      - name: Health check (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Checking service health..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml ps
+        shell: bash
+        
+      - name: Health check (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Checking service health..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml ps
+        shell: pwsh
           
-      - name: Run backend tests
+      - name: Run backend tests (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Running backend tests..."
+          
+          # Lancer les tests unitaires d'abord (plus rapides)
+          echo "Executing unit tests..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:unit
+          
+          # Puis les tests d'intégration
+          echo "Executing integration tests..."
+          docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:integration
+          
+          echo "All backend tests completed successfully!"
+        shell: bash
+        
+      - name: Run backend tests (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "Running backend tests..."
           
@@ -87,16 +176,34 @@ jobs:
           docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:integration
           
           Write-Host "All backend tests completed successfully!"
+        shell: pwsh
           
-      - name: Deployment success
+      - name: Deployment success (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "==================================="
+          echo "Déploiement DEV local réussi!"
+          echo ""
+          echo "URLs d'accès sur votre machine:"
+          echo "  Frontend: http://localhost:3000"
+          echo "  Backend:  http://localhost:5001"
+          echo "  API:      http://localhost:5001/api"
+          echo ""
+          echo "Services actifs:"
+          docker compose --env-file .env.dev -f docker-compose.dev.yml ps
+        shell: bash
+        
+      - name: Deployment success (Windows)
+        if: runner.os == 'Windows'
         run: |
           Write-Host "==================================="
-          Write-Host "Deploiement DEV local reussi!"
+          Write-Host "Déploiement DEV local réussi!"
           Write-Host ""
-          Write-Host "URLs d'acces sur votre machine:"
+          Write-Host "URLs d'accès sur votre machine:"
           Write-Host "  Frontend: http://localhost:3000"
           Write-Host "  Backend:  http://localhost:5001"
           Write-Host "  API:      http://localhost:5001/api"
           Write-Host ""
           Write-Host "Services actifs:"
           docker compose --env-file .env.dev -f docker-compose.dev.yml ps
+        shell: pwsh

@@ -1,12 +1,16 @@
 name: Production - Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Build and Deploy"]
+    types:
+      - completed
     branches: [ main ]
 
 jobs:
   deploy:
     runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     defaults:
       run:

@@ -11,10 +11,6 @@ services:
     ports:
       - "${DB_PORT}:3306"
     command: --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
     networks:
       - app-network
 
@@ -24,6 +20,10 @@ services:
       dockerfile: Dockerfile
       args:
         NODE_ENV: ${NODE_ENV}
+      # Support multi-architecture
+      platforms:
+        - linux/amd64
+        - linux/arm64
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV}
@@ -43,8 +43,7 @@ services:
     ports:
       - "${SERVER_PORT}:5001"
     depends_on:
-      database:
-        condition: service_healthy
+      - database
     networks:
       - app-network
 
@@ -54,6 +53,10 @@ services:
       dockerfile: Dockerfile
       args:
         REACT_APP_API_URL: ${REACT_APP_API_URL}
+      # Support multi-architecture
+      platforms:
+        - linux/amd64
+        - linux/arm64
     restart: unless-stopped
     volumes:
       - ./client/src:/app/src

@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       autoIncrement: true,
       allowNull: false,
       references: {
-        model: 'Nodes',
+        model: 'nodes',
         key: 'id'
       }
     },

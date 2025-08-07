@@ -8,9 +8,15 @@ yarn.lock
 .env
 **/.env
 .env.local
+.env.dev
+.env.prod
+.env.*.local
 .env.development
 .env.test
 .env.production
+
+# IMPORTANT: .env.dev et .env.prod sont versionnés pour faciliter le déploiement
+# mais assurez-vous de changer les mots de passe en production!
 
 # Logs
 logs/

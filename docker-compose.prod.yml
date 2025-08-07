@@ -1,0 +1,80 @@
+services:
+  database:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SYNC_ALTER: ${DB_SYNC_ALTER}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      JWT_INACTIVITY_EXPIRE: ${JWT_INACTIVITY_EXPIRE}
+      CLIENT_URL: ${CLIENT_URL}
+    volumes:
+      - ./server/uploads:/app/uploads
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  mysql_data_prod:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-network:
+    driver: bridge

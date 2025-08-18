@@ -7,6 +7,7 @@ const { Node, Client, Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 /**
  * Fonction utilitaire pour valider les données du client
@@ -167,6 +168,9 @@ const createClient = async (clientData) => {
     return newNode;
   });
   
+  // Mettre à jour le modified_at du client et de ses ancêtres après création
+  await updateAncestorsModifiedAt(result.id);
+  
   // Récupérer le client complet avec ses données associées
   const newClient = await Node.findByPk(result.id, {
     include: [{
@@ -266,6 +270,9 @@ const updateClient = async (clientId, clientData) => {
       });
     }
   });
+  
+  // Mettre à jour le modified_at du client et de ses ancêtres après mise à jour
+  await updateAncestorsModifiedAt(clientId);
   
   // Récupérer et renvoyer le client mis à jour
   const updatedClient = await Node.findByPk(clientId, {

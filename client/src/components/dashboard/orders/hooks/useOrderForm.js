@@ -5,6 +5,7 @@ import useFormValidation from './modules/useFormValidation';
 import useOrderSubmission from './modules/useOrderSubmission';
 import useOrderData from './modules/useOrderData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
+import useCopyPaste from '../../../../hooks/useCopyPaste';
 import { useState, useEffect, useCallback } from 'react';
 
 const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode = false, clientId) => {
@@ -52,6 +53,66 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode =
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
+  
+  // Fonctions pour Copy/Paste - même logique que l'API
+  const formatForApi = useCallback((data) => {
+    // Filtrer les contacts vides
+    const filteredContacts = (data.contacts || []).filter(contact => 
+      contact.name.trim() !== '' || contact.phone.trim() !== '' || contact.email.trim() !== ''
+    );
+    
+    const formattedDate = data.order_date ? new Date(data.order_date).toISOString().split('T')[0] : null;
+    
+    return {
+      order_date: formattedDate,
+      description: data.description || '',
+      commercial: data.commercial || '',
+      contacts: filteredContacts.length > 0 ? filteredContacts : [{ name: '', phone: '', email: '' }]
+    };
+  }, []);
+
+  const parseFromApi = useCallback((data) => {
+    // Traitement des contacts - même logique que useOrderData
+    let contacts = [];
+    
+    if (data.contacts) {
+      try {
+        if (typeof data.contacts === 'string') {
+          contacts = JSON.parse(data.contacts);
+        } else if (Array.isArray(data.contacts)) {
+          contacts = data.contacts;
+        }
+      } catch (e) {
+        console.error('Erreur lors du parsing des contacts:', e);
+        contacts = [];
+      }
+    }
+    
+    // S'assurer qu'il y a au moins un contact vide
+    if (!Array.isArray(contacts) || contacts.length === 0) {
+      contacts = [{ name: '', phone: '', email: '' }];
+    }
+    
+    return {
+      order_date: data.order_date || '',
+      commercial: data.commercial || '',
+      description: data.description || '',
+      contacts: contacts
+    };
+  }, []);
+
+  // Copy/Paste functionality
+  const {
+    handleCopy,
+    handlePaste,
+    message: copyPasteMessage
+  } = useCopyPaste({
+    formType: 'orders',
+    formData,
+    setFormData,
+    formatForApi,
+    parseFromApi
+  });
   
   // Soumission du formulaire au serveur - en mode lecture seule, la soumission est désactivée
   const { handleSubmit } = useOrderSubmission(
@@ -102,7 +163,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode =
     errors,
     loading,
     fetchingOrder,
-    message,
+    message: message || copyPasteMessage, // Combiner les messages
     parentId,
     handleChange,
     handleContactChange,
@@ -118,7 +179,10 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode =
     handleCloseRequest,
     confirmClose,
     cancelClose,
-    saveAndClose
+    saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   };
 };
 

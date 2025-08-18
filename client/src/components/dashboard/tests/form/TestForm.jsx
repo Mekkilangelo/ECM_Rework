@@ -64,9 +64,11 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
     return results.success;
   }, [fileAssociationMethods]);
 
-  // Exposer handleCloseRequest à travers la référence
+  // Exposer handleCloseRequest et copy/paste à travers la référence
   useImperativeHandle(ref, () => ({
-    handleCloseRequest
+    handleCloseRequest,
+    handleCopy,
+    handlePaste
   }));  const {
     formData,
     errors,
@@ -91,6 +93,9 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
     handleEcdChange,
     handleHardnessChange,
     calculateProgramDuration,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste,
     ...formHandlers
   } = useTestForm(test, onClose, onTestCreated, onTestUpdated, viewMode);
 

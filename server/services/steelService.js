@@ -11,6 +11,7 @@ const {
   NotFoundError, 
   ValidationError 
 } = require('../utils/errors');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 const logger = require('../utils/logger');
 
 /**
@@ -377,6 +378,9 @@ const createSteel = async (steelData) => {
     return newNode;
   });
   
+  // Mettre à jour le modified_at de l'acier et de ses ancêtres après création
+  await updateAncestorsModifiedAt(result.id);
+  
   // Récupérer l'acier complet
   const newSteel = await getSteelById(result.id);
   return newSteel;
@@ -497,6 +501,9 @@ const updateSteel = async (steelId, steelData) => {
       await steel.Steel.update(steelUpdates, { transaction: t });
     }
   });
+  
+  // Mettre à jour le modified_at de l'acier et de ses ancêtres après mise à jour
+  await updateAncestorsModifiedAt(steelId);
   
   // Récupérer l'acier mis à jour
   const updatedSteel = await getSteelById(steelId);

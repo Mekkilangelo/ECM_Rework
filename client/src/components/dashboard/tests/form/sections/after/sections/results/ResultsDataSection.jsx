@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Button, Card, Table } from 'react-bootstrap';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
@@ -28,6 +29,7 @@ const ResultsDataSection = forwardRef(({
   parentId,
   handleChange,
   handleSelectChange,
+  handleCreateOption,
   getSelectedOption,
   lengthUnitOptions,
   hardnessUnitOptions,
@@ -47,6 +49,10 @@ const ResultsDataSection = forwardRef(({
   specifications
 }, ref) => {
   const { t } = useTranslation();
+
+  // Fonction pour créer une nouvelle unité de dureté
+  const handleCreateHardnessUnit = (inputValue) =>
+    handleCreateOption(inputValue, 'hardnessUnit', 'units', 'hardness_units');
 
   // S'assurer que le tableau de résultats existe
   const results = formData.resultsData?.results || [];
@@ -479,9 +485,10 @@ const ResultsDataSection = forwardRef(({
                                   />
                                 </td>
                                 <td>
-                                  <Select
+                                  <CreatableSelect
                                     value={getSelectedOption(hardnessUnitOptions, point.unit || 'HV')}
                                     onChange={(option) => handleHardnessChange(resultIndex, sampleIndex, hardnessIndex, 'unit', option)}
+                                    onCreateOption={handleCreateHardnessUnit}
                                     options={hardnessUnitOptions}
                                     placeholder={t('common.selectUnit')}
                                     isDisabled={loading || viewMode}

@@ -110,6 +110,7 @@ const AfterTabContent = forwardRef(({
           parentId={formHandlers.parentId}
           handleChange={formHandlers.handleChange}
           handleSelectChange={formHandlers.handleSelectChange}
+          handleCreateOption={formHandlers.handleCreateOption}
           getSelectedOption={formHandlers.getSelectedOption}
           lengthUnitOptions={formHandlers.lengthUnitOptions}
           hardnessUnitOptions={formHandlers.hardnessUnitOptions}

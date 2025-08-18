@@ -10,6 +10,7 @@ import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
+import FormHeader from '../../../common/FormHeader/FormHeader';
 import PartForm from '../form/PartForm';
 import partService from '../../../../services/partService';
 import '../../../../styles/dataList.css';
@@ -56,6 +57,19 @@ const PartList = ({ orderId }) => {
   });
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
+
+  // Fonctions Copy/Paste qui utilisent la référence du formulaire
+  const handleCopy = () => {
+    if (partFormRef.current?.handleCopy) {
+      partFormRef.current.handleCopy();
+    }
+  };
+
+  const handlePaste = () => {
+    if (partFormRef.current?.handlePaste) {
+      partFormRef.current.handlePaste();
+    }
+  };
 
   // Configuration des colonnes pour la table triable
   const columns = [
@@ -125,7 +139,7 @@ const PartList = ({ orderId }) => {
     {
       key: 'actions',
       label: t('common.actions'),
-      style: { width: hasEditRights ? '150px' : '80px' },
+      style: { width: hasEditRights ? '180px' : '80px' },
       cellClassName: 'text-center',
       sortable: false,
       render: (part) => (
@@ -138,7 +152,7 @@ const PartList = ({ orderId }) => {
             handleEditPart(part);
           } : undefined}
           onDelete={hasEditRights ? (e, id) => {
-            handleDeletePart(part.id);
+            handleDeletePart(id);
           } : undefined}
           hasEditRights={hasEditRights}
           labels={{
@@ -267,7 +281,12 @@ const PartList = ({ orderId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('parts.new')}</Modal.Title>
+          <FormHeader 
+            title={t('parts.new')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           <PartForm
@@ -284,7 +303,12 @@ const PartList = ({ orderId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('parts.edit')}</Modal.Title>
+          <FormHeader 
+            title={t('parts.edit')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>          {selectedPart && (
             <PartForm
@@ -307,7 +331,12 @@ const PartList = ({ orderId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('parts.details')}</Modal.Title>
+          <FormHeader 
+            title={t('parts.details')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={true}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedPart && (

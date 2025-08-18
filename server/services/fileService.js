@@ -10,6 +10,7 @@ const { Node, File, Closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 // Importer la fonction depuis le middleware pour éviter la duplication
 const { buildPhysicalFilePath } = require('../middleware/file-path');
@@ -177,8 +178,13 @@ const saveUploadedFiles = async (files, data, req = null) => {
         subcategory
       });
     }
-      // Valider la transaction
+    // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at du nœud parent et de ses ancêtres après ajout de fichiers
+    if (nodeId) {
+      await updateAncestorsModifiedAt(parseInt(nodeId));
+    }
     
     return {
       success: true,
@@ -320,6 +326,9 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at du nœud parent et de ses ancêtres après association de fichiers
+    await updateAncestorsModifiedAt(nodeId);
     
     return {
       success: true,
@@ -825,6 +834,9 @@ const updateFile = async (fileId, updateData) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at du fichier et de ses ancêtres après mise à jour
+    await updateAncestorsModifiedAt(fileId);
     
     // Retourner le fichier mis à jour
     const updatedFile = await File.findOne({

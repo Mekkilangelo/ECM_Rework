@@ -8,6 +8,7 @@ const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 /**
  * Fonction utilitaire pour valider les données de la pièce
@@ -286,6 +287,10 @@ const createPart = async (partData) => {
     
     return newNode;
   });
+  
+  // Mettre à jour le modified_at de la pièce et de ses ancêtres après création
+  await updateAncestorsModifiedAt(result.id);
+  
   // Récupérer la pièce complète avec ses données associées
   // Utiliser getPartById pour profiter de la même transformation des données
   const newPart = await getPartById(result.id);
@@ -402,7 +407,11 @@ const updatePart = async (partId, partData) => {
       });
     }
   });
-    // Récupérer et renvoyer la pièce mise à jour
+  
+  // Mettre à jour le modified_at de la pièce et de ses ancêtres après mise à jour
+  await updateAncestorsModifiedAt(partId);
+  
+  // Récupérer et renvoyer la pièce mise à jour
   // Utiliser getPartById pour profiter de la même transformation des données
   const updatedPart = await getPartById(partId);
   

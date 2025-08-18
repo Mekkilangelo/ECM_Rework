@@ -67,7 +67,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           // Map from API structure to form structure
           setFormData({
             // Basic information
-            name: data.test_code || '',
+            name: data.name || '',  // Utiliser le vrai nom du nœud, pas le test_code
             loadNumber: data.load_number || '',
             testDate: data.test_date || '',
             location: data.location || '',

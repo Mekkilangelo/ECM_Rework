@@ -24,11 +24,16 @@ const ClientForm = forwardRef(({ client, onClose, onClientCreated, onClientUpdat
     confirmClose,
     cancelClose,
     saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   } = useClientForm(client, onClose, onClientCreated, onClientUpdated, viewMode);
 
-  // Exposer handleCloseRequest à travers la référence
+  // Exposer handleCloseRequest et copy/paste à travers la référence
   useImperativeHandle(ref, () => ({
-    handleCloseRequest
+    handleCloseRequest,
+    handleCopy,
+    handlePaste
   }));
 
   if (fetchingClient) {

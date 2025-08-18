@@ -9,6 +9,7 @@ import usePartSubmission from './modules/usePartSubmission';
 import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import usePartData from './modules/usePartData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
+import useCopyPaste from '../../../../hooks/useCopyPaste';
 
 const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
@@ -154,6 +155,123 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     viewMode // Passer le mode lecture seule
   );
 
+  // Fonction pour formater les données pour l'API/copie
+  const formatForApi = useCallback((data) => {
+    return {
+      // Informations de base
+      name: data.name || '',
+      designation: data.designation || '',
+      clientDesignation: data.clientDesignation || '',
+      reference: data.reference || '',
+      quantity: data.quantity || 1,
+      description: data.description || '',
+      steelId: data.steelId || null,
+      steel: data.steel || '',
+      
+      // Dimensions
+      length: data.length || '',
+      lengthUnit: data.lengthUnit || 'mm',
+      width: data.width || '',
+      widthUnit: data.widthUnit || 'mm',
+      height: data.height || '',
+      thickness: data.thickness || '',
+      thicknessUnit: data.thicknessUnit || 'mm',
+      dimensionsUnit: data.dimensionsUnit || '',
+      diameterIn: data.diameterIn || '',
+      diameterOut: data.diameterOut || '',
+      diameterUnit: data.diameterUnit || '',
+      weight: data.weight || '',
+      weightUnit: data.weightUnit || 'kg',
+      
+      // Spécifications de dureté - anciennes propriétés
+      coreHardnessMin: data.coreHardnessMin || '',
+      coreHardnessMax: data.coreHardnessMax || '',
+      coreHardnessUnit: data.coreHardnessUnit || '',
+      surfaceHardnessMin: data.surfaceHardnessMin || '',
+      surfaceHardnessMax: data.surfaceHardnessMax || '',
+      surfaceHardnessUnit: data.surfaceHardnessUnit || '',
+      toothHardnessMin: data.toothHardnessMin || '',
+      toothHardnessMax: data.toothHardnessMax || '',
+      toothHardnessUnit: data.toothHardnessUnit || '',
+      
+      // Spécifications ECD - anciennes propriétés
+      ecdDepthMin: data.ecdDepthMin || '',
+      ecdDepthMax: data.ecdDepthMax || '',
+      ecdHardness: data.ecdHardness || '',
+      ecdHardnessUnit: data.ecdHardnessUnit || '',
+      
+      // Spécifications nouvelles (tableaux)
+      hardnessSpecs: data.hardnessSpecs || [],
+      ecdSpecs: data.ecdSpecs || [],
+      
+      // Notes
+      notes: data.notes || ''
+    };
+  }, []);
+
+  // Fonction pour parser les données depuis l'API/collage
+  const parseFromApi = useCallback((data) => {
+    return {
+      // Informations de base
+      name: data.name || '',
+      designation: data.designation || '',
+      clientDesignation: data.clientDesignation || '',
+      reference: data.reference || '',
+      quantity: data.quantity || 1,
+      description: data.description || '',
+      steelId: data.steelId || null,
+      steel: data.steel || '',
+      
+      // Dimensions
+      length: data.length || '',
+      lengthUnit: data.lengthUnit || 'mm',
+      width: data.width || '',
+      widthUnit: data.widthUnit || 'mm',
+      height: data.height || '',
+      thickness: data.thickness || '',
+      thicknessUnit: data.thicknessUnit || 'mm',
+      dimensionsUnit: data.dimensionsUnit || '',
+      diameterIn: data.diameterIn || '',
+      diameterOut: data.diameterOut || '',
+      diameterUnit: data.diameterUnit || '',
+      weight: data.weight || '',
+      weightUnit: data.weightUnit || 'kg',
+      
+      // Spécifications de dureté - anciennes propriétés
+      coreHardnessMin: data.coreHardnessMin || '',
+      coreHardnessMax: data.coreHardnessMax || '',
+      coreHardnessUnit: data.coreHardnessUnit || '',
+      surfaceHardnessMin: data.surfaceHardnessMin || '',
+      surfaceHardnessMax: data.surfaceHardnessMax || '',
+      surfaceHardnessUnit: data.surfaceHardnessUnit || '',
+      toothHardnessMin: data.toothHardnessMin || '',
+      toothHardnessMax: data.toothHardnessMax || '',
+      toothHardnessUnit: data.toothHardnessUnit || '',
+      
+      // Spécifications ECD - anciennes propriétés
+      ecdDepthMin: data.ecdDepthMin || '',
+      ecdDepthMax: data.ecdDepthMax || '',
+      ecdHardness: data.ecdHardness || '',
+      ecdHardnessUnit: data.ecdHardnessUnit || '',
+      
+      // Spécifications nouvelles (tableaux)
+      hardnessSpecs: data.hardnessSpecs || [],
+      ecdSpecs: data.ecdSpecs || [],
+      
+      // Notes
+      notes: data.notes || ''
+    };
+  }, []);
+
+  // Hook pour la fonctionnalité copy/paste
+  const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
+    formType: 'parts',
+    formData,
+    setFormData,
+    formatForApi,
+    parseFromApi
+  });
+
   // Réinitialiser l'état initial après une sauvegarde réussie
   useEffect(() => {
     if (message && message.type === 'success') {
@@ -166,7 +284,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     errors,
     loading,
     fetchingPart,
-    message,
+    message: message || copyPasteMessage, // Combiner les messages
     parentId,
     designationOptions,
     steelOptions,
@@ -201,6 +319,9 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     confirmClose,
     cancelClose,
     saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   };
 };
 

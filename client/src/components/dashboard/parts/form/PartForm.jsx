@@ -51,11 +51,16 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     confirmClose,
     cancelClose,
     saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   } = usePartForm(part, onClose, onPartCreated, onPartUpdated, viewMode);
 
-  // Exposer handleCloseRequest à travers la référence
+  // Exposer handleCloseRequest et copy/paste à travers la référence
   useImperativeHandle(ref, () => ({
-    handleCloseRequest
+    handleCloseRequest,
+    handleCopy,
+    handlePaste
   }));
 
   // État pour gérer la modal de création d'acier

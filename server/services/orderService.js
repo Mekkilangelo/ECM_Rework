@@ -12,6 +12,7 @@ const {
   ValidationError 
 } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 /**
  * Récupère toutes les commandes avec pagination et filtrage
@@ -233,6 +234,9 @@ const createOrder = async (orderData) => {
     // Valider la transaction
     await transaction.commit();
     
+    // Mettre à jour le modified_at de la commande et de ses ancêtres après création
+    await updateAncestorsModifiedAt(orderNode.id);
+    
     // Récupérer la commande complète
     const createdOrder = await getOrderById(orderNode.id);
     return createdOrder;
@@ -357,6 +361,9 @@ const updateOrder = async (orderId, orderData) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at de la commande et de ses ancêtres après mise à jour
+    await updateAncestorsModifiedAt(orderId);
     
     // Récupérer la commande mise à jour
     const updatedOrder = await getOrderById(orderId);

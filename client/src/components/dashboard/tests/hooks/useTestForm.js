@@ -8,6 +8,7 @@ import useTestSubmission from './modules/useTestSubmission';
 import useTestData from './modules/useTestData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 import useExcelImport from './modules/useExcelImport';
+import useCopyPaste from '../../../../hooks/useCopyPaste';
 
 const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
@@ -201,6 +202,203 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     }
   }, [message, resetInitialState]);
 
+  // Fonction pour formater les données pour l'API/copie
+  const formatForApi = (data) => {
+    return {
+      // Informations de base
+      name: data.name || '',
+      testDate: data.testDate || '',
+      location: data.location || '',
+      status: data.status || 'pending',
+      description: data.description || '',
+      
+      // Types de test
+      mountingType: data.mountingType || '',
+      positionType: data.positionType || '',
+      processType: data.processType || '',
+      
+      // Données du four
+      furnaceData: {
+        furnaceType: data.furnaceData?.furnaceType || '',
+        heatingCell: data.furnaceData?.heatingCell || '',
+        coolingMedia: data.furnaceData?.coolingMedia || '',
+        furnaceSize: data.furnaceData?.furnaceSize || '',
+        quenchCell: data.furnaceData?.quenchCell || '',
+      },
+      
+      // Données de charge
+      loadData: {
+        length: data.loadData?.length || '',
+        width: data.loadData?.width || '',
+        height: data.loadData?.height || '',
+        sizeUnit: data.loadData?.sizeUnit || '',
+        floorCount: data.loadData?.floorCount || '',
+        partCount: data.loadData?.partCount || '',
+        weight: data.loadData?.weight || '',
+        weightUnit: data.loadData?.weightUnit || '',
+        loadComments: data.loadData?.loadComments || '',
+      },
+      
+      // Données de recette
+      recipeData: {
+        recipeNumber: data.recipeData?.recipeNumber || '',
+        
+        // Préoxydation
+        preoxTemp: data.recipeData?.preoxTemp || '',
+        preoxTempUnit: data.recipeData?.preoxTempUnit || '',
+        preoxDuration: data.recipeData?.preoxDuration || '',
+        preoxDurationUnit: data.recipeData?.preoxDurationUnit || '',
+        preoxMedia: data.recipeData?.preoxMedia || '',
+        
+        // Cycle thermique
+        thermalCycle: data.recipeData?.thermalCycle || [],
+        
+        // Configuration globale des gaz
+        selectedGas1: data.recipeData?.selectedGas1 || '',
+        selectedGas2: data.recipeData?.selectedGas2 || '',
+        selectedGas3: data.recipeData?.selectedGas3 || '',
+        
+        // Cycle chimique
+        chemicalCycle: data.recipeData?.chemicalCycle || [],
+        
+        // Autres paramètres de recette
+        waitTime: data.recipeData?.waitTime || '',
+        waitTimeUnit: data.recipeData?.waitTimeUnit || '',
+        programDuration: data.recipeData?.programDuration || '',
+        programDurationUnit: data.recipeData?.programDurationUnit || '',
+        cellTemp: data.recipeData?.cellTemp || '',
+        cellTempUnit: data.recipeData?.cellTempUnit || '',
+        waitPressure: data.recipeData?.waitPressure || '',
+        waitPressureUnit: data.recipeData?.waitPressureUnit || '',
+      },
+      
+      // Données de trempe
+      quenchData: {
+        gasQuenchSpeed: data.quenchData?.gasQuenchSpeed || [],
+        gasQuenchPressure: data.quenchData?.gasQuenchPressure || [],
+        oilQuenchSpeed: data.quenchData?.oilQuenchSpeed || [],
+        oilTemperature: data.quenchData?.oilTemperature || '',
+        oilTempUnit: data.quenchData?.oilTempUnit || '',
+        oilInertingPressure: data.quenchData?.oilInertingPressure || '',
+        oilInertingDelay: data.quenchData?.oilInertingDelay || '',
+        oilInertingDelayUnit: data.quenchData?.oilInertingDelayUnit || '',
+        oilDrippingTime: data.quenchData?.oilDrippingTime || '',
+        oilDrippingTimeUnit: data.quenchData?.oilDrippingTimeUnit || ''
+      },
+      
+      // Données de résultats
+      resultsData: {
+        results: data.resultsData?.results || []
+      },
+      
+      // Notes (ancien champ)
+      notes: data.notes || ''
+    };
+  };
+
+  // Fonction pour parser les données depuis l'API/collage
+  const parseFromApi = (data) => {
+    return {
+      // Informations de base
+      name: data.name || '',
+      testDate: data.testDate || '',
+      location: data.location || '',
+      status: data.status || 'pending',
+      description: data.description || '',
+      
+      // Types de test
+      mountingType: data.mountingType || '',
+      positionType: data.positionType || '',
+      processType: data.processType || '',
+      
+      // Données du four
+      furnaceData: {
+        furnaceType: data.furnaceData?.furnaceType || '',
+        heatingCell: data.furnaceData?.heatingCell || '',
+        coolingMedia: data.furnaceData?.coolingMedia || '',
+        furnaceSize: data.furnaceData?.furnaceSize || '',
+        quenchCell: data.furnaceData?.quenchCell || '',
+      },
+      
+      // Données de charge
+      loadData: {
+        length: data.loadData?.length || '',
+        width: data.loadData?.width || '',
+        height: data.loadData?.height || '',
+        sizeUnit: data.loadData?.sizeUnit || '',
+        floorCount: data.loadData?.floorCount || '',
+        partCount: data.loadData?.partCount || '',
+        weight: data.loadData?.weight || '',
+        weightUnit: data.loadData?.weightUnit || '',
+        loadComments: data.loadData?.loadComments || '',
+      },
+      
+      // Données de recette
+      recipeData: {
+        recipeNumber: data.recipeData?.recipeNumber || '',
+        
+        // Préoxydation
+        preoxTemp: data.recipeData?.preoxTemp || '',
+        preoxTempUnit: data.recipeData?.preoxTempUnit || '',
+        preoxDuration: data.recipeData?.preoxDuration || '',
+        preoxDurationUnit: data.recipeData?.preoxDurationUnit || '',
+        preoxMedia: data.recipeData?.preoxMedia || '',
+        
+        // Cycle thermique
+        thermalCycle: data.recipeData?.thermalCycle || [],
+        
+        // Configuration globale des gaz
+        selectedGas1: data.recipeData?.selectedGas1 || '',
+        selectedGas2: data.recipeData?.selectedGas2 || '',
+        selectedGas3: data.recipeData?.selectedGas3 || '',
+        
+        // Cycle chimique
+        chemicalCycle: data.recipeData?.chemicalCycle || [],
+        
+        // Autres paramètres de recette
+        waitTime: data.recipeData?.waitTime || '',
+        waitTimeUnit: data.recipeData?.waitTimeUnit || '',
+        programDuration: data.recipeData?.programDuration || '',
+        programDurationUnit: data.recipeData?.programDurationUnit || '',
+        cellTemp: data.recipeData?.cellTemp || '',
+        cellTempUnit: data.recipeData?.cellTempUnit || '',
+        waitPressure: data.recipeData?.waitPressure || '',
+        waitPressureUnit: data.recipeData?.waitPressureUnit || '',
+      },
+      
+      // Données de trempe
+      quenchData: {
+        gasQuenchSpeed: data.quenchData?.gasQuenchSpeed || [],
+        gasQuenchPressure: data.quenchData?.gasQuenchPressure || [],
+        oilQuenchSpeed: data.quenchData?.oilQuenchSpeed || [],
+        oilTemperature: data.quenchData?.oilTemperature || '',
+        oilTempUnit: data.quenchData?.oilTempUnit || '',
+        oilInertingPressure: data.quenchData?.oilInertingPressure || '',
+        oilInertingDelay: data.quenchData?.oilInertingDelay || '',
+        oilInertingDelayUnit: data.quenchData?.oilInertingDelayUnit || '',
+        oilDrippingTime: data.quenchData?.oilDrippingTime || '',
+        oilDrippingTimeUnit: data.quenchData?.oilDrippingTimeUnit || ''
+      },
+      
+      // Données de résultats
+      resultsData: {
+        results: data.resultsData?.results || []
+      },
+      
+      // Notes (ancien champ)
+      notes: data.notes || ''
+    };
+  };
+
+  // Hook pour la fonctionnalité copy/paste
+  const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
+    formType: 'tests',
+    formData,
+    setFormData,
+    formatForApi,
+    parseFromApi
+  });
+
   return {
     // États du formulaire
     formData,
@@ -208,7 +406,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     errors,
     setErrors,
     loading,
-    message,
+    message: message || copyPasteMessage, // Combiner les messages
     setMessage,
     fetchingTest,
     
@@ -317,7 +515,11 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     
     // Référence et fonction pour la gestion des données de courbe
     resultsSectionRef,
-    flushAllCurveData
+    flushAllCurveData,
+    
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   };
 };
 

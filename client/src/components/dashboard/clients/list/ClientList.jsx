@@ -10,6 +10,7 @@ import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
+import FormHeader from '../../../common/FormHeader/FormHeader';
 import ClientForm from '../form/ClientForm';
 import clientService from '../../../../services/clientService';
 import '../../../../styles/dataList.css';
@@ -66,6 +67,19 @@ const ClientList = ({ onDataChanged }) => {
   });
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   const isUserRole = user && user.role === 'user';
+
+  // Fonctions Copy/Paste qui utilisent la référence du formulaire
+  const handleCopy = () => {
+    if (clientFormRef.current?.handleCopy) {
+      clientFormRef.current.handleCopy();
+    }
+  };
+
+  const handlePaste = () => {
+    if (clientFormRef.current?.handlePaste) {
+      clientFormRef.current.handlePaste();
+    }
+  };
 
   // Configuration des colonnes pour la table triable
   const columns = [
@@ -128,7 +142,7 @@ const ClientList = ({ onDataChanged }) => {
     {
       key: 'actions',
       label: t('common.actions'),
-      style: { width: '150px' },
+      style: { width: hasEditRights ? '120px' : '80px' },
       cellClassName: 'text-center',
       sortable: false,
       render: (client) => (
@@ -141,7 +155,7 @@ const ClientList = ({ onDataChanged }) => {
             openEditModal(client);
           } : undefined}
           onDelete={hasEditRights ? (e, id) => {
-            handleDeleteClient(client.id);
+            handleDeleteClient(id);
           } : undefined}
           hasEditRights={hasEditRights}
           labels={{
@@ -255,7 +269,12 @@ const ClientList = ({ onDataChanged }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('clients.add')}</Modal.Title>
+          <FormHeader 
+            title={t('clients.add')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           <ClientForm
@@ -277,7 +296,12 @@ const ClientList = ({ onDataChanged }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('clients.edit')}</Modal.Title>
+          <FormHeader 
+            title={t('clients.edit')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedClient && (
@@ -302,7 +326,12 @@ const ClientList = ({ onDataChanged }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('clients.details')}</Modal.Title>
+          <FormHeader 
+            title={t('clients.details')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={true}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedClient && (

@@ -126,11 +126,19 @@ jobs:
           docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
         shell: powershell
           
-      - name: Wait for services
+      - name: Wait for services (Unix)
+        if: runner.os != 'Windows'
         run: |
           echo "Waiting for services to start..."
           sleep 30
         shell: bash
+        
+      - name: Wait for services (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Write-Host "Waiting for services to start..."
+          Start-Sleep -Seconds 30
+        shell: powershell
           
       - name: Health check (Unix)
         if: runner.os != 'Windows'

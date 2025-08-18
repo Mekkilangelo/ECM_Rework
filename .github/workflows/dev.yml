@@ -64,7 +64,7 @@ jobs:
           CLIENT_PORT=3000
           "@ | Out-File -FilePath ".env.dev" -Encoding UTF8
           Write-Host ".env.dev created successfully"
-        shell: pwsh
+        shell: powershell
       
       - name: Clean up any existing containers (Unix)
         if: runner.os != 'Windows'
@@ -80,7 +80,7 @@ jobs:
           Write-Host "Cleaning up existing containers and networks..."
           docker container prune -f
           docker network prune -f
-        shell: pwsh
+        shell: powershell
       
       - name: Stop existing containers (Unix)
         if: runner.os != 'Windows'
@@ -96,7 +96,7 @@ jobs:
           Write-Host "Stopping existing containers..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml down
           Write-Host "Containers stopped (if any were running)"
-        shell: pwsh
+        shell: powershell
           
       - name: Build with dev environment (Unix)
         if: runner.os != 'Windows'
@@ -110,7 +110,7 @@ jobs:
         run: |
           Write-Host "Building with dev environment..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml build --no-cache
-        shell: pwsh
+        shell: powershell
           
       - name: Start services (Unix)
         if: runner.os != 'Windows'
@@ -124,7 +124,7 @@ jobs:
         run: |
           Write-Host "Starting services..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
-        shell: pwsh
+        shell: powershell
           
       - name: Wait for services
         run: |
@@ -144,7 +144,7 @@ jobs:
         run: |
           Write-Host "Checking service health..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml ps
-        shell: pwsh
+        shell: powershell
           
       - name: Run backend tests (Unix)
         if: runner.os != 'Windows'
@@ -176,7 +176,7 @@ jobs:
           docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:integration
           
           Write-Host "All backend tests completed successfully!"
-        shell: pwsh
+        shell: powershell
           
       - name: Deployment success (Unix)
         if: runner.os != 'Windows'
@@ -206,4 +206,4 @@ jobs:
           Write-Host ""
           Write-Host "Services actifs:"
           docker compose --env-file .env.dev -f docker-compose.dev.yml ps
-        shell: pwsh
+        shell: powershell

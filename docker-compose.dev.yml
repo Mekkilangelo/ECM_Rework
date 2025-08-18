@@ -20,10 +20,6 @@ services:
       dockerfile: Dockerfile
       args:
         NODE_ENV: ${NODE_ENV}
-      # Support multi-architecture
-      platforms:
-        - linux/amd64
-        - linux/arm64
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV}
@@ -53,10 +49,6 @@ services:
       dockerfile: Dockerfile
       args:
         REACT_APP_API_URL: ${REACT_APP_API_URL}
-      # Support multi-architecture
-      platforms:
-        - linux/amd64
-        - linux/arm64
     restart: unless-stopped
     volumes:
       - ./client/src:/app/src

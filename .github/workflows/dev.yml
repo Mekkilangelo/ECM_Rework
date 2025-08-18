@@ -102,14 +102,14 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           echo "Building with dev environment..."
-          docker compose --env-file .env.dev -f docker-compose.dev.yml build --no-cache
+          docker compose --env-file .env.dev -f docker-compose.dev.yml build
         shell: bash
         
       - name: Build with dev environment (Windows)
         if: runner.os == 'Windows'
         run: |
           Write-Host "Building with dev environment..."
-          docker compose --env-file .env.dev -f docker-compose.dev.yml build --no-cache
+          docker compose --env-file .env.dev -f docker-compose.dev.yml build
         shell: powershell
           
       - name: Start services (Unix)

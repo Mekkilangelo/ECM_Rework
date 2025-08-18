@@ -2,7 +2,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const File = sequelize.define('File', {
+  const File = sequelize.define('file', {
     node_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -52,7 +52,7 @@ module.exports = (sequelize) => {
 
   // Définir les associations
   File.associate = function(models) {
-    File.belongsTo(models.Node, {
+    File.belongsTo(models.node, {
       foreignKey: 'node_id',
       onDelete: 'CASCADE'
     });

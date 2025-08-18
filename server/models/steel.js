@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Steel = sequelize.define('Steel', {
+  const Steel = sequelize.define('steel', {
     node_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -41,7 +41,7 @@ module.exports = (sequelize) => {
   });
 
   Steel.associate = function(models) {
-    Steel.belongsTo(models.Node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Steel.belongsTo(models.node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
   };
 
   return Steel;

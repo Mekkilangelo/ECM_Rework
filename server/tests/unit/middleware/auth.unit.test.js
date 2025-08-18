@@ -32,7 +32,7 @@ jest.mock('../../../config/auth', () => ({
 
 const config = require('../../../config/config');
 const { authenticate, requireEditRights } = require('../../../middleware/auth');
-const { User } = require('../../../models');
+const { user: User } = require('../../../models');
 
 describe('Auth Middleware - Unit Tests', () => {
   let mockReq, mockRes, mockNext;

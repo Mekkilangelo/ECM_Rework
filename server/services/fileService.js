@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { Node, File, Closure, sequelize } = require('../models');
+const { node: Node, file: File, closure: Closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');

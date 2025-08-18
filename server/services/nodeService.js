@@ -3,7 +3,7 @@
  * Contient la logique métier liée aux opérations sur les nœuds
  */
 
-const { Node, Closure, Client, Order, Part, Test, File, Furnace, Steel, sequelize } = require('../models');
+const { node: Node, closure: Closure, client: Client, order: Order, part: Part, test: Test, file: File, furnace: Furnace, steel: Steel, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const { deletePhysicalFiles } = require('../utils/fileUtils');

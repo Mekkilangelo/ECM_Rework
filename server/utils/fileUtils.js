@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { Node, File } = require('../models');
+const { node: Node, file: File } = require('../models');
 const { Op } = require('sequelize');
 
 /**

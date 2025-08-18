@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Enum = sequelize.define('Enum', {
+  const Enum = sequelize.define('enum', {
     // Modèle virtuel, pas de colonnes réelles
   }, {
     tableName: 'enums',

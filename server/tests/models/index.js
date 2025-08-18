@@ -17,15 +17,15 @@ module.exports = new Proxy({}, {
     }
     
     if (prop === 'User') {
-      return global.User || models.User;
+      return global.User || models.user;
     }
     
     if (prop === 'Node') {
-      return global.Node || models.Node;
+      return global.Node || models.node;
     }
     
     if (prop === 'Closure') {
-      return global.Closure || models.Closure;
+      return global.Closure || models.closure;
     }
     
     return models[prop];

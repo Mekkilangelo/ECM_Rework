@@ -3,7 +3,7 @@
  * Contient la logique métier liée aux opérations sur les tests
  */
 
-const { Node, Test, Closure, Part, Client, File } = require('../models');
+const { node: Node, test: Test, closure: Closure, part: Part, client: Client, file: File } = require('../models');
 const db = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
@@ -173,7 +173,7 @@ const getTestSpecs = async (testId, parent_id) => {
           type: 'part'  // S'assurer que c'est une pièce
         },
         include: [{
-          model: sequelize.models.Part,
+          model: sequelize.models.part,
           attributes: ['specifications']
         }]
       });

@@ -3,7 +3,7 @@
  * Contient la logique métier relative aux pièces
  */
 
-const { Node, Part, Closure } = require('../models');
+const { node: Node, part: Part, closure: Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');

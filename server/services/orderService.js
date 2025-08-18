@@ -3,7 +3,7 @@
  * Contient la logique métier liée aux opérations sur les commandes
  */
 
-const { Node, Order, Closure } = require('../models');
+const { node: Node, order: Order, closure: Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { validateOrderData } = require('../utils/validators');

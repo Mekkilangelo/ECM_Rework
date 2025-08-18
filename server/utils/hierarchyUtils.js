@@ -3,7 +3,7 @@
  * Fournit des fonctions pour mettre à jour les ancêtres lors de modifications
  */
 
-const { Node, Closure } = require('../models');
+const { node: Node, closure: Closure } = require('../models');
 const logger = require('./logger');
 
 /**

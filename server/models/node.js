@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Node = sequelize.define('Node', {
+  const Node = sequelize.define('node', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -55,21 +55,21 @@ module.exports = (sequelize) => {
     ]
   });
   Node.associate = function(models) {
-    Node.hasMany(models.Node, { as: 'children', foreignKey: 'parent_id' });
-    Node.belongsTo(models.Node, { as: 'parent', foreignKey: { name: 'parent_id', allowNull: true }, onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+    Node.hasMany(models.node, { as: 'children', foreignKey: 'parent_id' });
+    Node.belongsTo(models.node, { as: 'parent', foreignKey: { name: 'parent_id', allowNull: true }, onDelete: 'SET NULL', onUpdate: 'CASCADE' });
     
     // Associations avec les tables spécifiques
-    Node.hasOne(models.Client, { foreignKey: 'node_id' });
-    Node.hasOne(models.Order, { foreignKey: 'node_id' });
-    Node.hasOne(models.Part, { foreignKey: 'node_id' });
-    Node.hasOne(models.Test, { foreignKey: 'node_id' });
-    Node.hasOne(models.File, { foreignKey: 'node_id' });
-    Node.hasOne(models.Steel, { foreignKey: 'node_id' });
-    Node.hasOne(models.Furnace, { foreignKey: 'node_id' });
+    Node.hasOne(models.client, { foreignKey: 'node_id' });
+    Node.hasOne(models.order, { foreignKey: 'node_id' });
+    Node.hasOne(models.part, { foreignKey: 'node_id' });
+    Node.hasOne(models.test, { foreignKey: 'node_id' });
+    Node.hasOne(models.file, { foreignKey: 'node_id' });
+    Node.hasOne(models.steel, { foreignKey: 'node_id' });
+    Node.hasOne(models.furnace, { foreignKey: 'node_id' });
     
     // Associations avec Closure pour les relations hiérarchiques
-    Node.hasMany(models.Closure, { as: 'AncestorClosures', foreignKey: 'ancestor_id' });
-    Node.hasMany(models.Closure, { as: 'DescendantClosures', foreignKey: 'descendant_id' });
+    Node.hasMany(models.closure, { as: 'AncestorClosures', foreignKey: 'ancestor_id' });
+    Node.hasMany(models.closure, { as: 'DescendantClosures', foreignKey: 'descendant_id' });
   };
 
   return Node;

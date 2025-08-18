@@ -1,5 +1,5 @@
 const db = require('../models');
-const EnumModel = db.Enum;
+const EnumModel = db.enum;
 
 // Récupérer toutes les colonnes ENUM de la base de données
 exports.getAllEnums = async (req, res) => {

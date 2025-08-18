@@ -3,7 +3,7 @@
  * Contient la logique métier liée aux opérations sur les utilisateurs
  */
 
-const { User } = require('../models');
+const { user: User } = require('../models');
 const { sequelize, Sequelize } = require('../models');
 const { Op } = Sequelize;
 const { hashPassword } = require('../config/auth');

@@ -3,7 +3,7 @@
  * Contient la logique métier relative aux clients
  */
 
-const { Node, Client, Closure } = require('../models');
+const { node: Node, client: Client, closure: Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');

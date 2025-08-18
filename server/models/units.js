@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Unit = sequelize.define('Unit', {
+  const Unit = sequelize.define('unit', {
     length_units: {
       type: DataTypes.ENUM('mm', 'inch'),
       allowNull: true,

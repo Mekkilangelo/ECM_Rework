@@ -1,4 +1,4 @@
-const { Node, Furnace, Closure } = require('../models');
+const { node: Node, furnace: Furnace, closure: Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 

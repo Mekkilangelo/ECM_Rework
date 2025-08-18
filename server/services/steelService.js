@@ -3,7 +3,7 @@
  * Contient la logique métier liée aux opérations sur les aciers
  */
 
-const { Node, Steel, Closure } = require('../models');
+const { node: Node, steel: Steel, closure: Closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { validateSteelData } = require('../utils/validators');
@@ -574,7 +574,7 @@ const deleteSteel = async (steelId) => {
       });
       
       // 2. Supprimer toutes les entrées dans la table closure où ce nœud apparaît
-      const { Closure } = require('../models');
+      const { closure: Closure } = require('../models');
       await Closure.destroy({
         where: {
           [Op.or]: [

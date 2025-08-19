@@ -32,7 +32,7 @@ jest.mock('../../../config/auth', () => ({
 
 const config = require('../../../config/config');
 const { authenticate, requireEditRights } = require('../../../middleware/auth');
-const { user: User } = require('../../../models');
+const { User } = require('../../../models');
 
 describe('Auth Middleware - Unit Tests', () => {
   let mockReq, mockRes, mockNext;
@@ -50,8 +50,18 @@ describe('Auth Middleware - Unit Tests', () => {
     
     mockNext = jest.fn();
     
+    // Mock console.error pour supprimer le bruit dans les tests
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    
     // Reset mocks
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Restaurer console.error après chaque test
+    if (console.error.mockRestore) {
+      console.error.mockRestore();
+    }
   });
 
   describe('authenticate middleware', () => {

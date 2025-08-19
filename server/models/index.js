@@ -60,6 +60,24 @@ fs
     db[model.name] = model;
   });
 
+// Assurer que les modèles sont bien exportés avec les deux casses pour compatibilité
+// Windows/MySQL est moins strict avec la casse, mais Linux/Docker l'est
+Object.keys(db).forEach(modelName => {
+  if (modelName !== 'sequelize' && modelName !== 'Sequelize') {
+    // Exporter avec majuscule initiale
+    const capitalizedName = modelName.charAt(0).toUpperCase() + modelName.slice(1);
+    if (!db[capitalizedName]) {
+      db[capitalizedName] = db[modelName];
+    }
+    
+    // Exporter avec minuscule initiale
+    const lowercaseName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
+    if (!db[lowercaseName]) {
+      db[lowercaseName] = db[modelName];
+    }
+  }
+});
+
 // Établit les associations entre les modèles
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {

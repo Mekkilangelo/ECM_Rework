@@ -38,7 +38,7 @@ jest.mock('../../../utils/apiResponse', () => ({
 }));
 
 const authController = require('../../../controllers/authController');
-const { user: User } = require('../../../models');
+const { User } = require('../../../models');
 const { verifyPassword, generateToken } = require('../../../config/auth');
 const logger = require('../../../utils/logger');
 const loggingService = require('../../../services/loggingService');

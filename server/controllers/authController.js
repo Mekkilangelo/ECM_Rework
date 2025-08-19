@@ -4,7 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { user: User } = require('../models');
+const { User } = require('../models');
 const { generateToken, verifyPassword, hashPassword, refreshToken } = require('../config/auth');
 const config = require('../config/config');
 const logger = require('../utils/logger');

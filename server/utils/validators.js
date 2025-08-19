@@ -4,7 +4,7 @@
  */
 
 const { Op } = require('sequelize');
-const { user: User, node: Node } = require('../models');
+const { User, Node } = require('../models');
 
 /**
  * Valide les données d'une commande

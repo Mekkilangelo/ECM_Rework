@@ -6,7 +6,7 @@ const StatusBadge = ({ status }) => {
   const getLabel = () => {
     switch (status) {
       case 'new':
-        return 'NOUVEAU';
+        return 'NEW';
       case 'opened':
         return 'OUVERT';
       case 'in_progress':

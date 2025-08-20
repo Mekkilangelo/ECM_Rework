@@ -545,13 +545,13 @@ const getTable = async (params) => {
  * @returns {Promise<Object>} Résultat de l'opération
  */
 const updateNodeStatus = async (nodeId, status) => {
-  const node = await node.findByPk(nodeId);
-  if (!node) {
+  const nodeStatus = await node.findByPk(nodeId);
+  if (!nodeStatus) {
     throw new NotFoundError('Nœud non trouvé');
   }
   
   // Mettre à jour le statut et la date de modification
-  await node.update({
+  await nodeStatus.update({
     data_status: status,
     modified_at: new Date()
   });

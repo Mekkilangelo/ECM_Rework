@@ -292,11 +292,11 @@ const createTest = async (testData) => {
     });
     
     // Créer les fermetures pour relier le nœud à tous ses ancêtres
-    for (const closure of parentClosures) {
+    for (const cp of parentClosures) {
       await closure.create({
-        ancestor_id: closure.ancestor_id,
+        ancestor_id: cp.ancestor_id,
         descendant_id: testNode.id,
-        depth: closure.depth + 1
+        depth: cp.depth + 1
       }, { transaction });
     }
     

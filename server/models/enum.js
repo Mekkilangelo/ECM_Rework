@@ -1,6 +1,8 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Enum = sequelize.define('enum', {
-    // Modèle virtuel, pas de colonnes réelles
+    // Modèle virtuel pour la gestion des énumérations
   }, {
     tableName: 'enums',
     timestamps: false,
@@ -10,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
   // Récupérer toutes les colonnes ENUM de la base de données
   Enum.getAllEnums = async function() {
     try {
-      // Requête pour récupérer toutes les colonnes ENUM dans la base de données
+      // Requête pour récupérer les colonnes ENUM
       const query = `
         SELECT 
           TABLE_NAME AS tableName, 
@@ -27,21 +29,8 @@ module.exports = (sequelize, DataTypes) => {
       
       const [results] = await sequelize.query(query);
       
-      // Formater les résultats pour extraire les valeurs d'énumération
       return results.map(row => {
-        const enumString = row.enumType;
-        let enumValues = [];
-        
-        if (enumString && enumString.startsWith('enum(')) {
-          // Extraction des valeurs entre enum( et )
-          const match = enumString.match(/^enum\((.*)\)$/);
-          if (match && match[1]) {
-            // Diviser par virgule, mais pas à l'intérieur des guillemets
-            enumValues = match[1].split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
-              .map(val => val.trim().replace(/^'|'$/g, ''))
-              .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })); // Tri alphabétique
-          }
-        }
+        const enumValues = extractEnumValues(row.enumType);
         
         return {
           tableName: row.tableName,
@@ -50,15 +39,14 @@ module.exports = (sequelize, DataTypes) => {
         };
       });
     } catch (error) {
-      console.error('Erreur lors de la récupération de tous les ENUMs:', error);
+      console.error('Error retrieving all ENUMs:', error);
       throw error;
     }
   };
 
-  // Récupérer toutes les colonnes ENUM d'une table spécifique
+  // Récupérer les ENUM d'une table spécifique
   Enum.getEnumsByTable = async function(tableName) {
     try {
-      // Requête pour récupérer toutes les colonnes ENUM d'une table spécifique
       const query = `
         SELECT 
           COLUMN_NAME AS columnName, 
@@ -77,21 +65,8 @@ module.exports = (sequelize, DataTypes) => {
         replacements: [tableName]
       });
       
-      // Formater les résultats pour extraire les valeurs d'énumération
       return results.map(row => {
-        const enumString = row.enumType;
-        let enumValues = [];
-        
-        if (enumString && enumString.startsWith('enum(')) {
-          // Extraction des valeurs entre enum( et )
-          const match = enumString.match(/^enum\((.*)\)$/);
-          if (match && match[1]) {
-            // Diviser par virgule, mais pas à l'intérieur des guillemets
-            enumValues = match[1].split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
-              .map(val => val.trim().replace(/^'|'$/g, ''))
-              .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })); // Tri alphabétique
-          }
-        }
+        const enumValues = extractEnumValues(row.enumType);
         
         return {
           columnName: row.columnName,
@@ -99,7 +74,7 @@ module.exports = (sequelize, DataTypes) => {
         };
       });
     } catch (error) {
-      console.error(`Erreur lors de la récupération des ENUMs pour la table ${tableName}:`, error);
+      console.error(`Error retrieving ENUMs for table ${tableName}:`, error);
       throw error;
     }
   };
@@ -107,7 +82,6 @@ module.exports = (sequelize, DataTypes) => {
   // Récupérer les valeurs d'une colonne ENUM spécifique
   Enum.getEnumValues = async function(tableName, columnName) {
     try {
-      // Requête pour récupérer une colonne ENUM spécifique
       const query = `
         SELECT 
           COLUMN_TYPE AS enumType
@@ -124,26 +98,13 @@ module.exports = (sequelize, DataTypes) => {
         replacements: [tableName, columnName]
       });
       
-      // Vérifier si la colonne existe et est de type ENUM
       if (!results || results.length === 0) {
         return { 
-          error: `Aucune colonne ENUM trouvée avec le nom ${columnName} dans la table ${tableName}` 
+          error: `No ENUM column found with name ${columnName} in table ${tableName}` 
         };
       }
       
-      const enumString = results[0].enumType;
-      let enumValues = [];
-      
-      if (enumString && enumString.startsWith('enum(')) {
-        // Extraction des valeurs entre enum( et )
-        const match = enumString.match(/^enum\((.*)\)$/);
-        if (match && match[1]) {
-          // Diviser par virgule, mais pas à l'intérieur des guillemets
-          enumValues = match[1].split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
-            .map(val => val.trim().replace(/^'|'$/g, ''))
-            .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })); // Tri alphabétique
-        }
-      }
+      const enumValues = extractEnumValues(results[0].enumType);
       
       return { 
         tableName, 
@@ -151,10 +112,27 @@ module.exports = (sequelize, DataTypes) => {
         values: enumValues 
       };
     } catch (error) {
-      console.error(`Erreur lors de la récupération des valeurs ENUM pour ${tableName}.${columnName}:`, error);
+      console.error(`Error retrieving ENUM values for ${tableName}.${columnName}:`, error);
       throw error;
     }
   };
+
+  // Fonction utilitaire pour extraire les valeurs d'énumération
+  function extractEnumValues(enumString) {
+    let enumValues = [];
+    
+    if (enumString && enumString.startsWith('enum(')) {
+      const match = enumString.match(/^enum\((.*)\)$/);
+      if (match && match[1]) {
+        // Extraction compatible entre Windows et Linux
+        enumValues = match[1].split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
+          .map(val => val.trim().replace(/^'|'$/g, ''))
+          .sort();
+      }
+    }
+    
+    return enumValues;
+  }
 
   return Enum;
 };

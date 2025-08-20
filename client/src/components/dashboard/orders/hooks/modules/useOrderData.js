@@ -28,15 +28,15 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
           // Vérification et extraction des contacts avec gestion des différentes structures possibles
           console.log("Extraction des contacts...");
           
-          // Cas 1: Structure orderData.Order?.contacts
-          if (orderData.Order?.contacts) {
-            console.log("Contacts trouvés dans orderData.Order.contacts");
+          // Cas 1: Structure orderData.order?.contacts
+          if (orderData.order?.contacts) {
+            console.log("Contacts trouvés dans orderData.order.contacts");
             try {
-              if (typeof orderData.Order.contacts === 'string') {
-                contacts = JSON.parse(orderData.Order.contacts);
+              if (typeof orderData.order.contacts === 'string') {
+                contacts = JSON.parse(orderData.order.contacts);
                 console.log("Contacts parsés depuis JSON string:", contacts);
-              } else if (Array.isArray(orderData.Order.contacts)) {
-                contacts = orderData.Order.contacts;
+              } else if (Array.isArray(orderData.order.contacts)) {
+                contacts = orderData.order.contacts;
                 console.log("Contacts extraits directement depuis tableau:", contacts);
               }
             } catch (e) {
@@ -69,9 +69,9 @@ const useOrderData = (order, setFormData, setMessage, setFetchingOrder, setParen
             // Construction du nouvel état du formulaire en normalisant la structure
           // Après la refactorisation, nous devons normaliser les données pour la comparaison
           const normalizedData = {
-            // Essayer d'abord orderData.Order.*, puis orderData.* 
-            order_date: orderData.Order?.order_date || orderData.order_date || '',
-            commercial: orderData.Order?.commercial || orderData.commercial || '',
+            // Essayer d'abord orderData.order.*, puis orderData.* 
+            order_date: orderData.order?.order_date || orderData.order_date || '',
+            commercial: orderData.order?.commercial || orderData.commercial || '',
             // La description est habituellement au niveau du nœud parent (orderData)
             description: orderData.description || '',
             contacts: contacts

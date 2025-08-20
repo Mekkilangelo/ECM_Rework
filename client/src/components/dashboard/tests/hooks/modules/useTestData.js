@@ -37,7 +37,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           // Récupération des données du test avec la méthode refactorisée
           const testData = await testService.getTest(test.id);
             // Check if data is in the Test property or directly in testData
-          const data = testData.Test || testData;
+          const data = testData.test || testData;
           
           // Parse JSON strings if necessary
           const furnaceData = typeof data.furnace_data === 'string' 

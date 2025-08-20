@@ -73,7 +73,10 @@ module.exports = (sequelize) => {
   });
 
   Test.associate = function(models) {
-    Test.belongsTo(models.node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Test.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Test;

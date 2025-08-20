@@ -41,7 +41,10 @@ module.exports = (sequelize) => {
   });
 
   Steel.associate = function(models) {
-    Steel.belongsTo(models.node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Steel.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Steel;

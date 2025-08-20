@@ -97,29 +97,29 @@ const PartList = ({ orderId }) => {
       key: 'Part.client_designation',
       label: t('parts.clientDesignation'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.client_designation || "-",
-      sortValue: (part) => part.Part?.client_designation || ''
+      render: (part) => part.part?.client_designation || "-",
+      sortValue: (part) => part.part?.client_designation || ''
     },
     {
       key: 'Part.reference',
       label: t('parts.reference'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.reference || "-",
-      sortValue: (part) => part.Part?.reference || ''
+      render: (part) => part.part?.reference || "-",
+      sortValue: (part) => part.part?.reference || ''
     },
     {
       key: 'Part.steel',
       label: t('parts.steel.title'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.steel || "-",
-      sortValue: (part) => part.Part?.steel || ''
+      render: (part) => part.part?.steel || "-",
+      sortValue: (part) => part.part?.steel || ''
     },
     {
       key: 'Part.quantity',
       label: t('parts.quantity'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.quantity || "-",
-      sortValue: (part) => parseInt(part.Part?.quantity) || 0
+      render: (part) => part.part?.quantity || "-",
+      sortValue: (part) => parseInt(part.part?.quantity) || 0
     },
     {
       key: 'modified_at',

@@ -107,21 +107,21 @@ const OrderList = () => {
       key: 'Order.commercial',
       label: t('orders.commercial'),
       cellClassName: 'text-center',
-      render: (order) => order.Order?.commercial || "-",
-      sortValue: (order) => order.Order?.commercial || ''
+      render: (order) => order.order?.commercial || "-",
+      sortValue: (order) => order.order?.commercial || ''
     },
     {
       key: 'Order.order_date',
       label: t('orders.date'),
       cellClassName: 'text-center',
-      render: (order) => order.Order?.order_date
-        ? new Date(order.Order?.order_date).toLocaleString('fr-FR', {
+      render: (order) => order.order?.order_date
+        ? new Date(order.order?.order_date).toLocaleString('fr-FR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric'
         })
         : t('common.unknown'),
-      sortValue: (order) => order.Order?.order_date ? new Date(order.Order?.order_date).getTime() : 0
+      sortValue: (order) => order.order?.order_date ? new Date(order.order?.order_date).getTime() : 0
     },
     {
       key: 'modified_at',

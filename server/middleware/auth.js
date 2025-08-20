@@ -13,7 +13,7 @@
 
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const { User } = require('../models');
+const { user } = require('../models');
 const { parseJwtTime } = require('../config/auth');
 
 // Configuration des paramètres d'authentification
@@ -109,9 +109,9 @@ const authenticate = async (req, res, next) => {
     
     // Récupère l'utilisateur depuis la base de données pour confirmer son existence
     // et récupérer ses informations à jour (rôle, statut, etc.)
-    const user = await User.findByPk(decoded.id);
+    const foundUser = await user.findByPk(decoded.id);
 
-    if (!user) {
+    if (!foundUser) {
       return res.status(401).json({ 
         success: false, 
         message: 'Utilisateur non trouvé' 
@@ -121,9 +121,9 @@ const authenticate = async (req, res, next) => {
     // Ajoute l'utilisateur authentifié à l'objet requête
     // Ces données seront disponibles pour tous les middlewares suivants
     req.user = {
-      id: user.id,
-      username: user.username,
-      role: user.role
+      id: foundUser.id,
+      username: foundUser.username,
+      role: foundUser.role
     };
 
     // Passe au middleware suivant
@@ -234,9 +234,9 @@ const validateRefreshToken = async (req, res, next) => {
     }
     
     // Vérifie que l'utilisateur existe toujours dans la base de données
-    const user = await User.findByPk(decoded.id);
+    const foundUser = await user.findByPk(decoded.id);
     
-    if (!user) {
+    if (!foundUser) {
       return res.status(401).json({ 
         success: false, 
         message: 'Utilisateur non trouvé' 
@@ -245,9 +245,9 @@ const validateRefreshToken = async (req, res, next) => {
 
     // Ajoute l'utilisateur authentifié à l'objet requête
     req.user = {
-      id: user.id,
-      username: user.username,
-      role: user.role
+      id: foundUser.id,
+      username: foundUser.username,
+      role: foundUser.role
     };
     
     // Ajoute le token décodé pour permettre au contrôleur

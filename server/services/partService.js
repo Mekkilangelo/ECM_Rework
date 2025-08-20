@@ -3,8 +3,7 @@
  * Contient la logique métier relative aux pièces
  */
 
-const { node: Node, part: Part, closure: Closure } = require('../models');
-const { sequelize } = require('../models');
+const { node, part, closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
@@ -103,7 +102,7 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
   
   // Si un parent_id est fourni, rechercher les pièces associées à cette commande
   if (parent_id) {
-    const orderDescendants = await Closure.findAll({
+    const orderDescendants = await closure.findAll({
       where: { ancestor_id: parent_id },
       attributes: ['descendant_id']
     });
@@ -118,10 +117,10 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
   const getOrderClause = (sortBy, sortOrder) => {
     const sortMapping = {
       'name': ['name', sortOrder],
-      'client_designation': [{ model: Part }, 'client_designation', sortOrder],
-      'reference': [{ model: Part }, 'reference', sortOrder],
-      'steel': [{ model: Part }, 'steel', sortOrder],
-      'quantity': [{ model: Part }, 'quantity', sortOrder],
+      'client_designation': [{ model: part }, 'client_designation', sortOrder],
+      'reference': [{ model: part }, 'reference', sortOrder],
+      'steel': [{ model: part }, 'steel', sortOrder],
+      'quantity': [{ model: part }, 'quantity', sortOrder],
       'modified_at': ['modified_at', sortOrder],
       'created_at': ['created_at', sortOrder]
     };
@@ -129,10 +128,10 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
     return sortMapping[sortBy] || ['modified_at', 'DESC'];
   };
   
-  const parts = await Node.findAll({
+  const parts = await node.findAll({
     where: whereCondition,
     include: [{
-      model: Part,
+      model: part,
       attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference', 'quantity']
     }],
     order: [getOrderClause(sortBy, sortOrder)],
@@ -140,7 +139,7 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
     offset: parseInt(offset)
   });
   
-  const total = await Node.count({
+  const total = await node.count({
     where: whereCondition
   });
     // Transformer chaque pièce avec notre fonction de formatage
@@ -163,19 +162,19 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
  * @returns {Object} Détails de la pièce
  */
 const getPartById = async (partId) => {
-  const part = await Node.findOne({
+  const partNode = await node.findOne({
     where: { id: partId, type: 'part' },
     include: [{
-      model: Part,
+      model: part,
       attributes: { exclude: ['node_id'] }
     }]
   });
   
-  if (!part) {
+  if (!partNode) {
     throw new NotFoundError('Pièce non trouvée');
   }
   
-  return formatPartResponse(part);
+  return formatPartResponse(partNode);
 };
 
 /**
@@ -230,7 +229,7 @@ const createPart = async (partData) => {
   }
   
   // Vérifier si le parent existe et est une commande
-  const parentNode = await Node.findByPk(parent_id);
+  const parentNode = await node.findByPk(parent_id);
   if (!parentNode) {
     throw new NotFoundError('Node parent non trouvé');
   }
@@ -242,7 +241,7 @@ const createPart = async (partData) => {
   // Créer la pièce dans une transaction
   const result = await sequelize.transaction(async (t) => {
     // Créer le nœud
-    const newNode = await Node.create({
+    const newNode = await node.create({
       name,
       path: `${parentNode.path}/${name}`,
       type: 'part',
@@ -253,7 +252,7 @@ const createPart = async (partData) => {
       description
     }, { transaction: t });
       // Créer les données de la pièce
-    await Part.create({
+    await part.create({
       node_id: newNode.id,
       designation,
       dimensions: formattedDimensions,
@@ -265,20 +264,20 @@ const createPart = async (partData) => {
     }, { transaction: t });
     
     // Créer l'entrée de fermeture (auto-relation)
-    await Closure.create({
+    await closure.create({
       ancestor_id: newNode.id,
       descendant_id: newNode.id,
       depth: 0
     }, { transaction: t });
     
     // Créer les relations de fermeture avec les ancêtres
-    const parentClosures = await Closure.findAll({
+    const parentClosures = await closure.findAll({
       where: { descendant_id: parent_id },
       transaction: t
     });
     
     for (const pc of parentClosures) {
-      await Closure.create({
+      await closure.create({
         ancestor_id: pc.ancestor_id,
         descendant_id: newNode.id,
         depth: pc.depth + 1
@@ -343,24 +342,24 @@ const updatePart = async (partId, partData) => {
     });
   }
   
-  const node = await Node.findOne({
+  const partNode = await node.findOne({
     where: { id: partId, type: 'part' },
     include: [{
-      model: Part
+      model: part
     }]
   });
   
-  if (!node) {
+  if (!partNode) {
     throw new NotFoundError('Pièce non trouvée');
   }
   
   await sequelize.transaction(async (t) => {
     // Mettre à jour le nœud
     if (name) {
-      const oldPath = node.path;
+      const oldPath = partNode.path;
       const newPath = oldPath.substring(0, oldPath.lastIndexOf('/') + 1) + name;
       
-      await node.update({
+      await partNode.update({
         name,
         path: newPath,
         modified_at: new Date(),
@@ -368,8 +367,8 @@ const updatePart = async (partId, partData) => {
       }, { transaction: t });
       
       // Si le nom a changé, mettre à jour les chemins des descendants
-      if (name !== node.name) {
-        const descendants = await Closure.findAll({
+      if (name !== partNode.name) {
+        const descendants = await closure.findAll({
           where: { 
             ancestor_id: partId,
             depth: { [Op.gt]: 0 }
@@ -378,14 +377,14 @@ const updatePart = async (partId, partData) => {
         });
         
         for (const relation of descendants) {
-          const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
+          const descendant = await node.findByPk(relation.descendant_id, { transaction: t });
           const descendantPath = descendant.path.replace(oldPath, newPath);
           await descendant.update({ path: descendantPath }, { transaction: t });
         }
       }
     } else {
       // Juste mettre à jour la date de modification
-      await node.update({
+      await partNode.update({
         modified_at: new Date(),
         description
       }, { transaction: t });
@@ -401,7 +400,7 @@ const updatePart = async (partId, partData) => {
     if (quantity !== undefined) partUpdateData.quantity = quantity;
     
     if (Object.keys(partUpdateData).length > 0) {
-      await Part.update(partUpdateData, {
+      await part.update(partUpdateData, {
         where: { node_id: partId },
         transaction: t
       });
@@ -429,21 +428,21 @@ const deletePart = async (partId) => {
   
   try {
     // 1. Vérifier que la pièce existe
-    const part = await Node.findOne({
+    const partNode = await node.findOne({
       where: { id: partId, type: 'part' },
       transaction: t
     });
     
-    if (!part) {
+    if (!partNode) {
       await t.rollback();
       throw new NotFoundError('Pièce non trouvée');
     }
 
     // Stocker le chemin physique de la pièce pour la suppression
-    const partPhysicalPath = part.path;
+    const partPhysicalPath = partNode.path;
     
     // 2. Trouver tous les descendants dans la table closure
-    const closureEntries = await Closure.findAll({
+    const closureEntries = await closure.findAll({
       where: { ancestor_id: partId },
       transaction: t
     });
@@ -454,7 +453,7 @@ const deletePart = async (partId) => {
     
     // 3. Supprimer toutes les entrées de fermeture associées aux descendants
     // Supprimer d'abord où ils sont descendants ou ancêtres
-    await Closure.destroy({
+    await closure.destroy({
       where: {
         [Op.or]: [
           { descendant_id: { [Op.in]: Array.from(descendantIds) } },
@@ -465,7 +464,7 @@ const deletePart = async (partId) => {
     });
     
     // 4. Maintenant, supprimer tous les nœuds descendants
-    await Node.destroy({
+    await node.destroy({
       where: {
         id: { [Op.in]: Array.from(descendantIds) }
       },

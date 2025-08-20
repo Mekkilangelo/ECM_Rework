@@ -4,7 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { user } = require('../models');
 const { generateToken, verifyPassword, hashPassword, refreshToken } = require('../config/auth');
 const config = require('../config/config');
 const logger = require('../utils/logger');
@@ -28,8 +28,8 @@ const login = async (req, res, next) => {
     logger.info(`Tentative de connexion pour l'utilisateur: ${username}`);
 
     // Vérifier si l'utilisateur existe
-    const user = await User.findOne({ where: { username } });
-      if (!user || !(await verifyPassword(password, user.password_hash))) {
+    const userRecord = await user.findOne({ where: { username } });
+      if (!userRecord || !(await verifyPassword(password, userRecord.password_hash))) {
       // Délai pour contrer les attaques par force brute
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -49,12 +49,12 @@ const login = async (req, res, next) => {
     // Note: last_login field removed as it doesn't exist in the database
     
     // Générer un token JWT
-    const token = generateToken(user);
+    const token = generateToken(userRecord);
     
-    logger.info(`Successful login for user: ${username}`, { userId: user.id });
+    logger.info(`Successful login for user: ${username}`, { userId: userRecord.id });
 
     // Log successful login
-    await loggingService.logUserLogin(user.id, username, true, {
+    await loggingService.logUserLogin(userRecord.id, username, true, {
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
       sessionId: req.session?.id,
@@ -68,9 +68,9 @@ const login = async (req, res, next) => {
     return apiResponse.success(res, {
       token,
       user: {
-        id: user.id,
-        username: user.username,
-        role: user.role
+        id: userRecord.id,
+        username: userRecord.username,
+        role: userRecord.role
       }
     }, 'Authentification réussie');
   } catch (error) {
@@ -88,15 +88,15 @@ const login = async (req, res, next) => {
  * @returns {Object} Informations de l'utilisateur
  */
 const getMe = async (req, res, next) => {  try {
-    const user = await User.findByPk(req.user.id, {
+    const userRecord = await user.findByPk(req.user.id, {
       attributes: ['id', 'username', 'role', 'created_at']
     });
 
-    if (!user) {
+    if (!userRecord) {
       throw new NotFoundError('Utilisateur non trouvé');
     }
 
-    return apiResponse.success(res, user, 'Informations utilisateur récupérées avec succès');
+    return apiResponse.success(res, userRecord, 'Informations utilisateur récupérées avec succès');
   } catch (error) {
     logger.error(`Erreur lors de la récupération des informations utilisateur: ${error.message}`, error);
     next(error);

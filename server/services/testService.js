@@ -3,9 +3,7 @@
  * Contient la logique métier liée aux opérations sur les tests
  */
 
-const { node: Node, test: Test, closure: Closure, part: Part, client: Client, file: File } = require('../models');
-const db = require('../models');
-const { sequelize } = require('../models');
+const { node, test, closure, part, client, file, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { validateTestData } = require('../utils/validators');
 const { 
@@ -49,9 +47,9 @@ const getAllTests = async (options = {}) => {
   const getOrderClause = (sortBy, sortOrder) => {
     const sortMapping = {
       'name': ['name', sortOrder],
-      'load_number': [{ model: Test }, 'load_number', sortOrder],
-      'test_date': [{ model: Test }, 'test_date', sortOrder],
-      'location': [{ model: Test }, 'location', sortOrder],
+      'load_number': [{ model: test }, 'load_number', sortOrder],
+      'test_date': [{ model: test }, 'test_date', sortOrder],
+      'location': [{ model: test }, 'location', sortOrder],
       'modified_at': ['modified_at', sortOrder],
       'created_at': ['created_at', sortOrder]
     };
@@ -60,10 +58,10 @@ const getAllTests = async (options = {}) => {
   };
     
     // Exécuter la requête
-  const tests = await Node.findAll({
+  const tests = await node.findAll({
     where: whereCondition,
     include: [{
-      model: Test,
+      model: test,
       attributes: ['test_code', 'load_number', 'test_date', 'status', 'location']
     }],
     order: [getOrderClause(sortBy, sortOrder)],
@@ -72,7 +70,7 @@ const getAllTests = async (options = {}) => {
   });
   
   // Compter le total pour la pagination
-  const total = await Node.count({
+  const total = await node.count({
     where: whereCondition
   });
   
@@ -92,34 +90,34 @@ const getAllTests = async (options = {}) => {
  * @returns {Promise<Object>} Détails du test
  */
 const getTestById = async (testId) => {
-  const test = await Node.findOne({
+  const testNode = await node.findOne({
     where: { id: testId, type: 'test' },
     include: [{
-      model: Test,
+      model: test,
       attributes: { exclude: ['node_id'] }
     }]
   });
   
-  if (!test) {
+  if (!testNode) {
     throw new NotFoundError('Test non trouvé');
   }
   
   // Fusionner les données du nœud et du test pour simplifier le traitement côté client
   const testData = {
-    id: test.id,
-    name: test.name,
-    path: test.path,
-    type: test.type,
-    parent_id: test.parent_id,
-    created_at: test.created_at,
-    modified_at: test.modified_at,
-    data_status: test.data_status,
-    description: test.description
+    id: testNode.id,
+    name: testNode.name,
+    path: testNode.path,
+    type: testNode.type,
+    parent_id: testNode.parent_id,
+    created_at: testNode.created_at,
+    modified_at: testNode.modified_at,
+    data_status: testNode.data_status,
+    description: testNode.description
   };
   
   // Ajouter les propriétés du test si elles existent
-  if (test.Test) {
-    Object.assign(testData, test.Test.dataValues);
+  if (testNode.Test) {
+    Object.assign(testData, testNode.Test.dataValues);
   }
   
   return testData;
@@ -149,16 +147,16 @@ const getTestSpecs = async (testId, parent_id) => {
     logger.info(`Recherche de test avec les critères:`, whereClause);
     
     // Rechercher le test avec ces critères
-    const test = await Node.findOne({
+    const testNode = await node.findOne({
       where: whereClause,
       include: [{
-        model: Test,
+        model: test,
         attributes: { exclude: ['node_id'] }
       }]
     });
     
     // Si le test n'existe pas, retourner une erreur
-    if (!test) {
+    if (!testNode) {
       logger.warn(`Test non trouvé avec ID ${testId} et parent_id ${parent_id || 'non spécifié'}`);
       throw new NotFoundError('Test non trouvé');
     }
@@ -167,7 +165,7 @@ const getTestSpecs = async (testId, parent_id) => {
     
     if (parent_id && parent_id !== 'undefined' && parent_id !== 'null') {
       // Rechercher le nœud parent et ses spécifications
-      const parentNode = await Node.findOne({
+      const parentNode = await node.findOne({
         where: { 
           id: parent_id,
           type: 'part'  // S'assurer que c'est une pièce
@@ -192,8 +190,8 @@ const getTestSpecs = async (testId, parent_id) => {
     }
     
     const result = {
-      testId: test.id,
-      testName: test.name,
+      testId: testNode.id,
+      testName: testNode.name,
       specifications: specifications
     };
     
@@ -230,7 +228,7 @@ const createTest = async (testData) => {
   } = testData;
   
   // Vérifier si le parent existe
-  const parentNode = await Node.findByPk(parent_id);
+  const parentNode = await node.findByPk(parent_id);
   if (!parentNode) {
     throw new NotFoundError('Nœud parent introuvable');
   }
@@ -239,7 +237,7 @@ const createTest = async (testData) => {
   
   try {
     // Créer d'abord le nœud de test pour obtenir l'ID
-    const testNode = await Node.create({
+    const testNode = await node.create({
       name: 'temp', // Nom temporaire, sera mis à jour ci-dessous
       path: 'temp', // Chemin temporaire, sera mis à jour ci-dessous
       type: 'test',
@@ -270,7 +268,7 @@ const createTest = async (testData) => {
     const testCodeToUse = test_code || `TRIAL_${testNode.id}`;
     
     // Créer l'enregistrement de test
-    const testRecord = await Test.create({
+    const testRecord = await test.create({
       node_id: testNode.id,
       test_code: testCodeToUse,
       load_number,
@@ -281,21 +279,21 @@ const createTest = async (testData) => {
     }, { transaction });
     
     // Créer les enregistrements de fermeture (closure table)
-    await Closure.create({
+    await closure.create({
       ancestor_id: testNode.id,
       descendant_id: testNode.id,
       depth: 0
     }, { transaction });
     
     // Récupérer tous les ancêtres du parent
-    const parentClosures = await Closure.findAll({
+    const parentClosures = await closure.findAll({
       where: { descendant_id: parent_id },
       transaction
     });
     
     // Créer les fermetures pour relier le nœud à tous ses ancêtres
     for (const closure of parentClosures) {
-      await Closure.create({
+      await closure.create({
         ancestor_id: closure.ancestor_id,
         descendant_id: testNode.id,
         depth: closure.depth + 1
@@ -327,9 +325,9 @@ const createTest = async (testData) => {
  */
 const updateTest = async (testId, testData) => {
   // Récupérer le test existant
-  const testNode = await Node.findOne({
+  const testNode = await node.findOne({
     where: { id: testId, type: 'test' },
-    include: [{ model: Test }]
+    include: [{ model: test }]
   });
   
   if (!testNode) {
@@ -346,8 +344,8 @@ const updateTest = async (testId, testData) => {
     // Si le load_number change, mettre à jour automatiquement le nom
     if (testData.load_number !== undefined) {
       const currentName = testNode.name;
-      const currentTestCode = testNode.Test ? testNode.Test.test_code : null;
-      const currentLoadNumber = testNode.Test ? testNode.Test.load_number : null;
+      const currentTestCode = testNode.test ? testNode.test.test_code : null;
+      const currentLoadNumber = testNode.test ? testNode.test.load_number : null;
       
       // Détecter si le nom actuel est auto-généré (soit test_code, soit ancien load_number, soit TRIAL_X)
       const isAutoGeneratedName = currentName === currentTestCode || 
@@ -423,7 +421,7 @@ const updateTest = async (testId, testData) => {
     }
     
     if (Object.keys(testUpdates).length > 0) {
-      await testNode.Test.update(testUpdates, { transaction });
+      await testNode.test.update(testUpdates, { transaction });
     }
     
     // Valider la transaction
@@ -450,7 +448,7 @@ const updateTest = async (testId, testData) => {
  */
 const deleteTest = async (testId) => {
   // Récupérer le test
-  const testNode = await Node.findOne({
+  const testNode = await node.findOne({
     where: { id: testId, type: 'test' }
   });
   
@@ -462,7 +460,7 @@ const deleteTest = async (testId) => {
   const testPhysicalPath = testNode.path;
   
   // Récupérer tous les descendants de ce test
-  const descendants = await Closure.findAll({
+  const descendants = await closure.findAll({
     where: { ancestor_id: testId },
     order: [['depth', 'DESC']] // Important: supprimer les plus profonds d'abord
   });
@@ -476,7 +474,7 @@ const deleteTest = async (testId) => {
     const descendantIds = descendants.map(desc => desc.descendant_id);
     
     // Supprimer toutes les relations de fermeture où un descendant est impliqué
-    await Closure.destroy({
+    await closure.destroy({
       where: {
         [Op.or]: [
           { ancestor_id: { [Op.in]: descendantIds } },
@@ -488,9 +486,9 @@ const deleteTest = async (testId) => {
     
     // 2. Ensuite supprimer les données spécifiques aux tests pour tous les descendants
     for (const desc of descendants) {
-      const nodeToDelete = await Node.findByPk(desc.descendant_id, { transaction });
+      const nodeToDelete = await node.findByPk(desc.descendant_id, { transaction });
       if (nodeToDelete && nodeToDelete.type === 'test') {
-        await Test.destroy({
+        await test.destroy({
           where: { node_id: nodeToDelete.id },
           transaction
         });
@@ -499,7 +497,7 @@ const deleteTest = async (testId) => {
     
     // 3. Enfin supprimer tous les nœuds descendants
     for (const desc of descendants) {
-      await Node.destroy({
+      await node.destroy({
         where: { id: desc.descendant_id },
         transaction
       });
@@ -541,14 +539,14 @@ const deleteTest = async (testId) => {
 const getTestReportData = async (testId, sections = []) => {
   try {
     // Rechercher le test avec toutes les données nécessaires
-    const test = await Node.findOne({
+    const testNode = await node.findOne({
       where: { id: testId, type: 'test' },
       include: [{
-        model: Test
+        model: test
       }]
     });
     
-    if (!test) {
+    if (!testNode) {
       throw new NotFoundError('Test non trouvé');
     }
 
@@ -565,7 +563,7 @@ const getTestReportData = async (testId, sections = []) => {
     
     try {
       // Rechercher le nœud parent pièce en utilisant la table Closure
-      const partClosures = await Closure.findAll({
+      const partClosures = await closure.findAll({
         where: { 
           descendant_id: testId,
           depth: { [Op.gt]: 0 } // Exclure la relation avec soi-même
@@ -575,7 +573,7 @@ const getTestReportData = async (testId, sections = []) => {
       // Trouver le parent direct (pièce)
       let partId = null;
       for (const closure of partClosures) {
-        const ancestorNode = await Node.findByPk(closure.ancestor_id);
+        const ancestorNode = await node.findByPk(closure.ancestor_id);
         if (ancestorNode && ancestorNode.type === 'part') {
           partId = ancestorNode.id;
           break;
@@ -583,15 +581,15 @@ const getTestReportData = async (testId, sections = []) => {
       }
 
       if (partId) {
-        partNode = await Node.findOne({
+        partNode = await node.findOne({
           where: { id: partId, type: 'part' },
           include: [{
-            model: Part
+            model: part
           }]
         });
 
         // Rechercher le client parent de la pièce
-        const clientClosures = await Closure.findAll({
+        const clientClosures = await closure.findAll({
           where: { 
             descendant_id: partId,
             depth: { [Op.gt]: 0 }
@@ -599,12 +597,12 @@ const getTestReportData = async (testId, sections = []) => {
         });
 
         for (const closure of clientClosures) {
-          const ancestorNode = await Node.findByPk(closure.ancestor_id);
+          const ancestorNode = await node.findByPk(closure.ancestor_id);
           if (ancestorNode && ancestorNode.type === 'client') {
-            clientNode = await Node.findOne({
+            clientNode = await node.findOne({
               where: { id: ancestorNode.id, type: 'client' },
               include: [{
-                model: Client
+                model: client
               }]
             });
             break;
@@ -615,16 +613,16 @@ const getTestReportData = async (testId, sections = []) => {
       logger.warn(`Impossible de récupérer la hiérarchie pour le test #${testId}: ${hierarchyError.message}`);
     }    // Préparer les données selon les sections demandées
     const reportData = {
-      testId: test.id,
-      testName: test.name,
-      testDate: test.Test ? test.Test.test_date : null,
-      testCode: test.Test ? test.Test.test_code : null,
+      testId: testNode.id,
+      testName: testNode.name,
+      testDate: testNode.Test ? testNode.Test.test_date : null,
+      testCode: testNode.Test ? testNode.Test.test_code : null,
       // Ajouter toutes les données du test
-      loadNumber: test.Test ? test.Test.load_number : null,
-      status: test.Test ? test.Test.status : null,      location: test.Test ? test.Test.location : null,
-      furnaceData: test.Test ? (() => {
+      loadNumber: testNode.Test ? testNode.Test.load_number : null,
+      status: testNode.Test ? testNode.Test.status : null,      location: testNode.Test ? testNode.Test.location : null,
+      furnaceData: testNode.Test ? (() => {
         try {
-          let furnaceData = test.Test.furnace_data;
+          let furnaceData = testNode.Test.furnace_data;
           logger.info(`Raw furnace_data pour test #${testId}:`, furnaceData);
           logger.info(`Type de furnace_data:`, typeof furnaceData);
           
@@ -727,21 +725,21 @@ const getTestReportData = async (testId, sections = []) => {
       part: partNode ? {
         id: partNode.id,
         name: partNode.name,
-        designation: partNode.Part ? partNode.Part.designation : null,
-        client_designation: partNode.Part ? partNode.Part.client_designation : null,
-        reference: partNode.Part ? partNode.Part.reference : null,
-        quantity: partNode.Part ? partNode.Part.quantity : null,
-        steel: partNode.Part ? partNode.Part.steel : null,
-        material: partNode.Part ? partNode.Part.material : null,
-        specifications: partNode.Part && partNode.Part.specifications ? 
+        designation: partNode.part ? partNode.part.designation : null,
+        client_designation: partNode.part ? partNode.part.client_designation : null,
+        reference: partNode.part ? partNode.part.reference : null,
+        quantity: partNode.part ? partNode.part.quantity : null,
+        steel: partNode.part ? partNode.part.steel : null,
+        material: partNode.part ? partNode.part.material : null,
+        specifications: partNode.part && partNode.part.specifications ? 
           (() => {
             try {
               let specs = null;
-              if (typeof partNode.Part.specifications === 'string') {
-                specs = JSON.parse(partNode.Part.specifications);
+              if (typeof partNode.part.specifications === 'string') {
+                specs = JSON.parse(partNode.part.specifications);
                 logger.info(`Spécifications parsées avec succès pour la pièce #${partNode.id}`);
-              } else if (typeof partNode.Part.specifications === 'object') {
-                specs = partNode.Part.specifications;
+              } else if (typeof partNode.part.specifications === 'object') {
+                specs = partNode.part.specifications;
                 logger.info(`Spécifications déjà sous forme d'objet pour la pièce #${partNode.id}`);
               }
               

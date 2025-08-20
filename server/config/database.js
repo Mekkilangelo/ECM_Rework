@@ -1,5 +1,3 @@
-const { sequelize } = require('../models');
-
 /**
  * Configuration de la connexion à la base de données
  */
@@ -17,13 +15,13 @@ const config = {
     multipleStatements: true,
     decimalNumbers: true
   },
-  logging: true
+  logging: process.env.NODE_ENV === 'development'
 };
 
 // Test de la connexion à la base de données
 const testConnection = async () => {
   const { Sequelize } = require('sequelize');
-  const sequelize = new Sequelize(
+  const testSequelize = new Sequelize(
     config.database,
     config.username,
     config.password,
@@ -35,15 +33,18 @@ const testConnection = async () => {
   );
   
   try {
-    await sequelize.authenticate();
+    await testSequelize.authenticate();
     console.log('Connexion à la base de données établie avec succès.');
+    return true;
   } catch (error) {
     console.error('Impossible de se connecter à la base de données:', error);
+    return false;
+  } finally {
+    await testSequelize.close();
   }
 };
 
 module.exports = {
-  sequelize,
-  ...config,
+  config,
   testConnection
 };

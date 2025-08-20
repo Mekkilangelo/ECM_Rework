@@ -3,8 +3,7 @@
  * Contient la logique métier relative aux clients
  */
 
-const { node: Node, client: Client, closure: Closure } = require('../models');
-const { sequelize } = require('../models');
+const { node, client, closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
@@ -48,9 +47,9 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
   const getOrderClause = (sortBy, sortOrder) => {
     const sortMapping = {
       'name': ['name', sortOrder],
-      'client_group': [{ model: Client }, 'client_group', sortOrder],
-      'country': [{ model: Client }, 'country', sortOrder],
-      'city': [{ model: Client }, 'city', sortOrder],
+      'client_group': [{ model: client }, 'client_group', sortOrder],
+      'country': [{ model: client }, 'country', sortOrder],
+      'city': [{ model: client }, 'city', sortOrder],
       'modified_at': ['modified_at', sortOrder],
       'created_at': ['created_at', sortOrder]
     };
@@ -58,10 +57,10 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
     return sortMapping[sortBy] || ['modified_at', 'DESC'];
   };
   
-  const clients = await Node.findAll({
+  const clients = await node.findAll({
     where: whereClause,
     include: [{
-      model: Client,
+      model: client,
       attributes: ['client_code', 'country', 'city', 'client_group', 'address']
     }],
     order: [getOrderClause(sortBy, sortOrder)],
@@ -69,7 +68,7 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
     offset: parseInt(offset)
   });
   
-  const total = await Node.count({
+  const total = await node.count({
     where: whereClause
   });
   
@@ -90,19 +89,19 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
  * @returns {Object} Détails du client
  */
 const getClientById = async (clientId) => {
-  const client = await Node.findOne({
+  const foundClient = await node.findOne({
     where: { id: clientId, type: 'client' },
     include: [{
-      model: Client,
+      model: client,
       attributes: { exclude: ['node_id'] }
     }]
   });
   
-  if (!client) {
+  if (!foundClient) {
     throw new NotFoundError('Client non trouvé');
   }
   
-  return client;
+  return foundClient;
 };
 
 /**
@@ -120,7 +119,7 @@ const createClient = async (clientData) => {
   }
   
   // Vérifier si un client avec ce nom existe déjà
-  const existingClient = await Node.findOne({
+  const existingClient = await node.findOne({
     where: { 
       name,
       type: 'client'
@@ -134,7 +133,7 @@ const createClient = async (clientData) => {
   // Créer le client dans une transaction
   const result = await sequelize.transaction(async (t) => {
     // Créer le nœud
-    const newNode = await Node.create({
+    const newNode = await node.create({
       name,
       path: `/${name}`,
       type: 'client',
@@ -149,7 +148,7 @@ const createClient = async (clientData) => {
     const client_code = `CLI_${newNode.id}`;
     
     // Créer les données du client
-    await Client.create({
+    await client.create({
       node_id: newNode.id,
       client_code,
       country,
@@ -159,7 +158,7 @@ const createClient = async (clientData) => {
     }, { transaction: t });
     
     // Créer l'entrée de fermeture (auto-relation)
-    await Closure.create({
+    await closure.create({
       ancestor_id: newNode.id,
       descendant_id: newNode.id,
       depth: 0
@@ -172,9 +171,9 @@ const createClient = async (clientData) => {
   await updateAncestorsModifiedAt(result.id);
   
   // Récupérer le client complet avec ses données associées
-  const newClient = await Node.findByPk(result.id, {
+  const newClient = await node.findByPk(result.id, {
     include: [{
-      model: Client,
+      model: client,
       attributes: { exclude: ['node_id'] }
     }]
   });
@@ -199,20 +198,20 @@ const updateClient = async (clientId, clientData) => {
     }
   }
   
-  const node = await Node.findOne({
+  const foundNode = await node.findOne({
     where: { id: clientId, type: 'client' },
     include: [{
-      model: Client
+      model: client
     }]
   });
   
-  if (!node) {
+  if (!foundNode) {
     throw new NotFoundError('Client non trouvé');
   }
   
   // Si le code client change, vérifier s'il est déjà utilisé
-  if (client_code && client_code !== node.Client.client_code) {
-    const existingClient = await Client.findOne({
+  if (client_code && client_code !== foundNode.client.client_code) {
+    const existingClient = await client.findOne({
       where: { client_code }
     });
     
@@ -236,11 +235,11 @@ const updateClient = async (clientId, clientData) => {
     
     nodeUpdateData.modified_at = new Date();
     
-    await node.update(nodeUpdateData, { transaction: t });
+    await foundNode.update(nodeUpdateData, { transaction: t });
     
     // Si le nom a changé, mettre à jour les chemins des descendants
-    if (name && name !== node.name) {
-      const descendants = await Closure.findAll({
+    if (name && name !== foundNode.name) {
+      const descendants = await closure.findAll({
         where: { 
           ancestor_id: clientId,
           depth: { [Op.gt]: 0 }
@@ -249,8 +248,8 @@ const updateClient = async (clientId, clientData) => {
       });
       
       for (const relation of descendants) {
-        const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
-        const descendantPath = descendant.path.replace(node.path, `/${name}`);
+        const descendant = await node.findByPk(relation.descendant_id, { transaction: t });
+        const descendantPath = descendant.path.replace(foundNode.path, `/${name}`);
         await descendant.update({ path: descendantPath }, { transaction: t });
       }
     }
@@ -264,7 +263,7 @@ const updateClient = async (clientId, clientData) => {
     if (address !== undefined) clientData.address = address;
     
     if (Object.keys(clientData).length > 0) {
-      await Client.update(clientData, {
+      await client.update(clientData, {
         where: { node_id: clientId },
         transaction: t
       });
@@ -275,9 +274,9 @@ const updateClient = async (clientId, clientData) => {
   await updateAncestorsModifiedAt(clientId);
   
   // Récupérer et renvoyer le client mis à jour
-  const updatedClient = await Node.findByPk(clientId, {
+  const updatedClient = await node.findByPk(clientId, {
     include: [{
-      model: Client,
+      model: client,
       attributes: { exclude: ['node_id'] }
     }]
   });
@@ -296,18 +295,18 @@ const deleteClient = async (clientId) => {
   
   try {
     // 1. Vérifier que le client existe
-    const client = await Node.findOne({
+    const foundClient = await node.findOne({
       where: { id: clientId, type: 'client' },
       transaction: t
     });
     
-    if (!client) {
+    if (!foundClient) {
       await t.rollback();
       throw new NotFoundError('Client non trouvé');
     }
     
     // 2. Trouver tous les descendants dans la table closure
-    const closureEntries = await Closure.findAll({
+    const closureEntries = await closure.findAll({
       where: { ancestor_id: clientId },
       transaction: t
     });
@@ -318,7 +317,7 @@ const deleteClient = async (clientId) => {
     
     // 3. Supprimer toutes les entrées de fermeture associées aux descendants
     // Supprimer d'abord où ils sont descendants ou ancêtres
-    await Closure.destroy({
+    await closure.destroy({
       where: {
         [Op.or]: [
           { descendant_id: { [Op.in]: Array.from(descendantIds) } },
@@ -329,7 +328,7 @@ const deleteClient = async (clientId) => {
     });
     
     // 4. Maintenant, supprimer tous les nœuds descendants
-    await Node.destroy({
+    await node.destroy({
       where: {
         id: { [Op.in]: Array.from(descendantIds) }
       },

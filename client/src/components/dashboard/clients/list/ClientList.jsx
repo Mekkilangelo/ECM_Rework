@@ -104,25 +104,25 @@ const ClientList = ({ onDataChanged }) => {
       sortValue: (client) => client.name || ''
     },
     {
-      key: 'Client.client_group',
+      key: 'client.client_group',
       label: t('clients.group'),
       cellClassName: 'text-center',
-      render: (client) => client.Client?.client_group || "-",
-      sortValue: (client) => client.Client?.client_group || ''
+      render: (client) => client.client?.client_group || "-",
+      sortValue: (client) => client.client?.client_group || ''
     },
     {
-      key: 'Client.country',
+      key: 'client.country',
       label: t('clients.country'),
       cellClassName: 'text-center',
-      render: (client) => client.Client?.country || "-",
-      sortValue: (client) => client.Client?.country || ''
+      render: (client) => client.client?.country || "-",
+      sortValue: (client) => client.client?.country || ''
     },
     {
-      key: 'Client.city',
+      key: 'client.city',
       label: t('clients.city'),
       cellClassName: 'text-center',
-      render: (client) => client.Client?.city || "-",
-      sortValue: (client) => client.Client?.city || ''
+      render: (client) => client.client?.city || "-",
+      sortValue: (client) => client.client?.city || ''
     },
     {
       key: 'modified_at',

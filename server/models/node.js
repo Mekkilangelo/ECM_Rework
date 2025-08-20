@@ -54,22 +54,67 @@ module.exports = (sequelize) => {
       }
     ]
   });
+  
   Node.associate = function(models) {
-    Node.hasMany(models.node, { as: 'children', foreignKey: 'parent_id' });
-    Node.belongsTo(models.node, { as: 'parent', foreignKey: { name: 'parent_id', allowNull: true }, onDelete: 'SET NULL', onUpdate: 'CASCADE' });
+    // Auto-relation parent-enfant
+    Node.hasMany(models.node, { 
+      as: 'children', 
+      foreignKey: 'parent_id' 
+    });
     
-    // Associations avec les tables spécifiques
-    Node.hasOne(models.client, { foreignKey: 'node_id' });
-    Node.hasOne(models.order, { foreignKey: 'node_id' });
-    Node.hasOne(models.part, { foreignKey: 'node_id' });
-    Node.hasOne(models.test, { foreignKey: 'node_id' });
-    Node.hasOne(models.file, { foreignKey: 'node_id' });
-    Node.hasOne(models.steel, { foreignKey: 'node_id' });
-    Node.hasOne(models.furnace, { foreignKey: 'node_id' });
+    Node.belongsTo(models.node, { 
+      as: 'parent', 
+      foreignKey: 'parent_id',
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE' 
+    });
+    
+    // Associations avec les tables spécifiques - relations 1:1
+    Node.hasOne(models.client, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+    
+    Node.hasOne(models.order, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+    
+    Node.hasOne(models.part, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+    
+    Node.hasOne(models.test, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+    
+    Node.hasOne(models.file, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+    
+    Node.hasOne(models.steel, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
+    
+    Node.hasOne(models.furnace, { 
+      foreignKey: 'node_id',
+      onDelete: 'CASCADE'
+    });
     
     // Associations avec Closure pour les relations hiérarchiques
-    Node.hasMany(models.closure, { as: 'AncestorClosures', foreignKey: 'ancestor_id' });
-    Node.hasMany(models.closure, { as: 'DescendantClosures', foreignKey: 'descendant_id' });
+    Node.hasMany(models.closure, { 
+      as: 'AncestorClosures', 
+      foreignKey: 'ancestor_id' 
+    });
+    
+    Node.hasMany(models.closure, { 
+      as: 'DescendantClosures', 
+      foreignKey: 'descendant_id' 
+    });
   };
 
   return Node;

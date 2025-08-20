@@ -13,9 +13,7 @@ module.exports = (sequelize) => {
     },
     client_code: {
       type: DataTypes.STRING(50),
-      unique: {
-        name: 'unique_client_code'
-      },
+      unique: true,
       allowNull: true
     },
     city: {
@@ -47,7 +45,10 @@ module.exports = (sequelize) => {
   });
 
   Client.associate = function(models) {
-    Client.belongsTo(models.node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Client.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Client;

@@ -125,22 +125,22 @@ const TestList = ({ partId }) => {
       key: 'Test.load_number',
       label: t('tests.loadNumber'),
       cellClassName: 'text-center',
-      render: (test) => test.Test?.load_number || "-",
-      sortValue: (test) => parseInt(test.Test?.load_number) || 0
+      render: (test) => test.test?.load_number || "-",
+      sortValue: (test) => parseInt(test.test?.load_number) || 0
     },
     {
       key: 'Test.test_date',
       label: t('tests.date'),
       cellClassName: 'text-center',
-      render: (test) => test.Test?.test_date || t('tests.notDoneYet'),
-      sortValue: (test) => test.Test?.test_date ? new Date(test.Test?.test_date).getTime() : 0
+      render: (test) => test.test?.test_date || t('tests.notDoneYet'),
+      sortValue: (test) => test.test?.test_date ? new Date(test.test?.test_date).getTime() : 0
     },
     {
       key: 'Test.location',
       label: t('tests.location'),
       cellClassName: 'text-center',
-      render: (test) => test.Test?.location || "-",
-      sortValue: (test) => test.Test?.location || ''
+      render: (test) => test.test?.location || "-",
+      sortValue: (test) => test.test?.location || ''
     },
     {
       key: 'modified_at',

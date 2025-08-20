@@ -45,7 +45,10 @@ module.exports = (sequelize) => {
   });
 
   Part.associate = function(models) {
-    Part.belongsTo(models.node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Part.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Part;

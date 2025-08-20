@@ -4,9 +4,10 @@ const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const db = {};
 
-// Configuration de la base de données directement ici pour éviter les imports circulaires
+// Configuration de la base de données
 require('dotenv').config();
 
+// Configuration simple pour Windows et Linux
 const dbConfig = {
   host: process.env.DB_HOST || '127.0.0.1',
   database: process.env.DB_NAME || 'synergy',
@@ -14,7 +15,7 @@ const dbConfig = {
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'root',
   dialect: 'mysql',
-  logging: false, // Désactivé pour réduire le bruit
+  logging: false,
   pool: {
     max: 10,
     min: 0,
@@ -27,7 +28,7 @@ const dbConfig = {
   }
 };
 
-// Création de l'instance Sequelize avec la configuration
+// Création de l'instance Sequelize
 const sequelize = new Sequelize(
   dbConfig.database, 
   dbConfig.username, 
@@ -38,14 +39,11 @@ const sequelize = new Sequelize(
     dialect: dbConfig.dialect,
     logging: dbConfig.logging,
     pool: dbConfig.pool,
-    dialectOptions: dbConfig.dialectOptions,
-    define: {
-      underscored: false
-    }
+    dialectOptions: dbConfig.dialectOptions
   }
 );
 
-// Importe tous les modèles dans le dossier courant
+// Import des modèles de façon simple et compatible
 fs
   .readdirSync(__dirname)
   .filter(file => {
@@ -57,34 +55,20 @@ fs
   })
   .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    
+    // Utilisation des noms de modèles exactement comme définis dans les fichiers de modèle
+    // pour assurer une compatibilité parfaite avec les noms de tables
     db[model.name] = model;
   });
 
-// Assurer que les modèles sont bien exportés avec les deux casses pour compatibilité
-// Windows/MySQL est moins strict avec la casse, mais Linux/Docker l'est
+// Association des modèles
 Object.keys(db).forEach(modelName => {
-  if (modelName !== 'sequelize' && modelName !== 'Sequelize') {
-    // Exporter avec majuscule initiale
-    const capitalizedName = modelName.charAt(0).toUpperCase() + modelName.slice(1);
-    if (!db[capitalizedName]) {
-      db[capitalizedName] = db[modelName];
-    }
-    
-    // Exporter avec minuscule initiale
-    const lowercaseName = modelName.charAt(0).toLowerCase() + modelName.slice(1);
-    if (!db[lowercaseName]) {
-      db[lowercaseName] = db[modelName];
-    }
-  }
-});
-
-// Établit les associations entre les modèles
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
+  if (db[modelName].associate && typeof db[modelName].associate === 'function') {
     db[modelName].associate(db);
   }
 });
 
+// Export des objets de base de données
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

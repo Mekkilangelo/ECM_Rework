@@ -5,7 +5,6 @@ module.exports = (sequelize) => {
     node_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
       allowNull: false,
       references: {
         model: 'nodes',
@@ -42,7 +41,10 @@ module.exports = (sequelize) => {
   });
 
   Furnace.associate = function(models) {
-    Furnace.belongsTo(models.node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Furnace.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Furnace;

@@ -310,7 +310,7 @@ const SteelList = () => {
   };
   const handleDeleteSteel = async (steelId) => {
     const steelToDelete = steels.find(s => s.id === steelId);
-    const steelName = steelToDelete?.Steel?.grade || steelToDelete?.grade || 'cet acier';
+    const steelName = steelToDelete?.steel?.grade || steelToDelete?.grade || 'cet acier';
     
     const confirmed = await confirmDelete(steelName, 'l\'acier');
     if (confirmed) {

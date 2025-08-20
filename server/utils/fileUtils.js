@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { node: Node, file: File } = require('../models');
+const { node, file } = require('../models');
 const { Op } = require('sequelize');
 
 /**
@@ -17,7 +17,7 @@ const { Op } = require('sequelize');
 const deletePhysicalFiles = async (nodeId, transaction = null) => {
   try {
     // Récupérer tous les fichiers associés à ce nœud
-    const fileNodes = await Node.findAll({
+    const fileNodes = await node.findAll({
       where: {
         [Op.or]: [
           { parent_id: nodeId, type: 'file' },
@@ -25,7 +25,7 @@ const deletePhysicalFiles = async (nodeId, transaction = null) => {
         ]
       },
       include: [{
-        model: File,
+        model: file,
         required: true
       }],
       transaction

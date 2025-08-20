@@ -3,7 +3,7 @@
  * Fournit des fonctions pour mettre à jour les ancêtres lors de modifications
  */
 
-const { node: Node, closure: Closure } = require('../models');
+const { node, closure } = require('../models');
 const logger = require('./logger');
 
 /**
@@ -19,7 +19,7 @@ const updateAncestorsModifiedAt = async (nodeId, transaction = null) => {
     logger.info(`Mise à jour du modified_at pour le nœud #${nodeId} et ses ancêtres`);
     
     // 1. Mettre à jour le nœud lui-même
-    await Node.update(
+    await node.update(
       { modified_at: now },
       { 
         where: { id: nodeId },
@@ -28,7 +28,7 @@ const updateAncestorsModifiedAt = async (nodeId, transaction = null) => {
     );
     
     // 2. Récupérer tous les ancêtres via la table Closure
-    const ancestorClosures = await Closure.findAll({
+    const ancestorClosures = await closure.findAll({
       where: { 
         descendant_id: nodeId,
         depth: { [require('sequelize').Op.gt]: 0 } // Exclure la relation avec soi-même
@@ -43,7 +43,7 @@ const updateAncestorsModifiedAt = async (nodeId, transaction = null) => {
       logger.info(`Mise à jour de ${ancestorIds.length} ancêtres pour le nœud #${nodeId}: [${ancestorIds.join(', ')}]`);
       
       // 4. Mettre à jour tous les ancêtres en une seule requête
-      await Node.update(
+      await node.update(
         { modified_at: now },
         {
           where: { id: ancestorIds },
@@ -75,7 +75,7 @@ const updateMultipleAncestorsModifiedAt = async (nodeIds, transaction = null) =>
     logger.info(`Mise à jour du modified_at pour ${nodeIds.length} nœuds et leurs ancêtres: [${nodeIds.join(', ')}]`);
     
     // 1. Mettre à jour tous les nœuds fournis
-    await Node.update(
+    await node.update(
       { modified_at: now },
       { 
         where: { id: nodeIds },
@@ -84,7 +84,7 @@ const updateMultipleAncestorsModifiedAt = async (nodeIds, transaction = null) =>
     );
     
     // 2. Récupérer tous les ancêtres pour tous les nœuds
-    const ancestorClosures = await Closure.findAll({
+    const ancestorClosures = await closure.findAll({
       where: { 
         descendant_id: nodeIds,
         depth: { [require('sequelize').Op.gt]: 0 }
@@ -99,7 +99,7 @@ const updateMultipleAncestorsModifiedAt = async (nodeIds, transaction = null) =>
       logger.info(`Mise à jour de ${ancestorIds.length} ancêtres uniques pour les nœuds [${nodeIds.join(', ')}]`);
       
       // 4. Mettre à jour tous les ancêtres
-      await Node.update(
+      await node.update(
         { modified_at: now },
         {
           where: { id: ancestorIds },
@@ -125,13 +125,13 @@ const updateMultipleAncestorsModifiedAt = async (nodeIds, transaction = null) =>
  */
 const getNodeAncestors = async (nodeId, transaction = null) => {
   try {
-    const ancestorClosures = await Closure.findAll({
+    const ancestorClosures = await closure.findAll({
       where: { 
         descendant_id: nodeId,
         depth: { [require('sequelize').Op.gt]: 0 }
       },
       include: [{
-        model: Node,
+        model: node,
         as: 'ancestor',
         attributes: ['id', 'name', 'type', 'path', 'modified_at']
       }],
@@ -158,13 +158,13 @@ const getNodeAncestors = async (nodeId, transaction = null) => {
  */
 const getNodeDescendants = async (nodeId, transaction = null) => {
   try {
-    const descendantClosures = await Closure.findAll({
+    const descendantClosures = await closure.findAll({
       where: { 
         ancestor_id: nodeId,
         depth: { [require('sequelize').Op.gt]: 0 }
       },
       include: [{
-        model: Node,
+        model: node,
         as: 'descendant',
         attributes: ['id', 'name', 'type', 'path', 'modified_at']
       }],

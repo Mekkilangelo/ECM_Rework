@@ -1,5 +1,5 @@
 // src/pages/Reference.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tab, Nav, Container, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faIndustry, faFire, faCogs, faRuler, faToolbox } from '@fortawesome/free-solid-svg-icons';

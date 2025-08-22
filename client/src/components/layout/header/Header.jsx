@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../language_switch/LanguageSwitcher'; // Importez le composant personnalisé
-import ThemeToggle from '../../common/ThemeToggle'; // Import du composant ThemeToggle
+import ThemeToggle from '../../common/ThemeToggle/ThemeToggle'; // Import du composant ThemeToggle
 import '../../../styles/header.css';
 
 const Header = () => {

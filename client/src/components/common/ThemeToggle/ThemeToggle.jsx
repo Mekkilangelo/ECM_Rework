@@ -4,8 +4,8 @@ import {
   faMoon, 
   faSun,  // Étoile qui peut représenter le soleil
 } from '@fortawesome/free-solid-svg-icons';
-import { useTheme } from '../../context/ThemeContext';
-import '../../styles/darkTheme.css';
+import { useTheme } from '../../../context/ThemeContext';
+import '../../../styles/darkTheme.css';
 
 /**
  * Composant bouton pour basculer entre le mode clair et sombre

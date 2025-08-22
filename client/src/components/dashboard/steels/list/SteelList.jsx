@@ -13,8 +13,8 @@ import steelService from '../../../../services/steelService';
 import '../../../../styles/dataList.css';
 import { useTranslation } from 'react-i18next';
 import useModalState from '../../../../hooks/useModalState';
-import Pagination from '../../../common/Pagination';
-import LimitSelector from '../../../common/LimitSelector';
+import Pagination from '../../../common/Pagination/Pagination';
+import LimitSelector from '../../../common/LimitSelector/LimitSelector';
 import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
 
 const SteelList = () => {

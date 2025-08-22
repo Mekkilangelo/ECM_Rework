@@ -15,6 +15,7 @@ services:
       - app-network
 
   backend:
+    image: synergia-backend:dev
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -44,6 +45,7 @@ services:
       - app-network
 
   frontend:
+    image: synergia-frontend:dev
     build:
       context: ./client
       dockerfile: Dockerfile

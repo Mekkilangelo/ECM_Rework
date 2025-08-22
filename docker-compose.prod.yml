@@ -13,7 +13,7 @@ services:
       - app-network
 
   backend:
-    image: ghcr.io/mekkilangelo/ecm_rework-backend:latest
+    image: synergia-backend:latest
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV}
@@ -34,7 +34,7 @@ services:
       - app-network
 
   frontend:
-    image: ghcr.io/mekkilangelo/ecm_rework-frontend:latest
+    image: synergia-frontend:latest
     restart: unless-stopped
     depends_on:
       - backend

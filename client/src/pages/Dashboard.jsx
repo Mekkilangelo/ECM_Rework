@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,8 +6,8 @@ import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { NavigationProvider, useNavigation } from '../context/NavigationContext';
 import HierarchyManager from '../components/dashboard/HierarchyManager';
 import { useTranslation } from 'react-i18next';
-import LimitSelector from '../components/common/LimitSelector';
-import Pagination from '../components/common/Pagination';
+import LimitSelector from '../components/common/LimitSelector/LimitSelector';
+import Pagination from '../components/common/Pagination/Pagination';
 
 // Composant qui utilise le hook useHierarchy séparément pour éviter les dépendances circulaires
 const DashboardContent = () => {

@@ -6,7 +6,7 @@
 // Définition de la durée d'inactivité principale (en secondes)
 const SESSION_INACTIVITY_TIMEOUT_SECONDS = process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS 
   ? parseInt(process.env.REACT_APP_SESSION_INACTIVITY_TIMEOUT_SECONDS, 10)
-  : 120; // 2 minutes par défaut
+  : 1200; // 20 minutes par défaut
 
 // Configuration des délais d'authentification
 const authConfig = {

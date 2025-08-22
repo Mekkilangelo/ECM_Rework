@@ -2,8 +2,6 @@ import api, { setIntentionalLogout } from './api';
 import { jwtDecode } from 'jwt-decode';
 import { authConfig, SESSION_INACTIVITY_TIMEOUT_SECONDS } from '../config';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-
 /**
  * Service d'authentification optimisé
  * 
@@ -150,21 +148,14 @@ const authService = {
           const inactiveTime = Date.now() - authService.lastUserActivity;
           
           // Incrémenter le compteur d'inactivité (pour les logs)
-          inactiveTimeCount += authService.heartbeatInterval;          // Vérifier si l'utilisateur est actif
+          inactiveTimeCount += authService.heartbeatInterval;
+          // Vérifier si l'utilisateur est actif
           // On n'envoie un heartbeat que si l'utilisateur est actif ET que l'inactivité est en-dessous
           // du seuil configuré
           const inactivityThreshold = authService.inactivityTimeout * authService.heartbeatInactivityThreshold;
-            if (inactiveTime < inactivityThreshold) {
+          if (inactiveTime < inactivityThreshold) {
             // Utilisateur actif - envoyer un heartbeat pour maintenir la session
-            const token = authService.getToken();
-            const axios = (await import('axios')).default;
-            
-            // Utiliser un endpoint spécifique pour le heartbeat si disponible
-            await axios.get(`${API_URL}/auth/me`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
+            await api.get('/auth/me');
           }
         }
       } catch (error) {

@@ -15,7 +15,7 @@ variables:
     - name: gitlab.local:5050/customia/synergia/custom-dind:ca
   before_script:
     - mkdir -p /etc/docker/certs.d/gitlab.local:5050
-  - cp ./ci/docker-dind-cert/ca.crt /etc/docker/certs.d/gitlab.local:5050/ca.crt
+    - cp ./ci/docker-dind-cert/ca.crt /etc/docker/certs.d/gitlab.local:5050/ca.crt
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest .

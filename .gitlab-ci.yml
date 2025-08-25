@@ -20,7 +20,8 @@ test-backend:
   stage: build
   image: docker:latest
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--insecure-registry=gitlab.local:5050"]
   needs: [test-backend]
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY

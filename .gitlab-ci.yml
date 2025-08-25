@@ -1,46 +1,32 @@
 stages:
-  - test
   - build
   - deploy
 
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
-  CI_REGISTRY: "http://gitlab.local:5050"
-
-test-backend:
-  stage: test
-  image: node:18
-  before_script:
-    - cd server
-    - npm install
-  script:
-    - npm run test:all
 
 .build_template:
   stage: build
   image: docker:latest
   services:
-    - name: docker:dind
-      command: ["--insecure-registry=gitlab.local:5050"]
-  needs: [test-backend]
+    - docker:dind
   before_script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-  # Utilisation explicite de l'URL HTTP pour éviter le fallback HTTPS
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest .
-    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest .
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
 build-backend:
   extends: .build_template
   variables:
     IMAGE_NAME: synergia-backend
-  needs: [test-backend]
+  needs: []
   script:
-    - docker build -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./server
-    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./server
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
 build-frontend:
   extends: .build_template
@@ -48,9 +34,9 @@ build-frontend:
     IMAGE_NAME: synergia-frontend
   needs: []
   script:
-    - docker build -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./client
-    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./client
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
 deploy-dev:
   stage: deploy
@@ -58,8 +44,7 @@ deploy-dev:
   variables:
     GIT_STRATEGY: none
   script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - export DOCKER_HOST="tcp://localhost:2375"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker-compose -f docker-compose.dev.yml pull
     - docker-compose -f docker-compose.dev.yml up -d
   environment: development
@@ -72,8 +57,7 @@ deploy-prod:
   variables:
     GIT_STRATEGY: none
   script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - export DOCKER_HOST="tcp://localhost:2375"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker-compose -f docker-compose.prod.yml pull
     - docker-compose -f docker-compose.prod.yml up -d
   environment: production

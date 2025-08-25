@@ -26,10 +26,11 @@ test-backend:
   needs: [test-backend]
   before_script:
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  # Utilisation explicite de l'URL HTTP pour éviter le fallback HTTPS
   script:
-    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest .
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
+    - docker build -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest .
+    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
 build-backend:
   extends: .build_template
@@ -37,9 +38,9 @@ build-backend:
     IMAGE_NAME: synergia-backend
   needs: [test-backend]
   script:
-    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./server
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
+    - docker build -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./server
+    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
 build-frontend:
   extends: .build_template
@@ -47,9 +48,9 @@ build-frontend:
     IMAGE_NAME: synergia-frontend
   needs: []
   script:
-    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./client
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
+    - docker build -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./client
+    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push http://gitlab.local:5050/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
 deploy-dev:
   stage: deploy

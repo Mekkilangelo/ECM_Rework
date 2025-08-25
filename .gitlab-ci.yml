@@ -12,14 +12,18 @@ variables:
   stage: build
   image: docker:latest
   services:
-    - name: docker:dind
-      command: ["--registry-mirror=https://gitlab.local:5050"]
-      entrypoint: ["dockerd-entrypoint.sh"]
-      volumes:
-        - ./ci/ca.crt:/etc/docker/certs.d/gitlab.local:5050/ca.crt:ro
+    - docker:dind
   before_script:
     - mkdir -p /etc/docker/certs.d/gitlab.local:5050
     - cp ./ci/ca.crt /etc/docker/certs.d/gitlab.local:5050/ca.crt
+    # Copie aussi le certificat dans le conteneur dind si possible
+    - |
+      if [ -n "$CI_JOB_ID" ]; then
+        DIND_ID=$(docker ps -q --filter ancestor=docker:dind)
+        if [ -n "$DIND_ID" ]; then
+          docker cp ./ci/ca.crt $DIND_ID:/etc/docker/certs.d/gitlab.local:5050/ca.crt
+        fi
+      fi
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest .

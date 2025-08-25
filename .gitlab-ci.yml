@@ -13,6 +13,7 @@ variables:
   image: docker:latest
   services:
     - name: gitlab.local:5050/customia/synergia/custom-dind:ca
+      alias: docker
   before_script:
     - mkdir -p /etc/docker/certs.d/gitlab.local:5050
     - cp ./ci/docker-dind-cert/ca.crt /etc/docker/certs.d/gitlab.local:5050/ca.crt

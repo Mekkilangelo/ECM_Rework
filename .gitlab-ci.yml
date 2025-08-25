@@ -6,6 +6,7 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
+  CI_REGISTRY: "http://gitlab.local:5050"
 
 test-backend:
   stage: test

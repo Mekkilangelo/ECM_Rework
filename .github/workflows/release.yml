@@ -17,6 +17,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clean Docker Buildx cache
+        run: docker builder prune -af
+
       - name: Get version from package.json or create one
         id: version
         run: |
@@ -87,6 +90,9 @@ jobs:
           cp deploy.sh release/
           cp rollback.sh release/
           cp validate-bundle.sh release/
+
+          # Copier le Caddyfile
+          cp Caddyfile.prod release/Caddyfile
 
           # S'assurer que les scripts sont exécutables
           chmod +x release/deploy.sh release/rollback.sh release/validate-bundle.sh

@@ -17,6 +17,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clean Docker Buildx cache
+        run: docker builder prune -af
+
       - name: Get version from package.json or create one
         id: version
         run: |

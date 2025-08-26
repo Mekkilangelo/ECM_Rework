@@ -1,0 +1,158 @@
+name: Release Bundle Generation
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-bundle:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from package.json or create one
+        id: version
+        run: |
+          if [ -f "./client/package.json" ]; then
+            VERSION=$(grep '"version"' ./client/package.json | sed 's/.*"version": "\([^"]*\)".*/\1/')
+          else
+            VERSION="1.0.$(date +%Y%m%d%H%M)"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version détectée: $VERSION"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image
+        run: |
+          echo "Building frontend image..."
+          docker buildx build \
+            --load \
+            --tag synergia-frontend:${{ steps.version.outputs.version }} \
+            --tag synergia-frontend:latest \
+            ./client
+
+      - name: Build backend image
+        run: |
+          echo "Building backend image..."
+          docker buildx build \
+            --load \
+            --tag synergia-backend:${{ steps.version.outputs.version }} \
+            --tag synergia-backend:latest \
+            ./server
+
+      - name: Export Docker images (including MySQL)
+        run: |
+          echo "Exporting Docker images..."
+          mkdir -p release/images
+          
+          # Pull MySQL si pas déjà présent
+          docker pull mysql:8.0
+          
+          # Export des images
+          docker save synergia-frontend:${{ steps.version.outputs.version }} -o release/images/frontend.tar
+          docker save synergia-backend:${{ steps.version.outputs.version }} -o release/images/backend.tar
+          docker save mysql:8.0 -o release/images/mysql.tar
+          
+          echo "Images exportées:"
+          ls -la release/images/
+
+      - name: Prepare release files
+        run: |
+          echo "Preparing release files..."
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Copier et adapter le docker-compose.prod.yml
+          cp docker-compose.prod.yml release/docker-compose.yaml
+          
+          # S'assurer que les images pointent vers les bonnes versions
+          sed -i "s/synergia-frontend:latest/synergia-frontend:$VERSION/g" release/docker-compose.yaml
+          sed -i "s/synergia-backend:latest/synergia-backend:$VERSION/g" release/docker-compose.yaml
+          cp .env.prod release/.env.example
+
+          # Nettoyer .env.example - remplacer les vraies valeurs par CHANGEME
+          sed -i 's/MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=CHANGEME_STRONG_PASSWORD/' release/.env.example
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=CHANGEME_STRONG_PASSWORD/' release/.env.example
+          sed -i 's/JWT_SECRET=.*/JWT_SECRET=CHANGEME_VERY_STRONG_SECRET_KEY/' release/.env.example
+
+          # Copier les scripts existants
+          cp deploy.sh release/
+          cp rollback.sh release/
+          cp validate-bundle.sh release/
+
+          # S'assurer que les scripts sont exécutables
+          chmod +x release/deploy.sh release/rollback.sh release/validate-bundle.sh
+
+      - name: Generate release notes and checksums
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Release notes
+          cat > release/release-notes.txt << EOF
+          Synergia Release v$VERSION
+          ==========================
+
+          Date de build: $(date '+%Y-%m-%d %H:%M:%S')
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref_name }}
+
+          ## Contenu de cette release
+
+          - Frontend image: synergia-frontend:$VERSION
+          - Backend image: synergia-backend:$VERSION
+          - Configuration: docker-compose.yaml + .env.example
+          - Scripts: deploy.sh, rollback.sh, validate-bundle.sh
+
+          ## Instructions de déploiement
+
+          1. Validation: ./validate-bundle.sh
+          2. Extraction: tar -xzf synergia-release-v$VERSION.tar.gz
+          3. Configuration: cp .env.example .env && nano .env
+          4. Déploiement: ./deploy.sh
+
+          ## Rollback
+
+          En cas de problème: ./rollback.sh
+
+          ## Support
+
+          - Vérifier les logs: docker compose logs
+          - Statut des services: docker compose ps
+          EOF
+
+          # Génération des checksums
+          echo "Génération des checksums..."
+          cd release
+          find . -type f -not -name "checksums.txt" -exec sha256sum {} \; | sort > checksums.txt
+
+      - name: Create release archive
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCHIVE_NAME="synergia-release-v$VERSION.tar.gz"
+
+          echo "Création de l'archive: $ARCHIVE_NAME"
+          tar -czf "$ARCHIVE_NAME" -C release .
+
+          echo "Archive créée: $(ls -lh "$ARCHIVE_NAME")"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: synergia-release-v${{ steps.version.outputs.version }}
+          path: synergia-release-v${{ steps.version.outputs.version }}.tar.gz
+          retention-days: 90
+
+      - name: Release summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Release v$VERSION générée avec succès!"
+          echo "Archive: synergia-release-v$VERSION.tar.gz"
+          echo "Taille: $(du -h synergia-release-v$VERSION.tar.gz | cut -f1)"

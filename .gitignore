@@ -4,12 +4,14 @@ node_modules/
 package-lock.json
 yarn.lock
 
+
 # Fichiers d'environnement
 .env
 **/.env
 .env.local
 .env.dev
-.env.prod
+# .env.prod doit être versionné pour le déploiement (voir README)
+#.env.prod
 .env.*.local
 .env.development
 .env.test

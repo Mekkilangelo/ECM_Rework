@@ -6,6 +6,7 @@
     "back": "Retour",
     "cancel": "Annuler",
     "close": "Fermer",
+    "copy": "Copier",
     "create": "Créer",
     "creating": "Création en cours...",
     "delete": "Supprimer",
@@ -16,6 +17,7 @@
     "modifiedAt": "Modifié le",
     "modifying": "Modification en cours...",    "name": "Nom",
     "no": "Non",
+    "paste": "Coller",
     "save": "Enregistrer",
     "selectAll": "Tout sélectionner",
     "deselectAll": "Tout désélectionner",
@@ -43,6 +45,15 @@
     "noValuesFound": "Aucune valeur trouvée",
     "clickToAddValues": "Cliquez sur \"Ajouter une nouvelle valeur\" pour ajouter des valeurs à cette énumération",
     "valueUsedWarning": "Cette valeur est utilisée dans {{count}} enregistrement(s). La modification mettra à jour tous ces enregistrements."
+  },
+
+  "copyPaste": {
+    "copySuccess": "Données copiées avec succès",
+    "copyError": "Erreur lors de la copie",
+    "pasteSuccess": "Données collées avec succès", 
+    "pasteError": "Erreur lors du collage",
+    "noCachedData": "Aucune donnée copiée trouvée pour ce type de formulaire",
+    "expiredData": "Les données copiées ont expiré"
   },
   
   "pagination": {

@@ -1,4 +1,4 @@
-const { Log } = require('../models');
+const { log } = require('../models');
 const { v4: uuidv4 } = require('uuid');
 
 /**
@@ -43,7 +43,7 @@ class LoggingService {
         stackTrace: logData.stackTrace || null
       };
 
-      const createdLog = await Log.create(logEntry);
+      const createdLog = await log.create(logEntry);
       
       // Log en console pour le développement
       if (process.env.NODE_ENV === 'development') {
@@ -236,7 +236,8 @@ class LoggingService {
         if (dateTo) where.timestamp[require('sequelize').Op.lte] = new Date(dateTo);
       }
 
-      const offset = (page - 1) * limit;      const result = await Log.findAndCountAll({
+      const offset = (page - 1) * limit;
+      const result = await log.findAndCountAll({
         where,
         limit: parseInt(limit),
         offset: parseInt(offset),
@@ -266,7 +267,7 @@ class LoggingService {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-      const deletedCount = await Log.destroy({
+      const deletedCount = await log.destroy({
         where: {
           timestamp: {
             [require('sequelize').Op.lt]: cutoffDate
@@ -296,7 +297,7 @@ class LoggingService {
         if (dateTo) where.timestamp[require('sequelize').Op.lte] = new Date(dateTo);
       }
 
-      const stats = await Log.findAll({
+      const stats = await log.findAll({
         attributes: [
           'level',
           [require('sequelize').fn('COUNT', '*'), 'count']
@@ -304,7 +305,7 @@ class LoggingService {
         where,
         group: ['level'],
         raw: true
-      });      const actionStats = await Log.findAll({
+      });      const actionStats = await log.findAll({
         attributes: [
           'action',
           [require('sequelize').fn('COUNT', '*'), 'count']
@@ -317,10 +318,10 @@ class LoggingService {
       });
 
       // Statistiques totales
-      const totalLogs = await Log.count({ where });
+      const totalLogs = await log.count({ where });
       
       // Compter les erreurs
-      const errorCount = await Log.count({ 
+      const errorCount = await log.count({ 
         where: { 
           ...where, 
           level: 'error' 
@@ -328,7 +329,7 @@ class LoggingService {
       });
       
       // Compter les avertissements
-      const warningCount = await Log.count({ 
+      const warningCount = await log.count({ 
         where: { 
           ...where, 
           level: 'warning' 
@@ -338,7 +339,7 @@ class LoggingService {
       // Statistiques d'aujourd'hui
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayCount = await Log.count({
+      const todayCount = await log.count({
         where: {
           timestamp: {
             [require('sequelize').Op.gte]: today

@@ -47,7 +47,7 @@ const ActionButtons = ({
         <FontAwesomeIcon icon={faEye} />
       </Button>
 
-      {/* Boutons d'édition et de suppression - visibles uniquement si droits d'édition */}
+      {/* Boutons d'édition et suppression - visibles uniquement si droits d'édition */}
       {hasEditRights && !viewOnly && (
         <>
           <Button

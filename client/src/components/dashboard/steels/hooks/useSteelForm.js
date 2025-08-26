@@ -6,6 +6,7 @@ import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import useSteelSubmission from './modules/useSteelSubmission';
 import useSteelData from './modules/useSteelData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
+import useCopyPaste from '../../../../hooks/useCopyPaste';
 
 const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false) => {
   // État du formulaire et initialisation
@@ -109,13 +110,54 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode =
       resetInitialState();
     }
   }, [message, resetInitialState]);
+
+  // Fonction pour formater les données pour l'API/copie
+  const formatForApi = (data) => {
+    return {
+      // Informations de base
+      grade: data.grade || '',
+      family: data.family || '',
+      standard: data.standard || '',
+      
+      // Éléments chimiques
+      chemical_elements: data.chemical_elements || [],
+      
+      // Équivalents
+      equivalents: data.equivalents || []
+    };
+  };
+
+  // Fonction pour parser les données depuis l'API/collage
+  const parseFromApi = (data) => {
+    return {
+      // Informations de base
+      grade: data.grade || '',
+      family: data.family || '',
+      standard: data.standard || '',
+      
+      // Éléments chimiques
+      chemical_elements: data.chemical_elements || [],
+      
+      // Équivalents
+      equivalents: data.equivalents || []
+    };
+  };
+
+  // Hook pour la fonctionnalité copy/paste
+  const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
+    formType: 'steels',
+    formData,
+    setFormData,
+    formatForApi,
+    parseFromApi
+  });
   
   return {
     formData,
     errors,
     loading,
     fetchingSteel,
-    message,
+    message: message || copyPasteMessage, // Combiner les messages
     steelFamilyOptions,
     steelStandardOptions,
     steelGradeOptions,
@@ -140,7 +182,10 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode =
     handleCloseRequest, 
     confirmClose, 
     cancelClose, 
-    saveAndClose
+    saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   };
 };
 

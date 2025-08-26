@@ -10,6 +10,7 @@ import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
+import FormHeader from '../../../common/FormHeader/FormHeader';
 import TestForm from '../form/TestForm';
 //import TestDetails from './TestDetails';
 import '../../../../styles/dataList.css';
@@ -80,9 +81,23 @@ const TestList = ({ partId }) => {
         console.error('Erreur lors de la suppression du test:', err);
         alert(err.response?.data?.message || t('tests.deleteError'));
       }
-    }  };
+    }
+  };
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
+
+  // Fonctions Copy/Paste qui utilisent la référence du formulaire
+  const handleCopy = () => {
+    if (testFormRef.current?.handleCopy) {
+      testFormRef.current.handleCopy();
+    }
+  };
+
+  const handlePaste = () => {
+    if (testFormRef.current?.handlePaste) {
+      testFormRef.current.handlePaste();
+    }
+  };
 
   // Configuration des colonnes pour la table triable
   const columns = [
@@ -110,22 +125,22 @@ const TestList = ({ partId }) => {
       key: 'Test.load_number',
       label: t('tests.loadNumber'),
       cellClassName: 'text-center',
-      render: (test) => test.Test?.load_number || "-",
-      sortValue: (test) => parseInt(test.Test?.load_number) || 0
+      render: (test) => test.test?.load_number || "-",
+      sortValue: (test) => parseInt(test.test?.load_number) || 0
     },
     {
       key: 'Test.test_date',
       label: t('tests.date'),
       cellClassName: 'text-center',
-      render: (test) => test.Test?.test_date || t('tests.notDoneYet'),
-      sortValue: (test) => test.Test?.test_date ? new Date(test.Test?.test_date).getTime() : 0
+      render: (test) => test.test?.test_date || t('tests.notDoneYet'),
+      sortValue: (test) => test.test?.test_date ? new Date(test.test?.test_date).getTime() : 0
     },
     {
       key: 'Test.location',
       label: t('tests.location'),
       cellClassName: 'text-center',
-      render: (test) => test.Test?.location || "-",
-      sortValue: (test) => test.Test?.location || ''
+      render: (test) => test.test?.location || "-",
+      sortValue: (test) => test.test?.location || ''
     },
     {
       key: 'modified_at',
@@ -145,7 +160,7 @@ const TestList = ({ partId }) => {
     {
       key: 'actions',
       label: t('common.actions'),
-      style: { width: hasEditRights ? '180px' : '80px' },
+      style: { width: hasEditRights ? '210px' : '80px' },
       cellClassName: 'text-center',
       sortable: false,
       render: (test) => (
@@ -158,7 +173,7 @@ const TestList = ({ partId }) => {
             openEditModal(test);
           } : undefined}
           onDelete={hasEditRights ? (e, id) => {
-            handleDeleteTest(test.id);
+            handleDeleteTest(id);
           } : undefined}
           hasEditRights={hasEditRights}
           viewOnly={!hasEditRights}
@@ -259,7 +274,12 @@ const TestList = ({ partId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('tests.new')}</Modal.Title>
+          <FormHeader 
+            title={t('tests.new')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           <TestForm
@@ -278,7 +298,12 @@ const TestList = ({ partId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('tests.edit')}</Modal.Title>
+          <FormHeader 
+            title={t('tests.edit')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>        <Modal.Body>
           {selectedTest && (
             <TestForm
@@ -303,7 +328,12 @@ const TestList = ({ partId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('tests.details')}</Modal.Title>
+          <FormHeader 
+            title={t('tests.details')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={true}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedTest && (

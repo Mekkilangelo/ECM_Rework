@@ -7,6 +7,7 @@ import { AuthContext } from '../../../../context/AuthContext';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
+import FormHeader from '../../../common/FormHeader/FormHeader';
 import SteelForm from '../form/SteelForm';
 import steelService from '../../../../services/steelService';
 import '../../../../styles/dataList.css';
@@ -25,6 +26,7 @@ const SteelList = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const limitSelectorRef = useRef(null);
+  const steelFormRef = useRef(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,6 +147,19 @@ const SteelList = () => {
     onRefreshData: fetchSteels
   });  // Vérification des droits utilisateur
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
+
+  // Fonctions Copy/Paste qui utilisent la référence du formulaire
+  const handleCopy = () => {
+    if (steelFormRef.current?.handleCopy) {
+      steelFormRef.current.handleCopy();
+    }
+  };
+
+  const handlePaste = () => {
+    if (steelFormRef.current?.handlePaste) {
+      steelFormRef.current.handlePaste();
+    }
+  };
 
   // Configuration des colonnes pour la table triable
   const columns = [
@@ -295,7 +310,7 @@ const SteelList = () => {
   };
   const handleDeleteSteel = async (steelId) => {
     const steelToDelete = steels.find(s => s.id === steelId);
-    const steelName = steelToDelete?.Steel?.grade || steelToDelete?.grade || 'cet acier';
+    const steelName = steelToDelete?.steel?.grade || steelToDelete?.grade || 'cet acier';
     
     const confirmed = await confirmDelete(steelName, 'l\'acier');
     if (confirmed) {
@@ -419,7 +434,12 @@ const SteelList = () => {
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('steels.add')}</Modal.Title>
+          <FormHeader 
+            title={t('steels.add')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           <SteelForm
@@ -437,7 +457,12 @@ const SteelList = () => {
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('steels.edit')}</Modal.Title>
+          <FormHeader 
+            title={t('steels.edit')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedSteel && (
@@ -465,7 +490,12 @@ const SteelList = () => {
         size="lg"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('steels.details')}</Modal.Title>
+          <FormHeader 
+            title={t('steels.details')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={true}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedSteel && (

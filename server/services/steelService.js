@@ -3,14 +3,14 @@
  * Contient la logique métier liée aux opérations sur les aciers
  */
 
-const { Node, Steel, Closure } = require('../models');
-const { sequelize } = require('../models');
+const { node, steel, closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { validateSteelData } = require('../utils/validators');
 const { 
   NotFoundError, 
   ValidationError 
 } = require('../utils/errors');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 const logger = require('../utils/logger');
 
 /**
@@ -80,7 +80,7 @@ const getAllSteels = async (options = {}) => {
     whereCondition[Op.or] = [
       { name: { [Op.like]: `%${search}%` } },
       { description: { [Op.like]: `%${search}%` } },
-      sequelize.literal(`Steel.grade LIKE '%${search.replace(/'/g, "''")}%'`)
+      sequelize.literal(`steel.grade LIKE '%${search.replace(/'/g, "''")}%'`)
     ];
     logger.info('Condition de recherche ajoutée:', whereCondition[Op.or]);
   }
@@ -88,13 +88,13 @@ const getAllSteels = async (options = {}) => {
   // Filtrage par propriétés
   if (filter) {
     if (filter.grade) {
-      whereCondition['$Steel.grade$'] = filter.grade;
+      whereCondition['$steel.grade$'] = filter.grade;
     }
     if (filter.standard) {
-      whereCondition['$Steel.standard$'] = filter.standard;
+      whereCondition['$steel.standard$'] = filter.standard;
     }
     if (filter.family) {
-      whereCondition['$Steel.family$'] = filter.family;
+      whereCondition['$steel.family$'] = filter.family;
     }
     logger.info('Filtres appliqués:', filter);
   }
@@ -107,7 +107,7 @@ const getAllSteels = async (options = {}) => {
   
   if (steelColumns.includes(sortBy)) {
     // Si c'est une colonne de la table Steel, utiliser la syntaxe d'association
-    orderClause = [[{ model: Steel }, sortBy, sortOrder]];
+    orderClause = [[{ model: steel }, sortBy, sortOrder]];
   } else {
     // Si c'est une colonne de Node (name, modified_at, etc.)
     orderClause = [[sortBy, sortOrder]];
@@ -118,10 +118,10 @@ const getAllSteels = async (options = {}) => {
   try {
     // Exécuter la requête
     logger.info('Exécution de la requête Node.findAll...');
-    const steels = await Node.findAll({
+    const steels = await node.findAll({
       where: whereCondition,
       include: [{
-        model: Steel,
+        model: steel,
         attributes: ['grade', 'family', 'standard', 'equivalents', 'chemistery', 'elements']
       }],
       order: orderClause,
@@ -136,10 +136,10 @@ const getAllSteels = async (options = {}) => {
     
     // Compter le total pour la pagination
     logger.info('Comptage du total...');
-    const total = await Node.count({
+    const total = await node.count({
       where: whereCondition,
       include: [{
-        model: Steel,
+        model: steel,
         attributes: []
       }]
     });
@@ -173,22 +173,22 @@ const getAllSteels = async (options = {}) => {
  * @returns {Promise<Array>} Liste des nuances d'acier
  */
 const getSteelGrades = async () => {
-  const steels = await Node.findAll({
+  const steels = await node.findAll({
     where: { type: 'steel' },
     include: [{
-      model: Steel,
+      model: steel,
       attributes: ['grade', 'family', 'standard']
     }],
-    order: [[{ model: Steel }, 'grade', 'ASC']]
+    order: [[{ model: steel }, 'grade', 'ASC']]
   });
   
   // Extraire les grades uniques
   const grades = steels
-    .filter(node => node.Steel && node.Steel.grade)
+    .filter(node => node.steel && node.steel.grade)
     .map(node => ({
-      grade: node.Steel.grade,
-      family: node.Steel.family,
-      standard: node.Steel.standard
+      grade: node.steel.grade,
+      family: node.steel.family,
+      standard: node.steel.standard
     }))
     .filter((grade, index, self) => 
       self.findIndex(g => g.grade === grade.grade) === index
@@ -203,18 +203,18 @@ const getSteelGrades = async () => {
  * @returns {Promise<Object>} Détails de l'acier
  */
 const getSteelById = async (steelId) => {
-  const steel = await Node.findByPk(steelId, {
+  const steelNode = await node.findByPk(steelId, {
     include: [{
-      model: Steel,
+      model: steel,
       attributes: ['grade', 'family', 'standard', 'equivalents', 'chemistery', 'elements']
     }]
   });
   
-  if (!steel || steel.type !== 'steel') {
+  if (!steelNode || steelNode.type !== 'steel') {
     throw new NotFoundError('Acier non trouvé');
   }
   
-  return steel;
+  return steelNode;
 };
 
 /**
@@ -236,7 +236,7 @@ const addReciprocalEquivalents = async (steelId, equivalents, transaction) => {
       logger.info(`Traitement de l'équivalent ${equivalentId}...`);
       
       // Récupérer l'acier équivalent
-      const equivalentSteel = await Steel.findOne({
+      const equivalentSteel = await steel.findOne({
         where: { node_id: equivalentId },
         transaction
       });
@@ -288,7 +288,7 @@ const removeReciprocalEquivalents = async (steelId, equivalents, transaction) =>
     const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
     
     if (equivalentId) {
-      const equivalentSteel = await Steel.findOne({
+      const equivalentSteel = await steel.findOne({
         where: { node_id: equivalentId },
         transaction
       });
@@ -329,10 +329,10 @@ const createSteel = async (steelData) => {
   const normalizedEquivalents = normalizeEquivalents(equivalents);
   
   // Vérifier si la nuance existe déjà
-  const existingSteel = await Node.findOne({
+  const existingSteel = await node.findOne({
     where: { type: 'steel' },
     include: [{
-      model: Steel,
+      model: steel,
       where: {
         grade: grade,
         standard: standard || null
@@ -347,7 +347,7 @@ const createSteel = async (steelData) => {
   // Créer l'acier dans une transaction
   const result = await sequelize.transaction(async (t) => {
     // Créer le nœud
-    const newNode = await Node.create({
+    const newNode = await node.create({
       name,
       path: `/${name}`,
       type: 'steel',
@@ -359,7 +359,7 @@ const createSteel = async (steelData) => {
     }, { transaction: t });
     
     // Créer les données de l'acier
-    await Steel.create({
+    await steel.create({
       node_id: newNode.id,
       grade,
       family,
@@ -377,6 +377,9 @@ const createSteel = async (steelData) => {
     return newNode;
   });
   
+  // Mettre à jour le modified_at de l'acier et de ses ancêtres après création
+  await updateAncestorsModifiedAt(result.id);
+  
   // Récupérer l'acier complet
   const newSteel = await getSteelById(result.id);
   return newSteel;
@@ -390,26 +393,26 @@ const createSteel = async (steelData) => {
  */
 const updateSteel = async (steelId, steelData) => {
   // Récupérer l'acier existant
-  const steel = await Node.findOne({
+  const steelNode = await node.findOne({
     where: { id: steelId, type: 'steel' },
     include: [{
-      model: Steel
+      model: steel
     }]
   });
   
-  if (!steel) {
+  if (!steelNode) {
     throw new NotFoundError('Acier non trouvé');
   }
   
   // Vérifier si la mise à jour crée un doublon de nuance/standard
   if (steelData.grade && steelData.standard) {
-    const existingSteel = await Node.findOne({
+    const existingSteel = await node.findOne({
       where: { 
         id: { [Op.ne]: steelId },
         type: 'steel'
       },
       include: [{
-        model: Steel,
+        model: steel,
         where: {
           grade: steelData.grade,
           standard: steelData.standard
@@ -425,7 +428,7 @@ const updateSteel = async (steelId, steelData) => {
   // Mettre à jour dans une transaction
   await sequelize.transaction(async (t) => {    // Gérer les équivalents si modifiés
     if (steelData.equivalents !== undefined) {
-      const oldEquivalents = normalizeEquivalents(steel.Steel.equivalents || []);
+      const oldEquivalents = normalizeEquivalents(steel.steel.equivalents || []);
       const newEquivalents = normalizeEquivalents(steelData.equivalents || []);
       
       // Identifier les équivalents à ajouter et à supprimer
@@ -494,9 +497,12 @@ const updateSteel = async (steelId, steelData) => {
     if (steelData.elements !== undefined) steelUpdates.elements = steelData.elements;
     
     if (Object.keys(steelUpdates).length > 0) {
-      await steel.Steel.update(steelUpdates, { transaction: t });
+      await steel.steel.update(steelUpdates, { transaction: t });
     }
   });
+  
+  // Mettre à jour le modified_at de l'acier et de ses ancêtres après mise à jour
+  await updateAncestorsModifiedAt(steelId);
   
   // Récupérer l'acier mis à jour
   const updatedSteel = await getSteelById(steelId);
@@ -510,14 +516,14 @@ const updateSteel = async (steelId, steelData) => {
  */
 const deleteSteel = async (steelId) => {
   // Récupérer l'acier
-  const steel = await Node.findOne({
+  const steelNode = await node.findOne({
     where: { id: steelId, type: 'steel' },
     include: [{
-      model: Steel
+      model: steel
     }]
   });
   
-  if (!steel) {
+  if (!steelNode) {
     throw new NotFoundError('Acier non trouvé');
   }
   
@@ -525,14 +531,14 @@ const deleteSteel = async (steelId) => {
     // Vérifier les références avant suppression
     
     // 1. Vérifier si cet acier est utilisé comme équivalent par d'autres aciers
-    const steelsWithEquivalents = await Steel.findAll({
+    const steelsWithEquivalents = await steel.findAll({
       where: {
         equivalents: {
           [Op.ne]: null
         }
       },
       include: [{
-        model: Node,
+        model: node,
         required: true
       }]
     });
@@ -557,18 +563,18 @@ const deleteSteel = async (steelId) => {
     // (À implémenter selon la structure de votre base de données)    // Supprimer dans une transaction
     await sequelize.transaction(async (t) => {
       // Supprimer les réciprocités avant de supprimer l'acier
-      const equivalents = steel.Steel.equivalents || [];
+      const equivalents = steel.steel.equivalents || [];
       await removeReciprocalEquivalents(steelId, equivalents, t);
       
       // 1. Supprimer les données Steel en premier (à cause de la clé étrangère)
-      await Steel.destroy({
+      await steel.destroy({
         where: { node_id: steelId },
         transaction: t
       });
       
       // 2. Supprimer toutes les entrées dans la table closure où ce nœud apparaît
-      const { Closure } = require('../models');
-      await Closure.destroy({
+      const { closure: Closure } = require('../models');
+      await closure.destroy({
         where: {
           [Op.or]: [
             { ancestor_id: steelId },
@@ -597,7 +603,7 @@ const cleanUpEquivalents = async () => {
   try {
     logger.info('Début du nettoyage des équivalents...');
     
-    const steels = await Steel.findAll({
+    const steels = await steel.findAll({
       where: {
         equivalents: {
           [Op.ne]: null

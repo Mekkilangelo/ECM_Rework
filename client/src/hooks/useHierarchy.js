@@ -171,21 +171,21 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
     const sortMapping = {
       // Clients
       'name': 'name',
-      'Client.client_group': 'client_group',
-      'Client.country': 'country', 
-      'Client.city': 'city',
+      'client.client_group': 'client_group',
+      'client.country': 'country', 
+      'client.city': 'city',
       // Orders
-      'Order.commercial': 'commercial',
-      'Order.order_date': 'order_date',
+      'order.commercial': 'commercial',
+      'order.order_date': 'order_date',
       // Parts
-      'Part.client_designation': 'client_designation',
-      'Part.reference': 'reference',
-      'Part.steel': 'steel',
-      'Part.quantity': 'quantity',
+      'part.client_designation': 'client_designation',
+      'part.reference': 'reference',
+      'part.steel': 'steel',
+      'part.quantity': 'quantity',
       // Tests
-      'Test.load_number': 'load_number',
-      'Test.test_date': 'test_date',
-      'Test.location': 'location',
+      'test.load_number': 'load_number',
+      'test.test_date': 'test_date',
+      'test.location': 'location',
       // Commun
       'modified_at': 'modified_at',
       'created_at': 'created_at'

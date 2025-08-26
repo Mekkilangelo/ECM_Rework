@@ -6,10 +6,11 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { Node, File, Closure, sequelize } = require('../models');
+const { node, file, closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 // Importer la fonction depuis le middleware pour éviter la duplication
 const { buildPhysicalFilePath } = require('../middleware/file-path');
@@ -103,7 +104,7 @@ const saveUploadedFiles = async (files, data, req = null) => {
     // Récupérer le nœud parent si nodeId est fourni
     let parentNode = null;
     if (nodeId) {
-      parentNode = await Node.findByPk(nodeId, { transaction });
+      parentNode = await node.findByPk(nodeId, { transaction });
       if (!parentNode) {
         throw new NotFoundError('Nœud parent non trouvé');
       }
@@ -122,7 +123,7 @@ const saveUploadedFiles = async (files, data, req = null) => {
     const nodePath = buildNodePath(parentNode, category, subcategory, file.originalname);
     
     // Créer l'enregistrement du nœud
-    const fileNode = await Node.create({
+    const fileNode = await node.create({
       name: file.originalname,
       path: nodePath,
       type: 'file',
@@ -135,27 +136,27 @@ const saveUploadedFiles = async (files, data, req = null) => {
       // Créer les relations de fermeture si le fichier est directement associé à un nœud
       if (nodeId) {
         // 1. Auto-relation (profondeur 0)
-        await Closure.create({
+        await closure.create({
           ancestor_id: fileNode.id,
           descendant_id: fileNode.id,
           depth: 0
         }, { transaction });
         
         // 2. Relations avec les ancêtres du parent
-        const parentClosures = await Closure.findAll({
+        const parentClosures = await closure.findAll({
           where: { descendant_id: parseInt(nodeId) },
           transaction
         });
         
         for (const parentClosure of parentClosures) {
-          await Closure.create({
+          await closure.create({
             ancestor_id: parentClosure.ancestor_id,
             descendant_id: fileNode.id,
             depth: parentClosure.depth + 1
           }, { transaction });
         }
       }      // Créer l'enregistrement du fichier
-      const fileRecord = await File.create({
+      const fileRecord = await file.create({
         node_id: fileNode.id,
         original_name: file.originalname,
         file_path: finalPath,
@@ -177,8 +178,13 @@ const saveUploadedFiles = async (files, data, req = null) => {
         subcategory
       });
     }
-      // Valider la transaction
+    // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at du nœud parent et de ses ancêtres après ajout de fichiers
+    if (nodeId) {
+      await updateAncestorsModifiedAt(parseInt(nodeId));
+    }
     
     return {
       success: true,
@@ -206,7 +212,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
   try {
     // Récupérer les fichiers temporaires en utilisant le champ additional_info.temp_id
     // Utiliser l'opérateur JSON de Sequelize pour une compatibilité maximale
-    const tempFiles = await File.findAll({
+    const tempFiles = await file.findAll({
       where: sequelize.where(
         sequelize.json('additional_info.temp_id'),
         tempId
@@ -222,7 +228,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     }
     
     // Vérifier que le nœud parent existe
-    const parentNode = await Node.findByPk(nodeId);
+    const parentNode = await node.findByPk(nodeId);
     if (!parentNode) {
       throw new NotFoundError('Nœud parent non trouvé');
     }
@@ -247,16 +253,16 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       fs.renameSync(file.file_path, destPath);
       
       // Récupérer le nœud associé au fichier
-      const fileNode = file.Node;
+      const fileNode = file.node;
       if (!fileNode) {
-        throw new Error('Node is not associated to File!');
+        throw new Error('Node is not associated to file!');
       }
       
       // Construire le nouveau chemin logique pour le nœud
       const newNodePath = buildNodePath(parentNode, categoryPath, subcategoryPath, fileNode.name);
       
       // ÉTAPE 1: Supprimer les anciennes relations de fermeture du nœud fichier
-      await Closure.destroy({
+      await closure.destroy({
         where: {
           [Op.or]: [
             { ancestor_id: file.node_id },
@@ -267,7 +273,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       });
       
       // ÉTAPE 2: Mettre à jour les enregistrements du nœud avec le nouveau parent et chemin
-      await Node.update({
+      await node.update({
         parent_id: nodeId,
         path: newNodePath,
         data_status: 'updated',
@@ -279,20 +285,20 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
 
       // ÉTAPE 3: Recréer toutes les relations de fermeture
       // 3a. Relation avec lui-même (depth = 0)
-      await Closure.create({
+      await closure.create({
         ancestor_id: file.node_id,
         descendant_id: file.node_id,
         depth: 0
       }, { transaction });
 
       // 3b. Relations avec tous les ancêtres du nouveau parent
-      const ancestorRelations = await Closure.findAll({
+      const ancestorRelations = await closure.findAll({
         where: { descendant_id: nodeId },
         transaction
       });
 
       for (const ancestorRelation of ancestorRelations) {
-        await Closure.create({
+        await closure.create({
           ancestor_id: ancestorRelation.ancestor_id,
           descendant_id: file.node_id,
           depth: ancestorRelation.depth + 1
@@ -300,7 +306,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       }
       
       // ÉTAPE 4: Mettre à jour l'enregistrement du fichier avec le nouveau chemin physique
-      await File.update({
+      await file.update({
         file_path: destPath,
         category: categoryPath,
         subcategory: subcategoryPath,
@@ -320,6 +326,9 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at du nœud parent et de ses ancêtres après association de fichiers
+    await updateAncestorsModifiedAt(nodeId);
     
     return {
       success: true,
@@ -342,7 +351,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
 const deleteNodeFiles = async (nodeId, transaction = null) => {
   try {
     // Récupérer tous les fichiers associés à ce nœud et ses descendants
-    const fileNodes = await Node.findAll({
+    const fileNodes = await node.findAll({
       where: {
         [Op.or]: [
           { parent_id: nodeId, type: 'file' },
@@ -350,7 +359,7 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
         ]
       },
       include: [{
-        model: File,
+        model: file,
         required: true
       }],
       transaction
@@ -370,14 +379,14 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
 
         // Supprimer l'enregistrement File
         if (file) {
-          await File.destroy({
+          await file.destroy({
             where: { node_id: fileNode.id },
             transaction
           });
         }
 
         // Supprimer le nœud de fichier
-        await Node.destroy({
+        await node.destroy({
           where: { id: fileNode.id },
           transaction
         });
@@ -402,10 +411,10 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
  * @returns {Promise<Object>} Détails du fichier
  */
 const getFileDetails = async (fileId) => {
-  const file = await Node.findOne({
+  const file = await node.findOne({
     where: { id: fileId, type: 'file' },
     include: [{
-      model: File,
+      model: file,
       attributes: { exclude: ['node_id'] }
     }]
   });
@@ -428,7 +437,7 @@ const deleteFile = async (fileId) => {
   try {
     // Récupérer les détails du fichier
     // D'abord, vérifions que le nœud existe et qu'il s'agit bien d'un fichier
-    const node = await Node.findOne({
+    const node = await node.findOne({
       where: { id: fileId, type: 'file' },
       transaction
     });
@@ -438,7 +447,7 @@ const deleteFile = async (fileId) => {
     }
     
     // Ensuite, récupérons les informations du fichier associé
-    const file = await File.findOne({
+    const file = await file.findOne({
       where: { node_id: fileId },
       transaction
     });
@@ -448,7 +457,7 @@ const deleteFile = async (fileId) => {
     }
     
     // 1. Supprimer toutes les relations de fermeture liées à ce fichier
-    await Closure.destroy({
+    await closure.destroy({
       where: {
         [Op.or]: [
           { ancestor_id: fileId },
@@ -464,12 +473,12 @@ const deleteFile = async (fileId) => {
     }
     
     // 3. Supprimer les enregistrements en base
-    await File.destroy({
+    await file.destroy({
       where: { node_id: fileId },
       transaction
     });
     
-    await Node.destroy({
+    await node.destroy({
       where: { id: fileId },
       transaction
     });
@@ -496,7 +505,7 @@ const getAllFilesByNode = async (options) => {
   console.log(`[getAllFilesByNode] Recherche: nodeId=${nodeId}, category=${category}, subcategory=${subcategory}`);
   
   // D'abord, récupérer tous les descendants du nœud (y compris lui-même)
-  const descendantClosure = await Closure.findAll({
+  const descendantClosure = await closure.findAll({
     where: { ancestor_id: nodeId },
     attributes: ['descendant_id', 'depth']
   });
@@ -517,11 +526,11 @@ const getAllFilesByNode = async (options) => {
   if (category) fileConditions.category = category;
   if (subcategory) fileConditions.subcategory = subcategory;
   // Récupérer les nœuds de fichiers
-  const fileNodes = await Node.findAll({
+  const fileNodes = await node.findAll({
     where: conditions,
     include: [
       {
-        model: File,
+        model: file,
         where: Object.keys(fileConditions).length > 0 ? fileConditions : undefined,
         required: true
       }
@@ -555,7 +564,7 @@ const getAllFilesByNode = async (options) => {
  * @returns {Promise<Object>} Données du fichier
  */
 const getFileById = async (fileId) => {
-  const fileData = await File.findOne({ 
+  const fileData = await file.findOne({ 
     where: { node_id: fileId }
   });
   
@@ -578,11 +587,11 @@ const getFileById = async (fileId) => {
  */
 const downloadFile = async (fileId) => {
   // Récupérer les données du fichier
-  const fileData = await File.findOne({ 
+  const fileData = await file.findOne({ 
     where: { node_id: fileId }
   });
   
-  const nodeData = await Node.findOne({ 
+  const nodeData = await node.findOne({ 
     where: { id: fileId } 
   });
   
@@ -608,13 +617,13 @@ const downloadFile = async (fileId) => {
  */
 const getFileStats = async (nodeId) => {
   // Vérifier si le nœud existe
-  const node = await Node.findByPk(nodeId);
+  const node = await node.findByPk(nodeId);
   if (!node) {
     throw new NotFoundError('Nœud non trouvé');
   }
   
   // Compter par catégories
-  const categories = await File.findAll({
+  const categories = await file.findAll({
     attributes: [
       'category',
       [sequelize.fn('COUNT', sequelize.col('node_id')), 'count'],
@@ -630,7 +639,7 @@ const getFileStats = async (nodeId) => {
   });
   
   // Compter par sous-catégories
-  const subcategories = await File.findAll({
+  const subcategories = await file.findAll({
     attributes: [
       'category',
       'subcategory',
@@ -681,7 +690,7 @@ const updateFile = async (fileId, updateData) => {
   
   try {
     // Récupérer le fichier actuel
-    const currentFile = await File.findOne({
+    const currentFile = await file.findOne({
       where: { node_id: fileId },
       include: [{
         model: Node,
@@ -701,7 +710,7 @@ const updateFile = async (fileId, updateData) => {
     
     // Si changement de parent, gérer le déplacement
     if (newParentId && newParentId !== currentNode.parent_id) {
-      const newParent = await Node.findByPk(newParentId, { transaction });
+      const newParent = await node.findByPk(newParentId, { transaction });
       if (!newParent) {
         throw new NotFoundError('Nouveau nœud parent non trouvé');
       }
@@ -729,7 +738,7 @@ const updateFile = async (fileId, updateData) => {
       needsPhysicalMove = true;
       
       // Supprimer les anciennes relations de fermeture
-      await Closure.destroy({
+      await closure.destroy({
         where: {
           [Op.or]: [
             { ancestor_id: fileId },
@@ -740,7 +749,7 @@ const updateFile = async (fileId, updateData) => {
       });
       
       // Mettre à jour le nœud avec le nouveau parent et chemin
-      await Node.update({
+      await node.update({
         parent_id: newParentId,
         path: newLogicalPath,
         name: fileName,
@@ -753,20 +762,20 @@ const updateFile = async (fileId, updateData) => {
       
       // Recréer les relations de fermeture
       // Relation avec lui-même
-      await Closure.create({
+      await closure.create({
         ancestor_id: fileId,
         descendant_id: fileId,
         depth: 0
       }, { transaction });
       
       // Relations avec tous les ancêtres du nouveau parent
-      const ancestorRelations = await Closure.findAll({
+      const ancestorRelations = await closure.findAll({
         where: { descendant_id: newParentId },
         transaction
       });
       
       for (const ancestorRelation of ancestorRelations) {
-        await Closure.create({
+        await closure.create({
           ancestor_id: ancestorRelation.ancestor_id,
           descendant_id: fileId,
           depth: ancestorRelation.depth + 1
@@ -774,7 +783,7 @@ const updateFile = async (fileId, updateData) => {
       }
       
       // Mettre à jour l'enregistrement File
-      await File.update({
+      await file.update({
         file_path: newPhysicalPath,
         category: newCategory,
         subcategory: newSubcategory,
@@ -801,7 +810,7 @@ const updateFile = async (fileId, updateData) => {
       newLogicalPath = currentNode.path.replace(currentNode.name, newFileName);
       
       // Mettre à jour en base
-      await Node.update({
+      await node.update({
         name: newFileName,
         path: newLogicalPath,
         data_status: 'updated',
@@ -811,7 +820,7 @@ const updateFile = async (fileId, updateData) => {
         transaction
       });
       
-      await File.update({
+      await file.update({
         file_path: newPhysicalPath,
         additional_info: {
           ...currentFile.additional_info,
@@ -826,8 +835,11 @@ const updateFile = async (fileId, updateData) => {
     // Valider la transaction
     await transaction.commit();
     
+    // Mettre à jour le modified_at du fichier et de ses ancêtres après mise à jour
+    await updateAncestorsModifiedAt(fileId);
+    
     // Retourner le fichier mis à jour
-    const updatedFile = await File.findOne({
+    const updatedFile = await file.findOne({
       where: { node_id: fileId },
       include: [{
         model: Node,

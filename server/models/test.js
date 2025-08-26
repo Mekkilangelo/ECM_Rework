@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Test = sequelize.define('Test', {
+  const Test = sequelize.define('test', {
     node_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -73,7 +73,10 @@ module.exports = (sequelize) => {
   });
 
   Test.associate = function(models) {
-    Test.belongsTo(models.Node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Test.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Test;

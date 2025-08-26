@@ -133,20 +133,22 @@ const mockClientService = {
   },
 
   async getAllClients(options = {}) {
-    const clients = await Client.findAll({
+    const nodes = await Node.findAll({
+      where: { type: 'client' },
       include: [{
-        model: Node,
-        attributes: ['name']
+        model: Client
+        // Supprimé: attributes: { exclude: ['node_id'] } car node_id est la clé primaire
       }]
     });
 
     return {
-      clients: clients.map(client => ({
-        ...client.toJSON(),
-        name: client.Node ? client.Node.name : null
+      clients: nodes.map(node => ({
+        ...node.toJSON(),
+        ...(node.client ? node.client.toJSON() : {}),
+        name: node.name
       })),
       pagination: {
-        total: clients.length,
+        total: nodes.length,
         offset: 0,
         limit: 10
       }
@@ -154,83 +156,89 @@ const mockClientService = {
   },
 
   async getClientById(clientId) {
-    const client = await Client.findByPk(clientId, {
+    const node = await Node.findOne({
+      where: { id: clientId, type: 'client' },
       include: [{
-        model: Node,
-        attributes: ['name']
+        model: Client,
+        attributes: { exclude: ['node_id'] }
       }]
     });
 
-    if (!client) {
+    if (!node) {
       throw new Error('Client non trouvé');
     }
 
     return {
-      ...client.toJSON(),
-      name: client.Node ? client.Node.name : null
+      ...node.toJSON(),
+      ...(node.client ? node.client.toJSON() : {}),
+      name: node.name
     };
   },
 
   async updateClient(clientId, updateData) {
-    const client = await Client.findByPk(clientId, {
+    const node = await Node.findOne({
+      where: { id: clientId, type: 'client' },
       include: [{
-        model: Node,
-        attributes: ['name']
+        model: Client
+        // Supprimé: attributes: { exclude: ['node_id'] } car node_id est la clé primaire
       }]
     });
 
-    if (!client) {
+    if (!node) {
       throw new Error('Client non trouvé');
     }
 
     // Mettre à jour le nœud si le nom change
-    if (updateData.name && client.Node) {
-      await Node.update(
-        { 
-          name: updateData.name,
-          path: `/${updateData.name}`
-        },
-        { where: { id: client.node_id } }
-      );
+    if (updateData.name) {
+      await node.update({
+        name: updateData.name,
+        path: `/${updateData.name}`
+      });
     }
 
     // Mettre à jour le client
-    await client.update({
-      client_code: updateData.client_code !== undefined ? updateData.client_code : client.client_code,
-      city: updateData.city !== undefined ? updateData.city : client.city,
-      country: updateData.country !== undefined ? updateData.country : client.country,
-      client_group: updateData.client_group !== undefined ? updateData.client_group : client.client_group,
-      address: updateData.address !== undefined ? updateData.address : client.address
-    });
+    if (node.client) {
+      await node.client.update({
+        client_code: updateData.client_code !== undefined ? updateData.client_code : node.client.client_code,
+        city: updateData.city !== undefined ? updateData.city : node.client.city,
+        country: updateData.country !== undefined ? updateData.country : node.client.country,
+        client_group: updateData.client_group !== undefined ? updateData.client_group : node.client.client_group,
+        address: updateData.address !== undefined ? updateData.address : node.client.address
+      });
+    }
 
     // Recharger avec les nouvelles données
-    await client.reload({
+    await node.reload({
       include: [{
-        model: Node,
-        attributes: ['name']
+        model: Client
+        // Supprimé: attributes: { exclude: ['node_id'] } car node_id est la clé primaire
       }]
     });
 
     return {
-      ...client.toJSON(),
-      name: client.Node ? client.Node.name : null
+      ...node.toJSON(),
+      ...(node.client ? node.client.toJSON() : {}),
+      name: node.name
     };
   },
 
   async deleteClient(clientId) {
-    const client = await Client.findByPk(clientId);
+    const node = await Node.findOne({
+      where: { id: clientId, type: 'client' },
+      include: [{
+        model: Client
+      }]
+    });
     
-    if (!client) {
+    if (!node) {
       throw new Error('Client non trouvé');
     }
 
     // Supprimer d'abord le client puis le nœud
-    const nodeId = client.node_id;
-    await client.destroy();
-    
-    if (nodeId) {
-      await Node.destroy({ where: { id: nodeId } });
+    if (node.client) {
+      await node.client.destroy();
     }
+    await node.destroy();
 
     return { success: true };
   }

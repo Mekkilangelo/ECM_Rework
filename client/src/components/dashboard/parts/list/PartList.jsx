@@ -10,6 +10,7 @@ import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
+import FormHeader from '../../../common/FormHeader/FormHeader';
 import PartForm from '../form/PartForm';
 import partService from '../../../../services/partService';
 import '../../../../styles/dataList.css';
@@ -57,6 +58,19 @@ const PartList = ({ orderId }) => {
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
+  // Fonctions Copy/Paste qui utilisent la référence du formulaire
+  const handleCopy = () => {
+    if (partFormRef.current?.handleCopy) {
+      partFormRef.current.handleCopy();
+    }
+  };
+
+  const handlePaste = () => {
+    if (partFormRef.current?.handlePaste) {
+      partFormRef.current.handlePaste();
+    }
+  };
+
   // Configuration des colonnes pour la table triable
   const columns = [
     {
@@ -83,29 +97,29 @@ const PartList = ({ orderId }) => {
       key: 'Part.client_designation',
       label: t('parts.clientDesignation'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.client_designation || "-",
-      sortValue: (part) => part.Part?.client_designation || ''
+      render: (part) => part.part?.client_designation || "-",
+      sortValue: (part) => part.part?.client_designation || ''
     },
     {
       key: 'Part.reference',
       label: t('parts.reference'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.reference || "-",
-      sortValue: (part) => part.Part?.reference || ''
+      render: (part) => part.part?.reference || "-",
+      sortValue: (part) => part.part?.reference || ''
     },
     {
       key: 'Part.steel',
       label: t('parts.steel.title'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.steel || "-",
-      sortValue: (part) => part.Part?.steel || ''
+      render: (part) => part.part?.steel || "-",
+      sortValue: (part) => part.part?.steel || ''
     },
     {
       key: 'Part.quantity',
       label: t('parts.quantity'),
       cellClassName: 'text-center',
-      render: (part) => part.Part?.quantity || "-",
-      sortValue: (part) => parseInt(part.Part?.quantity) || 0
+      render: (part) => part.part?.quantity || "-",
+      sortValue: (part) => parseInt(part.part?.quantity) || 0
     },
     {
       key: 'modified_at',
@@ -125,7 +139,7 @@ const PartList = ({ orderId }) => {
     {
       key: 'actions',
       label: t('common.actions'),
-      style: { width: hasEditRights ? '150px' : '80px' },
+      style: { width: hasEditRights ? '180px' : '80px' },
       cellClassName: 'text-center',
       sortable: false,
       render: (part) => (
@@ -138,7 +152,7 @@ const PartList = ({ orderId }) => {
             handleEditPart(part);
           } : undefined}
           onDelete={hasEditRights ? (e, id) => {
-            handleDeletePart(part.id);
+            handleDeletePart(id);
           } : undefined}
           hasEditRights={hasEditRights}
           labels={{
@@ -267,7 +281,12 @@ const PartList = ({ orderId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('parts.new')}</Modal.Title>
+          <FormHeader 
+            title={t('parts.new')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           <PartForm
@@ -284,7 +303,12 @@ const PartList = ({ orderId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('parts.edit')}</Modal.Title>
+          <FormHeader 
+            title={t('parts.edit')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>          {selectedPart && (
             <PartForm
@@ -307,7 +331,12 @@ const PartList = ({ orderId }) => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('parts.details')}</Modal.Title>
+          <FormHeader 
+            title={t('parts.details')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={true}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedPart && (

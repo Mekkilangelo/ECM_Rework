@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Order = sequelize.define('Order', {
+  const Order = sequelize.define('order', {
     node_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -13,9 +13,7 @@ module.exports = (sequelize) => {
     },
     order_number: {
       type: DataTypes.STRING(50),
-      unique: {
-        name: 'unique_order_number'
-      },
+      unique: true,
       allowNull: true
     },
     order_date: {
@@ -43,7 +41,10 @@ module.exports = (sequelize) => {
   });
 
   Order.associate = function(models) {
-    Order.belongsTo(models.Node, { foreignKey: 'node_id', onDelete: 'CASCADE' });
+    Order.belongsTo(models.node, { 
+      foreignKey: 'node_id', 
+      onDelete: 'CASCADE' 
+    });
   };
 
   return Order;

@@ -3,8 +3,7 @@
  * Contient la logique métier liée aux opérations sur les utilisateurs
  */
 
-const { User } = require('../models');
-const { sequelize, Sequelize } = require('../models');
+const { user, sequelize, Sequelize } = require('../models');
 const { Op } = Sequelize;
 const { hashPassword } = require('../config/auth');
 const { 
@@ -20,7 +19,7 @@ const { validateUserData, userExists } = require('../utils/validators');
  * @returns {Promise<number>} Nombre d'utilisateurs
  */
 const getUserCount = async () => {
-  const count = await User.count();
+  const count = await user.count();
   return count;
 };
 
@@ -48,7 +47,7 @@ const createFirstUser = async (userData) => {
   }
   
   // Création de l'utilisateur
-  const newUser = await User.create({
+  const newUser = await user.create({
     username,
     password_hash: password, // Ne pas hacher ici, le hook beforeCreate du modèle le fera
     role: finalRole,
@@ -72,7 +71,7 @@ const createFirstUser = async (userData) => {
 const getAllUsers = async (options = {}) => {
   const { limit = 10, offset = 0, sortBy = 'created_at', sortOrder = 'DESC' } = options;
   
-  const users = await User.findAndCountAll({
+  const users = await user.findAndCountAll({
     attributes: ['id', 'username', 'role', 'created_at'],
     order: [[sortBy, sortOrder]],
     limit: parseInt(limit),
@@ -95,15 +94,15 @@ const getAllUsers = async (options = {}) => {
  * @returns {Promise<Object>} Détails de l'utilisateur
  */
 const getUserById = async (userId) => {
-  const user = await User.findByPk(userId, {
+  const userData = await user.findByPk(userId, {
     attributes: ['id', 'username', 'role', 'created_at']
   });
   
-  if (!user) {
+  if (!userData) {
     throw new NotFoundError('Utilisateur non trouvé');
   }
   
-  return user;
+  return userData;
 };
 
 /**
@@ -132,7 +131,7 @@ const createUser = async (userData, currentUser) => {
     throw new ConflictError('Ce nom d\'utilisateur existe déjà');
   }
     // Création de l'utilisateur
-  const newUser = await User.create({
+  const newUser = await user.create({
     username,
     password_hash: password, // Ne pas hacher ici, le hook beforeCreate du modèle le fera
     role,
@@ -157,8 +156,8 @@ const createUser = async (userData, currentUser) => {
  */
 const updateUser = async (userId, userData, currentUser) => {
   // Récupérer l'utilisateur existant
-  const user = await User.findByPk(userId);
-  if (!user) {
+  const foundUser = await user.findByPk(userId);
+  if (!foundUser) {
     throw new NotFoundError('Utilisateur non trouvé');
   }
   
@@ -167,7 +166,7 @@ const updateUser = async (userId, userData, currentUser) => {
     throw new AuthorizationError('Vous n\'avez pas les droits pour attribuer le rôle superuser');
   }
   
-  if (user.role === 'superuser' && currentUser.role !== 'superuser' && user.id !== currentUser.id) {
+  if (foundUser.role === 'superuser' && currentUser.role !== 'superuser' && foundUser.id !== currentUser.id) {
     throw new AuthorizationError('Vous ne pouvez pas modifier un superuser');
   }
   
@@ -178,7 +177,7 @@ const updateUser = async (userId, userData, currentUser) => {
   }
   
   // Vérifier si le nouveau nom d'utilisateur existe déjà
-  if (userData.username && userData.username !== user.username) {
+  if (userData.username && userData.username !== foundUser.username) {
     const exists = await userExists(userData.username, userId);
     if (exists) {
       throw new ConflictError('Ce nom d\'utilisateur existe déjà');
@@ -193,9 +192,9 @@ const updateUser = async (userId, userData, currentUser) => {
   // Note: modified_at field removed as it doesn't exist in the database
   
   // Mise à jour de l'utilisateur
-  await user.update(updateData);
+  await foundUser.update(updateData);
     // Récupérer les données mises à jour
-  const updatedUser = await User.findByPk(userId, {
+  const updatedUser = await user.findByPk(userId, {
     attributes: ['id', 'username', 'role', 'created_at']
   });
   
@@ -210,13 +209,13 @@ const updateUser = async (userId, userData, currentUser) => {
  */
 const deleteUser = async (userId, currentUser) => {
   // Récupérer l'utilisateur à supprimer
-  const user = await User.findByPk(userId);
-  if (!user) {
+  const foundUser = await user.findByPk(userId);
+  if (!foundUser) {
     throw new NotFoundError('Utilisateur non trouvé');
   }
   
   // Vérifications de sécurité
-  if (user.role === 'superuser' && currentUser.role !== 'superuser') {
+  if (foundUser.role === 'superuser' && currentUser.role !== 'superuser') {
     throw new AuthorizationError('Vous ne pouvez pas supprimer un superuser');
   }
   
@@ -226,7 +225,7 @@ const deleteUser = async (userId, currentUser) => {
   }
   
   // Supprimer l'utilisateur
-  await user.destroy();
+  await foundUser.destroy();
   return true;
 };
 
@@ -256,8 +255,8 @@ const updateUsersRoles = async (userRoles, currentUser) => {
         }
         
         // Récupérer l'utilisateur
-        const user = await User.findByPk(id, { transaction });
-        if (!user) {
+        const foundUser = await user.findByPk(id, { transaction });
+        if (!foundUser) {
           throw new NotFoundError(`Utilisateur #${id} non trouvé`);
         }
         
@@ -266,12 +265,12 @@ const updateUsersRoles = async (userRoles, currentUser) => {
           throw new AuthorizationError('Droits insuffisants pour attribuer le rôle superuser');
         }
         
-        if (user.role === 'superuser' && currentUser.role !== 'superuser') {
+        if (foundUser.role === 'superuser' && currentUser.role !== 'superuser') {
           throw new AuthorizationError('Droits insuffisants pour modifier un superuser');
         }
         
         // Mettre à jour le rôle
-        await user.update({ 
+        await foundUser.update({ 
           role, 
           modified_at: new Date() 
         }, { transaction });

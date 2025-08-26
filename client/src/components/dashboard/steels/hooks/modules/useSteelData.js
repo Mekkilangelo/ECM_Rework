@@ -13,7 +13,7 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel, forceRef
   useEffect(() => {
     if (steel) {
       // Récupérer l'ID du steel, qui peut être à différents endroits selon la structure
-      const steelId = steel.id || (steel.Steel && steel.id);
+      const steelId = steel.id || (steel.steel && steel.id);
       
       if (steelId) {
         const fetchSteelData = async () => {
@@ -28,7 +28,7 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel, forceRef
             
             // Récupérer les données du Node et du Steel (adaptation au nouveau format)
             const nodeData = steelData;
-            const steelProperties = steelData.Steel || {};
+            const steelProperties = steelData.steel || {};
             
             // Préparer les données pour le formulaire
             const formattedData = {

@@ -10,6 +10,7 @@ import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
+import FormHeader from '../../../common/FormHeader/FormHeader';
 import OrderForm from '../form/OrderForm';
 import orderService from '../../../../services/orderService';
 import '../../../../styles/dataList.css';
@@ -57,6 +58,29 @@ const OrderList = () => {
   // Vérifier si l'utilisateur a les droits d'édition
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
 
+  // Références pour accéder aux fonctions Copy/Paste des formulaires
+  const createFormRef = useRef(null);
+  const editFormRef = useRef(null);
+
+  // Fonctions Copy/Paste qui utilisent les fonctions du formulaire actif
+  const handleCopy = () => {
+    const activeForm = createFormRef.current || editFormRef.current;
+    if (activeForm && activeForm.handleCopy) {
+      activeForm.handleCopy();
+    } else {
+      console.log('Aucun formulaire actif pour la copie');
+    }
+  };
+
+  const handlePaste = () => {
+    const activeForm = createFormRef.current || editFormRef.current;
+    if (activeForm && activeForm.handlePaste) {
+      activeForm.handlePaste();
+    } else {
+      console.log('Aucun formulaire actif pour le collage');
+    }
+  };
+
   // Configuration des colonnes pour la table triable
   const columns = [
     {
@@ -83,21 +107,21 @@ const OrderList = () => {
       key: 'Order.commercial',
       label: t('orders.commercial'),
       cellClassName: 'text-center',
-      render: (order) => order.Order?.commercial || "-",
-      sortValue: (order) => order.Order?.commercial || ''
+      render: (order) => order.order?.commercial || "-",
+      sortValue: (order) => order.order?.commercial || ''
     },
     {
       key: 'Order.order_date',
       label: t('orders.date'),
       cellClassName: 'text-center',
-      render: (order) => order.Order?.order_date
-        ? new Date(order.Order?.order_date).toLocaleString('fr-FR', {
+      render: (order) => order.order?.order_date
+        ? new Date(order.order?.order_date).toLocaleString('fr-FR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric'
         })
         : t('common.unknown'),
-      sortValue: (order) => order.Order?.order_date ? new Date(order.Order?.order_date).getTime() : 0
+      sortValue: (order) => order.order?.order_date ? new Date(order.order?.order_date).getTime() : 0
     },
     {
       key: 'modified_at',
@@ -117,7 +141,7 @@ const OrderList = () => {
     {
       key: 'actions',
       label: t('common.actions'),
-      style: { width: hasEditRights ? '150px' : '80px' },
+      style: { width: hasEditRights ? '180px' : '80px' },
       cellClassName: 'text-center',
       sortable: false,
       render: (order) => (
@@ -130,7 +154,7 @@ const OrderList = () => {
             openEditModal(order);
           } : undefined}
           onDelete={hasEditRights ? (e, id) => {
-            handleDeleteOrder(order.id);
+            handleDeleteOrder(id);
           } : undefined}
           hasEditRights={hasEditRights}
           labels={{
@@ -253,11 +277,19 @@ const OrderList = () => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('orders.add')}</Modal.Title>
+          <FormHeader 
+            title={t('orders.add')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           <OrderForm
-            ref={orderFormRef}
+            ref={(ref) => {
+              orderFormRef.current = ref;
+              createFormRef.current = ref;
+            }}
             clientId={hierarchyState.clientId}
             onClose={closeCreateModal}
             onOrderCreated={handleItemCreated}
@@ -272,12 +304,20 @@ const OrderList = () => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('orders.edit')}</Modal.Title>
+          <FormHeader 
+            title={t('orders.edit')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={false}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedOrder && (
             <OrderForm
-              ref={orderFormRef}
+              ref={(ref) => {
+                orderFormRef.current = ref;
+                editFormRef.current = ref;
+              }}
               order={selectedOrder}
               clientId={hierarchyState.clientId}
               onClose={closeEditModal}
@@ -294,7 +334,12 @@ const OrderList = () => {
         size="xl"
       >
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title>{t('orders.details')}</Modal.Title>
+          <FormHeader 
+            title={t('orders.details')}
+            onCopy={handleCopy}
+            onPaste={handlePaste}
+            viewMode={true}
+          />
         </Modal.Header>
         <Modal.Body>
           {selectedOrder && (

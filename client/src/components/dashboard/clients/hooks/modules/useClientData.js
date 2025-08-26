@@ -22,11 +22,11 @@ const useClientData = (client, setFormData, setMessage, setFetchingClient) => {
           
           setFormData({
             name: clientData.name || '',
-            client_code: clientData.Client?.client_code || '',
-            country: clientData.Client?.country || '',
-            city: clientData.Client?.city || '',
-            client_group: clientData.Client?.client_group || '',
-            address: clientData.Client?.address || '',
+            client_code: clientData.client?.client_code || '',
+            country: clientData.client?.country || '',
+            city: clientData.client?.city || '',
+            client_group: clientData.client?.client_group || '',
+            address: clientData.client?.address || '',
             description: clientData.description || ''
           });
         } catch (error) {

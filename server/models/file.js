@@ -1,8 +1,7 @@
-// models/file.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const File = sequelize.define('File', {
+  const File = sequelize.define('file', {
     node_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -34,25 +33,23 @@ module.exports = (sequelize) => {
     },
     category: {
       type: DataTypes.STRING(50),
-      allowNull: true,
-      comment: 'Pour organiser par type: "general", "photos", "curves", etc.'
+      allowNull: true
     },
     subcategory: {
       type: DataTypes.STRING(50),
-      allowNull: true,
-      comment: 'Pour préciser: "top_view", "heating_curve", etc.'
+      allowNull: true
     },
     additional_info: {
       type: DataTypes.JSON,
       allowNull: true
-    }  }, {
+    }
+  }, {
     tableName: 'files',
     timestamps: false
   });
 
-  // Définir les associations
   File.associate = function(models) {
-    File.belongsTo(models.Node, {
+    File.belongsTo(models.node, {
       foreignKey: 'node_id',
       onDelete: 'CASCADE'
     });

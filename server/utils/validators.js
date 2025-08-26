@@ -4,7 +4,7 @@
  */
 
 const { Op } = require('sequelize');
-const { User, Node } = require('../models');
+const { user, node } = require('../models');
 
 /**
  * Valide les données d'une commande
@@ -95,8 +95,8 @@ const userExists = async (username, excludeId = null) => {
     whereClause.id = { [Op.ne]: excludeId };
   }
   
-  const user = await User.findOne({ where: whereClause });
-  return !!user;
+  const foundUser = await user.findOne({ where: whereClause });
+  return !!foundUser;
 };
 
 /**
@@ -105,8 +105,8 @@ const userExists = async (username, excludeId = null) => {
  * @returns {Promise<boolean>} True si existe, false sinon
  */
 const nodeExists = async (nodeId) => {
-  const node = await Node.findByPk(nodeId);
-  return !!node;
+  const foundNode = await node.findByPk(nodeId);
+  return !!foundNode;
 };
 
 module.exports = {

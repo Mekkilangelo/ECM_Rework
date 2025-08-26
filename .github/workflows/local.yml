@@ -9,16 +9,13 @@ on:
 jobs:
   build-and-deploy:
     runs-on: self-hosted
-    
-    defaults:
-      run:
-        shell: powershell
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Create .env.dev from secrets
+        uses: actions/checkout@v4
+
+      - name: Create .env.dev from secrets (Windows)
+        shell: powershell
         run: |
           Write-Host "Creating .env.dev from GitHub secrets..."
           @"
@@ -41,59 +38,56 @@ jobs:
           CLIENT_PORT=3000
           "@ | Out-File -FilePath ".env.dev" -Encoding UTF8
           Write-Host ".env.dev created successfully"
-      
-      - name: Clean up any existing containers
+
+      - name: Clean up any existing containers (Windows)
+        shell: powershell
         run: |
           Write-Host "Cleaning up existing containers and networks..."
           docker container prune -f
           docker network prune -f
-      
-      - name: Stop existing containers
+
+      - name: Stop existing containers (Windows)
+        shell: powershell
         run: |
           Write-Host "Stopping existing containers..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml down
           Write-Host "Containers stopped (if any were running)"
-          
-      - name: Build with dev environment
+
+      - name: Build with dev environment (Windows)
+        shell: powershell
         run: |
           Write-Host "Building with dev environment..."
-          docker compose --env-file .env.dev -f docker-compose.dev.yml build --no-cache
-          
-      - name: Start services
+          docker compose --env-file .env.dev -f docker-compose.dev.yml build
+
+      - name: Start services (Windows)
+        shell: powershell
         run: |
           Write-Host "Starting services..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml up -d
-          
-      - name: Wait for services
+
+      - name: Wait for services (Windows)
+        shell: powershell
         run: |
           Write-Host "Waiting for services to start..."
           Start-Sleep -Seconds 30
-          
-      - name: Health check
-        run: |
-          Write-Host "Checking service health..."
-          docker compose --env-file .env.dev -f docker-compose.dev.yml ps
-          
-      - name: Run backend tests
+
+      - name: Run backend tests (Windows)
+        shell: powershell
         run: |
           Write-Host "Running backend tests..."
-          
-          # Lancer les tests unitaires d'abord (plus rapides)
           Write-Host "Executing unit tests..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:unit
-          
-          # Puis les tests d'intégration
           Write-Host "Executing integration tests..."
           docker compose --env-file .env.dev -f docker-compose.dev.yml exec -T backend npm run test:integration
-          
           Write-Host "All backend tests completed successfully!"
-          
-      - name: Deployment success
+
+      - name: Deployment success (Windows)
+        shell: powershell
         run: |
           Write-Host "==================================="
-          Write-Host "Deploiement DEV local reussi!"
+          Write-Host "Déploiement DEV local réussi!"
           Write-Host ""
-          Write-Host "URLs d'acces sur votre machine:"
+          Write-Host "URLs d'accès sur votre machine:"
           Write-Host "  Frontend: http://localhost:3000"
           Write-Host "  Backend:  http://localhost:5001"
           Write-Host "  API:      http://localhost:5001/api"

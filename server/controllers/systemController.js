@@ -197,7 +197,7 @@ const cleanupTempFiles = async (req, res) => {
  */
 const getTempFileStats = async (req, res) => {
   try {
-    const { File, sequelize } = require('../models');
+    const { file: File, sequelize } = require('../models');
     const fs = require('fs');
     const { TEMP_DIR } = require('../utils/fileStorage');
     

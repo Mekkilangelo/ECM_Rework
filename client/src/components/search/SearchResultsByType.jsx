@@ -112,11 +112,11 @@ const SearchResultsByType = ({ results, entityTypes }) => {
 
   // Fonction pour déterminer le type d'entité d'un élément
   const getEntityType = (item) => {
-    if (item.Client) return 'clients';
-    if (item.Order) return 'orders';
-    if (item.Part) return 'parts';
-    if (item.Test) return 'tests';
-    if (item.Steel) return 'steels';
+    if (item.client) return 'clients';
+    if (item.order) return 'orders';
+    if (item.part) return 'parts';
+    if (item.test) return 'tests';
+    if (item.steel) return 'steels';
     return null;
   };
 
@@ -132,7 +132,7 @@ const SearchResultsByType = ({ results, entityTypes }) => {
             <td className="align-middle">{extractProperty(item, 'country', type) || '-'}</td>
             <td className="align-middle">
               {(item.contacts && item.contacts.length > 0) ? item.contacts[0].name : 
-               (item.Client && item.Client.contacts && item.Client.contacts.length > 0) ? item.Client.contacts[0].name : '-'}
+               (item.client && item.client.contacts && item.client.contacts.length > 0) ? item.client.contacts[0].name : '-'}
             </td>
             <td className="align-middle">
               {hasAdminRights && (

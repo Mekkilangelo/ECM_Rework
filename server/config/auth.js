@@ -50,7 +50,7 @@ const generateToken = (user) => {
     if (tokenParts.length !== 3) {
       console.error('ERREUR: Token JWT généré malformé!');
     } else {
-      console.log(`Token JWT généré avec succès pour ${user.username} (format valide)`);
+      console.log(`Token JWT généré avec succès pour ${user.username} (ID: ${user.id}) (format valide)`);
     }
     
     return token;

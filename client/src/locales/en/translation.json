@@ -5,6 +5,7 @@
     "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
+    "copy": "Copy",
     "create": "Create",
     "delete": "Delete",
     "edit": "Edit",
@@ -14,6 +15,7 @@
     "modifiedAt": "Modified on",
     "name": "Name",
     "no": "No",
+    "paste": "Paste",
     "save": "Save",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
@@ -41,6 +43,15 @@
     "noValuesFound": "No values found",
     "clickToAddValues": "Click \"Add new value\" to add values to this enumeration",
     "valueUsedWarning": "This value is used in {{count}} record(s). Modification will update all these records."
+  },
+
+  "copyPaste": {
+    "copySuccess": "Data copied successfully",
+    "copyError": "Error during copy",
+    "pasteSuccess": "Data pasted successfully",
+    "pasteError": "Error during paste", 
+    "noCachedData": "No copied data found for this form type",
+    "expiredData": "Copied data has expired"
   },
   
   "pagination": {

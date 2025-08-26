@@ -1,7 +1,7 @@
 /**
  * Contrôleur pour les fonctionnalités de recherche
  */
-const { Node, Client, Order, Part, Test, Steel } = require('../models');
+const { node: Node, client: Client, order: Order, part: Part, test: Test, steel: Steel } = require('../models');
 const { Op, Sequelize } = require('sequelize');
 
 // Mappages de types d'entités vers les champs à rechercher

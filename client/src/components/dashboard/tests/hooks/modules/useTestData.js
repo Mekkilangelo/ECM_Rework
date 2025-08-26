@@ -37,7 +37,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           // Récupération des données du test avec la méthode refactorisée
           const testData = await testService.getTest(test.id);
             // Check if data is in the Test property or directly in testData
-          const data = testData.Test || testData;
+          const data = testData.test || testData;
           
           // Parse JSON strings if necessary
           const furnaceData = typeof data.furnace_data === 'string' 
@@ -67,7 +67,7 @@ const useTestData = (test, setFormData, setMessage, setFetchingTest) => {
           // Map from API structure to form structure
           setFormData({
             // Basic information
-            name: data.test_code || '',
+            name: data.name || '',  // Utiliser le vrai nom du nœud, pas le test_code
             loadNumber: data.load_number || '',
             testDate: data.test_date || '',
             location: data.location || '',

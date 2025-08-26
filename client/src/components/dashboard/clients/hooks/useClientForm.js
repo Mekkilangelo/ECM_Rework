@@ -7,6 +7,7 @@ import useOptionsFetcher from '../../../../hooks/useOptionsFetcher';
 import useClientSubmission from './modules/useClientSubmission';
 import useClientData from './modules/useClientData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
+import useCopyPaste from '../../../../hooks/useCopyPaste';
 
 const useClientForm = (client, onClose, onClientCreated, onClientUpdated, viewMode = false) => {
   // État du formulaire et initialisation
@@ -107,12 +108,49 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated, viewMo
     }
   }, [message, resetInitialState]);
 
+  // Fonction pour formater les données pour l'API/copie
+  const formatForApi = (data) => {
+    return {
+      // Informations de base
+      name: data.name || '',
+      client_code: data.client_code || '',
+      country: data.country || '',
+      city: data.city || '',
+      client_group: data.client_group || '',
+      address: data.address || '',
+      description: data.description || ''
+    };
+  };
+
+  // Fonction pour parser les données depuis l'API/collage
+  const parseFromApi = (data) => {
+    return {
+      // Informations de base
+      name: data.name || '',
+      client_code: data.client_code || '',
+      country: data.country || '',
+      city: data.city || '',
+      client_group: data.client_group || '',
+      address: data.address || '',
+      description: data.description || ''
+    };
+  };
+
+  // Hook pour la fonctionnalité copy/paste
+  const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
+    formType: 'clients',
+    formData,
+    setFormData,
+    formatForApi,
+    parseFromApi
+  });
+
   return {
     formData,
     errors,
     loading,
     fetchingClient,
-    message,
+    message: message || copyPasteMessage, // Combiner les messages
     countryOptions,
     selectStyles,
     getSelectedOption,
@@ -127,7 +165,10 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated, viewMo
     handleCloseRequest,
     confirmClose,
     cancelClose,
-    saveAndClose
+    saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   };
 };
 

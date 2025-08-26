@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -8,9 +8,9 @@ RUN apk add --no-cache netcat-openbsd
 COPY package*.json ./
 
 # Pour le développement et les tests, installer toutes les dépendances
-# y compris devDependencies comme cross-env
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
+
 RUN if [ "$NODE_ENV" = "production" ]; then \
         npm ci --only=production; \
     else \

@@ -12,7 +12,7 @@ jest.mock('../../../utils/logger', () => ({
 }));
 
 jest.mock('../../../models', () => ({
-  User: {
+  user: {
     findOne: jest.fn()
   }
 }));

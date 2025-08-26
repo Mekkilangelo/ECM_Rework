@@ -27,12 +27,17 @@ const OrderForm = forwardRef(({ order, clientId, onClose, onOrderCreated, onOrde
     confirmClose,
     cancelClose,
     saveAndClose,
-    handleFileAssociationNeeded
+    handleFileAssociationNeeded,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
   } = useOrderForm(order, onClose, onOrderCreated, onOrderUpdated, viewMode, clientId);
 
-  // Exposer handleCloseRequest à travers la référence
+  // Exposer handleCloseRequest et les fonctions Copy/Paste à travers la référence
   useImperativeHandle(ref, () => ({
-    handleCloseRequest
+    handleCloseRequest,
+    handleCopy,
+    handlePaste
   }));
 
   if (fetchingOrder) {

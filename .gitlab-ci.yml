@@ -1,89 +1,70 @@
-stages: [build, test, deploy]
+stages:
+  - build
+  - deploy
 
 variables:
-  APP_VERSION: "$CI_COMMIT_SHORT_SHA"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
 
-# Si ton runner est "taggé", décommente et adapte ces 2 lignes :
-# default:
-#   tags: [runner-all]
+## Assurez-vous d'ajouter votre certificat CA sous ci/ca.crt dans le repo !
 
-# ---------- BUILD ----------
-build_backend:
+.build_template:
   stage: build
+  image: docker:latest
+  services:
+    - name: gitlab.local:5050/customia/synergia/custom-dind:ca
+      alias: docker
+  before_script:
+    - mkdir -p /etc/docker/certs.d/gitlab.local:5050
+    - cp ./ci/docker-dind-cert/ca.crt /etc/docker/certs.d/gitlab.local:5050/ca.crt
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
-    - docker build -t "$CI_REGISTRY_IMAGE/backend:$APP_VERSION" ./server
-    - docker push "$CI_REGISTRY_IMAGE/backend:$APP_VERSION"
-    - |
-      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker tag "$CI_REGISTRY_IMAGE/backend:$APP_VERSION" "$CI_REGISTRY_IMAGE/backend:latest"
-        docker push "$CI_REGISTRY_IMAGE/backend:latest"
-      fi
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest .
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
-build_frontend:
-  stage: build
+build-backend:
+  extends: .build_template
+  variables:
+    IMAGE_NAME: synergia-backend
+  needs: []
   script:
-    - docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
-    - docker build -t "$CI_REGISTRY_IMAGE/frontend:$APP_VERSION" ./client
-    - docker push "$CI_REGISTRY_IMAGE/frontend:$APP_VERSION"
-    - |
-      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker tag "$CI_REGISTRY_IMAGE/frontend:$APP_VERSION" "$CI_REGISTRY_IMAGE/frontend:latest"
-        docker push "$CI_REGISTRY_IMAGE/frontend:latest"
-      fi
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./server
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
-# ---------- TEST ----------
-test_backend:
-  stage: test
-  needs: [build_backend]
+build-frontend:
+  extends: .build_template
+  variables:
+    IMAGE_NAME: synergia-frontend
+  needs: []
   script:
-    - echo "TODO: mets tes commandes de tests backend ici (ex: npm test / pytest)"
-    # Exemple si tu veux tester l'image elle-même :
-    # - docker run --rm "$CI_REGISTRY_IMAGE/backend:$APP_VERSION" npm test
-  allow_failure: false
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest ./client
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/$IMAGE_NAME:latest
 
-test_frontend:
-  stage: test
-  needs: [build_frontend]
-  script:
-    - echo "TODO: mets tes commandes de tests frontend ici"
-    # - docker run --rm "$CI_REGISTRY_IMAGE/frontend:$APP_VERSION" npm test
-  allow_failure: false
-
-# ---------- DEPLOY ----------
-deploy_prod:
+deploy-dev:
   stage: deploy
-  # Déploiement manuel sur main (tu peux changer la règle si tu préfères les tags)
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-    - when: never
+  image: docker/compose:latest
+  variables:
+    GIT_STRATEGY: none
   script:
-    - export DEPLOY_DIR=/opt/synergia
-    - mkdir -p "$DEPLOY_DIR"
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f docker-compose.dev.yml pull
+    - docker-compose -f docker-compose.dev.yml up -d
+  environment: development
+  only:
+    - dev
 
-    # 1) Générer le .env utilisé par docker compose (images + secrets)
-    - |
-      cat > "$DEPLOY_DIR/.env" <<'EOF'
-      REGISTRY=${CI_REGISTRY_IMAGE}
-      APP_VERSION=${APP_VERSION}
-      # Pour environnement offline, tu pourras décommenter et pointer vers tes miroirs internes :
-      # REGISTRY_BASE_MYSQL=gitlab.local:5050/base/mysql:8.0
-      # REGISTRY_BASE_CADDY=gitlab.local:5050/base/caddy:2-alpine
-
-      DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      DB_NAME=${DB_NAME}
-      DB_USER=${DB_USER}
-      DB_PASSWORD=${DB_PASSWORD}
-      JWT_SECRET=${JWT_SECRET}
-      EOF
-
-    # 2) Déploiement
-    - cp docker-compose.prod.yml "$DEPLOY_DIR/"
-    - cd "$DEPLOY_DIR"
-    - docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
-    - docker compose -f docker-compose.prod.yml pull
-    - docker compose -f docker-compose.prod.yml up -d
-  environment:
-    name: production
-    url: http://monapp.local
+deploy-prod:
+  stage: deploy
+  image: docker/compose:latest
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f docker-compose.prod.yml pull
+    - docker-compose -f docker-compose.prod.yml up -d
+  environment: production
+  only:
+    - main

@@ -66,26 +66,29 @@ const getSteels = async (req, res, next) => {
       pagination: result.pagination
     });
     
-    // Transformation des données pour l'API
-    const formattedSteels = result.steels.map(steel => ({
-      id: steel.id,
-      name: steel.name,
-      description: steel.description,
-      grade: steel.Steel?.grade,
-      family: steel.Steel?.family,
-      standard: steel.Steel?.standard,
-      equivalents: steel.Steel?.equivalents,
-      chemistery: steel.Steel?.chemistery,
-      elements: steel.Steel?.elements,
-      created_at: steel.created_at,
-      modified_at: steel.modified_at
-    }));
-    
+    // Transformation des données pour l'API : aplatir les propriétés de steel à la racine
+    const formattedSteels = result.steels.map(node => {
+      const steelData = node.steel || {};
+      return {
+        id: node.id,
+        name: node.name,
+        description: node.description,
+        grade: steelData.grade,
+        family: steelData.family,
+        standard: steelData.standard,
+        equivalents: steelData.equivalents,
+        chemistery: steelData.chemistery,
+        elements: steelData.elements,
+        created_at: node.created_at,
+        modified_at: node.modified_at
+      };
+    });
+
     logger.info('Données formatées pour l\'API:', {
       formattedSteelsCount: formattedSteels.length,
       firstSteel: formattedSteels[0] || null
     });
-    
+
     // Renvoyer la réponse paginée
     const apiResponseResult = apiResponse.paginated(
       res,
@@ -93,7 +96,7 @@ const getSteels = async (req, res, next) => {
       result.pagination,
       'Aciers récupérés avec succès'
     );
-    
+
     logger.info('Réponse API envoyée');
     return apiResponseResult;
   } catch (error) {

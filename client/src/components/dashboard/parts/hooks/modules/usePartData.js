@@ -23,7 +23,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
           }
           
           // Vérifier si les données sont dans la propriété Part ou directement dans partData
-          const data = partData.Part || partData;
+          const data = partData.part || partData;
           
           // S'assurer que dimensions et specifications sont des objets et non des chaînes
           let dimensions = {};

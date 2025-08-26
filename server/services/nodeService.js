@@ -3,7 +3,7 @@
  * Contient la logique métier liée aux opérations sur les nœuds
  */
 
-const { Node, Closure, Client, Order, Part, Test, File, Furnace, Steel, sequelize } = require('../models');
+const { node, closure, client, order, part, test, file, furnace, steel, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const { deletePhysicalFiles } = require('../utils/fileUtils');
@@ -15,13 +15,13 @@ const { deletePhysicalFiles } = require('../utils/fileUtils');
  */
 const getModelForType = (type) => {
   const typeModelMap = {
-    'client': Client,
-    'order': Order,
-    'part': Part,
-    'test': Test,
-    'file': File,
-    'furnace': Furnace,
-    'steel': Steel
+    'client': client,
+    'order': order,
+    'part': part,
+    'test': test,
+    'file': file,
+    'furnace': furnace,
+    'steel': steel
   };
   return typeModelMap[type];
 };
@@ -108,7 +108,7 @@ const getNodes = async (params) => {
     }
   }
 
-  const nodes = await Node.findAll(queryOptions);
+  const nodes = await node.findAll(queryOptions);
   return nodes;
 };
 
@@ -126,7 +126,7 @@ const getNodeDetails = async (nodeId, type) => {
   
   const associatedModel = getModelForType(type);
   
-  const node = await Node.findOne({
+  const foundNode = await node.findOne({
     where: { id: nodeId, type },
     include: [{
       model: associatedModel,
@@ -179,7 +179,7 @@ const getTotalNodes = async (params) => {
     countOptions.where.id = { [Op.in]: ids };
   }
   
-  const count = await Node.count(countOptions);
+  const count = await node.count(countOptions);
   return count;
 };
 
@@ -202,7 +202,7 @@ const createNode = async (nodeData) => {
       throw new ValidationError('ID du parent requis pour ce type de nœud');
     }
     
-    const parentNode = await Node.findByPk(parentId);
+    const parentNode = await node.findByPk(parentId);
     if (!parentNode) {
       throw new NotFoundError('Nœud parent non trouvé');
     }
@@ -213,14 +213,14 @@ const createNode = async (nodeData) => {
     // Générer le chemin
     let path;
     if (parentId) {
-      const parentNode = await Node.findByPk(parentId, { transaction: t });
+      const parentNode = await node.findByPk(parentId, { transaction: t });
       path = `${parentNode.path}/${name}`;
     } else {
       path = `/${name}`;
     }
     
     // Créer le nœud
-    const newNode = await Node.create({
+    const newNode = await node.create({
       name,
       path,
       type,
@@ -278,7 +278,7 @@ const createNode = async (nodeData) => {
 const updateNode = async (nodeId, updateData) => {
   const { name, data } = updateData;
   
-  const node = await Node.findByPk(nodeId);
+  const node = await node.findByPk(nodeId);
   if (!node) {
     throw new NotFoundError('Nœud non trouvé');
   }
@@ -309,7 +309,7 @@ const updateNode = async (nodeId, updateData) => {
         });
         
         for (const relation of descendants) {
-          const descendant = await Node.findByPk(relation.descendant_id, { transaction: t });
+          const descendant = await node.findByPk(relation.descendant_id, { transaction: t });
           const descendantPath = descendant.path.replace(node.path, newPath);
           await descendant.update({ path: descendantPath }, { transaction: t });
         }
@@ -332,7 +332,7 @@ const updateNode = async (nodeId, updateData) => {
   });
   
   // Récupérer et renvoyer le nœud mis à jour avec ses données spécifiques
-  const updatedNode = await Node.findByPk(nodeId, {
+  const updatedNode = await node.findByPk(nodeId, {
     include: [{
       model: getModelForType(node.type),
       attributes: { exclude: ['node_id'] }
@@ -370,7 +370,7 @@ const deleteNode = async (nodeId) => {
   
   try {
     // 1. Vérifier que le nœud existe
-    const node = await Node.findByPk(nodeId, { transaction: t });
+    const node = await node.findByPk(nodeId, { transaction: t });
     
     if (!node) {
       await t.rollback();
@@ -405,7 +405,7 @@ const deleteNode = async (nodeId) => {
     
     // 5. Supprimer les données spécifiques au type pour tous les descendants
     for (const desc of descendants) {
-      const descendantNode = await Node.findByPk(desc.descendant_id, { transaction: t });
+      const descendantNode = await node.findByPk(desc.descendant_id, { transaction: t });
       if (descendantNode && descendantNode.type !== 'file') { // Les fichiers sont déjà supprimés
         await deleteSpecificData(descendantNode.type, desc.descendant_id, t);
       }
@@ -419,7 +419,7 @@ const deleteNode = async (nodeId) => {
     // 7. Supprimer tous les nœuds descendants (sauf les fichiers déjà supprimés)
     const nonFileDescendants = descendants.filter(d => d.descendant_id !== nodeId);
     if (nonFileDescendants.length > 0) {
-      await Node.destroy({
+      await node.destroy({
         where: {
           id: { [Op.in]: nonFileDescendants.map(d => d.descendant_id) },
           type: { [Op.ne]: 'file' } // Les fichiers sont déjà supprimés
@@ -494,7 +494,7 @@ const getTable = async (params) => {
   const offset = (page - 1) * limit;
   
   // Récupérer les enfants directs du nœud parent
-  const nodes = await Node.findAll({
+  const nodes = await node.findAll({
     attributes: ['id', 'name', 'type', 'created_at', 'updated_at'],
     include: [
       {
@@ -513,7 +513,7 @@ const getTable = async (params) => {
   });
   
   // Récupérer le total pour la pagination
-  const count = await Node.count({
+  const count = await node.count({
     include: [
       {
         model: Closure,
@@ -545,13 +545,13 @@ const getTable = async (params) => {
  * @returns {Promise<Object>} Résultat de l'opération
  */
 const updateNodeStatus = async (nodeId, status) => {
-  const node = await Node.findByPk(nodeId);
-  if (!node) {
+  const nodeStatus = await node.findByPk(nodeId);
+  if (!nodeStatus) {
     throw new NotFoundError('Nœud non trouvé');
   }
   
   // Mettre à jour le statut et la date de modification
-  await node.update({
+  await nodeStatus.update({
     data_status: status,
     modified_at: new Date()
   });

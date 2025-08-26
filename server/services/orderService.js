@@ -3,8 +3,7 @@
  * Contient la logique métier liée aux opérations sur les commandes
  */
 
-const { Node, Order, Closure } = require('../models');
-const { sequelize } = require('../models');
+const { node, order, closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { validateOrderData } = require('../utils/validators');
 const { 
@@ -12,6 +11,7 @@ const {
   ValidationError 
 } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
+const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 /**
  * Récupère toutes les commandes avec pagination et filtrage
@@ -46,8 +46,8 @@ const getAllOrders = async (options = {}) => {
   const getOrderClause = (sortBy, sortOrder) => {
     const sortMapping = {
       'name': ['name', sortOrder],
-      'commercial': [{ model: Order }, 'commercial', sortOrder],
-      'order_date': [{ model: Order }, 'order_date', sortOrder],
+      'commercial': [{ model: order }, 'commercial', sortOrder],
+      'order_date': [{ model: order }, 'order_date', sortOrder],
       'modified_at': ['modified_at', sortOrder],
       'created_at': ['created_at', sortOrder]
     };
@@ -56,10 +56,10 @@ const getAllOrders = async (options = {}) => {
   };
   
   // Exécuter la requête
-  const orders = await Node.findAll({
+  const orders = await node.findAll({
     where: whereCondition,
     include: [{
-      model: Order,
+      model: order,
       attributes: ['order_number', 'order_date', 'commercial', 'contacts']
     }],
     order: [getOrderClause(sortBy, sortOrder)],
@@ -68,7 +68,7 @@ const getAllOrders = async (options = {}) => {
   });
   
   // Compter le total pour la pagination
-  const total = await Node.count({
+  const total = await node.count({
     where: whereCondition
   });
   
@@ -88,19 +88,19 @@ const getAllOrders = async (options = {}) => {
  * @returns {Promise<Object>} Détails de la commande
  */
 const getOrderById = async (orderId) => {
-  const order = await Node.findOne({
+  const foundOrder = await node.findOne({
     where: { id: orderId, type: 'order' },
     include: [{
-      model: Order,
+      model: order,
       attributes: { exclude: ['node_id'] }
     }]
   });
   
-  if (!order) {
+  if (!foundOrder) {
     throw new NotFoundError('Commande non trouvée');
   }
   
-  return order;
+  return foundOrder;
 };
 
 /**
@@ -131,7 +131,7 @@ const createOrder = async (orderData) => {
   } = orderData;
   
   // Vérifier si le parent existe
-  const parentNode = await Node.findByPk(parent_id);
+  const parentNode = await node.findByPk(parent_id);
   if (!parentNode) {
     throw new NotFoundError('Nœud parent introuvable');
   }
@@ -148,7 +148,7 @@ const createOrder = async (orderData) => {
       const baseName = `TRQ_${formattedDate}`;
       
       // Trouver toutes les commandes du même jour
-      const existingNodes = await Node.findAll({
+      const existingNodes = await node.findAll({
         where: {
           parent_id: parent_id,
           type: 'order',
@@ -182,7 +182,7 @@ const createOrder = async (orderData) => {
     const nodeName = await generateNodeName();
     
     // Créer le nœud de commande
-    const orderNode = await Node.create({
+    const orderNode = await node.create({
       name: name || nodeName, // Utiliser le nom TRQ_date si aucun nom n'est fourni
       path: `${parentNode.path}/${nodeName}`,
       type: 'order',
@@ -196,7 +196,7 @@ const createOrder = async (orderData) => {
     const orderNumberToUse = order_number || `TRQ_${orderNode.id}`;
     
     // Créer l'enregistrement de commande
-    const orderRecord = await Order.create({
+    const orderRecord = await order.create({
       node_id: orderNode.id,
       order_number: orderNumberToUse,
       order_date,
@@ -209,29 +209,32 @@ const createOrder = async (orderData) => {
       additional_info
     }, { transaction });
       // Créer les enregistrements de fermeture (closure table)
-    await Closure.create({
+    await closure.create({
       ancestor_id: orderNode.id,
       descendant_id: orderNode.id,
       depth: 0
     }, { transaction });
     
     // Récupérer tous les ancêtres du parent
-    const parentClosures = await Closure.findAll({
+    const parentClosures = await closure.findAll({
       where: { descendant_id: parent_id },
       transaction
     });
     
     // Créer les fermetures pour relier le nœud à tous ses ancêtres
-    for (const closure of parentClosures) {
-      await Closure.create({
-        ancestor_id: closure.ancestor_id,
+    for (const pc of parentClosures) {
+      await closure.create({
+        ancestor_id: pc.ancestor_id,
         descendant_id: orderNode.id,
-        depth: closure.depth + 1
+        depth: pc.depth + 1
       }, { transaction });
     }
     
     // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at de la commande et de ses ancêtres après création
+    await updateAncestorsModifiedAt(orderNode.id);
     
     // Récupérer la commande complète
     const createdOrder = await getOrderById(orderNode.id);
@@ -251,9 +254,9 @@ const createOrder = async (orderData) => {
  */
 const updateOrder = async (orderId, orderData) => {
   // Récupérer la commande existante
-  const orderNode = await Node.findOne({
+  const orderNode = await node.findOne({
     where: { id: orderId, type: 'order' },
-    include: [{ model: Order }]
+    include: [{ model: order }]
   });
   
   if (!orderNode) {
@@ -269,8 +272,8 @@ const updateOrder = async (orderId, orderData) => {
     if (orderData.description) nodeUpdates.description = orderData.description;
     
     // Vérifier si la date de commande a changé pour mettre à jour le nom du nœud
-    if (orderData.order_date && orderNode.Order && orderNode.Order.order_date) {
-      const currentDate = new Date(orderNode.Order.order_date);
+    if (orderData.order_date && orderNode.order && orderNode.order.order_date) {
+      const currentDate = new Date(orderNode.order.order_date);
       const newDate = new Date(orderData.order_date);
       
       // Si la date a changé et que le nom du nœud suit le format TRQ_
@@ -283,7 +286,7 @@ const updateOrder = async (orderId, orderData) => {
           const baseName = `TRQ_${formattedNewDate}`;
           
           // Trouver toutes les commandes du même jour (exclure la commande actuelle)
-          const existingNodes = await Node.findAll({
+          const existingNodes = await node.findAll({
             where: {
               parent_id: orderNode.parent_id,
               type: 'order',
@@ -321,7 +324,7 @@ const updateOrder = async (orderId, orderData) => {
         
         // Mettre à jour le chemin aussi si nécessaire
         if (orderNode.parent_id) {
-          const parentNode = await Node.findByPk(orderNode.parent_id, { transaction });
+          const parentNode = await node.findByPk(orderNode.parent_id, { transaction });
           if (parentNode) {
             nodeUpdates.path = `${parentNode.path}/${newNodeName}`;
           }
@@ -349,7 +352,7 @@ const updateOrder = async (orderId, orderData) => {
     }
     
     if (Object.keys(orderUpdates).length > 0) {
-      await Order.update(orderUpdates, {
+      await order.update(orderUpdates, {
         where: { node_id: orderId },
         transaction
       });
@@ -357,6 +360,9 @@ const updateOrder = async (orderId, orderData) => {
     
     // Valider la transaction
     await transaction.commit();
+    
+    // Mettre à jour le modified_at de la commande et de ses ancêtres après mise à jour
+    await updateAncestorsModifiedAt(orderId);
     
     // Récupérer la commande mise à jour
     const updatedOrder = await getOrderById(orderId);
@@ -375,7 +381,7 @@ const updateOrder = async (orderId, orderData) => {
  */
 const deleteOrder = async (orderId) => {
   // Récupérer la commande
-  const orderNode = await Node.findOne({
+  const orderNode = await node.findOne({
     where: { id: orderId, type: 'order' }
   });
   
@@ -387,7 +393,7 @@ const deleteOrder = async (orderId) => {
   const orderPhysicalPath = orderNode.path;
   
   // Récupérer tous les descendants de cette commande
-  const descendants = await Closure.findAll({
+  const descendants = await closure.findAll({
     where: { ancestor_id: orderId },
     order: [['depth', 'DESC']] // Important: supprimer les plus profonds d'abord
   });
@@ -401,7 +407,7 @@ const deleteOrder = async (orderId) => {
     for (const desc of sortedDescendants) {
       if (desc.depth > 0) { // Ne pas supprimer la commande elle-même pour l'instant
         // D'abord supprimer toutes les relations de fermeture pour ce descendant
-        await Closure.destroy({
+        await closure.destroy({
           where: {
             [Op.or]: [
               { ancestor_id: desc.descendant_id },
@@ -412,7 +418,7 @@ const deleteOrder = async (orderId) => {
         });
         
         // Ensuite supprimer les entités spécifiques (Order, File, etc.)
-        const node = await Node.findByPk(desc.descendant_id, { transaction });
+        const node = await node.findByPk(desc.descendant_id, { transaction });
         if (node) {
           if (node.type === 'file') {
             await sequelize.query('DELETE FROM Files WHERE node_id = :nodeId', {
@@ -433,7 +439,7 @@ const deleteOrder = async (orderId) => {
     }
     
     // Supprimer les relations de fermeture restantes pour le nœud racine
-    await Closure.destroy({
+    await closure.destroy({
       where: {
         [Op.or]: [
           { ancestor_id: orderId },
@@ -444,7 +450,7 @@ const deleteOrder = async (orderId) => {
     });
     
     // Supprimer l'enregistrement de la commande
-    await Order.destroy({
+    await order.destroy({
       where: { node_id: orderId },
       transaction
     });

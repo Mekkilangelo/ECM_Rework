@@ -13,7 +13,7 @@
 
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const { User } = require('../models');
+const { user } = require('../models');
 const { parseJwtTime } = require('../config/auth');
 
 // Configuration des paramètres d'authentification
@@ -105,11 +105,13 @@ const authenticate = async (req, res, next) => {
           errorType: 'inactivity_timeout'
         });
       }
-    }    // Récupère l'utilisateur depuis la base de données pour confirmer son existence
+    }
+    
+    // Récupère l'utilisateur depuis la base de données pour confirmer son existence
     // et récupérer ses informations à jour (rôle, statut, etc.)
-    const user = await User.findByPk(decoded.id);
+    const foundUser = await user.findByPk(decoded.id);
 
-    if (!user) {
+    if (!foundUser) {
       return res.status(401).json({ 
         success: false, 
         message: 'Utilisateur non trouvé' 
@@ -119,13 +121,14 @@ const authenticate = async (req, res, next) => {
     // Ajoute l'utilisateur authentifié à l'objet requête
     // Ces données seront disponibles pour tous les middlewares suivants
     req.user = {
-      id: user.id,
-      username: user.username,
-      role: user.role
+      id: foundUser.id,
+      username: foundUser.username,
+      role: foundUser.role
     };
 
     // Passe au middleware suivant
-    next();  } catch (error) {
+    next();
+  } catch (error) {
     console.error('Erreur de vérification du token:', error);
     // Afficher plus de détails sur le token qui a causé l'erreur
     if (process.env.NODE_ENV === 'development' && token) {
@@ -228,10 +231,12 @@ const validateRefreshToken = async (req, res, next) => {
           errorType: 'inactivity_timeout'
         });
       }
-    }    // Vérifie que l'utilisateur existe toujours dans la base de données
-    const user = await User.findByPk(decoded.id);
+    }
     
-    if (!user) {
+    // Vérifie que l'utilisateur existe toujours dans la base de données
+    const foundUser = await user.findByPk(decoded.id);
+    
+    if (!foundUser) {
       return res.status(401).json({ 
         success: false, 
         message: 'Utilisateur non trouvé' 
@@ -240,9 +245,9 @@ const validateRefreshToken = async (req, res, next) => {
 
     // Ajoute l'utilisateur authentifié à l'objet requête
     req.user = {
-      id: user.id,
-      username: user.username,
-      role: user.role
+      id: foundUser.id,
+      username: foundUser.username,
+      role: foundUser.role
     };
     
     // Ajoute le token décodé pour permettre au contrôleur

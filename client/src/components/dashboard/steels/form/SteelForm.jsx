@@ -46,11 +46,17 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
     handleCloseRequest,
     confirmClose,
     cancelClose,
-    saveAndClose  } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated, viewMode);
+    saveAndClose,
+    // Copy/Paste functionality
+    handleCopy,
+    handlePaste
+  } = useSteelForm(steel, onClose, onSteelCreated, onSteelUpdated, viewMode);
   
-  // Exposer handleCloseRequest à travers la référence
+  // Exposer handleCloseRequest et copy/paste à travers la référence
   useImperativeHandle(ref, () => ({
-    handleCloseRequest
+    handleCloseRequest,
+    handleCopy,
+    handlePaste
   }));
   
   if (fetchingSteel) {

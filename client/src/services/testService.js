@@ -144,7 +144,9 @@ const testService = {/**
       console.error(`Erreur lors de la suppression du test ${id}:`, error);
       throw error;
     }
-  },  /**
+  },
+
+  /**
    * Récupère les spécifications d'un test (avec cache)
    * @param {string|number} testId - L'identifiant du test
    * @param {string|number} parentId - L'identifiant du parent (optionnel)

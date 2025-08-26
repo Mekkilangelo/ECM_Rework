@@ -88,6 +88,9 @@ jobs:
           cp rollback.sh release/
           cp validate-bundle.sh release/
 
+          # Copier le Caddyfile
+          cp Caddyfile.prod release/Caddyfile
+
           # S'assurer que les scripts sont exécutables
           chmod +x release/deploy.sh release/rollback.sh release/validate-bundle.sh
 

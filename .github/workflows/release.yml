@@ -144,7 +144,7 @@ jobs:
           echo "Archive créée: $(ls -lh "$ARCHIVE_NAME")"
 
       - name: Upload release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: synergia-release-v${{ steps.version.outputs.version }}
           path: synergia-release-v${{ steps.version.outputs.version }}.tar.gz

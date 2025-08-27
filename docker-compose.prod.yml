@@ -26,6 +26,8 @@ services:
       JWT_EXPIRE: ${JWT_EXPIRE}
       JWT_INACTIVITY_EXPIRE: ${JWT_INACTIVITY_EXPIRE}
       CLIENT_URL: ${CLIENT_URL}
+      API_URL: ${API_URL}
+      
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:

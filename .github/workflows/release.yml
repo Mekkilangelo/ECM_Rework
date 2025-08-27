@@ -79,6 +79,7 @@ jobs:
           # S'assurer que les images pointent vers les bonnes versions
           sed -i "s/synergia-frontend:latest/synergia-frontend:$VERSION/g" release/docker-compose.yaml
           sed -i "s/synergia-backend:latest/synergia-backend:$VERSION/g" release/docker-compose.yaml
+          cp .env.prod release/.env.example
           cp .env.prod release/.env
 
           # Nettoyer .env.example - remplacer les vraies valeurs par CHANGEME

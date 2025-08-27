@@ -251,12 +251,12 @@ async function startServer() {
     }
 
     // Start the server
-    app.listen(PORT, () => {
-      const url = `http://localhost:${PORT}`;
-      logger.info(`Server running on port ${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`Accédez à votre serveur à l'adresse : ${url} pour voir un "Hello World" !`);
-    });
+        app.listen(PORT, '0.0.0.0', () => {
+          const url = `http://0.0.0.0:${PORT}`;
+          logger.info(`Server running on port ${PORT}`);
+          logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+          logger.info(`Accédez à votre serveur à l'adresse : ${url} pour voir un "Hello World" !`);
+        });
   } catch (error) {
     logger.error('Unable to connect to the database:', error.message);
     process.exit(1);

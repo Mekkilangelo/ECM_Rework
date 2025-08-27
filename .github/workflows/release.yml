@@ -17,6 +17,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Préparer le .env du client pour le build React
+        run: |
+          grep '^REACT_APP_API_URL=' .env.prod > client/.env
+
       - name: Clean Docker Buildx cache
         run: docker builder prune -af
 

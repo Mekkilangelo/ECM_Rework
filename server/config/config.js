@@ -41,8 +41,14 @@ const config = {
   PORT: process.env.PORT || 5001,
   
   // URLs
-  API_URL: process.env.API_URL || 'http://localhost:5001/api',
-  CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  API_URL: (() => {
+    if (!process.env.API_URL) throw new Error('API_URL is not defined!');
+    return process.env.API_URL;
+  })(),
+  CLIENT_URL: (() => {
+    if (!process.env.CLIENT_URL) throw new Error('CLIENT_URL is not defined!');
+    return process.env.CLIENT_URL;
+  })(),
   
   // Chemins de fichiers
   PATHS: {

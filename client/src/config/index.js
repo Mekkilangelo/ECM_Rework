@@ -37,6 +37,9 @@ const authConfig = {
 };
 
 // API URL
-const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const apiUrl = process.env.REACT_APP_API_URL;
+if (!apiUrl) {
+  throw new Error('REACT_APP_API_URL is not defined!');
+}
 
 export { authConfig, apiUrl, SESSION_INACTIVITY_TIMEOUT_SECONDS };

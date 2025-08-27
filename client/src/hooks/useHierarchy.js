@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL;
+if (!API_URL) {
+  throw new Error('REACT_APP_API_URL is not defined!');
+}
 
 const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') => {
   const { 

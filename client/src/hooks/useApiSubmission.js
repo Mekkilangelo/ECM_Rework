@@ -2,7 +2,10 @@ import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL;
+if (!API_URL) {
+  throw new Error('REACT_APP_API_URL is not defined!');
+}
 
 /**
  * Hook générique pour gérer les soumissions d'API

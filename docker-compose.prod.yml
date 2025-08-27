@@ -32,6 +32,8 @@ services:
       - database
     networks:
       - app-network
+    ports:
+      - "5001:5001"
 
   frontend:
     image: synergia-frontend:latest

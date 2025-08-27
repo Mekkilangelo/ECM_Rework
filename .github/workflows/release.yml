@@ -17,8 +17,24 @@ jobs:
         with:
           fetch-depth: 0
 
+
       - name: Injecter la variable d'environnement frontend depuis les secrets
         run: echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" > client/.env
+
+      - name: Générer le .env pour le backend depuis les secrets
+        run: |
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" > server/.env
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> server/.env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> server/.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> server/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> server/.env
+          echo "DB_SYNC_ALTER=${{ secrets.DB_SYNC_ALTER }}" >> server/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> server/.env
+          echo "JWT_EXPIRE=${{ secrets.JWT_EXPIRE }}" >> server/.env
+          echo "JWT_INACTIVITY_EXPIRE=${{ secrets.JWT_INACTIVITY_EXPIRE }}" >> server/.env
+          echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> server/.env
+          echo "API_URL=${{ secrets.API_URL }}" >> server/.env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> server/.env
 
       - name: Clean Docker Buildx cache
         run: docker builder prune -af

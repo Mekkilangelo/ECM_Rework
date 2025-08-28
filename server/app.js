@@ -35,10 +35,10 @@ const app = express();
 app.set('trust proxy', true);
 
 // Middleware - CORS désactivé car géré par Caddy
-// app.use(cors({
-//   origin: true, // Autoriser toutes les origines
-//   credentials: true
-// }));
+app.use(cors({
+  origin: true, // Autoriser toutes les origines
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

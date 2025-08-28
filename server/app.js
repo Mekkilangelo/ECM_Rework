@@ -34,7 +34,6 @@ const app = express();
 // Configurer Express pour faire confiance aux proxies (pour capturer l'IP correctement)
 app.set('trust proxy', true);
 
-// Middleware - CORS désactivé car géré par Caddy
 app.use(cors({
   origin: true, // Autoriser toutes les origines
   credentials: true

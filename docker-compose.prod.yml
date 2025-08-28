@@ -11,6 +11,8 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - app-network
+    ports:
+      - "3306:3306"
 
   backend:
     image: synergia-backend:latest
@@ -27,7 +29,7 @@ services:
       JWT_INACTIVITY_EXPIRE: ${JWT_INACTIVITY_EXPIRE}
       CLIENT_URL: ${CLIENT_URL}
       API_URL: ${API_URL}
-      
+
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:
@@ -44,27 +46,12 @@ services:
       - backend
     networks:
       - app-network
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile.prod:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - app-network
+      - "3000:3000"
+
 
 volumes:
   mysql_data_prod:
-  caddy_data:
-  caddy_config:
 
 networks:
   app-network:

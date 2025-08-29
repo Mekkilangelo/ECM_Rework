@@ -116,8 +116,8 @@ const getTestById = async (testId) => {
   };
   
   // Ajouter les propriétés du test si elles existent
-  if (testNode.Test) {
-    Object.assign(testData, testNode.Test.dataValues);
+  if (testNode.test) {
+    Object.assign(testData, testNode.test.dataValues);
   }
   
   return testData;
@@ -176,8 +176,8 @@ const getTestSpecs = async (testId, parent_id) => {
         }]
       });
       
-      if (parentNode && parentNode.Part && parentNode.Part.specifications) {
-        specifications = parentNode.Part.specifications;
+      if (parentNode && parentNode.part && parentNode.part.specifications) {
+        specifications = parentNode.part.specifications;
         
         logger.info(`Spécifications de la pièce parente récupérées pour le test #${testId}`);
       } else {
@@ -615,14 +615,14 @@ const getTestReportData = async (testId, sections = []) => {
     const reportData = {
       testId: testNode.id,
       testName: testNode.name,
-      testDate: testNode.Test ? testNode.Test.test_date : null,
-      testCode: testNode.Test ? testNode.Test.test_code : null,
+      testDate: testNode.test ? testNode.test.test_date : null,
+      testCode: testNode.test ? testNode.test.test_code : null,
       // Ajouter toutes les données du test
-      loadNumber: testNode.Test ? testNode.Test.load_number : null,
-      status: testNode.Test ? testNode.Test.status : null,      location: testNode.Test ? testNode.Test.location : null,
-      furnaceData: testNode.Test ? (() => {
+      loadNumber: testNode.test ? testNode.test.load_number : null,
+      status: testNode.test ? testNode.test.status : null,      location: testNode.test ? testNode.test.location : null,
+      furnaceData: testNode.test ? (() => {
         try {
-          let furnaceData = testNode.Test.furnace_data;
+          let furnaceData = testNode.test.furnace_data;
           logger.info(`Raw furnace_data pour test #${testId}:`, furnaceData);
           logger.info(`Type de furnace_data:`, typeof furnaceData);
           
@@ -636,12 +636,12 @@ const getTestReportData = async (testId, sections = []) => {
           return furnaceData;
         } catch (parseError) {
           logger.warn(`Erreur lors du parsing des données de four pour le test #${testId}: ${parseError.message}`);
-          logger.warn(`Données brutes:`, test.Test.furnace_data);
-          return test.Test.furnace_data;
+          logger.warn(`Données brutes:`, test.test.furnace_data);
+          return test.test.furnace_data;
         }
-      })() : null,      loadData: test.Test ? (() => {
+      })() : null,      loadData: test.test ? (() => {
         try {
-          let loadData = test.Test.load_data;
+          let loadData = test.test.load_data;
           logger.info(`Raw load_data pour test #${testId}:`, loadData);
           logger.info(`Type de load_data:`, typeof loadData);
           
@@ -655,12 +655,12 @@ const getTestReportData = async (testId, sections = []) => {
           return loadData;
         } catch (parseError) {
           logger.warn(`Erreur lors du parsing des données de charge pour le test #${testId}: ${parseError.message}`);
-          logger.warn(`Données brutes:`, test.Test.load_data);
-          return test.Test.load_data;
+          logger.warn(`Données brutes:`, test.test.load_data);
+          return test.test.load_data;
         }
-      })() : null,      recipeData: test.Test ? (() => {
+      })() : null,      recipeData: test.test ? (() => {
         try {
-          let recipeData = test.Test.recipe_data;
+          let recipeData = test.test.recipe_data;
           logger.info(`Raw recipe_data pour test #${testId}:`, recipeData);
           logger.info(`Type de recipe_data:`, typeof recipeData);
           
@@ -674,13 +674,13 @@ const getTestReportData = async (testId, sections = []) => {
           return recipeData;
         } catch (parseError) {
           logger.warn(`Erreur lors du parsing des données de recette pour le test #${testId}: ${parseError.message}`);
-          logger.warn(`Données brutes:`, test.Test.recipe_data);
-          return test.Test.recipe_data;
+          logger.warn(`Données brutes:`, test.test.recipe_data);
+          return test.test.recipe_data;
         }
       })() : null,
-      quenchData: test.Test ? (() => {
+      quenchData: test.test ? (() => {
         try {
-          let quenchData = test.Test.quench_data;
+          let quenchData = test.test.quench_data;
           logger.info(`Raw quench_data pour test #${testId}:`, quenchData);
           logger.info(`Type de quench_data:`, typeof quenchData);
           
@@ -694,13 +694,13 @@ const getTestReportData = async (testId, sections = []) => {
           return quenchData;
         } catch (parseError) {
           logger.warn(`Erreur lors du parsing des données de trempe pour le test #${testId}: ${parseError.message}`);
-          logger.warn(`Données brutes:`, test.Test.quench_data);
-          return test.Test.quench_data;
+          logger.warn(`Données brutes:`, test.test.quench_data);
+          return test.test.quench_data;
         }
       })() : null,
-      resultsData: test.Test ? (() => {
+      resultsData: test.test ? (() => {
         try {
-          let resultsData = test.Test.results_data;
+          let resultsData = test.test.results_data;
           logger.info(`Raw results_data pour test #${testId}:`, resultsData);
           logger.info(`Type de results_data:`, typeof resultsData);
           
@@ -714,14 +714,14 @@ const getTestReportData = async (testId, sections = []) => {
           return resultsData;
         } catch (parseError) {
           logger.warn(`Erreur lors du parsing des données de résultats pour le test #${testId}: ${parseError.message}`);
-          logger.warn(`Données brutes:`, test.Test.results_data);
-          return test.Test.results_data;
+          logger.warn(`Données brutes:`, test.test.results_data);
+          return test.test.results_data;
         }
       })() : null,
-      mountingType: test.Test ? test.Test.mounting_type : null,
-      positionType: test.Test ? test.Test.position_type : null,
-      processType: test.Test ? test.Test.process_type : null,
-      preoxMedia: test.Test ? test.Test.preox_media : null,// Ajouter les données de la pièce
+      mountingType: test.test ? test.test.mounting_type : null,
+      positionType: test.test ? test.test.position_type : null,
+      processType: test.test ? test.test.process_type : null,
+      preoxMedia: test.test ? test.test.preox_media : null,// Ajouter les données de la pièce
       part: partNode ? {
         id: partNode.id,
         name: partNode.name,
@@ -743,7 +743,7 @@ const getTestReportData = async (testId, sections = []) => {
                 logger.info(`Spécifications déjà sous forme d'objet pour la pièce #${partNode.id}`);
               }
               
-              // Restructurer les spécifications selon le format attendu par usePartSubmission
+              // Restructurer les spécifications selon le format attendu par usepartSubmission
               // Format: { hardnessSpecs: [], ecdSpecs: [] }
               if (specs) {
                 // Si c'est déjà dans le bon format
@@ -800,32 +800,32 @@ const getTestReportData = async (testId, sections = []) => {
               return null;
             } catch (parseError) {
               logger.warn(`Erreur lors du parsing des spécifications de la pièce #${partNode.id}: ${parseError.message}`);
-              return partNode.Part.specifications;
+              return partNode.part.specifications;
             }
           })() : null,
-        dimensions: partNode.Part && partNode.Part.dimensions ? 
+        dimensions: partNode.part && partNode.part.dimensions ? 
           (() => {
             try {
-              if (typeof partNode.Part.dimensions === 'string') {
-                const parsed = JSON.parse(partNode.Part.dimensions);
+              if (typeof partNode.part.dimensions === 'string') {
+                const parsed = JSON.parse(partNode.part.dimensions);
                 logger.info(`Dimensions parsées avec succès pour la pièce #${partNode.id}`);
                 return parsed;
-              } else if (typeof partNode.Part.dimensions === 'object') {
+              } else if (typeof partNode.part.dimensions === 'object') {
                 logger.info(`Dimensions déjà sous forme d'objet pour la pièce #${partNode.id}`);
-                return partNode.Part.dimensions;
+                return partNode.part.dimensions;
               } else {
-                logger.warn(`Type de dimensions inattendu pour la pièce #${partNode.id}: ${typeof partNode.Part.dimensions}`);
-                return partNode.Part.dimensions;
+                logger.warn(`Type de dimensions inattendu pour la pièce #${partNode.id}: ${typeof partNode.part.dimensions}`);
+                return partNode.part.dimensions;
               }
             } catch (parseError) {
               logger.warn(`Erreur lors du parsing des dimensions de la pièce #${partNode.id}: ${parseError.message}`);
-              return partNode.Part.dimensions;
+              return partNode.part.dimensions;
             }
           })() : null,
-        description: partNode.Part ? partNode.Part.description : null,
-        drawing_number: partNode.Part ? partNode.Part.drawing_number : null,
-        revision: partNode.Part ? partNode.Part.revision : null,
-        weight: partNode.Part ? partNode.Part.weight : null
+        description: partNode.part ? partNode.part.description : null,
+        drawing_number: partNode.part ? partNode.part.drawing_number : null,
+        revision: partNode.part ? partNode.part.revision : null,
+        weight: partNode.part ? partNode.part.weight : null
       } : null,
       
       // Ajouter les données du client
@@ -847,38 +847,38 @@ const getTestReportData = async (testId, sections = []) => {
       reportData.data.identification = {
         testId: test.id,
         testName: test.name,
-        testCode: test.Test ? test.Test.test_code : null,
-        testDate: test.Test ? test.Test.test_date : null,
-        status: test.Test ? test.Test.status : null,
-        location: test.Test ? test.Test.location : null
+        testCode: test.test ? test.test.test_code : null,
+        testDate: test.test ? test.test.test_date : null,
+        status: test.test ? test.test.status : null,
+        location: test.test ? test.test.location : null
       };
     }
 
     if (selectedSections.includes('recipe') || selectedSections.length === 0) {
-      reportData.data.recipe = test.Test ? test.Test.recipe_data : null;
+      reportData.data.recipe = test.test ? test.test.recipe_data : null;
     }    if (selectedSections.includes('load') || selectedSections.length === 0) {
       // Parser aussi les données de charge dans data.load pour cohérence
-      reportData.data.load = test.Test ? (() => {
+      reportData.data.load = test.test ? (() => {
         try {
-          let loadData = test.Test.load_data;
+          let loadData = test.test.load_data;
           if (typeof loadData === 'string') {
             return JSON.parse(loadData);
           }
           return loadData;
         } catch (parseError) {
           logger.warn(`Erreur lors du parsing des données de charge (data.load) pour le test #${testId}: ${parseError.message}`);
-          return test.Test.load_data;
+          return test.test.load_data;
         }
       })() : null;
     }
 
     if (selectedSections.includes('curves') || selectedSections.length === 0) {
       reportData.data.curves = {
-        furnaceData: test.Test ? test.Test.furnace_data : null,
-        processType: test.Test ? test.Test.process_type : null
+        furnaceData: test.test ? test.test.furnace_data : null,
+        processType: test.test ? test.test.process_type : null
       };
     }    if (selectedSections.includes('control') || selectedSections.length === 0) {
-      reportData.data.results = test.Test ? test.Test.results_data : [];
+      reportData.data.results = test.test ? test.test.results_data : [];
     }    // Récupérer les fichiers associés organisés par sections comme dans SectionPhotoManager
     try {
       logger.info(`Tentative de récupération des fichiers pour le test #${testId}`);
@@ -930,7 +930,7 @@ const getTestReportData = async (testId, sections = []) => {
         logger.info(`=== CONFIGURATION DES SECTIONS ===`);
       logger.info('Sections configurées:', Object.keys(sectionFileConfig));
       if (partNode) {
-        logger.info(`PartNode trouvé: ID=${partNode.id}, nom="${partNode.name}"`);
+        logger.info(`partNode trouvé: ID=${partNode.id}, nom="${partNode.name}"`);
       } else {
         logger.warn('Aucun partNode trouvé - la section identification ne sera pas configurée');
       }
@@ -1017,15 +1017,15 @@ const getTestReportData = async (testId, sections = []) => {
       testCode: reportData.testCode,
       sectionsIncluded: selectedSections,
       dataKeys: Object.keys(reportData.data),
-      hasPartData: !!reportData.part,
+      haspartData: !!reportData.part,
       hasClientData: !!reportData.client,
       loadDataKeys: reportData.loadData ? Object.keys(reportData.loadData) : 'null',
-      rawTestDataKeys: test.Test ? Object.keys(test.Test.dataValues) : 'null'
+      rawTestDataKeys: test.test ? Object.keys(test.test.dataValues) : 'null'
     });
     
     // Log spécifique pour les données de charge
-    if (test.Test && test.Test.load_data) {
-      logger.info('Données de charge brutes dans Test.load_data:', test.Test.load_data);
+    if (test.test && test.test.load_data) {
+      logger.info('Données de charge brutes dans test.load_data:', test.test.load_data);
     }
     return reportData;
   } catch (error) {

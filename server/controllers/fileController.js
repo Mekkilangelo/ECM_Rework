@@ -18,7 +18,8 @@ const { ValidationError } = require('../utils/errors');
  */
 const uploadFiles = async (req, res) => {
   try {
-    const { nodeId, category, subcategory } = req.body;
+  const { nodeId, category, subcategory } = req.body;
+  console.log('[UPLOAD] subcategory reçue du frontend :', subcategory);
     const files = req.files;
     
     if (!files || files.length === 0) {

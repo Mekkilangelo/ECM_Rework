@@ -1,5 +1,5 @@
 // middleware/filePathResolver.js
-const { Node } = require('../models');
+const { node } = require('../models');
 const path = require('path');
 const fs = require('fs');
 
@@ -54,14 +54,14 @@ const resolveFilePath = async (req, res, next) => {
     if (!nodeId) return next();
     
     // Récupérer les informations du nœud pour construire le chemin
-    const node = await Node.findByPk(nodeId);
+    const parentNode = await node.findByPk(nodeId);
     
-    if (!node) {
+    if (!parentNode) {
       return res.status(404).json({ message: 'Nœud non trouvé' });
     }
     
     // Construire le chemin physique en utilisant la nouvelle fonction
-    const physicalPath = buildPhysicalFilePath(node, category, subcategory);
+    const physicalPath = buildPhysicalFilePath(parentNode, category, subcategory);
     
     // Créer le répertoire s'il n'existe pas
     if (!fs.existsSync(physicalPath)) {

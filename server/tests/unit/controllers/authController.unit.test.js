@@ -38,7 +38,7 @@ jest.mock('../../../utils/apiResponse', () => ({
 }));
 
 const authController = require('../../../controllers/authController');
-const { User } = require('../../../models');
+const { user } = require('../../../models');
 const { verifyPassword, generateToken } = require('../../../config/auth');
 const logger = require('../../../utils/logger');
 const loggingService = require('../../../services/loggingService');
@@ -75,22 +75,22 @@ describe('Auth Controller - Unit Tests', () => {
       role: 'user'
     };
 
-    test('should call User.findOne with correct username', async () => {
+    test('should call user.findOne with correct username', async () => {
       mockReq.body = { username: 'testuser', password: 'password123' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(true);
       generateToken.mockReturnValue('jwt-token');
 
       await authController.login(mockReq, mockRes, mockNext);
 
-      expect(User.findOne).toHaveBeenCalledWith({
+      expect(user.findOne).toHaveBeenCalledWith({
         where: { username: 'testuser' }
       });
     });
 
     test('should verify password with correct parameters', async () => {
       mockReq.body = { username: 'testuser', password: 'password123' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(true);
       generateToken.mockReturnValue('jwt-token');
 
@@ -101,7 +101,7 @@ describe('Auth Controller - Unit Tests', () => {
 
     test('should call apiResponse.error when user not found', async () => {
       mockReq.body = { username: 'nonexistent', password: 'password123' };
-      User.findOne.mockResolvedValue(null);
+      user.findOne.mockResolvedValue(null);
 
       await authController.login(mockReq, mockRes, mockNext);
 
@@ -114,7 +114,7 @@ describe('Auth Controller - Unit Tests', () => {
 
     test('should call apiResponse.error when password is incorrect', async () => {
       mockReq.body = { username: 'testuser', password: 'wrongpassword' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(false);
 
       await authController.login(mockReq, mockRes, mockNext);
@@ -128,7 +128,7 @@ describe('Auth Controller - Unit Tests', () => {
 
     test('should log successful login attempt', async () => {
       mockReq.body = { username: 'testuser', password: 'password123' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(true);
       generateToken.mockReturnValue('jwt-token');
 
@@ -141,7 +141,7 @@ describe('Auth Controller - Unit Tests', () => {
 
     test('should log failed login attempt', async () => {
       mockReq.body = { username: 'testuser', password: 'wrongpassword' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(false);
 
       await authController.login(mockReq, mockRes, mockNext);
@@ -153,7 +153,7 @@ describe('Auth Controller - Unit Tests', () => {
 
     test('should call loggingService.logUserLogin on failure', async () => {
       mockReq.body = { username: 'testuser', password: 'wrongpassword' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(false);
 
       await authController.login(mockReq, mockRes, mockNext);
@@ -173,7 +173,7 @@ describe('Auth Controller - Unit Tests', () => {
 
     test('should generate token on successful authentication', async () => {
       mockReq.body = { username: 'testuser', password: 'password123' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(true);
       generateToken.mockReturnValue('jwt-token');
       apiResponse.success.mockReturnValue();
@@ -186,7 +186,7 @@ describe('Auth Controller - Unit Tests', () => {
     test('should call next on unexpected error', async () => {
       const error = new Error('Database error');
       mockReq.body = { username: 'testuser', password: 'password123' };
-      User.findOne.mockRejectedValue(error);
+      user.findOne.mockRejectedValue(error);
 
       await authController.login(mockReq, mockRes, mockNext);
 
@@ -200,7 +200,7 @@ describe('Auth Controller - Unit Tests', () => {
     test('should add security delay on failed authentication', async () => {
       const startTime = Date.now();
       mockReq.body = { username: 'testuser', password: 'wrongpassword' };
-      User.findOne.mockResolvedValue(validUser);
+      user.findOne.mockResolvedValue(validUser);
       verifyPassword.mockResolvedValue(false);
 
       await authController.login(mockReq, mockRes, mockNext);

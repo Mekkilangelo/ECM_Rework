@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { node, file, closure, sequelize } = require('../models');
+console.log('Modèles chargés:', { node: !!node, nodeType: typeof node });
 const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');
@@ -55,8 +56,8 @@ const cleanupTempDirectories = async (tempFiles) => {
   const tempDirsToCheck = new Set();
   
   // Collecter tous les dossiers temporaires à vérifier
-  for (const file of tempFiles) {
-    const tempDir = path.dirname(file.file_path);
+  for (const tempFile of tempFiles) {
+    const tempDir = path.dirname(tempFile.file_path);
     tempDirsToCheck.add(tempDir);
   }
   
@@ -115,16 +116,16 @@ const saveUploadedFiles = async (files, data, req = null) => {
     throw new Error('Le nodeId parent est requis pour l\'upload de fichiers');
   }
 
-  for (const file of files) {
+  for (const uploadedFile of files) {
     // Le fichier est déjà stocké au bon endroit par multer
-    const finalPath = file.path;
+    const finalPath = uploadedFile.path;
     
     // Construire le chemin logique
-    const nodePath = buildNodePath(parentNode, category, subcategory, file.originalname);
+    const nodePath = buildNodePath(parentNode, category, subcategory, uploadedFile.originalname);
     
     // Créer l'enregistrement du nœud
     const fileNode = await node.create({
-      name: file.originalname,
+      name: uploadedFile.originalname,
       path: nodePath,
       type: 'file',
       parent_id: parseInt(nodeId),
@@ -158,10 +159,10 @@ const saveUploadedFiles = async (files, data, req = null) => {
       }      // Créer l'enregistrement du fichier
       const fileRecord = await file.create({
         node_id: fileNode.id,
-        original_name: file.originalname,
+        original_name: uploadedFile.originalname,
         file_path: finalPath,
-        size: file.size,
-        mime_type: file.mimetype,
+        size: uploadedFile.size,
+        mime_type: uploadedFile.mimetype,
         category: category || 'general',
         subcategory: subcategory || null,
         additional_info: {
@@ -171,9 +172,9 @@ const saveUploadedFiles = async (files, data, req = null) => {
       
       fileRecords.push({
         id: fileNode.id,
-        name: file.originalname,
-        size: file.size,
-        type: file.mimetype,
+        name: uploadedFile.originalname,
+        size: uploadedFile.size,
+        type: uploadedFile.mimetype,
         category,
         subcategory
       });
@@ -218,7 +219,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
         tempId
       ),
       include: [{
-        model: Node,
+        model: node,
         required: true
       }]
     });
@@ -246,14 +247,14 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     const physicalDirPath = buildPhysicalFilePath(parentNode, categoryPath, subcategoryPath);
     fs.mkdirSync(physicalDirPath, { recursive: true });
         // Mettre à jour chaque fichier et le déplacer vers le répertoire final
-    for (const file of tempFiles) {
+    for (const tempFile of tempFiles) {
       // Déplacer le fichier physique
-      const fileName = path.basename(file.file_path);
+      const fileName = path.basename(tempFile.file_path);
       const destPath = path.join(physicalDirPath, fileName);
-      fs.renameSync(file.file_path, destPath);
+      fs.renameSync(tempFile.file_path, destPath);
       
       // Récupérer le nœud associé au fichier
-      const fileNode = file.node;
+      const fileNode = tempFile.node;
       if (!fileNode) {
         throw new Error('Node is not associated to file!');
       }
@@ -545,13 +546,13 @@ const getAllFilesByNode = async (options) => {
     name: node.name,
     path: node.path,
     createdAt: node.created_at,
-    size: node.File ? node.File.size : null,
-    mimeType: node.File ? node.File.mime_type : null,
-    category: node.File ? node.File.category : null,
-    subcategory: node.File ? node.File.subcategory : null,
-    original_name: node.File ? node.File.original_name : null,
-    file_path: node.File ? node.File.file_path : null,
-    type: node.File ? node.File.mime_type : 'application/octet-stream'
+    size: node.file ? node.file.size : null,
+    mimeType: node.file ? node.file.mime_type : null,
+    category: node.file ? node.file.category : null,
+    subcategory: node.file ? node.file.subcategory : null,
+    original_name: node.file ? node.file.original_name : null,
+    file_path: node.file ? node.file.file_path : null,
+    type: node.file ? node.file.mime_type : 'application/octet-stream'
   }));
   console.log(`[getAllFilesByNode] Retour: ${files.length} fichiers`);
   
@@ -630,7 +631,7 @@ const getFileStats = async (nodeId) => {
       [sequelize.fn('SUM', sequelize.col('size')), 'totalSize']
     ],
     include: [{
-      model: Node,
+      model: node,
       where: {
         parent_id: nodeId
       }
@@ -647,7 +648,7 @@ const getFileStats = async (nodeId) => {
       [sequelize.fn('SUM', sequelize.col('size')), 'totalSize']
     ],
     include: [{
-      model: Node,
+      model: node,
       where: {
         parent_id: nodeId
       }
@@ -693,7 +694,7 @@ const updateFile = async (fileId, updateData) => {
     const currentFile = await file.findOne({
       where: { node_id: fileId },
       include: [{
-        model: Node,
+        model: node,
         required: true
       }],
       transaction
@@ -842,7 +843,7 @@ const updateFile = async (fileId, updateData) => {
     const updatedFile = await file.findOne({
       where: { node_id: fileId },
       include: [{
-        model: Node,
+        model: node,
         attributes: { exclude: ['id'] }
       }]
     });

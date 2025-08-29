@@ -20,7 +20,7 @@ jest.mock('../../../config/config', () => ({
 
 // Mock des modèles
 jest.mock('../../../models', () => ({
-  User: {
+  user: {
     findByPk: jest.fn()
   }
 }));
@@ -32,7 +32,7 @@ jest.mock('../../../config/auth', () => ({
 
 const config = require('../../../config/config');
 const { authenticate, requireEditRights } = require('../../../middleware/auth');
-const { User } = require('../../../models');
+const { user } = require('../../../models');
 
 describe('Auth Middleware - Unit Tests', () => {
   let mockReq, mockRes, mockNext;
@@ -148,12 +148,12 @@ describe('Auth Middleware - Unit Tests', () => {
       
       mockReq.headers.authorization = `Bearer ${token}`;
       jwt.verify.mockReturnValue(decodedUser);
-      User.findByPk.mockResolvedValue(dbUser);
+      user.findByPk.mockResolvedValue(dbUser);
 
       await authenticate(mockReq, mockRes, mockNext);
 
       expect(jwt.verify).toHaveBeenCalledWith(token, config.JWT.SECRET);
-      expect(User.findByPk).toHaveBeenCalledWith(1);
+      expect(user.findByPk).toHaveBeenCalledWith(1);
       expect(mockReq.user).toEqual({
         id: 1,
         username: 'testuser',
@@ -387,7 +387,7 @@ describe('Auth Middleware - Unit Tests', () => {
       // First authenticate
       mockReq.headers.authorization = `Bearer ${token}`;
       jwt.verify.mockReturnValue(decoded);
-      User.findByPk.mockResolvedValue(adminUser);
+      user.findByPk.mockResolvedValue(adminUser);
       
       await authenticate(mockReq, mockRes, mockNext);
       

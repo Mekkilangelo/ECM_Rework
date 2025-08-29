@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Alert, Card, Container, Row, Col, Form, Button } from 'react-bootstrap';
+import { Alert, Card, Container, Row, Col, Form, Button, InputGroup } from 'react-bootstrap';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import LanguageSwitcher from '../components/layout/language_switch/LanguageSwitc
 const Login = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated } = useContext(AuthContext);
@@ -67,6 +68,7 @@ const Login = () => {
       setSuccessMessage('');
     }
   }, [location, t]);
+
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       console.log('Tentative de connexion pour:', values.username);
@@ -109,6 +111,11 @@ const Login = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Fonction pour basculer l'affichage du mot de passe
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -222,19 +229,52 @@ const Login = () => {
 
                       <Form.Group className="mb-4">
                         <Form.Label>{t('auth.password')}</Form.Label>
-                        <Form.Control
-                          type="password"
-                          name="password"
-                          placeholder={t('auth.password')}
-                          value={values.password}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          isInvalid={touched.password && errors.password}
-                          className="py-2"
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.password}
-                        </Form.Control.Feedback>
+                        <InputGroup>
+                          <Form.Control
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder={t('auth.password')}
+                            value={values.password}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            isInvalid={touched.password && errors.password}
+                            className="py-2"
+                          />
+                          <Button 
+                            variant="outline-secondary"
+                            type="button"
+                            onClick={togglePasswordVisibility}
+                            style={{
+                              border: '1px solid #ced4da',
+                              borderLeft: 'none',
+                              backgroundColor: 'transparent',
+                              padding: '0.375rem 0.75rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                          >
+                            {showPassword ? (
+                              // Icône œil barré (masquer)
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                              </svg>
+                            ) : (
+                              // Icône œil ouvert (afficher)
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                              </svg>
+                            )}
+                          </Button>
+                        </InputGroup>
+                        {touched.password && errors.password && (
+                          <div className="invalid-feedback d-block">
+                            {errors.password}
+                          </div>
+                        )}
                       </Form.Group>
 
                       <Button 

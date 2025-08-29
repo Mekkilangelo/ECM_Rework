@@ -1,4 +1,4 @@
-const { node: Node, furnace: Furnace, closure: Closure } = require('../models');
+const { node, furnace, closure } = require('../models');
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 
@@ -9,10 +9,10 @@ exports.getFurnaces = async (req, res) => {
   try {
     const { limit = 10, offset = 0 } = req.query;
     
-    const furnaces = await Node.findAll({
+    const furnaces = await node.findAll({
       where: { type: 'furnace' },
       include: [{
-        model: Furnace,
+        model: furnace,
         attributes: ['furnace_type', 'furnace_size', 'heating_cell_type', 'cooling_media', 'process_type', 'quench_cell']
       }],
       order: [['modified_at', 'DESC']],
@@ -20,7 +20,7 @@ exports.getFurnaces = async (req, res) => {
       offset: parseInt(offset)
     });
     
-    const total = await Node.count({
+    const total = await node.count({
       where: { type: 'furnace' }
     });
     

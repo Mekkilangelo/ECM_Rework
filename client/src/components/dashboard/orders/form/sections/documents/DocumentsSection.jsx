@@ -130,7 +130,8 @@ const DocumentsSection = ({
           height="150px"
           width="100%"
           showPreview={true}
-          existingFiles={uploadedFiles['all_documents'] || []}
+          // Correction : afficher tous les fichiers, peu importe la sous-catégorie
+          existingFiles={Object.values(uploadedFiles).flat()}
           viewMode={viewMode}
         />
       </div>

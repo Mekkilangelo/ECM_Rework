@@ -37,9 +37,10 @@ const PhotosSection = ({
     try {
       const response = await fileService.getNodeFiles(partNodeId, { category: 'photos' });
       
-      const isDev = process.env.NODE_ENV === 'development';
-      if (isDev && response.data?.data?.files) {
-        console.log('📸 Photos loaded:', response.data.data.files.length);
+      // LOG récupération
+      console.log('[PhotosSection] GET files params:', { nodeId: partNodeId, category: 'photos' });
+      if (response.data?.data?.files) {
+        console.log('[PhotosSection] Fichiers reçus (objets complets):', response.data.data.files);
       }
 
       // Vérifier que la requête a réussi
@@ -60,13 +61,18 @@ const PhotosSection = ({
           filesBySubcategory[subcategory] = [];
         }
         filesBySubcategory[subcategory].push(file);
+        // LOG mapping
+        console.log(`[PhotosSection] Mapping file id=${file.id} name=${file.name} subcategory=${file.subcategory} -> clé ${subcategory}`);
       });
 
       setUploadedFiles(filesBySubcategory);
     } catch (error) {
       console.error(t('parts.photos.loadError'), error);
     }
-  };  const handleFilesUploaded = React.useCallback((viewId) => (files, tempId, operation = 'add', fileId = null) => {
+  };
+  const handleFilesUploaded = React.useCallback((viewId) => (files, tempId, operation = 'add', fileId = null) => {
+    // LOG upload
+    console.log(`[PhotosSection] handleFilesUploaded viewId=${viewId} operation=${operation} files=`, files.map(f => ({ name: f.name, subcategory: f.subcategory })));
     if (operation === 'delete') {
       // Pour une suppression, mettre à jour toutes les sous-catégories
       setUploadedFiles(prev => {

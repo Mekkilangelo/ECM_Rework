@@ -4,7 +4,7 @@
  */
 
 const multer = require('multer');
-const { Node } = require('../models');
+const { node } = require('../models');
 const { buildPhysicalFilePath } = require('./file-path');
 const fs = require('fs');
 const path = require('path');
@@ -47,15 +47,15 @@ const parseAndResolvePath = async (req, res, next) => {
       
       try {
         // Récupérer les informations du nœud
-        const node = await Node.findByPk(nodeId);
-        console.log('🔍 [parseAndResolvePath] Nœud trouvé:', node ? `${node.id} - ${node.name}` : 'null');
+        const parentNode = await node.findByPk(nodeId);
+        console.log('🔍 [parseAndResolvePath] Nœud trouvé:', parentNode ? `${parentNode.id} - ${parentNode.name}` : 'null');
         
-        if (!node) {
+        if (!parentNode) {
           return res.status(404).json({ message: 'Nœud non trouvé' });
         }
         
         // Construire le chemin physique
-        const physicalPath = buildPhysicalFilePath(node, category, subcategory);
+        const physicalPath = buildPhysicalFilePath(parentNode, category, subcategory);
         console.log('📁 [parseAndResolvePath] Chemin physique résolu:', physicalPath);
         
         // Créer le répertoire s'il n'existe pas

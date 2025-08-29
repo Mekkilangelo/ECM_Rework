@@ -434,29 +434,24 @@ const getFileDetails = async (fileId) => {
  */
 const deleteFile = async (fileId) => {
   const transaction = await sequelize.transaction();
-  
   try {
     // Récupérer les détails du fichier
     // D'abord, vérifions que le nœud existe et qu'il s'agit bien d'un fichier
-    const node = await node.findOne({
+    const fileNode = await node.findOne({
       where: { id: fileId, type: 'file' },
       transaction
     });
-    
-    if (!node) {
+    if (!fileNode) {
       throw new NotFoundError('Nœud de fichier non trouvé');
     }
-    
     // Ensuite, récupérons les informations du fichier associé
-    const file = await file.findOne({
+    const fileRecord = await file.findOne({
       where: { node_id: fileId },
       transaction
     });
-    
-    if (!file) {
+    if (!fileRecord) {
       throw new NotFoundError('Fichier non trouvé');
     }
-    
     // 1. Supprimer toutes les relations de fermeture liées à ce fichier
     await closure.destroy({
       where: {
@@ -467,26 +462,21 @@ const deleteFile = async (fileId) => {
       },
       transaction
     });
-    
     // 2. Supprimer le fichier physique
-    if (fs.existsSync(file.file_path)) {
-      fs.unlinkSync(file.file_path);
+    if (fs.existsSync(fileRecord.file_path)) {
+      fs.unlinkSync(fileRecord.file_path);
     }
-    
     // 3. Supprimer les enregistrements en base
     await file.destroy({
       where: { node_id: fileId },
       transaction
     });
-    
     await node.destroy({
       where: { id: fileId },
       transaction
     });
-    
     // Valider la transaction
     await transaction.commit();
-    
     return true;
   } catch (error) {
     // Annuler la transaction en cas d'erreur

@@ -1,3 +1,202 @@
+/* React-Select/Creatable : correction pour le mode sombre */
+.dark-theme .react-select__control,
+.dark-theme .creatable-select__control {
+  background-color: var(--dark-input-bg) !important;
+  border-color: var(--dark-input-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .react-select__control:hover,
+.dark-theme .creatable-select__control:hover {
+  border-color: var(--dark-input-border) !important;
+}
+
+.dark-theme .react-select__control--is-focused,
+.dark-theme .creatable-select__control--is-focused {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 1px var(--dark-accent) !important;
+}
+
+/* Valeur sélectionnée dans le champ */
+.dark-theme .react-select__single-value,
+.dark-theme .creatable-select__single-value {
+  color: var(--dark-text-primary) !important;
+  background-color: transparent !important;
+}
+
+/* Placeholder */
+.dark-theme .react-select__placeholder,
+.dark-theme .creatable-select__placeholder {
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Input pour la saisie */
+.dark-theme .react-select__input-container,
+.dark-theme .creatable-select__input-container,
+.dark-theme .react-select__input,
+.dark-theme .creatable-select__input {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Menu déroulant */
+.dark-theme .react-select__menu,
+.dark-theme .creatable-select__menu {
+  background-color: var(--dark-input-bg) !important;
+  border: 1px solid var(--dark-input-border) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Options dans le menu */
+.dark-theme .react-select__option,
+.dark-theme .creatable-select__option {
+  background-color: transparent !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Option au survol */
+.dark-theme .react-select__option--is-focused,
+.dark-theme .creatable-select__option--is-focused {
+  background-color: #343a40 !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Option sélectionnée dans le menu */
+.dark-theme .react-select__option--is-selected,
+.dark-theme .creatable-select__option--is-selected {
+  background-color: var(--dark-accent) !important;
+  color: var(--dark-bg-primary) !important;
+}
+
+/* Indicateurs (flèches, croix) */
+.dark-theme .react-select__dropdown-indicator,
+.dark-theme .react-select__clear-indicator,
+.dark-theme .creatable-select__dropdown-indicator,
+.dark-theme .creatable-select__clear-indicator {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .react-select__dropdown-indicator:hover,
+.dark-theme .react-select__clear-indicator:hover,
+.dark-theme .creatable-select__dropdown-indicator:hover,
+.dark-theme .creatable-select__clear-indicator:hover {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Séparateur */
+.dark-theme .react-select__indicator-separator,
+.dark-theme .creatable-select__indicator-separator {
+  background-color: var(--dark-input-border) !important;
+}
+
+/* Multi-value (si utilisé) */
+.dark-theme .react-select__multi-value,
+.dark-theme .creatable-select__multi-value {
+  background-color: var(--dark-bg-quaternary) !important;
+}
+
+.dark-theme .react-select__multi-value__label,
+.dark-theme .creatable-select__multi-value__label {
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .react-select__multi-value__remove,
+.dark-theme .creatable-select__multi-value__remove {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .react-select__multi-value__remove:hover,
+.dark-theme .creatable-select__multi-value__remove:hover {
+  background-color: var(--dark-danger) !important;
+  color: #fff !important;
+}
+
+/* Modals : texte plus lisible en mode sombre */
+.dark-theme .modal-content,
+.dark-theme .modal-header,
+.dark-theme .modal-footer,
+.dark-theme .modal-title,
+.dark-theme .modal-body,
+.dark-theme .modal-body * {
+  color: #fff !important;
+}
+
+/* Onglets Nav (react-bootstrap) en mode sombre : onglet inactif blanc, actif accent */
+.dark-theme .nav-tabs .nav-link {
+  background-color: transparent !important;
+  color: #fff !important;
+  border-color: var(--dark-border) !important;
+}
+.dark-theme .nav-tabs .nav-link.active,
+.dark-theme .nav-tabs .nav-item.show .nav-link {
+  color: var(--dark-accent) !important;
+  background-color: #23272b !important;
+  border-color: var(--dark-accent) var(--dark-accent) #23272b !important;
+}
+/* EnumTableContent en mode sombre */
+.dark-theme .data-table thead tr,
+.dark-theme .data-table th {
+  background-color: #23272b !important;
+  color: #fff !important;
+}
+.dark-theme .empty-state,
+.dark-theme .empty-state .card-body {
+  background-color: #23272b !important;
+  color: #fff !important;
+}
+/* SortableTable en mode sombre */
+.dark-theme .sortable-table thead tr,
+.dark-theme .sortable-table .sortable-header {
+  background-color: #23272b !important;
+  color: #fff !important;
+}
+.dark-theme .sortable-table .sortable-header.clickable:hover {
+  background-color: #2c2c2c !important;
+}
+.dark-theme .sortable-table .sort-icon.inactive {
+  color: #888 !important;
+}
+.dark-theme .sortable-table .sort-icon.active {
+  color: var(--dark-danger) !important;
+}
+/* SearchInput en mode sombre */
+.dark-theme .search-input-group,
+.dark-theme .search-input-group .search-input,
+.dark-theme .search-input-group .clear-button {
+  background-color: var(--dark-input-bg) !important;
+  border-color: var(--dark-input-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+.dark-theme .search-input-group .search-input {
+  border-left: none !important;
+  border-right: none !important;
+}
+.dark-theme .search-input-group .search-button {
+  background-color: var(--dark-danger) !important;
+  border-color: var(--dark-danger) !important;
+  color: #fff !important;
+}
+.dark-theme .search-input-group .search-button:hover {
+  background-color: #a71d2a !important;
+  border-color: #a71d2a !important;
+}
+.dark-theme .search-input-group .clear-button {
+  color: var(--dark-text-secondary) !important;
+}
+/* Breadcrumb en mode sombre */
+.dark-theme .breadcrumb {
+  background-color: #23272b !important;
+  color: #fff !important;
+  border-radius: 0.3rem;
+}
+.dark-theme .breadcrumb .breadcrumb-item {
+  color: #fff !important;
+}
+.dark-theme .breadcrumb .breadcrumb-item.active {
+  color: #ffc107 !important;
+}
+.dark-theme .breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+  color: #bbb !important;
+}
 /* styles/darkTheme.css - Thème sombre pour l'application */
 
 /* Variables de couleurs pour le thème sombre */

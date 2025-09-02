@@ -10,15 +10,15 @@ yarn.lock
 **/.env
 .env.local
 .env.dev
-# .env.prod doit être versionné pour le déploiement (voir README)
-#.env.prod
+.env.prod
 .env.*.local
 .env.development
 .env.test
 .env.production
 
-# IMPORTANT: .env.dev et .env.prod sont versionnés pour faciliter le déploiement
-# mais assurez-vous de changer les mots de passe en production!
+# NOTE: Tous les fichiers .env sont ignorés car les variables d'environnement
+# sont maintenant gérées via GitHub Secrets et le workflow de déploiement
+# génère automatiquement un .env.example sécurisé
 
 # Logs
 logs/

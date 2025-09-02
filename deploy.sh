@@ -12,11 +12,7 @@ LOG_FILE="$SCRIPT_DIR/deploy.log"
 # Couleurs pour l'affichage
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YE    info "Informations d'accès:"
-    echo "  🌐 Frontend & API: https://$(hostname -I | awk '{print $1}' | tr -d ' ')"
-    echo "  🔐 Note: Le certificat SSL est auto-signé, vous devrez peut-être l'accepter dans votre navigateur"
-    echo "  📊 Status:   docker compose ps"
-    echo "  📋 Logs:     docker compose logs"'\033[1;33m'
+YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
@@ -380,7 +376,7 @@ main() {
     
     info "Informations d'accès:"
     echo "  🌐 Frontend & API: https://$(hostname -I | awk '{print $1}' | tr -d ' ')"
-    echo "  � Note: Le certificat SSL est auto-signé, vous devrez peut-être l'accepter dans votre navigateur"
+    echo "  🔐 Note: Le certificat SSL est auto-signé, vous devrez peut-être l'accepter dans votre navigateur"
     echo "  📊 Status:   docker compose ps"
     echo "  📋 Logs:     docker compose logs"
     echo ""

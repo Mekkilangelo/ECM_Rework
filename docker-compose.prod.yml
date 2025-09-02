@@ -1,4 +1,20 @@
 services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
   database:
     image: mysql:8.0
     restart: unless-stopped
@@ -11,8 +27,6 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     networks:
       - app-network
-    ports:
-      - "3306:3306"
 
   backend:
     image: synergia-backend:latest
@@ -29,15 +43,15 @@ services:
       JWT_INACTIVITY_EXPIRE: ${JWT_INACTIVITY_EXPIRE}
       CLIENT_URL: ${CLIENT_URL}
       API_URL: ${API_URL}
-
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:
       - database
     networks:
       - app-network
-    ports:
-      - "5001:5001"
+    # Ports exposés seulement à l'intérieur du réseau Docker
+    expose:
+      - "5001"
 
   frontend:
     image: synergia-frontend:latest
@@ -46,8 +60,9 @@ services:
       - backend
     networks:
       - app-network
-    ports:
-      - "3000:3000"
+    # Ports exposés seulement à l'intérieur du réseau Docker
+    expose:
+      - "3000"
 
 
 volumes:

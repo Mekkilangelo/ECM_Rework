@@ -12,7 +12,11 @@ LOG_FILE="$SCRIPT_DIR/deploy.log"
 # Couleurs pour l'affichage
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+YE    info "Informations d'accès:"
+    echo "  🌐 Frontend & API: https://$(hostname -I | awk '{print $1}' | tr -d ' ')"
+    echo "  🔐 Note: Le certificat SSL est auto-signé, vous devrez peut-être l'accepter dans votre navigateur"
+    echo "  📊 Status:   docker compose ps"
+    echo "  📋 Logs:     docker compose logs"'\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
@@ -49,8 +53,8 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Vérifier les fichiers requis (maintenant avec MySQL)
-    local required_files=("docker-compose.yaml" "images/frontend.tar" "images/backend.tar" "images/mysql.tar")
+    # Vérifier les fichiers requis (avec MySQL et Nginx)
+    local required_files=("docker-compose.yaml" "images/frontend.tar" "images/backend.tar" "images/mysql.tar" "images/nginx.tar")
     for file in "${required_files[@]}"; do
         if [ ! -f "$SCRIPT_DIR/$file" ]; then
             error "Fichier requis manquant: $file"
@@ -174,15 +178,113 @@ load_docker_images() {
         exit 1
     fi
     
+    # Chargement nginx
+    if [ -f "$SCRIPT_DIR/images/nginx.tar" ]; then
+        log "Chargement de l'image Nginx..."
+        if docker load < "$SCRIPT_DIR/images/nginx.tar"; then
+            success "Image Nginx chargée"
+        else
+            error "Échec du chargement de l'image Nginx"
+            exit 1
+        fi
+    else
+        error "Image nginx.tar non trouvée"
+        exit 1
+    fi
+    
     # Afficher les images chargées
     info "Images Docker disponibles:"
-    docker images | grep -E "(synergia|mysql)" | head -10
+    docker images | grep -E "(synergia|mysql|nginx)" | head -10
+}
+
+prepare_nginx() {
+    info "Préparation de Nginx et SSL..."
+    
+    # Créer les dossiers nginx s'ils n'existent pas
+    mkdir -p "$SCRIPT_DIR/nginx/conf" "$SCRIPT_DIR/nginx/ssl" "$SCRIPT_DIR/nginx/logs"
+    
+    # Vérifier si le fichier de configuration nginx existe, sinon le créer
+    if [ ! -f "$SCRIPT_DIR/nginx/conf/default.conf" ]; then
+        log "Création du fichier de configuration Nginx..."
+        cat > "$SCRIPT_DIR/nginx/conf/default.conf" << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    
+    # Rediriger HTTP vers HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name _;
+
+    # Configuration SSL
+    ssl_certificate /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+
+    # Frontend - React App
+    location / {
+        proxy_pass http://frontend:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Backend API
+    location /api {
+        proxy_pass http://backend:5001/api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Logs
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+}
+EOF
+        success "Fichier de configuration Nginx créé"
+    fi
+
+    # Générer des certificats SSL auto-signés s'ils n'existent pas
+    if [ ! -f "$SCRIPT_DIR/nginx/ssl/cert.pem" ] || [ ! -f "$SCRIPT_DIR/nginx/ssl/key.pem" ]; then
+        log "Génération des certificats SSL auto-signés..."
+        # Détection de l'IP du serveur
+        SERVER_IP=$(hostname -I | awk '{print $1}' | tr -d ' ')
+        
+        openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+            -keyout "$SCRIPT_DIR/nginx/ssl/key.pem" \
+            -out "$SCRIPT_DIR/nginx/ssl/cert.pem" \
+            -subj "/CN=$SERVER_IP" \
+            -addext "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:$SERVER_IP"
+        
+        # Correction des permissions
+        chmod 600 "$SCRIPT_DIR/nginx/ssl/key.pem"
+        chmod 644 "$SCRIPT_DIR/nginx/ssl/cert.pem"
+        success "Certificats SSL auto-signés générés"
+    fi
 }
 
 deploy_services() {
     info "Déploiement des services..."
     
     cd "$SCRIPT_DIR"
+    
+    # Préparation de Nginx
+    prepare_nginx
     
     log "Arrêt des services existants..."
     if docker compose down; then
@@ -276,9 +378,9 @@ main() {
     docker compose ps
     echo ""
     
-    info "Informations d'accès (à adapter selon votre configuration):"
-    echo "  🌐 Frontend: https://app.entreprise.local"
-    echo "  🔧 API:      https://api.entreprise.local"
+    info "Informations d'accès:"
+    echo "  🌐 Frontend & API: https://$(hostname -I | awk '{print $1}' | tr -d ' ')"
+    echo "  � Note: Le certificat SSL est auto-signé, vous devrez peut-être l'accepter dans votre navigateur"
     echo "  📊 Status:   docker compose ps"
     echo "  📋 Logs:     docker compose logs"
     echo ""

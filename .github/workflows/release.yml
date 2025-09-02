@@ -71,18 +71,20 @@ jobs:
             --tag synergia-backend:latest \
             ./server
 
-      - name: Export Docker images (including MySQL)
+      - name: Export Docker images (including MySQL and Nginx)
         run: |
           echo "Exporting Docker images..."
           mkdir -p release/images
           
-          # Pull MySQL si pas déjà présent
+          # Pull MySQL et Nginx
           docker pull mysql:8.0
+          docker pull nginx:alpine
           
           # Export des images
           docker save synergia-frontend:${{ steps.version.outputs.version }} -o release/images/frontend.tar
           docker save synergia-backend:${{ steps.version.outputs.version }} -o release/images/backend.tar
           docker save mysql:8.0 -o release/images/mysql.tar
+          docker save nginx:alpine -o release/images/nginx.tar
           
           echo "Images exportées:"
           ls -la release/images/
@@ -98,13 +100,30 @@ jobs:
           # S'assurer que les images pointent vers les bonnes versions
           sed -i "s/synergia-frontend:latest/synergia-frontend:$VERSION/g" release/docker-compose.yaml
           sed -i "s/synergia-backend:latest/synergia-backend:$VERSION/g" release/docker-compose.yaml
-          cp .env.prod release/.env.example
-          cp .env.prod release/.env
-
-          # Nettoyer .env.example - remplacer les vraies valeurs par CHANGEME
-          sed -i 's/MYSQL_ROOT_PASSWORD=.*/MYSQL_ROOT_PASSWORD=CHANGEME_STRONG_PASSWORD/' release/.env.example
-          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=CHANGEME_STRONG_PASSWORD/' release/.env.example
-          sed -i 's/JWT_SECRET=.*/JWT_SECRET=CHANGEME_VERY_STRONG_SECRET_KEY/' release/.env.example
+          
+          # Créer .env.example basé sur les secrets et les noms de variables
+          cat > release/.env.example << EOF
+          # Configuration de la base de données MySQL
+          MYSQL_ROOT_PASSWORD=CHANGEME_STRONG_PASSWORD
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          
+          # Configuration du backend
+          NODE_ENV=production
+          DB_HOST=database
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=CHANGEME_STRONG_PASSWORD
+          DB_SYNC_ALTER=false
+          
+          # Configuration JWT
+          JWT_SECRET=CHANGEME_VERY_STRONG_SECRET_KEY
+          JWT_EXPIRE=${{ secrets.JWT_EXPIRE }}
+          JWT_INACTIVITY_EXPIRE=${{ secrets.JWT_INACTIVITY_EXPIRE }}
+          
+          # URLs (avec HTTPS via Nginx)
+          CLIENT_URL=${{ secrets.CLIENT_URL }}
+          API_URL=${{ secrets.API_URL }}
+          REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
+          EOF
 
           # Copier les scripts existants
           cp deploy.sh release/
@@ -132,6 +151,8 @@ jobs:
 
           - Frontend image: synergia-frontend:$VERSION
           - Backend image: synergia-backend:$VERSION
+          - MySQL image: mysql:8.0
+          - Nginx image: nginx:alpine (pour HTTPS)
           - Configuration: docker-compose.yaml + .env.example
           - Scripts: deploy.sh, rollback.sh, validate-bundle.sh
 
@@ -139,8 +160,8 @@ jobs:
 
           1. Validation: ./validate-bundle.sh
           2. Extraction: tar -xzf synergia-release-v$VERSION.tar.gz
-          3. Configuration: cp .env.example .env && nano .env
-          4. Déploiement: ./deploy.sh
+          3. Déploiement: ./deploy.sh
+             (Le script vous demandera de configurer les variables d'environnement)
 
           ## Rollback
 

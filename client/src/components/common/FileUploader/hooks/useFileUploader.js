@@ -9,7 +9,7 @@ import { faFile } from '@fortawesome/free-solid-svg-icons';
  * Hook principal gérant l'ensemble du processus d'upload de fichiers
  */
 const useFileUploader = ({
-  maxFiles = 5,
+  maxFiles = 50, // Augmenté de 5 à 50 fichiers
   acceptedFileTypes = {},
   fileIcon = faFile,
   existingFiles = [],

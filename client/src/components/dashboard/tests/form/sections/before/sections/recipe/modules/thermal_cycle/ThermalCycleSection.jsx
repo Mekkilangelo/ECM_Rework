@@ -30,6 +30,34 @@ const ThermalCycleSection = ({
     { value: 'down', label: t('tests.before.recipeData.thermalCycle.rampDown'), icon: faArrowDown },
     { value: 'continue', label: t('tests.before.recipeData.thermalCycle.rampContinue'), icon: faArrowRight }
   ];
+
+  // Fonction pour gérer la touche Entrée
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Vérifier si on est sur la dernière ligne
+      const isLastRow = index === (formData.recipeData?.thermalCycle?.length || 1) - 1;
+      if (isLastRow) {
+        // Ajouter une nouvelle étape
+        handleThermalCycleAdd();
+        // Focus sur le premier champ de la nouvelle ligne (optionnel)
+        setTimeout(() => {
+          const newRowIndex = formData.recipeData?.thermalCycle?.length || 0;
+          const targetInput = document.querySelector(`input[data-thermal-row="${newRowIndex}"][data-thermal-field="setpoint"]`);
+          if (targetInput) {
+            targetInput.focus();
+          }
+        }, 100);
+      } else {
+        // Passer à la ligne suivante, même champ
+        const fieldName = e.target.getAttribute('data-thermal-field');
+        const nextRowInput = document.querySelector(`input[data-thermal-row="${index + 1}"][data-thermal-field="${fieldName}"]`);
+        if (nextRowInput) {
+          nextRowInput.focus();
+        }
+      }
+    }
+  };
   
   return (
     <>
@@ -81,10 +109,13 @@ const ThermalCycleSection = ({
                   type="number"
                   value={cycle.setpoint || ''}
                   onChange={(e) => handleThermalCycleChange(index, 'setpoint', e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   step="0.1"
                   disabled={loading || viewMode}
                   readOnly={viewMode}
                   style={viewMode ? readOnlyFieldStyle : {}}
+                  data-thermal-row={index}
+                  data-thermal-field="setpoint"
                 />
               </td>
               <td>
@@ -99,6 +130,7 @@ const ThermalCycleSection = ({
                       handleThermalCycleChange(index, 'duration', value);
                     }
                   }}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   step="1"
@@ -106,6 +138,8 @@ const ThermalCycleSection = ({
                   disabled={loading || viewMode}
                   readOnly={viewMode}
                   style={viewMode ? readOnlyFieldStyle : {}}
+                  data-thermal-row={index}
+                  data-thermal-field="duration"
                 />
               </td>
               <td className="text-center">

@@ -86,7 +86,7 @@ const LoadDesignSection = ({
         nodeId={testNodeId}
         onFilesUploaded={handleFilesUploaded}
         onUploaderReady={handleUploaderReady}
-        maxFiles={5}
+        maxFiles={50}
         acceptedFileTypes={{
           'application/pdf': ['.pdf'],
           'application/msword': ['.doc'],

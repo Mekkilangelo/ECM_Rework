@@ -1,0 +1,126 @@
+/* Styles personnalisés pour les onglets TestForm */
+
+/* Container des onglets */
+#test-form-tabs {
+  border-bottom: 2px solid #dee2e6;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Onglets non actifs */
+#test-form-tabs .nav-link {
+  border: 2px solid transparent !important;
+  border-radius: 8px 8px 0 0 !important;
+  color: #6c757d !important;
+  font-weight: 500 !important;
+  padding: 12px 20px !important;
+  margin-right: 4px !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Effet hover sur les onglets non actifs */
+#test-form-tabs .nav-link:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+  color: #495057 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Onglet actif */
+#test-form-tabs .nav-link.active {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #dc3545 !important;
+  border-bottom: 2px solid #dc3545 !important;
+  font-weight: bold !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 
+    0 6px 12px rgba(220, 53, 69, 0.3),
+    0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+  z-index: 10 !important;
+}
+
+/* Animation pulse pour l'onglet actif */
+#test-form-tabs .nav-link.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  animation: pulse-light 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-light {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Badge indicateur sur les onglets */
+#test-form-tabs .nav-link .tab-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 8px;
+  background-color: #28a745;
+  animation: blink 2s infinite;
+}
+
+#test-form-tabs .nav-link.active .tab-badge {
+  background-color: #ffffff;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
+}
+
+/* Amélioration mobile */
+@media (max-width: 768px) {
+  #test-form-tabs .nav-link {
+    padding: 10px 16px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  #test-form-tabs .nav-link.active {
+    transform: translateY(-2px) !important;
+  }
+}
+
+/* Contenu des onglets */
+#test-form-tabs .tab-content {
+  background: #ffffff;
+  border-radius: 0 0 8px 8px;
+  min-height: 200px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus pour l'accessibilité */
+#test-form-tabs .nav-link:focus {
+  outline: 3px solid rgba(220, 53, 69, 0.3) !important;
+  outline-offset: 2px !important;
+}

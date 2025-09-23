@@ -3,31 +3,33 @@ import React, { useState } from 'react';
 import { Tab, Nav, Button, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 import EnumTableContent from '../EnumTableContent';
 
 const FurnacesSection = () => {
   const [activePill, setActivePill] = useState('furnace_type');
+  const { t } = useTranslation();
 
   return (
     <Tab.Container activeKey={activePill} onSelect={setActivePill}>
       <Nav variant="pills" className="mb-3">
         <Nav.Item>
-          <Nav.Link eventKey="furnace_type">Furnace Type</Nav.Link>
+          <Nav.Link eventKey="furnace_type">{t('references.furnaces.furnace_type')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="furnace_size">Furnace Size</Nav.Link>
+          <Nav.Link eventKey="furnace_size">{t('references.furnaces.furnace_size')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="heating_cell_type">Heating Cell Type</Nav.Link>
+          <Nav.Link eventKey="heating_cell_type">{t('references.furnaces.heating_cell_type')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="cooling_media">Cooling Media</Nav.Link>
+          <Nav.Link eventKey="cooling_media">{t('references.furnaces.cooling_media')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="process_type">Process Type</Nav.Link>
+          <Nav.Link eventKey="process_type">{t('references.furnaces.process_type')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="quench_cell">Quench Cell</Nav.Link>
+          <Nav.Link eventKey="quench_cell">{t('references.furnaces.quench_cell')}</Nav.Link>
         </Nav.Item>
       </Nav>
 

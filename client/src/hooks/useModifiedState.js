@@ -20,7 +20,15 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
   // Compteur pour les tentatives d'initialisation
   const initAttempts = useRef(0);
   // Timeout pour la stabilisation
-  const stabilizationTimeout = useRef(null);  // Fonction pour normaliser les données avant comparaison
+  const stabilizationTimeout = useRef(null);
+
+  console.log('🔍 useModifiedState state:', { 
+    isModified, 
+    isLoading, 
+    isFetching, 
+    isInitialized,
+    hasInitialState: !!initialState 
+  });  // Fonction pour normaliser les données avant comparaison
   const normalizeDataForComparison = useCallback((data) => {
     if (!data || typeof data !== 'object') return data;
     
@@ -256,8 +264,9 @@ const useModifiedState = (currentState, isLoading, isFetching, customCompare = n
 
   // Méthode pour définir explicitement l'état comme modifié
   const setModified = useCallback((modified = true) => {
+    console.log('🎯 setModified called with:', modified, 'current isModified:', isModified);
     setIsModified(modified);
-  }, []);  // Méthode pour réinitialiser l'état initial avec l'état actuel
+  }, [isModified]);  // Méthode pour réinitialiser l'état initial avec l'état actuel
   const resetInitialState = useCallback(() => {
     if (currentState) {
       // Normaliser les données avant de les stocker comme état initial

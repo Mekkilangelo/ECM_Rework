@@ -3,31 +3,33 @@ import React, { useState } from 'react';
 import { Tab, Nav, Button, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 import EnumTableContent from '../EnumTableContent';
 
 const UnitsSection = () => {
   const [activePill, setActivePill] = useState('length_units');
+  const { t } = useTranslation();
 
   return (
     <Tab.Container activeKey={activePill} onSelect={setActivePill}>
       <Nav variant="pills" className="mb-3">
         <Nav.Item>
-          <Nav.Link eventKey="length_units">Length Units</Nav.Link>
+          <Nav.Link eventKey="length_units">{t('references.units.length_units')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="weight_units">Weight Units</Nav.Link>
+          <Nav.Link eventKey="weight_units">{t('references.units.weight_units')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="hardness_units">Hardness Units</Nav.Link>
+          <Nav.Link eventKey="hardness_units">{t('references.units.hardness_units')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="temperature_units">Temperature Units</Nav.Link>
+          <Nav.Link eventKey="temperature_units">{t('references.units.temperature_units')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="time_units">Time Units</Nav.Link>
+          <Nav.Link eventKey="time_units">{t('references.units.time_units')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="pressure_units">Pressure Units</Nav.Link>
+          <Nav.Link eventKey="pressure_units">{t('references.units.pressure_units')}</Nav.Link>
         </Nav.Item>
       </Nav>
 

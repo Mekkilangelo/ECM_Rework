@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Tab, Nav, Container, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faIndustry, faFire, faCogs, faRuler, faToolbox } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 import SteelsSection from '../components/reference/sections/SteelsSection';
 import FurnacesSection from '../components/reference/sections/FurnacesSection';
 import PartsSection from '../components/reference/sections/PartsSection';
@@ -13,12 +14,13 @@ import { NavigationProvider } from '../context/NavigationContext';
 
 const ReferenceContent = () => {
   const [activeTab, setActiveTab] = useState('steels');
+  const { t } = useTranslation();
 
   return (
     <Layout>
         <Container fluid>
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 className="h3 mb-0 text-gray-800">Referencing Management</h1>
+            <h1 className="h3 mb-0 text-gray-800">{t('references.title')}</h1>
         </div>
 
         <Card className="shadow mb-4">
@@ -28,31 +30,31 @@ const ReferenceContent = () => {
                 <Nav.Item>
                     <Nav.Link eventKey="steels">
                     <FontAwesomeIcon icon={faIndustry} className="mr-2" />
-                    Steels
+                    {t('references.tabs.steels')}
                     </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link eventKey="furnaces">
                     <FontAwesomeIcon icon={faFire} className="mr-2" />
-                    Furnaces
+                    {t('references.tabs.furnaces')}
                     </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link eventKey="parts">
                     <FontAwesomeIcon icon={faCogs} className="mr-2" />
-                    Parts
+                    {t('references.tabs.parts')}
                     </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link eventKey="units">
                     <FontAwesomeIcon icon={faRuler} className="mr-2" />
-                    Units
+                    {t('references.tabs.units')}
                     </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link eventKey="process">
                     <FontAwesomeIcon icon={faToolbox} className="mr-2" />
-                    Process
+                    {t('references.tabs.process')}
                     </Nav.Link>
                 </Nav.Item>
                 </Nav>

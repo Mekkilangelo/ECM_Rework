@@ -224,7 +224,15 @@ const createTest = async (testData) => {
     test_date,
     location,
     status,
-    additional_info
+    furnace_data,
+    load_data,
+    recipe_data,
+    quench_data,
+    results_data,
+    mounting_type,
+    position_type,
+    process_type,
+    preox_media
   } = testData;
   
   // Vérifier si le parent existe
@@ -275,7 +283,15 @@ const createTest = async (testData) => {
       test_date,
       location,
       status: status || 'Pending',
-      additional_info
+      furnace_data,
+      load_data,
+      recipe_data,
+      quench_data,
+      results_data,
+      mounting_type,
+      position_type,
+      process_type,
+      preox_media
     }, { transaction });
     
     // Créer les enregistrements de fermeture (closure table)

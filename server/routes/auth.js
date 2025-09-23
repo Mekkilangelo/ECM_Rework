@@ -25,8 +25,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { login, getMe, refreshUserToken } = require('../controllers/authController');
-const { readAccess, publicAccess } = require('../middleware/access-control');
+const { login, getMe, refreshUserToken, changePassword } = require('../controllers/authController');
+const { readAccess, publicAccess, writeAccess } = require('../middleware/access-control');
 const { validateRefreshToken } = require('../middleware/auth');
 
 // Route d'authentification (publique)
@@ -38,5 +38,8 @@ router.get('/me', readAccess, getMe);
 // Route de rafraîchissement de token (utilise un validateur spécial)
 // Ce middleware accepte les tokens légèrement expirés pour permettre leur renouvellement
 router.post('/refresh-token', validateRefreshToken, refreshUserToken);
+
+// Route de changement de mot de passe (authentifiée)
+router.put('/change-password', writeAccess, changePassword);
 
 module.exports = router;

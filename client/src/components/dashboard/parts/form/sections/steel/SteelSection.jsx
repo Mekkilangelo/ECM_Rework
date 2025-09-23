@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, InputGroup } from 'react-bootstrap';
+import { Form, Button, InputGroup, Collapse } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import steelService from '../../../../../../services/steelService';
 import { useTranslation } from 'react-i18next';
 import './SteelSection.css';
@@ -21,6 +21,7 @@ const SteelSection = ({
   const { t } = useTranslation();
   const [selectedSteelInfo, setSelectedSteelInfo] = useState(null);
   const [fetchingSteelInfo, setFetchingSteelInfo] = useState(false);
+  const [showSteelDetails, setShowSteelDetails] = useState(false);
 
   // Style compact pour les Select
   const compactSelectStyles = {
@@ -69,6 +70,7 @@ const SteelSection = ({
     const fetchSteelDetails = async () => {
       if (!formData.steel) {
         setSelectedSteelInfo(null);
+        setShowSteelDetails(false);
         return;
       }
 
@@ -88,25 +90,31 @@ const SteelSection = ({
         const response = await steelService.getSteel(selectedOption.nodeId);
         
         if (response) {
-          // La structure de la réponse : { success: true, data: { id, name, Steel: {...} } }
+          // La structure de la réponse : { success: true, data: { id, name, steel: {...} } }
           let steelData = null;
           
-          if (response.success && response.data) {
+          // Simplification du parsing
+          if (response.success && response.data && response.data.steel) {
             // Format API standard avec succès
-            steelData = response.data.Steel || response.data;
+            steelData = response.data.steel;
+          } else if (response.data && response.data.steel) {
+            // Format avec data.steel
+            steelData = response.data.steel;
+          } else if (response.steel) {
+            // Format direct avec steel (minuscule)
+            steelData = response.steel;
           } else if (response.Steel) {
-            // Format direct avec Steel
+            // Format direct avec Steel (majuscule) - ancienne structure
             steelData = response.Steel;
-          } else if (response.data && response.data.Steel) {
-            // Format imbriqué
-            steelData = response.data.Steel;
-          } else {
-            // Format direct
-            steelData = response;
           }
           
           if (isDev && steelData) {
             console.log('🔧 Steel loaded:', steelData.grade || 'Unknown grade');
+            console.log('🔧 Steel data structure:', steelData);
+            console.log('🔧 Family:', steelData.family);
+            console.log('🔧 Standard:', steelData.standard);
+            console.log('🔧 Chemistry:', steelData.chemistery);
+            console.log('🔧 Equivalents:', steelData.equivalents);
           }
 
           if (steelData) {// Formatter la composition chimique depuis le champ chemistery (JSON)
@@ -141,11 +149,11 @@ const SteelSection = ({
                 }
               })
               .join(', ');
-          }// Formatter les équivalents depuis le champ equivalents (JSON)
+          }            // Formatter les équivalents depuis le champ equivalents (JSON)
             let equivalents = '';
             if (steelData.equivalents && Array.isArray(steelData.equivalents) && steelData.equivalents.length > 0) {
               // Limiter le nombre de requêtes pour éviter les surcharges
-              const maxEquivalents = 5; // Limiter à 5 équivalents maximum
+              const maxEquivalents = 3; // Réduire à 3 équivalents maximum
               const equivalentsToProcess = steelData.equivalents.slice(0, maxEquivalents);
               
               // Récupérer les grades des aciers équivalents
@@ -158,8 +166,13 @@ const SteelSection = ({
                       const equivResponse = await steelService.getSteel(steelId);
                       let equivData = null;
                       
-                      if (equivResponse && equivResponse.success && equivResponse.data) {
-                        equivData = equivResponse.data.Steel || equivResponse.data;
+                      // Utiliser la même logique de parsing simplifiée
+                      if (equivResponse && equivResponse.success && equivResponse.data && equivResponse.data.steel) {
+                        equivData = equivResponse.data.steel;
+                      } else if (equivResponse && equivResponse.data && equivResponse.data.steel) {
+                        equivData = equivResponse.data.steel;
+                      } else if (equivResponse && equivResponse.steel) {
+                        equivData = equivResponse.steel;
                       } else if (equivResponse && equivResponse.Steel) {
                         equivData = equivResponse.Steel;
                       }
@@ -226,6 +239,9 @@ const SteelSection = ({
               composition: composition || t('parts.steel.notSpecified'),
               equivalents: equivalents
             });
+            
+            // Ouvrir automatiquement la section des détails quand un acier est chargé
+            setShowSteelDetails(true);
           }
         }
       } catch (error) {
@@ -276,79 +292,96 @@ const SteelSection = ({
             </div>
           </Form.Group>
         </div>
-      </div>      {/* Informations détaillées sur l'acier sélectionné (en lecture seule) */}
+      </div>      {/* Informations détaillées sur l'acier sélectionné (collapsible) */}
       {formData.steel && (
-        <div className="steel-info-container p-3 bg-light rounded mb-3">
-          {fetchingSteelInfo ? (
-            <div className="text-center py-3">
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              {t('parts.steel.loadingInfo')}
+        <div className="mb-3">
+          {/* En-tête avec bouton de toggle */}
+          <div 
+            className="steel-info-header d-flex align-items-center justify-content-between p-2 bg-light rounded cursor-pointer border"
+            onClick={() => setShowSteelDetails(!showSteelDetails)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="d-flex align-items-center">
+              <i className="fas fa-info-circle me-2 text-primary"></i>
+              <span className="fw-bold text-primary">
+                {t('parts.steel.detailedInfo')} - {selectedSteelInfo?.grade || t('parts.steel.loading')}
+              </span>
             </div>
-          ) : selectedSteelInfo ? (
-            <>
-              <div className="d-flex align-items-center mb-3">
-                <h6 className="mb-0 text-primary">
-                  <i className="fas fa-info-circle me-2"></i>
-                  Informations détaillées - {selectedSteelInfo.grade}
-                </h6>
+            <FontAwesomeIcon 
+              icon={showSteelDetails ? faChevronUp : faChevronDown} 
+              className="text-muted chevron-icon"
+            />
+          </div>
+          
+          {/* Contenu collapsible */}
+          <Collapse in={showSteelDetails}>
+            <div>
+              <div className="steel-info-container p-3 bg-white border border-top-0 rounded-bottom">
+                {fetchingSteelInfo ? (
+                  <div className="text-center py-3">
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    {t('parts.steel.loadingInfo')}
+                  </div>
+                ) : selectedSteelInfo ? (
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <div className="info-item">
+                        <Form.Label className="small fw-bold text-muted mb-1">
+                          <i className="fas fa-layer-group me-1"></i>
+                          {t('parts.steel.family')}
+                        </Form.Label>
+                        <div className="info-value p-2 bg-light rounded border">
+                          {selectedSteelInfo.family}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="info-item">
+                        <Form.Label className="small fw-bold text-muted mb-1">
+                          <i className="fas fa-certificate me-1"></i>
+                          {t('parts.steel.standard')}
+                        </Form.Label>
+                        <div className="info-value p-2 bg-light rounded border">
+                          {selectedSteelInfo.standard}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <div className="info-item">
+                        <Form.Label className="small fw-bold text-muted mb-1">
+                          <i className="fas fa-flask me-1"></i>
+                          {t('parts.steel.chemicalComposition')}
+                        </Form.Label>
+                        <div className="info-value p-2 bg-light rounded border">
+                          <small className="text-muted">
+                            {selectedSteelInfo.composition}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <div className="info-item">
+                        <Form.Label className="small fw-bold text-muted mb-1">
+                          <i className="fas fa-exchange-alt me-1"></i>
+                          {t('parts.steel.equivalents')}
+                        </Form.Label>
+                        <div className="info-value p-2 bg-light rounded border">
+                          <small className="text-muted">
+                            {selectedSteelInfo.equivalents}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-3 text-muted">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    {t('parts.steel.unableToLoad')}
+                  </div>
+                )}
               </div>
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <div className="info-item">
-                    <Form.Label className="small fw-bold text-muted mb-1">
-                      <i className="fas fa-layer-group me-1"></i>
-                      {t('parts.steel.family')}
-                    </Form.Label>
-                    <div className="info-value p-2 bg-white rounded border">
-                      {selectedSteelInfo.family}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="info-item">
-                    <Form.Label className="small fw-bold text-muted mb-1">
-                      <i className="fas fa-certificate me-1"></i>
-                      {t('parts.steel.standard')}
-                    </Form.Label>
-                    <div className="info-value p-2 bg-white rounded border">
-                      {selectedSteelInfo.standard}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12">
-                  <div className="info-item">
-                    <Form.Label className="small fw-bold text-muted mb-1">
-                      <i className="fas fa-flask me-1"></i>
-                      {t('parts.steel.chemicalComposition')}
-                    </Form.Label>
-                    <div className="info-value p-2 bg-white rounded border">
-                      <small className="text-muted">
-                        {selectedSteelInfo.composition}
-                      </small>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12">
-                  <div className="info-item">
-                    <Form.Label className="small fw-bold text-muted mb-1">
-                      <i className="fas fa-exchange-alt me-1"></i>
-                      {t('parts.steel.equivalents')}
-                    </Form.Label>
-                    <div className="info-value p-2 bg-white rounded border">
-                      <small className="text-muted">
-                        {selectedSteelInfo.equivalents}
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-3 text-muted">
-              <i className="fas fa-exclamation-triangle me-2"></i>
-              {t('parts.steel.unableToLoad')}
             </div>
-          )}
+          </Collapse>
         </div>
       )}
     </>

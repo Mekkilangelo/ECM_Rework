@@ -11,6 +11,25 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Styles pour l'en-tête collapsible */
+.steel-info-header {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.steel-info-header:hover {
+  background-color: #e9ecef !important;
+  border-color: #adb5bd !important;
+}
+
+.steel-info-header .chevron-icon {
+  transition: transform 0.2s ease;
+}
+
+/* Animation pour la section collapsible */
+.collapse {
+  transition: height 0.35s ease;
+}
+
 .steel-info-container .info-item {
   margin-bottom: 1rem;
 }

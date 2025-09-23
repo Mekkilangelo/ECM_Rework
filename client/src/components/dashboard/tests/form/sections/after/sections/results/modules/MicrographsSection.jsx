@@ -144,7 +144,7 @@ const MicrographsSection = ({
               subcategory={view.id}
               nodeId={testNodeId}
               onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
-              maxFiles={5}
+              maxFiles={50}
               acceptedFileTypes={{
                 'application/pdf': ['.pdf'],
                 'application/msword': ['.doc'],

@@ -443,6 +443,7 @@ const SteelList = () => {
         </Modal.Header>
         <Modal.Body>
           <SteelForm
+            ref={steelFormRef}
             onClose={closeCreateModal}
             onSteelCreated={() => {
               fetchSteels();
@@ -467,6 +468,7 @@ const SteelList = () => {
         <Modal.Body>
           {selectedSteel && (
             <SteelForm
+              ref={steelFormRef}
               steel={selectedSteel}
               onClose={closeEditModal}
               onSteelUpdated={() => {
@@ -500,6 +502,7 @@ const SteelList = () => {
         <Modal.Body>
           {selectedSteel && (
             <SteelForm
+              ref={steelFormRef}
               steel={selectedSteel}
               onClose={closeDetailModal}
               viewMode={true} // Active le mode lecture seule

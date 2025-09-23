@@ -2,22 +2,29 @@
 import { useCallback } from 'react';
 import useGlobalFormHandlers from '../../../../../hooks/useFormHandlers';
 
-const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}) => {
+const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}, setModified = null) => {
   // Récupérer les gestionnaires de formulaire globaux
-  const globalHandlers = useGlobalFormHandlers(formData, setFormData, errors, setErrors, refreshOptionsFunctions);
+  const globalHandlers = useGlobalFormHandlers(formData, setFormData, errors, setErrors, refreshOptionsFunctions, setModified);
   
   // Extraire la fonction handleChange de globalHandlers
   const { handleChange } = globalHandlers;
+
+  // Fonction utilitaire pour marquer le formulaire comme modifié
+  const markAsModified = useCallback(() => {
+    console.log('🔄 markAsModified called in useTestHandlers');
+    if (setModified) {
+      setModified(true);
+    }
+  }, [setModified]);
   
-  // Fonction pour calculer la durée totale du programme (waitTime + somme des durées du cycle thermique)
+  // Fonction pour calculer la durée totale du programme (somme des durées du cycle thermique uniquement)
   const calculateProgramDuration = useCallback(() => {
-    const waitTime = parseInt(formData.recipeData?.waitTime || 0);
     const thermalCycleDurations = formData.recipeData?.thermalCycle?.reduce((sum, cycle) => {
       return sum + parseInt(cycle.duration || 0);
     }, 0) || 0;
     
-    return waitTime + thermalCycleDurations;
-  }, [formData.recipeData?.waitTime, formData.recipeData?.thermalCycle]);
+    return thermalCycleDurations;
+  }, [formData.recipeData?.thermalCycle]);
   
   // Fonction pour déterminer automatiquement la direction de la rampe en fonction des températures
   const determineRampDirection = (currentTemp, previousTemp) => {
@@ -49,7 +56,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         thermalCycle: [...(prev.recipeData?.thermalCycle || []), newStep]
       }
     }));
-  }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
   
   const handleThermalCycleRemove = useCallback((index) => {
     // On n'utilise plus le handler global car on fait la suppression directement ici
@@ -68,8 +76,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           thermalCycle: updatedThermalCycle
         }
       }));
+      markAsModified(); // Marquer comme modifié
     }
-  }, [formData, setFormData]);
+  }, [formData, setFormData, markAsModified]);
   
   // Nouvelle fonction pour mettre à jour une valeur dans le cycle thermique et 
   // recalculer automatiquement les rampes si besoin
@@ -121,7 +130,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         }
       };
     });
-  }, [setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [setFormData, markAsModified]);
   
   // Gestion du cycle chimique
   const handleChemicalCycleAdd = useCallback(() => {
@@ -140,7 +150,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         chemicalCycle: [...(prev.recipeData?.chemicalCycle || []), newStep]
       }
     }));
-  }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
   
   const handleChemicalCycleRemove = useCallback((index) => {
     if (formData.recipeData?.chemicalCycle?.length > 1) {
@@ -158,8 +169,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           chemicalCycle: updatedChemicalCycle
         }
       }));
+      markAsModified(); // Marquer comme modifié
     }
-  }, [formData, setFormData]);
+  }, [formData, setFormData, markAsModified]);
   
   // Gestion de la trempe au gaz - vitesse
   const handleGasQuenchSpeedAdd = useCallback(() => {
@@ -176,7 +188,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         gasQuenchSpeed: [...(prev.quenchData?.gasQuenchSpeed || []), newStep]
       }
     }));
-  }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
   
   const handleGasQuenchSpeedRemove = useCallback((index) => {
     if (formData.quenchData?.gasQuenchSpeed?.length > 1) {
@@ -194,8 +207,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           gasQuenchSpeed: updatedGasQuenchSpeed
         }
       }));
+      markAsModified(); // Marquer comme modifié
     }
-  }, [formData, setFormData]);
+  }, [formData, setFormData, markAsModified]);
   
   // Gestion de la trempe au gaz - pression
   const handleGasQuenchPressureAdd = useCallback(() => {
@@ -212,7 +226,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         gasQuenchPressure: [...(prev.quenchData?.gasQuenchPressure || []), newStep]
       }
     }));
-  }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
   
   const handleGasQuenchPressureRemove = useCallback((index) => {
     if (formData.quenchData?.gasQuenchPressure?.length > 1) {
@@ -230,8 +245,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           gasQuenchPressure: updatedGasQuenchPressure
         }
       }));
+      markAsModified(); // Marquer comme modifié
     }
-  }, [formData, setFormData]);
+  }, [formData, setFormData, markAsModified]);
   
   // Gestion de la trempe à l'huile
   const handleOilQuenchSpeedAdd = useCallback(() => {
@@ -248,7 +264,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         oilQuenchSpeed: [...(prev.quenchData?.oilQuenchSpeed || []), newStep]
       }
     }));
-  }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
   
   const handleOilQuenchSpeedRemove = useCallback((index) => {
     if (formData.quenchData?.oilQuenchSpeed?.length > 1) {
@@ -266,8 +283,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           oilQuenchSpeed: updatedOilQuenchSpeed
         }
       }));
+      markAsModified(); // Marquer comme modifié
     }
-  }, [formData, setFormData]);
+  }, [formData, setFormData, markAsModified]);
   // Gestion des résultats
   const handleResultBlocAdd = useCallback(() => {
     const newResult = {
@@ -300,7 +318,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         results: [...(prev.resultsData?.results || []), newResult]
       }
     }));
-    }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
 
   const handleResultBlocRemove = useCallback((index) => {
     if (formData.resultsData?.results?.length > 1) {
@@ -318,7 +337,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           results: updatedResults
         }
       }));
-    }  }, [formData, setFormData]);
+      markAsModified(); // Marquer comme modifié
+    }
+  }, [formData, setFormData, markAsModified]);
 
   // Gestion des échantillons
   const handleSampleAdd = useCallback((resultIndex) => {
@@ -350,7 +371,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         results: updatedResults
       }
     }));
-  }, [formData, setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [formData, setFormData, markAsModified]);
 
   const handleSampleRemove = useCallback((resultIndex, sampleIndex) => {
     if (formData.resultsData?.results?.[resultIndex]?.samples?.length > 1) {
@@ -371,8 +393,9 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
           results: updatedResults
         }
       }));
+      markAsModified(); // Marquer comme modifié
     }
-  }, [formData, setFormData]);
+  }, [formData, setFormData, markAsModified]);
   // Gestion des résultats de dureté (mis à jour pour les échantillons)
   const handleHardnessResultAdd = useCallback((resultIndex, sampleIndex) => {
     // Utiliser le callback de setState pour être sûr de travailler avec les données les plus récentes
@@ -399,7 +422,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         }
       };
     });
-  }, [setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [setFormData, markAsModified]);
   
   const handleHardnessResultRemove = useCallback((resultIndex, sampleIndex, hardnessIndex) => {
     setFormData(prev => {
@@ -411,9 +435,15 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
       }
       
       return {
-        ...prev,      };
+        ...prev,
+        resultsData: {
+          ...prev.resultsData,
+          results: updatedResults
+        }
+      };
     });
-  }, [setFormData]);
+    markAsModified(); // Marquer comme modifié
+  }, [setFormData, markAsModified]);
   // Nouvelle fonction pour gérer les positions ECD (mis à jour pour les échantillons)
   const handleEcdPositionAdd = useCallback((resultIndex, sampleIndex) => {
     const updatedResults = [...formData.resultsData.results];
@@ -558,7 +588,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         }
       };
     });
-  }, [setFormData, convertHMSToSeconds]);
+    markAsModified(); // Marquer comme modifié
+  }, [setFormData, convertHMSToSeconds, markAsModified]);
   
   // Fonction pour initialiser les champs décomposés depuis la valeur en secondes
   const initializeTimeComponents = useCallback((fieldBase, totalSeconds) => {
@@ -573,7 +604,8 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
         [`${fieldBase}Seconds`]: seconds
       }
     }));
-  }, [setFormData, convertSecondsToHMS]);
+    markAsModified(); // Marquer comme modifié
+  }, [setFormData, convertSecondsToHMS, markAsModified]);
   
   // Fonction pour gérer les changements de dureté
   const handleHardnessChange = useCallback((resultIndex, sampleIndex, hardnessIndex, field, value) => {

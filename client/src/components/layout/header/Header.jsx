@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faSearch, 
   faBars, 
   faSignOutAlt,
+  faUser,
+  faLock,
+  faChevronDown
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../language_switch/LanguageSwitcher'; // Importez le composant personnalisé
 import ThemeToggle from '../../common/ThemeToggle/ThemeToggle'; // Import du composant ThemeToggle
+import ChangePasswordModal from '../../common/ChangePasswordModal/ChangePasswordModal';
 import '../../../styles/header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const { t } = useTranslation();
   const navigate = useNavigate();
   
@@ -120,34 +126,66 @@ const Header = () => {
 
         <div className="topbar-divider d-none d-sm-block"></div>
 
-        {/* User Info */}
-        <li className="nav-item d-flex align-items-center">
-          <span className="text-gray-600 small mr-3 username-display">
-            {user?.username || t('common.user')}
-          </span>
-          <div className="user-avatar mr-2">
-            {user?.profileImage ? (
-              <img 
-                className="img-profile rounded-circle" 
-                src={user.profileImage}
-                alt={user.username}
-              />
-            ) : (
-              <div className="img-profile rounded-circle bg-danger text-white d-flex align-items-center justify-content-center">
-                {getUserInitials()}
+        {/* User Dropdown */}
+        <li className="nav-item dropdown no-arrow">
+          <Dropdown>
+            <Dropdown.Toggle 
+              as="button"
+              className="btn btn-link nav-link d-flex align-items-center"
+              id="userDropdown"
+            >
+              <span className="text-gray-600 small mr-2 username-display d-none d-lg-inline">
+                {user?.username || t('common.user')}
+              </span>
+              <div className="user-avatar mr-2">
+                {user?.profileImage ? (
+                  <img 
+                    className="img-profile rounded-circle" 
+                    src={user.profileImage}
+                    alt={user.username}
+                  />
+                ) : (
+                  <div className="img-profile rounded-circle bg-danger text-white d-flex align-items-center justify-content-center">
+                    {getUserInitials()}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <button
-            className="btn btn-sm btn-outline-danger"
-            onClick={logout}
-            title={t('auth.logout')}
-          >
-            <FontAwesomeIcon icon={faSignOutAlt} className="mr-1" />
-            {t('auth.logout')}
-          </button>
+              <FontAwesomeIcon icon={faChevronDown} className="text-muted" size="sm" />
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu align="end" className="shadow animated--grow-in">
+              <Dropdown.Header>
+                <FontAwesomeIcon icon={faUser} className="me-2" />
+                {user?.username || t('common.user')}
+              </Dropdown.Header>
+              
+              <Dropdown.Divider />
+              
+              <Dropdown.Item onClick={() => setShowChangePasswordModal(true)}>
+                <FontAwesomeIcon icon={faLock} className="me-2" />
+                {t('auth.changePassword.title')}
+              </Dropdown.Item>
+              
+              <Dropdown.Divider />
+              
+              <Dropdown.Item onClick={logout} className="text-danger">
+                <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+                {t('auth.logout')}
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </li>
       </ul>
+
+      {/* Modal de changement de mot de passe */}
+      <ChangePasswordModal
+        show={showChangePasswordModal}
+        onHide={() => setShowChangePasswordModal(false)}
+        onSuccess={() => {
+          // Optionnel: Afficher un toast de succès ou autre action
+          console.log('Mot de passe changé avec succès');
+        }}
+      />
     </nav>
   );
 };

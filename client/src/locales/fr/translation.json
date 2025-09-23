@@ -15,9 +15,11 @@
     "max": "Max",
     "min": "Min",
     "modifiedAt": "Modifié le",
-    "modifying": "Modification en cours...",    "name": "Nom",
+    "modifying": "Modification en cours...",
+    "name": "Nom",
     "no": "Non",
     "paste": "Coller",
+    "processing": "Traitement en cours...",
     "save": "Enregistrer",
     "selectAll": "Tout sélectionner",
     "deselectAll": "Tout désélectionner",
@@ -154,7 +156,26 @@
     "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
     "invalidCredentials": "Nom d'utilisateur ou mot de passe incorrect.",
     "noAccess": "Vous n'avez pas les droits nécessaires pour accéder à cette section.",
-    "authenticationError": "Erreur d'authentification"
+    "authenticationError": "Erreur d'authentification",
+    "changePassword": {
+      "title": "Changer le mot de passe",
+      "currentPassword": "Mot de passe actuel",
+      "currentPasswordPlaceholder": "Entrez votre mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Entrez votre nouveau mot de passe",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre nouveau mot de passe",
+      "submit": "Changer le mot de passe",
+      "success": "Mot de passe changé avec succès !",
+      "error": "Une erreur est survenue lors du changement de mot de passe",
+      "currentPasswordRequired": "Le mot de passe actuel est requis",
+      "newPasswordRequired": "Le nouveau mot de passe est requis",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+      "samePassword": "Le nouveau mot de passe doit être différent de l'ancien",
+      "currentPasswordIncorrect": "Le mot de passe actuel est incorrect",
+      "passwordRequirements": "Au moins 6 caractères requis"
+    }
   },
   
   "navigation": {
@@ -533,6 +554,8 @@
       "equivalents": "Équivalents",
       "noEquivalents": "Aucun équivalent spécifié",
       "notSpecified": "Non spécifié",
+      "detailedInfo": "Informations détaillées",
+      "loading": "Chargement",
       "loadingInfo": "Chargement des informations...",
       "unableToLoad": "Impossible de charger les informations détaillées pour cet acier.",
       "fetchError": "Erreur lors de la récupération des détails de l'acier:",
@@ -750,7 +773,11 @@
           "pressure": "Pression",
           "turbine": "Turbine",
           "addStep": "Ajouter une étape",
-          "totalCycleDuration": "Durée totale du cycle chimique (minutes)"
+          "totalCycleDuration": "Durée totale du cycle chimique (minutes)",
+          "durationTotals": "Totaux de durée",
+          "totalStepsSeconds": "Total étapes (s)",
+          "totalStepsFormatted": "Total étapes (m:s)",
+          "totalGas": "Total"
         },
         
         "graphs": {
@@ -1065,6 +1092,46 @@
     },
     "photos": {
       "title": "Photos à inclure dans le rapport"
+    }
+  },
+
+  "references": {
+    "title": "Gestion des Référentiels",
+    "tabs": {
+      "steels": "Aciers",
+      "furnaces": "Fours",
+      "parts": "Pièces", 
+      "units": "Unités",
+      "process": "Processus"
+    },
+    "steels": {
+      "grades": "Nuances",
+      "standard": "Norme",
+      "family": "Famille"
+    },
+    "furnaces": {
+      "furnace_type": "Type de Four",
+      "furnace_size": "Taille de Four",
+      "heating_cell_type": "Type de Cellule de Chauffage",
+      "cooling_media": "Média de Refroidissement",
+      "process_type": "Type de Processus",
+      "quench_cell": "Cellule de Trempe"
+    },
+    "parts": {
+      "designation": "Désignation"
+    },
+    "units": {
+      "length_units": "Unités de Longueur",
+      "weight_units": "Unités de Poids",
+      "hardness_units": "Unités de Dureté",
+      "temperature_units": "Unités de Température",
+      "time_units": "Unités de Temps",
+      "pressure_units": "Unités de Pression"
+    },
+    "process": {
+      "mounting_type": "Type de Montage",
+      "position_type": "Type de Position",
+      "process_type": "Type de Processus"
     }
   }
 }

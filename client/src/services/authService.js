@@ -325,6 +325,26 @@ const authService = {
     } catch (error) {
       throw error;
     }
+  },
+
+  /**
+   * Changement de mot de passe
+   * @param {string} currentPassword - Mot de passe actuel
+   * @param {string} newPassword - Nouveau mot de passe
+   * @returns {Promise<Object>} Réponse de l'API
+   */
+  changePassword: async (currentPassword, newPassword) => {
+    try {
+      const response = await api.put('/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors du changement de mot de passe:', error);
+      throw error;
+    }
   }
 };
 

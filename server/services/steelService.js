@@ -428,7 +428,7 @@ const updateSteel = async (steelId, steelData) => {
   // Mettre à jour dans une transaction
   await sequelize.transaction(async (t) => {    // Gérer les équivalents si modifiés
     if (steelData.equivalents !== undefined) {
-      const oldEquivalents = normalizeEquivalents(steel.steel.equivalents || []);
+      const oldEquivalents = normalizeEquivalents(steelNode.steel?.equivalents || []);
       const newEquivalents = normalizeEquivalents(steelData.equivalents || []);
       
       // Identifier les équivalents à ajouter et à supprimer
@@ -485,7 +485,7 @@ const updateSteel = async (steelId, steelData) => {
       }
       nodeUpdates.modified_at = new Date();
       
-      await steel.update(nodeUpdates, { transaction: t });
+      await steelNode.update(nodeUpdates, { transaction: t });
     }
       // Mettre à jour les données Steel
     const steelUpdates = {};
@@ -497,7 +497,7 @@ const updateSteel = async (steelId, steelData) => {
     if (steelData.elements !== undefined) steelUpdates.elements = steelData.elements;
     
     if (Object.keys(steelUpdates).length > 0) {
-      await steel.steel.update(steelUpdates, { transaction: t });
+      await steelNode.steel.update(steelUpdates, { transaction: t });
     }
   });
   
@@ -563,7 +563,7 @@ const deleteSteel = async (steelId) => {
     // (À implémenter selon la structure de votre base de données)    // Supprimer dans une transaction
     await sequelize.transaction(async (t) => {
       // Supprimer les réciprocités avant de supprimer l'acier
-      const equivalents = steel.steel.equivalents || [];
+      const equivalents = steelNode.steel?.equivalents || [];
       await removeReciprocalEquivalents(steelId, equivalents, t);
       
       // 1. Supprimer les données Steel en premier (à cause de la clé étrangère)
@@ -585,7 +585,7 @@ const deleteSteel = async (steelId) => {
       });
       
       // 3. Supprimer le nœud
-      await steel.destroy({ transaction: t });
+      await steelNode.destroy({ transaction: t });
     });
     
     return true;

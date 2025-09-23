@@ -4,3 +4,20 @@
     print-color-adjust: exact;
   }
 }
+
+/* Désactiver la molette de la souris sur les champs number */
+/* Cela empêche la modification accidentelle des valeurs lors du scroll */
+/* Note: La désactivation de l'événement wheel est gérée par JavaScript dans utils/disableNumberInputWheel.js */
+
+/* Masquer les flèches des inputs number pour une interface plus propre */
+input[type="number"] {
+  appearance: textfield; /* Standard property */
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) : masquer les flèches */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 // Sections importées
@@ -12,27 +12,37 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
   const { t } = useTranslation();
   
   // États pour stocker les fonctions d'association de fichiers des sous-sections
-  const [loadDesignFileAssociation, setLoadDesignFileAssociation] = useState(null);
-  const [recipeDataFileAssociation, setRecipeDataFileAssociation] = useState(null);
-    // Gestionnaires pour recevoir les fonctions d'association des fichiers
-  const handleLoadDesignFileAssociationNeeded = (associateFunc) => {
-    setLoadDesignFileAssociation(() => associateFunc);
-  };
+  const loadDesignFileAssociationRef = useRef(null);
+  const recipeDataFileAssociationRef = useRef(null);
   
-  const handleRecipeDataFileAssociationNeeded = (associateFunc) => {
-    setRecipeDataFileAssociation(() => associateFunc);
-  };
-    // Créer une fonction d'association qui appeelra toutes les fonctions d'association
+  // Ref pour éviter les re-renders inutiles
+  const handleFileAssociationNeededRef = useRef(handleFileAssociationNeeded);
+  
+  // Mettre à jour la ref quand la prop change
+  useEffect(() => {
+    handleFileAssociationNeededRef.current = handleFileAssociationNeeded;
+  }, [handleFileAssociationNeeded]);
+
+  // Gestionnaires pour recevoir les fonctions d'association des fichiers
+  const handleLoadDesignFileAssociationNeeded = React.useCallback((associateFunc) => {
+    loadDesignFileAssociationRef.current = associateFunc;
+  }, []);
+  
+  const handleRecipeDataFileAssociationNeeded = React.useCallback((associateFunc) => {
+    recipeDataFileAssociationRef.current = associateFunc;
+  }, []);
+
+  // Créer une fonction d'association qui appellera toutes les fonctions d'association
   const combineFileAssociations = React.useCallback(async (nodeId) => {
     const promises = [];
     let results = { success: true };
     
-    if (loadDesignFileAssociation) {
-      promises.push(loadDesignFileAssociation(nodeId));
+    if (loadDesignFileAssociationRef.current) {
+      promises.push(loadDesignFileAssociationRef.current(nodeId));
     }
     
-    if (recipeDataFileAssociation) {
-      promises.push(recipeDataFileAssociation(nodeId));
+    if (recipeDataFileAssociationRef.current) {
+      promises.push(recipeDataFileAssociationRef.current(nodeId));
     }
     
     if (promises.length > 0) {
@@ -50,12 +60,14 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
     }
     
     return results.success;
-  }, [loadDesignFileAssociation, recipeDataFileAssociation]);    // Transmettre la fonction combinée au parent (optimisé)
+  }, []); // Pas de dépendances car on utilise des refs
+
+  // Transmettre la fonction combinée au parent une seule fois
   useEffect(() => {
-    if (handleFileAssociationNeeded) {
-      handleFileAssociationNeeded(combineFileAssociations);
+    if (handleFileAssociationNeededRef.current) {
+      handleFileAssociationNeededRef.current(combineFileAssociations);
     }
-  }, [handleFileAssociationNeeded, combineFileAssociations]);
+  }, []); // Pas de dépendances - on ne fait cela qu'une seule fois
   
   return (
     <>
@@ -122,7 +134,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       
       <CollapsibleSection
         title={t('tests.before.loadDesign.title')}
-        isExpandedByDefault={false}
+        isExpandedByDefault={true}
         sectionId="test-load-design"
         rememberState={true}
       >        <LoadDesignSection

@@ -6,10 +6,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import useSteelForm from '../hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../../../context/ThemeContext';
 import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
 
 const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
+  const { isDarkTheme } = useTheme();
   
   const {
     formData,
@@ -63,12 +65,53 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
     return <div className="text-center p-4"><Spinner animation="border" /></div>;
   }
 
-  // Style pour les champs en mode lecture seule
+  // Style pour les champs en mode lecture seule - adapté au thème
   const readOnlyFieldStyle = viewMode ? {
-    backgroundColor: '#f8f9fa',
-    border: '1px solid #dee2e6',
+    backgroundColor: isDarkTheme ? 'var(--dark-input-bg)' : '#f8f9fa',
+    border: isDarkTheme ? '1px solid var(--dark-input-border)' : '1px solid #dee2e6',
+    color: isDarkTheme ? 'var(--dark-text-primary)' : '#212529',
     cursor: 'default'
   } : {};
+
+  // Style pour tous les champs en mode sombre (même en édition)
+  const inputFieldStyle = isDarkTheme ? {
+    backgroundColor: 'var(--dark-input-bg)',
+    border: '1px solid var(--dark-input-border)',
+    color: 'var(--dark-text-primary)'
+  } : (viewMode ? readOnlyFieldStyle : {});
+
+  // Style pour les en-têtes de tableau en mode sombre
+  const tableHeaderStyle = isDarkTheme ? {
+    backgroundColor: 'var(--dark-bg-secondary)',
+    color: 'var(--dark-text-primary)',
+    borderColor: 'var(--dark-input-border)'
+  } : {};
+
+  // Styles pour les composants Select - adaptés au thème sombre même en édition
+  const getSelectStylesForViewMode = () => {
+    return {
+      ...selectStyles,
+      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+      control: (base) => ({ 
+        ...base, 
+        marginBottom: '5px',
+        backgroundColor: isDarkTheme ? 'var(--dark-input-bg)' : (viewMode ? '#f8f9fa' : base.backgroundColor),
+        borderColor: isDarkTheme ? 'var(--dark-input-border)' : (viewMode ? '#dee2e6' : base.borderColor),
+        cursor: viewMode ? 'default' : base.cursor,
+        '&:hover': {
+          borderColor: isDarkTheme ? 'var(--dark-input-border)' : (viewMode ? '#dee2e6' : base['&:hover']?.borderColor)
+        }
+      }),
+      valueContainer: (base) => ({
+        ...base,
+        cursor: viewMode ? 'default' : base.cursor
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: isDarkTheme ? 'var(--dark-text-primary)' : (viewMode ? '#212529' : base.color)
+      })
+    };
+  };
   
   return (
     <div>
@@ -100,7 +143,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                 autoComplete="off"
                 disabled={viewMode || loading}
                 readOnly={viewMode}
-                style={readOnlyFieldStyle}
+                style={inputFieldStyle}
               />
               {!viewMode && (
                 <Form.Control.Feedback type="invalid">
@@ -112,24 +155,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
             <Form.Group className="mb-3">
               <Form.Label>{t('steels.family')}</Form.Label>
               <CreatableSelect
-                styles={{
-                  ...selectStyles,
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({ 
-                    ...base, 
-                    marginBottom: '5px',
-                    backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
-                    borderColor: viewMode ? '#dee2e6' : base.borderColor,
-                    cursor: viewMode ? 'default' : base.cursor,
-                    '&:hover': {
-                      borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
-                    }
-                  }),
-                  valueContainer: (base) => ({
-                    ...base,
-                    cursor: viewMode ? 'default' : base.cursor
-                  })
-                }}
+                styles={getSelectStylesForViewMode()}
                 menuPortalTarget={document.body}
                 options={steelFamilyOptions}
                 value={getSelectedOption(steelFamilyOptions, formData.family)}
@@ -148,24 +174,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
             <Form.Group className="mb-3">
               <Form.Label>{t('steels.standard')}</Form.Label>
               <CreatableSelect
-                styles={{
-                  ...selectStyles,
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({ 
-                    ...base, 
-                    marginBottom: '5px',
-                    backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
-                    borderColor: viewMode ? '#dee2e6' : base.borderColor,
-                    cursor: viewMode ? 'default' : base.cursor,
-                    '&:hover': {
-                      borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
-                    }
-                  }),
-                  valueContainer: (base) => ({
-                    ...base,
-                    cursor: viewMode ? 'default' : base.cursor
-                  })
-                }}
+                styles={getSelectStylesForViewMode()}
                 menuPortalTarget={document.body}
                 options={steelStandardOptions}
                 value={getSelectedOption(steelStandardOptions, formData.standard)}
@@ -189,23 +198,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
             {formData.equivalents.map((equivalent, index) => (              <div key={index} className="d-flex mb-2 align-items-center">
                 <div className="flex-grow-1" style={{ paddingRight: '10px' }}>
                   <CreatableSelect
-                    styles={{
-                      ...selectStyles,
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      control: (base) => ({ 
-                        ...base,
-                        backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
-                        borderColor: viewMode ? '#dee2e6' : base.borderColor,
-                        cursor: viewMode ? 'default' : base.cursor,
-                        '&:hover': {
-                          borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
-                        }
-                      }),
-                      valueContainer: (base) => ({
-                        ...base,
-                        cursor: viewMode ? 'default' : base.cursor
-                      })
-                    }}
+                    styles={getSelectStylesForViewMode()}
                     menuPortalTarget={document.body}
                     options={steelGradeOptions}
                     value={getSelectedOption(steelGradeOptions, equivalent.steel_id)}
@@ -250,12 +243,12 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
             <Table striped bordered hover responsive style={{ overflow: 'visible' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '5%' }}>#</th>
-                  <th style={{ width: '30%' }}>{t('steels.element')}</th>
-                  <th style={{ width: '20%' }}>{t('steels.rate')}</th>
-                  <th style={{ width: '35%' }}>{t('steels.value')} (%)</th>
+                  <th style={{ width: '5%', ...tableHeaderStyle }}>#</th>
+                  <th style={{ width: '30%', ...tableHeaderStyle }}>{t('steels.element')}</th>
+                  <th style={{ width: '20%', ...tableHeaderStyle }}>{t('steels.rate')}</th>
+                  <th style={{ width: '35%', ...tableHeaderStyle }}>{t('steels.value')} (%)</th>
                   {!viewMode && (
-                    <th style={{ width: '10%' }}>{t('common.actions')}</th>
+                    <th style={{ width: '10%', ...tableHeaderStyle }}>{t('common.actions')}</th>
                   )}
                 </tr>
               </thead>
@@ -264,23 +257,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                   <tr key={`chemical-element-${index}`}>
                     <td className="text-center align-middle">{index + 1}</td>                    <td style={{ paddingRight: '10px' }}>
                       <CreatableSelect
-                        styles={{
-                          ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                          control: (base) => ({ 
-                            ...base,
-                            backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
-                            borderColor: viewMode ? '#dee2e6' : base.borderColor,
-                            cursor: viewMode ? 'default' : base.cursor,
-                            '&:hover': {
-                              borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
-                            }
-                          }),
-                          valueContainer: (base) => ({
-                            ...base,
-                            cursor: viewMode ? 'default' : base.cursor
-                          })
-                        }}
+                        styles={getSelectStylesForViewMode()}
                         menuPortalTarget={document.body}
                         options={elementOptions}
                         value={getSelectedOption(elementOptions, element.element)}
@@ -296,27 +273,13 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                     </td>
                     <td style={{ paddingRight: '10px' }}>
                       <Select
-                        styles={{
-                          ...selectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                          control: (base) => ({ 
-                            ...base,
-                            backgroundColor: viewMode ? '#f8f9fa' : base.backgroundColor,
-                            borderColor: viewMode ? '#dee2e6' : base.borderColor,
-                            cursor: viewMode ? 'default' : base.cursor,
-                            '&:hover': {
-                              borderColor: viewMode ? '#dee2e6' : base['&:hover']?.borderColor
-                            }
-                          }),
-                          valueContainer: (base) => ({
-                            ...base,
-                            cursor: viewMode ? 'default' : base.cursor
-                          })
-                        }}
-                        menuPortalTarget={document.body}                        options={[
+                        styles={getSelectStylesForViewMode()}
+                        menuPortalTarget={document.body}
+                        options={[
                           { value: 'exact', label: '=' },
                           { value: 'range', label: 'min - max' },
-                        ]}                        value={getSelectedOption(
+                        ]}
+                        value={getSelectedOption(
                           [
                             { value: 'exact', label: '=' },
                             { value: 'range', label: 'min - max' },
@@ -338,7 +301,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                           placeholder={t('steels.value')}
                           disabled={viewMode || loading}
                           readOnly={viewMode}
-                          style={readOnlyFieldStyle}
+                          style={inputFieldStyle}
                         />
                       ) : (
                         <div className="d-flex">
@@ -346,11 +309,12 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                             type="number"
                             step="0.01"
                             value={element.min_value || ''}
-                            onChange={(e) => handleChemicalElementChange(index, 'min_value', e.target.value)}                            placeholder={t('steels.min')}
+                            onChange={(e) => handleChemicalElementChange(index, 'min_value', e.target.value)}
+                            placeholder={t('steels.min')}
                             className="me-1"
                             disabled={viewMode || loading}
                             readOnly={viewMode}
-                            style={readOnlyFieldStyle}
+                            style={inputFieldStyle}
                           />
                           <Form.Control
                             type="number"
@@ -360,7 +324,7 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                             placeholder={t('steels.max')}
                             disabled={viewMode || loading}
                             readOnly={viewMode}
-                            style={readOnlyFieldStyle}
+                            style={inputFieldStyle}
                           />
                         </div>
                       )}

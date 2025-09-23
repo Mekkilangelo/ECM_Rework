@@ -13,7 +13,16 @@
     "test:coverage": "cross-env NODE_ENV=test jest --coverage --forceExit --detectOpenHandles",
     "test:coverage:unit": "cross-env NODE_ENV=test jest --config jest.unit.config.js --coverage",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:clean": "node scripts/clean-database.js",
+    "db:clean:silent": "node scripts/clean-database.js --silent",
+    "workflow": "node scripts/full-workflow.js",
+    "workflow:silent": "node scripts/full-workflow.js --silent",
+    "etl:help": "node scripts/etl-help.js",
+    "etl:validate": "node scripts/validate-etl.js",
+    "etl:load": "node scripts/etl-load-data.js",
+     "etl:load:usa": "node scripts/etl-load-usa-data.js",
+    "etl:test": "node scripts/etl-test.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +31,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",

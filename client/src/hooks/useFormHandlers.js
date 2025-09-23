@@ -2,7 +2,16 @@
 import { useCallback } from 'react';
 import enumService from '../services/enumService';
 
-const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}) => {
+const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}, setModified = null) => {
+  
+  // Fonction utilitaire pour marquer le formulaire comme modifié
+  const markAsModified = useCallback(() => {
+    console.log('🔄 markAsModified called in useFormHandlers');
+    if (setModified) {
+      setModified(true);
+    }
+  }, [setModified]);
+
   // Gestionnaire de base pour les champs simples
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -88,11 +97,14 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     
+    // Marquer le formulaire comme modifié
+    markAsModified();
+    
     // Effacer l'erreur si elle existe
     if (errors && errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
-  }, [setFormData, errors, setErrors]);
+  }, [setFormData, errors, setErrors, markAsModified]);
 
   // Gestionnaire pour les sélecteurs (Select components)
   const handleSelectChange = useCallback((selectedOption, fieldInfo) => {
@@ -126,11 +138,14 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     
+    // Marquer le formulaire comme modifié
+    markAsModified();
+    
     // Effacer l'erreur si elle existe
     if (errors && errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
-  }, [setFormData, errors, setErrors]);
+  }, [setFormData, errors, setErrors, markAsModified]);
 
   // Gestionnaire pour les tableaux d'objets imbriqués (structure plus complexe)
   const handleNestedArraySelectChange = useCallback((option, field, index, subField) => {

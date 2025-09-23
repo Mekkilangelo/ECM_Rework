@@ -93,7 +93,7 @@ const ControlLocationSection = ({
         subcategory="control-location"
         nodeId={testNodeId}
         onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
-        maxFiles={5}
+        maxFiles={50}
         acceptedFileTypes={{
           'image/*': ['.png', '.jpg', '.jpeg']
         }}

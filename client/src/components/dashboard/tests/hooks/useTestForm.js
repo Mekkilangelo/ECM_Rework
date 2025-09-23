@@ -120,6 +120,46 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     refreshAllOptions
   };
 
+  // Validation du formulaire
+  const { validate } = useFormValidation(formData, parentId, setErrors);
+
+  // Soumission du formulaire au serveur
+  const { handleSubmit } = useTestSubmission(
+    formData, 
+    setFormData, 
+    validate, 
+    parentId,
+    test, 
+    setLoading, 
+    setMessage, 
+    onTestCreated,
+    onTestUpdated, 
+    onClose,
+    fileAssociationCallback,
+    viewMode,
+    () => flushAllCurveData(resultsSectionRef) // Passer une fonction qui utilise la ref
+  );
+
+  // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
+  const { 
+    showConfirmModal, 
+    pendingClose, 
+    isModified,
+    setModified,
+    resetInitialState,
+    handleCloseRequest, 
+    confirmClose, 
+    cancelClose, 
+    saveAndClose 
+  } = useCloseConfirmation(
+    formData,
+    loading,
+    fetchingTest,
+    handleSubmit,
+    onClose,
+    viewMode
+  );
+
   // Handlers pour le formulaire
   const { 
     handleChange, handleSelectChange, 
@@ -143,7 +183,7 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
     handleTimeComponentChange,
     initializeTimeComponents,
     calculateProgramDuration
-  } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions);
+  } = useTestHandlers(formData, setFormData, errors, setErrors, refreshFunctions, setModified);
 
   // Hook pour la gestion de l'import Excel
   const {
@@ -153,46 +193,6 @@ const useTestForm = (test, onClose, onTestCreated, onTestUpdated, viewMode = fal
   } = useExcelImport(
     formData,
     handleChange
-  );
-  
-  // Validation du formulaire
-  const { validate } = useFormValidation(formData, parentId, setErrors);
-
-  // Soumission du formulaire au serveur
-  const { handleSubmit } = useTestSubmission(
-    formData, 
-    setFormData, 
-    validate, 
-    parentId,
-    test, 
-    setLoading, 
-    setMessage, 
-    onTestCreated,
-    onTestUpdated, 
-    onClose,
-    fileAssociationCallback,
-    viewMode,
-    () => flushAllCurveData(resultsSectionRef) // Passer une fonction qui utilise la ref
-  );
-  
-  // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
-  const { 
-    showConfirmModal, 
-    pendingClose, 
-    isModified,
-    setModified,
-    resetInitialState,
-    handleCloseRequest, 
-    confirmClose, 
-    cancelClose, 
-    saveAndClose 
-  } = useCloseConfirmation(
-    formData,
-    loading,
-    fetchingTest,
-    handleSubmit,
-    onClose,
-    viewMode
   );
 
   // Réinitialiser l'état initial après une sauvegarde réussie

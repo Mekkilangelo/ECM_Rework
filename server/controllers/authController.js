@@ -190,9 +190,73 @@ const logout = async (req, res, next) => {
   }
 };
 
+/**
+ * Changement de mot de passe utilisateur
+ * @route PUT /api/auth/change-password
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Réponse de confirmation
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Validation des entrées
+    if (!currentPassword || !newPassword) {
+      return apiResponse.error(res, 'Ancien et nouveau mot de passe requis', 400);
+    }
+
+    if (newPassword.length < 6) {
+      return apiResponse.error(res, 'Le nouveau mot de passe doit contenir au moins 6 caractères', 400);
+    }
+
+    // Récupérer l'utilisateur
+    const userRecord = await user.findByPk(userId);
+    if (!userRecord) {
+      return apiResponse.error(res, 'Utilisateur introuvable', 404);
+    }
+
+    // Vérifier l'ancien mot de passe
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, userRecord.password_hash);
+    if (!isCurrentPasswordValid) {
+      // Log pour diagnostic du problème de double hachage
+      logger.info(`Debug password verification for user ${userRecord.username}:`, {
+        providedPassword: currentPassword ? '[PROVIDED]' : '[EMPTY]',
+        storedHashLength: userRecord.password_hash ? userRecord.password_hash.length : 0,
+        storedHashPrefix: userRecord.password_hash ? userRecord.password_hash.substring(0, 7) : '[EMPTY]'
+      });
+      
+      logger.warn(`Tentative de changement de mot de passe avec ancien mot de passe incorrect pour l'utilisateur: ${userRecord.username}`);
+      return apiResponse.error(res, 'Ancien mot de passe incorrect', 401);
+    }
+
+    // Hasher le nouveau mot de passe
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Mettre à jour le mot de passe en désactivant les hooks pour éviter le double hachage
+    await userRecord.update({
+      password_hash: newPasswordHash,
+      modified_at: new Date()
+    }, {
+      hooks: false // Important : désactiver les hooks pour éviter le double hachage
+    });
+
+    // Logger le changement de mot de passe
+    logger.info(`Changement de mot de passe réussi pour l'utilisateur: ${userRecord.username}`, { userId });
+
+    return apiResponse.success(res, null, 'Mot de passe changé avec succès');
+  } catch (error) {
+    logger.error(`Erreur lors du changement de mot de passe: ${error.message}`, error);
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   getMe,
   refreshUserToken,
-  logout
+  logout,
+  changePassword
 };

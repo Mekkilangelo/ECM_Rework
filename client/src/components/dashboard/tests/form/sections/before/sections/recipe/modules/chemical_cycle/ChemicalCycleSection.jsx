@@ -38,6 +38,51 @@ const ChemicalCycleSection = ({
     
     return Math.round(totalMinutes); // Arrondi à la minute la plus proche (valeur entière)
   };
+
+  // Fonction pour calculer la durée totale des steps en secondes (SANS wait time)
+  const calculateStepsTotalSeconds = () => {
+    if (!formData.recipeData?.chemicalCycle) return 0;
+    
+    return formData.recipeData.chemicalCycle.reduce((total, step) => {
+      return total + (parseInt(step.time) || 0);
+    }, 0);
+  };
+
+  // Fonction pour convertir des secondes en format "Xm Ys"
+  const formatSecondsToMinSec = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes === 0) {
+      return `${remainingSeconds}s`;
+    } else if (remainingSeconds === 0) {
+      return `${minutes}m`;
+    } else {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  };
+
+  // Fonction pour calculer le total d'une colonne de gaz en minutes/secondes
+  const calculateGasTotalTime = (gasNumber) => {
+    if (!formData.recipeData?.chemicalCycle) return { seconds: 0, formatted: '0s' };
+    
+    let totalSeconds = 0;
+    
+    formData.recipeData.chemicalCycle.forEach(step => {
+      const flowRate = parseFloat(step[`debit${gasNumber}`]) || 0;
+      const stepTime = parseInt(step.time) || 0;
+      
+      // Si le débit n'est pas 0, on compte le temps de cette étape
+      if (flowRate > 0) {
+        totalSeconds += stepTime;
+      }
+    });
+    
+    return {
+      seconds: totalSeconds,
+      formatted: formatSecondsToMinSec(totalSeconds)
+    };
+  };
   
   const gasOptions = [
     { value: 'N2', label: 'N2' },
@@ -46,6 +91,34 @@ const ChemicalCycleSection = ({
     { value: 'N2O', label: 'N2O' },
     { value: 'CO2', label: 'CO2' }
   ];
+
+  // Fonction pour gérer la touche Entrée
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Vérifier si on est sur la dernière ligne
+      const isLastRow = index === (formData.recipeData?.chemicalCycle?.length || 1) - 1;
+      if (isLastRow) {
+        // Ajouter une nouvelle étape
+        handleChemicalCycleAdd();
+        // Focus sur le premier champ de la nouvelle ligne (optionnel)
+        setTimeout(() => {
+          const newRowIndex = formData.recipeData?.chemicalCycle?.length || 0;
+          const targetInput = document.querySelector(`input[data-chemical-row="${newRowIndex}"][data-chemical-field="time"]`);
+          if (targetInput) {
+            targetInput.focus();
+          }
+        }, 100);
+      } else {
+        // Passer à la ligne suivante, même champ
+        const fieldName = e.target.getAttribute('data-chemical-field');
+        const nextRowInput = document.querySelector(`input[data-chemical-row="${index + 1}"][data-chemical-field="${fieldName}"]`);
+        if (nextRowInput) {
+          nextRowInput.focus();
+        }
+      }
+    }
+  };
   
   const handleChemicalCycleChange = (index, field, value) => {
     const updatedChemicalCycle = [...formData.recipeData.chemicalCycle];
@@ -188,10 +261,13 @@ const ChemicalCycleSection = ({
                   type="number"
                   value={cycle.time || ''}
                   onChange={(e) => handleChemicalCycleChange(index, 'time', e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   step="0.1"
                   disabled={loading || viewMode}
                   readOnly={viewMode}
                   style={viewMode ? readOnlyFieldStyle : {}}
+                  data-chemical-row={index}
+                  data-chemical-field="time"
                 />
               </td>
               {/* Débit pour Gaz 1 */}
@@ -202,10 +278,13 @@ const ChemicalCycleSection = ({
                     placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit1 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit1', e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                     step="0.1"
                     disabled={loading || viewMode}
                     readOnly={viewMode}
                     style={viewMode ? readOnlyFieldStyle : {}}
+                    data-chemical-row={index}
+                    data-chemical-field="debit1"
                   />
                 </td>
               )}
@@ -217,10 +296,13 @@ const ChemicalCycleSection = ({
                     placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit2 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit2', e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                     step="0.1"
                     disabled={loading || viewMode}
                     readOnly={viewMode}
                     style={viewMode ? readOnlyFieldStyle : {}}
+                    data-chemical-row={index}
+                    data-chemical-field="debit2"
                   />
                 </td>
               )}
@@ -232,10 +314,13 @@ const ChemicalCycleSection = ({
                     placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit3 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit3', e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                     step="0.1"
                     disabled={loading || viewMode}
                     readOnly={viewMode}
                     style={viewMode ? readOnlyFieldStyle : {}}
+                    data-chemical-row={index}
+                    data-chemical-field="debit3"
                   />
                 </td>
               )}
@@ -244,10 +329,13 @@ const ChemicalCycleSection = ({
                   type="number"
                   value={cycle.pressure || ''}
                   onChange={(e) => handleChemicalCycleChange(index, 'pressure', e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   step="0.1"
                   disabled={loading || viewMode}
                   readOnly={viewMode}
                   style={viewMode ? readOnlyFieldStyle : {}}
+                  data-chemical-row={index}
+                  data-chemical-field="pressure"
                 />
               </td>
               {/* Colonne Turbine avec case à cocher */}
@@ -296,6 +384,101 @@ const ChemicalCycleSection = ({
         </div>
       )}
       
+      {/* Section des totaux de durée */}
+      <div className="row mb-3">
+        <div className="col-12">
+          <h6 className="text-muted mb-3">{t('tests.before.recipeData.chemicalCycle.durationTotals')}</h6>
+        </div>
+        
+        {/* Total des steps en secondes et en format min/sec */}
+        <div className="col-md-6">
+          <div className="row">
+            <div className="col-6">
+              <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalStepsSeconds')}</label>
+              <input
+                type="text"
+                className="form-control"
+                value={`${calculateStepsTotalSeconds()}s`}
+                readOnly
+                style={{
+                  ...readOnlyFieldStyle,
+                  backgroundColor: '#e9ecef',
+                  borderColor: '#ced4da'
+                }}
+              />
+            </div>
+            <div className="col-6">
+              <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalStepsFormatted')}</label>
+              <input
+                type="text"
+                className="form-control"
+                value={formatSecondsToMinSec(calculateStepsTotalSeconds())}
+                readOnly
+                style={{
+                  ...readOnlyFieldStyle,
+                  backgroundColor: '#e9ecef',
+                  borderColor: '#ced4da'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Totaux des gaz */}
+        <div className="col-md-6">
+          <div className="row">
+            {formData.recipeData.selectedGas1 && (
+              <div className="col-4">
+                <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas1}</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={calculateGasTotalTime(1).formatted}
+                  readOnly
+                  style={{
+                    ...readOnlyFieldStyle,
+                    backgroundColor: '#d1ecf1',
+                    borderColor: '#bee5eb'
+                  }}
+                />
+              </div>
+            )}
+            {formData.recipeData.selectedGas2 && (
+              <div className="col-4">
+                <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas2}</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={calculateGasTotalTime(2).formatted}
+                  readOnly
+                  style={{
+                    ...readOnlyFieldStyle,
+                    backgroundColor: '#d4edda',
+                    borderColor: '#c3e6cb'
+                  }}
+                />
+              </div>
+            )}
+            {formData.recipeData.selectedGas3 && (
+              <div className="col-4">
+                <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas3}</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={calculateGasTotalTime(3).formatted}
+                  readOnly
+                  style={{
+                    ...readOnlyFieldStyle,
+                    backgroundColor: '#fff3cd',
+                    borderColor: '#ffeaa7'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Champ calculé pour la durée totale du cycle chimique */}
       <div className="row mb-3">
         <div className="col-md-6">

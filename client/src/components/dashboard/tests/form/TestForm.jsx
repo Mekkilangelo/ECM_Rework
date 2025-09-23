@@ -1,10 +1,13 @@
 import React, { useState, useCallback, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFlask, faCheckCircle, faFileAlt } from '@fortawesome/free-solid-svg-icons';
 import useTestForm from '../hooks/useTestForm';
 import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
 import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
 import { useRenderTracker } from '../../../../utils/performanceMonitor';
+import './TestForm.css';
 
 // Sections importées
 import BasicInfoSection from './sections/common/BasicInfoSection';
@@ -106,17 +109,45 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
     cursor: 'default'
   } : {};
 
-  // Fonction pour rendre les titres d'onglets avec mise en gras et rouge pour l'onglet actif
+  // Fonction pour rendre les titres d'onglets avec icônes et badge visuel
   const renderTabTitle = (title, eventKey) => {
-    // Style de l'onglet actif : gras et rouge (utilisant la même couleur que Bootstrap danger)
-    const activeStyle = {
-      fontWeight: 'bold',
-      color: '#dc3545' // Rouge Bootstrap danger, même couleur que pour les sections étendues
+    // Définir les icônes pour chaque onglet
+    const tabIcons = {
+      before: faFlask,
+      after: faCheckCircle,
+      report: faFileAlt
     };
+
+    // Couleur du badge selon l'onglet
+    const badgeColors = {
+      before: '#007bff',   // Bleu pour "avant"
+      after: '#28a745',    // Vert pour "après"  
+      report: '#ffc107'    // Jaune pour "rapport"
+    };
+
+    const isActive = activeTab === eventKey;
     
     return (
-      <span style={activeTab === eventKey ? activeStyle : {}}>
-        {title}
+      <span className="d-flex align-items-center">
+        <FontAwesomeIcon 
+          icon={tabIcons[eventKey]} 
+          className="me-2" 
+          style={{ 
+            color: isActive ? '#ffffff' : badgeColors[eventKey],
+            fontSize: '1.1em'
+          }}
+        />
+        <span style={{ fontWeight: isActive ? 'bold' : '500' }}>
+          {title}
+        </span>
+        {/* Badge indicateur */}
+        <span 
+          className="tab-badge ms-2"
+          style={{ 
+            backgroundColor: isActive ? '#ffffff' : badgeColors[eventKey],
+            opacity: isActive ? 0.8 : 0.6
+          }}
+        ></span>
       </span>
     );
   };  // Mettre à jour le callback d'association de fichiers dans le hook quand il change (optimisé)
@@ -203,9 +234,15 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
             <Tabs
               activeKey={activeTab}
               onSelect={handleTabChange}
-              className="mb-4 mt-4"
+              className="mb-4 mt-4 test-form-tabs"
               id="test-form-tabs"
-            >              <Tab eventKey="before" title={renderTabTitle(t('tests.tabs.before'), "before")}>
+              variant="pills"
+            >
+              <Tab 
+                eventKey="before" 
+                title={renderTabTitle(t('tests.tabs.before'), "before")}
+                tabClassName={`tab-before ${activeTab === 'before' ? 'active-tab' : ''}`}
+              >
                 <BeforeTabContent 
                   formData={formData}
                   errors={errors}
@@ -217,7 +254,13 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                   readOnlyFieldStyle={readOnlyFieldStyle}
                   calculateProgramDuration={calculateProgramDuration}
                 />
-              </Tab>              <Tab eventKey="after" title={renderTabTitle(t('tests.tabs.after'), "after")}>
+              </Tab>
+              
+              <Tab 
+                eventKey="after" 
+                title={renderTabTitle(t('tests.tabs.after'), "after")}
+                tabClassName={`tab-after ${activeTab === 'after' ? 'active-tab' : ''}`}
+              >
                 <AfterTabContent
                   ref={afterTabContentRef}
                   formData={formData}
@@ -239,7 +282,12 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
                   }}
                 />
               </Tab>
-              <Tab eventKey="report" title={renderTabTitle(t('tests.tabs.report'), "report")}>
+              
+              <Tab 
+                eventKey="report" 
+                title={renderTabTitle(t('tests.tabs.report'), "report")}
+                tabClassName={`tab-report ${activeTab === 'report' ? 'active-tab' : ''}`}
+              >
                 <ReportTabContent 
                   testId={test.id}
                   partId={test.parent_id}  // Ajoutez directement l'ID de la pièce
@@ -268,6 +316,7 @@ const TestForm = forwardRef(({ test, onClose, onTestCreated, onTestUpdated, view
               </Button>
             ) : (
               <>                <Button variant="secondary" onClick={() => {
+                  console.log('🔘 Cancel button clicked, handleCloseRequest:', typeof handleCloseRequest);
                   handleCloseRequest();
                 }} className="mr-2">
                   {t('common.cancel')}

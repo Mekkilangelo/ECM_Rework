@@ -16,6 +16,7 @@
     "name": "Name",
     "no": "No",
     "paste": "Paste",
+    "processing": "Processing...",
     "save": "Save",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
@@ -152,7 +153,26 @@
     "sessionExpired": "Your session has expired. Please login again.",
     "invalidCredentials": "Invalid username or password.",
     "noAccess": "You don't have the necessary rights to access this section.",
-    "authenticationError": "Authentication error"
+    "authenticationError": "Authentication error",
+    "changePassword": {
+      "title": "Change Password",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "confirmPassword": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Confirm your new password",
+      "submit": "Change Password",
+      "success": "Password changed successfully!",
+      "error": "An error occurred while changing the password",
+      "currentPasswordRequired": "Current password is required",
+      "newPasswordRequired": "New password is required",
+      "passwordTooShort": "Password must be at least 6 characters long",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "samePassword": "New password must be different from the current one",
+      "currentPasswordIncorrect": "Current password is incorrect",
+      "passwordRequirements": "At least 6 characters required"
+    }
   },
   
   "navigation": {
@@ -531,6 +551,8 @@
       "equivalents": "Equivalents",
       "noEquivalents": "No equivalents specified",
       "notSpecified": "Not specified",
+      "detailedInfo": "Detailed information",
+      "loading": "Loading",
       "loadingInfo": "Loading information...",
       "unableToLoad": "Unable to load detailed information for this steel.",
       "fetchError": "Error fetching steel details:",
@@ -746,7 +768,11 @@
           "pressure": "Pressure",
           "turbine": "Turbine",
           "addStep": "Add step",
-          "totalCycleDuration": "Total chemical cycle duration (minutes)"
+          "totalCycleDuration": "Total chemical cycle duration (minutes)",
+          "durationTotals": "Duration Totals",
+          "totalStepsSeconds": "Total steps (s)",
+          "totalStepsFormatted": "Total steps (m:s)",
+          "totalGas": "Total"
         },
         
         "graphs": {
@@ -1054,6 +1080,46 @@
     },
     "photos": {
       "title": "Photos to include in report"
+    }
+  },
+
+  "references": {
+    "title": "Reference Management",
+    "tabs": {
+      "steels": "Steels",
+      "furnaces": "Furnaces", 
+      "parts": "Parts",
+      "units": "Units",
+      "process": "Process"
+    },
+    "steels": {
+      "grades": "Grades",
+      "standard": "Standard",
+      "family": "Family"
+    },
+    "furnaces": {
+      "furnace_type": "Furnace Type",
+      "furnace_size": "Furnace Size",
+      "heating_cell_type": "Heating Cell Type",
+      "cooling_media": "Cooling Media",
+      "process_type": "Process Type",
+      "quench_cell": "Quench Cell"
+    },
+    "parts": {
+      "designation": "Designation"
+    },
+    "units": {
+      "length_units": "Length Units",
+      "weight_units": "Weight Units",
+      "hardness_units": "Hardness Units",
+      "temperature_units": "Temperature Units",
+      "time_units": "Time Units",
+      "pressure_units": "Pressure Units"
+    },
+    "process": {
+      "mounting_type": "Mounting Type",
+      "position_type": "Position Type",
+      "process_type": "Process Type"
     }
   }
 }

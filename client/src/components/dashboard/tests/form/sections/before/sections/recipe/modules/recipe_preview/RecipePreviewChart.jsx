@@ -108,10 +108,10 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       
       // Points pour la courbe de température
       let temperaturePoints = [];
-        // La température commence à la température cellule, pas à zéro
+      // La température commence à la température cellule, pas à zéro
       const cellTemp = parseInt(relevantRecipeData.cellTemp) || 20;
       
-      // Temps d'attente avant le cycle thermique (en minutes)
+      // Temps d'attente avant le cycle chimique (en minutes)
       const waitTime = parseInt(relevantRecipeData.waitTime) || 0;
       // Le waitTime est maintenant directement en minutes
       const waitTimeInMinutes = waitTime;
@@ -119,16 +119,13 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       // Ajouter le point initial au temps 0 et à la température cellule
       temperaturePoints.push({ x: 0, y: cellTemp });
       
-      // Point après le temps d'attente, toujours à la même température
-      temperaturePoints.push({ x: waitTimeInMinutes, y: cellTemp });
-      
-      // Timeoffset commence après le temps d'attente
-      let timeOffset = waitTimeInMinutes;
+      // CORRECTION : Le cycle thermique commence immédiatement, pas après le waitTime
+      let timeOffset = 0; // Le cycle thermique commence à t=0
       
       // Stockage des points pour débogage
       let debugPoints = [];
       
-      // Construire la courbe de température
+      // Construire la courbe de température (commence dès t=0)
       thermalCycle.forEach((step, index) => {
         const duration = parseInt(step.duration) || 0;
         const setpoint = parseInt(step.setpoint) || 0;
@@ -172,12 +169,22 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       
       // Construire les courbes de débit de gaz
       const gasDatasets = {};
-        // Initialiser les datasets pour chaque gaz potentiellement utilisé
+      // Initialiser les datasets pour chaque gaz potentiellement utilisé
       const gasTypes = [
         relevantRecipeData.selectedGas1, 
         relevantRecipeData.selectedGas2, 
         relevantRecipeData.selectedGas3
       ].filter(Boolean);
+      
+      // CORRECTION : Calculer la durée totale du cycle chimique pour synchroniser avec le cycle thermique
+      const totalChemicalTime = chemicalCycle.reduce((total, step) => {
+        return total + ((parseInt(step.time) || 0) / 60); // Convertir secondes en minutes
+      }, 0);
+      
+      // Le cycle chimique devrait se terminer en même temps que le cycle thermique
+      const chemicalEndTime = totalThermalTime;
+      const chemicalStartTime = waitTimeInMinutes;
+      const availableChemicalDuration = chemicalEndTime - chemicalStartTime;
       
       // Parcourir le cycle chimique et créer des segments horizontaux pour chaque gaz
       let chemTimeOffset = waitTimeInMinutes;
@@ -207,8 +214,19 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       // Parcourir chaque étape du cycle chimique
       chemicalCycle.forEach((step, stepIndex) => {
         const stepTime = (parseInt(step.time) || 0) / 60; // Convertir secondes en minutes
+        
+        // CORRECTION : Ajuster la durée de l'étape pour qu'elle s'adapte à la durée disponible
+        // Si le cycle chimique total est plus long que la durée disponible, on l'écrase
+        // Si il est plus court, on l'étale pour qu'il finisse en même temps que le cycle thermique
+        let adjustedStepTime = stepTime;
+        if (totalChemicalTime > 0) {
+          // Calculer le facteur d'ajustement proportionnel
+          const scaleFactor = availableChemicalDuration / totalChemicalTime;
+          adjustedStepTime = stepTime * scaleFactor;
+        }
+        
         const stepStart = chemTimeOffset;
-        const stepEnd = chemTimeOffset + stepTime;
+        const stepEnd = chemTimeOffset + adjustedStepTime;
         
         // Pour chaque gaz défini, créer les échelons
         gasTypes.forEach(gasType => {
@@ -247,7 +265,7 @@ const RecipePreviewChart = React.memo(({ formData }) => {
           }
         });
         
-        chemTimeOffset = stepEnd;
+        chemTimeOffset = stepEnd; // stepEnd utilise déjà adjustedStepTime
       });
       
       // Créer le dataset complet
@@ -277,7 +295,11 @@ const RecipePreviewChart = React.memo(({ formData }) => {
         waitTime,
         waitTimeInMinutes,
         debugPoints,
-        temperaturePoints
+        temperaturePoints,
+        totalThermalTime,
+        totalChemicalTime,
+        availableChemicalDuration,
+        chemicalEndTime: chemTimeOffset
       });
       
       setChartData({

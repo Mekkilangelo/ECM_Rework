@@ -43,6 +43,33 @@ const CurveDataTable = ({
     onUpdateSeriesValue(seriesIndex, distanceIndex, value);
   };
 
+  // Nouvelle fonction pour gérer la touche Entrée
+  const handleKeyDown = (e, seriesIndex, distanceIndex) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Vérifier si on est sur la dernière ligne
+      const isLastRow = distanceIndex === distances.length - 1;
+      if (isLastRow) {
+        // Ajouter une nouvelle distance
+        handleAddDistance();
+        // Focus sur le même champ de la nouvelle ligne (optionnel)
+        setTimeout(() => {
+          const newRowIndex = distances.length;
+          const targetInput = document.querySelector(`input[data-row="${newRowIndex}"][data-series="${seriesIndex}"]`);
+          if (targetInput) {
+            targetInput.focus();
+          }
+        }, 100);
+      } else {
+        // Passer à la ligne suivante
+        const nextRowInput = document.querySelector(`input[data-row="${distanceIndex + 1}"][data-series="${seriesIndex}"]`);
+        if (nextRowInput) {
+          nextRowInput.focus();
+        }
+      }
+    }
+  };
+
   const handleAddDistance = () => {
     // Utiliser le pas configuré pour calculer la nouvelle distance
     const maxDistance = distances.length > 0 ? Math.max(...distances) : 0;
@@ -84,26 +111,15 @@ const CurveDataTable = ({
               </Button>
             )}
             
-            <div className="btn-group">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleAddDistance}
-                title={`Ajouter une distance (+${distanceStep})`}
-              >
-                <FontAwesomeIcon icon={faPlus} className="me-1" />
-                Distance
-              </Button>
-              <Button
-                variant="outline-success"
-                size="sm"
-                onClick={handleAddSeries}
-                title="Ajouter une colonne"
-              >
-                <FontAwesomeIcon icon={faPlus} className="me-1" />
-                Colonne
-              </Button>
-            </div>
+            <Button
+              variant="outline-success"
+              size="sm"
+              onClick={handleAddSeries}
+              title="Ajouter une colonne"
+            >
+              <FontAwesomeIcon icon={faPlus} className="me-1" />
+              Colonne
+            </Button>
           </div>
         )}
       </div>
@@ -204,9 +220,12 @@ const CurveDataTable = ({
                         step="0.1"
                         value={serie.values[distanceIndex] === 0 ? '' : (serie.values[distanceIndex] || '')}
                         onChange={(e) => handleValueChange(seriesIndex, distanceIndex, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, seriesIndex, distanceIndex)}
                         placeholder={`Valeur ${serie.name || `Série ${seriesIndex + 1}`}`}
                         size="sm"
                         style={viewMode ? readOnlyFieldStyle : {}}
+                        data-row={distanceIndex}
+                        data-series={seriesIndex}
                       />
                     ) : (
                       serie.values[distanceIndex] || 0
@@ -245,6 +264,22 @@ const CurveDataTable = ({
           </div>
         )}
       </div>
+
+      {/* Bouton d'ajout de distance en bas du tableau */}
+      {!viewMode && series.length > 0 && (
+        <div className="d-flex justify-content-center mt-2">
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={handleAddDistance}
+            title={`Ajouter une distance (+${distanceStep})`}
+            className="px-4"
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-2" />
+            Ajouter une distance
+          </Button>
+        </div>
+      )}
 
       {distances.length > 0 && (
         <div className="mt-3 text-muted">

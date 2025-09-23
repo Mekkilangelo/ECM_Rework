@@ -10,7 +10,7 @@ const FileUploader = ({
   subcategory,
   nodeId,
   onFilesUploaded,
-  maxFiles = 5,
+  maxFiles = 50, // Augmenté de 5 à 50 fichiers
   acceptedFileTypes = {},
   title = 'Importer des fichiers',
   showPreview = true,

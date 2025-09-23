@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import { ToastContainer } from 'react-toastify';
@@ -13,6 +13,9 @@ import './styles/darkTheme.css'; // Import des styles du thème sombre
 import './styles/sidebar.css';
 
 import { useTranslation } from 'react-i18next'; 
+
+// Utilitaires
+import initDisableNumberInputWheel from './utils/disableNumberInputWheel'; // Import pour désactiver la molette sur les inputs number 
 
 // Pages/Composants
 import Login from './pages/Login';
@@ -55,6 +58,14 @@ const PrivateRouteComponent = ({ children }) => {
 };
 
 function App() {
+  // Initialiser la désactivation de la molette sur les inputs number
+  useEffect(() => {
+    const cleanup = initDisableNumberInputWheel();
+    
+    // Nettoyer lors du démontage du composant
+    return cleanup;
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>

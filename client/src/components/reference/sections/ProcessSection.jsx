@@ -1,22 +1,24 @@
 // src/components/reference/ProcessSection.jsx
 import React, { useState } from 'react';
 import { Tab, Nav, Card } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
 import EnumTableContent from '../EnumTableContent';
 
 const ProcessSection = () => {
   const [activePill, setActivePill] = useState('mounting_type');
+  const { t } = useTranslation();
 
   return (
     <Tab.Container activeKey={activePill} onSelect={setActivePill}>
       <Nav variant="pills" className="mb-3">
         <Nav.Item>
-          <Nav.Link eventKey="mounting_type">Mounting Type</Nav.Link>
+          <Nav.Link eventKey="mounting_type">{t('references.process.mounting_type')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="position_type">Position Type</Nav.Link>
+          <Nav.Link eventKey="position_type">{t('references.process.position_type')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="process_type">Process Type</Nav.Link>
+          <Nav.Link eventKey="process_type">{t('references.process.process_type')}</Nav.Link>
         </Nav.Item>
       </Nav>
 

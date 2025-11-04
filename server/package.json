@@ -21,7 +21,7 @@
     "etl:help": "node scripts/etl-help.js",
     "etl:validate": "node scripts/validate-etl.js",
     "etl:load": "node scripts/etl-load-data.js",
-     "etl:load:usa": "node scripts/etl-load-usa-data.js",
+    "etl:load:usa": "node scripts/etl-load-usa-data.js",
     "etl:test": "node scripts/etl-test.js"
   },
   "keywords": [],
@@ -40,12 +40,13 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.13.0",
     "nodemon": "^3.1.9",
-    "sequelize": "^6.37.6"
+    "sequelize": "^6.37.6",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "cross-env": "^7.0.3",
-    "electron": "^35.1.5",
     "jest": "^29.7.0",
     "sqlite3": "^5.1.7",
     "supertest": "^7.0.0"

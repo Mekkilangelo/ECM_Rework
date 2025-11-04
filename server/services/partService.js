@@ -480,13 +480,16 @@ const deletePart = async (partId) => {
     try {
       const deletionResult = await deletePhysicalDirectory(partPhysicalPath);
       if (deletionResult) {
-        console.log(`Dossier physique de la pièce ${partId} supprimé avec succès`);
+        logger.info('Dossier physique pièce supprimé', { partId });
       } else {
-        console.warn(`Échec de la suppression du dossier physique de la pièce ${partId}`);
+        logger.warn('Échec suppression dossier physique pièce', { partId });
       }
     } catch (physicalDeleteError) {
       // Log l'erreur mais ne pas faire échouer l'opération car la DB a été nettoyée
-      console.error(`Erreur lors de la suppression du dossier physique de la pièce ${partId}:`, physicalDeleteError);
+      logger.error('Erreur suppression dossier physique pièce', { 
+        partId, 
+        error: physicalDeleteError.message 
+      });
     }
     
     return true;

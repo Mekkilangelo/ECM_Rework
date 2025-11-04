@@ -158,40 +158,6 @@ const deleteTest = async (req, res, next) => {
 };
 
 /**
- * Récupère les données pour le rapport de test
- * @route GET /api/tests/:testId/report
- * @param {Object} req - Requête Express
- * @param {Object} res - Réponse Express
- * @param {Function} next - Middleware suivant
- * @returns {Object} Données du rapport
- */
-const getTestReportData = async (req, res, next) => {
-  try {
-    const { testId } = req.params;
-    const { sections } = req.query;
-    
-    // Analyser les sections demandées
-    let selectedSections;
-    try {
-      selectedSections = typeof sections === 'string' ? JSON.parse(sections) : sections;
-    } catch (parseError) {
-      logger.error("Erreur lors de l'analyse des sections:", parseError);
-      return apiResponse.error(res, 'Format de sections invalide', 400);
-    }
-    
-    logger.info(`Récupération des données de rapport pour le test #${testId}`, { sections: selectedSections });
-    
-    // Déléguer au service
-    const reportData = await testService.getTestReportData(testId, selectedSections);
-    
-    return apiResponse.success(res, reportData, 'Données de rapport récupérées avec succès');
-  } catch (error) {
-    logger.error(`Erreur lors de la récupération des données de rapport pour le test #${req.params.testId}: ${error.message}`, error);
-    next(error);
-  }
-};
-
-/**
  * Récupère les spécifications d'un test spécifique
  * @route GET /api/tests/:testId/specs
  * @param {Object} req - Requête Express
@@ -231,6 +197,5 @@ module.exports = {
   createTest,
   updateTest,
   deleteTest,
-  getTestReportData,
   getTestSpecs
 };

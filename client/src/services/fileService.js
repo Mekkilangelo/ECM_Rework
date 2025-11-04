@@ -85,14 +85,8 @@ const fileService = {
       url.searchParams.append('preview', 'true');
     }
     
-    // Vérifier si nous sommes dans Electron
-    if (window.electronAPI) {
-      // Utiliser l'API Electron pour le téléchargement
-      window.electronAPI.downloadFile(url.toString(), fileId);
-    } else {
-      // Fallback pour navigateur web
-      window.open(url.toString(), '_blank');
-    }
+    // Ouvrir dans un nouvel onglet
+    window.open(url.toString(), '_blank');
   },
   
   /**

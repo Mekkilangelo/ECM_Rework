@@ -5,6 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const logger = require('./logger');
 const { node, file } = require('../models');
 const { Op } = require('sequelize');
 
@@ -40,17 +41,20 @@ const deletePhysicalFiles = async (nodeId, transaction = null) => {
         // Supprimer le fichier physique si il existe
         if (file && file.file_path && fs.existsSync(file.file_path)) {
           fs.unlinkSync(file.file_path);
-          console.log(`Fichier physique supprimé: ${file.file_path}`);
+          logger.debug('Fichier physique supprimé', { path: file.file_path });
         }
 
         deletedCount++;
       } catch (error) {
-        console.warn(`Erreur lors de la suppression du fichier physique ${fileNode.id}:`, error.message);
+        logger.warn('Erreur suppression fichier physique', { 
+          nodeId: fileNode.id, 
+          error: error.message 
+        });
         // Continue avec les autres fichiers même si un échoue
       }
     }    return deletedCount;
   } catch (error) {
-    console.error('Erreur lors de la suppression des fichiers physiques:', error);
+    logger.error('Erreur suppression fichiers physiques', { error: error.message });
     return 0; // Retourner 0 plutôt que de lancer une erreur pour ne pas bloquer la suppression du nœud
   }
 };
@@ -71,21 +75,24 @@ const deletePhysicalDirectory = async (nodePath, uploadsBasePath = null) => {
     const cleanedPath = nodePath.startsWith('/') ? nodePath.substring(1) : nodePath;
     const physicalPath = path.join(baseDir, cleanedPath);
     
-    console.log(`Tentative de suppression du dossier physique: ${physicalPath}`);
+    logger.debug('Tentative suppression dossier physique', { path: physicalPath });
     
     // Vérifier si le dossier existe
     if (!fs.existsSync(physicalPath)) {
-      console.log(`Le dossier n'existe pas: ${physicalPath}`);
+      logger.debug('Dossier inexistant', { path: physicalPath });
       return true; // Considéré comme réussi car le dossier n'existe déjà plus
     }
     
     // Supprimer récursivement le dossier et tout son contenu
     fs.rmSync(physicalPath, { recursive: true, force: true });
-    console.log(`Dossier physique supprimé avec succès: ${physicalPath}`);
+    logger.info('Dossier physique supprimé', { path: physicalPath });
     
     return true;
   } catch (error) {
-    console.error(`Erreur lors de la suppression du dossier physique ${nodePath}:`, error.message);
+    logger.error('Erreur suppression dossier physique', { 
+      nodePath, 
+      error: error.message 
+    });
     return false; // Retourner false plutôt que de lancer une erreur pour ne pas bloquer la suppression du nœud
   }
 };

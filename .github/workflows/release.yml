@@ -18,23 +18,25 @@ jobs:
           fetch-depth: 0
 
 
-      - name: Injecter la variable d'environnement frontend depuis les secrets
+      - name: Generate frontend .env
         run: echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" > client/.env
 
-      - name: Générer le .env pour le backend depuis les secrets
-        run: |
-          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" > server/.env
-          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> server/.env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> server/.env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> server/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> server/.env
-          echo "DB_SYNC_ALTER=${{ secrets.DB_SYNC_ALTER }}" >> server/.env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> server/.env
-          echo "JWT_EXPIRE=${{ secrets.JWT_EXPIRE }}" >> server/.env
-          echo "JWT_INACTIVITY_EXPIRE=${{ secrets.JWT_INACTIVITY_EXPIRE }}" >> server/.env
-          echo "CLIENT_URL=${{ secrets.CLIENT_URL }}" >> server/.env
-          echo "API_URL=${{ secrets.API_URL }}" >> server/.env
-          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> server/.env
+      - name: Generate backend .env
+        uses: ./.github/actions/generate-env
+        with:
+          environment: ${{ secrets.NODE_ENV }}
+          output-file: server/.env
+          mysql-root-password: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          mysql-database: ${{ secrets.MYSQL_DATABASE }}
+          db-host: ${{ secrets.DB_HOST }}
+          db-user: ${{ secrets.DB_USER }}
+          db-password: ${{ secrets.DB_PASSWORD }}
+          db-sync-alter: ${{ secrets.DB_SYNC_ALTER }}
+          jwt-secret: ${{ secrets.JWT_SECRET }}
+          jwt-expire: ${{ secrets.JWT_EXPIRE }}
+          jwt-inactivity-expire: ${{ secrets.JWT_INACTIVITY_EXPIRE }}
+          client-url: ${{ secrets.CLIENT_URL }}
+          api-url: ${{ secrets.API_URL }}
 
       - name: Clean Docker Buildx cache
         run: docker builder prune -af
@@ -50,44 +52,18 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version détectée: $VERSION"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build frontend image
-        run: |
-          echo "Building frontend image..."
-          docker buildx build \
-            --load \
-            --tag synergia-frontend:${{ steps.version.outputs.version }} \
-            --tag synergia-frontend:latest \
-            ./client
-
-      - name: Build backend image
-        run: |
-          echo "Building backend image..."
-          docker buildx build \
-            --load \
-            --tag synergia-backend:${{ steps.version.outputs.version }} \
-            --tag synergia-backend:latest \
-            ./server
+      - name: Build Docker images
+        uses: ./.github/actions/build-images
+        with:
+          version: ${{ steps.version.outputs.version }}
 
       - name: Export Docker images (including MySQL and Nginx)
-        run: |
-          echo "Exporting Docker images..."
-          mkdir -p release/images
-          
-          # Pull MySQL et Nginx
-          docker pull mysql:8.0
-          docker pull nginx:alpine
-          
-          # Export des images
-          docker save synergia-frontend:${{ steps.version.outputs.version }} -o release/images/frontend.tar
-          docker save synergia-backend:${{ steps.version.outputs.version }} -o release/images/backend.tar
-          docker save mysql:8.0 -o release/images/mysql.tar
-          docker save nginx:alpine -o release/images/nginx.tar
-          
-          echo "Images exportées:"
-          ls -la release/images/
+        uses: ./.github/actions/export-images
+        with:
+          version: ${{ steps.version.outputs.version }}
+          output-dir: release/images
+          include-mysql: 'true'
+          include-nginx: 'true'
 
       - name: Prepare release files
         run: |

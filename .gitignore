@@ -37,13 +37,10 @@ lerna-debug.log*
 **/dist-*/
 *.tsbuildinfo
 
-# Dossier electron partiel
-# Le dossier electron n'est plus complètement ignoré
-/electron/dist-*/
-/electron/node_modules/
-/electron/*.exe
-/electron/prereq
-/electron/resources
+# Release bundles
+/release/
+/release-build/
+synergia-release-*.tar.gz
 
 
 # Fichiers d'exécution et binaires

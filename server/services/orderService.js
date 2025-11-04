@@ -467,13 +467,16 @@ const deleteOrder = async (orderId) => {
     try {
       const deletionResult = await deletePhysicalDirectory(orderPhysicalPath);
       if (deletionResult) {
-        console.log(`Dossier physique de la commande ${orderId} supprimé avec succès`);
+        logger.info('Dossier physique commande supprimé', { orderId });
       } else {
-        console.warn(`Échec de la suppression du dossier physique de la commande ${orderId}`);
+        logger.warn('Échec suppression dossier physique commande', { orderId });
       }
     } catch (physicalDeleteError) {
       // Log l'erreur mais ne pas faire échouer l'opération car la DB a été nettoyée
-      console.error(`Erreur lors de la suppression du dossier physique de la commande ${orderId}:`, physicalDeleteError);
+      logger.error('Erreur suppression dossier physique commande', { 
+        orderId, 
+        error: physicalDeleteError.message 
+      });
     }
     
     return true;

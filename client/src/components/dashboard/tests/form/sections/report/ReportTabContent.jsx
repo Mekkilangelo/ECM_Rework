@@ -3,6 +3,7 @@ import { Card, Row, Col, Button, Badge, ListGroup, Tooltip, OverlayTrigger, Spin
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faFileDownload, faIdCard, faList, faCubes, faChartLine, faMicroscope, faClipboardCheck, faToggleOn, faToggleOff, faImages } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import reportService from '../../../../../../services/reportService';
 import testService from '../../../../../../services/testService';
 import ReportPreviewModal from './ReportPreviewModal';
 import SectionPhotoManager from './SectionPhotoManager';
@@ -207,10 +208,14 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
       const sectionsToFetch = {
         ...selectedSections,
         // Forcer identification pour récupérer les données client
-        identification: true      };
-        const reportDataResponse = await testService.getTestReportData(testId, sectionsToFetch);      // Créer un nouvel objet de rapport avec toutes les données nécessaires
+        identification: true      
+      };
+      
+      const reportDataResponse = await reportService.getTestReportData(testId, sectionsToFetch);
+      
+      // Créer un nouvel objet de rapport avec toutes les données nécessaires
       const completeReportData = {
-        ...reportDataResponse,
+        ...(reportDataResponse.data || reportDataResponse),
         selectedPhotos: selectedPhotos,
         partId: parentNodeId
       };

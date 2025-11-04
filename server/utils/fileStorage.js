@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('./logger');
 const crypto = require('crypto');
 const os = require('os');
 
@@ -31,34 +32,33 @@ const TEMP_DIR = tempPathEnv.match(/^([A-Z]:|\/)/)
   ? tempPathEnv 
   : path.join(__dirname, '..', tempPathEnv);
 
-console.log('UPLOAD_BASE_DIR:', UPLOAD_BASE_DIR);
-console.log('TEMP_DIR:', TEMP_DIR);
+logger.debug('Chemins de stockage configurés', { uploadDir: UPLOAD_BASE_DIR, tempDir: TEMP_DIR });
 
 // Assurer que les répertoires existent
 if (!fs.existsSync(UPLOAD_BASE_DIR)) {
-  console.log('Creating upload directory:', UPLOAD_BASE_DIR);
+  logger.info('Création du répertoire uploads', { path: UPLOAD_BASE_DIR });
   fs.mkdirSync(UPLOAD_BASE_DIR, { recursive: true });
 }
 
 if (!fs.existsSync(TEMP_DIR)) {
-  console.log('Creating temp directory:', TEMP_DIR);
+  logger.info('Création du répertoire temporaire', { path: TEMP_DIR });
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }
 
 // Configuration du stockage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    console.log('📂 [multer-destination] Début de la résolution du stockage...');
-    console.log('📋 [multer-destination] req.body:', req.body);
-    console.log('📋 [multer-destination] req.resolvedPath:', req.resolvedPath);
+    logger.debug('Résolution destination fichier', { 
+      hasResolvedPath: !!req.resolvedPath 
+    });
     
     // Si le chemin a été résolu par le middleware, l'utiliser
     if (req.resolvedPath) {
-      console.log('✅ [multer-destination] Utilisation du chemin résolu:', req.resolvedPath);
+      logger.debug('Chemin résolu utilisé', { path: req.resolvedPath });
       cb(null, req.resolvedPath);
     } else {
       // Pas de chemin résolu : stockage temporaire
-      console.log('📦 [multer-destination] Stockage temporaire...');
+      logger.debug('Stockage temporaire utilisé');
       if (!req.tempId) {
         req.tempId = `temp-${uuidv4()}`;
       }
@@ -66,7 +66,7 @@ const storage = multer.diskStorage({
       if (!fs.existsSync(tempUploadDir)) {
         fs.mkdirSync(tempUploadDir, { recursive: true });
       }
-      console.log('📁 [multer-destination] Dossier temporaire créé:', tempUploadDir);
+      logger.debug('Dossier temporaire créé', { path: tempUploadDir });
       cb(null, tempUploadDir);
     }
   },
@@ -75,7 +75,7 @@ const storage = multer.diskStorage({
     const uniqueSuffix = crypto.randomBytes(8).toString('hex');
     const safeFileName = file.originalname.replace(/\s+/g, '_');
     const finalName = `${uniqueSuffix}-${safeFileName}`;
-    console.log('📄 [multer-filename] Nom généré:', finalName);
+    logger.debug('Nom de fichier généré', { filename: finalName });
     cb(null, finalName);
   }
 });
@@ -128,19 +128,19 @@ const cleanupTempDir = async (olderThan = 24 * 60 * 60 * 1000) => {
           if (entry.isDirectory()) {
             // Supprimer récursivement le dossier temporaire
             fs.rmSync(fullPath, { recursive: true, force: true });
-            console.log(`Dossier temporaire nettoyé: ${entry.name}`);
+            logger.debug('Dossier temporaire nettoyé', { name: entry.name });
           } else {
             // Supprimer le fichier isolé
             fs.unlinkSync(fullPath);
-            console.log(`Fichier temporaire nettoyé: ${entry.name}`);
+            logger.debug('Fichier temporaire nettoyé', { name: entry.name });
           }
         }
       } catch (statError) {
-        console.warn(`Erreur lors de l'accès aux stats de ${fullPath}:`, statError.message);
+        logger.warn('Erreur accès stats fichier temporaire', { path: fullPath, error: statError.message });
       }
     }
   } catch (error) {
-    console.error('Erreur lors du nettoyage des fichiers temporaires:', error);
+    logger.error('Erreur nettoyage fichiers temporaires', { error: error.message });
   }
 };
 

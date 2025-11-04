@@ -11,6 +11,7 @@ const partService = require('./partService');
 const testService = require('./testService');
 const steelService = require('./steelService');
 const nodeService = require('./nodeService');
+const reportService = require('./reportService');
 
 module.exports = {
   fileService,
@@ -20,5 +21,6 @@ module.exports = {
   partService,
   testService,
   steelService,
-  nodeService
+  nodeService,
+  reportService
 };

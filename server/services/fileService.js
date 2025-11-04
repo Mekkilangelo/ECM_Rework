@@ -6,8 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../utils/logger');
 const { node, file, closure, sequelize } = require('../models');
-console.log('Modèles chargés:', { node: !!node, nodeType: typeof node });
 const { Op } = require('sequelize');
 const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
 const { NotFoundError, ValidationError } = require('../utils/errors');
@@ -68,7 +68,7 @@ const cleanupTempDirectories = async (tempFiles) => {
         const files = fs.readdirSync(tempDir);
         if (files.length === 0) {
           fs.rmdirSync(tempDir);
-          console.log(`Dossier temporaire vide supprimé: ${tempDir}`);
+          logger.debug('Dossier temporaire vide supprimé', { path: tempDir });
           
           // Vérifier aussi le dossier parent s'il est dans temp/
           const parentDir = path.dirname(tempDir);
@@ -76,13 +76,16 @@ const cleanupTempDirectories = async (tempFiles) => {
             const parentFiles = fs.readdirSync(parentDir);
             if (parentFiles.length === 0) {
               fs.rmdirSync(parentDir);
-              console.log(`Dossier parent temporaire vide supprimé: ${parentDir}`);
+              logger.debug('Dossier parent temporaire vide supprimé', { path: parentDir });
             }
           }
         }
       }
     } catch (error) {
-      console.warn(`Erreur lors du nettoyage du dossier temporaire ${tempDir}:`, error.message);
+      logger.warn('Erreur nettoyage dossier temporaire', { 
+        path: tempDir, 
+        error: error.message 
+      });
     }
   }
 };
@@ -375,7 +378,7 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
         // Supprimer le fichier physique si il existe
         if (file && file.file_path && fs.existsSync(file.file_path)) {
           fs.unlinkSync(file.file_path);
-          console.log(`Fichier physique supprimé: ${file.file_path}`);
+          logger.debug('Fichier physique supprimé', { path: file.file_path });
         }
 
         // Supprimer l'enregistrement File
@@ -394,14 +397,17 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
 
         deletedCount++;
       } catch (error) {
-        console.warn(`Erreur lors de la suppression du fichier ${fileNode.id}:`, error.message);
+        logger.warn('Erreur suppression fichier du nœud', { 
+          nodeId: fileNode.id, 
+          error: error.message 
+        });
         // Continue avec les autres fichiers même si un échoue
       }
     }
 
     return deletedCount;
   } catch (error) {
-    console.error('Erreur lors de la suppression des fichiers du nœud:', error);
+    logger.error('Erreur suppression fichiers du nœud', { error: error.message });
     throw error;
   }
 };
@@ -493,7 +499,7 @@ const deleteFile = async (fileId) => {
 const getAllFilesByNode = async (options) => {
   const { nodeId, category, subcategory } = options;
   
-  console.log(`[getAllFilesByNode] Recherche: nodeId=${nodeId}, category=${category}, subcategory=${subcategory}`);
+  logger.debug('Recherche fichiers par nœud', { nodeId, category, subcategory });
   
   // D'abord, récupérer tous les descendants du nœud (y compris lui-même)
   const descendantClosure = await closure.findAll({
@@ -501,7 +507,7 @@ const getAllFilesByNode = async (options) => {
     attributes: ['descendant_id', 'depth']
   });
   
-  console.log(`[getAllFilesByNode] Relations closure trouvées: ${descendantClosure.length}`);
+  logger.debug('Relations closure trouvées', { count: descendantClosure.length });
   
   // Extraire les IDs des descendants
   const descendantIds = descendantClosure.map(closure => closure.descendant_id);
@@ -528,7 +534,7 @@ const getAllFilesByNode = async (options) => {
     ]
   });
   
-  console.log(`[getAllFilesByNode] Fichiers trouvés: ${fileNodes.length}`);
+  logger.debug('Fichiers trouvés', { count: fileNodes.length });
   
   // Formater la réponse
   const files = fileNodes.map(node => ({
@@ -544,7 +550,8 @@ const getAllFilesByNode = async (options) => {
     file_path: node.file ? node.file.file_path : null,
     type: node.file ? node.file.mime_type : 'application/octet-stream'
   }));
-  console.log(`[getAllFilesByNode] Retour: ${files.length} fichiers`);
+  
+  logger.debug('Fichiers retournés', { count: files.length });
   
   return { files };
 };

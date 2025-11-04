@@ -7,7 +7,7 @@ const { publicAccess, writeAccess } = require('../middleware/access-control');
 router.get('/', publicAccess, testController.getTests);
 router.get('/:testId', publicAccess, testController.getTestById);
 router.get('/:testId/specs', publicAccess, testController.getTestSpecs);
-router.get('/:testId/report', publicAccess, testController.getTestReportData);
+// Route de rapport déplacée vers /api/reports/tests/:testId (voir routes/reports.js)
 
 // Routes protégées pour la modification (création, mise à jour, suppression)
 router.post('/', writeAccess, testController.createTest);

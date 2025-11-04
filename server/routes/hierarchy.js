@@ -1,18 +1,18 @@
+/**
+ * Routes de gestion des nœuds
+ * 
+ * Note : Ce module contient uniquement les opérations transversales
+ * sur les nœuds. Les opérations CRUD spécifiques sont gérées par
+ * les services dédiés (clientService, orderService, etc.)
+ */
+
 const express = require('express');
 const router = express.Router();
 const nodeController = require('../controllers/nodeController');
-const { publicAccess, writeAccess } = require('../middleware/access-control');
+const { writeAccess } = require('../middleware/access-control');
 
-// Routes pour la gestion de la hiérarchie (lecture uniquement)
-router.get('/', publicAccess, nodeController.getNodes);
-router.get('/:nodeId/:type', publicAccess, nodeController.getNodeDetails);
-router.get('/count', publicAccess, nodeController.getTotalNodes);
-
-// Routes protégées pour la modification (création, mise à jour, suppression)
-router.post('/', writeAccess, nodeController.createNode);
-router.put('/:nodeId', writeAccess, nodeController.updateNode);
-router.delete('/:nodeId', writeAccess, nodeController.deleteNode);
-router.delete('/', writeAccess, nodeController.deleteNodes);
+// Routes transversales pour tous les types de nœuds
 router.put('/:nodeId/status', writeAccess, nodeController.updateNodeStatus);
+router.delete('/', writeAccess, nodeController.deleteNodes);
 
 module.exports = router;

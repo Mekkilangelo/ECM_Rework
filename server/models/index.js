@@ -1,49 +1,19 @@
+/**
+ * Chargement et association des modèles Sequelize
+ * Utilise l'instance Singleton de la base de données
+ */
 const fs = require('fs');
 const path = require('path');
-const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
+const database = require('../config/database');
+
 const db = {};
 
-// Configuration de la base de données
-require('dotenv').config();
+// Utiliser l'instance Singleton de Sequelize
+const sequelize = database.getSequelize();
+const { DataTypes } = require('sequelize');
 
-// Configuration simple pour Windows et Linux
-const dbConfig = {
-  host: process.env.DB_HOST || '127.0.0.1',
-  database: process.env.DB_NAME || 'synergy',
-  port: process.env.DB_PORT || 3306,
-  username: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'root',
-  dialect: 'mysql',
-  logging: false,
-  pool: {
-    max: 10,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  },
-  dialectOptions: {
-    multipleStatements: true,
-    decimalNumbers: true
-  }
-};
-
-// Création de l'instance Sequelize
-const sequelize = new Sequelize(
-  dbConfig.database, 
-  dbConfig.username, 
-  dbConfig.password, 
-  {
-    host: dbConfig.host,
-    port: dbConfig.port,
-    dialect: dbConfig.dialect,
-    logging: dbConfig.logging,
-    pool: dbConfig.pool,
-    dialectOptions: dbConfig.dialectOptions
-  }
-);
-
-// Import des modèles de façon simple et compatible
+// Import automatique de tous les modèles
 fs
   .readdirSync(__dirname)
   .filter(file => {
@@ -54,10 +24,7 @@ fs
     );
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    
-    // Utilisation des noms de modèles exactement comme définis dans les fichiers de modèle
-    // pour assurer une compatibilité parfaite avec les noms de tables
+    const model = require(path.join(__dirname, file))(sequelize, DataTypes);
     db[model.name] = model;
   });
 
@@ -68,8 +35,9 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-// Export des objets de base de données
+// Exposer l'instance Sequelize et les modèles
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+db.Sequelize = require('sequelize');
+db.database = database; // Accès au singleton complet
 
 module.exports = db;

@@ -1,5 +1,6 @@
 const { log } = require('../models');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('../utils/logger');
 
 /**
  * Service de logging centralisé
@@ -47,15 +48,17 @@ class LoggingService {
       
       // Log en console pour le développement
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[${logEntry.level.toUpperCase()}] ${logEntry.action}: ${logEntry.message}`);
-        if (logEntry.details) {
-          console.log('Details:', logEntry.details);
-        }
+        logger.debug('Log enregistré', {
+          level: logEntry.level,
+          action: logEntry.action,
+          message: logEntry.message,
+          details: logEntry.details
+        });
       }
 
       return createdLog;
     } catch (error) {
-      console.error('Erreur lors de l\'enregistrement du log:', error);
+      logger.error('Erreur enregistrement log', { error: error.message });
       // Ne pas faire planter l'application si le logging échoue
       return null;
     }
@@ -254,7 +257,7 @@ class LoggingService {
         hasPrevPage: page > 1
       };
     } catch (error) {
-      console.error('Erreur lors de la récupération des logs:', error);
+      logger.error('Erreur récupération logs', { error: error.message });
       throw error;
     }
   }
@@ -356,7 +359,7 @@ class LoggingService {
         topActions: actionStats
       };
     } catch (error) {
-      console.error('Erreur lors de la récupération des statistiques:', error);
+      logger.error('Erreur récupération statistiques logs', { error: error.message });
       throw error;
     }
   }

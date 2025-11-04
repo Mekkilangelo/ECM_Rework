@@ -252,35 +252,6 @@ const testService = {/**
   },
     
   /**
-   * Récupère les données du rapport d'un test
-   * @param {string|number} testId - L'identifiant du test
-   * @param {Array} selectedSections - Les sections du rapport à récupérer
-   * @returns {Promise<Object>} Les données du rapport
-   * @throws {Error} En cas d'échec de la requête
-   */  getTestReportData: async (testId, selectedSections) => {
-    try {
-      console.log(`Récupération des données de rapport pour test ${testId}`, selectedSections);
-      const response = await api.get(`/tests/${testId}/report`, { 
-        params: { 
-          sections: JSON.stringify(selectedSections) 
-        } 
-      });
-      
-      console.log('Réponse brute du serveur:', response);
-      console.log('Données de la réponse:', response.data);
-      
-      // Traitement de la réponse selon le nouveau format d'API
-      if (response.data && response.data.success === true) {
-        console.log('Format API success détecté, retour de response.data.data');
-        return response.data.data;
-      }      console.log('Format direct détecté, retour de response.data');
-      return response.data;
-    } catch (error) {
-      console.error(`Erreur lors de la récupération des données du rapport pour le test ${testId}:`, error);
-      throw error;
-    }
-  },
-  /**
    * Vide le cache des spécifications
    */
   clearSpecsCache: () => {

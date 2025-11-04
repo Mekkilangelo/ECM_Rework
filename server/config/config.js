@@ -10,8 +10,7 @@ const dotenv = require('dotenv');
 require('dotenv').config();
 
 // Chemin de base pour les ressources
-const isElectron = process.env.ELECTRON_RUN_AS_NODE === '1';
-const basePath = isElectron ? process.resourcesPath : path.resolve(__dirname, '..');
+const basePath = path.resolve(__dirname, '..');
 
 // Tenter de charger .env, mais continuer même en cas d'échec
 try {
@@ -25,13 +24,18 @@ try {
   
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
-      console.log(`Loading environment from: ${envPath}`);
+      // Note: Le logger n'est pas encore disponible ici
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Loading environment from: ${envPath}`);
+      }
       dotenv.config({ path: envPath });
       break;
     }
   }
 } catch (err) {
-  console.warn('Warning: Unable to load .env file, using defaults', err);
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('Warning: Unable to load .env file, using defaults', err);
+  }
 }
 
 // Configuration de l'application
@@ -54,9 +58,9 @@ const config = {
   PATHS: {
     UPLOAD: process.env.UPLOAD_PATH || path.join(basePath, 'uploads'),
     TEMP: process.env.TEMP_PATH || path.join(basePath, 'uploads/temp'),
-    ROOT: process.env.ROOT_PATH || (isElectron ? path.join(basePath, 'data') : 'C:/Users/mekki/Desktop/CIA/ECM/Monitoring/NEW_BASE'),
-    PUMP: process.env.PUMP_PATH || 'C:/Users/mekki/Desktop/DATA(X)/DATA(X)/C2 - TECHNIQUE/AFFAIRES EN COURS',
-    BACKUP: process.env.BACKUP_DIR || 'C:/Users/mekki/Desktop/backups'
+    ROOT: process.env.ROOT_PATH || path.join(basePath, 'data'),
+    PUMP: process.env.PUMP_PATH || path.join(basePath, 'pump-data'),
+    BACKUP: process.env.BACKUP_DIR || path.join(basePath, 'backups')
   },
     // Base de données
   DB: {
@@ -73,10 +77,19 @@ const config = {
     GLOBAL_READ_ONLY: process.env.GLOBAL_READ_ONLY === 'true',
   },  // JSON Web Token
   JWT: {
-    SECRET: process.env.JWT_SECRET || 'default_jwt_secret_for_development_and_testing',
+    SECRET: (() => {
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        throw new Error('JWT_SECRET must be defined in environment variables for security reasons');
+      }
+      if (secret.length < 32) {
+        throw new Error('JWT_SECRET must be at least 32 characters long');
+      }
+      return secret;
+    })(),
     EXPIRE: process.env.JWT_EXPIRE || '24h',
-    // Durée d'inactivité configurée par la variable d'environnement ou 2 minutes par défaut
-    INACTIVITY_EXPIRE: process.env.JWT_INACTIVITY_EXPIRE || '2m'
+    // Durée d'inactivité configurée par la variable d'environnement ou 10 minutes par défaut
+    INACTIVITY_EXPIRE: process.env.JWT_INACTIVITY_EXPIRE || '10m'
   },
   
   // Python

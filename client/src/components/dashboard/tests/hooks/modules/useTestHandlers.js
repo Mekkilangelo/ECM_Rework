@@ -17,10 +17,13 @@ const useTestHandlers = (formData, setFormData, errors, setErrors, refreshOption
     }
   }, [setModified]);
   
-  // Fonction pour calculer la durée totale du programme (somme des durées du cycle thermique uniquement)
+  // Fonction pour calculer la durée totale du programme (somme des durées du cycle thermique + 1min par rampe)
   const calculateProgramDuration = useCallback(() => {
-    const thermalCycleDurations = formData.recipeData?.thermalCycle?.reduce((sum, cycle) => {
-      return sum + parseInt(cycle.duration || 0);
+    if (!formData.recipeData?.thermalCycle) return 0;
+    
+    const thermalCycleDurations = formData.recipeData.thermalCycle.reduce((sum, cycle) => {
+      // Ajouter la durée du palier + 1 minute pour la rampe
+      return sum + parseInt(cycle.duration || 0) + 1;
     }, 0) || 0;
     
     return thermalCycleDurations;

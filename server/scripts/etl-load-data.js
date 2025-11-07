@@ -16,7 +16,7 @@ const testService = require('../services/testService');
 const steelService = require('../services/steelService');
 
 // Models pour les requêtes directes si nécessaire
-const { node, enum: EnumModel } = require('../models');
+const { node, enum: EnumModel, sequelize } = require('../models');
 
 class ETLLoader {
   constructor() {
@@ -26,6 +26,205 @@ class ETLLoader {
     this.steelsMap = new Map();  // Map pour stocker steel_grade -> steel_id
     this.processedData = [];
     this.errors = [];
+    
+    // Cache des valeurs ENUM pour éviter les requêtes répétées
+    this.enumCache = {
+      steelFamily: new Set(),
+      steelStandard: new Set(),
+      clientCountry: new Set(),
+      partDesignation: new Set()
+    };
+  }
+
+  /**
+   * Initialise le cache des valeurs ENUM existantes
+   */
+  async initializeEnumCache() {
+    console.log('🔧 Initialisation du cache ENUM...');
+    
+    try {
+      // Charger les familles d'acier
+      const steelFamilyEnum = await EnumModel.getEnumValues('steels', 'family');
+      if (steelFamilyEnum.values) {
+        steelFamilyEnum.values.forEach(val => this.enumCache.steelFamily.add(val));
+        console.log(`   ✓ ${this.enumCache.steelFamily.size} familles d'acier chargées`);
+      }
+      
+      // Charger les standards d'acier
+      const steelStandardEnum = await EnumModel.getEnumValues('steels', 'standard');
+      if (steelStandardEnum.values) {
+        steelStandardEnum.values.forEach(val => this.enumCache.steelStandard.add(val));
+        console.log(`   ✓ ${this.enumCache.steelStandard.size} standards d'acier chargés`);
+      }
+      
+      // Charger les pays clients (table CLIENTS, pas nodes !)
+      const clientCountryEnum = await EnumModel.getEnumValues('clients', 'country');
+      if (clientCountryEnum.values) {
+        clientCountryEnum.values.forEach(val => this.enumCache.clientCountry.add(val));
+        console.log(`   ✓ ${this.enumCache.clientCountry.size} pays clients chargés`);
+      }
+      
+      // Charger les désignations de pièces
+      const partDesignationEnum = await EnumModel.getEnumValues('parts', 'designation');
+      if (partDesignationEnum.values) {
+        partDesignationEnum.values.forEach(val => this.enumCache.partDesignation.add(val));
+        console.log(`   ✓ ${this.enumCache.partDesignation.size} désignations de pièces chargées`);
+      }
+      
+      console.log('✅ Cache ENUM initialisé avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'initialisation du cache ENUM:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Ajoute dynamiquement une valeur à un ENUM si elle n'existe pas
+   * @param {string} tableName - Nom de la table
+   * @param {string} columnName - Nom de la colonne ENUM
+   * @param {string} newValue - Nouvelle valeur à ajouter
+   * @param {Set} cacheSet - Set du cache à mettre à jour
+   * @returns {Promise<boolean>} True si ajouté, false si déjà existant
+   */
+  async addEnumValueIfNeeded(tableName, columnName, newValue, cacheSet) {
+    // Vérifier dans le cache d'abord (insensible à la casse pour détection)
+    const normalizedValue = newValue;
+    const cacheValues = Array.from(cacheSet);
+    const existsInCache = cacheValues.some(val => val.toLowerCase() === normalizedValue.toLowerCase());
+    
+    if (existsInCache) {
+      // Trouver la valeur exacte dans le cache pour l'utiliser
+      const exactValue = cacheValues.find(val => val.toLowerCase() === normalizedValue.toLowerCase());
+      if (exactValue !== newValue) {
+        console.log(`   ⚠️  Valeur ENUM "${newValue}" normalisée en "${exactValue}" (sensibilité à la casse)`);
+      }
+      return false; // Déjà existant
+    }
+
+    try {
+      // Récupérer les valeurs actuelles depuis la DB
+      const currentEnum = await EnumModel.getEnumValues(tableName, columnName);
+      const currentValues = currentEnum.values || [];
+      
+      // Vérifier si la valeur existe déjà (insensible à la casse)
+      const existsInDb = currentValues.some(val => val.toLowerCase() === normalizedValue.toLowerCase());
+      if (existsInDb) {
+        const exactValue = currentValues.find(val => val.toLowerCase() === normalizedValue.toLowerCase());
+        cacheSet.add(exactValue);
+        if (exactValue !== newValue) {
+          console.log(`   ⚠️  Valeur ENUM "${newValue}" existe déjà comme "${exactValue}"`);
+        }
+        return false;
+      }
+      
+      // Ajouter la nouvelle valeur
+      const newValues = [...currentValues, newValue];
+      const enumDefinition = newValues.map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+      const query = `ALTER TABLE ${tableName} MODIFY COLUMN ${columnName} ENUM(${enumDefinition})`;
+      
+      await sequelize.query(query);
+      
+      // Mettre à jour le cache
+      cacheSet.add(newValue);
+      
+      console.log(`   ✅ Valeur ENUM ajoutée: ${tableName}.${columnName} = "${newValue}"`);
+      return true;
+    } catch (error) {
+      console.error(`   ❌ Erreur ajout ENUM ${tableName}.${columnName} = "${newValue}": ${error.message}`);
+      this.errors.push(`Erreur ajout ENUM ${tableName}.${columnName} = "${newValue}": ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Détermine automatiquement la famille d'acier basée sur le grade
+   * @param {string} grade - Grade de l'acier
+   * @returns {string} Famille d'acier
+   */
+  determineSteelFamily(grade) {
+    if (!grade) return 'Low_Alloy';
+    
+    const gradeUpper = grade.toUpperCase();
+    
+    // Patterns pour détecter la famille
+    const patterns = {
+      'Stainless': /INOX|SS\d+|X\d+CR|STAINLESS|17-4PH/i,
+      'Tool_Steel': /H13|H11|D2|A2|O1|TOOL|X\d+CRMOV/i,
+      'High_Carbon': /100C|XC\d+|C\d{2,3}[^R]|52100|100CRMN/i,
+      'Case_Hardening': /\d+MNC|MNC\d+|MNB\d+|\d+CRMN|\d+NICR|SCR\d+|SCM\d+/i,
+      'Low_Alloy': /42CRMO|4140|4340|8620|9310|CRMO|NICR|NICRMO/i,
+      'Carbon_Steel': /C\d+E|XC\d+|SAE\d{4}|ASTM/i
+    };
+    
+    // Tester chaque pattern
+    for (const [family, pattern] of Object.entries(patterns)) {
+      if (pattern.test(gradeUpper)) {
+        return family;
+      }
+    }
+    
+    // Par défaut
+    return 'Low_Alloy';
+  }
+
+  /**
+   * Détermine automatiquement le standard d'acier basé sur le grade
+   * @param {string} grade - Grade de l'acier
+   * @returns {string} Standard d'acier
+   */
+  determineSteelStandard(grade) {
+    if (!grade) return 'OTHER';
+    
+    const gradeUpper = grade.toUpperCase();
+    
+    // Patterns pour détecter le standard
+    const patterns = {
+      'AISI_SAE': /^(AISI|SAE|[0-9]{4}[A-Z]?$)/i,
+      'EN': /^(EN|[0-9]+[A-Z]+[0-9]|X[0-9]|C[0-9]{2}E)/i,
+      'DIN': /^(DIN|[0-9]\.[0-9]{4})/i,
+      'JIS': /^(JIS|SC[MR]|SNC)/i,
+      'ASTM': /^(ASTM|A[0-9])/i,
+      'BS': /^(BS|[0-9]{3}M[0-9])/i,
+      'AFNOR': /^(XC|Z[0-9])/i
+    };
+    
+    // Tester chaque pattern
+    for (const [standard, pattern] of Object.entries(patterns)) {
+      if (pattern.test(gradeUpper)) {
+        return standard;
+      }
+    }
+    
+    // Par défaut OTHER
+    return 'OTHER';
+  }
+
+  /**
+   * Normalise le nom du pays selon les valeurs ENUM attendues
+   * @param {string} country - Nom du pays
+   * @returns {string} Pays normalisé
+   */
+  normalizeCountry(country) {
+    if (!country || country.trim() === '') return 'OTHER';
+    
+    const countryMap = {
+      'TAÏWAN': 'REPUBLIC_OF_CHINA',
+      'TAIWAN': 'REPUBLIC_OF_CHINA',
+      'FRANCE': 'FRANCE',
+      'USA': 'USA',
+      'UK': 'UNITED_KINGDOM',
+      'GERMANY': 'GERMANY',
+      'ITALY': 'ITALY',
+      'SPAIN': 'SPAIN',
+      'CHINA': 'CHINA',
+      'JAPAN': 'JAPAN',
+      'KOREA': 'SOUTH_KOREA',
+      'IRELAND': 'REPUBLIC_OF_IRELAND',
+      'POLAND': 'POLAND'
+    };
+    
+    const normalized = country.toUpperCase().trim();
+    return countryMap[normalized] || 'OTHER';
   }
 
   /**
@@ -36,6 +235,9 @@ class ETLLoader {
     console.log('🚀 Début du chargement ETL...');
     
     try {
+      // 0. Initialiser le cache ENUM
+      await this.initializeEnumCache();
+
       // 1. Charger et parser le CSV
       console.log('📖 Lecture du fichier CSV...');
       const data = await this.readCSV(csvFilePath);
@@ -45,23 +247,19 @@ class ETLLoader {
       console.log('🔧 Création des aciers manquants...');
       await this.createMissingSteel(data);
 
-      // 3. Créer les valeurs ENUM manquantes pour designation
-      console.log('📝 Création des ENUMs designation manquants...');
-      await this.createMissingDesignationEnums(data);
-
-      // 4. Créer tous les clients uniques
+      // 3. Créer les clients uniques
       console.log('👥 Création des clients...');
       await this.createClients(data);
 
-      // 5. Créer les commandes (demandes d'essai)
+      // 4. Créer les commandes (demandes d'essai)
       console.log('📋 Création des commandes...');
       await this.createOrders(data);
 
-      // 6. Créer les pièces uniques
+      // 5. Créer les pièces uniques
       console.log('🔧 Création des pièces...');
       await this.createParts(data);
 
-      // 7. Créer les tests
+      // 6. Créer les tests
       console.log('🧪 Création des tests...');
       await this.createTests(data);
 
@@ -130,15 +328,34 @@ class ETLLoader {
     const existingGrades = new Set(existingSteel.steels.map(s => s.steel?.grade).filter(Boolean));
 
     let createdCount = 0;
+    let familyAddedCount = 0;
+    let standardAddedCount = 0;
+    
     // Créer les aciers manquants
     for (const grade of uniqueSteel) {
       try {
         if (!existingGrades.has(grade)) {
+          // Déterminer automatiquement la famille et le standard
+          const autoFamily = this.determineSteelFamily(grade);
+          const autoStandard = this.determineSteelStandard(grade);
+          
+          // Vérifier si la famille existe dans les ENUM, sinon l'ajouter
+          const familyAdded = await this.addEnumValueIfNeeded('steels', 'family', autoFamily, this.enumCache.steelFamily);
+          if (familyAdded) {
+            familyAddedCount++;
+          }
+          
+          // Vérifier si le standard existe dans les ENUM, sinon l'ajouter
+          const standardAdded = await this.addEnumValueIfNeeded('steels', 'standard', autoStandard, this.enumCache.steelStandard);
+          if (standardAdded) {
+            standardAddedCount++;
+          }
+          
           const steelData = {
             name: `Acier ${grade}`,
             grade: grade,
-            family: 'Low_Alloy',  // ✅ Valeur ENUM valide selon la DB
-            standard: 'EN',   // ✅ Valeur ENUM valide selon la DB
+            family: autoFamily,
+            standard: autoStandard,
             description: `Acier importé via ETL le ${new Date().toISOString().split('T')[0]}`,
             equivalents: [],
             chemistery: null,
@@ -147,7 +364,7 @@ class ETLLoader {
 
           const createdSteel = await steelService.createSteel(steelData);
           this.steelsMap.set(grade, createdSteel.id);
-          console.log(`   ✅ Acier créé : ${grade} (ID: ${createdSteel.id})`);
+          console.log(`   ✅ Acier créé : ${grade} (Famille: ${autoFamily}, Standard: ${autoStandard}, ID: ${createdSteel.id})`);
           createdCount++;
         } else {
           // Récupérer l'ID de l'acier existant
@@ -165,10 +382,16 @@ class ETLLoader {
     }
 
     console.log(`   📈 ${createdCount} nouveaux aciers créés, ${uniqueSteel.size - createdCount} aciers existants`);
+    if (familyAddedCount > 0) {
+      console.log(`   🔧 ${familyAddedCount} nouvelles familles d'acier ajoutées aux ENUM`);
+    }
+    if (standardAddedCount > 0) {
+      console.log(`   🔧 ${standardAddedCount} nouveaux standards d'acier ajoutés aux ENUM`);
+    }
   }
 
   /**
-   * Crée les valeurs ENUM manquantes pour la colonne designation
+   * DEPRECATED - Ne plus utiliser, géré automatiquement
    * @param {Array} data - Données du CSV
    */
   async createMissingDesignationEnums(data) {
@@ -235,6 +458,7 @@ class ETLLoader {
   async createClients(data) {
     // Extraire les clients uniques
     const uniqueClients = new Map();
+    let countryAddedCount = 0;
     
     data.forEach(row => {
       const clientName = row.client?.trim();
@@ -242,9 +466,12 @@ class ETLLoader {
       const city = row.city?.trim();
       
       if (clientName && !uniqueClients.has(clientName)) {
+        // Normaliser le pays
+        const normalizedCountry = this.normalizeCountry(country);
+        
         uniqueClients.set(clientName, {
           name: clientName,
-          country: country || 'OTHER', // Valeur par défaut si pays manquant
+          country: normalizedCountry,
           city: city || null,
           client_group: null,
           address: null,
@@ -258,14 +485,24 @@ class ETLLoader {
     // Créer les clients un par un
     for (const [clientName, clientData] of uniqueClients) {
       try {
+        // Vérifier si le pays existe dans les ENUM, sinon l'ajouter
+        const countryAdded = await this.addEnumValueIfNeeded('clients', 'country', clientData.country, this.enumCache.clientCountry);
+        if (countryAdded) {
+          countryAddedCount++;
+        }
+        
         const createdClient = await clientService.createClient(clientData);
         this.clientsMap.set(clientName, createdClient.id);
-        console.log(`   ✅ Client créé : ${clientName} (ID: ${createdClient.id})`);
+        console.log(`   ✅ Client créé : ${clientName} (Pays: ${clientData.country}, ID: ${createdClient.id})`);
       } catch (error) {
         const errorMsg = `Erreur création client "${clientName}": ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
         this.errors.push(errorMsg);
       }
+    }
+    
+    if (countryAddedCount > 0) {
+      console.log(`   🔧 ${countryAddedCount} nouveaux pays ajoutés aux ENUM`);
     }
   }
 
@@ -391,9 +628,17 @@ class ETLLoader {
 
     console.log(`   📊 ${uniqueParts.size} pièces uniques trouvées`);
 
+    let designationAddedCount = 0;
+    
     // Créer les pièces une par une
     for (const [partKey, partData] of uniqueParts) {
       try {
+        // Vérifier si la désignation existe dans les ENUM, sinon l'ajouter
+        const designationAdded = await this.addEnumValueIfNeeded('parts', 'designation', partData.designation, this.enumCache.partDesignation);
+        if (designationAdded) {
+          designationAddedCount++;
+        }
+        
         const createdPart = await partService.createPart(partData);
         this.partsMap.set(partKey, createdPart.id);
         console.log(`   ✅ Pièce créée : ${partData.designation} (ID: ${createdPart.id})`);
@@ -402,6 +647,10 @@ class ETLLoader {
         console.error(`   ❌ ${errorMsg}`);
         this.errors.push(errorMsg);
       }
+    }
+    
+    if (designationAddedCount > 0) {
+      console.log(`   🔧 ${designationAddedCount} nouvelles désignations ajoutées aux ENUM`);
     }
   }
 

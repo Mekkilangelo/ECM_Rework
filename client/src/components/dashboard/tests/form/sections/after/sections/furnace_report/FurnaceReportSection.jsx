@@ -6,7 +6,7 @@ import fileService from '../../../../../../../../services/fileService';
 import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
 
 const FurnaceReportSection = ({
-  testNodeId,
+  trialNodeId,
   onFileAssociationNeeded,
   viewMode = false
 }) => {
@@ -23,28 +23,27 @@ const FurnaceReportSection = ({
   
   // Configuration des différentes vues
   const views = [
-    { id: 'heating', name: t('tests.after.furnaceReport.heating') },
-    { id: 'cooling', name: t('tests.after.furnaceReport.cooling') },
-    { id: 'alarms', name: t('tests.after.furnaceReport.alarms') },
-    { id: 'datapaq', name: t('tests.after.furnaceReport.datapaq') },
+    { id: 'heating', name: t('trials.after.furnaceReport.heating') },
+    { id: 'cooling', name: t('trials.after.furnaceReport.cooling') },
+    { id: 'alarms', name: t('trials.after.furnaceReport.alarms') },
+    { id: 'datapaq', name: t('trials.after.furnaceReport.datapaq') },
   ];
   
   // Charger les fichiers existants
   useEffect(() => {
-    if (testNodeId) {
+    if (trialNodeId) {
       loadExistingFiles();
     }
-  }, [testNodeId]);
+  }, [trialNodeId]);
     const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getNodeFiles(testNodeId, { category: 'furnace_report' });
+      const response = await fileService.getNodeFiles(trialNodeId, { category: 'furnace_report' });
       if (process.env.NODE_ENV === 'development') {
-        console.log(t('tests.after.furnaceReport.filesResponse'), response.data);
       }
       
       // Vérifier que la requête a réussi
       if (!response.data || response.data.success === false) {
-        console.error(t('tests.after.furnaceReport.loadError'), response.data?.message);
+        console.error(t('trials.after.furnaceReport.loadError'), response.data?.message);
         return;
       }
       
@@ -62,7 +61,7 @@ const FurnaceReportSection = ({
       });
       setUploadedFiles(filesBySubcategory);
     } catch (error) {
-      console.error(t('tests.after.furnaceReport.loadError'), error);
+      console.error(t('trials.after.furnaceReport.loadError'), error);
     }
   };
   
@@ -100,7 +99,7 @@ const FurnaceReportSection = ({
   };
     // Méthode pour associer les fichiers lors de la soumission du formulaire
   // Utilisez useCallback pour mémoriser cette fonction
-  const associateFiles = useCallback(async (newTestNodeId) => {
+  const associateFiles = useCallback(async (newTrialNodeId) => {
     try {
       // Utilisez la référence pour obtenir les tempIds les plus récents
       const currentTempIds = tempIdsRef.current;
@@ -108,14 +107,14 @@ const FurnaceReportSection = ({
       
       // Parcourir tous les tempIds et les associer
       for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        const response = await fileService.associateFiles(newTestNodeId, tempId, {
+        const response = await fileService.associateFiles(newTrialNodeId, tempId, {
           category: 'furnace_report',
           subcategory
         });
         
         // Vérifier que l'association a réussi
         if (!response.data || response.data.success === false) {
-          console.error(t('tests.after.furnaceReport.associateError'), response.data?.message);
+          console.error(t('trials.after.furnaceReport.associateError'), response.data?.message);
           allSuccessful = false;
         }
       }
@@ -125,17 +124,17 @@ const FurnaceReportSection = ({
         setTempIds({});
         
         // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
-        if (newTestNodeId === testNodeId) {
+        if (newTrialNodeId === trialNodeId) {
           loadExistingFiles();
         }
       }
       
       return allSuccessful;
     } catch (error) {
-      console.error(t('tests.after.furnaceReport.associateError'), error);
+      console.error(t('trials.after.furnaceReport.associateError'), error);
       return false;
     }
-  }, [testNodeId]); // Ne dépend que de testNodeId, pas de tempIds
+  }, [trialNodeId]); // Ne dépend que de trialNodeId, pas de tempIds
   
   // Exposer la méthode d'association via le prop onFileAssociationNeeded
   // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
@@ -152,7 +151,7 @@ const FurnaceReportSection = ({
           key={view.id}
           title={view.name}
           isExpandedByDefault={false}
-          sectionId={`test-furnace-report-${view.id}`}
+          sectionId={`trial-furnace-report-${view.id}`}
           rememberState={false}
           className="mb-3"
           level={1}
@@ -160,7 +159,7 @@ const FurnaceReportSection = ({
           <div className="p-2">            <FileUploader
               category="furnace_report"
               subcategory={view.id}
-              nodeId={testNodeId}
+              nodeId={trialNodeId}
               onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
               maxFiles={50}
               acceptedFileTypes={{
@@ -171,7 +170,7 @@ const FurnaceReportSection = ({
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
                 'image/*': ['.png', '.jpg', '.jpeg']
               }}
-              title={t('tests.after.furnaceReport.import', { name: view.name.toLowerCase() })}
+              title={t('trials.after.furnaceReport.import', { name: view.name.toLowerCase() })}
               fileIcon={faFile}
               height="150px"
               width="100%"

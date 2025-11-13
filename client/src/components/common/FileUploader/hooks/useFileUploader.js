@@ -51,7 +51,6 @@ const useFileUploader = ({
       // Mode standby
     standbyMode,
     getPendingFiles: () => {
-      console.log("📋 [useFileUploader] getPendingFiles called, files:", files.map(f => f.name));
       return files;
     },
     uploadPendingFiles: fileUpload.uploadPendingFiles,

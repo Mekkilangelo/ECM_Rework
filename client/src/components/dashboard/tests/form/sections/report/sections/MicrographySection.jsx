@@ -41,20 +41,24 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
   const extractPhotoMetadata = (photo) => {
     if (photo && typeof photo === 'object') {
       const category = photo.category || photo.originalData?.category || '';
+      const subcategory = photo.subcategory || photo.originalData?.subcategory || '';
       
-      // Extract resultIndex and sampleIndex from category
-      const match = category.match(/micrographs-result-(\d+)-sample-(\d+)/);
+      // Extract resultIndex, sampleIndex, and magnification from subcategory
+      // Format: "result-0-sample-1-x100"
+      const match = subcategory.match(/result-(\d+)-sample-(\d+)-(.+)/);
       const resultIndex = match ? parseInt(match[1]) : 0;
       const sampleIndex = match ? parseInt(match[2]) : 0;
+      const magnification = match ? match[3] : 'other';
       
       return {
         resultIndex,
         sampleIndex,
-        magnification: photo.subcategory || photo.originalData?.subcategory || 'other',
-        category
+        magnification,
+        category,
+        subcategory
       };
     }
-    return { resultIndex: 0, sampleIndex: 0, magnification: 'other', category: '' };
+    return { resultIndex: 0, sampleIndex: 0, magnification: 'other', category: '', subcategory: '' };
   };
   // Organize photos by result > sample > magnification
   const organizePhotosByHierarchy = (photos) => {
@@ -455,7 +459,7 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
                     const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                     
                     if (e.target.src !== alternateUrl) {
-                      console.log(`Trying alternative URL: ${alternateUrl}`);
+                      
                       e.target.src = alternateUrl;
                       return;
                     }

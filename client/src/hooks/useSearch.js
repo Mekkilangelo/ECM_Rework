@@ -10,7 +10,7 @@ const useSearch = () => {
   
   const [searchParams, setSearchParams] = useState({
     query: '',
-    entityTypes: ['clients', 'orders', 'parts', 'tests', 'steels'],
+    entityTypes: ['clients', 'orders', 'parts', 'trials', 'steels'],
     page: 1,
     limit: 20
   });
@@ -42,14 +42,14 @@ const useSearch = () => {
     minCoreHardness: '',
     maxCoreHardness: '',
     
-    // Tests
-    testStatus: '',
-    testLocation: '',
+    // Trials
+    trialStatus: '',
+    trialLocation: '',
     mountingType: '',
     processType: '',
     positionType: '',
-    testDateFrom: null,
-    testDateTo: null,
+    trialDateFrom: null,
+    trialDateTo: null,
     loadNumber: '',
     furnaceType: '',
     recipeNumber: '',
@@ -67,7 +67,7 @@ const useSearch = () => {
     clients: [],
     orders: [],
     parts: [],
-    tests: [],
+    trials: [],
     steels: []
   });
 
@@ -309,14 +309,14 @@ const useSearch = () => {
       minCoreHardness: '',
       maxCoreHardness: '',
       
-      // Tests
-      testStatus: '',
-      testLocation: '',
+      // Trials
+      trialStatus: '',
+      trialLocation: '',
       mountingType: '',
       processType: '',
       positionType: '',
-      testDateFrom: null,
-      testDateTo: null,
+      trialDateFrom: null,
+      trialDateTo: null,
       loadNumber: '',
       furnaceType: '',
       recipeNumber: '',

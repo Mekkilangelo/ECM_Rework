@@ -34,13 +34,13 @@ const OilQuenchSection = ({
 
   return (
     <>
-      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.oil.speedParameters')}</h5>
+      <h5 className="mt-4 mb-2">{t('trials.before.recipeData.quenchData.oil.speedParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
-            <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
-            <th>{t('tests.before.recipeData.quenchData.oil.speed')} (rpm)</th>
+            <th style={{ width: '60px' }}>{t('trials.before.recipeData.quenchData.common.step')}</th>
+            <th>{t('trials.before.recipeData.quenchData.common.duration')} (s)</th>
+            <th>{t('trials.before.recipeData.quenchData.oil.speed')} (rpm)</th>
             {!viewMode && <th style={{ width: '80px' }}>{t('common.actions')}</th>}
           </tr>
         </thead>
@@ -94,16 +94,16 @@ const OilQuenchSection = ({
             onClick={handleOilQuenchSpeedAdd}
             disabled={loading}
           >
-            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.before.recipeData.quenchData.common.addStep')}
           </Button>
         </div>
       )}
 
-      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.oil.parameters')}</h5>
+      <h5 className="mt-4 mb-2">{t('trials.before.recipeData.quenchData.oil.parameters')}</h5>
       <Row>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.temperature')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.temperature')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilTemperature"
@@ -118,7 +118,7 @@ const OilQuenchSection = ({
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.tempUnit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.tempUnit')}</Form.Label>
             <Select
               name="quenchData.oilTempUnit"
               value={formData.quenchData?.oilTempUnit 
@@ -138,13 +138,13 @@ const OilQuenchSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
+              placeholder={t('trials.before.recipeData.quenchData.common.selectUnit')}
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.inertingPressure')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.inertingPressure')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilInertingPressure"
@@ -161,7 +161,7 @@ const OilQuenchSection = ({
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.inertingDelay')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.inertingDelay')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilInertingDelay"
@@ -176,7 +176,7 @@ const OilQuenchSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.delayUnit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.delayUnit')}</Form.Label>
             <Select
               name="quenchData.oilInertingDelayUnit"
               value={formData.quenchData?.oilInertingDelayUnit 
@@ -196,13 +196,13 @@ const OilQuenchSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
+              placeholder={t('trials.before.recipeData.quenchData.common.selectUnit')}
             />
           </Form.Group>
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.drippingTime')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.drippingTime')}</Form.Label>
             <Form.Control
               type="number"
               name="quenchData.oilDrippingTime"
@@ -217,7 +217,7 @@ const OilQuenchSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.quenchData.oil.drippingUnit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.quenchData.oil.drippingUnit')}</Form.Label>
             <Select
               name="quenchData.oilDrippingTimeUnit"
               value={formData.quenchData?.oilDrippingTimeUnit
@@ -237,7 +237,7 @@ const OilQuenchSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.quenchData.common.selectUnit')}
+              placeholder={t('trials.before.recipeData.quenchData.common.selectUnit')}
             />
           </Form.Group>
         </Col>

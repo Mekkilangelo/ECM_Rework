@@ -39,26 +39,26 @@ class DatabaseCleaner {
    * Affiche un résumé avant nettoyage
    */
   async showSummary() {
-    console.log('📊 État actuel de la base de données :\n');
-    
+    console.log('\nResume des donnees en base:');
+    console.log('Tables a nettoyer:');
     for (const table of this.tablesToClean) {
       try {
         const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
         const count = results[0].count;
-        console.log(`   ${table}: ${count} enregistrements`);
+        console.log(`  - ${table}: ${count} lignes`);
       } catch (error) {
-        console.log(`   ${table}: ❌ Erreur (${error.message})`);
+        console.error(`  - ${table}: Erreur`);
       }
     }
 
-    console.log('\n📋 Tables préservées :');
+    console.log('\nTables preservees:');
     for (const table of this.preservedTables) {
       try {
         const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
         const count = results[0].count;
-        console.log(`   ${table}: ${count} enregistrements (préservé)`);
+        console.log(`  - ${table}: ${count} lignes`);
       } catch (error) {
-        console.log(`   ${table}: ❌ Table non trouvée`);
+        console.error(`  - ${table}: Erreur`);
       }
     }
   }
@@ -68,9 +68,9 @@ class DatabaseCleaner {
    */
   async disableForeignKeyChecks() {
     try {
-      console.log('🔓 Désactivation des contraintes de clés étrangères...');
+      
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-      console.log('   ✅ Contraintes désactivées');
+      
     } catch (error) {
       console.error('   ❌ Erreur désactivation contraintes :', error.message);
       throw error;
@@ -82,9 +82,9 @@ class DatabaseCleaner {
    */
   async enableForeignKeyChecks() {
     try {
-      console.log('🔒 Réactivation des contraintes de clés étrangères...');
+      
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-      console.log('   ✅ Contraintes réactivées');
+      
     } catch (error) {
       console.error('   ❌ Erreur réactivation contraintes :', error.message);
       throw error;
@@ -97,7 +97,7 @@ class DatabaseCleaner {
   async truncateTable(tableName) {
     try {
       await sequelize.query(`TRUNCATE TABLE ${tableName}`);
-      console.log(`   ✅ ${tableName} vidée`);
+      
       return true;
     } catch (error) {
       console.error(`   ❌ Erreur vidage ${tableName}: ${error.message}`);
@@ -109,7 +109,7 @@ class DatabaseCleaner {
    * Nettoie toutes les tables (sauf celles préservées)
    */
   async cleanDatabase() {
-    console.log('\n🧹 Nettoyage de la base de données...\n');
+    
     
     let successCount = 0;
     let errorCount = 0;
@@ -123,7 +123,7 @@ class DatabaseCleaner {
 
       // Vider les tables dans l'ordre
       for (const table of this.tablesToClean) {
-        console.log(`🗑️  Nettoyage de la table "${table}"...`);
+        
         const success = await this.truncateTable(table);
         if (success) {
           successCount++;
@@ -137,10 +137,10 @@ class DatabaseCleaner {
 
       await transaction.commit();
 
-      console.log('\n📈 Résumé du nettoyage :');
-      console.log(`   ✅ ${successCount} tables nettoyées avec succès`);
-      console.log(`   ❌ ${errorCount} erreurs rencontrées`);
-      console.log(`   🛡️  ${this.preservedTables.length} tables préservées`);
+      
+      
+      
+      
 
     } catch (error) {
       await transaction.rollback();
@@ -161,7 +161,7 @@ class DatabaseCleaner {
    * Remet à zéro les auto-increment
    */
   async resetAutoIncrements() {
-    console.log('\n🔄 Remise à zéro des auto-increments...');
+    
     
     const tablesWithAutoIncrement = ['nodes', 'users', 'logs'];
     
@@ -169,9 +169,9 @@ class DatabaseCleaner {
       if (!this.preservedTables.includes(table) || table === 'nodes') {
         try {
           await sequelize.query(`ALTER TABLE ${table} AUTO_INCREMENT = 1`);
-          console.log(`   ✅ ${table} auto-increment remis à 1`);
+          
         } catch (error) {
-          console.log(`   ⚠️  ${table}: ${error.message}`);
+          
         }
       }
     }
@@ -181,7 +181,7 @@ class DatabaseCleaner {
    * Vérifie l'état après nettoyage
    */
   async verifyCleanup() {
-    console.log('\n🔍 Vérification après nettoyage :\n');
+    
     
     let totalRemaining = 0;
     
@@ -192,21 +192,21 @@ class DatabaseCleaner {
         totalRemaining += count;
         
         if (count === 0) {
-          console.log(`   ✅ ${table}: vide`);
+          
         } else {
-          console.log(`   ⚠️  ${table}: ${count} enregistrements restants`);
+          
         }
       } catch (error) {
-        console.log(`   ❌ ${table}: Erreur vérification`);
+        
       }
     }
 
-    console.log(`\n📊 Total enregistrements restants dans les tables nettoyées : ${totalRemaining}`);
+    
     
     if (totalRemaining === 0) {
-      console.log('🎉 Nettoyage réussi ! Toutes les tables ciblées sont vides.');
+      
     } else {
-      console.log('⚠️  Certaines tables contiennent encore des données.');
+      
     }
   }
 
@@ -215,7 +215,7 @@ class DatabaseCleaner {
    */
   async clean() {
     try {
-      console.log('🚀 Début du nettoyage de la base de données\n');
+      
       
       // 1. Afficher le résumé actuel
       await this.showSummary();
@@ -223,7 +223,7 @@ class DatabaseCleaner {
       // 2. Demander confirmation
       const confirmed = await this.askConfirmation();
       if (!confirmed) {
-        console.log('❌ Nettoyage annulé par l\'utilisateur');
+        
         return;
       }
 
@@ -236,7 +236,7 @@ class DatabaseCleaner {
       // 5. Vérifier le résultat
       await this.verifyCleanup();
 
-      console.log('\n✅ Nettoyage terminé avec succès !');
+      
 
     } catch (error) {
       console.error('\n💥 Erreur fatale pendant le nettoyage :', error);
@@ -267,14 +267,14 @@ class DatabaseCleaner {
  */
 async function cleanSilent() {
   const cleaner = new DatabaseCleaner();
-  console.log('🤖 Mode silencieux - nettoyage automatique');
+  
   
   await cleaner.showSummary();
   await cleaner.cleanDatabase();
   await cleaner.resetAutoIncrements();
   await cleaner.verifyCleanup();
   
-  console.log('✅ Nettoyage silencieux terminé');
+  
 }
 
 /**

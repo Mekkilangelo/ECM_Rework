@@ -2,8 +2,42 @@
 import { useCallback } from 'react';
 import useGlobalFormHandlers from '../../../../../hooks/useFormHandlers';
 
-const usePartHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}, viewMode = false) => {  // Récupérer les gestionnaires de formulaire globaux
+const usePartHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}, viewMode = false) => {
+  // Récupérer les gestionnaires de formulaire globaux
   const globalHandlers = useGlobalFormHandlers(formData, setFormData, errors, setErrors, refreshOptionsFunctions);
+  
+  // Override handleSelectChange pour gérer le cas spécifique du steel
+  const handleSelectChange = useCallback((selectedOption, fieldInfo) => {
+    const name = typeof fieldInfo === 'string' 
+      ? fieldInfo 
+      : (fieldInfo.name || fieldInfo.field || null);
+    
+    // Cas spécifique pour la sélection de l'acier
+    if (name === 'steel') {
+      if (selectedOption) {
+        setFormData(prev => ({
+          ...prev,
+          steel: selectedOption.value,          // Le grade de l'acier
+          steelId: selectedOption.nodeId || null  // L'ID du nœud de l'acier
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          steel: null,
+          steelId: null
+        }));
+      }
+      
+      // Effacer l'erreur si elle existe
+      if (errors && errors.steel) {
+        setErrors(prev => ({ ...prev, steel: null }));
+      }
+      return;
+    }
+    
+    // Pour tous les autres champs, utiliser le handler global
+    globalHandlers.handleSelectChange(selectedOption, fieldInfo);
+  }, [setFormData, errors, setErrors, globalHandlers]);
   
   // Handlers pour les spécifications de dureté
   const addHardnessSpec = useCallback(() => {
@@ -107,6 +141,7 @@ const usePartHandlers = (formData, setFormData, errors, setErrors, refreshOption
   
   return {
     ...globalHandlers,
+    handleSelectChange, // Override le handleSelectChange global
     // Handlers spécifiques aux spécifications
     addHardnessSpec,
     removeHardnessSpec,

@@ -1,0 +1,230 @@
+/* TrialResultsGrid - Affichage des résultats en grille de cartes */
+
+.trial-results-grid {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cartes d'essais */
+.trial-card {
+  border: none;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.trial-card:hover {
+  transform: translateY(-5px);
+}
+
+.hover-shadow {
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.trial-card:hover.hover-shadow {
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.trial-card .card-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.trial-card .card-header h6 {
+  color: #212529;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.trial-card .card-body {
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
+.trial-card .card-footer {
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+}
+
+/* Lignes d'information */
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Badges */
+.trial-card .badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.375rem;
+}
+
+/* Sections avec bordures */
+.trial-card .border-bottom:last-of-type {
+  border-bottom: none !important;
+}
+
+/* Boutons */
+.trial-card .btn {
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.trial-card .btn:hover {
+  transform: translateX(3px);
+}
+
+/* Pagination */
+.trial-results-grid .pagination {
+  margin-top: 2rem;
+}
+
+.trial-results-grid .page-link {
+  color: #dc3545;
+  border-radius: 0.375rem;
+  margin: 0 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.trial-results-grid .page-link:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+  transform: translateY(-2px);
+}
+
+.trial-results-grid .page-item.active .page-link {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.trial-results-grid .page-item.disabled .page-link {
+  cursor: not-allowed;
+}
+
+/* Animations de chargement */
+.trial-card .skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .trial-card .card-body {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .trial-card {
+    margin-bottom: 1rem;
+  }
+
+  .trial-card .card-header h6 {
+    font-size: 0.9375rem;
+  }
+
+  .trial-card .card-body {
+    padding: 0.75rem;
+  }
+
+  .trial-card .badge {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .trial-results-grid .pagination {
+    margin-top: 1.5rem;
+  }
+
+  .trial-results-grid .page-link {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .trial-card .card-footer {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.5rem;
+  }
+
+  .trial-card .card-footer .btn {
+    width: 100%;
+  }
+
+  .trial-card .card-footer small {
+    text-align: center;
+  }
+}
+
+/* Effets de texte tronqué */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Icônes colorées */
+.trial-card .text-primary {
+  color: #0d6efd !important;
+}
+
+.trial-card .text-success {
+  color: #198754 !important;
+}
+
+.trial-card .text-warning {
+  color: #ffc107 !important;
+}
+
+.trial-card .text-danger {
+  color: #dc3545 !important;
+}
+
+.trial-card .text-info {
+  color: #0dcaf0 !important;
+}
+
+.trial-card .text-secondary {
+  color: #6c757d !important;
+}
+
+.trial-card .text-muted {
+  color: #6c757d !important;
+}
+
+/* Dividers */
+.trial-card .border-top,
+.trial-card .border-bottom {
+  border-color: #e9ecef !important;
+}

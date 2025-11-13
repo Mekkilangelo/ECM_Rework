@@ -1,9 +1,9 @@
 /**
- * Service de génération de rapports de tests
- * Responsabilité unique : Agréger les données nécessaires pour générer un rapport de test
+ * Service de génération de rapports de trials
+ * Responsabilité unique : Agréger les données nécessaires pour générer un rapport de trial
  */
 
-const { node, test, closure, part, client, file } = require('../models');
+const { node, trial, closure, part, client, file } = require('../models');
 const { Op } = require('sequelize');
 const { NotFoundError } = require('../utils/errors');
 const logger = require('../utils/logger');
@@ -33,7 +33,7 @@ const getTestHierarchy = async (testId) => {
       if (ancestorNode && ancestorNode.type === 'part') {
         partNode = await node.findOne({
           where: { id: ancestorNode.id, type: 'part' },
-          include: [{ model: part }]
+          include: [{ model: part, as: 'part' }]
         });
         break;
       }
@@ -202,7 +202,7 @@ const buildBaseTestData = (testNode) => {
   return {
     testId: testNode.id,
     testName: testNode.name,
-    testDate: testData?.test_date || null,
+    testDate: testData?.trial_date || null,
     testCode: testData?.test_code || null,
     loadNumber: testData?.load_number || null,
     status: testData?.status || null,
@@ -213,20 +213,20 @@ const buildBaseTestData = (testNode) => {
 /**
  * Construit les données de recette
  * @param {Object} testData - Données du test
- * @returns {Object}
+ * @returns {Object} Données de recette
  */
-const buildRecipeData = (testData) => {
-  const recipeData = parseJsonField(testData?.recipe_data, 'recipe_data');
+const buildRecipeData = (trialData) => {
+  const recipeData = parseJsonField(trialData?.recipe_data, 'recipe_data');
   
   return {
     recipeData,
-    furnaceData: parseJsonField(testData?.furnace_data, 'furnace_data')
+    furnaceData: parseJsonField(trialData?.furnace_data, 'furnace_data')
   };
 };
 
 /**
  * Construit les données de trempe
- * @param {Object} testData - Données du test
+ * @param {Object} trialData - Données du trial
  * @returns {Object}
  */
 const buildQuenchData = (testData) => {
@@ -249,19 +249,19 @@ const buildResultsData = (testData) => {
 /**
  * Génère les données complètes d'un rapport de test
  * @param {number} testId - ID du test
- * @param {Array<string>} selectedSections - Sections à inclure dans le rapport
- * @returns {Promise<Object>} Données du rapport
+ * @param {Array} selectedSections - Sections à inclure dans le rapport
+ * @returns {Object} Données du rapport
  */
-const getTestReportData = async (testId, selectedSections = []) => {
+const getTrialReportData = async (trialId, selectedSections = []) => {
   try {
-    // 1. Récupérer le test
-    const testNode = await node.findOne({
-      where: { id: testId, type: 'test' },
-      include: [{ model: test }]
+    // 1. Récupérer le trial
+    const trialNode = await node.findOne({
+      where: { id: trialId, type: 'trial' },
+      include: [{ model: trial }]
     });
     
-    if (!testNode || !testNode.test) {
-      throw new NotFoundError('Test non trouvé');
+    if (!trialNode || !trialNode.trial) {
+      throw new NotFoundError('Trial non trouvé');
     }
 
     // 2. Normaliser les sections sélectionnées
@@ -322,8 +322,8 @@ const getTestReportData = async (testId, selectedSections = []) => {
     return reportData;
 
   } catch (error) {
-    logger.error('Erreur génération rapport test', { 
-      testId, 
+    logger.warn('Erreur récupération hiérarchie trial', { 
+      trialId, 
       error: error.message 
     });
     throw error;
@@ -331,12 +331,12 @@ const getTestReportData = async (testId, selectedSections = []) => {
 };
 
 module.exports = {
-  getTestReportData,
-  getTestHierarchy,
+  getTrialReportData,
+  getTrialHierarchy: getTestHierarchy,
   getSectionFiles,
   // Export des fonctions utilitaires pour tests unitaires
   parseJsonField,
-  buildBaseTestData,
+  buildBaseTrialData: buildBaseTestData,
   buildRecipeData,
   buildQuenchData,
   buildResultsData

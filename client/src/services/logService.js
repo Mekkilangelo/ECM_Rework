@@ -35,19 +35,19 @@ class LogService {
         if (value !== null && value !== undefined && value !== '') {
           queryParams.append(key, value);
         }
-      });      console.log('LogService: Making request to /logs with params:', params);
+      });      
       const response = await api.get(`/logs?${queryParams.toString()}`);
-      console.log('LogService: Response received:', response);
+      
       console.log('LogService: Response data structure:', {
         hasData: !!response.data,
         dataKeys: response.data ? Object.keys(response.data) : [],
         dataType: typeof response.data
       });
-      console.log('LogService: Full response data:', response.data);
+      
       
       // Extraire les données de la structure API standardisée
       if (response.data && response.data.success && response.data.data) {
-        console.log('LogService: Returning extracted data:', response.data.data);
+        
         return response.data.data;
       } else {
         console.error('LogService: Unexpected response structure');
@@ -75,14 +75,14 @@ class LogService {
       const queryParams = new URLSearchParams();
       
       if (dateFrom) queryParams.append('dateFrom', dateFrom);
-      if (dateTo) queryParams.append('dateTo', dateTo);      console.log('LogService: Making request to /logs/stats');
+      if (dateTo) queryParams.append('dateTo', dateTo);      
       const response = await api.get(`/logs/stats?${queryParams.toString()}`);
-      console.log('LogService: Stats response received:', response);
-      console.log('LogService: Full stats data:', response.data);
+      
+      
       
       // Extraire les données de la structure API standardisée
       if (response.data && response.data.success && response.data.data) {
-        console.log('LogService: Returning extracted stats:', response.data.data);
+        
         return response.data.data;
       } else {
         console.error('LogService: Unexpected stats response structure');

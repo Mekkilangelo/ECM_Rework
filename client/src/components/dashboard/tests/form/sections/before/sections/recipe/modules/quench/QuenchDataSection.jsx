@@ -60,7 +60,7 @@ const QuenchDataSection = ({
       >
         <Tab
           eventKey="gas"
-          title={renderTabTitle(t('tests.before.recipeData.quenchData.gas.title'), faWind, "gas")}
+          title={renderTabTitle(t('trials.before.recipeData.quenchData.gas.title'), faWind, "gas")}
         >
           <div className="fade-in tab-content-container">            <GasQuenchSection
               formData={formData}
@@ -80,7 +80,7 @@ const QuenchDataSection = ({
         </Tab>
         <Tab
           eventKey="oil"
-          title={renderTabTitle(t('tests.before.recipeData.quenchData.oil.title'), faOilCan, "oil")}
+          title={renderTabTitle(t('trials.before.recipeData.quenchData.oil.title'), faOilCan, "oil")}
         >
           <div className="fade-in tab-content-container">            <OilQuenchSection
               formData={formData}

@@ -41,13 +41,13 @@ const GasQuenchSection = ({
 
   return (
     <>
-      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.gas.speedParameters')}</h5>
+      <h5 className="mt-4 mb-2">{t('trials.before.recipeData.quenchData.gas.speedParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
-            <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
-            <th>{t('tests.before.recipeData.quenchData.gas.speed')} (rpm) </th>
+            <th style={{ width: '60px' }}>{t('trials.before.recipeData.quenchData.common.step')}</th>
+            <th>{t('trials.before.recipeData.quenchData.common.duration')} (s)</th>
+            <th>{t('trials.before.recipeData.quenchData.gas.speed')} (rpm) </th>
             {!viewMode && <th style={{ width: '80px' }}>{t('common.actions')}</th>}
           </tr>
         </thead>
@@ -101,18 +101,18 @@ const GasQuenchSection = ({
             onClick={handleGasQuenchSpeedAdd}
             disabled={loading}
           >
-            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.before.recipeData.quenchData.common.addStep')}
           </Button>
         </div>
       )}
 
-      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.quenchData.gas.pressureParameters')}</h5>
+      <h5 className="mt-4 mb-2">{t('trials.before.recipeData.quenchData.gas.pressureParameters')}</h5>
       <Table responsive bordered size="sm" className="mt-2">
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>{t('tests.before.recipeData.quenchData.common.step')}</th>
-            <th>{t('tests.before.recipeData.quenchData.common.duration')} (s)</th>
-            <th>{t('tests.before.recipeData.quenchData.gas.pressure')} (mb)</th>
+            <th style={{ width: '60px' }}>{t('trials.before.recipeData.quenchData.common.step')}</th>
+            <th>{t('trials.before.recipeData.quenchData.common.duration')} (s)</th>
+            <th>{t('trials.before.recipeData.quenchData.gas.pressure')} (mb)</th>
             {!viewMode && <th style={{ width: '80px' }}>{t('common.actions')}</th>}
           </tr>
         </thead>
@@ -166,7 +166,7 @@ const GasQuenchSection = ({
             onClick={handleGasQuenchPressureAdd}
             disabled={loading}
           >
-            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.quenchData.common.addStep')}
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.before.recipeData.quenchData.common.addStep')}
           </Button>
         </div>
       )}

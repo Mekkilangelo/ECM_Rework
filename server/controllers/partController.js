@@ -69,8 +69,6 @@ const getPartById = async (req, res, next) => {
     // Déléguer au service
     const part = await partService.getPartById(partId);
     
-    logger.debug('Part data sent to client:', part);
-    
     return apiResponse.success(res, part, 'Pièce récupérée avec succès');
   } catch (error) {
     logger.error(`Erreur lors de la récupération de la pièce #${req.params.partId}: ${error.message}`, error);

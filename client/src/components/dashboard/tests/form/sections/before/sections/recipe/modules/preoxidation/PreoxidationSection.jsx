@@ -20,11 +20,11 @@ const PreoxidationSection = ({
 
   return (
     <>
-      <h5 className="mt-3 mb-2">{t('tests.before.recipeData.preoxidation.title')}</h5>
+      <h5 className="mt-3 mb-2">{t('trials.before.recipeData.preoxidation.title')}</h5>
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.preoxidation.media')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.preoxidation.media')}</Form.Label>
             <Select
               name="recipeData.preoxMedia"
               value={getSelectedOption(coolingMediaOptions, formData.recipeData?.preoxMedia)}
@@ -42,7 +42,7 @@ const PreoxidationSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.preoxidation.media')}
+              placeholder={t('trials.before.recipeData.preoxidation.media')}
               className="react-select-container"
               classNamePrefix="react-select"
             />
@@ -50,7 +50,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.preoxidation.temperature')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.preoxidation.temperature')}</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.preoxTemp"
@@ -65,7 +65,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={2}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.preoxidation.unit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxTempUnit"
               value={formData.recipeData?.preoxTempUnit 
@@ -85,7 +85,7 @@ const PreoxidationSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.preoxidation.unit')}
+              placeholder={t('trials.before.recipeData.preoxidation.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
             />
@@ -93,7 +93,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={2}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.preoxidation.duration')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.preoxidation.duration')}</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.preoxDuration"
@@ -108,7 +108,7 @@ const PreoxidationSection = ({
         </Col>
         <Col md={2}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.preoxidation.unit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxDurationUnit"
               value={formData.recipeData?.preoxDurationUnit 
@@ -128,7 +128,7 @@ const PreoxidationSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.preoxidation.unit')}
+              placeholder={t('trials.before.recipeData.preoxidation.unit')}
               className="react-select-container"
               classNamePrefix="react-select"
             />

@@ -26,7 +26,7 @@ const BasicInfoSection = React.memo(({
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.basicInfo.loadNumber')}</Form.Label>            <Form.Control
+            <Form.Label>{t('trials.basicInfo.loadNumber')}</Form.Label>            <Form.Control
               type="text"
               name="loadNumber"
               value={formData.loadNumber || ''}
@@ -39,20 +39,21 @@ const BasicInfoSection = React.memo(({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.basicInfo.testDate')} <span className="text-danger fw-bold">*</span></Form.Label>            <Form.Control
+            <Form.Label>{t('trials.basicInfo.trialDate')} <span className="text-danger fw-bold">*</span></Form.Label>
+            <Form.Control
               type="date"
-              name="testDate"
-              value={formData.testDate || ''}
+              name="trialDate"
+              value={formData.trialDate || ''}
               onChange={handleChange}
               data-date-format={dateFormat}
               title={dateFormat}
-              isInvalid={!!errors.testDate}
+              isInvalid={!!errors.trialDate}
               readOnly={viewMode}
               style={viewMode ? readOnlyFieldStyle : {}}
             />
-            {errors.testDate && (
+            {errors.trialDate && (
               <Form.Control.Feedback type="invalid">
-                {t(errors.testDate)}
+                {t(errors.trialDate)}
               </Form.Control.Feedback>
             )}
           </Form.Group>
@@ -61,7 +62,7 @@ const BasicInfoSection = React.memo(({
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.basicInfo.location')}</Form.Label>            <Select
+            <Form.Label>{t('trials.basicInfo.location')}</Form.Label>            <Select
               name="location"
               value={getSelectedOption(locationOptions, formData.location)}
               onChange={(option) => handleSelectChange(option, { name: 'location' })}
@@ -77,7 +78,7 @@ const BasicInfoSection = React.memo(({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.basicInfo.selectLocation')}
+              placeholder={t('trials.basicInfo.selectLocation')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -87,7 +88,7 @@ const BasicInfoSection = React.memo(({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.basicInfo.status')}</Form.Label>            <Select
+            <Form.Label>{t('trials.basicInfo.status')}</Form.Label>            <Select
               name="status"
               value={getSelectedOption(statusOptions, formData.status)}
               onChange={(option) => handleSelectChange(option, { name: 'status' })}
@@ -103,7 +104,7 @@ const BasicInfoSection = React.memo(({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.basicInfo.selectStatus')}
+              placeholder={t('trials.basicInfo.selectStatus')}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
@@ -115,7 +116,7 @@ const BasicInfoSection = React.memo(({
       <Row>
         <Col md={12}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.basicInfo.description')}</Form.Label>            <Form.Control
+            <Form.Label>{t('trials.basicInfo.description')}</Form.Label>            <Form.Control
               as="textarea"
               name="description"
               value={formData.description || ''}

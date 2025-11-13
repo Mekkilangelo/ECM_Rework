@@ -4,6 +4,9 @@ node_modules/
 package-lock.json
 yarn.lock
 
+#bdd
+rework_db.sql
+
 
 # Fichiers d'environnement
 .env

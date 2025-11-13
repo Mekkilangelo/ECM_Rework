@@ -6,7 +6,7 @@ import fileService from '../../../../../../../../../services/fileService';
 import { faImage } from '@fortawesome/free-solid-svg-icons';
 
 const MicrographsSection = ({
-  testNodeId,
+  trialNodeId,
   resultIndex = 0,
   sampleIndex = 0,  // Ajout du sampleIndex
   onFileAssociationNeeded,
@@ -22,43 +22,48 @@ const MicrographsSection = ({
   }, [tempIds]);
   
   const views = [
-    { id: 'x50', name: t('tests.after.results.micrographs.zoomX50') },
-    { id: 'x500', name: t('tests.after.results.micrographs.zoomX500') },
-    { id: 'x1000', name: t('tests.after.results.micrographs.zoomX1000') },
-    { id: 'other', name: t('tests.after.results.micrographs.otherZoom') },
+    { id: 'x50', name: t('trials.after.results.micrographs.zoomX50') },
+    { id: 'x500', name: t('trials.after.results.micrographs.zoomX500') },
+    { id: 'x1000', name: t('trials.after.results.micrographs.zoomX1000') },
+    { id: 'other', name: t('trials.after.results.micrographs.otherZoom') },
   ];
     useEffect(() => {
-    if (testNodeId) {
+    if (trialNodeId) {
       loadExistingFiles();
     }
-  }, [testNodeId, resultIndex, sampleIndex]);
+  }, [trialNodeId, resultIndex, sampleIndex]);
     const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getNodeFiles(testNodeId, {
-        category: `micrographs-result-${resultIndex}-sample-${sampleIndex}`,  // Nouveau format avec sample
+      // Charger tous les fichiers micrographs pour ce nœud
+      const response = await fileService.getNodeFiles(trialNodeId, {
+        category: 'micrographs',
       });
       
       // Vérifier que la requête a réussi
       if (!response.data || response.data.success === false) {
-        console.error(t('tests.after.results.micrographs.loadError'), response.data?.message);
+        console.error(t('trials.after.results.micrographs.loadError'), response.data?.message);
         return;
       }
       
       const filesBySubcategory = {};
-      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
       const files = response.data.data?.files || [];
       
+      // Filtrer et grouper les fichiers pour ce résultat et échantillon spécifique
+      const pattern = `result-${resultIndex}-sample-${sampleIndex}-`;
       files.forEach(file => {
-        const subcategory = file.subcategory || 'other';
-        if (!filesBySubcategory[subcategory]) {
-          filesBySubcategory[subcategory] = [];
+        if (file.subcategory && file.subcategory.startsWith(pattern)) {
+          // Extraire le grossissement (ex: "result-0-sample-0-x100" -> "x100")
+          const magnification = file.subcategory.substring(pattern.length);
+          if (!filesBySubcategory[magnification]) {
+            filesBySubcategory[magnification] = [];
+          }
+          filesBySubcategory[magnification].push(file);
         }
-        filesBySubcategory[subcategory].push(file);
       });
       
       setUploadedFiles(filesBySubcategory);
     } catch (error) {
-      console.error(t('tests.after.results.micrographs.loadError'), error);
+      console.error(t('trials.after.results.micrographs.loadError'), error);
     }
   };
   
@@ -91,20 +96,20 @@ const MicrographsSection = ({
         }));
       }
     }
-  };  const associateFiles = useCallback(async (newTestNodeId) => {
+  };  const associateFiles = useCallback(async (newTrialNodeId) => {
     try {
       const currentTempIds = tempIdsRef.current;
       let allSuccessful = true;
       
-      for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        const response = await fileService.associateFiles(newTestNodeId, tempId, {
-          category: `micrographs-result-${resultIndex}-sample-${sampleIndex}`,  // Nouveau format avec sample
-          subcategory
+      for (const [magnification, tempId] of Object.entries(currentTempIds)) {
+        const response = await fileService.associateFiles(newTrialNodeId, tempId, {
+          category: 'micrographs',
+          subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`
         });
         
         // Vérifier que l'association a réussi
         if (!response.data || response.data.success === false) {
-          console.error(t('tests.after.results.micrographs.associateError'), response.data?.message);
+          console.error(t('trials.after.results.micrographs.associateError'), response.data?.message);
           allSuccessful = false;
         }
       }
@@ -112,14 +117,14 @@ const MicrographsSection = ({
       if (allSuccessful) {
         setTempIds({});
         
-        if (newTestNodeId === testNodeId) {
+        if (newTrialNodeId === trialNodeId) {
           loadExistingFiles();
         }
       }
     } catch (error) {
-      console.error(t('tests.after.results.micrographs.associateError'), error);
+      console.error(t('trials.after.results.micrographs.associateError'), error);
     }
-  }, [testNodeId, resultIndex, sampleIndex]);
+  }, [trialNodeId, resultIndex, sampleIndex]);
   
   useEffect(() => {
     if (onFileAssociationNeeded) {
@@ -133,16 +138,16 @@ const MicrographsSection = ({
           key={`${resultIndex}-${sampleIndex}-${view.id}`}  // Mise à jour de la clé
           title={view.name}
           isExpandedByDefault={view.id === 'x50'}
-          sectionId={`test-micrographs-${resultIndex}-${sampleIndex}-${view.id}`}  // Mise à jour de l'ID
+          sectionId={`trial-micrographs-${resultIndex}-${sampleIndex}-${view.id}`}  // Mise à jour de l'ID
           rememberState={true}
           className="mb-3"
           level={2}
         >
           <div className="p-2">
             <FileUploader
-              category={`micrographs-result-${resultIndex}-sample-${sampleIndex}`}  // Nouveau format avec sample
-              subcategory={view.id}
-              nodeId={testNodeId}
+              category="micrographs"
+              subcategory={`result-${resultIndex}-sample-${sampleIndex}-${view.id}`}
+              nodeId={trialNodeId}
               onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
               maxFiles={50}
               acceptedFileTypes={{
@@ -153,7 +158,7 @@ const MicrographsSection = ({
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
                 'image/*': ['.png', '.jpg', '.jpeg']
               }}
-              title={t('tests.after.results.micrographs.import', { name: view.name.toLowerCase() })}
+              title={t('trials.after.results.micrographs.import', { name: view.name.toLowerCase() })}
               fileIcon={faImage}
               height="150px"
               width="100%"

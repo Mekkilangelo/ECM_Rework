@@ -3,7 +3,7 @@
  * Contient la logique métier relative aux pièces
  */
 
-const { node, part, closure, sequelize } = require('../models');
+const { node, part, closure, sequelize, specs_hardness, specs_ecd, steel } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
@@ -38,50 +38,58 @@ const validatePartData = (data) => {
 
 /**
  * Formate la réponse d'une pièce pour assurer une structure cohérente
- * @param {Object} part - La pièce à formater
+ * @param {Object} partNode - Le nœud de la pièce à formater
  * @returns {Object} - La pièce avec une structure cohérente
  */
-const formatPartResponse = (part) => {
-  if (!part) return null;
+const formatPartResponse = (partNode) => {
+  if (!partNode) return null;
   
   // Convertir en JSON pour pouvoir manipuler l'objet
-  const formattedPart = typeof part.toJSON === 'function' ? part.toJSON() : { ...part };
+  const formattedPart = typeof partNode.toJSON === 'function' ? partNode.toJSON() : { ...partNode };
   
-  // Vérifier si Part existe et le transformer pour le format attendu par le front
-  if (formattedPart.Part) {
-    // Traiter dimensions et specifications
-    let dimensions = formattedPart.Part.dimensions;
-    if (typeof dimensions === 'string') {
-      try {
-        dimensions = JSON.parse(dimensions);
-      } catch (error) {
-        dimensions = {};
-      }
-    }
-    
-    let specifications = formattedPart.Part.specifications;
-    if (typeof specifications === 'string') {
-      try {
-        specifications = JSON.parse(specifications);
-      } catch (error) {
-        specifications = {};
-      }
-    }
-    
+  // Vérifier si part existe et le transformer pour le format attendu par le front
+  if (formattedPart.part) {
     // Remonter les propriétés importantes au niveau principal pour compatibilité avec le frontend
-    formattedPart.name = formattedPart.name || '';
-    formattedPart.designation = formattedPart.Part.designation || '';
-    formattedPart.client_designation = formattedPart.Part.client_designation || '';
-    formattedPart.reference = formattedPart.Part.reference || '';
-    formattedPart.quantity = formattedPart.Part.quantity || '';
-    formattedPart.steel = formattedPart.Part.steel || '';
-    formattedPart.dimensions = dimensions || {};
-    formattedPart.specifications = specifications || {};
-    formattedPart.description = formattedPart.description || '';
+    formattedPart.designation = formattedPart.part.designation || '';
+    formattedPart.client_designation = formattedPart.part.client_designation || '';
+    formattedPart.reference = formattedPart.part.reference || '';
+    formattedPart.quantity = formattedPart.part.quantity || '';
+    formattedPart.steel_node_id = formattedPart.part.steel_node_id || null;
     
-    // Mettre à jour Part avec les valeurs parsées
-    formattedPart.Part.dimensions = dimensions;
-    formattedPart.Part.specifications = specifications;
+    // Ajouter les informations de l'acier si disponibles
+    if (formattedPart.part.steel) {
+      formattedPart.steel = {
+        node_id: formattedPart.part.steel_node_id,
+        grade: formattedPart.part.steel.grade || '',
+        standard: formattedPart.part.steel.standard || '',
+        family: formattedPart.part.steel.family || ''
+      };
+    }
+    
+    // Regrouper les dimensions
+    formattedPart.dimensions = {
+      weight: {
+        value: formattedPart.part.dim_weight_value || '',
+        unit: formattedPart.part.dim_weight_unit || ''
+      },
+      rectangular: {
+        length: formattedPart.part.dim_rect_length || '',
+        width: formattedPart.part.dim_rect_width || '',
+        height: formattedPart.part.dim_rect_height || '',
+        unit: formattedPart.part.dim_rect_unit || ''
+      },
+      circular: {
+        diameterIn: formattedPart.part.dim_circ_diameterIn || '',
+        diameterOut: formattedPart.part.dim_circ_diameterOut || '',
+        unit: formattedPart.part.dim_circ_unit || ''
+      }
+    };
+    
+    // Ajouter les spécifications
+    formattedPart.specifications = {
+      hardness: formattedPart.part.hardnessSpecs || [],
+      ecd: formattedPart.part.ecdSpecs || []
+    };
   }
   
   return formattedPart;
@@ -117,10 +125,10 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
   const getOrderClause = (sortBy, sortOrder) => {
     const sortMapping = {
       'name': ['name', sortOrder],
-      'client_designation': [{ model: part }, 'client_designation', sortOrder],
-      'reference': [{ model: part }, 'reference', sortOrder],
-      'steel': [{ model: part }, 'steel', sortOrder],
-      'quantity': [{ model: part }, 'quantity', sortOrder],
+      'client_designation': [{ model: part, as: 'part' }, 'client_designation', sortOrder],
+      'reference': [{ model: part, as: 'part' }, 'reference', sortOrder],
+      'steel_node_id': [{ model: part, as: 'part' }, 'steel_node_id', sortOrder],
+      'quantity': [{ model: part, as: 'part' }, 'quantity', sortOrder],
       'modified_at': ['modified_at', sortOrder],
       'created_at': ['created_at', sortOrder]
     };
@@ -132,7 +140,30 @@ const getAllParts = async ({ limit = 10, offset = 0, parent_id = null, sortBy = 
     where: whereCondition,
     include: [{
       model: part,
-      attributes: ['designation', 'client_designation', 'dimensions', 'specifications', 'steel', 'reference', 'quantity']
+      as: 'part',
+      attributes: [
+        'designation', 'client_designation', 'reference', 'quantity', 'steel_node_id',
+        'dim_weight_value', 'dim_weight_unit',
+        'dim_rect_length', 'dim_rect_width', 'dim_rect_height', 'dim_rect_unit',
+        'dim_circ_diameterIn', 'dim_circ_diameterOut', 'dim_circ_unit'
+      ],
+      include: [
+        {
+          model: steel,
+          as: 'steel',
+          attributes: ['grade', 'standard', 'family']
+        },
+        {
+          model: specs_hardness,
+          as: 'hardnessSpecs',
+          attributes: ['spec_id', 'name', 'min', 'max', 'unit']
+        },
+        {
+          model: specs_ecd,
+          as: 'ecdSpecs',
+          attributes: ['spec_id', 'name', 'depthMin', 'depthMax', 'depthUnit', 'hardness', 'hardnessUnit']
+        }
+      ]
     }],
     order: [getOrderClause(sortBy, sortOrder)],
     limit: parseInt(limit),
@@ -166,7 +197,25 @@ const getPartById = async (partId) => {
     where: { id: partId, type: 'part' },
     include: [{
       model: part,
-      attributes: { exclude: ['node_id'] }
+      as: 'part',
+      attributes: { exclude: ['node_id'] },
+      include: [
+        {
+          model: steel,
+          as: 'steel',
+          attributes: ['grade', 'standard', 'family']
+        },
+        {
+          model: specs_hardness,
+          as: 'hardnessSpecs',
+          attributes: ['spec_id', 'name', 'min', 'max', 'unit']
+        },
+        {
+          model: specs_ecd,
+          as: 'ecdSpecs',
+          attributes: ['spec_id', 'name', 'depthMin', 'depthMax', 'depthUnit', 'hardness', 'hardnessUnit']
+        }
+      ]
     }]
   });
   
@@ -186,41 +235,24 @@ const createPart = async (partData) => {
   const { 
     parent_id, 
     designation, 
-    dimensions, 
-    specifications, 
-    steel, 
+    steel_node_id,
     description, 
-    clientDesignation, 
+    client_designation, 
     reference, 
-    quantity 
+    quantity,
+    dim_weight_value,
+    dim_weight_unit,
+    dim_rect_length,
+    dim_rect_width,
+    dim_rect_height,
+    dim_rect_unit,
+    dim_circ_diameterIn,
+    dim_circ_diameterOut,
+    dim_circ_unit,
+    hardnessSpecs,
+    ecdSpecs
   } = partData;
   const name = partData.designation || null;
-  // Traitement des objets dimensions et specifications
-  const formattedDimensions = typeof dimensions === 'string' 
-    ? dimensions 
-    : JSON.stringify(dimensions || {});
-  
-  const formattedSpecifications = typeof specifications === 'string'
-    ? specifications
-    : JSON.stringify(specifications || {});
-    
-  // Assurons-nous que les valeurs soient bien des objets JSON valides
-  try {
-    // Vérifier si dimensions est un objet JSON valide
-    if (typeof formattedDimensions === 'string') {
-      JSON.parse(formattedDimensions);
-    }
-    
-    // Vérifier si specifications est un objet JSON valide
-    if (typeof formattedSpecifications === 'string') {
-      JSON.parse(formattedSpecifications);
-    }
-  } catch (error) {
-    throw new ValidationError('Format JSON invalide pour dimensions ou spécifications', {
-      dimensions: typeof dimensions === 'string' ? 'Format JSON invalide' : null,
-      specifications: typeof specifications === 'string' ? 'Format JSON invalide' : null
-    });
-  }
   
   // Validation des données
   const { isValid, errors } = validatePartData({ name, designation, parent_id });
@@ -228,14 +260,14 @@ const createPart = async (partData) => {
     throw new ValidationError('Données de pièce invalides', errors);
   }
   
-  // Vérifier si le parent existe et est une commande
+  // Vérifier si le parent existe
   const parentNode = await node.findByPk(parent_id);
   if (!parentNode) {
     throw new NotFoundError('Node parent non trouvé');
   }
   
-  if (parentNode.type !== 'order') {
-    throw new ValidationError('Le parent doit être une commande');
+  if (parentNode.type !== 'trial_request') {
+    throw new ValidationError('Le parent doit être une demande d\'essai (trial_request)');
   }
   
   // Créer la pièce dans une transaction
@@ -255,13 +287,48 @@ const createPart = async (partData) => {
     await part.create({
       node_id: newNode.id,
       designation,
-      dimensions: formattedDimensions,
-      specifications: formattedSpecifications,
-      steel,
-      client_designation: clientDesignation,
+      steel_node_id,
+      client_designation,
       reference,
-      quantity
+      quantity,
+      dim_weight_value,
+      dim_weight_unit,
+      dim_rect_length,
+      dim_rect_width,
+      dim_rect_height,
+      dim_rect_unit,
+      dim_circ_diameterIn,
+      dim_circ_diameterOut,
+      dim_circ_unit
     }, { transaction: t });
+    
+    // Créer les spécifications de dureté
+    if (hardnessSpecs && Array.isArray(hardnessSpecs) && hardnessSpecs.length > 0) {
+      for (const spec of hardnessSpecs) {
+        await specs_hardness.create({
+          part_node_id: newNode.id,
+          name: spec.name,
+          min: spec.min,
+          max: spec.max,
+          unit: spec.unit
+        }, { transaction: t });
+      }
+    }
+    
+    // Créer les spécifications ECD
+    if (ecdSpecs && Array.isArray(ecdSpecs) && ecdSpecs.length > 0) {
+      for (const spec of ecdSpecs) {
+        await specs_ecd.create({
+          part_node_id: newNode.id,
+          name: spec.name,
+          depthMin: spec.depthMin,
+          depthMax: spec.depthMax,
+          depthUnit: spec.depthUnit,
+          hardness: spec.hardness,
+          hardnessUnit: spec.hardnessUnit
+        }, { transaction: t });
+      }
+    }
     
     // Créer l'entrée de fermeture (auto-relation)
     await closure.create({
@@ -291,7 +358,6 @@ const createPart = async (partData) => {
   await updateAncestorsModifiedAt(result.id);
   
   // Récupérer la pièce complète avec ses données associées
-  // Utiliser getPartById pour profiter de la même transformation des données
   const newPart = await getPartById(result.id);
   
   return newPart;
@@ -306,46 +372,30 @@ const createPart = async (partData) => {
 const updatePart = async (partId, partData) => {
   const { 
     designation, 
-    dimensions, 
-    specifications, 
-    steel, 
+    steel_node_id,
     description, 
-    clientDesignation, 
+    client_designation, 
     reference, 
-    quantity 
+    quantity,
+    dim_weight_value,
+    dim_weight_unit,
+    dim_rect_length,
+    dim_rect_width,
+    dim_rect_height,
+    dim_rect_unit,
+    dim_circ_diameterIn,
+    dim_circ_diameterOut,
+    dim_circ_unit,
+    hardnessSpecs,
+    ecdSpecs
   } = partData;
   const name = partData.designation || null;
-    // Traitement des objets dimensions et specifications
-  const formattedDimensions = typeof dimensions === 'string' 
-    ? dimensions 
-    : dimensions ? JSON.stringify(dimensions) : undefined;
-  
-  const formattedSpecifications = typeof specifications === 'string'
-    ? specifications
-    : specifications ? JSON.stringify(specifications) : undefined;
-    
-  // Assurons-nous que les valeurs soient bien des objets JSON valides s'ils sont définis
-  try {
-    // Vérifier si dimensions est un objet JSON valide
-    if (typeof formattedDimensions === 'string') {
-      JSON.parse(formattedDimensions);
-    }
-    
-    // Vérifier si specifications est un objet JSON valide
-    if (typeof formattedSpecifications === 'string') {
-      JSON.parse(formattedSpecifications);
-    }
-  } catch (error) {
-    throw new ValidationError('Format JSON invalide pour dimensions ou spécifications', {
-      dimensions: formattedDimensions !== undefined ? 'Format JSON invalide' : null,
-      specifications: formattedSpecifications !== undefined ? 'Format JSON invalide' : null
-    });
-  }
   
   const partNode = await node.findOne({
     where: { id: partId, type: 'part' },
     include: [{
-      model: part
+      model: part,
+      as: 'part'
     }]
   });
   
@@ -392,12 +442,19 @@ const updatePart = async (partId, partData) => {
       // Mettre à jour les données de la pièce
     const partUpdateData = {};
     if (designation !== undefined) partUpdateData.designation = designation;
-    if (formattedDimensions !== undefined) partUpdateData.dimensions = formattedDimensions;
-    if (formattedSpecifications !== undefined) partUpdateData.specifications = formattedSpecifications;
-    if (steel !== undefined) partUpdateData.steel = steel;
-    if (clientDesignation !== undefined) partUpdateData.client_designation = clientDesignation;
+    if (steel_node_id !== undefined) partUpdateData.steel_node_id = steel_node_id;
+    if (client_designation !== undefined) partUpdateData.client_designation = client_designation;
     if (reference !== undefined) partUpdateData.reference = reference;
     if (quantity !== undefined) partUpdateData.quantity = quantity;
+    if (dim_weight_value !== undefined) partUpdateData.dim_weight_value = dim_weight_value;
+    if (dim_weight_unit !== undefined) partUpdateData.dim_weight_unit = dim_weight_unit;
+    if (dim_rect_length !== undefined) partUpdateData.dim_rect_length = dim_rect_length;
+    if (dim_rect_width !== undefined) partUpdateData.dim_rect_width = dim_rect_width;
+    if (dim_rect_height !== undefined) partUpdateData.dim_rect_height = dim_rect_height;
+    if (dim_rect_unit !== undefined) partUpdateData.dim_rect_unit = dim_rect_unit;
+    if (dim_circ_diameterIn !== undefined) partUpdateData.dim_circ_diameterIn = dim_circ_diameterIn;
+    if (dim_circ_diameterOut !== undefined) partUpdateData.dim_circ_diameterOut = dim_circ_diameterOut;
+    if (dim_circ_unit !== undefined) partUpdateData.dim_circ_unit = dim_circ_unit;
     
     if (Object.keys(partUpdateData).length > 0) {
       await part.update(partUpdateData, {
@@ -405,13 +462,58 @@ const updatePart = async (partId, partData) => {
         transaction: t
       });
     }
+    
+    // Mettre à jour les spécifications de dureté
+    if (hardnessSpecs !== undefined) {
+      // Supprimer les anciennes spécifications
+      await specs_hardness.destroy({
+        where: { part_node_id: partId },
+        transaction: t
+      });
+      
+      // Créer les nouvelles spécifications
+      if (Array.isArray(hardnessSpecs) && hardnessSpecs.length > 0) {
+        for (const spec of hardnessSpecs) {
+          await specs_hardness.create({
+            part_node_id: partId,
+            name: spec.name,
+            min: spec.min,
+            max: spec.max,
+            unit: spec.unit
+          }, { transaction: t });
+        }
+      }
+    }
+    
+    // Mettre à jour les spécifications ECD
+    if (ecdSpecs !== undefined) {
+      // Supprimer les anciennes spécifications
+      await specs_ecd.destroy({
+        where: { part_node_id: partId },
+        transaction: t
+      });
+      
+      // Créer les nouvelles spécifications
+      if (Array.isArray(ecdSpecs) && ecdSpecs.length > 0) {
+        for (const spec of ecdSpecs) {
+          await specs_ecd.create({
+            part_node_id: partId,
+            name: spec.name,
+            depthMin: spec.depthMin,
+            depthMax: spec.depthMax,
+            depthUnit: spec.depthUnit,
+            hardness: spec.hardness,
+            hardnessUnit: spec.hardnessUnit
+          }, { transaction: t });
+        }
+      }
+    }
   });
   
   // Mettre à jour le modified_at de la pièce et de ses ancêtres après mise à jour
   await updateAncestorsModifiedAt(partId);
   
   // Récupérer et renvoyer la pièce mise à jour
-  // Utiliser getPartById pour profiter de la même transformation des données
   const updatedPart = await getPartById(partId);
   
   return updatedPart;

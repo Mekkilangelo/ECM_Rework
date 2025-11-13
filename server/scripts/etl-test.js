@@ -104,7 +104,7 @@ function createSampleCSV() {
   ].join('\n');
   
   fs.writeFileSync(csvPath, csvContent, 'utf8');
-  console.log(`✅ Fichier CSV d'exemple créé : ${csvPath}`);
+  
   
   return csvPath;
 }
@@ -114,7 +114,7 @@ function createSampleCSV() {
  */
 async function runETLTest() {
   try {
-    console.log('🧪 Test du chargement ETL...\n');
+    
     
     // 1. Créer le fichier CSV d'exemple
     const csvPath = createSampleCSV();
@@ -123,11 +123,11 @@ async function runETLTest() {
     const etlLoader = new ETLLoader();
     await etlLoader.loadData(csvPath);
     
-    console.log('\n🎉 Test ETL terminé avec succès !');
+    
     
     // 3. Nettoyer le fichier temporaire
     fs.unlinkSync(csvPath);
-    console.log('🧹 Fichier temporaire supprimé');
+    
     
   } catch (error) {
     console.error('❌ Erreur pendant le test ETL :', error);

@@ -4,13 +4,13 @@ import { faWeightHanging, faUser, faCalendarAlt, faFlask, faCogs, faImage, faBox
 import fileService from '../../../../../../../services/fileService';
 import SectionHeader from './common/SectionHeader';
 
-const LoadSection = ({ testData, partData, clientData, selectedPhotos = {} }) => {
-  // Vérification de sécurité pour éviter les erreurs si testData est undefined
-  const test = testData || {};
+const LoadSection = ({ trialData, partData, clientData, selectedPhotos = {} }) => {
+  // Vérification de sécurité pour éviter les erreurs si trialData est undefined
+  const trial = trialData || {};
   const part = partData || {};
 
-  // Récupérer les données de loadData depuis l'objet test
-  const loadData = test.loadData || {};
+  // Récupérer les données de loadData depuis l'objet trial
+  const loadData = trial.loadData || {};
   // Récupération des photos sélectionnées pour cette section (avec support des métadonnées)
   let loadPhotos = [];
   
@@ -48,12 +48,10 @@ const LoadSection = ({ testData, partData, clientData, selectedPhotos = {} }) =>
   };
 
   // Déboguer les informations sur les photos et les URLs
-  console.log("LoadSection - testData:", testData);
-  console.log("LoadSection - selectedPhotos:", selectedPhotos);
-  console.log("LoadSection - loadPhotos (après traitement):", loadPhotos);
+  
+  
   
   if (loadPhotos.length > 0) {
-    console.log(`URL pour la première image:`, getPhotoUrlWithDebug(loadPhotos[0]));
   }
   // Calculer le nombre de photos par page pour optimiser l'affichage A4
   const calculatePhotosPerPage = (totalPhotos) => {
@@ -150,7 +148,7 @@ const LoadSection = ({ testData, partData, clientData, selectedPhotos = {} }) =>
           title="LOAD CONFIGURATION"
           subtitle={loadData.loadType || 'Load configuration details'}
           icon={faWeightHanging}
-          testData={testData}
+          trialData={trialData}
           clientData={clientData}
           sectionType="load"
           showSubtitle={isFirstPage}
@@ -373,7 +371,7 @@ const LoadSection = ({ testData, partData, clientData, selectedPhotos = {} }) =>
                       
                       const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                       if (e.target.src !== alternateUrl) {
-                        console.log(`Attempting with alternative URL: ${alternateUrl}`);
+                        
                         e.target.src = alternateUrl;
                         return;
                       }

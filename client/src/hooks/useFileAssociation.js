@@ -16,21 +16,19 @@ const useFileAssociation = () => {
    */  const createAssociationFunction = useCallback((uploadPendingFiles, getPendingFiles, category, subcategory) => {
     return async (nodeId) => {
       const pendingFiles = getPendingFiles();
-      console.log(`🔗 [useFileAssociation] Association pour ${category}/${subcategory} au nœud ${nodeId}`);
-      console.log(`🔗 [useFileAssociation] Fichiers en attente:`, pendingFiles.map(f => f.name));
+      
       
       if (pendingFiles.length === 0) {
-        console.log(`🔗 [useFileAssociation] Aucun fichier en attente pour ${category}/${subcategory}`);
+        
         return { success: true, files: [] };
       }
 
-      console.log(`🔗 Association des fichiers ${category}/${subcategory} au nœud ${nodeId}`);
+      
       
       try {
         const result = await uploadPendingFiles(nodeId, category, subcategory, pendingFiles);
         
         if (result.success) {
-          console.log(`✅ ${result.files.length} fichier(s) ${category}/${subcategory} associé(s) avec succès`);
         } else {
           console.error(`❌ Erreur lors de l'association des fichiers ${category}/${subcategory}:`, result.error);
         }
@@ -52,8 +50,6 @@ const useFileAssociation = () => {
     return async (nodeId) => {
       const results = [];
       
-      console.log(`🚀 Début de l'association de ${associationFunctions.length} section(s) de fichiers au nœud ${nodeId}`);
-      
       // Exécuter toutes les associations en parallèle
       const promises = associationFunctions.map(fn => fn(nodeId));
       const associationResults = await Promise.allSettled(promises);
@@ -74,8 +70,6 @@ const useFileAssociation = () => {
       const totalFiles = results.reduce((sum, r) => sum + (r.files?.length || 0), 0);
       const successCount = results.filter(r => r.success).length;
       const failureCount = results.length - successCount;
-      
-      console.log(`🏁 Association terminée: ${successCount}/${results.length} sections réussies, ${totalFiles} fichier(s) total`);
       
       return {
         success: failureCount === 0,

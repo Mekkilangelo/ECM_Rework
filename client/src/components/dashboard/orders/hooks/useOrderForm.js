@@ -61,10 +61,10 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode =
       contact.name.trim() !== '' || contact.phone.trim() !== '' || contact.email.trim() !== ''
     );
     
-    const formattedDate = data.order_date ? new Date(data.order_date).toISOString().split('T')[0] : null;
+    const formattedDate = data.trial_request_date ? new Date(data.trial_request_date).toISOString().split('T')[0] : null;
     
     return {
-      order_date: formattedDate,
+      trial_request_date: formattedDate,
       description: data.description || '',
       commercial: data.commercial || '',
       contacts: filteredContacts.length > 0 ? filteredContacts : [{ name: '', phone: '', email: '' }]
@@ -94,7 +94,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode =
     }
     
     return {
-      order_date: data.order_date || '',
+      trial_request_date: data.trial_request_date || '',
       commercial: data.commercial || '',
       description: data.description || '',
       contacts: contacts

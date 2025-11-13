@@ -20,7 +20,7 @@ jobs:
           environment: 'development'
           output-file: '.env.dev'
           mysql-root-password: ${{ secrets.DEV_MYSQL_ROOT_PASSWORD }}
-          mysql-database: 'synergy'
+          mysql-database: 'synergia'
           db-host: 'database'
           db-user: 'root'
           db-password: ${{ secrets.DEV_DB_PASSWORD }}

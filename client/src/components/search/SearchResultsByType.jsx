@@ -9,9 +9,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import ClientForm from '../dashboard/clients/form/ClientForm';
-import OrderForm from '../dashboard/orders/form/OrderForm';
+import TrialRequestForm from '../dashboard/orders/form/TrialRequestForm';
 import PartForm from '../dashboard/parts/form/PartForm';
-import TestForm from '../dashboard/tests/form/TestForm';
+import TestForm from '../dashboard/tests/form/TrialForm';
 import SteelForm from '../dashboard/steels/form/SteelForm';
 import './SearchResultsByType.css';
 
@@ -83,7 +83,7 @@ const SearchResultsByType = ({ results, entityTypes }) => {
       case 'parts':
         setShowPartModal(true);
         break;
-      case 'tests':
+      case 'trials':
         setShowTestModal(true);
         break;
       case 'steels':
@@ -113,9 +113,9 @@ const SearchResultsByType = ({ results, entityTypes }) => {
   // Fonction pour déterminer le type d'entité d'un élément
   const getEntityType = (item) => {
     if (item.client) return 'clients';
-    if (item.order) return 'orders';
+    if (item.trialRequest) return 'orders';
     if (item.part) return 'parts';
-    if (item.test) return 'tests';
+    if (item.trial) return 'trials';
     if (item.steel) return 'steels';
     return null;
   };
@@ -149,14 +149,14 @@ const SearchResultsByType = ({ results, entityTypes }) => {
           </tr>
         );
       case 'orders':
-        const orderDate = extractProperty(item, 'order_date', type);
+        const trialRequestDate = extractProperty(item, 'request_date', type);
         return (
           <tr key={item.id}>
             <td className="align-middle">{extractProperty(item, 'reference', type) || '-'}</td>
-            <td className="align-middle">{orderDate ? new Date(orderDate).toLocaleDateString() : '-'}</td>
+            <td className="align-middle">{trialRequestDate ? new Date(trialRequestDate).toLocaleDateString() : '-'}</td>
             <td className="align-middle">
               {item.client ? item.client.name : 
-               item.Order && item.Order.client ? item.Order.client.name : 
+               item.TrialRequest && item.TrialRequest.client ? item.TrialRequest.client.name : 
                item.parent_name || '-'}
             </td>
             <td className="align-middle">
@@ -205,7 +205,7 @@ const SearchResultsByType = ({ results, entityTypes }) => {
             </td>
           </tr>
         );
-      case 'tests':
+      case 'trials':
         const testDate = extractProperty(item, 'test_date', type);
         return (
           <tr key={item.id}>
@@ -329,7 +329,7 @@ const SearchResultsByType = ({ results, entityTypes }) => {
   // Fonction pour déboguer les résultats
   const debugResults = (type) => {
     if (!results[type]) return [];
-    console.log(`Results for ${type}:`, results[type]);
+    
     return results[type];
   };
 
@@ -422,7 +422,7 @@ const SearchResultsByType = ({ results, entityTypes }) => {
         </Modal.Header>
         <Modal.Body>
           {selectedItem && (
-            <OrderForm
+            <TrialRequestForm
               order={selectedItem}
               clientId={selectedItem.client_id || (selectedItem.client && selectedItem.client.id)}
               onClose={() => setShowOrderModal(false)}
@@ -448,7 +448,7 @@ const SearchResultsByType = ({ results, entityTypes }) => {
           {selectedItem && (
             <PartForm
               part={selectedItem}
-              orderId={selectedItem.order_id || (selectedItem.order && selectedItem.order.id)}
+              orderId={selectedItem.order_id || (selectedItem.trialRequest && selectedItem.trialRequest.id)}
               onClose={() => setShowPartModal(false)}
               onPartUpdated={() => {
                 setShowPartModal(false);

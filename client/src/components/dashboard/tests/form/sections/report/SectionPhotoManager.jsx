@@ -158,19 +158,21 @@ const SectionPhotoManager = ({
     for (let resultIndex = 0; resultIndex < maxResults; resultIndex++) {
       for (let sampleIndex = 0; sampleIndex < maxSamples; sampleIndex++) {
         for (const magnification of magnifications) {
-          const baseCategory = `micrographs-result-${resultIndex}-sample-${sampleIndex}`;
           
           // Créer une promesse pour chaque combinaison
           const promise = fileService.getNodeFiles(
             nodeId,
-            { category: baseCategory, subcategory: magnification }
+            { 
+              category: 'micrographs',
+              subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`
+            }
           ).then(response => {
             if (response.data && response.data.success !== false) {
               const files = response.data.data?.files || response.data.files || [];
               if (files.length > 0) {
                 return {
-                  category: baseCategory,
-                  subcategory: magnification,
+                  category: 'micrographs',
+                  subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`,
                   label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
                   description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
                   group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 }),
@@ -212,7 +214,7 @@ const SectionPhotoManager = ({
         // Vérifier si l'opération a été annulée
         if (signal.aborted) {
           if (process.env.NODE_ENV === 'development') {
-            console.log('Opération de chargement des photos annulée');
+            
           }
           return;
         }
@@ -233,7 +235,7 @@ const SectionPhotoManager = ({
     } catch (error) {
       if (error.name === 'AbortError') {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Requêtes de photos annulées');
+          
         }
         return;
       }
@@ -251,7 +253,6 @@ const SectionPhotoManager = ({
     if (process.env.NODE_ENV === 'development' && sources.length > 0) {
       const foundCombinations = new Set(sources.map(s => s.category));
       const combinationsList = Array.from(foundCombinations).sort();
-      console.log(`Combinaisons résultat/échantillon avec photos (${combinationsList.length}):`, combinationsList);
       
       // Statistiques par résultat
       const statsByResult = {};
@@ -263,7 +264,6 @@ const SectionPhotoManager = ({
       
       Object.keys(statsByResult).forEach(result => {
         const samples = Array.from(statsByResult[result]).sort((a, b) => a - b);
-        console.log(`${result}: Échantillons ${samples.join(', ')}`);
       });
     }
     
@@ -356,7 +356,7 @@ const SectionPhotoManager = ({
       if (config.isDynamic && sectionType === 'micrography') {
         sources = await generateMicrographySources(nodeId, config);
         if (process.env.NODE_ENV === 'development') {
-          console.log(`Sources dynamiques générées pour micrography:`, sources);
+          
         }
       }
 
@@ -464,16 +464,6 @@ const SectionPhotoManager = ({
             // Pour la section curves, organiser par sous-catégorie réelle
             if (sectionType === 'curves') {
               const realSubcategory = photo.sourceSubcategory || photo.subcategory || subgroupKey;
-                if (process.env.NODE_ENV === 'development') {
-                console.log(`Photo ${photo.id} (${photo.name}):`, {
-                  sourceSubcategory: photo.sourceSubcategory,
-                  subcategory: photo.subcategory,
-                  subgroupKey: subgroupKey,
-                  realSubcategory: realSubcategory,
-                  category: photo.category,
-                  sourceCategory: photo.sourceCategory
-                });
-              }
               
               // Mapper vers nos catégories attendues
               let targetCategory = realSubcategory;
@@ -513,7 +503,7 @@ const SectionPhotoManager = ({
     });
     
     if (process.env.NODE_ENV === 'development') {
-      console.log("Organized selected photos with metadata:", organized);
+      
     }
     return organized;
   };

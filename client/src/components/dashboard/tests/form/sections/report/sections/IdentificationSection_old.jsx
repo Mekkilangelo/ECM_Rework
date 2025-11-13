@@ -130,8 +130,8 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
     return photo && typeof photo === 'object' ? photo.id : photo;
   };
   // Déboguer les informations sur les photos
-  console.log("IdentificationSection - selectedPhotos:", selectedPhotos);
-  console.log("IdentificationSection - identificationPhotos (après traitement):", identificationPhotos);
+  
+  :", identificationPhotos);
   
   // Calculer le nombre de photos par page pour optimiser l'affichage A4
   const calculatePhotosPerPage = (totalPhotos) => {
@@ -456,7 +456,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
                       
                       const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                       if (e.target.src !== alternateUrl) {
-                        console.log(`Attempting with alternative URL: ${alternateUrl}`);
+                        
                         e.target.src = alternateUrl;
                         return;
                       }

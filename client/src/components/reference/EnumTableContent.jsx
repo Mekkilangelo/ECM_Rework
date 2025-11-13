@@ -1,113 +1,179 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus, faList, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import enumService from '../../services/enumService';
+import referenceService from '../../services/referenceService';
 import '../../styles/dataList.css';
 import useConfirmationDialog from '../../hooks/useConfirmationDialog';
+import DeleteWithUsageModal from '../common/DeleteWithUsageModal/DeleteWithUsageModal';
 
-const EnumTableContent = ({ table, column }) => {
+// Mapping des anciennes colonnes ENUM vers les nouvelles tables de référence
+const ENUM_TO_REF_TABLE_MAPPING = {
+  'parts.designation': 'ref_designation',
+  'clients.country': 'ref_country',
+  'trials.status': 'ref_status',
+  'trials.location': 'ref_location',
+  'trials.mounting_type': 'ref_mounting_type',
+  'trials.position_type': 'ref_position_type',
+  'trials.process_type': 'ref_process_type',
+  'furnaces.furnace_type': 'ref_furnace_types',
+  'furnaces.furnace_size': 'ref_furnace_sizes',
+  'furnaces.heating_cell': 'ref_heating_cells',
+  'furnaces.cooling_media': 'ref_cooling_media',
+  'furnaces.quench_cell': 'ref_quench_cells',
+  'steels.family': 'ref_steel_family',
+  'steels.standard': 'ref_steel_standard',
+  'files.category': 'ref_file_category',
+  'files.subcategory': 'ref_file_subcategory',
+  'units': 'ref_units'
+};
+
+const EnumTableContent = ({ table, column, refTable }) => {
   const { t } = useTranslation();
   const { confirmDelete } = useConfirmationDialog();
   const [values, setValues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', 'delete'
+  const [modalMode, setModalMode] = useState('add'); // 'add', 'delete' (plus besoin de 'edit')
   const [currentValue, setCurrentValue] = useState('');
   const [originalValue, setOriginalValue] = useState('');
   const [usageCount, setUsageCount] = useState(0);
-  const [replacementValue, setReplacementValue] = useState('');
-  const [showUsageWarning, setShowUsageWarning] = useState(false);
+  const [usageDetails, setUsageDetails] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [valueToDelete, setValueToDelete] = useState(null);
+
+  // Déterminer la table de référence à utiliser
+  const activeRefTable = useMemo(() => {
+    if (refTable) return refTable;
+    if (table && column) {
+      const key = `${table}.${column}`;
+      return ENUM_TO_REF_TABLE_MAPPING[key] || ENUM_TO_REF_TABLE_MAPPING[table];
+    }
+    return null;
+  }, [refTable, table, column]);
 
   useEffect(() => {
-    fetchEnumValues();
-  }, [table, column]);
-  const fetchEnumValues = async () => {
-    console.log(`[EnumTableContent] Début fetchEnumValues pour table: ${table}, column: ${column}`);
+    if (activeRefTable) {
+      fetchReferenceValues();
+    }
+  }, [activeRefTable]);
+  const fetchReferenceValues = async () => {
+    
     setLoading(true);
     try {
-      console.log(`[EnumTableContent] Appel enumService.getEnumValues(${table}, ${column})`);
-      const response = await enumService.getEnumValues(table, column);
-      console.log(`[EnumTableContent] Réponse de enumService:`, response);
+      const response = await referenceService.getValues(activeRefTable);
       
-      if (response && response.success && response.data) {
-        console.log(`[EnumTableContent] Réponse avec success=true, values:`, response.data.values);
-        setValues(response.data.values || []);
-      } else if (response && response.values) {
-        console.log(`[EnumTableContent] Réponse avec format direct values:`, response.values);
-        setValues(response.values || []);
+      
+      // referenceService.getValues peut retourner:
+      // - Tableau de strings pour les tables simples
+      // - Tableau d'objets pour les tables complexes (ref_units, ref_unit_types)
+      if (Array.isArray(response)) {
+        setValues(response);
       } else {
-        console.log(`[EnumTableContent] Format de réponse non reconnu, définition de valeurs vides`);
-        console.log(`[EnumTableContent] Structure complète de la réponse:`, JSON.stringify(response, null, 2));
+        console.warn(`[EnumTableContent] Unexpected response format:`, response);
         setValues([]);
       }
       setError(null);
     } catch (err) {
-      console.error('[EnumTableContent] Error fetching enum values:', err);
-      console.error('[EnumTableContent] Stack trace:', err.stack);
+      console.error('[EnumTableContent] Error fetching reference values:', err);
       setError('Failed to load values. Please try again.');
       setValues([]);
     } finally {
       setLoading(false);
-      console.log(`[EnumTableContent] Fin fetchEnumValues, loading=false`);
     }
   };
 
   const checkValueUsage = async (value) => {
     try {
-      // Cette fonction sera à implémenter côté serveur
-      const response = await enumService.checkEnumValueUsage(table, column, value);
-      return response.count || 0;
+      // Si value est un objet, extraire le nom
+      const valueName = typeof value === 'object' ? value.name : value;
+      const response = await referenceService.checkUsage(activeRefTable, valueName);
+      setUsageDetails(response.details || []);
+      return response.totalCount || 0;
     } catch (err) {
-      console.error('Error checking enum value usage:', err);
+      console.error('Error checking value usage:', err);
       return 0;
     }
   };
 
-  const handleEdit = async (value) => {
-    const count = await checkValueUsage(value);
-    setUsageCount(count);
-    setShowUsageWarning(count > 0);
-    
-    setModalMode('edit');
-    setCurrentValue(value);
-    setOriginalValue(value);
-    setShowModal(true);
-  };
   const handleDelete = async (value) => {
-    const count = await checkValueUsage(value);
+    // Extraire le nom si c'est un objet
+    const valueName = typeof value === 'object' ? value.name : value;
+    const count = await checkValueUsage(valueName);
     setUsageCount(count);
+    setValueToDelete(valueName);
     
     if (count > 0) {
-      // Si la valeur est utilisée, demander à l'utilisateur de choisir une valeur de remplacement
-      setModalMode('delete');
-      setOriginalValue(value);
-      setCurrentValue(value);
-      setReplacementValue('');
-      setShowModal(true);    } else {
+      // Afficher le modal avec options de remplacement
+      setShowDeleteModal(true);
+    } else {
       // Si la valeur n'est pas utilisée, confirmer la suppression simple
-      const confirmed = await confirmDelete(value, 'la valeur');
+      const confirmed = await confirmDelete(valueName, 'la valeur');
       if (confirmed) {
         try {
-          await enumService.deleteEnumValue(table, column, value);
-          // Rafraîchir la liste après suppression pour assurer la cohérence
-          await fetchEnumValues();
+          await referenceService.deleteValue(activeRefTable, valueName);
+          await fetchReferenceValues();
         } catch (err) {
-          console.error('Error deleting enum value:', err);
+          console.error('Error deleting reference value:', err);
           alert('Échec de la suppression. Veuillez réessayer.');
         }
       }
     }
   };
+  
+  const handleDeleteForce = async (valueName) => {
+    try {
+      await referenceService.forceDelete(activeRefTable, valueName);
+      setShowDeleteModal(false);
+      setValueToDelete(null);
+      setUsageCount(0);
+      await fetchReferenceValues();
+    } catch (err) {
+      console.error('Error force deleting reference value:', err);
+      alert('Échec de la suppression. Veuillez réessayer.');
+    }
+  };
+  
+  const handleReplace = async (oldValue, newValue) => {
+    try {
+      await referenceService.replaceValue(activeRefTable, oldValue, newValue);
+      setShowDeleteModal(false);
+      setValueToDelete(null);
+      setUsageCount(0);
+      await fetchReferenceValues();
+    } catch (err) {
+      console.error('Error replacing reference value:', err);
+      alert('Échec du remplacement. Veuillez réessayer.');
+    }
+  };
+  
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setValueToDelete(null);
+    setUsageCount(0);
+  };
+  
+  const handleEdit = async (value) => {
+    const valueName = typeof value === 'object' ? value.name : value;
+    setModalMode('edit');
+    setCurrentValue(valueName);
+    setOriginalValue(valueName);
+    
+    // Vérifier l'utilisation pour afficher un avertissement si nécessaire
+    const count = await checkValueUsage(valueName);
+    setUsageCount(count);
+    
+    setShowModal(true);
+  };
+  
   const handleAdd = () => {
     setModalMode('add');
     setCurrentValue('');
     setOriginalValue('');
-    setReplacementValue('');
     setUsageCount(0);
-    setShowUsageWarning(false);
+    setUsageDetails([]);
     setShowModal(true);
   };
 
@@ -116,49 +182,38 @@ const EnumTableContent = ({ table, column }) => {
     setShowModal(false);
     setCurrentValue('');
     setOriginalValue('');
-    setReplacementValue('');
     setUsageCount(0);
-    setShowUsageWarning(false);
+    setUsageDetails([]);
     setModalMode('add');
   };
+  
   const handleSave = async () => {
-    if (modalMode !== 'delete' && !currentValue.trim()) {
+    if (!currentValue.trim()) {
       alert('La valeur ne peut pas être vide');
       return;
     }
 
-    if (modalMode === 'delete' && !replacementValue) {
-      alert('Veuillez sélectionner une valeur de remplacement');
-      return;
-    }
-
     try {
-      if (modalMode === 'add') {
-        await enumService.addEnumValue(table, column, currentValue);
-        
-        if (!values.includes(currentValue)) {
-          setValues([...values, currentValue]);
-        }
-      } else if (modalMode === 'edit') {
-        await enumService.updateEnumValue(table, column, originalValue, currentValue);
-        setValues(values.map(v => v === originalValue ? currentValue : v));
-      } else if (modalMode === 'delete') {
-        await enumService.replaceAndDeleteEnumValue(table, column, originalValue, replacementValue);
-        setValues(values.filter(v => v !== originalValue));
+      if (modalMode === 'edit') {
+        // Mode édition : renommer la valeur
+        await referenceService.updateValue(activeRefTable, originalValue, currentValue.trim());
+      } else {
+        // Mode ajout : ajouter une nouvelle valeur
+        await referenceService.addValue(activeRefTable, currentValue.trim());
       }
-        // Réinitialiser les états du modal
+      
+      // Réinitialiser les états du modal
       setCurrentValue('');
       setOriginalValue('');
-      setReplacementValue('');
       setUsageCount(0);
-      setShowUsageWarning(false);
+      setUsageDetails([]);
       setModalMode('add');
       setShowModal(false);
       
       // Rafraîchir la liste pour s'assurer de la cohérence
-      await fetchEnumValues();
+      await fetchReferenceValues();
     } catch (err) {
-      console.error('Error saving enum value:', err);
+      console.error('Error saving reference value:', err);
       alert('Échec de l\'enregistrement. Veuillez réessayer.');
     }
   };
@@ -200,41 +255,63 @@ const EnumTableContent = ({ table, column }) => {
           <Table hover responsive className="data-table border-bottom">
             <thead>
               <tr className="bg-light">
-                <th style={{ width: '70%' }}>Valeur</th>
-                <th className="text-center" style={{ width: '30%' }}>Actions</th>
+                <th style={{ width: '50%' }}>Valeur</th>
+                {activeRefTable === 'ref_units' && (
+                  <th style={{ width: '20%' }}>Type</th>
+                )}
+                <th className="text-center" style={{ width: activeRefTable === 'ref_units' ? '30%' : '50%' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {values.map((value, index) => (
-                <tr key={index}>
-                  <td>
-                    <div className="item-name font-weight-bold">
-                      {value}
-                    </div>
-                  </td>
-                  <td className="text-center">
-                    <div className="d-flex justify-content-center">
-                      <Button 
-                        variant="outline-warning" 
-                        size="sm" 
-                        className="me-2"
-                        onClick={() => handleEdit(value)}
-                        title="Modifier"
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </Button>
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm"
-                        onClick={() => handleDelete(value)}
-                        title="Supprimer"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {values.map((value, index) => {
+                // Gérer le cas où value peut être un objet ou une string
+                const valueName = typeof value === 'object' ? value.name : value;
+                const unitType = typeof value === 'object' ? value.unit_type : null;
+                const description = typeof value === 'object' ? value.description : null;
+                
+                return (
+                  <tr key={index}>
+                    <td>
+                      <div className="item-name font-weight-bold">
+                        {valueName}
+                      </div>
+                      {description && (
+                        <small className="text-muted">{description}</small>
+                      )}
+                    </td>
+                    {activeRefTable === 'ref_units' && (
+                      <td>
+                        {unitType ? (
+                          <span className="badge bg-secondary">{unitType}</span>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                    )}
+                    <td className="text-center">
+                      <div className="d-flex justify-content-center gap-2">
+                        <Button 
+                          variant="outline-warning" 
+                          size="sm"
+                          onClick={() => handleEdit(value)}
+                          title="Modifier"
+                          className="mr-1"
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </Button>
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm"
+                          onClick={() => handleDelete(value)}
+                          title="Supprimer"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </Table>
         </div>
@@ -246,7 +323,31 @@ const EnumTableContent = ({ table, column }) => {
             <p className="text-muted">{t('common.clickToAddValues')}</p>
           </Card.Body>
         </Card>
-      )}      {/* Modal for Add/Edit/Delete with Replacement */}
+      )}
+      
+      {/* Modal de confirmation de suppression avec options de remplacement */}
+      <DeleteWithUsageModal
+        show={showDeleteModal}
+        onHide={handleCancelDelete}
+        onCancel={handleCancelDelete}
+        onDeleteForce={handleDeleteForce}
+        onReplace={handleReplace}
+        itemName={valueToDelete}
+        itemType="reference"
+        usageCount={usageCount}
+        availableOptions={values
+          .filter(v => {
+            const vName = typeof v === 'object' ? v.name : v;
+            return vName !== valueToDelete;
+          })
+          .map(v => {
+            const vName = typeof v === 'object' ? v.name : v;
+            return { value: vName, label: vName };
+          })
+        }
+      />
+      
+      {/* Modal for Add/Edit/Delete with Replacement */}
       <Modal 
         show={showModal} 
         onHide={handleModalClose}
@@ -256,69 +357,27 @@ const EnumTableContent = ({ table, column }) => {
       >
         <Modal.Header closeButton className="bg-light">
           <Modal.Title>
-            {modalMode === 'add' 
-              ? t('common.addNewValue')
-              : modalMode === 'edit' 
-                ? t('common.editValue')
-                : t('common.deleteAndReplaceValue')
-            }
+            {modalMode === 'edit' ? 'Modifier la valeur' : t('common.addNewValue')}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {showUsageWarning && modalMode === 'edit' && (
-            <Alert variant="warning">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-              {t('common.valueUsedWarning', { count: usageCount })}
-            </Alert>
-          )}
-            <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-            {modalMode === 'delete' ? (
-              <>
-                <Alert variant="warning">
-                  <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                  La valeur <strong>{originalValue}</strong> est utilisée dans {usageCount} enregistrement(s). 
-                  Veuillez sélectionner une valeur de remplacement.
-                </Alert>
-                
-                <Form.Group className="mb-3">
-                  <Form.Label>Valeur à supprimer</Form.Label>
-                  <Form.Control 
-                    type="text" 
-                    value={originalValue} 
-                    disabled
-                  />
-                </Form.Group>
-                
-                <Form.Group className="mb-3">
-                  <Form.Label>Remplacer par</Form.Label>
-                  <Form.Select 
-                    value={replacementValue} 
-                    onChange={(e) => setReplacementValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                  >
-                    <option value="">Sélectionnez une valeur de remplacement</option>
-                    {values
-                      .filter(v => v !== originalValue)
-                      .map((v, i) => (
-                        <option key={i} value={v}>{v}</option>
-                      ))
-                    }
-                  </Form.Select>
-                </Form.Group>
-              </>
-            ) : (
-              <Form.Group className="mb-3">
-                <Form.Label>{`Valeur ${column}`}</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  value={currentValue} 
-                  onChange={(e) => setCurrentValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Entrez la valeur ${column}`}
-                  autoFocus
-                />
-              </Form.Group>
-            )}
+          <Form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+            <Form.Group className="mb-3">
+              <Form.Label>{`Nouvelle valeur pour ${activeRefTable}`}</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={currentValue} 
+                onChange={(e) => setCurrentValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSave();
+                  }
+                }}
+                placeholder={`Entrez la nouvelle valeur`}
+                autoFocus
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>        <Modal.Footer>
           <Button variant="outline-secondary" onClick={handleModalClose}>
@@ -327,12 +386,9 @@ const EnumTableContent = ({ table, column }) => {
           <Button 
             variant="danger" 
             onClick={handleSave}
-            disabled={
-              (modalMode === 'delete' && !replacementValue) || 
-              (modalMode !== 'delete' && !currentValue.trim())
-            }
+            disabled={!currentValue.trim()}
           >
-            {modalMode === 'delete' ? 'Supprimer et remplacer' : 'Enregistrer'}
+            Enregistrer
           </Button>
         </Modal.Footer>
       </Modal>

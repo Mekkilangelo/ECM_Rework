@@ -23,7 +23,6 @@ axios.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      console.log('Redirection depuis intercepteur global après 401...');
       setTimeout(() => {
         window.location.replace('/login?error=session_expired');
       }, 100);

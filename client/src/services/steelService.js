@@ -18,7 +18,7 @@ const steelService = {  /**
       // Logs condensés uniquement en mode debug
       const isDev = process.env.NODE_ENV === 'development';
       if (isDev && search) {
-        console.log('🔍 Recherche aciers:', { search, page, limit });
+        
       }
       
       const params = { 
@@ -61,20 +61,20 @@ const steelService = {  /**
    */
   getSteelGrades: async () => {
     try {
-      console.log('=== FRONTEND steelService.getSteelGrades called ===');
+      
       
       const response = await api.get('/steels/grades');
       
-      console.log('Réponse brute grades:', response);
-      console.log('Données grades:', response.data);
+      
+      
       
       // Traitement de la réponse selon le nouveau format d'API
       if (response.data && response.data.success === true) {
-        console.log('Grades formatés:', response.data.data);
+        
         return response.data.data;
       }
       
-      console.log('Retour grades brutes:', response.data);
+      
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des nuances d\'acier:', error);
@@ -159,6 +159,61 @@ const steelService = {  /**
       return response.data;
     } catch (error) {
       console.error(`Erreur lors de la suppression de l'acier ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Vérifie l'utilisation d'un acier
+   * @param {string|number} id - L'identifiant de l'acier
+   * @returns {Promise<Object>} Informations sur l'utilisation
+   */
+  checkSteelUsage: async (id) => {
+    try {
+      const response = await api.get(`/steels/${id}/usage`);
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la vérification d'utilisation de l'acier ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Supprime un acier en forçant (retire toutes les références)
+   * @param {string|number} id - L'identifiant de l'acier
+   * @returns {Promise<Object>} Résultat de l'opération
+   */
+  forceDeleteSteel: async (id) => {
+    try {
+      const response = await api.delete(`/steels/${id}/force`);
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la suppression forcée de l'acier ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Remplace un acier par un autre puis supprime l'ancien
+   * @param {string|number} oldSteelId - L'identifiant de l'acier à supprimer
+   * @param {string|number} newSteelId - L'identifiant de l'acier de remplacement
+   * @returns {Promise<Object>} Résultat de l'opération
+   */
+  replaceSteelAndDelete: async (oldSteelId, newSteelId) => {
+    try {
+      const response = await api.put(`/steels/${oldSteelId}/replace`, { newSteelId });
+      if (response.data && response.data.success === true) {
+        return response.data.data;
+      }
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors du remplacement de l'acier ${oldSteelId} par ${newSteelId}:`, error);
       throw error;
     }
   },

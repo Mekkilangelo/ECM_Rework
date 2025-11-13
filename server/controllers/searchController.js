@@ -1,7 +1,7 @@
 /**
  * Contrôleur pour les fonctionnalités de recherche
  */
-const { node: Node, client: Client, order: Order, part: Part, test: Test, steel: Steel } = require('../models');
+const { node: Node, client: Client, trial_request: TrialRequest, part: Part, trial: Trial, steel: Steel } = require('../models');
 const { Op, Sequelize } = require('sequelize');
 
 // Mappages de types d'entités vers les champs à rechercher
@@ -17,47 +17,40 @@ const searchableFields = {
   orders: [
     'name', 
     'description',
-    'Order.commercial', 
-    'Order.order_number', 
-    'Order.contacts'
+    'TrialRequest.commercial', 
+    'TrialRequest.request_number'
   ],
   parts: [
     'name', 
     'description',
     'Part.designation', 
     'Part.client_designation', 
-    'Part.reference', 
-    'Part.steel',
-    // Champs JSON
-    'Part.specifications->coreHardness',
-    'Part.specifications->surfaceHardness',
-    'Part.specifications->toothHardness',
-    'Part.specifications->ecd'
+    'Part.reference'
   ],
-  tests: [
+  trials: [
     'name', 
     'description',
-    'Test.load_number', 
-    'Test.mounting_type', 
-    'Test.position_type',
-    'Test.process_type',
-    'Test.preox_media',
+    'Trial.load_number', 
+    'Trial.mounting_type', 
+    'Trial.position_type',
+    'Trial.process_type',
+    'Trial.preox_media',
     // Champs JSON imbriqués
-    'Test.furnace_data->furnace_type',
-    'Test.furnace_data->heating_cell',
-    'Test.furnace_data->cooling_media',
-    'Test.furnace_data->quench_cell',
-    'Test.load_data->floor_count',
-    'Test.load_data->part_count',
-    'Test.load_data->comments',
-    'Test.recipe_data->number',
-    'Test.recipe_data->selected_gas1',
-    'Test.recipe_data->selected_gas2',
-    'Test.recipe_data->selected_gas3',
-    'Test.recipe_data->preox->media',
-    'Test.quench_data->gas_quench->speed_parameters',
-    'Test.quench_data->oil_quench->speed_parameters',
-    'Test.results_data->results'
+    'Trial.furnace_data->furnace_type',
+    'Trial.furnace_data->heating_cell',
+    'Trial.furnace_data->cooling_media',
+    'Trial.furnace_data->quench_cell',
+    'Trial.load_data->floor_count',
+    'Trial.load_data->part_count',
+    'Trial.load_data->comments',
+    'Trial.recipe_data->number',
+    'Trial.recipe_data->selected_gas1',
+    'Trial.recipe_data->selected_gas2',
+    'Trial.recipe_data->selected_gas3',
+    'Trial.recipe_data->preox->media',
+    'Trial.quench_data->gas_quench->speed_parameters',
+    'Trial.quench_data->oil_quench->speed_parameters',
+    'Trial.results_data->results'
   ],
   steels: [
     'name', 
@@ -76,7 +69,7 @@ const formatResults = {
   clients: (nodes) => nodes,
   orders: (nodes) => nodes,
   parts: (nodes) => nodes,
-  tests: (nodes) => nodes,
+  trials: (nodes) => nodes,
   steels: (nodes) => nodes
 };
 
@@ -94,7 +87,7 @@ exports.search = async (req, res) => {
       clientGroup, country, city,
       orderDate, commercial,
       partDesignation, steelType, minQuantity, maxQuantity,
-      testStatus, testLocation, mountingType, processType, positionType, testDateFrom, testDateTo,
+      trialStatus, trialLocation, mountingType, processType, positionType, trialDateFrom, trialDateTo,
       steelFamily, steelStandard
     } = req.query;
     
@@ -106,10 +99,10 @@ exports.search = async (req, res) => {
     }
     
     // Déterminer les types d'entités à rechercher
-    let typesToSearch = ['clients', 'orders', 'parts', 'tests', 'steels'];
+    let typesToSearch = ['clients', 'orders', 'parts', 'trials', 'steels'];
     if (entityTypes) {
       typesToSearch = entityTypes.split(',').filter(type => 
-        ['clients', 'orders', 'parts', 'tests', 'steels'].includes(type)
+        ['clients', 'orders', 'parts', 'trials', 'steels'].includes(type)
       );
     }
     
@@ -233,7 +226,7 @@ function anyFilterApplied(query) {
     'clientGroup', 'country', 'city',
     'orderDate', 'commercial',
     'partDesignation', 'steelType', 'minQuantity', 'maxQuantity',
-    'testStatus', 'testLocation', 'mountingType', 'processType', 'positionType', 'testDateFrom', 'testDateTo',
+    'trialStatus', 'trialLocation', 'mountingType', 'processType', 'positionType', 'trialDateFrom', 'trialDateTo',
     'steelFamily', 'steelStandard'
   ];
   
@@ -247,7 +240,7 @@ function getAppliedFilters(query) {
     'clientGroup', 'country', 'city',
     'orderDate', 'commercial',
     'partDesignation', 'steelType', 'minQuantity', 'maxQuantity',
-    'testStatus', 'testLocation', 'mountingType', 'processType', 'positionType', 'testDateFrom', 'testDateTo',
+    'trialStatus', 'trialLocation', 'mountingType', 'processType', 'positionType', 'trialDateFrom', 'trialDateTo',
     'steelFamily', 'steelStandard'
   ];
   
@@ -275,15 +268,13 @@ function getEntitySpecificFilters(entityType, query) {
     case 'orders':
       if (query.orderDate) {
         const orderDate = new Date(query.orderDate);
-        filters['$Order.order_date$'] = orderDate;
+        filters['$TrialRequest.request_date$'] = orderDate;
       }
-      if (query.commercial) filters['$Order.commercial$'] = { [Op.like]: `%${query.commercial}%` };
-      if (query.contacts) filters['$Order.contacts$'] = { [Op.like]: `%${query.contacts}%` };
+      if (query.commercial) filters['$TrialRequest.commercial$'] = { [Op.like]: `%${query.commercial}%` };
       break;
       
     case 'parts':
       if (query.partDesignation) filters['$Part.designation$'] = { [Op.like]: `%${query.partDesignation}%` };
-      if (query.steelType) filters['$Part.steel$'] = { [Op.like]: `%${query.steelType}%` };
       if (query.clientDesignation) filters['$Part.client_designation$'] = { [Op.like]: `%${query.clientDesignation}%` };
       if (query.reference) filters['$Part.reference$'] = { [Op.like]: `%${query.reference}%` };
       
@@ -296,66 +287,31 @@ function getEntitySpecificFilters(entityType, query) {
         };
       }
       
-      // Filtres pour les dimensions (via JSON)
-      if (query.minLength || query.maxLength) {
-        const lengthConditions = [];
-        if (query.minLength) {
-          lengthConditions.push(Sequelize.literal(
-            `CAST(JSON_EXTRACT(Part.dimensions, '$.rectangular.length') AS DECIMAL) >= ${parseFloat(query.minLength)}`
-          ));
-        }
-        if (query.maxLength) {
-          lengthConditions.push(Sequelize.literal(
-            `CAST(JSON_EXTRACT(Part.dimensions, '$.rectangular.length') AS DECIMAL) <= ${parseFloat(query.maxLength)}`
-          ));
-        }
-        if (lengthConditions.length > 0) {
-          filters[Op.and] = filters[Op.and] || [];
-          filters[Op.and].push({ [Op.or]: lengthConditions });
-        }
-      }
-      
-      // Filtres pour les spécifications (hardness)
-      if (query.minCoreHardness || query.maxCoreHardness) {
-        const hardnessConditions = [];
-        if (query.minCoreHardness) {
-          hardnessConditions.push(Sequelize.literal(
-            `CAST(JSON_EXTRACT(Part.specifications, '$.coreHardness.min') AS DECIMAL) >= ${parseFloat(query.minCoreHardness)}`
-          ));
-        }
-        if (query.maxCoreHardness) {
-          hardnessConditions.push(Sequelize.literal(
-            `CAST(JSON_EXTRACT(Part.specifications, '$.coreHardness.max') AS DECIMAL) <= ${parseFloat(query.maxCoreHardness)}`
-          ));
-        }
-        if (hardnessConditions.length > 0) {
-          filters[Op.and] = filters[Op.and] || [];
-          filters[Op.and].push({ [Op.or]: hardnessConditions });
-        }
-      }
+      // TODO: Ajouter les filtres pour les dimensions (dim_rect_length, etc.) 
+      // et les spécifications (tables specs_hardness, specs_ecd) si nécessaire
       break;
       
-    case 'tests':
-      if (query.testStatus) filters['$Test.status$'] = query.testStatus;
-      if (query.testLocation) filters['$Test.location$'] = query.testLocation;
-      if (query.mountingType) filters['$Test.mounting_type$'] = query.mountingType;
-      if (query.processType) filters['$Test.process_type$'] = query.processType;
-      if (query.positionType) filters['$Test.position_type$'] = query.positionType;
-      if (query.loadNumber) filters['$Test.load_number$'] = { [Op.like]: `%${query.loadNumber}%` };
-      if (query.preoxMedia) filters['$Test.preox_media$'] = { [Op.like]: `%${query.preoxMedia}%` };
+    case 'trials':
+      if (query.trialStatus) filters['$Trial.status$'] = query.trialStatus;
+      if (query.trialLocation) filters['$Trial.location$'] = query.trialLocation;
+      if (query.mountingType) filters['$Trial.mounting_type$'] = query.mountingType;
+      if (query.processType) filters['$Trial.process_type$'] = query.processType;
+      if (query.positionType) filters['$Trial.position_type$'] = query.positionType;
+      if (query.loadNumber) filters['$Trial.load_number$'] = { [Op.like]: `%${query.loadNumber}%` };
+      if (query.preoxMedia) filters['$Trial.preox_media$'] = { [Op.like]: `%${query.preoxMedia}%` };
       
       // Filtres de plage de dates
-      if (query.testDateFrom || query.testDateTo) {
-        filters['$Test.test_date$'] = {};
-        if (query.testDateFrom) filters['$Test.test_date$'][Op.gte] = query.testDateFrom;
-        if (query.testDateTo) filters['$Test.test_date$'][Op.lte] = query.testDateTo;
+      if (query.trialDateFrom || query.trialDateTo) {
+        filters['$Trial.trial_date$'] = {};
+        if (query.trialDateFrom) filters['$Trial.trial_date$'][Op.gte] = query.trialDateFrom;
+        if (query.trialDateTo) filters['$Trial.trial_date$'][Op.lte] = query.trialDateTo;
       }
       
       // Filtres pour les données de four (via JSON)
       if (query.furnaceType) {
         filters[Op.and] = filters[Op.and] || [];
         filters[Op.and].push(Sequelize.literal(
-          `JSON_EXTRACT(Test.furnace_data, '$.furnace_type') LIKE '%${query.furnaceType}%'`
+          `JSON_EXTRACT(Trial.furnace_data, '$.furnace_type') LIKE '%${query.furnaceType}%'`
         ));
       }
       
@@ -363,7 +319,7 @@ function getEntitySpecificFilters(entityType, query) {
       if (query.recipeNumber) {
         filters[Op.and] = filters[Op.and] || [];
         filters[Op.and].push(Sequelize.literal(
-          `JSON_EXTRACT(Test.recipe_data, '$.number') LIKE '%${query.recipeNumber}%'`
+          `JSON_EXTRACT(Trial.recipe_data, '$.number') LIKE '%${query.recipeNumber}%'`
         ));
       }
       break;
@@ -408,7 +364,7 @@ exports.searchByEntityType = async (req, res) => {
       clientGroup, country, city,
       orderDate, commercial,
       partDesignation, steelType, minQuantity, maxQuantity,
-      testStatus, testLocation, mountingType, processType, positionType, testDateFrom, testDateTo,
+      trialStatus, trialLocation, mountingType, processType, positionType, trialDateFrom, trialDateTo,
       steelFamily, steelStandard
     } = req.query;
     
@@ -419,7 +375,7 @@ exports.searchByEntityType = async (req, res) => {
       });
     }
     
-    if (!['clients', 'orders', 'parts', 'tests', 'steels'].includes(entityType)) {
+    if (!['clients', 'orders', 'parts', 'trials', 'steels'].includes(entityType)) {
       return res.status(400).json({ 
         success: false, 
         message: 'Type d\'entité invalide' 
@@ -427,7 +383,8 @@ exports.searchByEntityType = async (req, res) => {
     }
     
     // Convertir le type d'entité pluriel au singulier pour le type de nœud
-    const nodeType = entityType.slice(0, -1); // Ex: 'clients' -> 'client'
+    let nodeType = entityType.slice(0, -1); // Ex: 'clients' -> 'client'
+    if (entityType === 'orders') nodeType = 'trial_request'; // Exception: orders -> trial_request dans la DB
     
     // Les champs à rechercher pour ce type d'entité
     const fields = searchableFields[entityType];
@@ -524,11 +481,11 @@ function getIncludesForType(entityType) {
     case 'clients':
       return [{ model: Client, as: 'Client' }];
     case 'orders':
-      return [{ model: Order, as: 'Order' }];
+      return [{ model: TrialRequest, as: 'TrialRequest' }];
     case 'parts':
       return [{ model: Part, as: 'Part' }];
-    case 'tests':
-      return [{ model: Test, as: 'Test' }];
+    case 'trials':
+      return [{ model: Trial, as: 'Trial' }];
     case 'steels':
       return [{ model: Steel, as: 'Steel' }];
     default:

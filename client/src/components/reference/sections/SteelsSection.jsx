@@ -31,14 +31,14 @@ const SteelsSection = () => {
         <Tab.Pane eventKey="standard">
           <Card>
             <Card.Body>
-              <EnumTableContent table="steels" column="standard" />
+              <EnumTableContent refTable="ref_steel_standard" />
             </Card.Body>
           </Card>
         </Tab.Pane>
         <Tab.Pane eventKey="family">
           <Card>
             <Card.Body>
-              <EnumTableContent table="steels" column="family" />
+              <EnumTableContent refTable="ref_steel_family" />
             </Card.Body>
           </Card>
         </Tab.Pane>

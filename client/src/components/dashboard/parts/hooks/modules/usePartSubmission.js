@@ -37,42 +37,34 @@ const usePartSubmission = (
     description: ''
   };
     const formatDataForApi = () => {
-    // Structurer les dimensions en JSON
-    const dimensions = {
-      rectangular: {
-        length: formData.length || null,
-        width: formData.width || null,
-        height: formData.height || null,
-        unit: formData.dimensionsUnit || null
-      },
-      circular: {
-        diameterIn: formData.diameterIn || null,
-        diameterOut: formData.diameterOut || null,
-        unit: formData.diameterUnit || null
-      },
-      weight: {
-        value: formData.weight || null,
-        unit: formData.weightUnit || null
-      }
-    };
-    
-    // Structurer les spécifications en JSON avec la nouvelle structure
-    const specifications = {
-      hardnessSpecs: formData.hardnessSpecs || [],
-      ecdSpecs: formData.ecdSpecs || []
-    };
-    
+    // Le backend attend les champs en snake_case, pas un objet JSON
     return {
       parent_id: parentId,
-      name: formData.name,
-      designation: formData.designation,
-      clientDesignation: formData.clientDesignation,
-      reference: formData.reference,
+      designation: formData.designation || null,
+      client_designation: formData.clientDesignation || null,
+      reference: formData.reference || null,
       quantity: formData.quantity || null,
-      dimensions,
-      specifications,
-      steel: formData.steel,
-      description: formData.description || null
+      steel_node_id: formData.steelId || null,
+      description: formData.description || null,
+      
+      // Dimensions - Poids
+      dim_weight_value: formData.weight || null,
+      dim_weight_unit: formData.weightUnit || null,
+      
+      // Dimensions - Rectangulaires
+      dim_rect_length: formData.length || null,
+      dim_rect_width: formData.width || null,
+      dim_rect_height: formData.height || null,
+      dim_rect_unit: formData.dimensionsUnit || null,
+      
+      // Dimensions - Circulaires
+      dim_circ_diameterIn: formData.diameterIn || null,
+      dim_circ_diameterOut: formData.diameterOut || null,
+      dim_circ_unit: formData.diameterUnit || null,
+      
+      // Spécifications (seront gérées séparément via specs_hardness et specs_ecd)
+      hardnessSpecs: formData.hardnessSpecs || [],
+      ecdSpecs: formData.ecdSpecs || []
     };
   };
   // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission

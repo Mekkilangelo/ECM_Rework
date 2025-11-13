@@ -1,7 +1,6 @@
 /**
  * Script ETL pour charger les données depuis un fichier CSV
- * Utilise les services existants pour créer clients, commandes, pièces        // Utiliser une valeur par défaut existante pour family
-        family: 'Low_Alloy', // Valeur ENUM existante par défaut (DB)et tests
+ * Utilise les services existants pour créer clients, commandes, pièces et trials
  */
 
 const fs = require('fs');
@@ -10,9 +9,9 @@ const path = require('path');
 
 // Services
 const clientService = require('../services/clientService');
-const orderService = require('../services/orderService');
+const trialRequestService = require('../services/trialRequestService');
 const partService = require('../services/partService');
-const testService = require('../services/testService');
+const trialService = require('../services/trialService');
 const steelService = require('../services/steelService');
 
 // Models pour les requêtes directes si nécessaire
@@ -40,38 +39,38 @@ class ETLLoader {
    * Initialise le cache des valeurs ENUM existantes
    */
   async initializeEnumCache() {
-    console.log('🔧 Initialisation du cache ENUM...');
+    
     
     try {
       // Charger les familles d'acier
       const steelFamilyEnum = await EnumModel.getEnumValues('steels', 'family');
       if (steelFamilyEnum.values) {
         steelFamilyEnum.values.forEach(val => this.enumCache.steelFamily.add(val));
-        console.log(`   ✓ ${this.enumCache.steelFamily.size} familles d'acier chargées`);
+        
       }
       
       // Charger les standards d'acier
       const steelStandardEnum = await EnumModel.getEnumValues('steels', 'standard');
       if (steelStandardEnum.values) {
         steelStandardEnum.values.forEach(val => this.enumCache.steelStandard.add(val));
-        console.log(`   ✓ ${this.enumCache.steelStandard.size} standards d'acier chargés`);
+        
       }
       
       // Charger les pays clients (table CLIENTS, pas nodes !)
       const clientCountryEnum = await EnumModel.getEnumValues('clients', 'country');
       if (clientCountryEnum.values) {
         clientCountryEnum.values.forEach(val => this.enumCache.clientCountry.add(val));
-        console.log(`   ✓ ${this.enumCache.clientCountry.size} pays clients chargés`);
+        
       }
       
       // Charger les désignations de pièces
       const partDesignationEnum = await EnumModel.getEnumValues('parts', 'designation');
       if (partDesignationEnum.values) {
         partDesignationEnum.values.forEach(val => this.enumCache.partDesignation.add(val));
-        console.log(`   ✓ ${this.enumCache.partDesignation.size} désignations de pièces chargées`);
+        
       }
       
-      console.log('✅ Cache ENUM initialisé avec succès');
+      
     } catch (error) {
       console.error('❌ Erreur lors de l\'initialisation du cache ENUM:', error.message);
       throw error;
@@ -96,7 +95,7 @@ class ETLLoader {
       // Trouver la valeur exacte dans le cache pour l'utiliser
       const exactValue = cacheValues.find(val => val.toLowerCase() === normalizedValue.toLowerCase());
       if (exactValue !== newValue) {
-        console.log(`   ⚠️  Valeur ENUM "${newValue}" normalisée en "${exactValue}" (sensibilité à la casse)`);
+        console.log(`   ℹ️  Utilisation de la casse existante: "${exactValue}" au lieu de "${newValue}"`);
       }
       return false; // Déjà existant
     }
@@ -112,7 +111,7 @@ class ETLLoader {
         const exactValue = currentValues.find(val => val.toLowerCase() === normalizedValue.toLowerCase());
         cacheSet.add(exactValue);
         if (exactValue !== newValue) {
-          console.log(`   ⚠️  Valeur ENUM "${newValue}" existe déjà comme "${exactValue}"`);
+          
         }
         return false;
       }
@@ -127,7 +126,7 @@ class ETLLoader {
       // Mettre à jour le cache
       cacheSet.add(newValue);
       
-      console.log(`   ✅ Valeur ENUM ajoutée: ${tableName}.${columnName} = "${newValue}"`);
+      
       return true;
     } catch (error) {
       console.error(`   ❌ Erreur ajout ENUM ${tableName}.${columnName} = "${newValue}": ${error.message}`);
@@ -232,49 +231,49 @@ class ETLLoader {
    * @param {string} csvFilePath - Chemin vers le fichier CSV
    */
   async loadData(csvFilePath) {
-    console.log('🚀 Début du chargement ETL...');
+    
     
     try {
       // 0. Initialiser le cache ENUM
       await this.initializeEnumCache();
 
       // 1. Charger et parser le CSV
-      console.log('📖 Lecture du fichier CSV...');
+      
       const data = await this.readCSV(csvFilePath);
-      console.log(`📊 ${data.length} lignes trouvées dans le CSV`);
+      
 
       // 2. Créer les aciers manquants
-      console.log('🔧 Création des aciers manquants...');
+      
       await this.createMissingSteel(data);
 
       // 3. Créer les clients uniques
-      console.log('👥 Création des clients...');
+      
       await this.createClients(data);
 
       // 4. Créer les commandes (demandes d'essai)
-      console.log('📋 Création des commandes...');
+      
       await this.createOrders(data);
 
       // 5. Créer les pièces uniques
-      console.log('🔧 Création des pièces...');
+      
       await this.createParts(data);
 
       // 6. Créer les tests
-      console.log('🧪 Création des tests...');
+      
       await this.createTests(data);
 
-      console.log('✅ Chargement ETL terminé avec succès !');
-      console.log(`📈 Statistiques :`);
-      console.log(`   - ${this.steelsMap.size} aciers créés/vérifiés`);
-      console.log(`   - ${this.clientsMap.size} clients créés`);
-      console.log(`   - ${this.ordersMap.size} commandes créées`);
-      console.log(`   - ${this.partsMap.size} pièces créées`);
-      console.log(`   - ${data.length} tests traités`);
+      
+      
+      
+      
+      
+      
+      
       
       if (this.errors.length > 0) {
-        console.log(`⚠️  ${this.errors.length} erreurs rencontrées :`);
+        
         this.errors.forEach((error, index) => {
-          console.log(`   ${index + 1}. ${error}`);
+          
         });
       }
 
@@ -321,7 +320,7 @@ class ETLLoader {
       }
     });
 
-    console.log(`   📊 ${uniqueSteel.size} aciers uniques trouvés dans le CSV`);
+    
 
     // Vérifier quels aciers existent déjà
     const existingSteel = await steelService.getAllSteels({ limit: 1000 });
@@ -364,14 +363,14 @@ class ETLLoader {
 
           const createdSteel = await steelService.createSteel(steelData);
           this.steelsMap.set(grade, createdSteel.id);
-          console.log(`   ✅ Acier créé : ${grade} (Famille: ${autoFamily}, Standard: ${autoStandard}, ID: ${createdSteel.id})`);
+          console.log(`   ✅ Acier créé: ${grade}`);
           createdCount++;
         } else {
           // Récupérer l'ID de l'acier existant
           const existingSteelData = existingSteel.steels.find(s => s.steel?.grade === grade);
           if (existingSteelData) {
             this.steelsMap.set(grade, existingSteelData.id);
-            console.log(`   ✓ Acier existant : ${grade} (ID: ${existingSteelData.id})`);
+            console.log(`   ℹ️  Acier existant: ${grade}`);
           }
         }
       } catch (error) {
@@ -381,12 +380,12 @@ class ETLLoader {
       }
     }
 
-    console.log(`   📈 ${createdCount} nouveaux aciers créés, ${uniqueSteel.size - createdCount} aciers existants`);
+    
     if (familyAddedCount > 0) {
-      console.log(`   🔧 ${familyAddedCount} nouvelles familles d'acier ajoutées aux ENUM`);
+      
     }
     if (standardAddedCount > 0) {
-      console.log(`   🔧 ${standardAddedCount} nouveaux standards d'acier ajoutés aux ENUM`);
+      
     }
   }
 
@@ -405,10 +404,10 @@ class ETLLoader {
       }
     });
 
-    console.log(`   📊 ${uniqueDesignations.size} désignations uniques trouvées dans le CSV`);
+    
 
     if (uniqueDesignations.size === 0) {
-      console.log(`   ✓ Aucune désignation à traiter`);
+      
       return;
     }
 
@@ -431,7 +430,7 @@ class ETLLoader {
             await node.sequelize.query(query);
             existingValues.add(designation);
             
-            console.log(`   ✅ ENUM designation ajouté : ${designation}`);
+            
             addedCount++;
           } catch (error) {
             const errorMsg = `Erreur ajout ENUM designation "${designation}": ${error.message}`;
@@ -439,11 +438,11 @@ class ETLLoader {
             this.errors.push(errorMsg);
           }
         } else {
-          console.log(`   ✓ ENUM designation existant : ${designation}`);
+          
         }
       }
 
-      console.log(`   📈 ${addedCount} nouvelles valeurs ENUM ajoutées, ${uniqueDesignations.size - addedCount} valeurs existantes`);
+      
     } catch (error) {
       const errorMsg = `Erreur lors de la gestion des ENUMs designation: ${error.message}`;
       console.error(`   ❌ ${errorMsg}`);
@@ -480,7 +479,7 @@ class ETLLoader {
       }
     });
 
-    console.log(`   📊 ${uniqueClients.size} clients uniques trouvés`);
+    
 
     // Créer les clients un par un
     for (const [clientName, clientData] of uniqueClients) {
@@ -493,7 +492,7 @@ class ETLLoader {
         
         const createdClient = await clientService.createClient(clientData);
         this.clientsMap.set(clientName, createdClient.id);
-        console.log(`   ✅ Client créé : ${clientName} (Pays: ${clientData.country}, ID: ${createdClient.id})`);
+        console.log(`   ✅ Client créé: ${clientName}`);
       } catch (error) {
         const errorMsg = `Erreur création client "${clientName}": ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
@@ -502,7 +501,7 @@ class ETLLoader {
     }
     
     if (countryAddedCount > 0) {
-      console.log(`   🔧 ${countryAddedCount} nouveaux pays ajoutés aux ENUM`);
+      
     }
   }
 
@@ -529,7 +528,7 @@ class ETLLoader {
       }
     });
 
-    console.log(`   📊 ${clientOrders.size} commandes à créer`);
+    
 
     // Créer une commande par client
     for (const [clientName, orderInfo] of clientOrders) {
@@ -538,14 +537,14 @@ class ETLLoader {
           parent_id: orderInfo.clientId, // La commande est enfant du client
           name: `Demande d'essai - ${clientName}`,
           description: `Demande d'essai importée via ETL (${orderInfo.testCount} tests)`,
-          order_date: new Date().toISOString().split('T')[0], // Date d'aujourd'hui
+          request_date: new Date().toISOString().split('T')[0], // Date d'aujourd'hui
           commercial: 'ETL Import',
           contacts: null
         };
 
-        const createdOrder = await orderService.createOrder(orderData);
+        const createdOrder = await trialRequestService.createTrialRequest(orderData);
         this.ordersMap.set(clientName, createdOrder.id);
-        console.log(`   ✅ Commande créée pour ${clientName} (ID: ${createdOrder.id})`);
+        console.log(`   ✅ Demande d'essai créée: ${createdOrder.id}`);
       } catch (error) {
         const errorMsg = `Erreur création commande pour "${clientName}": ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
@@ -626,7 +625,7 @@ class ETLLoader {
       }
     });
 
-    console.log(`   📊 ${uniqueParts.size} pièces uniques trouvées`);
+    
 
     let designationAddedCount = 0;
     
@@ -641,7 +640,7 @@ class ETLLoader {
         
         const createdPart = await partService.createPart(partData);
         this.partsMap.set(partKey, createdPart.id);
-        console.log(`   ✅ Pièce créée : ${partData.designation} (ID: ${createdPart.id})`);
+        console.log(`   ✅ Pièce créée: ${designation}`);
       } catch (error) {
         const errorMsg = `Erreur création pièce "${partKey}": ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
@@ -650,7 +649,7 @@ class ETLLoader {
     }
     
     if (designationAddedCount > 0) {
-      console.log(`   🔧 ${designationAddedCount} nouvelles désignations ajoutées aux ENUM`);
+      
     }
   }
 
@@ -659,7 +658,7 @@ class ETLLoader {
    * @param {Array} data - Données du CSV
    */
   async createTests(data) {
-    console.log(`   📊 ${data.length} tests à créer`);
+    
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
@@ -834,11 +833,11 @@ class ETLLoader {
           results_data: resultsData
         };
 
-        const createdTest = await testService.createTest(testData);
-        console.log(`   ✅ Test créé : ${testData.name} (ID: ${createdTest.id})`);
+        const createdTrial = await trialService.createTrial(trialData);
+        console.log(`   ✅ Trial créé ligne ${i + 1}`);
 
       } catch (error) {
-        const errorMsg = `Erreur création test ligne ${i + 1}: ${error.message}`;
+        const errorMsg = `Erreur création trial ligne ${i + 1}: ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
         this.errors.push(errorMsg);
       }
@@ -860,7 +859,7 @@ async function main() {
 
   try {
     await etlLoader.loadData(csvFilePath);
-    console.log('🎉 ETL terminé avec succès !');
+    
     process.exit(0);
   } catch (error) {
     console.error('💥 Erreur fatale ETL :', error);

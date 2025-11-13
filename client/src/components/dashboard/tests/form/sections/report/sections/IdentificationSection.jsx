@@ -5,9 +5,9 @@ import { faIdCard, faRuler, faWeight, faTag, faCogs, faImage, faBox, faUser, faC
 import fileService from '../../../../../../../services/fileService';
 import SectionHeader from './common/SectionHeader';
 
-const IdentificationSection = ({ testData, partData, clientData, selectedPhotos = {} }) => {
+const IdentificationSection = ({ trialData, partData, clientData, selectedPhotos = {} }) => {
   // Vérification de sécurité pour éviter les erreurs
-  const test = testData || {};
+  const trial = trialData || {};
   const part = partData || {};
   
   // Fonction améliorée pour formater les dimensions de façon plus complète
@@ -115,7 +115,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
       case 'partDetails':
         // Informations de base de la pièce
         let baseHeight = 250;
-        if (part.comments || (test.loadData && test.loadData.comments)) {
+        if (part.comments || (trial.loadData && trial.loadData.comments)) {
           baseHeight += 120; // Ajouter de la place pour les commentaires
         }
         return baseHeight;
@@ -217,7 +217,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
     
     // S'assurer qu'on a au moins une page
     return pages.length > 0 ? pages : [{ sections: [{ type: 'partDetails', data: part }], estimatedHeight: 400 }];
-  }, [part, identificationPhotos, test]);
+  }, [part, identificationPhotos, trial]);
 
   // Fonction pour créer le header de page
   const createPageHeader = (pageIndex, isFirstPage = false) => (
@@ -227,7 +227,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
           title="PART IDENTIFICATION"
           subtitle={part.designation || 'Part designation not specified'}
           icon={faIdCard}
-          testData={testData}
+          trialData={trialData}
           clientData={clientData}
           sectionType="identification"
           showSubtitle={true}
@@ -432,7 +432,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
       </div>
 
       {/* Commentaires (si présents) */}
-      {(part.comments || (test.loadData && test.loadData.comments)) && (
+      {(part.comments || (trial.loadData && trial.loadData.comments)) && (
         <div style={{
           background: 'white',
           borderRadius: '12px',
@@ -459,7 +459,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
               padding: '15px',
               background: '#fafafa',
               borderRadius: '8px',
-              marginBottom: part.comments && test.loadData?.comments ? '15px' : '0',
+              marginBottom: part.comments && trial.loadData?.comments ? '15px' : '0',
               border: '1px solid #e0e0e0'
             }}>
               <h5 style={{ fontSize: '14px', fontWeight: '600', color: '#7b1fa2', marginBottom: '8px' }}>Part Comments:</h5>
@@ -467,7 +467,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
             </div>
           )}
           
-          {test.loadData && test.loadData.comments && (
+          {trial.loadData && trial.loadData.comments && (
             <div style={{ 
               padding: '15px',
               background: '#fafafa',
@@ -475,7 +475,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
               border: '1px solid #e0e0e0'
             }}>
               <h5 style={{ fontSize: '14px', fontWeight: '600', color: '#7b1fa2', marginBottom: '8px' }}>Load Comments:</h5>
-              <p style={{ margin: 0, color: '#555', fontSize: '14px' }}>{test.loadData.comments}</p>
+              <p style={{ margin: 0, color: '#555', fontSize: '14px' }}>{trial.loadData.comments}</p>
             </div>
           )}
         </div>
@@ -584,7 +584,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
                   
                   const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                   if (e.target.src !== alternateUrl) {
-                    console.log(`Attempting with alternative URL: ${alternateUrl}`);
+                    
                     e.target.src = alternateUrl;
                     return;
                   }

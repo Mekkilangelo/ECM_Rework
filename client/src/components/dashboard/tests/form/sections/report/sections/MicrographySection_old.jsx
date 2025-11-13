@@ -128,19 +128,19 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
     return magnificationNames[magnification] || magnification;
   };
     // Debug photo information
-  console.log("MicrographySection - testData:", testData);
-  console.log("MicrographySection - selectedPhotos:", selectedPhotos);
-  console.log("MicrographySection - micrographyPhotos (after processing):", micrographyPhotos);
+  
+  
+  :", micrographyPhotos);
     
   if (micrographyPhotos.length > 0) {
-    console.log(`URL of first image:`, getPhotoUrl(micrographyPhotos[0]));
+    );
   }
 
   // Organize photos by hierarchy
   const organizedPhotos = organizePhotosByHierarchy(micrographyPhotos);
   const hasPhotos = Object.keys(organizedPhotos).length > 0;
 
-  console.log("Photos organized by hierarchy:", organizedPhotos);    return (
+      return (
     <div style={{ 
       minHeight: '297mm', // Format A4 exact
       maxHeight: '297mm',
@@ -312,7 +312,7 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
                                                 const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                                                 
                                                 if (e.target.src !== alternateUrl) {
-                                                  console.log(`Trying alternative URL: ${alternateUrl}`);
+                                                  
                                                   e.target.src = alternateUrl;
                                                   return;
                                                 }

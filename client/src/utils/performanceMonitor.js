@@ -181,7 +181,7 @@ class PerformanceMonitor {
     if (summary.topRenderingComponents.length > 0) {
       console.group('🔄 Top Rendering Components');
       summary.topRenderingComponents.forEach(({ component, count }) => {
-        console.log(`${component}: ${count} renders`);
+        
       });
       console.groupEnd();
     }
@@ -190,15 +190,14 @@ class PerformanceMonitor {
     if (summary.mostFrequentApiCalls.length > 0) {
       console.group('📡 Most Frequent API Calls');
       summary.mostFrequentApiCalls.forEach(({ endpoint, count }) => {
-        console.log(`${endpoint}: ${count} calls`);
+        
       });
       console.groupEnd();
     }
     
     // Statistiques générales
-    console.log(`Average renders per component: ${summary.averageRenderCount.toFixed(2)}`);
-    console.log(`Total API calls: ${summary.totalApiCalls}`);
-    console.log(`Endpoints with duplicates: ${summary.duplicateRequestsCount}`);
+    
+    
     
     // Recommandations
     if (summary.recommendations.length > 0) {
@@ -269,7 +268,7 @@ export const startPerformanceMonitoring = () => {
       performanceMonitor.cleanup();
     }, 30000);
     
-    console.log('🚀 Performance monitoring started. Summary will be logged every 30 seconds.');
+    
   }
 };
 

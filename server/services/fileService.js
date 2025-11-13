@@ -31,8 +31,8 @@ const buildNodePath = (parentNode, category, subcategory, filename) => {
   let categoryPath = category;
   let subcategoryPath = subcategory;
   
-  // Si le parent est un ordre, respecter la structure order/documents/alldocuments
-  if (parentNode.type === 'order') {
+  // Si le parent est une demande d'essai, respecter la structure trial_request/documents/alldocuments
+  if (parentNode.type === 'trial_request') {
     categoryPath = 'documents';
     subcategoryPath = 'alldocuments';
   }
@@ -160,17 +160,20 @@ const saveUploadedFiles = async (files, data, req = null) => {
           }, { transaction });
         }
       }      // Créer l'enregistrement du fichier
+      // Normaliser la catégorie : si elle commence par 'micrographs-result', utiliser 'micrography'
+      let normalizedCategory = category || 'general';
+      if (category && category.startsWith('micrographs-result')) {
+        normalizedCategory = 'micrography';
+      }
+      
       const fileRecord = await file.create({
         node_id: fileNode.id,
         original_name: uploadedFile.originalname,
         file_path: finalPath,
         size: uploadedFile.size,
         mime_type: uploadedFile.mimetype,
-        category: category || 'general',
-        subcategory: subcategory || null,
-        additional_info: {
-          upload_date: new Date().toISOString()
-        }
+        category: normalizedCategory,
+        subcategory: subcategory || null
       }, { transaction });
       
       fileRecords.push({
@@ -223,6 +226,7 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       ),
       include: [{
         model: node,
+        as: 'node',
         required: true
       }]
     });
@@ -241,8 +245,8 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     let categoryPath = category || 'general';
     let subcategoryPath = subcategory || '';
     
-    // Si le parent est un ordre, respecter la structure order/documents/alldocuments
-    if (parentNode.type === 'order') {
+    // Si le parent est une demande d'essai, respecter la structure trial_request/documents/alldocuments
+    if (parentNode.type === 'trial_request') {
       categoryPath = 'documents';
       subcategoryPath = 'alldocuments';
     }
@@ -364,6 +368,7 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
       },
       include: [{
         model: file,
+        as: 'file',
         required: true
       }],
       transaction
@@ -418,19 +423,20 @@ const deleteNodeFiles = async (nodeId, transaction = null) => {
  * @returns {Promise<Object>} Détails du fichier
  */
 const getFileDetails = async (fileId) => {
-  const file = await node.findOne({
+  const fileNode = await node.findOne({
     where: { id: fileId, type: 'file' },
     include: [{
       model: file,
+      as: 'file',
       attributes: { exclude: ['node_id'] }
     }]
   });
   
-  if (!file) {
+  if (!fileNode) {
     throw new NotFoundError('Fichier non trouvé');
   }
   
-  return file;
+  return fileNode;
 };
 
 /**
@@ -522,12 +528,14 @@ const getAllFilesByNode = async (options) => {
   const fileConditions = {};
   if (category) fileConditions.category = category;
   if (subcategory) fileConditions.subcategory = subcategory;
+  
   // Récupérer les nœuds de fichiers
   const fileNodes = await node.findAll({
     where: conditions,
     include: [
       {
         model: file,
+        as: 'file',
         where: Object.keys(fileConditions).length > 0 ? fileConditions : undefined,
         required: true
       }
@@ -537,18 +545,18 @@ const getAllFilesByNode = async (options) => {
   logger.debug('Fichiers trouvés', { count: fileNodes.length });
   
   // Formater la réponse
-  const files = fileNodes.map(node => ({
-    id: node.id,
-    name: node.name,
-    path: node.path,
-    createdAt: node.created_at,
-    size: node.file ? node.file.size : null,
-    mimeType: node.file ? node.file.mime_type : null,
-    category: node.file ? node.file.category : null,
-    subcategory: node.file ? node.file.subcategory : null,
-    original_name: node.file ? node.file.original_name : null,
-    file_path: node.file ? node.file.file_path : null,
-    type: node.file ? node.file.mime_type : 'application/octet-stream'
+  const files = fileNodes.map(nodeItem => ({
+    id: nodeItem.id,
+    name: nodeItem.name,
+    path: nodeItem.path,
+    createdAt: nodeItem.created_at,
+    size: nodeItem.file ? nodeItem.file.size : null,
+    mimeType: nodeItem.file ? nodeItem.file.mime_type : null,
+    category: nodeItem.file ? nodeItem.file.category : null,
+    subcategory: nodeItem.file ? nodeItem.file.subcategory : null,
+    original_name: nodeItem.file ? nodeItem.file.original_name : null,
+    file_path: nodeItem.file ? nodeItem.file.file_path : null,
+    type: nodeItem.file ? nodeItem.file.mime_type : 'application/octet-stream'
   }));
   
   logger.debug('Fichiers retournés', { count: files.length });
@@ -629,6 +637,7 @@ const getFileStats = async (nodeId) => {
     ],
     include: [{
       model: node,
+      as: 'node',
       where: {
         parent_id: nodeId
       }
@@ -646,6 +655,7 @@ const getFileStats = async (nodeId) => {
     ],
     include: [{
       model: node,
+      as: 'node',
       where: {
         parent_id: nodeId
       }
@@ -692,6 +702,7 @@ const updateFile = async (fileId, updateData) => {
       where: { node_id: fileId },
       include: [{
         model: node,
+        as: 'node',
         required: true
       }],
       transaction
@@ -717,7 +728,7 @@ const updateFile = async (fileId, updateData) => {
       let newCategory = category || currentFile.category || 'general';
       let newSubcategory = subcategory || currentFile.subcategory || '';
       
-      if (newParent.type === 'order') {
+      if (newParent.type === 'trial_request') {
         newCategory = 'documents';
         newSubcategory = 'alldocuments';
       }
@@ -841,6 +852,7 @@ const updateFile = async (fileId, updateData) => {
       where: { node_id: fileId },
       include: [{
         model: node,
+        as: 'node',
         attributes: { exclude: ['id'] }
       }]
     });

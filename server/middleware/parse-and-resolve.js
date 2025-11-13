@@ -17,7 +17,7 @@ const crypto = require('crypto');
  */
 const parseAndResolvePath = async (req, res, next) => {
   try {
-    console.log('🔍 [parseAndResolvePath] Début du parsing...');
+    
     
     // Créer un middleware multer temporaire qui accepte tout et parse les champs
     const tempStorage = multer.memoryStorage();
@@ -36,19 +36,19 @@ const parseAndResolvePath = async (req, res, next) => {
         return next(err);
       }
         const { nodeId, category, subcategory } = req.body;
-      console.log('📋 [parseAndResolvePath] Données parsées:', { nodeId, category, subcategory });
-      console.log('📄 [parseAndResolvePath] Fichiers détectés:', req.files ? req.files.length : 0);
+      
+      
 
       // Si pas de nodeId, passer au middleware suivant sans traitement
       if (!nodeId) {
-        console.log('📂 [parseAndResolvePath] Pas de nodeId -> passage au middleware suivant');
+        
         return next();
       }
       
       try {
         // Récupérer les informations du nœud
         const parentNode = await node.findByPk(nodeId);
-        console.log('🔍 [parseAndResolvePath] Nœud trouvé:', parentNode ? `${parentNode.id} - ${parentNode.name}` : 'null');
+        
         
         if (!parentNode) {
           return res.status(404).json({ message: 'Nœud non trouvé' });
@@ -56,12 +56,12 @@ const parseAndResolvePath = async (req, res, next) => {
         
         // Construire le chemin physique
         const physicalPath = buildPhysicalFilePath(parentNode, category, subcategory);
-        console.log('📁 [parseAndResolvePath] Chemin physique résolu:', physicalPath);
+        
         
         // Créer le répertoire s'il n'existe pas
         if (!fs.existsSync(physicalPath)) {
           fs.mkdirSync(physicalPath, { recursive: true });
-          console.log('📁 [parseAndResolvePath] Répertoire créé:', physicalPath);
+          
         }
         
         // Stocker le chemin résolu
@@ -95,14 +95,14 @@ const parseAndResolvePath = async (req, res, next) => {
               buffer: undefined // Libérer la mémoire
             });
             
-            console.log('💾 [parseAndResolvePath] Fichier sauvé:', filePath);
+            
           }
           
           // Remplacer req.files par les fichiers convertis
           req.files = convertedFiles;
         }
         
-        console.log('✅ [parseAndResolvePath] Chemin résolu et fichiers traités');
+        
         next();
         
       } catch (dbError) {

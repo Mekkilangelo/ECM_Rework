@@ -157,7 +157,7 @@ const ChemicalCycleSection = ({
       <Row className="mb-3">
         <Col md={4}>
           <Form.Group>
-            <Form.Label>{t('tests.before.recipeData.chemicalCycle.gas')} 1</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.chemicalCycle.gas')} 1</Form.Label>
             <Select
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas1)}
               onChange={(option) => handleGlobalGasChange(option, 1)}
@@ -173,14 +173,14 @@ const ChemicalCycleSection = ({
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
               isDisabled={loading || viewMode}
-              placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
+              placeholder={t('trials.before.recipeData.chemicalCycle.selectGas')}
               isClearable={!viewMode}
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>{t('tests.before.recipeData.chemicalCycle.gas')} 2</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.chemicalCycle.gas')} 2</Form.Label>
             <Select
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas2)}
               onChange={(option) => handleGlobalGasChange(option, 2)}
@@ -196,14 +196,14 @@ const ChemicalCycleSection = ({
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
               isDisabled={loading || viewMode}
-              placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
+              placeholder={t('trials.before.recipeData.chemicalCycle.selectGas')}
               isClearable={!viewMode}
             />
           </Form.Group>
         </Col>
         <Col md={4}>
           <Form.Group>
-            <Form.Label>{t('tests.before.recipeData.chemicalCycle.gas')} 3</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.chemicalCycle.gas')} 3</Form.Label>
             <Select
               value={getSelectedOption(gasOptions, formData.recipeData.selectedGas3)}
               onChange={(option) => handleGlobalGasChange(option, 3)}
@@ -219,7 +219,7 @@ const ChemicalCycleSection = ({
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
               isDisabled={loading || viewMode}
-              placeholder={t('tests.before.recipeData.chemicalCycle.selectGas')}
+              placeholder={t('trials.before.recipeData.chemicalCycle.selectGas')}
               isClearable={!viewMode}
             />
           </Form.Group>
@@ -228,25 +228,25 @@ const ChemicalCycleSection = ({
       <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>{t('tests.before.recipeData.chemicalCycle.step')}</th>
-            <th>{t('tests.before.recipeData.chemicalCycle.time')} (s)</th>
+            <th style={{ width: '60px' }}>{t('trials.before.recipeData.chemicalCycle.step')}</th>
+            <th>{t('trials.before.recipeData.chemicalCycle.time')} (s)</th>
             {formData.recipeData.selectedGas1 && (
               <th className="text-center">
-                {t('tests.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas1} (Nl/h)
+                {t('trials.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas1} (Nl/h)
               </th>
             )}
             {formData.recipeData.selectedGas2 && (
               <th className="text-center">
-                {t('tests.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas2} (Nl/h)
+                {t('trials.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas2} (Nl/h)
               </th>
             )}
             {formData.recipeData.selectedGas3 && (
               <th className="text-center">
-                {t('tests.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas3} (Nl/h)
+                {t('trials.before.recipeData.chemicalCycle.flowRate')} {formData.recipeData.selectedGas3} (Nl/h)
               </th>
             )}
-            <th>{t('tests.before.recipeData.chemicalCycle.pressure')} (mb)</th>
-            <th className="text-center">{t('tests.before.recipeData.chemicalCycle.turbine')}</th>
+            <th>{t('trials.before.recipeData.chemicalCycle.pressure')} (mb)</th>
+            <th className="text-center">{t('trials.before.recipeData.chemicalCycle.turbine')}</th>
             {!viewMode && (
               <th style={{ width: '80px' }}>{t('common.actions')}</th>
             )}
@@ -275,7 +275,7 @@ const ChemicalCycleSection = ({
                 <td>
                   <Form.Control
                     type="number"
-                    placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
+                    placeholder={t('trials.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit1 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit1', e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
@@ -293,7 +293,7 @@ const ChemicalCycleSection = ({
                 <td>
                   <Form.Control
                     type="number"
-                    placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
+                    placeholder={t('trials.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit2 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit2', e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
@@ -311,7 +311,7 @@ const ChemicalCycleSection = ({
                 <td>
                   <Form.Control
                     type="number"
-                    placeholder={t('tests.before.recipeData.chemicalCycle.flowRate')}
+                    placeholder={t('trials.before.recipeData.chemicalCycle.flowRate')}
                     value={cycle.debit3 || ''}
                     onChange={(e) => handleChemicalCycleChange(index, 'debit3', e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
@@ -379,7 +379,7 @@ const ChemicalCycleSection = ({
             onClick={handleChemicalCycleAdd}
             disabled={loading}
           >
-            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.chemicalCycle.addStep')}
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.before.recipeData.chemicalCycle.addStep')}
           </Button>
         </div>
       )}
@@ -387,14 +387,14 @@ const ChemicalCycleSection = ({
       {/* Section des totaux de durée */}
       <div className="row mb-3">
         <div className="col-12">
-          <h6 className="text-muted mb-3">{t('tests.before.recipeData.chemicalCycle.durationTotals')}</h6>
+          <h6 className="text-muted mb-3">{t('trials.before.recipeData.chemicalCycle.durationTotals')}</h6>
         </div>
         
         {/* Total des steps en secondes et en format min/sec */}
         <div className="col-md-6">
           <div className="row">
             <div className="col-6">
-              <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalStepsSeconds')}</label>
+              <label className="form-label">{t('trials.before.recipeData.chemicalCycle.totalStepsSeconds')}</label>
               <input
                 type="text"
                 className="form-control"
@@ -408,7 +408,7 @@ const ChemicalCycleSection = ({
               />
             </div>
             <div className="col-6">
-              <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalStepsFormatted')}</label>
+              <label className="form-label">{t('trials.before.recipeData.chemicalCycle.totalStepsFormatted')}</label>
               <input
                 type="text"
                 className="form-control"
@@ -429,7 +429,7 @@ const ChemicalCycleSection = ({
           <div className="row">
             {formData.recipeData.selectedGas1 && (
               <div className="col-4">
-                <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas1}</label>
+                <label className="form-label">{t('trials.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas1}</label>
                 <input
                   type="text"
                   className="form-control"
@@ -445,7 +445,7 @@ const ChemicalCycleSection = ({
             )}
             {formData.recipeData.selectedGas2 && (
               <div className="col-4">
-                <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas2}</label>
+                <label className="form-label">{t('trials.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas2}</label>
                 <input
                   type="text"
                   className="form-control"
@@ -461,7 +461,7 @@ const ChemicalCycleSection = ({
             )}
             {formData.recipeData.selectedGas3 && (
               <div className="col-4">
-                <label className="form-label">{t('tests.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas3}</label>
+                <label className="form-label">{t('trials.before.recipeData.chemicalCycle.totalGas')} {formData.recipeData.selectedGas3}</label>
                 <input
                   type="text"
                   className="form-control"
@@ -482,7 +482,7 @@ const ChemicalCycleSection = ({
       {/* Champ calculé pour la durée totale du cycle chimique */}
       <div className="row mb-3">
         <div className="col-md-6">
-          <label className="form-label">{t('tests.before.chemicalCycle.totalCycleDuration')}</label>
+          <label className="form-label">{t('trials.before.chemicalCycle.totalCycleDuration')}</label>
           <input
             type="text"
             className="form-control"

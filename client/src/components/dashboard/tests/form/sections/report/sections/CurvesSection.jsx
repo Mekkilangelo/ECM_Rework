@@ -30,20 +30,20 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
     };
     
     if (!selectedPhotos || !selectedPhotos.curves) {
-      console.log("No curves photos selected");
+      
       return result;
     }
     
     const curvesPhotos = selectedPhotos.curves;
-    console.log("Raw selectedPhotos.curves:", curvesPhotos);
+    
     
     // The new format from SectionPhotoManager should be objects with metadata
     if (typeof curvesPhotos === 'object' && !Array.isArray(curvesPhotos)) {
-      console.log("Processing new format with metadata from SectionPhotoManager");
+      
       
       // Direct mapping from organized data by SectionPhotoManager
       Object.entries(curvesPhotos).forEach(([subcategory, photos]) => {
-        console.log(`Processing subcategory: ${subcategory}, photos:`, photos);
+        
         
         if (Array.isArray(photos)) {
           // Photos now have metadata, extract just the photo objects for display
@@ -70,7 +70,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
     }
     // Legacy fallback: if it's still a flat array or other format
     else if (Array.isArray(curvesPhotos)) {
-      console.log("Processing legacy flat array format");
+      
       
       curvesPhotos.forEach((photo, index) => {
         const photoObj = typeof photo === 'object' ? photo : { id: photo };
@@ -81,7 +81,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
       });
     }
     
-    console.log("Final organized curves photos with metadata:", result);
+    
     return result;
   };// Use the function to organize photos
   const groupedPhotos = getCurvesPhotosByCategory();
@@ -95,12 +95,10 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
   ];
 
   // Debug photo information
-  console.log("CurvesSection - testData:", testData);
-  console.log("CurvesSection - selectedPhotos:", selectedPhotos);
-  console.log("CurvesSection - curvesPhotos (after processing):", curvesPhotos);
+  
+  
   
   if (curvesPhotos.length > 0) {
-    console.log(`URL for first curve image:`, getPhotoUrl(curvesPhotos[0]));
   }
 
   // Pagination intelligente
@@ -139,7 +137,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
     const footerHeight = 60;
     const availableHeight = maxPageHeight - headerHeight - footerHeight;
     
-    console.log(`CurvesSection Pagination - MaxPage: ${maxPageHeight}, Header: ${headerHeight}, Footer: ${footerHeight}, Available: ${availableHeight}`);
+    
     
     const pages = [];
     let currentPage = { heating: [], cooling: [], datapaq: [], alarms: [], nonCurvePhotos: [] };
@@ -157,12 +155,12 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
       if (photos.length === 0) return;
 
       const sectionHeight = estimateHeight(photos, name === 'heating');
-      console.log(`CurvesSection - ${name}: ${photos.length} photos, estimated height: ${sectionHeight}px`);
+      
       
       if (currentHeight + sectionHeight > availableHeight && 
           (currentPage.heating.length > 0 || currentPage.cooling.length > 0 || 
            currentPage.datapaq.length > 0 || currentPage.alarms.length > 0)) {
-        console.log(`CurvesSection - Creating new page. Current height: ${currentHeight}, Available: ${availableHeight}`);
+        
         pages.push(currentPage);
         currentPage = { heating: [], cooling: [], datapaq: [], alarms: [], nonCurvePhotos: [] };
         currentHeight = 0;
@@ -170,7 +168,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
 
       currentPage[name] = photos;
       currentHeight += sectionHeight + 30; // Ajout d'espacement entre sections
-      console.log(`CurvesSection - Added ${name}, new total height: ${currentHeight}px`);
+      
     });
 
     if (currentPage.heating.length > 0 || currentPage.cooling.length > 0 || 
@@ -264,7 +262,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
-                            console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                            
                             e.target.src = alternateUrl;
                             return;
                           }
@@ -326,7 +324,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
-                            console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                            
                             e.target.src = alternateUrl;
                             return;
                           }
@@ -388,7 +386,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
-                            console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                            
                             e.target.src = alternateUrl;
                             return;
                           }
@@ -449,7 +447,7 @@ const CurvesSection = ({ testData = {}, selectedPhotos = {}, clientData = {} }) 
                           
                           // Si l'URL actuelle n'est pas l'URL alternative, essayer celle-ci
                           if (e.target.src !== alternateUrl) {
-                            console.log(`Tentative avec URL alternative: ${alternateUrl}`);
+                            
                             e.target.src = alternateUrl;
                             return;
                           }

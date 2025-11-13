@@ -172,7 +172,7 @@ const ClientList = ({ onDataChanged }) => {
     if (client.data_status === 'new') {
       updateItemStatus(client.id);
     }
-    navigateToLevel('order', client.id, client.name);
+    navigateToLevel('trial_request', client.id, client.name);
   };
   const handleDeleteClient = async (clientId) => {
     const clientToDelete = data.find(c => c.id === clientId);

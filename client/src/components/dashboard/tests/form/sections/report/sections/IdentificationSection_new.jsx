@@ -584,7 +584,7 @@ const IdentificationSection = ({ testData, partData, clientData, selectedPhotos 
                   
                   const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                   if (e.target.src !== alternateUrl) {
-                    console.log(`Attempting with alternative URL: ${alternateUrl}`);
+                    
                     e.target.src = alternateUrl;
                     return;
                   }

@@ -1,7 +1,7 @@
 // Hook unifié pour récupérer toutes les options nécessaires aux formulaires
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import enumService from '../services/enumService';
 import steelService from '../services/steelService';
+import referenceService from '../services/referenceService';
 
 /**
  * Hook unifié pour récupérer différentes options à partir des services
@@ -28,7 +28,7 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   // Options pour les pièces
   const [designationOptions, setDesignationOptions] = useState([]);
   
-  // Options pour les tests
+  // Options pour les trials
   const [locationOptions, setLocationOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [mountingTypeOptions, setMountingTypeOptions] = useState([]);
@@ -47,33 +47,35 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   const [unitOptions, setUnitOptions] = useState([]);
   
   // Options dérivées pour les types d'unités spécifiques
+  // OPTIMISÉ : Filtrage côté client - instantané, zéro latence réseau
+  // Note : Les unit_type dans la DB sont en minuscules (length, weight, temperature, etc.)
   const lengthUnitOptions = useMemo(() => 
-    unitOptions.filter(unit => unit.type === 'length'), 
+    unitOptions.filter(unit => unit.unit_type === 'length'), 
     [unitOptions]
   );
   
   const weightUnitOptions = useMemo(() =>
-    unitOptions.filter(unit => unit.type === 'weight'),
+    unitOptions.filter(unit => unit.unit_type === 'weight'),
     [unitOptions]
   );
   
   const timeUnitOptions = useMemo(() =>
-    unitOptions.filter(unit => unit.type === 'time'),
+    unitOptions.filter(unit => unit.unit_type === 'time'),
     [unitOptions]
   );
   
   const temperatureUnitOptions = useMemo(() =>
-    unitOptions.filter(unit => unit.type === 'temperature'),
+    unitOptions.filter(unit => unit.unit_type === 'temperature'),
     [unitOptions]
   );
   
   const pressureUnitOptions = useMemo(() =>
-    unitOptions.filter(unit => unit.type === 'pressure'),
+    unitOptions.filter(unit => unit.unit_type === 'pressure'),
     [unitOptions]
   );
   
   const hardnessUnitOptions = useMemo(() =>
-    unitOptions.filter(unit => unit.type === 'hardness'),
+    unitOptions.filter(unit => unit.unit_type === 'hardness'),
     [unitOptions]
   );
   
@@ -121,61 +123,97 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     return options.find(option => option.value === value) || null;
   }, []);
 
-  // ------ FONCTIONS DE RÉCUPÉRATION INDIVIDUELLES ------    // Récupérer les valeurs d'énumération génériques avec gestion d'erreur
-  const fetchEnumValues = useCallback(async (category, field, setter) => {
+  // ------ FONCTIONS DE RÉCUPÉRATION INDIVIDUELLES ------
+  
+  // Récupérer les valeurs de référence génériques avec gestion d'erreur
+  const fetchReferenceValues = useCallback(async (refTable, setter) => {
     try {
-      const enumData = await enumService.getEnumValues(category, field);
+      const response = await referenceService.getValues(refTable);
       
-      // Adaptation au nouveau format de réponse
+      // Adaptation au format de réponse
       let values = [];
-      if (enumData && enumData.values) {
-        // Format direct: { values: [...] }
-        values = enumData.values;
-      } else if (enumData && enumData.data && enumData.data.values) {
-        // Format avec success: { success: true, data: { values: [...] } }
-        values = enumData.data.values;
-      } else if (Array.isArray(enumData)) {
-        // Format direct tableau
-        values = enumData;
+      if (response && response.values) {
+        values = response.values;
+      } else if (response && response.data && response.data.values) {
+        values = response.data.values;
+      } else if (Array.isArray(response)) {
+        values = response;
       }
       
-      setter(values.map(value => ({ 
-        value: value, 
-        label: value 
-      })));
+      // Convertir en options pour React-Select
+      setter(values.map(value => {
+        // Si c'est un objet (ref_units par exemple)
+        if (typeof value === 'object') {
+          return {
+            value: value.name,
+            label: value.name,
+            ...value // Inclure les autres propriétés (unit_type, description, etc.)
+          };
+        }
+        // Si c'est une string simple
+        return { 
+          value: value, 
+          label: value 
+        };
+      }));
     } catch (error) {
-      console.error(`Erreur lors de la récupération des options ${category}.${field}:`, error);
+      console.error(`Erreur lors de la récupération des options ${refTable}:`, error);
       setter([]);
     }
   }, []);
 
   // Récupérer les options des clients
   const fetchCountryOptions = useCallback(async () => {
-    await fetchEnumValues('clients', 'country', setCountryOptions);
-  }, [fetchEnumValues]);
+    try {
+      // Utilisation du nouveau service de référence au lieu de l'ancien système ENUM
+      const countries = await referenceService.getCountries();
+      setCountryOptions(countries);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des pays:', error);
+      setCountryOptions([]);
+    }
+  }, []);
 
   // Récupérer les options des aciers
   const fetchSteelFamilyOptions = useCallback(async () => {
-    await fetchEnumValues('steels', 'family', setSteelFamilyOptions);
-  }, [fetchEnumValues]);
+    try {
+      const families = await referenceService.getSteelFamilies();
+      setSteelFamilyOptions(families);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des familles d\'acier:', error);
+      setSteelFamilyOptions([]);
+    }
+  }, []);
   
   const fetchSteelStandardOptions = useCallback(async () => {
-    await fetchEnumValues('steels', 'standard', setSteelStandardOptions);
-  }, [fetchEnumValues]);
+    try {
+      const standards = await referenceService.getSteelStandards();
+      setSteelStandardOptions(standards);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des standards d\'acier:', error);
+      setSteelStandardOptions([]);
+    }
+  }, []);
   
   const fetchElementOptions = useCallback(async () => {
-    await fetchEnumValues('steels', 'elements', setElementOptions);
-  }, [fetchEnumValues]);  // Fonction pour récupérer les aciers
+    try {
+      const elements = await referenceService.getSteelElements();
+      setElementOptions(elements);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des éléments chimiques:', error);
+      setElementOptions([]);
+    }
+  }, []);  // Fonction pour récupérer les aciers
   const fetchSteelOptions = useCallback(async () => {
     try {
       // Log condensé uniquement en mode debug
       const isDev = process.env.NODE_ENV === 'development';
       if (isDev) {
-        console.log("⚙️ Fetching steels...");
+        
       }
       
-      // Utilisation de la méthode renommée getSteels au lieu de getAllSteels
-      const response = await steelService.getSteels();
+      // Charger TOUS les aciers pour les options (limite élevée pour éviter la pagination)
+      const response = await steelService.getSteels(1, 1000);
       
       let steelsList = [];
       
@@ -239,141 +277,184 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   // Récupérer les désignations de pièces
   const fetchDesignationOptions = useCallback(async () => {
     try {
-      // Utiliser la méthode correcte pour récupérer les désignations
-      const enumData = await enumService.getEnumValues('parts', 'designation');
-      
-      // Adaptation au nouveau format de réponse
-      let designations = [];
-      if (enumData && enumData.values) {
-        designations = enumData.values;
-      } else if (enumData && enumData.data && enumData.data.values) {
-        designations = enumData.data.values;
-      }
-      
-      setDesignationOptions(designations.map(designation => ({ 
-        value: designation, 
-        label: designation 
-      })));
+      // Utiliser le nouveau service de référence au lieu de l'ancien système ENUM
+      const designations = await referenceService.getDesignations();
+      setDesignationOptions(designations);
     } catch (error) {
       console.error('Erreur lors de la récupération des désignations:', error);
       setDesignationOptions([]);
     }
   }, []);
 
-  // Récupérer les options des tests
+  // Récupérer les options des trials depuis les tables de référence
   const fetchLocationOptions = useCallback(async () => {
-    await fetchEnumValues('tests', 'location', setLocationOptions);
-  }, [fetchEnumValues]);
+    try {
+      const locations = await referenceService.getLocations();
+      setLocationOptions(locations);
+    } catch (error) {
+      console.error('Error fetching location options:', error);
+      setLocationOptions([]);
+    }
+  }, []);
   
   const fetchStatusOptions = useCallback(async () => {
-    await fetchEnumValues('tests', 'status', setStatusOptions);
-  }, [fetchEnumValues]);
+    try {
+      const statuses = await referenceService.getStatuses();
+      setStatusOptions(statuses);
+    } catch (error) {
+      console.error('Error fetching status options:', error);
+      setStatusOptions([]);
+    }
+  }, []);
   
   const fetchMountingTypeOptions = useCallback(async () => {
-    await fetchEnumValues('tests', 'mounting_type', setMountingTypeOptions);
-  }, [fetchEnumValues]);
+    try {
+      const mountingTypes = await referenceService.getMountingTypes();
+      setMountingTypeOptions(mountingTypes);
+    } catch (error) {
+      console.error('Error fetching mounting type options:', error);
+      setMountingTypeOptions([]);
+    }
+  }, []);
   
   const fetchPositionTypeOptions = useCallback(async () => {
-    await fetchEnumValues('tests', 'position_type', setPositionTypeOptions);
-  }, [fetchEnumValues]);
+    try {
+      const positionTypes = await referenceService.getPositionTypes();
+      setPositionTypeOptions(positionTypes);
+    } catch (error) {
+      console.error('Error fetching position type options:', error);
+      setPositionTypeOptions([]);
+    }
+  }, []);
   
   const fetchProcessTypeOptions = useCallback(async () => {
-    await fetchEnumValues('tests', 'process_type', setProcessTypeOptions);
-  }, [fetchEnumValues]);
+    try {
+      const processTypes = await referenceService.getProcessTypes();
+      setProcessTypeOptions(processTypes);
+    } catch (error) {
+      console.error('Error fetching process type options:', error);
+      setProcessTypeOptions([]);
+    }
+  }, []);
   
   const fetchPreoxMediaOptions = useCallback(async () => {
-    await fetchEnumValues('tests', 'preox_media', setPreoxMediaOptions);
-  }, [fetchEnumValues]);
+    try {
+      const coolingMedia = await referenceService.getCoolingMedia();
+      setPreoxMediaOptions(coolingMedia);
+    } catch (error) {
+      console.error('Error fetching preox media options:', error);
+      setPreoxMediaOptions([]);
+    }
+  }, []);
 
-  // Récupérer les options des fours
+  // Récupérer les options des fours depuis les tables de référence
   const fetchFurnaceTypeOptions = useCallback(async () => {
-    await fetchEnumValues('furnaces', 'furnace_type', setFurnaceTypeOptions);
-  }, [fetchEnumValues]);
+    try {
+      const furnaceTypes = await referenceService.getFurnaceTypes();
+      setFurnaceTypeOptions(furnaceTypes);
+    } catch (error) {
+      console.error('Error fetching furnace type options:', error);
+      setFurnaceTypeOptions([]);
+    }
+  }, []);
   
   const fetchHeatingCellOptions = useCallback(async () => {
-    await fetchEnumValues('furnaces', 'heating_cell_type', setHeatingCellOptions);
-  }, [fetchEnumValues]);
+    try {
+      const heatingCells = await referenceService.getHeatingCells();
+      setHeatingCellOptions(heatingCells);
+    } catch (error) {
+      console.error('Error fetching heating cell options:', error);
+      setHeatingCellOptions([]);
+    }
+  }, []);
   
   const fetchCoolingMediaOptions = useCallback(async () => {
-    await fetchEnumValues('furnaces', 'cooling_media', setCoolingMediaOptions);
-  }, [fetchEnumValues]);
+    try {
+      const coolingMedia = await referenceService.getCoolingMedia();
+      setCoolingMediaOptions(coolingMedia);
+    } catch (error) {
+      console.error('Error fetching cooling media options:', error);
+      setCoolingMediaOptions([]);
+    }
+  }, []);
   
   const fetchFurnaceSizeOptions = useCallback(async () => {
-    await fetchEnumValues('furnaces', 'furnace_size', setFurnaceSizeOptions);
-  }, [fetchEnumValues]);
+    try {
+      const furnaceSizes = await referenceService.getFurnaceSizes();
+      setFurnaceSizeOptions(furnaceSizes);
+    } catch (error) {
+      console.error('Error fetching furnace size options:', error);
+      setFurnaceSizeOptions([]);
+    }
+  }, []);
     const fetchQuenchCellOptions = useCallback(async () => {
-    await fetchEnumValues('furnaces', 'quench_cell', setQuenchCellOptions);
-  }, [fetchEnumValues]);
-  // Fonction pour récupérer les unités
+    try {
+      const quenchCells = await referenceService.getQuenchCells();
+      setQuenchCellOptions(quenchCells);
+    } catch (error) {
+      console.error('Error fetching quench cell options:', error);
+      setQuenchCellOptions([]);
+    }
+  }, []);
+  // Fonction pour récupérer les unités - SYSTÈME OPTIMISÉ AVEC AUTO-REFRESH
   const fetchUnitOptions = useCallback(async () => {
     try {
-      // Fonction d'aide pour extraire les valeurs de l'énumération
-      const extractEnumValues = (enumData) => {
-        if (enumData && enumData.values) {
-          return enumData.values;
-        } else if (enumData && enumData.data && enumData.data.values) {
-          return enumData.data.values;
+      
+      
+      // Utiliser le nouveau service de référence
+      // getValues('ref_units') retourne maintenant des objets complets avec unit_type
+      const unitsData = await referenceService.getValues('ref_units');
+      
+      
+      
+      // Formater les unités pour les dropdowns
+      const formattedUnits = unitsData.map(unit => {
+        // Si c'est un objet avec tous les champs (nouvelle structure)
+        if (typeof unit === 'object' && unit.name) {
+          return {
+            value: unit.name,
+            label: unit.name,
+            unit_type: unit.unit_type,  // Clé pour le filtrage par type
+            description: unit.description
+          };
         }
-        return [];
-      };
+        // Sinon fallback pour compatibilité (string simple)
+        return {
+          value: unit,
+          label: unit,
+          unit_type: null
+        };
+      });
       
-      // Récupérer tous les types d'unités en parallèle pour optimiser les performances
-      const [
-        lengthUnitsResponse,
-        weightUnitsResponse,
-        timeUnitsResponse,
-        temperatureUnitsResponse,
-        pressureUnitsResponse,
-        hardnessUnitsResponse
-      ] = await Promise.all([
-        enumService.getEnumValues('units', 'length_units'),
-        enumService.getEnumValues('units', 'weight_units'),
-        enumService.getEnumValues('units', 'time_units'),
-        enumService.getEnumValues('units', 'temperature_units'),
-        enumService.getEnumValues('units', 'pressure_units'),
-        enumService.getEnumValues('units', 'hardness_units')
-      ]);
+      console.log('📊 Formatted units:', {
+        total: formattedUnits.length,
+        byType: {
+          length: formattedUnits.filter(u => u.unit_type === 'length').length,
+          weight: formattedUnits.filter(u => u.unit_type === 'weight').length,
+          temperature: formattedUnits.filter(u => u.unit_type === 'temperature').length,
+          time: formattedUnits.filter(u => u.unit_type === 'time').length,
+          pressure: formattedUnits.filter(u => u.unit_type === 'pressure').length,
+          hardness: formattedUnits.filter(u => u.unit_type === 'hardness').length,
+          null: formattedUnits.filter(u => u.unit_type === null).length
+        }
+      });
       
-      // Traiter toutes les réponses et construire les options
-      const allUnitOptions = [
-        ...extractEnumValues(lengthUnitsResponse).map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'length'
-        })),
-        ...extractEnumValues(weightUnitsResponse).map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'weight'
-        })),
-        ...extractEnumValues(timeUnitsResponse).map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'time'
-        })),
-        ...extractEnumValues(temperatureUnitsResponse).map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'temperature'
-        })),
-        ...extractEnumValues(pressureUnitsResponse).map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'pressure'
-        })),
-        ...extractEnumValues(hardnessUnitsResponse).map(unit => ({
-          value: unit,
-          label: unit,
-          type: 'hardness'
-        }))
-      ];
-      
-      setUnitOptions(allUnitOptions);
+      setUnitOptions(formattedUnits);
     } catch (error) {
-      console.error('Error fetching units:', error);
+      console.error('❌ Error fetching units:', error);
       setUnitOptions([]);
     }
   }, []);
+
+  // S'abonner aux changements de ref_units pour auto-refresh
+  useEffect(() => {
+    const unsubscribe = referenceService.subscribe('ref_units', () => {
+      
+      fetchUnitOptions();
+    });
+    
+    return unsubscribe;
+  }, [fetchUnitOptions]);
 
   // ------ FONCTIONS DE RAFRAÎCHISSEMENT GROUPÉES ------
   
@@ -402,7 +483,15 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     }
   }, [fetchSteelOptions, fetchSteelFamilyOptions, fetchSteelStandardOptions, fetchElementOptions]);
   
-  const refreshTestOptions = useCallback(async () => {
+  const refreshDesignationOptions = useCallback(async () => {
+    try {
+      await fetchDesignationOptions();
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement des options de désignation:', error);
+    }
+  }, [fetchDesignationOptions]);
+  
+  const refreshTrialOptions = useCallback(async () => {
     try {
       await fetchLocationOptions();
       await fetchStatusOptions();
@@ -411,7 +500,7 @@ const useOptionsFetcher = (setLoading, options = {}) => {
       await fetchProcessTypeOptions();
       await fetchPreoxMediaOptions();
     } catch (error) {
-      console.error('Erreur lors du rafraîchissement des options de test:', error);
+      console.error('Erreur lors du rafraîchissement des options de trial:', error);
     }
   }, [
     fetchLocationOptions, 
@@ -439,6 +528,24 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     fetchFurnaceSizeOptions,
     fetchQuenchCellOptions
   ]);
+
+  // ------ FONCTIONS DE RAFRAÎCHISSEMENT INDIVIDUELLES ------
+  // Alias vers les fonctions fetch* pour compatibilité avec les composants
+  
+  // Options trial
+  const refreshLocationOptions = fetchLocationOptions;
+  const refreshStatusOptions = fetchStatusOptions;
+  const refreshMountingTypeOptions = fetchMountingTypeOptions;
+  const refreshPositionTypeOptions = fetchPositionTypeOptions;
+  const refreshProcessTypeOptions = fetchProcessTypeOptions;
+  const refreshPreoxMediaOptions = fetchPreoxMediaOptions;
+  
+  // Options furnace
+  const refreshFurnaceTypeOptions = fetchFurnaceTypeOptions;
+  const refreshHeatingCellOptions = fetchHeatingCellOptions;
+  const refreshCoolingMediaOptions = fetchCoolingMediaOptions;
+  const refreshFurnaceSizeOptions = fetchFurnaceSizeOptions;
+  const refreshQuenchCellOptions = fetchQuenchCellOptions;
 
   // ------ UTILITÉS POUR LES SÉLECTEURS D'UNITÉS ------
   
@@ -497,12 +604,12 @@ const useOptionsFetcher = (setLoading, options = {}) => {
         
         // Pièces (Désignations)
         if (options.fetchPartOptions !== false) {
-          fetchPromises.push(fetchDesignationOptions());
+          fetchPromises.push(refreshDesignationOptions());
         }
         
-        // Tests
-        if (options.fetchTestOptions !== false) {
-          fetchPromises.push(refreshTestOptions());
+        // Trials
+        if (options.fetchTrialOptions !== false) {
+          fetchPromises.push(refreshTrialOptions());
         }
         
         // Fours
@@ -538,16 +645,75 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     refreshClientOptions,
     refreshSteelOptions,
     fetchDesignationOptions,
-    refreshTestOptions,
+    refreshTrialOptions,
     refreshFurnaceOptions,
     fetchUnitOptions,
     refreshCounter,
     options?.fetchClientOptions,
     options?.fetchSteelOptions,
     options?.fetchPartOptions,
-    options?.fetchTestOptions,
+    options?.fetchTrialOptions,
     options?.fetchFurnaceOptions,
     options?.fetchUnitOptions
+  ]);
+
+  // ------ AUTO-REFRESH SUR CHANGEMENTS DE RÉFÉRENCE ------
+  // S'abonner aux changements de toutes les tables de référence
+  // pour recharger automatiquement les options quand une valeur est ajoutée/supprimée
+  useEffect(() => {
+    const unsubscribers = [];
+    
+    // Mapping table -> fonction de fetch
+    const tableSubscriptions = {
+      'ref_country': fetchCountryOptions,
+      'ref_steel_family': fetchSteelFamilyOptions,
+      'ref_steel_standard': fetchSteelStandardOptions,
+      'ref_steel_elements': fetchElementOptions,
+      'ref_designation': fetchDesignationOptions,
+      'ref_location': fetchLocationOptions,
+      'ref_status': fetchStatusOptions,
+      'ref_mounting_type': fetchMountingTypeOptions,
+      'ref_position_type': fetchPositionTypeOptions,
+      'ref_process_type': fetchProcessTypeOptions,
+      'ref_cooling_media': fetchPreoxMediaOptions,
+      'ref_furnace_types': fetchFurnaceTypeOptions,
+      'ref_heating_cells': fetchHeatingCellOptions,
+      'ref_cooling_media': fetchCoolingMediaOptions,
+      'ref_furnace_sizes': fetchFurnaceSizeOptions,
+      'ref_quench_cells': fetchQuenchCellOptions,
+      // ref_units déjà abonné ci-dessus
+    };
+    
+    // S'abonner à chaque table
+    Object.entries(tableSubscriptions).forEach(([tableName, fetchFn]) => {
+      const unsubscribe = referenceService.subscribe(tableName, () => {
+        
+        fetchFn();
+      });
+      unsubscribers.push(unsubscribe);
+    });
+    
+    // Nettoyage lors du démontage
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [
+    fetchCountryOptions,
+    fetchSteelFamilyOptions,
+    fetchSteelStandardOptions,
+    fetchElementOptions,
+    fetchDesignationOptions,
+    fetchLocationOptions,
+    fetchStatusOptions,
+    fetchMountingTypeOptions,
+    fetchPositionTypeOptions,
+    fetchProcessTypeOptions,
+    fetchPreoxMediaOptions,
+    fetchFurnaceTypeOptions,
+    fetchHeatingCellOptions,
+    fetchCoolingMediaOptions,
+    fetchFurnaceSizeOptions,
+    fetchQuenchCellOptions
   ]);
 
   // ------ OBJET RETOURNÉ AVEC TOUTES LES OPTIONS ET FONCTIONS ------
@@ -566,7 +732,7 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     // Options pièces
     designationOptions,
     
-    // Options tests
+    // Options trials
     locationOptions,
     statusOptions,
     mountingTypeOptions,
@@ -610,10 +776,25 @@ const useOptionsFetcher = (setLoading, options = {}) => {
     refreshAllOptions,
     refreshClientOptions,
     refreshSteelOptions,
-    refreshTestOptions,
+    refreshDesignationOptions,
+    refreshTrialOptions,
     refreshFurnaceOptions,
     refreshUnitOptions: fetchUnitOptions,
-    refreshDesignationOptions: fetchDesignationOptions,
+    
+    // Fonctions de rafraîchissement individuelles pour trials
+    refreshLocationOptions,
+    refreshStatusOptions,
+    refreshMountingTypeOptions,
+    refreshPositionTypeOptions,
+    refreshProcessTypeOptions,
+    refreshPreoxMediaOptions,
+    
+    // Fonctions de rafraîchissement individuelles pour furnaces
+    refreshFurnaceTypeOptions,
+    refreshHeatingCellOptions,
+    refreshCoolingMediaOptions,
+    refreshFurnaceSizeOptions,
+    refreshQuenchCellOptions,
     
     // Fonctions individuelles pour un rafraîchissement spécifique
     fetchCountryOptions,

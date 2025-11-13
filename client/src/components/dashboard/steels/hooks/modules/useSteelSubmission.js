@@ -83,7 +83,7 @@ const useSteelSubmission = ({
       }
       
       // Log pour déboguer
-      console.log('Steel updated, triggering data refresh...');
+      
       
       // Ajouter un petit délai pour s'assurer que toutes les mises à jour en base sont terminées
       setTimeout(() => {

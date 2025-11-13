@@ -9,10 +9,10 @@ const { authenticate } = require('../middleware/auth');
 const { readAccess } = require('../middleware/access-control');
 
 /**
- * @route GET /api/reports/tests/:testId
- * @desc Génère les données d'un rapport de test
+ * @route GET /api/reports/trials/:trialId
+ * @desc Génère les données d'un rapport de trial
  * @access Private (lecture)
  */
-router.get('/tests/:testId', authenticate, readAccess, reportController.getTestReportData);
+router.get('/trials/:trialId', authenticate, readAccess, reportController.getTrialReportData);
 
 module.exports = router;

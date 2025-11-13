@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faFileDownload, faIdCard, faList, faCubes, faChartLine, faMicroscope, faClipboardCheck, faToggleOn, faToggleOff, faImages } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import reportService from '../../../../../../services/reportService';
-import testService from '../../../../../../services/testService';
+import trialService from '../../../../../../services/trialService';
 import ReportPreviewModal from './ReportPreviewModal';
 import SectionPhotoManager from './SectionPhotoManager';
 import './ReportStyles.css';
@@ -18,7 +18,7 @@ import CurvesSection from './sections/CurvesSection';
 import MicrographySection from './sections/MicrographySection';
 import ControlSection from './sections/ControlSection';
 
-const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => {
+const ReportTabContent = React.memo(({ trialId, trialData, partData, partId }) => {
   const { t } = useTranslation();
   
   // Utilisez partId directement si disponible, sinon essayez de le récupérer de partData
@@ -29,7 +29,7 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
     if (partData && partData.id) {
       setParentNodeId(partData.id);
       if (process.env.NODE_ENV === 'development') {
-        console.log("ID de pièce défini:", partData.id);
+        
       }
     }
   }, [partData]);
@@ -105,26 +105,26 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
     // Charger l'ID du nœud parent (pièce) au montage (optimisé)
   useEffect(() => {
     const loadPartNodeId = async () => {
-      if (!testId) return;
+      if (!trialId) return;
       
       try {
-        // D'abord, récupérez le test
-        const testResponse = await testService.getTestById(testId);
+        // D'abord, récupérez le trial
+        const trialResponse = await trialService.getTrialById(trialId);
         
-        if (testResponse.data) {
+        if (trialResponse.data) {
           // Si parent_id existe et est disponible directement
-          if (testResponse.data.parent_id) {
+          if (trialResponse.data.parent_id) {
             // Tester si c'est une pièce
             try {
-              const nodeResponse = await testService.getNodeById(testResponse.data.parent_id);
+              const nodeResponse = await trialService.getNodeById(trialResponse.data.parent_id);
               if (nodeResponse.data && nodeResponse.data.type === 'part') {
                 if (process.env.NODE_ENV === 'development') {
-                  console.log("Found part node:", nodeResponse.data);
+                  
                 }
                 setParentNodeId(nodeResponse.data.id);
               } else {
                 if (process.env.NODE_ENV === 'development') {
-                  console.log("Parent is not a part, searching part in ancestors");
+                  
                 }
                 // TODO: Ajouter une API pour trouver l'ancêtre de type pièce
               }
@@ -133,11 +133,11 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
             }
           } 
           // Si nous avons l'information de part_id directement
-          else if (testResponse.data.part_id) {
+          else if (trialResponse.data.part_id) {
             if (process.env.NODE_ENV === 'development') {
-              console.log("Using part_id directly:", testResponse.data.part_id);
+              
             }
-            setParentNodeId(testResponse.data.part_id);
+            setParentNodeId(trialResponse.data.part_id);
           }
         }
       } catch (error) {
@@ -146,7 +146,7 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
     };
     
     loadPartNodeId();
-  }, [testId]);
+  }, [trialId]);
   
   // Gérer les changements de sélection de sections
   const handleSectionToggle = (sectionName, event) => {
@@ -175,7 +175,7 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
   // Gérer les changements de sélection de photos pour une section
   const handlePhotoSelectionChange = (section, selectedIds) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`PhotoSelectionChange - section: ${section}, selectedIds:`, selectedIds);
+      
     }
     
     // NOUVELLE APPROCHE: Préserver la structure hiérarchique des photos
@@ -187,9 +187,9 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
   
   // Fonction pour prévisualiser le rapport
   const handlePreview = async () => {
-    if (!testId) {
-      console.error("Impossible de prévisualiser: ID du test manquant");
-      setError("ID du test manquant");
+    if (!trialId) {
+      console.error("Impossible de prévisualiser: ID du trial manquant");
+      setError("ID du trial manquant");
       return;
     }
 
@@ -211,7 +211,7 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
         identification: true      
       };
       
-      const reportDataResponse = await reportService.getTestReportData(testId, sectionsToFetch);
+      const reportDataResponse = await reportService.getTrialReportData(trialId, sectionsToFetch);
       
       // Créer un nouvel objet de rapport avec toutes les données nécessaires
       const completeReportData = {
@@ -366,8 +366,8 @@ const ReportTabContent = React.memo(({ testId, testData, partData, partId }) => 
                 {photoSections.map(section => (
                   <div key={section} className="mb-3">
                     <SectionPhotoManager
-                      key={`${section}-${testId}-${parentNodeId}`}
-                      testNodeId={testId}
+                      key={`${section}-${trialId}-${parentNodeId}`}
+                      trialNodeId={trialId}
                       partNodeId={parentNodeId}
                       sectionType={section}
                       onChange={handlePhotoSelectionChange}

@@ -7,9 +7,9 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
   // Fonction pour déboguer la structure de l'ECD
   useEffect(() => {
     if (partData && partData.specifications && partData.specifications.ecd) {
-      console.log("=== ECD Debug Info ===");
-      console.log("ECD structure:", partData.specifications.ecd);
-      console.log("ECD direct:", partData.ecd);
+      
+      
+      
     }
   }, [partData]);
     // Vérifier que les données nécessaires sont présentes
@@ -100,29 +100,27 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
     // Vérifier plusieurs sources possibles pour les données de charge
     const loadData = testData.loadData || testData.load_data || testData.data?.load || {};
     
-    console.log("=== DEBUG POIDS DE LA CHARGE ===");
-    console.log("CoverPageSection - TestData complet:", testData);
-    console.log("CoverPageSection - LoadData extrait:", loadData);
-    console.log("CoverPageSection - testData.loadData:", testData.loadData);
-    console.log("CoverPageSection - testData.load_data:", testData.load_data);
-    console.log("CoverPageSection - testData.data?.load:", testData.data?.load);
-    console.log("CoverPageSection - Type de loadData:", typeof loadData);
-    console.log("CoverPageSection - Keys de loadData:", Object.keys(loadData || {}));
-    console.log("CoverPageSection - TestData keys:", Object.keys(testData || {}));
+    
+    
+    
+    
+    
+    
+    
     
     // Si le loadData est null ou undefined
     if (!loadData) {
-      console.log("Aucune donnée de charge trouvée");
+      
       return 'Not specified';
     }
     
     // Si le poids est défini dans les données de charge
     if (loadData && typeof loadData === 'object') {
-      console.log("LoadData est un objet, exploration des propriétés...");
+      
       
       // Format structuré: { weight: { value: X, unit: Y } }
       if (loadData.weight && typeof loadData.weight === 'object' && loadData.weight.value !== undefined) {
-        console.log("Format structuré détecté:", loadData.weight);
+        
         let value = loadData.weight.value;
         let unit = loadData.weight.unit || 'kg';
         
@@ -132,13 +130,12 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
           unit = 'kg';
         }
         
-        console.log(`Poids formaté (structuré): ${value} ${unit}`);
         return `${value} ${unit}`;
       }
       
       // Format direct: { weight: X, weight_unit: Y } ou variations
       if (loadData.weight !== undefined && loadData.weight !== null) {
-        console.log("Format direct détecté:", { weight: loadData.weight, unit: loadData.weight_unit || loadData.weightUnit });
+        
         let value = loadData.weight;
         let unit = loadData.weight_unit || loadData.weightUnit || 'kg';
         
@@ -147,40 +144,38 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
           unit = 'kg';
         }
         
-        console.log(`Poids formaté (direct): ${value} ${unit}`);
         return `${value} ${unit}`;
       }
       
       // Autres formats possibles
       if (loadData.totalWeight !== undefined) {
-        console.log("Format totalWeight détecté:", { totalWeight: loadData.totalWeight, unit: loadData.totalWeightUnit });
+        
         const result = `${loadData.totalWeight} ${loadData.totalWeightUnit || 'kg'}`;
-        console.log(`Poids formaté (totalWeight): ${result}`);
         return result;
       }
       
       // Explorer toutes les propriétés pour trouver des indices de poids
-      console.log("Exploration de toutes les propriétés de loadData:");
+      
       Object.entries(loadData).forEach(([key, value]) => {
         if (key.toLowerCase().includes('weight') || key.toLowerCase().includes('poids') || key.toLowerCase().includes('mass')) {
-          console.log(`Propriété contenant 'weight/poids/mass': ${key} =`, value);
+          
         }
       });
     }
     
     // Vérifier si loadData est une string JSON à parser
     if (typeof loadData === 'string') {
-      console.log("LoadData est une string, tentative de parsing:", loadData);
+      
       try {
         const parsedData = JSON.parse(loadData);
-        console.log("Données parsées:", parsedData);
+        
         return formatLoadWeight({ ...testData, loadData: parsedData });
       } catch (e) {
         console.warn("Impossible de parser loadData:", loadData, e);
       }
     }
     
-    console.log("Aucun format de poids reconnu, retour de 'Not specified'");
+    
     return 'Not specified';
   };
   
@@ -194,12 +189,12 @@ const CoverPageSection = ({ testData, partData, clientData }) => {
     loadNumber: testData.loadNumber || testData.load_number || '',
     testDate: testData.testDate || testData.test_date || null
   };  // Vérification de la console pour le débogage
-  console.log("CoverPageSection - PartData:", partData);
-  console.log("CoverPageSection - HardnessSpecs:", hardnessSpecs);
-  console.log("CoverPageSection - EcdSpecs:", ecdSpecs);
-  console.log("CoverPageSection - Results:", results);
-  console.log("CoverPageSection - TestData:", testData);
-  console.log("CoverPageSection - Steel value:", partData?.steel);
+  
+  
+  
+  
+  
+  
 
   // Fonction utilitaire pour formater les valeurs de spécification
   const formatSpecValue = (value) => {

@@ -18,8 +18,16 @@ const validateOrderData = (data) => {
     errors.parent_id = 'ID parent est requis';
   }
   
-  if (!data.order_date || (typeof data.order_date === 'string' && data.order_date.trim() === '')) {
-    errors.order_date = 'La date est requise';
+  // Support legacy 'order_date' for compatibility, prefer 'request_date'
+  const hasRequestDate = data.request_date !== undefined && data.request_date !== null;
+  const hasOrderDate = data.order_date !== undefined && data.order_date !== null;
+
+  // Determine the effective date value (prefer request_date)
+  const effectiveDate = hasRequestDate ? data.request_date : (hasOrderDate ? data.order_date : undefined);
+
+  if (!effectiveDate || (typeof effectiveDate === 'string' && effectiveDate.trim() === '')) {
+    // Use the canonical key 'request_date' in errors (front-end expects new name)
+    errors.request_date = 'La date est requise';
   }
   
   return {

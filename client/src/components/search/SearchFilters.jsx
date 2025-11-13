@@ -241,7 +241,7 @@ const SearchFilters = ({
           </Row>
         );
 
-      case 'tests':
+      case 'trials':
         return (
           <Row className="mt-3">
             <Col md={6} lg={4}>

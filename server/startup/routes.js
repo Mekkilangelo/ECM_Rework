@@ -9,14 +9,14 @@ const logger = require('../utils/logger');
 // Import des routes
 const authRoutes = require('../routes/auth');
 const clientRoutes = require('../routes/clients');
-const orderRoutes = require('../routes/orders');
+const trialRequestRoutes = require('../routes/trial-requests');
 const partRoutes = require('../routes/parts');
-const testRoutes = require('../routes/tests');
+const trialRoutes = require('../routes/trials');
 const steelRoutes = require('../routes/steels');
 const fileRoutes = require('../routes/files');
 const furnaceRoutes = require('../routes/furnaces');
 const userRoutes = require('../routes/users');
-const enumRoutes = require('../routes/enums');
+const referenceRoutes = require('../routes/references');
 const hierarchyRoutes = require('../routes/hierarchy');
 const searchRoutes = require('../routes/search');
 const systemRoutes = require('../routes/system');
@@ -30,14 +30,14 @@ function setupRoutes(app) {
   // Routes API
   app.use('/api/auth', authRoutes);
   app.use('/api/clients', clientRoutes);
-  app.use('/api/orders', orderRoutes);
+  app.use('/api/trial-requests', trialRequestRoutes);
   app.use('/api/parts', partRoutes);
-  app.use('/api/tests', testRoutes);
+  app.use('/api/trials', trialRoutes);
   app.use('/api/steels', steelRoutes);
   app.use('/api/files', fileRoutes);
   app.use('/api/furnaces', furnaceRoutes);
   app.use('/api/users', userRoutes);
-  app.use('/api/enums', enumRoutes);
+  app.use('/api/references', referenceRoutes);
   app.use('/api/nodes', hierarchyRoutes);
   app.use('/api/search', searchRoutes);
   app.use('/api/system', systemRoutes);

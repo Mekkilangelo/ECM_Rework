@@ -35,26 +35,26 @@ const colorPalette = [
   { borderColor: 'rgb(255, 205, 86)', backgroundColor: 'rgba(255, 205, 86, 0.5)' }    // Jaune
 ];
 
-const ControlSection = ({ testData, partData, clientData }) => {
+const ControlSection = ({ trialData, partData, clientData }) => {
   // Vérification de sécurité pour éviter les erreurs
-  const test = testData || {};
+  const trial = trialData || {};
   const part = partData || {};
   
-  // Récupérer les résultats depuis les données du test - priorité à results_data
-  const results = test.results_data?.results || test.results || [];
+  // Récupérer les résultats depuis les données du trial - priorité à results_data
+  const results = trial.results_data?.results || trial.results || [];
   
-  console.log("Control Section - Results:", results);
-  console.log("Control Section - Test Data:", test);
+  
+  
   
   // Récupérer les spécifications depuis les données de la pièce
   const specs = part.specifications || {};
   
-  console.log("Control Section - Specs:", specs);
+  
   
   // Points ECD précalculés par le backend
   const ecdPoints = part.ecdPoints || [];
   
-  console.log("Control Section - ECD Points:", ecdPoints);
+  
   // Préparer les données de graphique avec useMemo pour optimiser les performances
   const chartData = useMemo(() => {
     if (!results || results.length === 0) return { datasets: [] };
@@ -364,7 +364,7 @@ const ControlSection = ({ testData, partData, clientData }) => {
         title="CONTRÔLES ET RÉSULTATS"
         subtitle={`${results.length} résultat${results.length > 1 ? 's' : ''} disponible${results.length > 1 ? 's' : ''}`}
         icon={faChartLine}
-        testData={testData}
+        trialData={trialData}
         clientData={clientData}
         sectionType="control"
         showSubtitle={true}
@@ -1109,7 +1109,7 @@ const ControlSection = ({ testData, partData, clientData }) => {
             <div style={{ fontSize: '48px', marginBottom: '15px', opacity: 0.5 }}>📊</div>
             <h5 style={{ color: '#6c757d', marginBottom: '8px' }}>Aucun résultat disponible</h5>
             <p style={{ margin: 0, fontSize: '14px' }}>
-              Les données de contrôle et de mesure n'ont pas encore été saisies pour ce test.
+              Les données de contrôle et de mesure n'ont pas encore été saisies pour ce trial.
             </p>
           </div>
         )}

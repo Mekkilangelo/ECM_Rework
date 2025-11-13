@@ -4,9 +4,9 @@ import { Container } from 'react-bootstrap';
 import { useNavigation } from '../../context/NavigationContext';
 import Breadcrumb from '../common/Breadcrumb/Breadcrumb';
 import ClientList from './clients/list/ClientList';
-import OrderList from './orders/list/OrderList';
+import TrialRequestList from './orders/list/TrialRequestList';
 import PartList from './parts/list/PartList';
-import TestList from './tests/list/TestList';
+import TrialList from './tests/list/TrialList';
 import PropTypes from 'prop-types';
 
 const HierarchyManager = ({ onDataChanged }) => {
@@ -16,12 +16,14 @@ const HierarchyManager = ({ onDataChanged }) => {
     switch (currentLevel) {
       case 'client':
         return <ClientList onDataChanged={onDataChanged} />;
-      case 'order':
-        return <OrderList onDataChanged={onDataChanged} />;
+      case 'trial_request':
+      case 'order':  // Support ancien nom
+        return <TrialRequestList onDataChanged={onDataChanged} />;
       case 'part':
         return <PartList orderId={hierarchyState.orderId} onDataChanged={onDataChanged} />;
-      case 'test':
-        return <TestList partId={hierarchyState.partId} onDataChanged={onDataChanged} />;
+      case 'trial':
+      case 'test':  // Support ancien nom
+        return <TrialList partId={hierarchyState.partId} onDataChanged={onDataChanged} />;
       default:
         return <ClientList onDataChanged={onDataChanged} />;
     }

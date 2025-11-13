@@ -49,10 +49,6 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
       const newFiles = response.data.data.files;
       const tempId = response.data.data.tempId;
       
-      console.log("Upload response:", response.data);
-      console.log("New files:", newFiles);
-      console.log("Temp ID from server:", tempId);
-      
       setInternalUploadedFiles(prev => [...prev, ...newFiles]);
       setFiles([]);
       setUploadProgress(0);
@@ -68,18 +64,8 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     }
   };  // Fonction pour uploader les fichiers en attente après création du node
   const uploadPendingFiles = async (nodeId, category, subcategory, pendingFiles = files) => {
-    console.log("🚀 [useFileUpload] uploadPendingFiles called:", {
-      nodeId,
-      category,
-      subcategory,
-      pendingFilesCount: pendingFiles.length,
-      filesStateCount: files.length,
-      pendingFiles: pendingFiles.map(f => f.name),
-      filesState: files.map(f => f.name)
-    });
     
     if (pendingFiles.length === 0) {
-      console.log("⚠️ [useFileUpload] No pending files to upload");
       return { success: true, files: [] };
     }
     

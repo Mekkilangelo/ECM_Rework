@@ -35,7 +35,7 @@ import CurveChart from './components/CurveChart';
  * - Initialisation depuis formData.resultsData
  */
 const ResultCurveSection = forwardRef(({
-  testNodeId,
+  trialNodeId,
   resultIndex = 0,
   sampleIndex = 0,
   formData,

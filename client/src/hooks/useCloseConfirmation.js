@@ -47,7 +47,7 @@ const useCloseConfirmation = (
       }
       return;
     }    try {
-      console.log('🚪 handleCloseRequest - isModified:', isModified, 'viewMode:', viewMode);
+      
       if (isModified) {
         setShowConfirmModal(true);
         setPendingClose(true);

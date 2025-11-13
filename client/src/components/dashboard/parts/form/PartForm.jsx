@@ -234,7 +234,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               </Button>
             ) : (              <>
                 <Button variant="secondary" onClick={() => {
-                  console.log('🟢 Cancel button clicked in PartForm');
+                  
                   handleCloseRequest();
                 }} className="mr-2">
                   {t('common.cancel')}

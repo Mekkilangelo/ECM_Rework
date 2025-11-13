@@ -1,6 +1,6 @@
 /**
  * Script ETL pour charger les données USA depuis un fichier CSV
- * Utilise les services existants pour créer clients, commandes, pièces et tests
+ * Utilise les services existants pour créer clients, commandes, pièces et trials
  * Version adaptée pour le format de données américaines
  */
 
@@ -10,9 +10,9 @@ const path = require('path');
 
 // Services
 const clientService = require('../services/clientService');
-const orderService = require('../services/orderService');
+const trialRequestService = require('../services/trialRequestService');
 const partService = require('../services/partService');
-const testService = require('../services/testService');
+const trialService = require('../services/trialService');
 const steelService = require('../services/steelService');
 
 // Models pour les requêtes directes si nécessaire
@@ -33,50 +33,50 @@ class ETLUSALoader {
    * @param {string} csvFilePath - Chemin vers le fichier CSV
    */
   async loadData(csvFilePath) {
-    console.log('🇺🇸 Début du chargement ETL USA...');
+    
     
     try {
       // 1. Charger et parser le CSV
-      console.log('📖 Lecture du fichier CSV USA...');
+      
       const data = await this.readCSV(csvFilePath);
-      console.log(`📊 ${data.length} lignes trouvées dans le CSV`);
+      
 
       // 2. Créer les aciers manquants
-      console.log('🔧 Création des aciers USA manquants...');
+      
       await this.createMissingSteel(data);
 
       // 3. Créer les valeurs ENUM manquantes pour designation
-      console.log('📝 Création des ENUMs designation USA manquants...');
+      
       await this.createMissingDesignationEnums(data);
 
       // 4. Créer tous les clients uniques (USA)
-      console.log('👥 Création des clients USA...');
+      
       await this.createClients(data);
 
       // 5. Créer les commandes (demandes d'essai)
-      console.log('📋 Création des commandes...');
+      
       await this.createOrders(data);
 
       // 6. Créer les pièces uniques
-      console.log('🔧 Création des pièces...');
+      
       await this.createParts(data);
 
       // 7. Créer les tests
-      console.log('🧪 Création des tests...');
+      
       await this.createTests(data);
 
-      console.log('✅ Chargement ETL USA terminé avec succès !');
-      console.log(`📈 Statistiques :`);
-      console.log(`   - ${this.steelsMap.size} aciers USA créés/vérifiés`);
-      console.log(`   - ${this.clientsMap.size} clients USA créés`);
-      console.log(`   - ${this.ordersMap.size} commandes créées`);
-      console.log(`   - ${this.partsMap.size} pièces créées`);
-      console.log(`   - ${data.length} tests traités`);
+      
+      
+      
+      
+      
+      
+      
       
       if (this.errors.length > 0) {
-        console.log(`⚠️  ${this.errors.length} erreurs rencontrées :`);
+        
         this.errors.forEach((error, index) => {
-          console.log(`   ${index + 1}. ${error}`);
+          
         });
       }
 
@@ -123,7 +123,7 @@ class ETLUSALoader {
       }
     });
 
-    console.log(`   📊 ${uniqueSteel.size} aciers USA uniques trouvés dans le CSV`);
+    
 
     // Vérifier quels aciers existent déjà
     const existingSteel = await steelService.getAllSteels({ limit: 1000 });
@@ -152,14 +152,12 @@ class ETLUSALoader {
           const createdSteel = await steelService.createSteel(steelData);
           this.steelsMap.set(grade, createdSteel.id);  // Map avec le grade original
           this.steelsMap.set(truncatedGrade, createdSteel.id);  // Map aussi avec le grade tronqué 
-          console.log(`   ✅ Acier USA créé : ${truncatedGrade} (ID: ${createdSteel.id})`);
           createdCount++;
         } else {
           // Récupérer l'ID de l'acier existant
           const existingSteelData = existingSteel.steels.find(s => s.steel?.grade === grade);
           if (existingSteelData) {
             this.steelsMap.set(grade, existingSteelData.id);
-            console.log(`   ✓ Acier USA existant : ${grade} (ID: ${existingSteelData.id})`);
           }
         }
       } catch (error) {
@@ -169,7 +167,7 @@ class ETLUSALoader {
       }
     }
 
-    console.log(`   📈 ${createdCount} nouveaux aciers USA créés, ${uniqueSteel.size - createdCount} aciers existants`);
+    
   }
 
   /**
@@ -187,10 +185,10 @@ class ETLUSALoader {
       }
     });
 
-    console.log(`   📊 ${uniqueDesignations.size} désignations USA uniques trouvées dans le CSV`);
+    
 
     if (uniqueDesignations.size === 0) {
-      console.log(`   ✓ Aucune désignation USA à traiter`);
+      
       return;
     }
 
@@ -207,13 +205,13 @@ class ETLUSALoader {
             // Construire la requête SQL pour ajouter la valeur ENUM
             const currentValues = Array.from(existingValues);
             const newValues = [...currentValues, designation];
-            const enumDefinition = newValues.map(val => `'${val.replace(/'/g, "''")}'`).join(',');
+            const enumDefinition = newValues.map(val => `'${val.replace(/'/g, "''")}' `).join(',');
             const query = `ALTER TABLE parts MODIFY COLUMN designation ENUM(${enumDefinition})`;
             
             await node.sequelize.query(query);
             existingValues.add(designation);
             
-            console.log(`   ✅ ENUM designation USA ajouté : ${designation}`);
+            
             addedCount++;
           } catch (error) {
             const errorMsg = `Erreur ajout ENUM designation USA "${designation}": ${error.message}`;
@@ -221,11 +219,11 @@ class ETLUSALoader {
             this.errors.push(errorMsg);
           }
         } else {
-          console.log(`   ✓ ENUM designation USA existant : ${designation}`);
+          
         }
       }
 
-      console.log(`   📈 ${addedCount} nouvelles valeurs ENUM USA ajoutées, ${uniqueDesignations.size - addedCount} valeurs existantes`);
+      
     } catch (error) {
       const errorMsg = `Erreur lors de la gestion des ENUMs designation USA: ${error.message}`;
       console.error(`   ❌ ${errorMsg}`);
@@ -289,7 +287,7 @@ class ETLUSALoader {
       }
     });
 
-    console.log(`   📊 ${uniqueClients.size} clients USA uniques trouvés`);
+    
 
     // Créer les clients un par un
     for (const [clientName, clientData] of uniqueClients) {
@@ -304,20 +302,17 @@ class ETLUSALoader {
           if (foundClient) {
             clientId = foundClient.id;
             this.clientsMap.set(clientName, clientId);
-            console.log(`   ✓ Client USA existant : ${clientName} (ID: ${clientId})`);
           } else {
             // Créer le client
             const createdClient = await clientService.createClient(clientData);
             clientId = createdClient.id;
             this.clientsMap.set(clientName, clientId);
-            console.log(`   ✅ Client USA créé : ${clientName} (ID: ${clientId})`);
           }
         } else {
           // Créer le client
           const createdClient = await clientService.createClient(clientData);
           clientId = createdClient.id;
           this.clientsMap.set(clientName, clientId);
-          console.log(`   ✅ Client USA créé : ${clientName} (ID: ${clientId})`);
         }
       } catch (error) {
         // Si erreur "déjà existant", tenter de récupérer l'ID
@@ -328,7 +323,6 @@ class ETLUSALoader {
               const foundClient = existingClient.clients.find(c => c.name === clientName);
               if (foundClient) {
                 this.clientsMap.set(clientName, foundClient.id);
-                console.log(`   ✓ Client USA récupéré : ${clientName} (ID: ${foundClient.id})`);
                 continue;
               }
             }
@@ -367,7 +361,7 @@ class ETLUSALoader {
       }
     });
 
-    console.log(`   📊 ${clientOrders.size} commandes USA à créer`);
+    
 
     // Créer une commande par client
     for (const [clientName, orderInfo] of clientOrders) {
@@ -376,14 +370,13 @@ class ETLUSALoader {
           parent_id: orderInfo.clientId, // La commande est enfant du client
           name: `Demande d'essai USA - ${clientName}`,
           description: `Demande d'essai USA importée via ETL (${orderInfo.testCount} tests)`,
-          order_date: new Date().toISOString().split('T')[0], // Date d'aujourd'hui
+          request_date: new Date().toISOString().split('T')[0], // Date d'aujourd'hui
           commercial: 'ETL USA Import',
           contacts: null
         };
 
-        const createdOrder = await orderService.createOrder(orderData);
+        const createdOrder = await trialRequestService.createTrialRequest(orderData);
         this.ordersMap.set(clientName, createdOrder.id);
-        console.log(`   ✅ Commande USA créée pour ${clientName} (ID: ${createdOrder.id})`);
       } catch (error) {
         const errorMsg = `Erreur création commande USA pour "${clientName}": ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
@@ -457,7 +450,7 @@ class ETLUSALoader {
             dimensions: dimensions,
             specifications: specifications,
             steel: steel || null, // Nouvelle colonne 'steel'
-            description: `Pièce USA importée via ETL`,
+            description: 'Pièce USA importée via ETL',
             reference: row.reference || null,
             quantity: null   // Laissé vide comme demandé
           });
@@ -465,14 +458,13 @@ class ETLUSALoader {
       }
     });
 
-    console.log(`   📊 ${uniqueParts.size} pièces USA uniques trouvées`);
+    
 
     // Créer les pièces une par une
     for (const [partKey, partData] of uniqueParts) {
       try {
         const createdPart = await partService.createPart(partData);
         this.partsMap.set(partKey, createdPart.id);
-        console.log(`   ✅ Pièce USA créée : ${partData.designation} (ID: ${createdPart.id})`);
       } catch (error) {
         const errorMsg = `Erreur création pièce USA "${partKey}": ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
@@ -486,7 +478,7 @@ class ETLUSALoader {
    * @param {Array} data - Données du CSV
    */
   async createTests(data) {
-    console.log(`   📊 ${data.length} tests USA à créer`);
+    
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
@@ -496,15 +488,14 @@ class ETLUSALoader {
         const clientDesignation = row.client_designation?.trim();
         
         if (!clientName) {
-          this.errors.push(`Ligne ${i + 1}: Client manquant`);
+          this.errors.push('Ligne ${i + 1}: Client manquant');
           continue;
         }
 
+        
         // Retrouver la pièce correspondante
         const partKey = `${clientDesignation || 'NO_DESIGNATION'}_${clientName}`;
-        const partId = this.partsMap.get(partKey);
-        
-        if (!partId) {
+        const partId = this.partsMap.get(partKey);        if (!partId) {
           this.errors.push(`Ligne ${i + 1}: Pièce non trouvée pour ${partKey}`);
           continue;
         }
@@ -573,7 +564,7 @@ class ETLUSALoader {
         const testData = {
           parent_id: partId, // Le test est enfant de la pièce
           name: `Test USA ${row.load_number || `Test_${i + 1}`}`,
-          description: `Test USA importé via ETL - ${row.file || ''}`,
+          description: `Test USA importé via ETL - ${row.file || ''}`,  
           test_code: row.id || null,
           load_number: row.load_number || null, // Utilise la nouvelle colonne
           test_date: parseTestDate(row.created_on) || new Date().toISOString().split('T')[0],
@@ -585,11 +576,10 @@ class ETLUSALoader {
           results_data: resultsData
         };
 
-        const createdTest = await testService.createTest(testData);
-        console.log(`   ✅ Test USA créé : ${testData.name} (ID: ${createdTest.id})`);
+        const createdTrial = await trialService.createTrial(testData);
 
       } catch (error) {
-        const errorMsg = `Erreur création test USA ligne ${i + 1}: ${error.message}`;
+        const errorMsg = `Erreur création trial ligne ${i + 1}: ${error.message}`;
         console.error(`   ❌ ${errorMsg}`);
         this.errors.push(errorMsg);
       }
@@ -611,7 +601,7 @@ async function main() {
 
   try {
     await etlLoader.loadData(csvFilePath);
-    console.log('🎉 ETL USA terminé avec succès !');
+    
     process.exit(0);
   } catch (error) {
     console.error('💥 Erreur fatale ETL USA :', error);

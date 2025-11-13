@@ -1,5 +1,9 @@
 const { DataTypes } = require('sequelize');
 
+/**
+ * Modèle Client - Données spécifiques aux clients
+ * Philosophie Synergia : ENUM → Tables de référence
+ */
 module.exports = (sequelize) => {
   const Client = sequelize.define('client', {
     node_id: {
@@ -9,28 +13,38 @@ module.exports = (sequelize) => {
       references: {
         model: 'nodes',
         key: 'id'
-      }
+      },
+      comment: '🔗 RELATION FONDAMENTALE : Référence au nœud parent'
     },
     client_code: {
       type: DataTypes.STRING(50),
       unique: true,
-      allowNull: true
+      allowNull: true,
+      comment: 'Code unique du client'
     },
     city: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: true,
+      comment: 'Ville du client'
     },
     country: {
-      type: DataTypes.ENUM('USA','AFGHANISTAN','ALBANIA','ALGERIA','ANDORRA','ANGOLA','ANTIGUA_DEPS','ARGENTINA','ARMENIA','AUSTRALIA','AUSTRIA','AZERBAIJAN','BAHAMAS','BAHRAIN','BANGLADESH','BARBADOS','BELARUS','BELGIUM','BELIZE','BENIN','BHUTAN','BOLIVIA','BOSNIA_HERZEGOVINA','BOTSWANA','BRAZIL','BRUNEI','BULGARIA','BURKINA','BURMA','BURUNDI','CAMBODIA','CAMEROON','CANADA','CAPE_VERDE','CENTRAL_AFRICAN_REP','CHAD','CHILE','CHINA','REPUBLIC_OF_CHINA','COLOMBIA','COMOROS','DEMOCRATIC_REPUBLIC_OF_THE_CONGO','REPUBLIC_OF_THE_CONGO','COSTA_RICA','CROATIA','CUBA','CYPRUS','CZECH_REPUBLIC','DANZIG','DENMARK','DJIBOUTI','DOMINICA','DOMINICAN_REPUBLIC','EAST_TIMOR','ECUADOR','EGYPT','EL_SALVADOR','EQUATORIAL_GUINEA','ERITREA','ESTONIA','ETHIOPIA','FIJI','FINLAND','FRANCE','GABON','GAZA_STRIP','THE_GAMBIA','GEORGIA','GERMANY','GHANA','GREECE','GRENADA','GUATEMALA','GUINEA','GUINEA_BISSAU','GUYANA','HAITI','HOLY_ROMAN_EMPIRE','HONDURAS','HUNGARY','ICELAND','INDIA','INDONESIA','IRAN','IRAQ','REPUBLIC_OF_IRELAND','ISRAEL','ITALY','IVORY_COAST','JAMAICA','JAPAN','JONATHANLAND','JORDAN','KAZAKHSTAN','KENYA','KIRIBATI','NORTH_KOREA','SOUTH_KOREA','KOSOVO','KUWAIT','KYRGYZSTAN','LAOS','LATVIA','LEBANON','LESOTHO','LIBERIA','LIBYA','LIECHTENSTEIN','LITHUANIA','LUXEMBOURG','MACEDONIA','MADAGASCAR','MALAWI','MALAYSIA','MALDIVES','MALI','MALTA','MARSHALL_ISLANDS','MAURITANIA','MAURITIUS','MEXICO','MICRONESIA','MOLDOVA','MONACO','MONGOLIA','MONTENEGRO','MOROCCO','MOUNT_ATHOS','MOZAMBIQUE','NAMIBIA','NAURU','NEPAL','NEWFOUNDLAND','NETHERLANDS','NEW_ZEALAND','NICARAGUA','NIGER','NIGERIA','NORWAY','OMAN','OTHER','OTTOMAN_EMPIRE','PAKISTAN','PALAU','PALESTINE','PANAMA','PAPUA_NEW_GUINEA','PARAGUAY','PERU','PHILIPPINES','POLAND','PORTUGAL','PRUSSIA','QATAR','ROMANIA','ROME','RUSSIAN_FEDERATION','RWANDA','GRENADINES','SAMOA','SAN_MARINO','SAO_TOME_PRINCIPE','SAUDI_ARABIA','SENEGAL','SERBIA','SEYCHELLES','SIERRA_LEONE','SINGAPORE','SLOVAKIA','SLOVENIA','SOLOMON_ISLANDS','SOMALIA','SOUTH_AFRICA','SPAIN','SRI_LANKA','SUDAN','SURINAME','SWAZILAND','SWEDEN','SWITZERLAND','SYRIA','TAJIKISTAN','TANZANIA','THAILAND','TOGO','TONGA','TRINIDAD_TOBAGO','TUNISIA','TURKEY','TURKMENISTAN','TUVALU','UGANDA','UKRAINE','UNITED_ARAB_EMIRATES','UNITED_KINGDOM','URUGUAY','UZBEKISTAN','VANUATU','VATICAN_CITY','VENEZUELA','VIETNAM','YEMEN','ZAMBIA','ZIMBABWE'),
-      allowNull: true
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      references: {
+        model: 'ref_country',
+        key: 'name'
+      },
+      comment: 'Pays - FK vers ref_country.name (normalisé)'
     },
     client_group: {
       type: DataTypes.STRING(50),
-      allowNull: true
+      allowNull: true,
+      comment: 'Groupe du client'
     },
     address: {
       type: DataTypes.STRING(50),
-      allowNull: true
+      allowNull: true,
+      comment: 'Adresse du client'
     }
   }, {
     tableName: 'clients',
@@ -40,14 +54,30 @@ module.exports = (sequelize) => {
         unique: true,
         fields: ['client_code'],
         name: 'unique_client_code'
+      },
+      {
+        fields: ['country'],
+        name: 'fk_clients_country'
       }
     ]
   });
 
   Client.associate = function(models) {
+    // 🔗 RELATION CRITIQUE : Chaque Client DOIT appartenir à un Node
     Client.belongsTo(models.node, { 
-      foreignKey: 'node_id', 
-      onDelete: 'CASCADE' 
+      foreignKey: 'node_id',
+      as: 'node',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
+    
+    // Relation avec table de référence country
+    Client.belongsTo(models.ref_country, {
+      foreignKey: 'country',
+      targetKey: 'name',
+      as: 'countryRef',
+      onDelete: 'RESTRICT',
+      onUpdate: 'CASCADE'
     });
   };
 

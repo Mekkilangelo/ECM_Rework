@@ -183,7 +183,7 @@ const Header = () => {
         onHide={() => setShowChangePasswordModal(false)}
         onSuccess={() => {
           // Optionnel: Afficher un toast de succès ou autre action
-          console.log('Mot de passe changé avec succès');
+          
         }}
       />
     </nav>

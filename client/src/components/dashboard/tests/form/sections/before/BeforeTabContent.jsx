@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 // Sections importées
-import TestTypeSection from './sections/test_type/TestTypeSection';
+import TrialTypeSection from './sections/trial_type/TrialTypeSection';
 import FurnaceDataSection from './sections/furnace/FurnaceDataSection';
 import LoadDataSection from './sections/load_data/LoadDataSection';
 import RecipeDataSection from './sections/recipe/RecipeDataSection';
 import LoadDesignSection from './sections/load_design/LoadDesignSection';
 
-const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, test, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {}, calculateProgramDuration }) => {
+const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, trial, handleFileAssociationNeeded, viewMode = false, readOnlyFieldStyle = {}, calculateProgramDuration }) => {
   const { t } = useTranslation();
   
   // États pour stocker les fonctions d'association de fichiers des sous-sections
@@ -72,12 +72,12 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
   return (
     <>
       <CollapsibleSection
-        title={t('tests.before.testType.title')}
+        title={t('trials.before.trialType.title')}
         isExpandedByDefault={true}
-        sectionId="test-type"
+        sectionId="trial-type"
         rememberState={false}
       >
-        <TestTypeSection
+        <TrialTypeSection
           formData={formData}
           handleSelectChange={formHandlers.handleSelectChange}
           handleCreateOption={formHandlers.handleCreateOption}
@@ -92,9 +92,9 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       </CollapsibleSection>
       
       <CollapsibleSection
-        title={t('tests.before.furnaceData.title')}
+        title={t('trials.before.furnaceData.title')}
         isExpandedByDefault={true}
-        sectionId="test-furnace-data"
+        sectionId="trial-furnace-data"
         rememberState={true}
       >
         <FurnaceDataSection
@@ -114,9 +114,9 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       </CollapsibleSection>
       
       <CollapsibleSection
-        title={t('tests.before.loadData.title')}
+        title={t('trials.before.loadData.title')}
         isExpandedByDefault={true}
-        sectionId="test-load-data"
+        sectionId="trial-load-data"
         rememberState={true}
       >
         <LoadDataSection
@@ -133,21 +133,21 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       </CollapsibleSection>
       
       <CollapsibleSection
-        title={t('tests.before.loadDesign.title')}
+        title={t('trials.before.loadDesign.title')}
         isExpandedByDefault={true}
-        sectionId="test-load-design"
+        sectionId="trial-load-design"
         rememberState={true}
       >        <LoadDesignSection
-          testNodeId={test ? test.id : null}
+          trialNodeId={trial ? trial.id : null}
           onFileAssociationNeeded={handleLoadDesignFileAssociationNeeded}
           viewMode={viewMode}
         />
       </CollapsibleSection>
       
       <CollapsibleSection
-        title={t('tests.before.recipeData.title')}
+        title={t('trials.before.recipeData.title')}
         isExpandedByDefault={true}
-        sectionId="test-recipe-data"
+        sectionId="trial-recipe-data"
         rememberState={true}
       >        <RecipeDataSection
           formData={formData}
@@ -171,7 +171,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
           handleOilQuenchSpeedAdd={formHandlers.handleOilQuenchSpeedAdd}
           handleOilQuenchSpeedRemove={formHandlers.handleOilQuenchSpeedRemove}
           loading={loading}          selectStyles={formHandlers.selectStyles}
-          test={test}
+          trial={trial}
           handleFileAssociationNeeded={handleRecipeDataFileAssociationNeeded}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}

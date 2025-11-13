@@ -48,8 +48,8 @@ const useExcelImport = (
   const processExcelFileData = async (data, resultIndex, sampleIndex) => {
     if (!data || data.length === 0) return;
 
-    console.log('=== ANALYSE FICHIER EXCEL ===');
-    console.log(`Import pour résultat ${resultIndex}, échantillon ${sampleIndex}`);
+    
+    
 
     /*
     LOGIQUE DE TRAITEMENT SELON LES SPÉCIFICATIONS :
@@ -70,9 +70,8 @@ const useExcelImport = (
 
     const dataRows = data;
     
-    console.log('=== DIAGNOSTIC STRUCTURE EXCEL ===');
-    console.log('Première ligne (données):', dataRows[0]);
-    console.log('Nombre total de lignes de données:', dataRows.length);
+    
+    
 
     // Analyser les 7 filiations fixes possibles
     const allFiliations = [];
@@ -87,7 +86,7 @@ const useExcelImport = (
         !dataRows[0][locNameIndex].toString().startsWith('$');
       
       if (hasData) {
-        console.log(`Filiation ${i} détectée aux colonnes ${baseIndex}-${baseIndex + 7}`);
+        
         
         const meanIndex = baseIndex + 3;
         const isCore = dataRows[0][meanIndex] && 
@@ -131,11 +130,10 @@ const useExcelImport = (
     const distanceFiliation = normalFiliations[0] || allFiliations[0];
 
     // ÉTAPE 1 : Traiter les données de base et préparer les structures
-    console.log('=== ÉTAPE 1 : TRAITEMENT DES FILIATIONS ===');
+    
     
     for (let filiationIndex = 0; filiationIndex < allFiliations.length; filiationIndex++) {
       const filiation = allFiliations[filiationIndex];
-      console.log(`Traitement filiation ${filiation.index} ${filiation.isCore ? '(CŒUR)' : ''}`);
 
       const firstDataRow = dataRows[0];
       const locationName = firstDataRow[filiation.locNameIndex];
@@ -159,10 +157,8 @@ const useExcelImport = (
       let hardnessResultValue = null;
       if (filiation.isCore && meanNum !== null && !isNaN(meanNum)) {
         hardnessResultValue = meanNum;
-        console.log(`Cœur détecté - Valeur hardnessResult (MEAN): ${hardnessResultValue}`);
       } else if (!filiation.isCore && surfHvalNum !== null && !isNaN(surfHvalNum)) {
         hardnessResultValue = surfHvalNum;
-        console.log(`Cas normal - Valeur hardnessResult (SURFHVAL): ${hardnessResultValue}`);
       }
 
       // Ajouter aux résultats de dureté
@@ -224,7 +220,7 @@ const useExcelImport = (
     }
 
     // ÉTAPE 2 : Mettre à jour les données du formulaire
-    console.log('=== ÉTAPE 2 : MISE À JOUR DU FORMULAIRE ===');
+    
     
     await updateFormDataWithImportedData(
       resultIndex,
@@ -240,7 +236,7 @@ const useExcelImport = (
 
   // Fonction pour mettre à jour le formData avec les données importées
   const updateFormDataWithImportedData = async (resultIndex, sampleIndex, hardnessResults, ecdPositions, curveData) => {
-    console.log('Mise à jour du formData:', { hardnessResults, ecdPositions, curveData });
+    
 
     // Créer une copie du formData actuel
     const updatedFormData = { ...formData };
@@ -278,7 +274,7 @@ const useExcelImport = (
       }
     });
 
-    console.log('FormData mis à jour avec succès');
+    
   };
 
   return {

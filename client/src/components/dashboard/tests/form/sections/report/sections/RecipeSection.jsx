@@ -621,7 +621,7 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
     const usableHeight = availableHeight - headerHeight - totalRowHeight - baseHeight;
     const maxRows = Math.floor(usableHeight / rowHeight);
     
-    console.log(`calculateMaxTableRows: available=${availableHeight}, usable=${usableHeight}, maxRows=${maxRows}`);
+    
     
     return Math.max(0, maxRows);
   };
@@ -663,7 +663,7 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
           const remainingHeight = availableHeight - currentPage.estimatedHeight;
           const maxRows = calculateMaxTableRows(remainingHeight, true, section.type === 'chemicalCycle');
           const maxRowsForPage = calculateMaxTableRows(availableHeight, true, section.type === 'chemicalCycle');
-          console.log(`${section.type}: remainingHeight=${remainingHeight}, maxRows=${maxRows}, tableLength=${tableData.length}`);
+          
 
           // NOUVEAU : Si le tableau complet tient dans l'espace restant, l'ajouter à la page courante
           if (tableData.length <= maxRows) {
@@ -683,7 +683,7 @@ const RecipeSection = ({ testData, recipeData: passedRecipeData, clientData }) =
             // Découper le tableau - mettre le maximum possible sur cette page
             const firstPartRows = Math.min(maxRows, tableData.length);
             const remainingRows = tableData.length - firstPartRows;
-            console.log(`Splitting table: firstPart=${firstPartRows}, remaining=${remainingRows}`);
+            
             // Ajouter la première partie du tableau à la page actuelle
             currentPage.sections.push({
               type: section.type,

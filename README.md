@@ -162,7 +162,7 @@ Copiez `.env.example` vers `.env` et configurez :
 ```env
 # Base de données
 MYSQL_ROOT_PASSWORD=your_secure_password
-MYSQL_DATABASE=synergy
+MYSQL_DATABASE=synergia
 DB_HOST=database
 DB_USER=root
 DB_PASSWORD=your_secure_password

@@ -54,8 +54,6 @@ const authenticate = async (req, res, next) => {
       const tokenPreview = token.length > 20 ? 
         `${token.substring(0, 10)}...${token.substring(token.length - 5)}` : 
         'token trop court';
-      console.log(`Token reçu (aperçu): ${tokenPreview}`);
-      console.log(`Structure du token: ${token ? token.split('.').length : 0} segments`);
       
       // Vérifier si le token a une structure valide de JWT (doit avoir 3 segments séparés par des points)
       if (token.split('.').length !== 3) {
@@ -75,12 +73,9 @@ const authenticate = async (req, res, next) => {
     // Vérifie et décode le token JWT
     const decoded = jwt.verify(token, JWT_SECRET);    // Journalisation en mode développement pour faciliter le débogage
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[SERVER] 🔒 Token vérifié`);
-      console.log(`📋 DONNÉES JWT:`);
-      console.log(`  • Utilisateur: ${decoded.username}`);
-      console.log(`  • Dernière activité: ${new Date(decoded.lastActivity).toLocaleString()}`);
-      console.log(`  • Délai d'inactivité configuré: ${INACTIVITY_TIMEOUT/1000}s (${config.JWT.INACTIVITY_EXPIRE})`);
-      console.log(`  • Valeur du .env: JWT_INACTIVITY_EXPIRE=${process.env.JWT_INACTIVITY_EXPIRE || 'non définie'}`);
+      
+      
+      
     }
 
     // Vérification du délai d'inactivité
@@ -92,13 +87,11 @@ const authenticate = async (req, res, next) => {
       if (process.env.NODE_ENV === 'development') {
         const inactiveSeconds = Math.round(inactiveTime/1000);
         const inactivePercent = Math.round((inactiveTime / INACTIVITY_TIMEOUT) * 100);
-        console.log(`[SERVER] ⏱️ Inactivité: ${inactiveSeconds}s / ${INACTIVITY_TIMEOUT/1000}s (${inactivePercent}%)`);
       }
       
       // Si le délai d'inactivité dépasse la limite configurée, rejette la requête
       if (inactiveTime > INACTIVITY_TIMEOUT) {
-        console.log(`[SERVER] ⚠️ SESSION EXPIRÉE pour l'utilisateur "${decoded.username}"`);
-        console.log(`  • Cause: Inactivité de ${Math.round(inactiveTime/1000)}s > limite de ${INACTIVITY_TIMEOUT/1000}s`);
+        
         return res.status(401).json({ 
           success: false, 
           message: 'Session expirée due à l\'inactivité',
@@ -203,8 +196,7 @@ const validateRefreshToken = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
       // Journalisation en mode développement pour faciliter le débogage
     if (process.env.NODE_ENV === 'development') {
-      console.log('Tentative de rafraîchissement du token pour:', decoded.username);
-      console.log('Dernière activité:', new Date(decoded.lastActivity));
+      
     }
 
     // Définit un délai d'inactivité étendu spécifique au rafraîchissement
@@ -218,13 +210,11 @@ const validateRefreshToken = async (req, res, next) => {
       const inactiveTime = now - decoded.lastActivity;
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('Temps d\'inactivité pour rafraîchissement:', Math.round(inactiveTime/1000), 'secondes');
-        console.log('Délai étendu autorisé:', Math.round(extendedInactivityTimeout/1000), 'secondes');
       }
       
       // Même avec la tolérance étendue, refuse les tokens inactifs depuis trop longtemps
       if (inactiveTime > extendedInactivityTimeout) {
-        console.log('Rafraîchissement refusé - Inactivité trop longue pour:', decoded.username);
+        
         return res.status(401).json({ 
           success: false, 
           message: 'Session expirée, impossible de rafraîchir après une inactivité prolongée',

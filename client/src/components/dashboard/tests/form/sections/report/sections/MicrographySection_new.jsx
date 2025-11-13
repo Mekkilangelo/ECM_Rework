@@ -508,7 +508,7 @@ const MicrographySection = ({ testData, selectedPhotos = {}, clientData }) => {
                     const alternateUrl = `/api/files/${getPhotoId(photo)}`;
                     
                     if (e.target.src !== alternateUrl) {
-                      console.log(`Trying alternative URL: ${alternateUrl}`);
+                      
                       e.target.src = alternateUrl;
                       return;
                     }

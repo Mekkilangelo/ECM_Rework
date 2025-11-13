@@ -7,6 +7,7 @@ import useSteelSubmission from './modules/useSteelSubmission';
 import useSteelData from './modules/useSteelData';
 import useCloseConfirmation from '../../../../hooks/useCloseConfirmation';
 import useCopyPaste from '../../../../hooks/useCopyPaste';
+import referenceService from '../../../../services/referenceService';
 
 const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false) => {
   // État du formulaire et initialisation
@@ -65,6 +66,50 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode =
     handleRateTypeChange,
     handleEquivalentChange
   } = useSteelHandlers(formData, setFormData, errors, setErrors, viewMode);
+  
+  // Handlers pour créer de nouvelles options dans les CreatableSelect
+  // Ces handlers ajoutent les valeurs dans les tables de référence
+  const handleCreateFamily = async (inputValue) => {
+    if (!inputValue || viewMode) return;
+    try {
+      // Ajouter la valeur dans la table de référence ref_steel_family
+      await referenceService.addValue('ref_steel_family', inputValue);
+      // Mettre à jour formData avec la nouvelle valeur
+      setFormData(prev => ({ ...prev, family: inputValue }));
+    } catch (error) {
+      console.error('Erreur lors de la création de la famille:', error);
+    }
+  };
+
+  const handleCreateStandard = async (inputValue) => {
+    if (!inputValue || viewMode) return;
+    try {
+      // Ajouter la valeur dans la table de référence ref_steel_standard
+      await referenceService.addValue('ref_steel_standard', inputValue);
+      // Mettre à jour formData avec la nouvelle valeur
+      setFormData(prev => ({ ...prev, standard: inputValue }));
+    } catch (error) {
+      console.error('Erreur lors de la création du standard:', error);
+    }
+  };
+
+  const handleCreateElement = async (inputValue) => {
+    if (!inputValue || viewMode) return;
+    try {
+      // Ajouter la valeur dans la table de référence ref_steel_elements
+      await referenceService.addValue('ref_steel_elements', inputValue);
+      return inputValue; // Retourner la valeur pour l'utiliser dans handleChemicalElementChange
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'élément:', error);
+      return null;
+    }
+  };
+
+  const handleCreateGrade = (inputValue) => {
+    if (!inputValue || viewMode) return;
+    // Le grade n'est pas dans une table de référence, mise à jour directe
+    setFormData(prev => ({ ...prev, grade: inputValue }));
+  };
   
   // Validation du formulaire
   const { validate } = useFormValidation(formData, setErrors);
@@ -174,6 +219,11 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode =
     handleChemicalElementChange,
     handleRateTypeChange,
     handleEquivalentChange,
+    // Handlers pour CreatableSelect
+    handleCreateFamily,
+    handleCreateStandard,
+    handleCreateElement,
+    handleCreateGrade,
     // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
     showConfirmModal, 
     pendingClose,

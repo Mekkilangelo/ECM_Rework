@@ -752,6 +752,7 @@
     "add": "Add trial",
     "edit": "Edit trial",
     "new": "New trial",    "trialCode": "Trial code",
+    "recipeNumber": "Recipe No.",
     "loadNumber": "Load Number",
     "date": "Date",
     "location": "Location",
@@ -990,6 +991,7 @@
         "selectPosition": "Position",
         "enterValue": "Value",
         "enterDistance": "Distance",
+        "noUnitsAvailable": "No hardness units available. Using \"HV\" as default.",
         "locations": {
           "surface": "Surface",
           "tooth": "Tooth",
@@ -1160,6 +1162,13 @@
       "preview": "Preview",
       "downloadPdf": "PDF",
       "pdfFromPreview": "Use preview to generate PDF"
+    },
+    "preview": {
+      "title": "Report Preview",
+      "iframe": {
+        "title": "PDF Report Preview"
+      },
+      "size": "Size"
     },
     "sections": {
       "title": "Report Sections",

@@ -270,6 +270,14 @@ module.exports = (sequelize) => {
       onUpdate: 'CASCADE'
     });
     
+    // Relation avec les résultats
+    Trial.hasMany(models.results_step, {
+      foreignKey: 'trial_node_id',
+      as: 'resultSteps',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
+    
     // Relations avec unités
     Trial.belongsTo(models.ref_units, {
       foreignKey: 'load_weight_unit',

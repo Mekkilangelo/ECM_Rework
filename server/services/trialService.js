@@ -588,11 +588,20 @@ const getAllTrials = async (options = {}) => {
     // Exécuter la requête
   const trials = await node.findAll({
     where: whereCondition,
-    include: [{
-      model: trial,
-      as: 'trial',
-      attributes: ['trial_code', 'load_number', 'trial_date', 'status', 'location']
-    }],
+    include: [
+      {
+        model: trial,
+        as: 'trial',
+        attributes: ['trial_code', 'load_number', 'trial_date', 'status', 'location', 'recipe_id'],
+        include: [
+          {
+            model: sequelize.models.recipe,
+            as: 'recipe',
+            attributes: ['recipe_number']
+          }
+        ]
+      }
+    ],
     order: [getOrderClause(sortBy, sortOrder)],
     limit: parseInt(limit),
     offset: parseInt(offset)

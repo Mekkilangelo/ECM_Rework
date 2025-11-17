@@ -13,7 +13,7 @@ import './TrialForm.css';
 import BasicInfoSection from './sections/common/BasicInfoSection';
 import BeforeTabContent from './sections/before/BeforeTabContent';
 import AfterTabContent from './sections/after/AfterTabContent';
-import ReportTabContent from './sections/report/ReportTabContent';
+import { ReportConfiguration } from '../../../../features/reports';
 
 const TrialForm = forwardRef(({ trial, onClose, onTrialCreated, onTrialUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
@@ -288,9 +288,9 @@ const TrialForm = forwardRef(({ trial, onClose, onTrialCreated, onTrialUpdated, 
                 title={renderTabTitle(t('trials.tabs.report'), "report")}
                 tabClassName={`tab-report ${activeTab === 'report' ? 'active-tab' : ''}`}
               >
-                <ReportTabContent 
+                <ReportConfiguration 
                   trialId={trial.id}
-                  partId={trial.parent_id}  // Ajoutez directement l'ID de la pièce
+                  partId={trial.parent_id}
                 />
               </Tab>
             </Tabs>

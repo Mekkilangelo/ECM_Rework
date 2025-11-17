@@ -128,7 +128,7 @@ const TrialList = ({ partId }) => {
     {
       key: 'name',
       label: t('trials.trialCode'),
-      style: { width: '25%' },
+      style: { width: '20%' },
       render: (trial) => (
         <div
           onClick={() => handleTrialClick(trial)}
@@ -144,6 +144,13 @@ const TrialList = ({ partId }) => {
         </div>
       ),
       sortValue: (trial) => trial.name || ''
+    },
+    {
+      key: 'Trial.recipe_number',
+      label: t('trials.recipeNumber'),
+      cellClassName: 'text-center',
+      render: (trial) => trial.trial?.recipe?.recipe_number || "-",
+      sortValue: (trial) => trial.trial?.recipe?.recipe_number || ''
     },
     {
       key: 'Trial.load_number',

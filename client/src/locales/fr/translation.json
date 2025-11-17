@@ -756,6 +756,7 @@
     "add": "Ajouter un essai",
     "edit": "Modifier l'essai",
     "new": "Nouvel essai",    "trialCode": "Code d'essai",
+    "recipeNumber": "N° Recette",
     "loadNumber": "Numéro de charge",
     "date": "Date",
     "location": "Lieu",
@@ -997,6 +998,7 @@
         "enterPosition": "Saisir une position",
         "enterValue": "Valeur",
         "enterDistance": "Distance",
+        "noUnitsAvailable": "Aucune unité de dureté disponible. Utilisation de \"HV\" par défaut.",
         "locations": {
           "surface": "Surface",
           "tooth": "PdD",
@@ -1172,6 +1174,13 @@
       "preview": "Prévisualiser",
       "downloadPdf": "PDF",
       "pdfFromPreview": "Utilisez la prévisualisation pour générer le PDF"
+    },
+    "preview": {
+      "title": "Aperçu du rapport",
+      "iframe": {
+        "title": "Aperçu du rapport PDF"
+      },
+      "size": "Taille"
     },
     "sections": {
       "title": "Sections du rapport",

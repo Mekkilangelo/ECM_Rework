@@ -87,7 +87,9 @@ const createRecipeFromData = async (recipeData, transaction) => {
       wait_time_value: recipeData.wait_time?.value || null,
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
-      wait_pressure_unit: recipeData.wait_pressure?.unit || null
+      wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      cell_temp_value: recipeData.cell_temp?.value || null,
+      cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
 
     // Créer les steps du cycle chimique
@@ -112,7 +114,7 @@ const createRecipeFromData = async (recipeData, transaction) => {
       }
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 || 
-             recipeData.wait_time || recipeData.wait_pressure) {
+             recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp) {
     // Si pas de chemical_cycle array mais qu'on a les métadonnées, les enregistrer quand même
     await ChemicalModel.create({
       recipe_id: recipe.recipe_id,
@@ -122,7 +124,9 @@ const createRecipeFromData = async (recipeData, transaction) => {
       wait_time_value: recipeData.wait_time?.value || null,
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
-      wait_pressure_unit: recipeData.wait_pressure?.unit || null
+      wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      cell_temp_value: recipeData.cell_temp?.value || null,
+      cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
   }
 
@@ -363,7 +367,9 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       wait_time_value: recipeData.wait_time?.value || null,
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
-      wait_pressure_unit: recipeData.wait_pressure?.unit || null
+      wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      cell_temp_value: recipeData.cell_temp?.value || null,
+      cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
 
     for (const step of recipeData.chemical_cycle) {
@@ -386,7 +392,7 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       }
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 || 
-             recipeData.wait_time || recipeData.wait_pressure) {
+             recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp) {
     // Si pas de chemical_cycle array mais qu'on a les métadonnées, les enregistrer quand même
     await sequelize.models.recipe_chemical_cycle.create({
       recipe_id: recipeId,
@@ -396,7 +402,9 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       wait_time_value: recipeData.wait_time?.value || null,
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
-      wait_pressure_unit: recipeData.wait_pressure?.unit || null
+      wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      cell_temp_value: recipeData.cell_temp?.value || null,
+      cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
   }
 
@@ -813,6 +821,10 @@ const getTrialById = async (trialId) => {
             value: recipe.chemicalCycle.wait_pressure_value,
             unit: recipe.chemicalCycle.wait_pressure_unit
           };
+          trialData.recipe_data.cell_temp = {
+            value: recipe.chemicalCycle.cell_temp_value,
+            unit: recipe.chemicalCycle.cell_temp_unit
+          };
           
           trialData.recipe_data.chemical_cycle = recipe.chemicalCycle.steps.map(step => ({
             time: step.time,
@@ -824,6 +836,23 @@ const getTrialById = async (trialId) => {
               index: gas.gas_index
             })) : []
           }));
+        } else if (recipe.chemicalCycle) {
+          // Même sans steps, récupérer les métadonnées du cycle chimique incluant cell_temp
+          trialData.recipe_data.selected_gas1 = recipe.chemicalCycle.selected_gas1 || '';
+          trialData.recipe_data.selected_gas2 = recipe.chemicalCycle.selected_gas2 || '';
+          trialData.recipe_data.selected_gas3 = recipe.chemicalCycle.selected_gas3 || '';
+          trialData.recipe_data.wait_time = {
+            value: recipe.chemicalCycle.wait_time_value,
+            unit: recipe.chemicalCycle.wait_time_unit
+          };
+          trialData.recipe_data.wait_pressure = {
+            value: recipe.chemicalCycle.wait_pressure_value,
+            unit: recipe.chemicalCycle.wait_pressure_unit
+          };
+          trialData.recipe_data.cell_temp = {
+            value: recipe.chemicalCycle.cell_temp_value,
+            unit: recipe.chemicalCycle.cell_temp_unit
+          };
         }
         
         // Données de trempe

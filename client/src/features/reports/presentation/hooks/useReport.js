@@ -41,6 +41,7 @@ export const useReport = (trialId, partId) => {
 
   // Créer un générateur PDF à la demande avec les photos actuelles
   const createPDFGenerator = useCallback(() => {
+    
     const pdfGenerator = new ReactPDFGenerator();
     pdfGenerator.setDocumentRenderer(
       (report, options) => (
@@ -97,6 +98,7 @@ export const useReport = (trialId, partId) => {
       if (JSON.stringify(currentPhotos) === JSON.stringify(photos)) {
         return prev;
       }
+      
       return {
         ...prev,
         [sectionType]: photos

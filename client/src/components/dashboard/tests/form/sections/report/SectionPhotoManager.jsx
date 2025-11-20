@@ -1,10 +1,97 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useReducer, startTransition } from 'react';
 import { Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faImage, faTimes, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 import fileService from '../../../../../../services/fileService';
+
+// Reducer pour gérer les états de sélection de façon synchrone
+const selectionReducer = (state, action) => {
+  switch (action.type) {
+    case 'TOGGLE_PHOTO': {
+      const { photoId } = action.payload;
+      const isCurrentlySelected = state.selectedPhotoIds.includes(photoId);
+      
+      const newSelectedIds = isCurrentlySelected 
+        ? state.selectedPhotoIds.filter(id => id !== photoId)
+        : [...state.selectedPhotoIds, photoId];
+      
+      const newOrder = isCurrentlySelected 
+        ? Object.fromEntries(
+            Object.entries(state.photoOrder)
+              .filter(([id]) => id !== photoId)
+              .map(([id, order]) => [id, order > state.photoOrder[photoId] ? order - 1 : order])
+          )
+        : {
+            ...state.photoOrder,
+            [photoId]: Object.keys(state.photoOrder).length + 1
+          };
+      
+      return {
+        ...state,
+        selectedPhotoIds: newSelectedIds,
+        photoOrder: newOrder,
+        forceUpdate: state.forceUpdate + 1
+      };
+    }
+    
+    case 'TOGGLE_GROUP': {
+      const { photoIds, select } = action.payload;
+      let newSelectedIds = [...state.selectedPhotoIds];
+      let newOrder = { ...state.photoOrder };
+      
+      if (select) {
+        photoIds.forEach(photoId => {
+          if (!newSelectedIds.includes(photoId)) {
+            newSelectedIds.push(photoId);
+            newOrder[photoId] = Object.keys(newOrder).length + 1;
+          }
+        });
+      } else {
+        photoIds.forEach(photoId => {
+          if (newSelectedIds.includes(photoId)) {
+            newSelectedIds = newSelectedIds.filter(id => id !== photoId);
+            const removedOrder = newOrder[photoId];
+            delete newOrder[photoId];
+            Object.keys(newOrder).forEach(id => {
+              if (newOrder[id] > removedOrder) {
+                newOrder[id] = newOrder[id] - 1;
+              }
+            });
+          }
+        });
+      }
+      
+      return {
+        ...state,
+        selectedPhotoIds: newSelectedIds,
+        photoOrder: newOrder,
+        forceUpdate: state.forceUpdate + 1
+      };
+    }
+
+    case 'SET_SELECTION': {
+      return {
+        ...state,
+        selectedPhotoIds: action.payload.selectedIds,
+        photoOrder: action.payload.order,
+        forceUpdate: state.forceUpdate + 1
+      };
+    }
+    
+    case 'RESET': {
+      return {
+        selectedPhotoIds: [],
+        photoOrder: {},
+        forceUpdate: 0
+      };
+    }
+    
+    default:
+      return state;
+  }
+};
 
 const SectionPhotoManager = ({
   testNodeId,
@@ -19,10 +106,19 @@ const SectionPhotoManager = ({
   
   // États
   const [availablePhotos, setAvailablePhotos] = useState({});
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
-  const [photoOrder, setPhotoOrder] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);  const [expandedSections, setExpandedSections] = useState({});
+  const [error, setError] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
+  const [pendingChange, setPendingChange] = useState(null);
+  
+  // Utiliser useReducer pour les états de sélection
+  const [selectionState, dispatchSelection] = useReducer(selectionReducer, {
+    selectedPhotoIds: [],
+    photoOrder: {},
+    forceUpdate: 0
+  });
+  
+  const { selectedPhotoIds, photoOrder, forceUpdate } = selectionState;
   
   // Cleanup lors du démontage
   useEffect(() => {
@@ -320,18 +416,28 @@ const SectionPhotoManager = ({
         });
       }
       
-      setSelectedPhotoIds(initSelected);
-      
       const initOrder = {};
       initSelected.forEach((photoId, index) => {
         initOrder[photoId] = index + 1;
       });
-      setPhotoOrder(initOrder);
+      
+      dispatchSelection({ 
+        type: 'SET_SELECTION', 
+        payload: { selectedIds: initSelected, order: initOrder } 
+      });
     } else {
-      setSelectedPhotoIds([]);
-      setPhotoOrder({});
+      dispatchSelection({ type: 'RESET' });
     }
   }, [initialSelectedPhotos, sectionType]);
+
+  // Effect pour notifier les changements
+  useEffect(() => {
+    if (pendingChange && onChange) {
+      onChange(sectionType, pendingChange);
+      setPendingChange(null);
+    }
+  }, [pendingChange, onChange, sectionType]);
+
   // Charger les photos pour la section
   const loadPhotosForSection = async () => {
     setLoading(true);
@@ -440,9 +546,16 @@ const SectionPhotoManager = ({
       });
     });
     return flatPhotos;
-  };  // Fonction pour organiser les photos sélectionnées avec leurs métadonnées
-  const organizeSelectedPhotosWithMetadata = (selectedIds) => {
+  };  // Fonction pour organiser les photos sélectionnées avec leurs métadonnées et numérotation intelligente
+  const organizeSelectedPhotosWithMetadata = useCallback((selectedIds, customPhotoOrder = null) => {
     const organized = {};
+    const orderToUse = customPhotoOrder || photoOrder;
+    
+    // Créer un mapping des photos sélectionnées avec leur ordre
+    const orderedSelectedIds = selectedIds
+      .map(id => ({ id, order: orderToUse[id] || 999999 }))
+      .sort((a, b) => a.order - b.order)
+      .map(item => item.id);
     
     // Parcourir toutes les photos disponibles et récupérer les métadonnées des photos sélectionnées
     Object.keys(availablePhotos).forEach(groupKey => {
@@ -450,13 +563,18 @@ const SectionPhotoManager = ({
         const photos = availablePhotos[groupKey][subgroupKey];        
         photos.forEach(photo => {
           if (selectedIds.includes(photo.id)) {
-            // Créer un objet avec toutes les métadonnées
+            // Numérotation basée sur l'ordre de sélection, pas sur la position dans la structure
+            const photoSectionOrder = orderedSelectedIds.indexOf(photo.id) + 1;
+            
+            // Créer un objet avec toutes les métadonnées et la numérotation
             const photoWithMetadata = {
               id: photo.id,
               name: photo.name || '',
               category: photo.category || photo.sourceCategory || groupKey,
               subcategory: photo.subcategory || photo.sourceSubcategory || subgroupKey,
               viewPath: photo.viewPath,
+              sectionOrder: photoSectionOrder, // Numérotation indépendante pour cette section
+              globalOrder: orderToUse[photo.id] || photoSectionOrder, // Ordre global de sélection
               // Ajouter d'autres métadonnées si nécessaires
               originalData: photo
             };
@@ -502,56 +620,26 @@ const SectionPhotoManager = ({
       });
     });
     
-    if (process.env.NODE_ENV === 'development') {
-      
-    }
     return organized;
-  };
+  }, [availablePhotos, sectionType]);
 
-  // Réorganiser l'ordre après suppression
-  const reorderPhotos = (removedPhotoId, currentOrder) => {
-    const removedOrder = currentOrder[removedPhotoId];
-    const newOrder = { ...currentOrder };
-    delete newOrder[removedPhotoId];
-    
-    Object.keys(newOrder).forEach(photoId => {
-      if (newOrder[photoId] > removedOrder) {
-        newOrder[photoId] = newOrder[photoId] - 1;
-      }
-    });
-    
-    return newOrder;
-  };
+
 
   // Basculer la sélection d'une photo
-  const togglePhotoSelection = (photoId) => {
-    setSelectedPhotoIds(prevSelected => {
-      setPhotoOrder(prevOrder => {
-        let newSelected;
-        let newOrder;
-        
-        if (prevSelected.includes(photoId)) {
-          newSelected = prevSelected.filter(id => id !== photoId);
-          newOrder = reorderPhotos(photoId, prevOrder);
-        } else {
-          newSelected = [...prevSelected, photoId];          newOrder = {
-            ...prevOrder,
-            [photoId]: Object.keys(prevOrder).length + 1          };
-        }
-        
-        if (onChange) {
-          const organizedPhotos = organizeSelectedPhotosWithMetadata(newSelected);
-          onChange(sectionType, organizedPhotos);
-        }
-        
-        return newOrder;
+  const togglePhotoSelection = useCallback((photoId) => {
+    // Utiliser le reducer pour la mise à jour d'état synchrone
+    dispatchSelection({ type: 'TOGGLE_PHOTO', payload: { photoId } });
+  }, []);
+
+  // Effet pour synchroniser les changements avec le parent (seulement quand forceUpdate change)
+  useEffect(() => {
+    if (forceUpdate > 0 && Object.keys(availablePhotos).length > 0) {
+      startTransition(() => {
+        const organizedPhotos = organizeSelectedPhotosWithMetadata(selectedPhotoIds, photoOrder);
+        setPendingChange(organizedPhotos);
       });
-      
-      return prevSelected.includes(photoId) 
-        ? prevSelected.filter(id => id !== photoId)
-        : [...prevSelected, photoId];
-    });
-  };
+    }
+  }, [forceUpdate, selectedPhotoIds, photoOrder, availablePhotos, organizeSelectedPhotosWithMetadata]);
 
   // Sélectionner/désélectionner un groupe
   const toggleGroupSelection = (group, subgroup = null, select = true) => {
@@ -564,37 +652,9 @@ const SectionPhotoManager = ({
     
     const photoIds = photosToToggle.map(photo => photo.id);
     
-    setSelectedPhotoIds(prevSelected => {
-      setPhotoOrder(prevOrder => {
-        let newSelected = [...prevSelected];
-        let newOrder = { ...prevOrder };
-        
-        if (select) {
-          photoIds.forEach(photoId => {
-            if (!newSelected.includes(photoId)) {
-              newSelected.push(photoId);
-              newOrder[photoId] = Object.keys(newOrder).length + 1;
-            }
-          });
-        } else {
-          photoIds.forEach(photoId => {
-            if (newSelected.includes(photoId)) {
-              newSelected = newSelected.filter(id => id !== photoId);
-              newOrder = reorderPhotos(photoId, newOrder);
-            }
-          });        }
-        
-        if (onChange) {
-          const organizedPhotos = organizeSelectedPhotosWithMetadata(newSelected);
-          onChange(sectionType, organizedPhotos);
-        }
-        
-        return newOrder;
-      });
-      
-      return select 
-        ? [...new Set([...prevSelected, ...photoIds])]
-        : prevSelected.filter(id => !photoIds.includes(id));
+    dispatchSelection({ 
+      type: 'TOGGLE_GROUP', 
+      payload: { photoIds, select } 
     });
   };
 
@@ -603,21 +663,10 @@ const SectionPhotoManager = ({
     const allPhotos = getAllPhotosFlat();
     const allPhotoIds = allPhotos.map(photo => photo.id);
     
-    let newSelected = [];
-    let newOrder = {};
-    
-    if (select) {
-      newSelected = allPhotoIds;
-      allPhotoIds.forEach((photoId, index) => {
-        newOrder[photoId] = index + 1;
-      });
-    }    setSelectedPhotoIds(newSelected);
-    setPhotoOrder(newOrder);
-    
-    if (onChange) {
-      const organizedPhotos = organizeSelectedPhotosWithMetadata(newSelected);
-      onChange(sectionType, organizedPhotos);
-    }
+    dispatchSelection({ 
+      type: 'TOGGLE_GROUP', 
+      payload: { photoIds: allPhotoIds, select } 
+    });
   };
 
   // Gérer l'ouverture/fermeture des sections
@@ -832,6 +881,7 @@ const SectionPhotoManager = ({
                       </div>
                     
                     <PhotoGrid 
+                      key={`${groupKey}-${subgroupKey}-${forceUpdate}`}
                       photos={subgroupPhotos} 
                       selectedPhotoIds={selectedPhotoIds}
                       photoOrder={photoOrder}
@@ -849,7 +899,7 @@ const SectionPhotoManager = ({
   );
 };
 
-// Composant pour la grille de photos (séparé pour la clarté)
+// Composant pour la grille de photos
 const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t }) => {
   return (
     <Row className="g-2">

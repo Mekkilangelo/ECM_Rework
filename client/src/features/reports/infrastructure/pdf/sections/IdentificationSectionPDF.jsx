@@ -77,6 +77,25 @@ const styles = StyleSheet.create({
 export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
+  // S'assurer que photos est toujours un tableau valide
+  const validPhotos = (() => {
+    if (!photos) return [];
+    if (Array.isArray(photos)) return photos;
+    
+    // Si c'est un objet avec des sous-catégories, les aplatir
+    if (typeof photos === 'object') {
+      const flatPhotos = [];
+      Object.values(photos).forEach(categoryPhotos => {
+        if (Array.isArray(categoryPhotos)) {
+          flatPhotos.push(...categoryPhotos);
+        }
+      });
+      return flatPhotos;
+    }
+    
+    return [];
+  })();
+
   // Helper pour obtenir l'URL de la photo
   const getPhotoUrl = (photo) => {
     if (!photo) return '';
@@ -212,18 +231,18 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
       )}
 
       {/* Photos d'identification */}
-      {photos && photos.length > 0 && (
+      {validPhotos && validPhotos.length > 0 && (
         <>
           <Text style={styles.subsectionTitle}>Photos d'identification</Text>
           <View style={styles.photoGrid}>
-            {photos.map((photo, index) => (
+            {validPhotos.map((photo, index) => (
               <View key={photo.id || photo.url || index} style={styles.photoContainer}>
                 <Image 
                   src={getPhotoUrl(photo)} 
                   style={styles.photo}
                 />
-                {photo.original_name && (
-                  <Text style={styles.photoLabel}>{photo.original_name}</Text>
+                {(photo.original_name || photo.name) && (
+                  <Text style={styles.photoLabel}>{photo.original_name || photo.name}</Text>
                 )}
               </View>
             ))}

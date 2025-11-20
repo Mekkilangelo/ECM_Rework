@@ -527,13 +527,7 @@ const RecipePhotosSection = ({ photos = [] }) => {
  * Composant principal: Section Recette complète
  */
 export const RecipeSectionPDF = ({ report }) => {
-  console.log('🍳 RecipeSectionPDF render', { 
-    hasReport: !!report,
-    hasRecipeData: !!report?.recipeData,
-    hasQuenchData: !!report?.quenchData,
-    recipeData: report?.recipeData,
-    quenchData: report?.quenchData
-  });
+
   
   const recipeData = report.recipeData;
   const quenchData = report.quenchData;

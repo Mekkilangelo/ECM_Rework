@@ -6,7 +6,6 @@
 // Composants de présentation
 export { default as ReportConfiguration } from './presentation/components/ReportConfiguration';
 export { default as ReportPreviewModal } from './presentation/components/ReportPreviewModal';
-export { default as SectionPhotoManager } from './presentation/components/SectionPhotoManager';
 
 // Hooks
 export { useReport } from './presentation/hooks/useReport';

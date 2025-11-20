@@ -23,7 +23,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useReport } from '../hooks/useReport';
 import ReportPreviewModal from './ReportPreviewModal';
-import SectionPhotoManager from './SectionPhotoManager';
+import SectionPhotoManager from '../../../../components/dashboard/tests/form/sections/report/SectionPhotoManager';
 import './ReportConfiguration.css';
 
 /**
@@ -244,7 +244,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                       trialNodeId={trialId}
                       partNodeId={partId}
                       sectionType={section.type}
-                      onChange={(photos) => setSectionPhotos(section.type, photos)}
+                      onChange={(sectionType, photos) => setSectionPhotos(sectionType, photos)}
                       initialSelectedPhotos={selectedPhotos[section.type] || []}
                       show={section.isEnabled}
                     />

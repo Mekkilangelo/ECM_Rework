@@ -23,13 +23,7 @@ export class ConfigureReportUseCase {
         selectedSections
       );
 
-      console.log('🔧 ConfigureReportUseCase - rawData from API:', {
-        hasRecipeData: !!rawData.recipeData,
-        hasQuenchData: !!rawData.quenchData,
-        recipeData: rawData.recipeData,
-        quenchData: rawData.quenchData,
-        fullRawData: rawData
-      });
+
 
       // 2. Transformer les données
       const sanitized = DataTransformer.sanitizeReportData(rawData);

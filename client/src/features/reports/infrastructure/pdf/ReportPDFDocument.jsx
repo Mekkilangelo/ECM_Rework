@@ -5,9 +5,14 @@
 
 import React from 'react';
 import { Document, Page, View, Text, StyleSheet, Font, Image } from '@react-pdf/renderer';
-import { IdentificationSectionPDF } from './sections/IdentificationSectionPDF';
-import { RecipeSectionPDF } from './sections/RecipeSectionPDF';
-import { ControlSectionPDF } from './sections/ControlSectionPDF';
+import { 
+  IdentificationSectionPDF,
+  MicrographySectionPDF,
+  CurvesSectionPDF,
+  LoadSectionPDF,
+  RecipeSectionPDF,
+  ControlSectionPDF 
+} from './sections';
 
 // Enregistrer les polices personnalisées (optionnel)
 // Font.register({
@@ -243,21 +248,80 @@ export const Table = ({ headers, rows }) => (
 );
 
 /**
+ * Helper pour normaliser les photos organisées vers un format simple
+ */
+const normalizePhotosForSection = (photos, sectionType) => {
+  if (!photos) return [];
+  
+  // Si c'est déjà un tableau, le retourner tel quel
+  if (Array.isArray(photos)) {
+    return photos;
+  }
+  
+  // Si c'est un objet organisé, l'aplatir en tableau
+  if (typeof photos === 'object') {
+    const flatPhotos = [];
+    
+    Object.keys(photos).forEach(categoryKey => {
+      const categoryPhotos = photos[categoryKey];
+      
+      if (Array.isArray(categoryPhotos)) {
+        // Ajouter les métadonnées de catégorie si elles n'existent pas
+        categoryPhotos.forEach(photo => {
+          flatPhotos.push({
+            ...photo,
+            category: photo.category || categoryKey,
+            subcategory: photo.subcategory || categoryKey,
+            // Construire l'URL si elle n'existe pas
+            url: photo.url || photo.viewPath || (photo.id ? `http://localhost:5001/api/files/${photo.id}/preview` : ''),
+            original_name: photo.name || photo.original_name,
+          });
+        });
+      }
+    });
+    
+    return flatPhotos;
+  }
+  
+
+  return [];
+};
+
+/**
  * Document PDF principal
  */
 export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} }) => {
-  // Validation du rapport
+  // Validation stricte des paramètres
   if (!report || typeof report !== 'object') {
-    console.error('Invalid report object:', report);
-    return null;
+    console.error('❌ ReportPDFDocument: Invalid report object:', report);
+    return (
+      <Document title="Erreur">
+        <Page size="A4" style={styles.page}>
+          <Text style={{ fontSize: 16, color: 'red', textAlign: 'center', marginTop: 100 }}>
+            Erreur: Rapport invalide
+          </Text>
+        </Page>
+      </Document>
+    );
+  }
+  
+  if (process.env.NODE_ENV === 'development') {
+
   }
   
   const generatedDate = new Date().toLocaleDateString('fr-FR');
   
   // Récupérer les sections actives de manière sécurisée
   let activeSections = [];
-  if (Array.isArray(report.sections)) {
-    activeSections = report.sections.filter(s => s && s.isEnabled);
+  try {
+    if (Array.isArray(report.sections)) {
+      activeSections = report.sections.filter(s => s && s.isEnabled);
+    } else if (report.getActiveSections && typeof report.getActiveSections === 'function') {
+      activeSections = report.getActiveSections();
+    }
+  } catch (error) {
+    console.error('❌ Error getting active sections:', error);
+    activeSections = [];
   }
   
   // Si aucune section active, afficher au moins la page de garde
@@ -276,66 +340,258 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         <CoverPage report={report} options={options} />
       )}
 
-      {/* Sections - Afficher même s'il n'y a pas de sections actives */}
-      <Page size="A4" style={styles.page}>
-        {options.includeHeader && (
-          <PageHeader 
-            clientName={report.clientName}
-            trialCode={report.testCode}
-            pageNumber={2}
-          />
-        )}
-
-        {!hasActiveSections && (
-          <View style={{ padding: 20, textAlign: 'center' }}>
-            <Text style={{ fontSize: 12, color: '#999', fontStyle: 'italic' }}>
-              Aucune section sélectionnée pour ce rapport.
+      {/* Page d'information si aucune section */}
+      {!hasActiveSections && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={2}
+            />
+          )}
+          <View style={{ padding: 20, textAlign: 'center', marginTop: 100 }}>
+            <Text style={{ fontSize: 16, color: '#999', fontFamily: 'Helvetica-Bold', marginBottom: 20 }}>
+              Aucune section sélectionnée
             </Text>
-            <Text style={{ fontSize: 10, color: '#999', marginTop: 10 }}>
-              Veuillez sélectionner au moins une section pour générer le rapport complet.
+            <Text style={{ fontSize: 12, color: '#666', textAlign: 'center' }}>
+              Veuillez sélectionner au moins une section dans la configuration
+            </Text>
+            <Text style={{ fontSize: 12, color: '#666', textAlign: 'center' }}>
+              pour générer le rapport complet avec les photos.
             </Text>
           </View>
-        )}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
 
-        {/* Section Identification */}
-        {activeSections.some(s => s.type === 'identification') && (
-          <IdentificationSectionPDF 
-            report={report}
-            photos={selectedPhotos.identification || []}
-          />
-        )}
+      {/* Section Identification - Page séparée */}
+      {activeSections.some(s => s.type === 'identification') && report && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={"Identification"}
+            />
+          )}
+          {(() => {
+            try {
 
-        {/* Section Recette */}
-        {activeSections.some(s => s.type === 'recipe') && (
-          <RecipeSectionPDF 
-            report={report}
-          />
-        )}
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.identification, 'identification');
+              return (
+                <IdentificationSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering IdentificationSectionPDF:', error);
+              return (
+                <Section title="IDENTIFICATION">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section d'identification
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
 
-        {/* Section Contrôle/Résultats */}
-        {activeSections.some(s => s.type === 'control') && (
-          <ControlSectionPDF 
-            report={report}
-          />
-        )}
+      {/* Section Micrographie - Page séparée */}
+      {activeSections.some(s => s.type === 'micrography') && report && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={"Micrographie"}
+            />
+          )}
+          {(() => {
+            try {
 
-        {/* Autres sections - TODO: implémenter */}
-        {activeSections.map((section) => {
-          if (section.type === 'identification' || section.type === 'recipe' || section.type === 'control') return null;
-          
-          return (
-            <Section key={section.id} title={section.label}>
-              <Text style={{ fontSize: 9, fontStyle: 'italic', color: '#999' }}>
-                Section {section.label} - En cours d'implémentation
-              </Text>
-            </Section>
-          );
-        })}
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.micrography, 'micrography');
+              return (
+                <MicrographySectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering MicrographySectionPDF:', error);
+              return (
+                <Section title="ANALYSE MICROGRAPHIQUE">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section micrographie
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
 
-        {options.includeFooter && (
-          <PageFooter generatedDate={generatedDate} />
-        )}
-      </Page>
+      {/* Section Courbes - Page séparée */}
+      {activeSections.some(s => s.type === 'curves') && report && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={"Courbes"}
+            />
+          )}
+          {(() => {
+            try {
+
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.curves, 'curves');
+              return (
+                <CurvesSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering CurvesSectionPDF:', error);
+              return (
+                <Section title="COURBES ET RAPPORTS DE FOUR">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section courbes
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Charge - Page séparée */}
+      {activeSections.some(s => s.type === 'load') && report && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={"Charge"}
+            />
+          )}
+          {(() => {
+            try {
+
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.load, 'load');
+              return (
+                <LoadSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering LoadSectionPDF:', error);
+              return (
+                <Section title="CONFIGURATION DE CHARGE">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section charge
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Recette - Page séparée */}
+      {activeSections.some(s => s.type === 'recipe') && report && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={"Recette"}
+            />
+          )}
+          {(() => {
+            try {
+              return <RecipeSectionPDF report={report} />;
+            } catch (error) {
+              console.error('❌ Error rendering RecipeSectionPDF:', error);
+              return (
+                <Section title="RECETTE">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section recette
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Contrôle/Résultats - Page séparée */}
+      {activeSections.some(s => s.type === 'control') && report && (
+        <Page size="A4" style={styles.page}>
+          {options.includeHeader && (
+            <PageHeader 
+              clientName={report.clientName}
+              trialCode={report.testCode}
+              pageNumber={"Contrôle"}
+            />
+          )}
+          {(() => {
+            try {
+              return <ControlSectionPDF report={report} />;
+            } catch (error) {
+              console.error('❌ Error rendering ControlSectionPDF:', error);
+              return (
+                <Section title="CONTRÔLE">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section contrôle
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {options.includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
     </Document>
   );
 };

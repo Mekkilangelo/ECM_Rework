@@ -11,7 +11,7 @@ import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
 import FormHeader from '../../../common/FormHeader/FormHeader';
-import TrialForm from '../form/TrialForm';
+import TrialFormWithSideNavigation from '../form/TrialFormWithSideNavigation';
 //import TrialDetails from './TrialDetails';
 import '../../../../styles/dataList.css';
 import trialService from '../../../../services/trialService';
@@ -324,83 +324,50 @@ const TrialList = ({ partId }) => {
       )}
 
       {/* Modal pour créer un essai */}
-      <Modal
+      <TrialFormWithSideNavigation
+        ref={trialFormRef}
         show={showCreateForm}
         onHide={closeCreateModal}
-        size="xl"
-      >
-        <Modal.Header closeButton className="bg-light">
-          <FormHeader 
-            title={t('trials.new')}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            viewMode={false}
-          />
-        </Modal.Header>
-        <Modal.Body>
-          <TrialForm
-            ref={trialFormRef}
-            partId={partId}
-            onClose={closeCreateModal}
-            onTrialCreated={handleItemCreated}
-          />
-        </Modal.Body>
-      </Modal>
+        partId={partId}
+        onClose={closeCreateModal}
+        onTrialCreated={handleItemCreated}
+        title={t('trials.new')}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
+        viewMode={false}
+      />
 
       {/* Modal pour éditer un essai */}
-      <Modal
+      <TrialFormWithSideNavigation
+        ref={trialFormRef}
         show={showEditForm}
         onHide={() => handleRequestClose('edit', trialFormRef)}
-        size="xl"
-      >
-        <Modal.Header closeButton className="bg-light">
-          <FormHeader 
-            title={t('trials.edit')}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            viewMode={false}
-          />
-        </Modal.Header>        <Modal.Body>
-          {selectedTrial && (
-            <TrialForm
-              ref={trialFormRef}
-              trial={selectedTrial}
-              partId={partId}
-              onClose={() => {
-                // Appeler directement closeEditModal au lieu de handleRequestClose
-                // pour éviter la boucle infinie
-                closeEditModal();
-              }}
-              onTrialUpdated={handleItemUpdated}
-            />
-          )}
-        </Modal.Body>
-      </Modal>
+        trial={selectedTrial}
+        partId={partId}
+        onClose={() => {
+          // Appeler directement closeEditModal au lieu de handleRequestClose
+          // pour éviter la boucle infinie
+          closeEditModal();
+        }}
+        onTrialUpdated={handleItemUpdated}
+        title={t('trials.edit')}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
+        viewMode={false}
+      />
 
       {/* Modal pour voir les détails - utilise TrialForm en mode lecture seule */}
-      <Modal
+      <TrialFormWithSideNavigation
         show={showDetailModal}
         onHide={() => handleRequestClose('detail', trialFormRef)}
-        size="xl"
-      >
-        <Modal.Header closeButton className="bg-light">
-          <FormHeader 
-            title={t('trials.details')}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            viewMode={true}
-          />
-        </Modal.Header>
-        <Modal.Body>
-          {selectedTrial && (
-            <TrialForm
-              trial={selectedTrial}
-              partId={partId}
-              onClose={closeDetailModal}
-              viewMode={true} // Active le mode lecture seule
-            />
-          )}
-        </Modal.Body>      </Modal>
+        trial={selectedTrial}
+        partId={partId}
+        onClose={closeDetailModal}
+        title={t('trials.details')}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
+        viewMode={true} // Active le mode lecture seule
+      />
     </>
   );
 };

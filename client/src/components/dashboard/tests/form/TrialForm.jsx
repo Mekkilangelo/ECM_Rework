@@ -1,5 +1,5 @@
 import React, { useState, useCallback, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { Form, Button, Tabs, Tab, Spinner } from 'react-bootstrap';
+import { Form, Button, Spinner } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFlask, faCheckCircle, faFileAlt } from '@fortawesome/free-solid-svg-icons';
@@ -15,7 +15,16 @@ import BeforeTabContent from './sections/before/BeforeTabContent';
 import AfterTabContent from './sections/after/AfterTabContent';
 import { ReportConfiguration } from '../../../../features/reports';
 
-const TrialForm = forwardRef(({ trial, onClose, onTrialCreated, onTrialUpdated, viewMode = false }, ref) => {
+const TrialForm = forwardRef(({ 
+  trial, 
+  onClose, 
+  onTrialCreated, 
+  onTrialUpdated, 
+  viewMode = false,
+  activeTab: externalActiveTab,
+  onTabChange: externalOnTabChange,
+  useExternalNavigation = false
+}, ref) => {
   const { t } = useTranslation();
   
   // Tracker les performances
@@ -71,7 +80,12 @@ const TrialForm = forwardRef(({ trial, onClose, onTrialCreated, onTrialUpdated, 
   useImperativeHandle(ref, () => ({
     handleCloseRequest,
     handleCopy,
-    handlePaste
+    handlePaste,
+    setActiveTab: (tab) => {
+      if (!useExternalNavigation) {
+        setInternalActiveTab(tab);
+      }
+    }
   }));  const {
     formData,
     errors,
@@ -109,60 +123,26 @@ const TrialForm = forwardRef(({ trial, onClose, onTrialCreated, onTrialUpdated, 
     cursor: 'default'
   } : {};
 
-  // Fonction pour rendre les titres d'onglets avec icônes et badge visuel
-  const renderTabTitle = (title, eventKey) => {
-    // Définir les icônes pour chaque onglet
-    const tabIcons = {
-      before: faFlask,
-      after: faCheckCircle,
-      report: faFileAlt
-    };
-
-    // Couleur du badge selon l'onglet
-    const badgeColors = {
-      before: '#007bff',   // Bleu pour "avant"
-      after: '#28a745',    // Vert pour "après"  
-      report: '#ffc107'    // Jaune pour "rapport"
-    };
-
-    const isActive = activeTab === eventKey;
-    
-    return (
-      <span className="d-flex align-items-center">
-        <FontAwesomeIcon 
-          icon={tabIcons[eventKey]} 
-          className="me-2" 
-          style={{ 
-            color: isActive ? '#ffffff' : badgeColors[eventKey],
-            fontSize: '1.1em'
-          }}
-        />
-        <span style={{ fontWeight: isActive ? 'bold' : '500' }}>
-          {title}
-        </span>
-        {/* Badge indicateur */}
-        <span 
-          className="tab-badge ms-2"
-          style={{ 
-            backgroundColor: isActive ? '#ffffff' : badgeColors[eventKey],
-            opacity: isActive ? 0.8 : 0.6
-          }}
-        ></span>
-      </span>
-    );
-  };  // Mettre à jour le callback d'association de fichiers dans le hook quand il change (optimisé)
+  // Mettre à jour le callback d'association de fichiers dans le hook quand il change (optimisé)
   useEffect(() => {
     if (setFileAssociationCallback) {
       setFileAssociationCallback(() => combineFileAssociations); // Utiliser une fonction qui retourne combineFileAssociations
     }
   }, [combineFileAssociations, setFileAssociationCallback]); // Dépendances précises
 
-  // État pour gérer l'onglet actif
-  const [activeTab, setActiveTab] = useState('before');
+  // État pour gérer l'onglet actif (interne seulement si pas de navigation externe)
+  const [internalActiveTab, setInternalActiveTab] = useState('before');
+
+  // Utiliser l'état externe si disponible, sinon utiliser l'état interne
+  const activeTab = useExternalNavigation ? externalActiveTab : internalActiveTab;
 
   // Fonction pour gérer le changement d'onglet
   const handleTabChange = (key) => {
-    setActiveTab(key);
+    if (useExternalNavigation && externalOnTabChange) {
+      externalOnTabChange(key);
+    } else {
+      setInternalActiveTab(key);
+    }
   };
 
   // Détermine si nous sommes en mode édition
@@ -229,74 +209,84 @@ const TrialForm = forwardRef(({ trial, onClose, onTrialCreated, onTrialUpdated, 
             />
           </CollapsibleSection>
           
-          {/* Affichage conditionnel des onglets en fonction du mode */}
+          {/* Navigation verticale à gauche avec contenu principal */}
           {isEditMode ? (
-            <Tabs
-              activeKey={activeTab}
-              onSelect={handleTabChange}
-              className="mb-4 mt-4 trial-form-tabs"
-              id="trial-form-tabs"
-              variant="pills"
-            >
-              <Tab 
-                eventKey="before" 
-                title={renderTabTitle(t('trials.tabs.before'), "before")}
-                tabClassName={`tab-before ${activeTab === 'before' ? 'active-tab' : ''}`}
-              >
-                <BeforeTabContent 
-                  formData={formData}
-                  errors={errors}
-                  loading={loading}
-                  formHandlers={formHandlers}
-                  trial={trial}
-                  handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
-                  viewMode={viewMode}
-                  readOnlyFieldStyle={readOnlyFieldStyle}
-                  calculateProgramDuration={calculateProgramDuration}
-                />
-              </Tab>
+            <div className="trial-form-layout d-flex">
+              {/* Navigation verticale à gauche - masquée si navigation externe */}
+              {!useExternalNavigation && (
+                <div className="trial-navigation">
+                <div className="trial-nav-item" onClick={() => handleTabChange('before')}>
+                  <div className={`trial-nav-button ${activeTab === 'before' ? 'active' : ''}`}>
+                    <FontAwesomeIcon icon={faFlask} className="trial-nav-icon" />
+                    <span className="trial-nav-text">{t('trials.tabs.before')}</span>
+                  </div>
+                </div>
+                <div className="trial-nav-item" onClick={() => handleTabChange('after')}>
+                  <div className={`trial-nav-button ${activeTab === 'after' ? 'active' : ''}`}>
+                    <FontAwesomeIcon icon={faCheckCircle} className="trial-nav-icon" />
+                    <span className="trial-nav-text">{t('trials.tabs.after')}</span>
+                  </div>
+                </div>
+                <div className="trial-nav-item" onClick={() => handleTabChange('report')}>
+                  <div className={`trial-nav-button ${activeTab === 'report' ? 'active' : ''}`}>
+                    <FontAwesomeIcon icon={faFileAlt} className="trial-nav-icon" />
+                    <span className="trial-nav-text">{t('trials.tabs.report')}</span>
+                  </div>
+                </div>
+              </div>
+              )}
               
-              <Tab 
-                eventKey="after" 
-                title={renderTabTitle(t('trials.tabs.after'), "after")}
-                tabClassName={`tab-after ${activeTab === 'after' ? 'active-tab' : ''}`}
-              >
-                <AfterTabContent
-                  ref={afterTabContentRef}
-                  formData={formData}
-                  errors={errors}
-                  loading={loading}
-                  formHandlers={formHandlers}
-                  trial={trial}
-                  handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
-                  viewMode={viewMode}
-                  readOnlyFieldStyle={readOnlyFieldStyle}
-                  // Passer les fonctions d'import Excel
-                  excelImportHandlers={{
-                    fileInputRef,
-                    getCurveSectionRef,
-                    handleExcelImport,
-                    processExcelData,
-                    handleEcdChange,
-                    handleHardnessChange
-                  }}
-                />
-              </Tab>
-              
-              <Tab 
-                eventKey="report" 
-                title={renderTabTitle(t('trials.tabs.report'), "report")}
-                tabClassName={`tab-report ${activeTab === 'report' ? 'active-tab' : ''}`}
-              >
-                <ReportConfiguration 
-                  trialId={trial.id}
-                  partId={trial.parent_id}
-                />
-              </Tab>
-            </Tabs>
+              {/* Contenu principal */}
+              <div className={`trial-content ${useExternalNavigation ? 'full-width' : ''}`}>
+                {activeTab === 'before' && (
+                  <BeforeTabContent 
+                    formData={formData}
+                    errors={errors}
+                    loading={loading}
+                    formHandlers={formHandlers}
+                    trial={trial}
+                    handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
+                    viewMode={viewMode}
+                    readOnlyFieldStyle={readOnlyFieldStyle}
+                    calculateProgramDuration={calculateProgramDuration}
+                  />
+                )}
+                
+                {activeTab === 'after' && (
+                  <AfterTabContent
+                    ref={afterTabContentRef}
+                    formData={formData}
+                    errors={errors}
+                    loading={loading}
+                    formHandlers={formHandlers}
+                    trial={trial}
+                    handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
+                    viewMode={viewMode}
+                    readOnlyFieldStyle={readOnlyFieldStyle}
+                    // Passer les fonctions d'import Excel
+                    excelImportHandlers={{
+                      fileInputRef,
+                      getCurveSectionRef,
+                      handleExcelImport,
+                      processExcelData,
+                      handleEcdChange,
+                      handleHardnessChange
+                    }}
+                  />
+                )}
+                
+                {activeTab === 'report' && (
+                  <ReportConfiguration 
+                    trialId={trial.id}
+                    partId={trial.parent_id}
+                  />
+                )}
+              </div>
+            </div>
           ) : (
             // En mode création, on affiche directement le contenu de l'onglet "Before"
-            <div className="mt-4">              <BeforeTabContent 
+            <div className="mt-4">
+              <BeforeTabContent 
                 formData={formData}
                 errors={errors}
                 loading={loading}

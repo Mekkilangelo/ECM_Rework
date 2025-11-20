@@ -63,6 +63,7 @@ const TrialResultsGrid = ({ results, pagination, onPageChange }) => {
   // Sauvegarde l'état de navigation dans sessionStorage pour que le Dashboard le récupère
   const handleViewDetails = (trial) => {
     // Construire l'état de navigation hiérarchique complet
+    // Le currentLevel doit être 'trial' car c'est à ce niveau qu'on affiche les trials d'une part
     const navigationState = {
       currentLevel: 'trial',
       hierarchyState: {

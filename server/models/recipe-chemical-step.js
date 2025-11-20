@@ -47,7 +47,8 @@ module.exports = (sequelize, DataTypes) => {
 
     RecipeChemicalStep.hasMany(models.recipe_chemical_gas, {
       foreignKey: 'step_id',
-      as: 'gases'
+      as: 'gases',
+      onDelete: 'CASCADE'
     });
   };
 

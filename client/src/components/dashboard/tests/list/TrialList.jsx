@@ -58,29 +58,54 @@ const TrialList = ({ partId }) => {
   });
 
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
+  
+  // Ref pour éviter les appels multiples
+  const trialLoadedRef = useRef(false);
 
   // Effet pour ouvrir automatiquement un trial depuis la recherche
   useEffect(() => {
+    // Si déjà chargé, ne rien faire
+    if (trialLoadedRef.current) return;
+    
     const openTrialId = sessionStorage.getItem('openTrialId');
-    if (openTrialId && data && data.length > 0) {
-      // Trouver le trial dans les données
-      const trialToOpen = data.find(t => t.id === parseInt(openTrialId));
-      if (trialToOpen) {
-        // Ouvrir le modal du trial
-        if (hasEditRights) {
-          openEditModal(trialToOpen);
-        } else {
-          openDetailModal(trialToOpen);
+    console.log('[TrialList] useEffect - openTrialId:', openTrialId);
+    
+    if (openTrialId) {
+      // Marquer comme en cours de chargement
+      trialLoadedRef.current = true;
+      
+      // Nettoyer immédiatement du sessionStorage pour éviter les multiples tentatives
+      sessionStorage.removeItem('openTrialId');
+      console.log('[TrialList] Chargement du trial', openTrialId);
+      
+      // Charger le trial directement depuis l'API
+      const loadTrial = async () => {
+        try {
+          const trial = await trialService.getTrialById(parseInt(openTrialId));
+          console.log('[TrialList] Trial chargé:', trial);
+          if (trial) {
+            console.log('[TrialList] Ouverture du modal, hasEditRights:', hasEditRights);
+            // Ouvrir le modal du trial
+            if (hasEditRights) {
+              openEditModal(trial);
+            } else {
+              openDetailModal(trial);
+            }
+            
+            // Marquer comme vu si nouveau
+            if (trial.data_status === 'new') {
+              updateItemStatus(trial.id);
+            }
+          }
+        } catch (error) {
+          console.error('[TrialList] Erreur lors du chargement du trial:', error);
         }
-        // Marquer comme vu si nouveau
-        if (trialToOpen.data_status === 'new') {
-          updateItemStatus(trialToOpen.id);
-        }
-        // Nettoyer le sessionStorage
-        sessionStorage.removeItem('openTrialId');
-      }
+      };
+      
+      loadTrial();
     }
-  }, [data, hasEditRights, openEditModal, openDetailModal, updateItemStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dépendances vides : s'exécute une seule fois au mount
 
   const handleTrialClick = (trial) => {
     if (hasEditRights) {

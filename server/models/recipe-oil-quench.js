@@ -60,7 +60,8 @@ module.exports = (sequelize, DataTypes) => {
 
     RecipeOilQuench.hasMany(models.recipe_oil_quench_speed, {
       foreignKey: 'oil_quench_id',
-      as: 'speedSteps'
+      as: 'speedSteps',
+      onDelete: 'CASCADE'
     });
   };
 

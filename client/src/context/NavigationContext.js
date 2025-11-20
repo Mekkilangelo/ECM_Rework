@@ -46,6 +46,7 @@ export const NavigationProvider = ({ children }) => {
   const [currentPage, setCurrentPage] = useState(savedState?.currentPage || 1);
   const [itemsPerPage, setItemsPerPage] = useState(savedState?.itemsPerPage || 10);
 
+
   // Sauvegarder l'état à chaque changement
   useEffect(() => {
     saveNavigationState({

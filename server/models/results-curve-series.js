@@ -35,7 +35,8 @@ module.exports = (sequelize, DataTypes) => {
 
     ResultsCurveSeries.hasMany(models.results_curve_point, {
       foreignKey: 'series_id',
-      as: 'points'
+      as: 'points',
+      onDelete: 'CASCADE'
     });
   };
 

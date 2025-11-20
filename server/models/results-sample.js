@@ -47,17 +47,20 @@ module.exports = (sequelize, DataTypes) => {
 
     ResultsSample.hasMany(models.results_hardness_point, {
       foreignKey: 'sample_id',
-      as: 'hardnessPoints'
+      as: 'hardnessPoints',
+      onDelete: 'CASCADE'
     });
 
     ResultsSample.hasMany(models.results_ecd_position, {
       foreignKey: 'sample_id',
-      as: 'ecdPositions'
+      as: 'ecdPositions',
+      onDelete: 'CASCADE'
     });
 
     ResultsSample.hasMany(models.results_curve_series, {
       foreignKey: 'sample_id',
-      as: 'curveSeries'
+      as: 'curveSeries',
+      onDelete: 'CASCADE'
     });
   };
 

@@ -24,27 +24,32 @@ module.exports = (sequelize, DataTypes) => {
     // Relation avec les cycles
     Recipe.hasOne(models.recipe_preox_cycle, {
       foreignKey: 'recipe_id',
-      as: 'preoxCycle'
+      as: 'preoxCycle',
+      onDelete: 'CASCADE'
     });
 
     Recipe.hasMany(models.recipe_thermal_cycle, {
       foreignKey: 'recipe_id',
-      as: 'thermalCycle'
+      as: 'thermalCycle',
+      onDelete: 'CASCADE'
     });
 
     Recipe.hasOne(models.recipe_chemical_cycle, {
       foreignKey: 'recipe_id',
-      as: 'chemicalCycle'
+      as: 'chemicalCycle',
+      onDelete: 'CASCADE'
     });
 
     Recipe.hasOne(models.recipe_gas_quench, {
       foreignKey: 'recipe_id',
-      as: 'gasQuench'
+      as: 'gasQuench',
+      onDelete: 'CASCADE'
     });
 
     Recipe.hasOne(models.recipe_oil_quench, {
       foreignKey: 'recipe_id',
-      as: 'oilQuench'
+      as: 'oilQuench',
+      onDelete: 'CASCADE'
     });
 
     // Relation avec trials

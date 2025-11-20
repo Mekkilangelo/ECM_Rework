@@ -283,6 +283,7 @@ const addReciprocalEquivalents = async (steelId, equivalents, transaction) => {
   
   logger.info(`Ajout de réciprocité pour l'acier ${steelId} vers:`, equivalents.map(eq => eq.steel_id || eq.steelId || eq.id));
   
+  const now = new Date();
   for (const equivalent of equivalents) {
     const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
     
@@ -291,9 +292,9 @@ const addReciprocalEquivalents = async (steelId, equivalents, transaction) => {
       
       // Insérer la relation réciproque dans steel_equivalents
       await sequelize.query(
-        'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id)',
+        'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id, createdAt, updatedAt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id), updatedAt = VALUES(updatedAt)',
         {
-          replacements: [equivalentId, steelId],
+          replacements: [equivalentId, steelId, now, now],
           type: sequelize.QueryTypes.INSERT,
           transaction
         }
@@ -389,14 +390,15 @@ const createSteel = async (steelData) => {
     
     // Ajouter les équivalents dans la table steel_equivalents
     if (normalizedEquivalents && normalizedEquivalents.length > 0) {
+      const now = new Date();
       // Ajouter les relations directes
       for (const equivalent of normalizedEquivalents) {
         const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
         if (equivalentId) {
           await sequelize.query(
-            'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id)',
+            'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id, createdAt, updatedAt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id), updatedAt = VALUES(updatedAt)',
             {
-              replacements: [newNode.id, equivalentId],
+              replacements: [newNode.id, equivalentId, now, now],
               type: sequelize.QueryTypes.INSERT,
               transaction: t
             }
@@ -526,13 +528,14 @@ const updateSteel = async (steelId, steelData) => {
       
       // Ajouter les nouvelles relations directes
       if (equivalentsToAdd.length > 0) {
+        const now = new Date();
         for (const equiv of equivalentsToAdd) {
           const equivalentId = equiv.steel_id || equiv.steelId || equiv.id;
           if (equivalentId) {
             await sequelize.query(
-              'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id)',
+              'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id, createdAt, updatedAt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id), updatedAt = VALUES(updatedAt)',
               {
-                replacements: [steelId, equivalentId],
+                replacements: [steelId, equivalentId, now, now],
                 type: sequelize.QueryTypes.INSERT,
                 transaction: t
               }

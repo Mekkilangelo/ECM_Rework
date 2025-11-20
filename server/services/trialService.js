@@ -35,7 +35,22 @@ const createRecipeFromData = async (recipeData, transaction) => {
   const OilQuenchModel = sequelize.models.recipe_oil_quench;
   const OilQuenchSpeed = sequelize.models.recipe_oil_quench_speed;
 
-  const recipe = await RecipeModel.create({ recipe_number: recipeData.number || null }, { transaction });
+  // Vérifier si la recette existe déjà par son numéro
+  let recipe = null;
+  if (recipeData.number) {
+    recipe = await RecipeModel.findOne({ 
+      where: { recipe_number: recipeData.number },
+      transaction 
+    });
+  }
+
+  // Si la recette existe déjà, la retourner
+  if (recipe) {
+    return recipe.recipe_id;
+  }
+
+  // Sinon créer une nouvelle recette
+  recipe = await RecipeModel.create({ recipe_number: recipeData.number || null }, { transaction });
 
   // Pré-oxydation
   if (recipeData.preox) {
@@ -208,9 +223,10 @@ const createResultsFromData = async (trialNodeId, resultsData, transaction) => {
         }
       }
 
-      // ECD positions
-      if (sample.ecd?.ecd_points && Array.isArray(sample.ecd.ecd_points) && sample.ecd.ecd_points.length > 0) {
-        for (const ecd of sample.ecd.ecd_points) {
+      // ECD positions - supporter à la fois 'positions' et 'ecd_points'
+      const ecdPoints = sample.ecd?.positions || sample.ecd?.ecd_points;
+      if (ecdPoints && Array.isArray(ecdPoints) && ecdPoints.length > 0) {
+        for (const ecd of ecdPoints) {
           await EcdPositionModel.create({
             sample_id: sampleRec.sample_id,
             distance: ecd.distance || null,

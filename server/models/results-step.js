@@ -39,7 +39,8 @@ module.exports = (sequelize, DataTypes) => {
 
     ResultsStep.hasMany(models.results_sample, {
       foreignKey: 'result_step_id',
-      as: 'samples'
+      as: 'samples',
+      onDelete: 'CASCADE'
     });
   };
 

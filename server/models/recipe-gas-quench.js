@@ -32,12 +32,14 @@ module.exports = (sequelize, DataTypes) => {
 
     RecipeGasQuench.hasMany(models.recipe_gas_quench_speed, {
       foreignKey: 'gas_quench_id',
-      as: 'speedSteps'
+      as: 'speedSteps',
+      onDelete: 'CASCADE'
     });
 
     RecipeGasQuench.hasMany(models.recipe_gas_quench_pressure, {
       foreignKey: 'gas_quench_id',
-      as: 'pressureSteps'
+      as: 'pressureSteps',
+      onDelete: 'CASCADE'
     });
   };
 

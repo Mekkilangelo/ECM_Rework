@@ -349,12 +349,14 @@
   
   "trialSearch": {
     "title": "Recherche d'Essais",
-    "subtitle": "Trouvez rapidement un essai par client, pièce, acier, recette ou four",
-    "placeholder": "Rechercher par code essai, numéro de charge, description...",
+    "subtitle": "Recherchez et filtrez les essais",
+    "placeholder": "Rechercher par n° de charge, client, recette ou nuance...",
     "search": "Rechercher",
     "searching": "Recherche...",
     "loading": "Chargement des résultats...",
     "filters": "Filtres",
+    "showFilters": "Filtres",
+    "hideFilters": "Masquer",
     "resultsCount": "{{count}} essai(s) trouvé(s)",
     "noResults": "Aucun essai trouvé",
     "noResultsHint": "Essayez de modifier vos critères de recherche ou vos filtres",

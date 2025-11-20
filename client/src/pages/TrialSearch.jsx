@@ -21,7 +21,7 @@ const TrialSearch = () => {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({});
   const [filterOptions, setFilterOptions] = useState({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   
   // État des résultats
   const [results, setResults] = useState([]);
@@ -193,11 +193,11 @@ const TrialSearch = () => {
         {/* En-tête */}
         <div className="search-header mb-4">
           <h1 className="page-title">
-            <FontAwesomeIcon icon={faSearch} className="me-3" />
+            <FontAwesomeIcon icon={faSearch} className="mr-3" />
             {t('trialSearch.title', 'Recherche d\'Essais')}
           </h1>
           <p className="page-subtitle text-muted">
-            {t('trialSearch.subtitle', 'Trouvez rapidement un essai par client, pièce, acier, recette ou four')}
+            {t('trialSearch.subtitle', 'Recherchez et filtrez les essais')}
           </p>
         </div>
 
@@ -206,21 +206,21 @@ const TrialSearch = () => {
           <Card.Body>
             <Form onSubmit={handleSearchSubmit}>
               <Row className="align-items-center g-3">
-                <Col lg={8}>
-                  <InputGroup size="lg" className="search-input-group">
-                    <InputGroup.Text className="bg-white border-end-0">
+                <Col lg={9}>
+                  <InputGroup className="search-input-group">
+                    <InputGroup.Text className="bg-white border-right-0">
                       <FontAwesomeIcon icon={faSearch} className="text-muted" />
                     </InputGroup.Text>
                     <Form.Control
                       type="search"
-                      placeholder={t('trialSearch.placeholder', 'Rechercher par code essai, numéro de charge, description...')}
+                      placeholder={t('trialSearch.placeholder', 'Rechercher par n° de charge, client, recette ou nuance...')}
                       value={query}
                       onChange={handleQueryChange}
-                      className="border-start-0 shadow-none"
+                      className="border-left-0 border-right-0 shadow-none"
                     />
                     {query && (
                       <InputGroup.Text 
-                        className="bg-white border-start-0 cursor-pointer"
+                        className="bg-white border-left-0 cursor-pointer"
                         onClick={handleClearQuery}
                       >
                         <FontAwesomeIcon icon={faTimes} className="text-muted" />
@@ -229,47 +229,46 @@ const TrialSearch = () => {
                   </InputGroup>
                 </Col>
                 
-                <Col lg={4} className="d-flex gap-2">
+                <Col lg={3} className="d-flex">
                   <Button 
                     type="submit" 
-                    variant="danger" 
-                    size="lg"
+                    variant="danger"
                     className="flex-grow-1"
                     disabled={loading}
                   >
                     {loading ? (
                       <>
-                        <Spinner animation="border" size="sm" className="me-2" />
+                        <Spinner animation="border" size="sm" className="mr-2" />
                         {t('trialSearch.searching', 'Recherche...')}
                       </>
                     ) : (
                       <>
-                        <FontAwesomeIcon icon={faSearch} className="me-2" />
+                        <FontAwesomeIcon icon={faSearch} className="mr-2" />
                         {t('trialSearch.search', 'Rechercher')}
                       </>
                     )}
                   </Button>
                   
                   <Button
-                    variant={showFilters ? 'primary' : 'outline-secondary'}
-                    size="lg"
+                    variant={showFilters ? 'outline-secondary' : 'primary'}
                     onClick={() => setShowFilters(!showFilters)}
-                    className="position-relative"
+                    className="position-relative ml-2"
                   >
-                    <FontAwesomeIcon icon={faSliders} className="me-2" />
-                    {t('trialSearch.filters', 'Filtres')}
+                    <FontAwesomeIcon icon={faSliders} className="mr-2" />
+                    {showFilters ? t('trialSearch.hideFilters', 'Masquer') : t('trialSearch.showFilters', 'Filtres')}
                     {activeFiltersCount > 0 && (
                       <Badge 
-                        bg="danger" 
+                        variant="danger" 
                         pill 
-                        className="position-absolute top-0 start-100 translate-middle"
+                        className="position-absolute"
+                        style={{ top: '-8px', right: '-8px' }}
                       >
                         {activeFiltersCount}
                       </Badge>
                     )}
                     <FontAwesomeIcon 
                       icon={showFilters ? faChevronUp : faChevronDown} 
-                      className="ms-2" 
+                      className="ml-2" 
                       size="sm"
                     />
                   </Button>
@@ -304,9 +303,9 @@ const TrialSearch = () => {
               </span>
             </div>
             
-            <div className="sort-controls d-flex align-items-center gap-2">
-              <span className="text-muted small me-2">
-                <FontAwesomeIcon icon={faSortAmountDown} className="me-1" />
+            <div className="sort-controls d-flex align-items-center">
+              <span className="text-muted small mr-2">
+                <FontAwesomeIcon icon={faSortAmountDown} className="mr-1" />
                 {t('trialSearch.sortBy', 'Trier par:')}
               </span>
               
@@ -320,7 +319,7 @@ const TrialSearch = () => {
                   {sortBy === 'trial_date' && (
                     <FontAwesomeIcon 
                       icon={sortOrder === 'ASC' ? faChevronUp : faChevronDown} 
-                      className="ms-1" 
+                      className="ml-1" 
                       size="xs"
                     />
                   )}
@@ -334,7 +333,7 @@ const TrialSearch = () => {
                   {sortBy === 'trial_code' && (
                     <FontAwesomeIcon 
                       icon={sortOrder === 'ASC' ? faChevronUp : faChevronDown} 
-                      className="ms-1" 
+                      className="ml-1" 
                       size="xs"
                     />
                   )}
@@ -348,7 +347,7 @@ const TrialSearch = () => {
                   {sortBy === 'name' && (
                     <FontAwesomeIcon 
                       icon={sortOrder === 'ASC' ? faChevronUp : faChevronDown} 
-                      className="ms-1" 
+                      className="ml-1" 
                       size="xs"
                     />
                   )}
@@ -362,7 +361,7 @@ const TrialSearch = () => {
         {error && (
           <Alert variant="danger" dismissible onClose={() => setError(null)}>
             <Alert.Heading>
-              <FontAwesomeIcon icon={faTimes} className="me-2" />
+              <FontAwesomeIcon icon={faTimes} className="mr-2" />
               {t('trialSearch.error', 'Erreur')}
             </Alert.Heading>
             <p className="mb-0">{error}</p>

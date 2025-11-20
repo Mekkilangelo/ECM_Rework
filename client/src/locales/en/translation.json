@@ -346,12 +346,14 @@
   
   "trialSearch": {
     "title": "Trial Search",
-    "subtitle": "Quickly find a trial by client, part, steel, recipe or furnace",
-    "placeholder": "Search by trial code, load number, description...",
+    "subtitle": "Search and filter trials",
+    "placeholder": "Search by load number, client, recipe or grade...",
     "search": "Search",
     "searching": "Searching...",
     "loading": "Loading results...",
     "filters": "Filters",
+    "showFilters": "Filters",
+    "hideFilters": "Hide",
     "resultsCount": "{{count}} trial(s) found",
     "noResults": "No trials found",
     "noResultsHint": "Try modifying your search criteria or filters",

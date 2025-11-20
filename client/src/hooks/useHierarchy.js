@@ -15,6 +15,11 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
     itemsPerPage 
   } = useNavigation();
   
+  // Extraire les IDs primitifs pour éviter les re-renders sur changement de référence d'objet
+  const clientId = hierarchyState?.clientId;
+  const orderId = hierarchyState?.orderId;
+  const partId = hierarchyState?.partId;
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -71,7 +76,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         case 'order':  // Support ancien nom
           url = `${API_URL}/trial-requests`;
           params = { 
-            parent_id: hierarchyState.clientId, 
+            parent_id: clientId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage,
             sortBy: sortBy,
@@ -85,7 +90,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         case 'part':
           url = `${API_URL}/parts`;
           params = { 
-            parent_id: hierarchyState.orderId, 
+            parent_id: orderId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage,
             sortBy: sortBy,
@@ -100,7 +105,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         case 'test':  // Support ancien nom
           url = `${API_URL}/trials`;
           params = { 
-            parent_id: hierarchyState.partId, 
+            parent_id: partId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage,
             sortBy: sortBy,
@@ -155,10 +160,10 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       isFetchingRef.current = false;
     }
   };  // Recharger les données quand le niveau, la page, les filtres ou la recherche changent
+  // Utiliser les IDs primitifs au lieu de hierarchyState pour éviter les re-renders inutiles
   useEffect(() => {
     fetchData();
-  }, [currentLevel, hierarchyState.clientId, hierarchyState.orderId, 
-      hierarchyState.partId, currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
+  }, [currentLevel, clientId, orderId, partId, currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
   
   // Fonction pour gérer la recherche
   const handleSearch = (query) => {

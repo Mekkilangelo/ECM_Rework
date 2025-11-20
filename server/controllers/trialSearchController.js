@@ -41,7 +41,6 @@ exports.searchTrials = async (req, res) => {
       limit = 20,
       
       // Filtres sur l'essai lui-même
-      trialCode,
       loadNumber,
       status,
       location,
@@ -53,13 +52,11 @@ exports.searchTrials = async (req, res) => {
       
       // Filtres sur le client (via la hiérarchie des nodes)
       clientName,
-      clientCode,
       clientCountry,
       clientCity,
       clientGroup,
       
       // Filtres sur la pièce (via la hiérarchie des nodes)
-      partName,
       partDesignation,
       partReference,
       partClientDesignation,
@@ -91,10 +88,6 @@ exports.searchTrials = async (req, res) => {
 
     // Conditions pour la table Trial
     const trialWhere = {};
-
-    if (trialCode) {
-      trialWhere.trial_code = { [Op.like]: `%${trialCode}%` };
-    }
 
     if (loadNumber) {
       trialWhere.load_number = { [Op.like]: `%${loadNumber}%` };
@@ -136,74 +129,264 @@ exports.searchTrials = async (req, res) => {
       whereConditions[Op.or] = [
         { name: { [Op.like]: `%${query}%` } },
         { description: { [Op.like]: `%${query}%` } },
-        { '$trial.trial_code$': { [Op.like]: `%${query}%` } },
         { '$trial.load_number$': { [Op.like]: `%${query}%` } }
       ];
     }
 
-    // Construction des includes (jointures)
-    const includes = [
-      {
-        model: Trial,
-        as: 'trial',
-        where: Object.keys(trialWhere).length > 0 ? trialWhere : undefined,
-        required: true,
-        include: [
-          {
-            model: Recipe,
-            as: 'recipe',
-            where: recipeNumber ? { recipe_number: { [Op.like]: `%${recipeNumber}%` } } : undefined,
-            required: false
-          },
-          {
-            model: Furnace,
-            as: 'furnace',
-            where: buildFurnaceWhere({ furnaceType, furnaceSize, heatingCell, coolingMedia, quenchCell }),
-            required: false
-          }
-        ]
-      }
-    ];
-
     // Recherche dans la hiérarchie pour trouver le client et les pièces
-    // On va chercher les ancestors et descendants via la table closure
+    // On construit une requête SQL avec jointures via la table closure
     const offset = (page - 1) * limit;
 
-    // Requête principale
-    const { rows: trials, count } = await Node.findAndCountAll({
-      where: whereConditions,
-      include: includes,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [[buildOrderClause(sortBy, sortOrder)]],
-      distinct: true,
-      subQuery: false
+    // Construction de la requête SQL pour filtrer par client/pièce via closure
+    let sqlWhere = 'nodes.type = :nodeType';
+    const sqlReplacements = { nodeType: 'trial' };
+
+    // Construire les sous-requêtes pour les filtres hiérarchiques
+    if (clientName || clientCountry || clientCity || clientGroup) {
+      const clientConditions = [];
+      
+      if (clientName) {
+        clientConditions.push('client_nodes.name LIKE :clientName');
+        sqlReplacements.clientName = `%${clientName}%`;
+      }
+      if (clientCountry) {
+        clientConditions.push('clients.country LIKE :clientCountry');
+        sqlReplacements.clientCountry = `%${clientCountry}%`;
+      }
+      if (clientCity) {
+        clientConditions.push('clients.city LIKE :clientCity');
+        sqlReplacements.clientCity = `%${clientCity}%`;
+      }
+      if (clientGroup) {
+        clientConditions.push('clients.client_group LIKE :clientGroup');
+        sqlReplacements.clientGroup = `%${clientGroup}%`;
+      }
+
+      if (clientConditions.length > 0) {
+        sqlWhere += ` AND EXISTS (
+          SELECT 1 FROM closure c1
+          JOIN nodes client_nodes ON c1.ancestor_id = client_nodes.id AND client_nodes.type = 'client'
+          JOIN clients ON client_nodes.id = clients.node_id
+          WHERE c1.descendant_id = nodes.id AND (${clientConditions.join(' AND ')})
+        )`;
+      }
+    }
+
+    // Filtres sur les pièces via la hiérarchie
+    if (partDesignation || partReference || partClientDesignation || steelGrade || steelFamily || steelStandard) {
+      const partConditions = [];
+      
+      if (partDesignation) {
+        partConditions.push('parts.designation LIKE :partDesignation');
+        sqlReplacements.partDesignation = `%${partDesignation}%`;
+      }
+      if (partReference) {
+        partConditions.push('parts.reference LIKE :partReference');
+        sqlReplacements.partReference = `%${partReference}%`;
+      }
+      if (partClientDesignation) {
+        partConditions.push('parts.client_designation LIKE :partClientDesignation');
+        sqlReplacements.partClientDesignation = `%${partClientDesignation}%`;
+      }
+
+      // Filtres sur l'acier
+      const steelJoin = (steelGrade || steelFamily || steelStandard) ? `
+        JOIN nodes steel_nodes ON parts.steel_node_id = steel_nodes.id
+        JOIN steels ON steel_nodes.id = steels.node_id
+      ` : '';
+
+      if (steelGrade) {
+        partConditions.push('steels.grade LIKE :steelGrade');
+        sqlReplacements.steelGrade = `%${steelGrade}%`;
+      }
+      if (steelFamily) {
+        partConditions.push('steels.family LIKE :steelFamily');
+        sqlReplacements.steelFamily = `%${steelFamily}%`;
+      }
+      if (steelStandard) {
+        partConditions.push('steels.standard LIKE :steelStandard');
+        sqlReplacements.steelStandard = `%${steelStandard}%`;
+      }
+
+      if (partConditions.length > 0) {
+        sqlWhere += ` AND EXISTS (
+          SELECT 1 FROM closure c2
+          JOIN nodes part_nodes ON c2.ancestor_id = part_nodes.id AND part_nodes.type = 'part'
+          JOIN parts ON part_nodes.id = parts.node_id
+          ${steelJoin}
+          WHERE c2.descendant_id = nodes.id AND (${partConditions.join(' AND ')})
+        )`;
+      }
+    }
+
+    // Ajouter les conditions de recherche textuelle
+    if (query) {
+      sqlWhere += ` AND (
+        trials.load_number LIKE :query OR
+        EXISTS (
+          SELECT 1 FROM closure c
+          JOIN nodes client_nodes ON c.ancestor_id = client_nodes.id AND client_nodes.type = 'client'
+          WHERE c.descendant_id = nodes.id AND client_nodes.name LIKE :query
+        ) OR
+        recipes.recipe_number LIKE :query OR
+        EXISTS (
+          SELECT 1 FROM closure c2
+          JOIN nodes part_nodes ON c2.ancestor_id = part_nodes.id AND part_nodes.type = 'part'
+          JOIN parts ON part_nodes.id = parts.node_id
+          JOIN nodes steel_nodes ON parts.steel_node_id = steel_nodes.id
+          JOIN steels ON steel_nodes.id = steels.node_id
+          WHERE c2.descendant_id = nodes.id AND steels.grade LIKE :query
+        )
+      )`;
+      sqlReplacements.query = `%${query}%`;
+    }
+
+    // Ajouter les conditions sur les trials
+    Object.keys(trialWhere).forEach((key, index) => {
+      const paramName = `trial_${key}`;
+      const value = trialWhere[key];
+      
+      if (value && typeof value === 'object' && value[Op.like]) {
+        sqlWhere += ` AND trials.${key} LIKE :${paramName}`;
+        sqlReplacements[paramName] = value[Op.like];
+      } else if (value && typeof value === 'object' && (value[Op.gte] || value[Op.lte])) {
+        if (value[Op.gte]) {
+          sqlWhere += ` AND trials.${key} >= :${paramName}_gte`;
+          sqlReplacements[`${paramName}_gte`] = value[Op.gte];
+        }
+        if (value[Op.lte]) {
+          sqlWhere += ` AND trials.${key} <= :${paramName}_lte`;
+          sqlReplacements[`${paramName}_lte`] = value[Op.lte];
+        }
+      } else if (value !== undefined) {
+        sqlWhere += ` AND trials.${key} = :${paramName}`;
+        sqlReplacements[paramName] = value;
+      }
     });
 
-    // Pour chaque trial, on récupère les informations enrichies
+    // Ajouter les conditions sur les recettes
+    if (recipeNumber) {
+      sqlWhere += ` AND recipes.recipe_number LIKE :recipeNumber`;
+      sqlReplacements.recipeNumber = `%${recipeNumber}%`;
+    }
+
+    // Ajouter les conditions sur les fours
+    const furnaceWhere = buildFurnaceWhere({ furnaceType, furnaceSize, heatingCell, coolingMedia, quenchCell });
+    if (furnaceWhere) {
+      Object.keys(furnaceWhere).forEach(key => {
+        sqlWhere += ` AND furnaces.${key} = :furnace_${key}`;
+        sqlReplacements[`furnace_${key}`] = furnaceWhere[key];
+      });
+    }
+
+    // Requête pour compter le total
+    const countQuery = `
+      SELECT COUNT(DISTINCT nodes.id) as total
+      FROM nodes
+      INNER JOIN trials ON nodes.id = trials.node_id
+      LEFT JOIN recipes ON trials.recipe_id = recipes.recipe_id
+      LEFT JOIN furnaces ON trials.furnace_id = furnaces.furnace_id
+      WHERE ${sqlWhere}
+    `;
+
+    const [countResult] = await Node.sequelize.query(countQuery, {
+      replacements: sqlReplacements,
+      type: Sequelize.QueryTypes.SELECT
+    });
+
+    const total = parseInt(countResult.total) || 0;
+
+    // Si aucun résultat, retourner directement
+    if (total === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          totalPages: 0
+        }
+      });
+    }
+
+    // Requête principale avec pagination
+    const orderClause = buildOrderSQLClause(sortBy, sortOrder);
+    const orderColumn = getOrderColumn(sortBy);
+    const dataQuery = `
+      SELECT DISTINCT nodes.id, ${orderColumn} as sort_column
+      FROM nodes
+      INNER JOIN trials ON nodes.id = trials.node_id
+      LEFT JOIN recipes ON trials.recipe_id = recipes.recipe_id
+      LEFT JOIN furnaces ON trials.furnace_id = furnaces.furnace_id
+      WHERE ${sqlWhere}
+      ORDER BY ${orderClause}
+      LIMIT :limit OFFSET :offset
+    `;
+
+    sqlReplacements.limit = parseInt(limit);
+    sqlReplacements.offset = parseInt(offset);
+
+    const trialIds = await Node.sequelize.query(dataQuery, {
+      replacements: sqlReplacements,
+      type: Sequelize.QueryTypes.SELECT
+    });
+
+    // Récupérer les informations complètes des essais
+    const trials = await Node.findAll({
+      where: {
+        id: { [Op.in]: trialIds.map(t => t.id) }
+      },
+      attributes: ['id', 'name', 'description', 'path', 'parent_id', 'created_at', 'modified_at'],
+      include: [
+        {
+          model: Trial,
+          as: 'trial',
+          required: true,
+          include: [
+            {
+              model: Recipe,
+              as: 'recipe',
+              required: false
+            },
+            {
+              model: Furnace,
+              as: 'furnace',
+              required: false
+            }
+          ]
+        }
+      ],
+      order: [[buildOrderClause(sortBy, sortOrder)]]
+    });
+
+    // Pour chaque trial, récupérer les informations enrichies
     const enrichedTrials = await Promise.all(
       trials.map(async (trial) => {
-        // Récupérer les ancêtres (client, order, part)
-        const ancestors = await getAncestors(trial.id);
+        // Récupérer le parent direct (la part)
+        const partNode = await Node.findOne({
+          where: { id: trial.parent_id },
+          include: [
+            { 
+              model: Part, 
+              as: 'part', 
+              required: false,
+              include: [
+                {
+                  model: Steel,
+                  as: 'steel',
+                  required: false
+                }
+              ]
+            }
+          ]
+        });
 
-        // Extraire les informations pertinentes
+        // Récupérer les ancêtres de la part pour avoir le client et l'order
+        const ancestors = partNode ? await getAncestors(partNode.id) : [];
+        
         const clientNode = ancestors.find(a => a.type === 'client');
         const orderNode = ancestors.find(a => a.type === 'trial_request');
-        const partNode = ancestors.find(a => a.type === 'part');
-
-        // Filtrer par client si nécessaire
-        if (clientName || clientCode || clientCountry || clientCity || clientGroup) {
-          if (!clientNode || !matchesClientFilters(clientNode, { clientName, clientCode, clientCountry, clientCity, clientGroup })) {
-            return null;
-          }
-        }
-
-        // Filtrer par pièce si nécessaire
-        if (partName || partDesignation || partReference || partClientDesignation || steelGrade || steelFamily || steelStandard) {
-          if (!partNode || !matchesPartFilters(partNode, { partName, partDesignation, partReference, partClientDesignation, steelGrade, steelFamily, steelStandard })) {
-            return null;
-          }
-        }
 
         return {
           id: trial.id,
@@ -238,18 +421,15 @@ exports.searchTrials = async (req, res) => {
       })
     );
 
-    // Filtrer les null (essais qui ne correspondent pas aux filtres)
-    const filteredTrials = enrichedTrials.filter(t => t !== null);
-
     // Réponse
     return res.status(200).json({
       success: true,
-      data: filteredTrials,
+      data: enrichedTrials,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        total: count,
-        totalPages: Math.ceil(count / limit)
+        total: total,
+        totalPages: Math.ceil(total / limit)
       }
     });
 
@@ -283,7 +463,19 @@ async function getAncestors(nodeId) {
     },
     include: [
       { model: Client, as: 'client', required: false },
-      { model: require('../models').trial_request, as: 'trialRequest', required: false }
+      { model: require('../models').trial_request, as: 'trialRequest', required: false },
+      { 
+        model: Part, 
+        as: 'part', 
+        required: false,
+        include: [
+          {
+            model: Steel,
+            as: 'steel',
+            required: false
+          }
+        ]
+      }
     ]
   });
 
@@ -344,7 +536,49 @@ function buildFurnaceWhere(filters) {
 }
 
 /**
- * Construit la clause ORDER BY
+ * Récupère la colonne pour le tri SQL
+ */
+function getOrderColumn(sortBy) {
+  switch (sortBy) {
+    case 'trial_date':
+      return 'trials.trial_date';
+    case 'trial_code':
+      return 'trials.trial_code';
+    case 'name':
+      return 'nodes.name';
+    case 'modified_at':
+      return 'nodes.modified_at';
+    case 'created_at':
+      return 'nodes.created_at';
+    default:
+      return 'trials.trial_date';
+  }
+}
+
+/**
+ * Construit la clause ORDER BY pour SQL brut
+ */
+function buildOrderSQLClause(sortBy, sortOrder) {
+  const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+  switch (sortBy) {
+    case 'trial_date':
+      return `trials.trial_date ${order}`;
+    case 'trial_code':
+      return `trials.trial_code ${order}`;
+    case 'name':
+      return `nodes.name ${order}`;
+    case 'modified_at':
+      return `nodes.modified_at ${order}`;
+    case 'created_at':
+      return `nodes.created_at ${order}`;
+    default:
+      return `trials.trial_date ${order}`;
+  }
+}
+
+/**
+ * Construit la clause ORDER BY pour Sequelize
  */
 function buildOrderClause(sortBy, sortOrder) {
   const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
@@ -366,81 +600,6 @@ function buildOrderClause(sortBy, sortOrder) {
 }
 
 /**
- * Vérifie si un client correspond aux filtres
- */
-function matchesClientFilters(clientNode, filters) {
-  const { clientName, clientCode, clientCountry, clientCity, clientGroup } = filters;
-
-  if (clientName && !clientNode.name.toLowerCase().includes(clientName.toLowerCase())) {
-    return false;
-  }
-
-  if (!clientNode.client) return false;
-
-  if (clientCode && (!clientNode.client.client_code || !clientNode.client.client_code.toLowerCase().includes(clientCode.toLowerCase()))) {
-    return false;
-  }
-
-  if (clientCountry && (!clientNode.client.country || !clientNode.client.country.toLowerCase().includes(clientCountry.toLowerCase()))) {
-    return false;
-  }
-
-  if (clientCity && (!clientNode.client.city || !clientNode.client.city.toLowerCase().includes(clientCity.toLowerCase()))) {
-    return false;
-  }
-
-  if (clientGroup && (!clientNode.client.client_group || !clientNode.client.client_group.toLowerCase().includes(clientGroup.toLowerCase()))) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Vérifie si une pièce correspond aux filtres
- */
-function matchesPartFilters(partNode, filters) {
-  const { partName, partDesignation, partReference, partClientDesignation, steelGrade, steelFamily, steelStandard } = filters;
-
-  if (partName && !partNode.name.toLowerCase().includes(partName.toLowerCase())) {
-    return false;
-  }
-
-  if (!partNode.part) return false;
-
-  if (partDesignation && (!partNode.part.designation || !partNode.part.designation.toLowerCase().includes(partDesignation.toLowerCase()))) {
-    return false;
-  }
-
-  if (partReference && (!partNode.part.reference || !partNode.part.reference.toLowerCase().includes(partReference.toLowerCase()))) {
-    return false;
-  }
-
-  if (partClientDesignation && (!partNode.part.client_designation || !partNode.part.client_designation.toLowerCase().includes(partClientDesignation.toLowerCase()))) {
-    return false;
-  }
-
-  // Filtres sur l'acier
-  if (steelGrade || steelFamily || steelStandard) {
-    if (!partNode.part.steel) return false;
-
-    if (steelGrade && (!partNode.part.steel.grade || !partNode.part.steel.grade.toLowerCase().includes(steelGrade.toLowerCase()))) {
-      return false;
-    }
-
-    if (steelFamily && (!partNode.part.steel.family || !partNode.part.steel.family.toLowerCase().includes(steelFamily.toLowerCase()))) {
-      return false;
-    }
-
-    if (steelStandard && (!partNode.part.steel.standard || !partNode.part.steel.standard.toLowerCase().includes(steelStandard.toLowerCase()))) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
  * Récupère toutes les valeurs de référence pour les filtres
  */
 exports.getFilterOptions = async (req, res) => {
@@ -456,7 +615,10 @@ exports.getFilterOptions = async (req, res) => {
       coolingMedias,
       steelFamilies,
       steelStandards,
-      clients
+      clients,
+      loadNumbers,
+      steelGrades,
+      recipeNumbers
     ] = await Promise.all([
       RefStatus.findAll({ attributes: ['name'], order: [['name', 'ASC']] }),
       RefLocation.findAll({ attributes: ['name'], order: [['name', 'ASC']] }),
@@ -479,15 +641,39 @@ exports.getFilterOptions = async (req, res) => {
           attributes: ['client_code', 'city', 'country', 'client_group']
         }],
         order: [['name', 'ASC']]
+      }),
+      // Récupérer tous les load numbers distincts
+      Trial.findAll({
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('load_number')), 'load_number']],
+        where: {
+          load_number: { [Op.ne]: null }
+        },
+        order: [['load_number', 'ASC']],
+        raw: true
+      }),
+      // Récupérer tous les steel grades distincts
+      Steel.findAll({
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('grade')), 'grade']],
+        where: {
+          grade: { [Op.ne]: null }
+        },
+        order: [['grade', 'ASC']],
+        raw: true
+      }),
+      // Récupérer tous les recipe numbers distincts
+      Recipe.findAll({
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('recipe_number')), 'recipe_number']],
+        where: {
+          recipe_number: { [Op.ne]: null }
+        },
+        order: [['recipe_number', 'ASC']],
+        raw: true
       })
     ]);
 
     // Extraire les valeurs uniques pour les filtres clients
     // Nom du client vient de la colonne name de la table nodes
     const clientNames = [...new Set(clients.map(c => c.name).filter(Boolean))].sort();
-    
-    // Code client vient de la colonne client_code de la table clients
-    const clientCodes = [...new Set(clients.map(c => c.client?.client_code).filter(Boolean))].sort();
     
     // Pays vient de la colonne country de la table clients (clé étrangère vers ref_country)
     const clientCountries = [...new Set(clients.map(c => c.client?.country).filter(Boolean))].sort();
@@ -511,12 +697,15 @@ exports.getFilterOptions = async (req, res) => {
         coolingMedias: coolingMedias.map(c => c.name),
         steelFamilies: steelFamilies.map(s => s.name),
         steelStandards: steelStandards.map(s => s.name),
-        // Nouvelles options pour les filtres clients
+        // Options pour les filtres clients
         clientNames: clientNames,
-        clientCodes: clientCodes,
         clientCountries: clientCountries,
         clientCities: clientCities,
-        clientGroups: clientGroups
+        clientGroups: clientGroups,
+        // Nouvelles options pour les selects
+        loadNumbers: loadNumbers.map(l => l.load_number).filter(Boolean),
+        steelGrades: steelGrades.map(s => s.grade).filter(Boolean),
+        recipeNumbers: recipeNumbers.map(r => r.recipe_number).filter(Boolean)
       }
     });
 

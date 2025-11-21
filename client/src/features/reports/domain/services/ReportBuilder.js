@@ -137,6 +137,8 @@ export class ReportBuilder {
         load_number: apiData.loadNumber,
         status: apiData.status,
         location: apiData.location,
+        process_type: apiData.trialData?.process_type,
+        processTypeRef: apiData.trialData?.processTypeRef,
         recipe_data: apiData.recipeData,
         quench_data: apiData.quenchData,
         furnace_data: apiData.furnaceData,

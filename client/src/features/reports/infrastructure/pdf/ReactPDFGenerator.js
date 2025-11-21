@@ -24,29 +24,32 @@ export class ReactPDFGenerator extends IPDFGenerator {
   /**
    * Génère le PDF et le télécharge
    */
-  async generate(report, options = new PDFOptions()) {
+  async generate(report, options = {}) {
     try {
       if (!this.documentRenderer) {
         throw new PDFGenerationError('Document renderer not set');
       }
 
+      // Créer les options avec les valeurs par défaut
+      const pdfOptions = options instanceof PDFOptions ? options : new PDFOptions(options);
+
       // Notifier le début
-      this._notifyProgress(options, 'Initialisation', 0);
+      this._notifyProgress(pdfOptions, 'Initialisation', 0);
 
       // Créer le document React-PDF
-      const pdfDocument = this.documentRenderer(report, options);
+      const pdfDocument = this.documentRenderer(report, pdfOptions);
 
-      this._notifyProgress(options, 'Génération du PDF', 30);
+      this._notifyProgress(pdfOptions, 'Génération du PDF', 30);
 
       // Générer le blob
       const blob = await pdf(pdfDocument).toBlob();
 
-      this._notifyProgress(options, 'Finalisation', 90);
+      this._notifyProgress(pdfOptions, 'Finalisation', 90);
 
       // Télécharger
       this._downloadBlob(blob, report.getFileName());
 
-      this._notifyProgress(options, 'Terminé', 100);
+      this._notifyProgress(pdfOptions, 'Terminé', 100);
 
       return {
         success: true,
@@ -67,7 +70,7 @@ export class ReactPDFGenerator extends IPDFGenerator {
   /**
    * Génère un aperçu du PDF (blob URL)
    */
-  async preview(report, options = new PDFOptions()) {
+  async preview(report, options = {}) {
     try {
       if (!this.documentRenderer) {
         throw new PDFGenerationError('Document renderer not set');
@@ -77,19 +80,22 @@ export class ReactPDFGenerator extends IPDFGenerator {
         throw new PDFGenerationError('Report object is required');
       }
 
-      this._notifyProgress(options, 'Création de l\'aperçu', 0);
+      // Créer les options avec les valeurs par défaut
+      const pdfOptions = options instanceof PDFOptions ? options : new PDFOptions(options);
 
-      const pdfDocument = this.documentRenderer(report, options);
+      this._notifyProgress(pdfOptions, 'Création de l\'aperçu', 0);
+
+      const pdfDocument = this.documentRenderer(report, pdfOptions);
       
       if (!pdfDocument) {
         throw new PDFGenerationError('Document renderer returned null or undefined');
       }
 
-      this._notifyProgress(options, 'Génération', 50);
+      this._notifyProgress(pdfOptions, 'Génération', 50);
 
       const blob = await pdf(pdfDocument).toBlob();
 
-      this._notifyProgress(options, 'Terminé', 100);
+      this._notifyProgress(pdfOptions, 'Terminé', 100);
 
       // Créer une URL pour l'aperçu
       const url = URL.createObjectURL(blob);

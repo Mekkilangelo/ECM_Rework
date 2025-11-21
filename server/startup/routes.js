@@ -105,6 +105,14 @@ function setupUploads(app) {
     app.use('/uploads', express.static(uploadsPath));
     logger.info('📂 Dossier uploads accessible', { path: uploadsPath });
   }
+
+  // Servir les images publiques (logos, etc.) depuis client/public
+  const publicImagesPath = path.join(__dirname, '../../client/public/images');
+  
+  if (fs.existsSync(publicImagesPath)) {
+    app.use('/images', express.static(publicImagesPath));
+    logger.info('📂 Dossier images publiques accessible', { path: publicImagesPath });
+  }
 }
 
 module.exports = { setupRoutes, setupStaticFiles, setupUploads };

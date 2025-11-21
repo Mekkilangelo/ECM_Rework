@@ -31,6 +31,14 @@ const getTrialReportData = async (req, res) => {
 
     const reportData = await reportService.getTrialReportData(trialId, parsedSections);
 
+    // Log pour déboguer le process_type envoyé au client
+    logger.info('📤 Données envoyées au client:', {
+      trialId,
+      process_type: reportData.trialData?.process_type,
+      processTypeRef: reportData.trialData?.processTypeRef?.name,
+      hasTrialData: !!reportData.trialData
+    });
+
     return res.status(200).json({
       success: true,
       data: reportData

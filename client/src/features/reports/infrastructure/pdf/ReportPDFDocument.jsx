@@ -13,6 +13,7 @@ import {
   RecipeSectionPDF,
   ControlSectionPDF 
 } from './sections';
+import { CommonReportHeader } from './components/CommonReportHeader';
 
 // Enregistrer les polices personnalisées (optionnel)
 // Font.register({
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
 });
 
 /**
- * En-tête de page
+ * En-tête de page (ancienne version - conservée pour compatibilité)
  */
 const PageHeader = ({ clientName, trialCode, pageNumber }) => (
   <View style={styles.pageHeader} fixed>
@@ -305,6 +306,16 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
     );
   }
   
+  // Appliquer les valeurs par défaut pour les options
+  const {
+    includeHeader = true,
+    includeFooter = true,
+    includeCoverPage = true
+  } = options;
+  
+  // Log pour déboguer les options
+  console.log('🔍 ReportPDFDocument options:', { includeHeader, includeFooter, includeCoverPage });
+  
   if (process.env.NODE_ENV === 'development') {
 
   }
@@ -336,14 +347,14 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       producer="ECM Synergia"
     >
       {/* Page de garde */}
-      {options.includeCoverPage !== false && (
+      {includeCoverPage !== false && (
         <CoverPage report={report} options={options} />
       )}
 
       {/* Page d'information si aucune section */}
       {!hasActiveSections && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
+          {includeHeader && (
             <PageHeader 
               clientName={report.clientName}
               trialCode={report.testCode}
@@ -361,7 +372,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               pour générer le rapport complet avec les photos.
             </Text>
           </View>
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>
@@ -370,11 +381,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {/* Section Identification - Page séparée */}
       {activeSections.some(s => s.type === 'identification') && report && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
-            <PageHeader 
+          {includeHeader && (
+            <CommonReportHeader 
               clientName={report.clientName}
-              trialCode={report.testCode}
-              pageNumber={"Identification"}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
             />
           )}
           {(() => {
@@ -401,7 +413,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               );
             }
           })()}
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>
@@ -410,11 +422,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {/* Section Micrographie - Page séparée */}
       {activeSections.some(s => s.type === 'micrography') && report && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
-            <PageHeader 
+          {includeHeader && (
+            <CommonReportHeader 
               clientName={report.clientName}
-              trialCode={report.testCode}
-              pageNumber={"Micrographie"}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
             />
           )}
           {(() => {
@@ -441,7 +454,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               );
             }
           })()}
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>
@@ -450,11 +463,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {/* Section Courbes - Page séparée */}
       {activeSections.some(s => s.type === 'curves') && report && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
-            <PageHeader 
+          {includeHeader && (
+            <CommonReportHeader 
               clientName={report.clientName}
-              trialCode={report.testCode}
-              pageNumber={"Courbes"}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
             />
           )}
           {(() => {
@@ -481,7 +495,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               );
             }
           })()}
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>
@@ -490,11 +504,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {/* Section Charge - Page séparée */}
       {activeSections.some(s => s.type === 'load') && report && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
-            <PageHeader 
+          {includeHeader && (
+            <CommonReportHeader 
               clientName={report.clientName}
-              trialCode={report.testCode}
-              pageNumber={"Charge"}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
             />
           )}
           {(() => {
@@ -521,7 +536,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               );
             }
           })()}
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>
@@ -530,11 +545,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {/* Section Recette - Page séparée */}
       {activeSections.some(s => s.type === 'recipe') && report && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
-            <PageHeader 
+          {includeHeader && (
+            <CommonReportHeader 
               clientName={report.clientName}
-              trialCode={report.testCode}
-              pageNumber={"Recette"}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
             />
           )}
           {(() => {
@@ -554,7 +570,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               );
             }
           })()}
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>
@@ -563,11 +579,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {/* Section Contrôle/Résultats - Page séparée */}
       {activeSections.some(s => s.type === 'control') && report && (
         <Page size="A4" style={styles.page}>
-          {options.includeHeader && (
-            <PageHeader 
+          {includeHeader && (
+            <CommonReportHeader 
               clientName={report.clientName}
-              trialCode={report.testCode}
-              pageNumber={"Contrôle"}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
             />
           )}
           {(() => {
@@ -587,7 +604,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               );
             }
           })()}
-          {options.includeFooter && (
+          {includeFooter && (
             <PageFooter generatedDate={generatedDate} />
           )}
         </Page>

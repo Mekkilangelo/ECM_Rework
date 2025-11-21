@@ -215,6 +215,13 @@ const getAllSectionFiles = async (testId, partId, selectedSections) => {
 const buildBaseTestData = (trialNode) => {
   const trialData = trialNode.trial;
   
+  // Log pour déboguer
+  logger.info('🔍 buildBaseTestData - trialData:', {
+    process_type: trialData?.process_type,
+    processTypeRef: trialData?.processTypeRef,
+    hasProcessTypeRef: !!trialData?.processTypeRef
+  });
+  
   return {
     testId: trialNode.id,
     testName: trialNode.name,
@@ -448,6 +455,11 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
         as: 'trial',
         include: [
           {
+            model: db.ref_process_type,
+            as: 'processTypeRef',
+            required: false
+          },
+          {
             model: db.recipe,
             as: 'recipe',
             required: false,
@@ -589,6 +601,14 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
     // 4. Construire les données de base
     const reportData = buildBaseTestData(trialNode);
+
+    // Log pour déboguer le process_type
+    logger.info('📋 Trial data pour process_type:', {
+      trialId,
+      process_type: trialNode.trial?.process_type,
+      processTypeRef: trialNode.trial?.processTypeRef?.name,
+      hasProcessTypeRef: !!trialNode.trial?.processTypeRef
+    });
 
     // 5. Ajouter les données de hiérarchie
     if (partNode) {

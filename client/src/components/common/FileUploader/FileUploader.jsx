@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button, ProgressBar, Alert, Modal } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Button, ProgressBar, Alert, Modal, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload, faTrash, faEye, faDownload, faFile } from '@fortawesome/free-solid-svg-icons';
 import useFileUploader from './hooks/useFileUploader';
@@ -20,7 +20,11 @@ const FileUploader = ({
   existingFiles = [],
   enableStandbyMode = false, // Nouveau prop pour activer le mode standby
   onUploaderReady = null // Callback pour exposer les fonctions d'upload
-}) => {// Utiliser le hook personnalisé
+}) => {
+  // État pour les descriptions personnalisées de chaque fichier
+  const [fileDescriptions, setFileDescriptions] = useState({});
+
+  // Utiliser le hook personnalisé
   const fileUploader = useFileUploader({
     maxFiles,
     acceptedFileTypes,
@@ -81,26 +85,37 @@ const FileUploader = ({
           <h6>Fichiers sélectionnés ({files.length})</h6>
           <ul className="list-group">
             {files.map((file, index) => (
-              <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                <div className="d-flex align-items-center">
-                  <div className="thumbnail-wrapper">
-                    {renderThumbnail(file, () => openPreviewModal({...file, previewUrl: file.preview}))}
+              <li key={index} className="list-group-item">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="d-flex align-items-center">
+                    <div className="thumbnail-wrapper">
+                      {renderThumbnail(file, () => openPreviewModal({...file, previewUrl: file.preview}))}
+                    </div>
+                    <div>
+                      <div>{file.name}</div>
+                      <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
+                    </div>
                   </div>
-                  <div>
-                    <div>{file.name}</div>
-                    <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
-                  </div>
+                  <Button variant="outline-danger" size="sm" onClick={() => removeFile(index)}>
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
                 </div>
-                <Button variant="outline-danger" size="sm" onClick={() => removeFile(index)}>
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
+                <Form.Group className="mb-0">
+                  <Form.Control
+                    type="text"
+                    size="sm"
+                    placeholder="Description / Titre (optionnel)"
+                    value={fileDescriptions[index] || ''}
+                    onChange={(e) => setFileDescriptions(prev => ({...prev, [index]: e.target.value}))}
+                  />
+                </Form.Group>
               </li>
             ))}          </ul>
           {!standbyMode && (
             <Button
               variant="primary"
               className="mt-2"
-              onClick={() => handleUpload(nodeId, category, subcategory)}
+              onClick={() => handleUpload(nodeId, category, subcategory, fileDescriptions)}
               disabled={uploading}
             >
               {uploading ? 'Téléchargement en cours...' : 'Télécharger les fichiers'}
@@ -136,7 +151,7 @@ const FileUploader = ({
                     {renderThumbnail(file)}
                   </div>
                   <div>
-                    <div>{file.name}</div>
+                    <div>{file.description || file.name}</div>
                     <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
                   </div>
                 </div>
@@ -182,7 +197,7 @@ const FileUploader = ({
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {previewState.previewFile?.name}
+            {previewState.previewFile?.description || previewState.previewFile?.name}
             {previewState.previewFile?.mimeType && (
               <small className="text-muted ms-2">
                 ({previewState.previewFile?.mimeType})
@@ -197,6 +212,9 @@ const FileUploader = ({
           {previewState.previewFile && (
             <>
               <div className="me-auto text-muted small">
+                {previewState.previewFile.original_name && previewState.previewFile.description && (
+                  <div>Fichier original : {previewState.previewFile.original_name}</div>
+                )}
                 {previewState.previewFile.size && `Taille: ${(previewState.previewFile.size / 1024).toFixed(1)} KB`}
               </div>
               <Button

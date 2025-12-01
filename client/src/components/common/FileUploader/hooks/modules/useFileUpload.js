@@ -9,7 +9,7 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
 
-  const handleUpload = async (nodeId, category, subcategory) => {
+  const handleUpload = async (nodeId, category, subcategory, fileDescriptions = {}) => {
     // En mode standby, ne pas faire d'upload immédiat
     if (standbyMode) {
       // Juste notifier le parent qu'il y a des fichiers en attente
@@ -28,8 +28,12 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     setError(null);
     
     const formData = new FormData();
-    files.forEach(file => {
+    files.forEach((file, index) => {
       formData.append('files', file);
+      // Ajouter la description correspondante si elle existe
+      if (fileDescriptions[index]) {
+        formData.append(`descriptions[${index}]`, fileDescriptions[index]);
+      }
     });
     
     if (nodeId) formData.append('nodeId', nodeId);

@@ -19,6 +19,9 @@ const { ValidationError } = require('../utils/errors');
 const uploadFiles = async (req, res) => {
   try {
   const { nodeId, category, subcategory } = req.body;
+  // Extraire les descriptions en objet (descriptions[0], descriptions[1], etc.)
+  const descriptions = req.body.descriptions || {};
+  const userId = req.user?.id;
   
     const files = req.files;
     
@@ -29,14 +32,17 @@ const uploadFiles = async (req, res) => {
     logger.info(`Téléchargement de fichiers`, { 
       nodeId, 
       category, 
-      subcategory, 
+      subcategory,
+      descriptionsCount: Object.keys(descriptions).length,
       fileCount: files.length 
     });
       // Déléguer au service
     const result = await fileService.saveUploadedFiles(files, {
       nodeId,
       category,
-      subcategory
+      subcategory,
+      descriptions, // Tableau de descriptions indexées
+      userId // ID utilisateur
     }, req);
     
     return apiResponse.success(

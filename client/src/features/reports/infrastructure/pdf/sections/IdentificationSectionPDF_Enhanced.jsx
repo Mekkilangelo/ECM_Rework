@@ -371,9 +371,9 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                         src={getPhotoUrl(photos[0])} 
                         style={[styles.photo, styles.photoFullWidth]}
                       />
-                      {(photos[0].original_name || photos[0].name) && (
+                      {(photos[0].description || photos[0].original_name || photos[0].name) && (
                         <Text style={styles.photoLabel}>
-                          {photos[0].original_name || photos[0].name}
+                          {photos[0].description || photos[0].original_name || photos[0].name}
                         </Text>
                       )}
                     </View>
@@ -386,9 +386,9 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                             src={getPhotoUrl(photo)} 
                             style={[styles.photo, styles.photoHalfWidth]}
                           />
-                          {(photo.original_name || photo.name) && (
+                          {(photo.description || photo.original_name || photo.name) && (
                             <Text style={styles.photoLabel}>
-                              {photo.original_name || photo.name}
+                              {photo.description || photo.original_name || photo.name}
                             </Text>
                           )}
                         </View>
@@ -403,9 +403,9 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                             src={getPhotoUrl(photo)} 
                             style={[styles.photo, styles.photoSmall]}
                           />
-                          {(photo.original_name || photo.name) && (
+                          {(photo.description || photo.original_name || photo.name) && (
                             <Text style={styles.photoLabel}>
-                              {photo.original_name || photo.name}
+                              {photo.description || photo.original_name || photo.name}
                             </Text>
                           )}
                         </View>

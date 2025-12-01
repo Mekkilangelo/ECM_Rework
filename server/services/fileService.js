@@ -1,6 +1,9 @@
 /**
  * Service de gestion des fichiers
  * Contient la logique métier liée aux opérations sur les fichiers
+ * 
+ * ⚠️ MIGRATION EN COURS : Ce service utilise maintenant le nouveau système
+ * avec storage_key et contexte JSON tout en restant compatible avec l'ancien code
  */
 
 const fs = require('fs');
@@ -15,6 +18,10 @@ const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 
 // Importer la fonction depuis le middleware pour éviter la duplication
 const { buildPhysicalFilePath } = require('../middleware/file-path');
+
+// ⭐ NOUVEAU : Importer les services du nouveau système
+const fileStorageService = require('./storage/FileStorageService');
+const fileMetadataService = require('./storage/FileMetadataService');
 
 /**
  * Construit le chemin logique pour un fichier (utilisé dans la base de données)
@@ -98,7 +105,7 @@ const cleanupTempDirectories = async (tempFiles) => {
  * @returns {Promise<Object>} Résultat de l'opération
  */
 const saveUploadedFiles = async (files, data, req = null) => {
-  const { nodeId, category, subcategory } = data;
+  const { nodeId, category, subcategory, descriptions = {}, userId } = data;
   const fileRecords = [];
   
   // Utiliser une transaction pour garantir la cohérence des données
@@ -119,12 +126,30 @@ const saveUploadedFiles = async (files, data, req = null) => {
     throw new Error('Le nodeId parent est requis pour l\'upload de fichiers');
   }
 
+  let fileIndex = 0;
   for (const uploadedFile of files) {
-    // Le fichier est déjà stocké au bon endroit par multer
-    const finalPath = uploadedFile.path;
+    // ⭐ NOUVEAU SYSTÈME : Construire le contexte
+    const context = await fileMetadataService.buildFileContext({
+      category,
+      subcategory
+    }, parentNode);
     
-    // Construire le chemin logique
+    // ⭐ NOUVEAU SYSTÈME : Générer la storage_key immuable
+    const storageKey = fileStorageService.generateStorageKey(
+      context.entity_type,
+      context.entity_id,
+      context.file_type,
+      uploadedFile.originalname
+    );
+    
+    // ⭐ NOUVEAU SYSTÈME : Sauvegarder le fichier à sa destination finale
+    const finalPath = await fileStorageService.saveFile(uploadedFile, storageKey);
+    
+    // Construire le chemin logique (pour compatibilité)
     const nodePath = buildNodePath(parentNode, category, subcategory, uploadedFile.originalname);
+    
+    // Récupérer la description spécifique pour ce fichier (par index)
+    const fileDescription = descriptions[fileIndex] || uploadedFile.originalname;
     
     // Créer l'enregistrement du nœud
     const fileNode = await node.create({
@@ -134,7 +159,8 @@ const saveUploadedFiles = async (files, data, req = null) => {
       parent_id: parseInt(nodeId),
       created_at: new Date(),
       data_status: 'new',
-      description: `File uploaded as ${category || 'general'}${subcategory ? `/${subcategory}` : ''}`
+      // ⭐ NOUVEAU : Utiliser description personnalisée si fournie, sinon le nom du fichier
+      description: fileDescription
     }, { transaction });
 
       // Créer les relations de fermeture si le fichier est directement associé à un nœud
@@ -159,7 +185,12 @@ const saveUploadedFiles = async (files, data, req = null) => {
             depth: parentClosure.depth + 1
           }, { transaction });
         }
-      }      // Créer l'enregistrement du fichier
+      }
+      
+      // ⭐ NOUVEAU SYSTÈME : Générer le checksum
+      const checksum = await fileStorageService.generateChecksum(storageKey);
+      
+      // Créer l'enregistrement du fichier
       // Normaliser la catégorie : si elle commence par 'micrographs-result', utiliser 'micrography'
       let normalizedCategory = category || 'general';
       if (category && category.startsWith('micrographs-result')) {
@@ -169,9 +200,15 @@ const saveUploadedFiles = async (files, data, req = null) => {
       const fileRecord = await file.create({
         node_id: fileNode.id,
         original_name: uploadedFile.originalname,
-        file_path: finalPath,
+        file_path: finalPath, // Garder pour compatibilité
+        storage_key: storageKey, // ⭐ NOUVEAU
         size: uploadedFile.size,
         mime_type: uploadedFile.mimetype,
+        checksum: checksum, // ⭐ NOUVEAU
+        context: context, // ⭐ NOUVEAU
+        version: 1, // ⭐ NOUVEAU
+        is_latest: true, // ⭐ NOUVEAU
+        uploaded_by: userId || null, // ⭐ NOUVEAU
         category: normalizedCategory,
         subcategory: subcategory || null
       }, { transaction });
@@ -184,6 +221,8 @@ const saveUploadedFiles = async (files, data, req = null) => {
         category,
         subcategory
       });
+      
+      fileIndex++; // Incrémenter l'index pour le prochain fichier
     }
     // Valider la transaction
     await transaction.commit();
@@ -548,6 +587,7 @@ const getAllFilesByNode = async (options) => {
   const files = fileNodes.map(nodeItem => ({
     id: nodeItem.id,
     name: nodeItem.name,
+    description: nodeItem.description, // Ajouter la description
     path: nodeItem.path,
     createdAt: nodeItem.created_at,
     size: nodeItem.file ? nodeItem.file.size : null,
@@ -556,7 +596,9 @@ const getAllFilesByNode = async (options) => {
     subcategory: nodeItem.file ? nodeItem.file.subcategory : null,
     original_name: nodeItem.file ? nodeItem.file.original_name : null,
     file_path: nodeItem.file ? nodeItem.file.file_path : null,
-    type: nodeItem.file ? nodeItem.file.mime_type : 'application/octet-stream'
+    type: nodeItem.file ? nodeItem.file.mime_type : 'application/octet-stream',
+    // IMPORTANT: Ajouter viewPath pour que les images s'affichent dans le PDF
+    viewPath: nodeItem.id ? `http://localhost:5001/api/files/${nodeItem.id}` : null
   }));
   
   logger.debug('Fichiers retournés', { count: files.length });

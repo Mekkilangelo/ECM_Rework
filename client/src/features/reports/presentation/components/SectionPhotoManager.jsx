@@ -1038,7 +1038,7 @@ const PhotoGrid = React.memo(({ photos, selectedPhotoIds, photoOrder, onToggleSe
               <div className="d-flex justify-content-between align-items-start">
                 <div className="flex-grow-1">
                   <Card.Text className="mb-0 small fw-medium text-truncate">
-                    {photo.name}
+                    {photo.description || photo.name}
                   </Card.Text>
                 </div>
                 {selectedPhotoIds.includes(photo.id) && (

@@ -1,214 +1,283 @@
 /**
- * INFRASTRUCTURE: Section Charge pour le PDF - Version Améliorée
- * Affiche les photos de configuration de charge avec pagination intelligente
+ * INFRASTRUCTURE: Load Configuration Section for PDF
+ * Displays load configuration photos with intelligent layout
  */
 
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { getPhotoUrl, calculatePhotoLayout, paginatePhotos, validatePhotos } from '../helpers/photoHelpers';
+import { getPhotoUrl, validatePhotos } from '../helpers/photoHelpers';
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
-    padding: 15,
-    border: '1pt solid #e0e0e0',
-    borderRadius: 4,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#2c3e50',
-    borderBottom: '2pt solid #795548',
-    paddingBottom: 6,
-    textAlign: 'center',
+    marginBottom: 16,
+    marginTop: 4,
+    color: '#1a1a1a',
+    letterSpacing: 0.5,
   },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 15,
-    marginBottom: 10,
-    color: '#5d4037',
-    backgroundColor: '#efebe9',
-    padding: 8,
-    borderLeft: '4pt solid #795548',
+  // Layout 1 photo - full width, full page height
+  photoFullPage: {
+    width: 500,
+    height: 700,
   },
-  photoGrid: {
+  // Layout 2 photos - stacked vertically, full width each
+  photoHalfPage: {
+    width: 500,
+    height: 340,
+    marginBottom: 12,
+  },
+  // Layout 3 photos - first full width, then 2 side by side
+  photoFirstLarge: {
+    width: 500,
+    height: 300,
+    marginBottom: 12,
+  },
+  photoSmallSideBySide: {
+    width: 244,
+    height: 340,
+  },
+  photoRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 15,
+    justifyContent: 'space-between',
     gap: 12,
   },
   photoContainer: {
-    alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 8,
   },
   photo: {
     objectFit: 'cover',
-    border: '1pt solid #ddd',
-    borderRadius: 2,
+    border: '0.5pt solid #d0d0d0',
   },
   photoLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     textAlign: 'center',
-    marginTop: 4,
-    color: '#666',
-    maxWidth: 160,
-    lineHeight: 1.2,
-  },
-  loadTypeLabel: {
-    fontSize: 7,
-    color: '#5d4037',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 2,
+    marginTop: 3,
+    color: '#888',
+    fontStyle: 'italic',
   },
   emptyState: {
-    fontSize: 11,
+    fontSize: 9,
     fontStyle: 'italic',
     color: '#999',
-    textAlign: 'center',
-    padding: 30,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 4,
+    marginTop: 8,
   },
-  analysisInfo: {
-    fontSize: 10,
-    color: '#555',
-    backgroundColor: '#f8f9fa',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 3,
-    border: '1pt solid #e9ecef',
-  },
-  photoCounter: {
-    fontSize: 7,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 1,
-  },
-  loadInfo: {
-    fontSize: 10,
-    color: '#5d4037',
-    backgroundColor: '#efebe9',
-    padding: 8,
-    marginBottom: 12,
-    borderRadius: 3,
-    border: '1pt solid #d7ccc8',
-  }
 });
 
 /**
- * Composant Section Charge pour le PDF
+ * Calculate intelligent layout based on photo count
+ */
+const calculateLayout = (photoCount) => {
+  if (photoCount === 1) {
+    return { type: 'single', pages: [[0]] };
+  } else if (photoCount === 2) {
+    return { type: 'double', pages: [[0, 1]] };
+  } else if (photoCount === 3) {
+    return { type: 'triple', pages: [[0, 1, 2]] };
+  } else {
+    // Pour 4+ photos, on utilise le pattern: 1ère page = 3 photos (1 grand + 2 petits), puis 2 par page
+    const pages = [];
+    let currentIndex = 0;
+    
+    // Première page avec 3 photos
+    if (photoCount >= 3) {
+      pages.push([0, 1, 2]);
+      currentIndex = 3;
+    }
+    
+    // Pages suivantes avec 2 photos chacune
+    while (currentIndex < photoCount) {
+      const remaining = photoCount - currentIndex;
+      if (remaining >= 2) {
+        pages.push([currentIndex, currentIndex + 1]);
+        currentIndex += 2;
+      } else {
+        pages.push([currentIndex]);
+        currentIndex += 1;
+      }
+    }
+    
+    return { type: 'multiple', pages };
+  }
+};
+
+/**
+ * Load Configuration Section for PDF
  */
 export const LoadSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
-  // Valider et traiter les photos
+  // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
   
-
-
-  // Diviser les photos en pages (max 9 photos par page pour la charge)
-  const photosPerPage = 9;
-  const photoPages = paginatePhotos(validPhotos, photosPerPage);
-
-  // Extraire les informations de charge depuis le rapport
-  const loadData = report.loadData || {};
-  const trialData = report.trialData || report.trial || {};
-
   if (validPhotos.length === 0) {
     return (
-      <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>CONFIGURATION DE CHARGE</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>LOAD CONFIGURATION</Text>
         <Text style={styles.emptyState}>
-          Aucune photo de configuration de charge disponible pour cet essai.
+          No load configuration photos available for this trial.
         </Text>
       </View>
     );
   }
 
+  const layout = calculateLayout(validPhotos.length);
+
   return (
     <>
-      <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>CONFIGURATION DE CHARGE</Text>
-        
-        <Text style={styles.analysisInfo}>
-          Cette section présente la configuration et la disposition de la charge dans le four lors de l'essai.
-          Les photos documentent l'arrangement des pièces, les supports utilisés et la configuration générale.
-          Total : {validPhotos.length} photo{validPhotos.length > 1 ? 's' : ''}
-        </Text>
-
-        {/* Informations sur la charge si disponibles */}
-        {(loadData.weight || loadData.pieces_count || loadData.configuration || trialData.load_description) && (
-          <View style={styles.loadInfo}>
-            <Text style={{ fontSize: 11, fontWeight: 'bold', marginBottom: 4, color: '#5d4037' }}>
-              Spécifications de la charge :
-            </Text>
-            {loadData.weight && (
-              <Text style={{ fontSize: 9, marginBottom: 2 }}>
-                • Poids total : {loadData.weight} kg
-              </Text>
-            )}
-            {loadData.pieces_count && (
-              <Text style={{ fontSize: 9, marginBottom: 2 }}>
-                • Nombre de pièces : {loadData.pieces_count}
-              </Text>
-            )}
-            {loadData.configuration && (
-              <Text style={{ fontSize: 9, marginBottom: 2 }}>
-                • Configuration : {loadData.configuration}
-              </Text>
-            )}
-            {trialData.load_description && (
-              <Text style={{ fontSize: 9, marginBottom: 2 }}>
-                • Description : {trialData.load_description}
-              </Text>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* Photos de charge avec pagination intelligente */}
-      {photoPages.map((pagePhotos, pageIndex) => {
-        const layout = calculatePhotoLayout(pagePhotos.length, 'load');
+      <Text style={styles.sectionTitle}>LOAD CONFIGURATION</Text>
+      
+      {layout.pages.map((photoIndices, pageIndex) => {
+        const isFirstPage = pageIndex === 0;
+        const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
         
         return (
-          <View key={`load-page-${pageIndex}`} style={styles.section} wrap={false}>
-            <Text style={styles.subtitle}>
-              Photos de Configuration {photoPages.length > 1 ? `(Page ${pageIndex + 1}/${photoPages.length})` : ''}
-            </Text>
+          <View 
+            key={`load-page-${pageIndex}`} 
+            style={styles.section} 
+            wrap={false}
+          >
+            {pageIndex > 0 && <Text style={styles.sectionTitle}>LOAD CONFIGURATION</Text>}
             
-            <View style={styles.photoGrid}>
-              {pagePhotos.map((photo, index) => (
-                <View key={photo.id || photo.url || index} style={[
-                  styles.photoContainer,
-                  { width: `${100 / layout.cols}%` }
-                ]}>
+            {/* Layout 1: Single photo - full page */}
+            {layout.type === 'single' && (
+              <View style={styles.photoContainer}>
+                <Image 
+                  src={getPhotoUrl(pagePhotos[0])} 
+                  style={[styles.photo, styles.photoFullPage]}
+                />
+                {(pagePhotos[0].original_name || pagePhotos[0].name) && (
+                  <Text style={styles.photoLabel}>
+                    {pagePhotos[0].original_name || pagePhotos[0].name}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Layout 2: Two photos - stacked vertically */}
+            {layout.type === 'double' && (
+              <>
+                {pagePhotos.map((photo, idx) => (
+                  <View key={idx} style={styles.photoContainer}>
+                    <Image 
+                      src={getPhotoUrl(photo)} 
+                      style={[styles.photo, styles.photoHalfPage]}
+                    />
+                    {(photo.original_name || photo.name) && (
+                      <Text style={styles.photoLabel}>
+                        {photo.original_name || photo.name}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Layout 3: Three photos - 1 large + 2 side by side */}
+            {layout.type === 'triple' && (
+              <>
+                {/* First photo - large */}
+                <View style={styles.photoContainer}>
                   <Image 
-                    src={getPhotoUrl(photo)} 
-                    style={[
-                      styles.photo,
-                      { 
-                        width: layout.photoWidth, 
-                        height: layout.photoHeight 
-                      }
-                    ]}
+                    src={getPhotoUrl(pagePhotos[0])} 
+                    style={[styles.photo, styles.photoFirstLarge]}
                   />
-                  {(photo.original_name || photo.name) && (
+                  {(pagePhotos[0].original_name || pagePhotos[0].name) && (
                     <Text style={styles.photoLabel}>
-                      {photo.original_name || photo.name}
+                      {pagePhotos[0].original_name || pagePhotos[0].name}
                     </Text>
                   )}
-                  <Text style={styles.loadTypeLabel}>
-                    Configuration de charge
-                  </Text>
-                  <Text style={styles.photoCounter}>
-                    LOAD-{pageIndex * photosPerPage + index + 1}
-                  </Text>
                 </View>
-              ))}
-            </View>
+                
+                {/* Second and third photos - side by side */}
+                <View style={styles.photoRow}>
+                  {pagePhotos.slice(1).map((photo, idx) => (
+                    <View key={idx + 1} style={styles.photoContainer}>
+                      <Image 
+                        src={getPhotoUrl(photo)} 
+                        style={[styles.photo, styles.photoSmallSideBySide]}
+                      />
+                      {(photo.original_name || photo.name) && (
+                        <Text style={styles.photoLabel}>
+                          {photo.original_name || photo.name}
+                        </Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {/* Layout Multiple: For pages after first page or 4+ photos */}
+            {layout.type === 'multiple' && (
+              <>
+                {isFirstPage && photoIndices.length === 3 ? (
+                  // First page with 3 photos
+                  <>
+                    <View style={styles.photoContainer}>
+                      <Image 
+                        src={getPhotoUrl(pagePhotos[0])} 
+                        style={[styles.photo, styles.photoFirstLarge]}
+                      />
+                      {(pagePhotos[0].original_name || pagePhotos[0].name) && (
+                        <Text style={styles.photoLabel}>
+                          {pagePhotos[0].original_name || pagePhotos[0].name}
+                        </Text>
+                      )}
+                    </View>
+                    
+                    <View style={styles.photoRow}>
+                      {pagePhotos.slice(1).map((photo, idx) => (
+                        <View key={idx + 1} style={styles.photoContainer}>
+                          <Image 
+                            src={getPhotoUrl(photo)} 
+                            style={[styles.photo, styles.photoSmallSideBySide]}
+                          />
+                          {(photo.original_name || photo.name) && (
+                            <Text style={styles.photoLabel}>
+                              {photo.original_name || photo.name}
+                            </Text>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                ) : photoIndices.length === 2 ? (
+                  // Subsequent pages with 2 photos
+                  <>
+                    {pagePhotos.map((photo, idx) => (
+                      <View key={idx} style={styles.photoContainer}>
+                        <Image 
+                          src={getPhotoUrl(photo)} 
+                          style={[styles.photo, styles.photoHalfPage]}
+                        />
+                        {(photo.original_name || photo.name) && (
+                          <Text style={styles.photoLabel}>
+                            {photo.original_name || photo.name}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </>
+                ) : (
+                  // Single photo on a page
+                  <View style={styles.photoContainer}>
+                    <Image 
+                      src={getPhotoUrl(pagePhotos[0])} 
+                      style={[styles.photo, styles.photoFullPage]}
+                    />
+                    {(pagePhotos[0].original_name || pagePhotos[0].name) && (
+                      <Text style={styles.photoLabel}>
+                        {pagePhotos[0].original_name || pagePhotos[0].name}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </>
+            )}
           </View>
         );
       })}

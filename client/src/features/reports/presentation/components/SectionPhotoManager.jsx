@@ -3,8 +3,8 @@ import { Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faImage, faTimes, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
-import fileService from '../../../../../../services/fileService';
+import CollapsibleSection from '../../../../components/common/CollapsibleSection/CollapsibleSection';
+import fileService from '../../../../services/fileService';
 
 // Reducer pour gérer les états de sélection de façon synchrone
 const selectionReducer = (state, action) => {
@@ -17,16 +17,23 @@ const selectionReducer = (state, action) => {
         ? state.selectedPhotoIds.filter(id => id !== photoId)
         : [...state.selectedPhotoIds, photoId];
       
-      const newOrder = isCurrentlySelected 
-        ? Object.fromEntries(
-            Object.entries(state.photoOrder)
-              .filter(([id]) => id !== photoId)
-              .map(([id, order]) => [id, order > state.photoOrder[photoId] ? order - 1 : order])
-          )
-        : {
-            ...state.photoOrder,
-            [photoId]: Object.keys(state.photoOrder).length + 1
-          };
+      let newOrder = { ...state.photoOrder };
+      
+      if (isCurrentlySelected) {
+        // Supprimer la photo et réorganiser les ordres
+        const removedOrder = newOrder[photoId];
+        delete newOrder[photoId];
+        // Réajuster les ordres des photos restantes
+        Object.keys(newOrder).forEach(id => {
+          if (newOrder[id] > removedOrder) {
+            newOrder[id] = newOrder[id] - 1;
+          }
+        });
+      } else {
+        // Ajouter la photo avec le prochain ordre disponible
+        const maxOrder = Math.max(0, ...Object.values(newOrder));
+        newOrder[photoId] = maxOrder + 1;
+      }
       
       return {
         ...state,
@@ -42,24 +49,31 @@ const selectionReducer = (state, action) => {
       let newOrder = { ...state.photoOrder };
       
       if (select) {
+        // Sélectionner toutes les photos non sélectionnées
+        let currentMaxOrder = Math.max(0, ...Object.values(newOrder));
         photoIds.forEach(photoId => {
           if (!newSelectedIds.includes(photoId)) {
             newSelectedIds.push(photoId);
-            newOrder[photoId] = Object.keys(newOrder).length + 1;
+            currentMaxOrder += 1;
+            newOrder[photoId] = currentMaxOrder;
           }
         });
       } else {
-        photoIds.forEach(photoId => {
-          if (newSelectedIds.includes(photoId)) {
-            newSelectedIds = newSelectedIds.filter(id => id !== photoId);
-            const removedOrder = newOrder[photoId];
-            delete newOrder[photoId];
-            Object.keys(newOrder).forEach(id => {
-              if (newOrder[id] > removedOrder) {
-                newOrder[id] = newOrder[id] - 1;
-              }
-            });
-          }
+        // Désélectionner toutes les photos sélectionnées
+        const photosToRemove = photoIds.filter(id => newSelectedIds.includes(id));
+        photosToRemove.forEach(photoId => {
+          newSelectedIds = newSelectedIds.filter(id => id !== photoId);
+          delete newOrder[photoId];
+        });
+        
+        // Réorganiser les ordres après suppression
+        const remainingPhotos = Object.entries(newOrder)
+          .sort(([,a], [,b]) => a - b)
+          .map(([id]) => id);
+        
+        newOrder = {};
+        remainingPhotos.forEach((id, index) => {
+          newOrder[id] = index + 1;
         });
       }
       
@@ -94,7 +108,7 @@ const selectionReducer = (state, action) => {
 };
 
 const SectionPhotoManager = ({
-  testNodeId,
+  trialNodeId,
   partNodeId,
   sectionType,
   onChange,
@@ -174,7 +188,7 @@ const SectionPhotoManager = ({
           }
         ]
       },      micrography: {
-        nodeId: testNodeId,
+        nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.micrography.title', 'Micrographies'),
         description: tSafe('parts.photos.manager.sections.micrography.description', 'Images micrographiques par résultat et échantillon'),
         // Configuration dynamique - sera générée dans loadPhotosForSection
@@ -185,7 +199,7 @@ const SectionPhotoManager = ({
         magnifications: ['x50', 'x500', 'x1000', 'other'] // Grossissements disponibles
       },
       load: {
-        nodeId: testNodeId,
+        nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.load.title', 'Photos de charge'),
         description: tSafe('parts.photos.manager.sections.load.description', 'Disposition et configuration de la charge'),
         sources: [
@@ -198,7 +212,7 @@ const SectionPhotoManager = ({
         ]
       },
       curves: {
-        nodeId: testNodeId,
+        nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.curves.title', 'Rapports de four'),
         description: tSafe('parts.photos.manager.sections.curves.description', 'Courbes et rapports de température'),
         sources: [
@@ -388,9 +402,17 @@ const SectionPhotoManager = ({
     }
     
     loadPhotosForSection();
-  }, [sectionType, testNodeId, partNodeId, t]);
-  // Initialiser les photos sélectionnées
+  }, [sectionType, trialNodeId, partNodeId, t]);
+  // Initialiser les photos sélectionnées UNIQUEMENT au montage ou si initialSelectedPhotos change vraiment
+  const initializationRef = useRef(false);
+  
   useEffect(() => {
+    // Ne pas réinitialiser si on a déjà initialisé et que les props n'ont pas vraiment changé
+    if (initializationRef.current) {
+      return;
+    }
+    
+    
     if (initialSelectedPhotos && initialSelectedPhotos[sectionType]) {
       let initSelected = [];
       const initialData = initialSelectedPhotos[sectionType];
@@ -428,7 +450,14 @@ const SectionPhotoManager = ({
     } else {
       dispatchSelection({ type: 'RESET' });
     }
-  }, [initialSelectedPhotos, sectionType]);
+    
+    initializationRef.current = true;
+  }, [sectionType]); // Supprimer initialSelectedPhotos des dépendances
+  
+  // Réinitialiser le flag d'initialisation si la section change
+  useEffect(() => {
+    initializationRef.current = false;
+  }, [sectionType]);
 
   // Effect pour notifier les changements
   useEffect(() => {
@@ -551,8 +580,14 @@ const SectionPhotoManager = ({
     const organized = {};
     const orderToUse = customPhotoOrder || photoOrder;
     
+    // Vérifier que les IDs sélectionnés sont cohérents
+    if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+      return organized;
+    }
+    
     // Créer un mapping des photos sélectionnées avec leur ordre
     const orderedSelectedIds = selectedIds
+      .filter(id => id != null) // Filtrer les valeurs nulles/undefined
       .map(id => ({ id, order: orderToUse[id] || 999999 }))
       .sort((a, b) => a.order - b.order)
       .map(item => item.id);
@@ -629,15 +664,13 @@ const SectionPhotoManager = ({
   const togglePhotoSelection = useCallback((photoId) => {
     // Utiliser le reducer pour la mise à jour d'état synchrone
     dispatchSelection({ type: 'TOGGLE_PHOTO', payload: { photoId } });
-  }, []);
+  }, [dispatchSelection]);
 
   // Effet pour synchroniser les changements avec le parent (seulement quand forceUpdate change)
   useEffect(() => {
     if (forceUpdate > 0 && Object.keys(availablePhotos).length > 0) {
-      startTransition(() => {
-        const organizedPhotos = organizeSelectedPhotosWithMetadata(selectedPhotoIds, photoOrder);
-        setPendingChange(organizedPhotos);
-      });
+      const organizedPhotos = organizeSelectedPhotosWithMetadata(selectedPhotoIds, photoOrder);
+      setPendingChange(organizedPhotos);
     }
   }, [forceUpdate, selectedPhotoIds, photoOrder, availablePhotos, organizeSelectedPhotosWithMetadata]);
 
@@ -834,6 +867,7 @@ const SectionPhotoManager = ({
                       </div>
                       
                       <PhotoGrid 
+                        key={`${groupKey}-${subgroupKey}-${forceUpdate}`}
                         photos={subgroupPhotos} 
                         selectedPhotoIds={selectedPhotoIds}
                         photoOrder={photoOrder}
@@ -900,7 +934,7 @@ const SectionPhotoManager = ({
 };
 
 // Composant pour la grille de photos
-const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t }) => {
+const PhotoGrid = React.memo(({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t }) => {
   return (
     <Row className="g-2">
       {photos
@@ -915,7 +949,9 @@ const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t 
         <Col key={photo.id} xs={6} sm={4} md={3} lg={2}>
           <Card 
             className={`photo-card h-100 ${selectedPhotoIds.includes(photo.id) ? 'border-primary border-2 shadow' : 'border-light'}`}
-            onClick={() => onToggleSelection(photo.id)}
+            onClick={() => {
+              onToggleSelection(photo.id);
+            }}
             style={{ 
               cursor: 'pointer',
               opacity: selectedPhotoIds.includes(photo.id) ? 1 : 0.8,
@@ -985,6 +1021,10 @@ const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t 
                 fontWeight: 'bold',
                 zIndex: 2,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection(photo.id);
               }}>                {selectedPhotoIds.includes(photo.id) ? (
                   <span style={{ color: 'white' }}>
                     {photoOrder[photo.id]}
@@ -1016,6 +1056,20 @@ const PhotoGrid = ({ photos, selectedPhotoIds, photoOrder, onToggleSelection, t 
         </Col>      ))}
     </Row>
   );
-};
+}, (prevProps, nextProps) => {
+  // Comparer les props importantes pour éviter les re-renders inutiles
+  const photosEqual = prevProps.photos.length === nextProps.photos.length &&
+    prevProps.photos.every((photo, index) => photo.id === nextProps.photos[index].id);
+  
+  const selectedEqual = prevProps.selectedPhotoIds.length === nextProps.selectedPhotoIds.length &&
+    prevProps.selectedPhotoIds.every(id => nextProps.selectedPhotoIds.includes(id));
+  
+  const orderEqual = Object.keys(prevProps.photoOrder).length === Object.keys(nextProps.photoOrder).length &&
+    Object.keys(prevProps.photoOrder).every(id => prevProps.photoOrder[id] === nextProps.photoOrder[id]);
+  
+  const shouldSkipRender = photosEqual && selectedEqual && orderEqual && 
+    prevProps.onToggleSelection === nextProps.onToggleSelection;
+  return shouldSkipRender;
+});
 
 export default SectionPhotoManager;

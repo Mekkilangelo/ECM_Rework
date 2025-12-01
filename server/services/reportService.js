@@ -27,7 +27,23 @@ const getTestHierarchy = async (trialId) => {
         model: node,
         as: 'ancestor',
         include: [
-          { model: part, as: 'part', required: false },
+          { 
+            model: part, 
+            as: 'part', 
+            required: false,
+            include: [
+              {
+                model: db.specs_hardness,
+                as: 'hardnessSpecs',
+                required: false
+              },
+              {
+                model: db.specs_ecd,
+                as: 'ecdSpecs',
+                required: false
+              }
+            ]
+          },
           { model: client, as: 'client', required: false }
         ]
       }],

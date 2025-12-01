@@ -23,7 +23,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useReport } from '../hooks/useReport';
 import ReportPreviewModal from './ReportPreviewModal';
-import SectionPhotoManager from '../../../../components/dashboard/tests/form/sections/report/SectionPhotoManager';
+import SectionPhotoManager from './SectionPhotoManager';
 import './ReportConfiguration.css';
 
 /**
@@ -274,6 +274,11 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
 const SectionItem = React.memo(({ section, onToggle, selectedPhotosCount, icon }) => {
   const { t } = useTranslation();
 
+  const handleToggleClick = (e) => {
+    e.stopPropagation();
+    onToggle();
+  };
+
   return (
     <OverlayTrigger
       placement="right"
@@ -281,8 +286,6 @@ const SectionItem = React.memo(({ section, onToggle, selectedPhotosCount, icon }
     >
       <ListGroup.Item 
         className="d-flex justify-content-between align-items-center border-start-0 border-end-0 section-item"
-        action
-        onClick={onToggle}
       >
         <div className="d-flex align-items-center flex-grow-1">
           <FontAwesomeIcon 
@@ -307,13 +310,13 @@ const SectionItem = React.memo(({ section, onToggle, selectedPhotosCount, icon }
           )}
         </div>
         
-        <div className="toggle-button" onClick={(e) => e.stopPropagation()}>
+        <div className="toggle-button">
           <FontAwesomeIcon 
             icon={section.isEnabled ? faToggleOn : faToggleOff} 
             size="2x"
             className={section.isEnabled ? 'text-danger' : 'text-secondary'}
             style={{ cursor: 'pointer' }}
-            onClick={onToggle}
+            onClick={handleToggleClick}
           />
         </div>
       </ListGroup.Item>

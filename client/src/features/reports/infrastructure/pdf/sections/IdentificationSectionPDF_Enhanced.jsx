@@ -1,84 +1,123 @@
 /**
- * INFRASTRUCTURE: Section Identification pour le PDF - Version Améliorée
- * Affiche les informations complètes du client, de la pièce et les photos avec pagination intelligente
+ * INFRASTRUCTURE: Part Identification Section for PDF
+ * Displays part identification, specifications, and photos organized by view
  */
 
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { getPhotoUrl, calculatePhotoLayout, paginatePhotos, validatePhotos } from '../helpers/photoHelpers';
+import { getPhotoUrl, validatePhotos } from '../helpers/photoHelpers';
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
-    padding: 15,
-    border: '1pt solid #e0e0e0',
-    borderRadius: 4,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#2c3e50',
-    borderBottom: '2pt solid #c62828',
-    paddingBottom: 6,
-    textAlign: 'center',
+    marginBottom: 16,
+    marginTop: 4,
+    color: '#1a1a1a',
+    letterSpacing: 0.5,
   },
   subsectionTitle: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: 'bold',
-    marginTop: 12,
+    marginTop: 14,
+    marginBottom: 10,
+    color: '#2c3e50',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  infoRow: {
+    flexDirection: 'row',
     marginBottom: 8,
-    color: '#34495e',
-    backgroundColor: '#f8f9fa',
-    padding: 6,
-    borderLeft: '3pt solid #007bff',
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 12,
-  },
-  infoColumn: {
-    width: '50%',
-    paddingRight: 10,
-  },
-  row: {
-    flexDirection: 'row',
-    marginBottom: 4,
     alignItems: 'flex-start',
+    paddingBottom: 6,
+    borderBottom: '0.5pt solid #e8e8e8',
   },
   label: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
-    width: '40%',
-    color: '#555',
+    width: '30%',
+    color: '#666',
+    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   value: {
-    fontSize: 10,
-    width: '60%',
-    color: '#000',
+    fontSize: 9,
+    width: '70%',
+    color: '#1a1a1a',
+  },
+  specGrid: {
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  specRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+    paddingBottom: 4,
+    borderBottom: '0.5pt solid #f0f0f0',
+  },
+  specLabel: {
+    fontSize: 8.5,
+    fontWeight: 'bold',
+    width: '28%',
+    color: '#555',
+  },
+  specValue: {
+    fontSize: 8.5,
+    width: '72%',
+    color: '#1a1a1a',
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 12,
+    marginTop: 8,
+    justifyContent: 'flex-start',
+    gap: 8,
+  },
+  photoRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    justifyContent: 'space-between',
     gap: 8,
   },
   photoContainer: {
-    marginBottom: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  photoContainerSingle: {
+    width: '100%',
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  photoContainerHalf: {
+    width: '48%',
+    marginBottom: 8,
     alignItems: 'center',
   },
   photo: {
     objectFit: 'cover',
-    border: '1pt solid #ccc',
-    borderRadius: 2,
+    border: '0.5pt solid #d0d0d0',
+  },
+  photoFullWidth: {
+    width: 480,
+    height: 200,
+  },
+  photoHalfWidth: {
+    width: 235,
+    height: 176,
+  },
+  photoSmall: {
+    width: 235,
+    height: 140,
   },
   photoLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     textAlign: 'center',
-    marginTop: 4,
-    color: '#666',
-    maxWidth: 120,
+    marginTop: 3,
+    color: '#888',
+    fontStyle: 'italic',
   },
   emptyState: {
     fontSize: 10,
@@ -87,38 +126,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     padding: 20,
   },
-  dimensionText: {
-    fontSize: 10,
-    color: '#2c3e50',
-    fontWeight: 'bold',
-  },
   pageBreak: {
-    marginTop: 20,
-    borderTop: '1pt dashed #ccc',
-    paddingTop: 15,
+    marginTop: 16,
+  },
+  viewTitle: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    marginTop: 12,
+    marginBottom: 8,
+    color: '#2c3e50',
+    letterSpacing: 0.3,
   }
 });
 
 /**
- * Composant Section Identification pour le PDF
+ * Component: Part Identification Section for PDF
  */
 export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
-  // Valider et traiter les photos
+  // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
   
+  // Extract data from report
+  const partData = report.partData || report.part || {};
+  const steelGrade = partData.steel?.grade || partData.steelGrade || 'Not specified';
 
+  // Get specifications - check multiple locations
+  const hardnessSpecs = partData.hardnessSpecs || [];
+  const ecdSpecs = partData.ecdSpecs || [];
 
-  // Diviser les photos en pages (max 12 photos par page)
-  const photosPerPage = 12;
-  const photoPages = paginatePhotos(validPhotos, photosPerPage);
-
-  // Formater les dimensions pour l'affichage
+  // Format dimensions
   const formatDimensions = (part) => {
     const dims = [];
     
-    // Dimensions rectangulaires
+    // Rectangular dimensions
     if (part.dim_rect_length || part.dim_rect_width || part.dim_rect_height) {
       const rectDims = [part.dim_rect_length, part.dim_rect_width, part.dim_rect_height]
         .filter(d => d)
@@ -128,7 +170,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
       }
     }
     
-    // Dimensions circulaires
+    // Circular dimensions
     if (part.dim_circ_diameterOut || part.dim_circ_diameterIn) {
       const circDims = [];
       if (part.dim_circ_diameterOut) circDims.push(`⌀ ext: ${part.dim_circ_diameterOut}`);
@@ -136,165 +178,250 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
       dims.push(`${circDims.join(', ')} ${part.dim_circ_unit || 'mm'}`);
     }
     
-    // Poids
+    // Weight
     if (part.dim_weight_value) {
       dims.push(`${part.dim_weight_value} ${part.dim_weight_unit || 'kg'}`);
     }
     
-    return dims.join(' | ') || 'Non spécifié';
+    return dims.join(' | ') || 'Not specified';
   };
 
-  // Extraire les données du rapport
-  const clientData = report.clientData || report.client || {};
-  const partData = report.partData || report.part || {};
-  const trialData = report.trialData || report.trial || {};
+  // Group photos by subcategory (view)
+  const photosByView = {};
+  validPhotos.forEach(photo => {
+    const view = photo.subcategory || 'other';
+    if (!photosByView[view]) {
+      photosByView[view] = [];
+    }
+    photosByView[view].push(photo);
+  });
+
+  /**
+   * Calcule le layout intelligent pour une page de photos
+   * Optimise l'utilisation de l'espace disponible
+   */
+  const calculatePageLayout = (views) => {
+    const layouts = [];
+    const pageHeight = 700; // Hauteur disponible approximative
+    let currentPage = { views: [], usedHeight: 0 };
+
+    Object.entries(views).forEach(([viewName, photos]) => {
+      const photoCount = photos.length;
+      
+      // Calculer la hauteur nécessaire pour cette vue
+      let viewHeight = 80; // Header + marges
+      
+      if (photoCount === 1) {
+        // 1 photo : pleine largeur mais hauteur réduite
+        viewHeight += 220; // 200px photo + 20px label
+      } else if (photoCount === 2) {
+        // 2 photos : côte à côte
+        viewHeight += 200; // 176px photo + labels
+      } else if (photoCount <= 4) {
+        // 3-4 photos : 2 lignes de 2
+        viewHeight += 360; // 2 lignes
+      } else if (photoCount <= 6) {
+        // 5-6 photos : 3 lignes de 2
+        viewHeight += 540; // 3 lignes
+      } else {
+        // Plus de 6 photos : nouvelle page dédiée
+        viewHeight = pageHeight + 1; // Force nouvelle page
+      }
+
+      // Vérifier si on peut ajouter cette vue sur la page actuelle
+      if (currentPage.usedHeight + viewHeight <= pageHeight && currentPage.views.length < 3) {
+        currentPage.views.push({ viewName, photos, height: viewHeight });
+        currentPage.usedHeight += viewHeight;
+      } else {
+        // Sauvegarder la page actuelle et en créer une nouvelle
+        if (currentPage.views.length > 0) {
+          layouts.push(currentPage);
+        }
+        currentPage = {
+          views: [{ viewName, photos, height: viewHeight }],
+          usedHeight: viewHeight
+        };
+      }
+    });
+
+    // Ajouter la dernière page
+    if (currentPage.views.length > 0) {
+      layouts.push(currentPage);
+    }
+
+    return layouts;
+  };
+
+  const pageLayouts = calculatePageLayout(photosByView);
 
   return (
     <>
+      {/* Section Title - Once at the top */}
+      <Text style={styles.sectionTitle}>PART IDENTIFICATION</Text>
+
+      {/* Part Identification */}
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>IDENTIFICATION DE LA PIÈCE</Text>
-
-        {/* Informations Client */}
-        <Text style={styles.subsectionTitle}>Informations Client</Text>
-        <View style={styles.infoGrid}>
-          <View style={styles.infoColumn}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Client :</Text>
-              <Text style={styles.value}>{clientData.name || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Pays :</Text>
-              <Text style={styles.value}>{clientData.country || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Contact :</Text>
-              <Text style={styles.value}>{clientData.contact || 'Non spécifié'}</Text>
-            </View>
-          </View>
-          <View style={styles.infoColumn}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Adresse :</Text>
-              <Text style={styles.value}>{clientData.address || 'Non spécifiée'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Email :</Text>
-              <Text style={styles.value}>{clientData.email || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Téléphone :</Text>
-              <Text style={styles.value}>{clientData.phone || 'Non spécifié'}</Text>
-            </View>
-          </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Client Designation:</Text>
+          <Text style={styles.value}>{partData.client_designation || 'Not specified'}</Text>
         </View>
-
-        {/* Informations Pièce */}
-        <Text style={styles.subsectionTitle}>Spécifications de la Pièce</Text>
-        <View style={styles.infoGrid}>
-          <View style={styles.infoColumn}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Désignation :</Text>
-              <Text style={styles.value}>{partData.designation || 'Non spécifiée'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Désignation client :</Text>
-              <Text style={styles.value}>{partData.client_designation || 'Non spécifiée'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Référence :</Text>
-              <Text style={styles.value}>{partData.reference || 'Non spécifiée'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Quantité :</Text>
-              <Text style={styles.value}>{partData.quantity || 'Non spécifiée'}</Text>
-            </View>
-          </View>
-          <View style={styles.infoColumn}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Acier :</Text>
-              <Text style={styles.value}>{partData.steel?.name || partData.steelName || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Dimensions :</Text>
-              <Text style={[styles.value, styles.dimensionText]}>{formatDimensions(partData)}</Text>
-            </View>
-          </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Reference:</Text>
+          <Text style={styles.value}>{partData.reference || 'Not specified'}</Text>
         </View>
-
-        {/* Informations Essai */}
-        <Text style={styles.subsectionTitle}>Informations d'Essai</Text>
-        <View style={styles.infoGrid}>
-          <View style={styles.infoColumn}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Code d'essai :</Text>
-              <Text style={styles.value}>{trialData.test_code || report.testCode || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Date création :</Text>
-              <Text style={styles.value}>
-                {trialData.created_at ? new Date(trialData.created_at).toLocaleDateString('fr-FR') : 'Non spécifiée'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.infoColumn}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Statut :</Text>
-              <Text style={styles.value}>{trialData.status || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Remarques :</Text>
-              <Text style={styles.value}>{trialData.comments || 'Aucune'}</Text>
-            </View>
-          </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Quantity:</Text>
+          <Text style={styles.value}>{partData.quantity || 'Not specified'}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Steel Grade:</Text>
+          <Text style={styles.value}>{steelGrade}</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Dimensions:</Text>
+          <Text style={styles.value}>{formatDimensions(partData)}</Text>
         </View>
       </View>
 
-      {/* Photos d'identification avec pagination intelligente */}
-      {photoPages.length > 0 && photoPages.map((pagePhotos, pageIndex) => {
-        const layout = calculatePhotoLayout(pagePhotos.length, 'identification');
-        
-        return (
-          <View key={`photo-page-${pageIndex}`} style={[styles.section, pageIndex > 0 && styles.pageBreak]} wrap={false}>
-            <Text style={styles.subsectionTitle}>
-              Photos d'identification {photoPages.length > 1 ? `(Page ${pageIndex + 1}/${photoPages.length})` : ''}
-            </Text>
-            
-            <View style={styles.photoGrid}>
-              {pagePhotos.map((photo, index) => (
-                <View key={photo.id || photo.url || index} style={[
-                  styles.photoContainer,
-                  { width: `${100 / layout.cols}%` }
-                ]}>
-                  <Image 
-                    src={getPhotoUrl(photo)} 
-                    style={[
-                      styles.photo,
-                      { 
-                        width: layout.photoWidth, 
-                        height: layout.photoHeight 
-                      }
-                    ]}
-                  />
-                  {(photo.original_name || photo.name) && (
-                    <Text style={styles.photoLabel}>
-                      {photo.original_name || photo.name}
+      {/* Specifications */}
+      {(hardnessSpecs.length > 0 || ecdSpecs.length > 0) && (
+        <View style={styles.section} wrap={false}>
+          {/* Hardness Specifications */}
+          {hardnessSpecs.length > 0 && (
+            <>
+              <Text style={styles.subsectionTitle}>Hardness Specifications</Text>
+              <View style={styles.specGrid}>
+                {hardnessSpecs.map((spec, index) => (
+                  <View key={`hardness-${index}`} style={styles.specRow}>
+                    <Text style={styles.specLabel}>
+                      {spec.name || `Spec ${index + 1}`}:
                     </Text>
-                  )}
-                  <Text style={[styles.photoLabel, { fontSize: 7, color: '#999' }]}>
-                    Photo {pageIndex * photosPerPage + index + 1}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        );
-      })}
+                    <Text style={styles.specValue}>
+                      {spec.min && spec.max 
+                        ? `${spec.min} - ${spec.max} ${spec.unit || ''}`
+                        : spec.min 
+                          ? `Min: ${spec.min} ${spec.unit || ''}`
+                          : spec.max 
+                            ? `Max: ${spec.max} ${spec.unit || ''}`
+                            : 'Not specified'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
 
-      {/* Message si aucune photo */}
-      {validPhotos.length === 0 && (
+          {/* ECD Specifications */}
+          {ecdSpecs.length > 0 && (
+            <>
+              <Text style={styles.subsectionTitle}>ECD Specifications</Text>
+              <View style={styles.specGrid}>
+                {ecdSpecs.map((spec, index) => (
+                  <View key={`ecd-${index}`} style={styles.specRow}>
+                    <Text style={styles.specLabel}>
+                      {spec.name || `ECD ${index + 1}`}:
+                    </Text>
+                    <Text style={styles.specValue}>
+                      Depth: {spec.depthMin && spec.depthMax 
+                        ? `${spec.depthMin} - ${spec.depthMax} ${spec.depthUnit || 'mm'}`
+                        : spec.depthMin 
+                          ? `Min: ${spec.depthMin} ${spec.depthUnit || 'mm'}`
+                          : spec.depthMax 
+                            ? `Max: ${spec.depthMax} ${spec.depthUnit || 'mm'}`
+                            : 'Not specified'}
+                      {spec.hardness && ` | Hardness: ${spec.hardness} ${spec.hardnessUnit || ''}`}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* Photos organized by view with intelligent layout */}
+      {pageLayouts.length > 0 ? (
+        pageLayouts.map((page, pageIndex) => (
+          <View 
+            key={`photo-page-${pageIndex}`} 
+            style={[styles.section, pageIndex > 0 && styles.pageBreak]} 
+            wrap={false}
+          >
+            {pageIndex > 0 && <Text style={styles.sectionTitle}>PART IDENTIFICATION</Text>}
+            
+            {page.views.map((viewData, viewIndex) => {
+              const { viewName, photos } = viewData;
+              const photoCount = photos.length;
+
+              return (
+                <View key={`view-${viewName}-${viewIndex}`} style={{ marginBottom: 15 }}>
+                  <Text style={styles.subsectionTitle}>
+                    {viewName.charAt(0).toUpperCase() + viewName.slice(1)} View
+                  </Text>
+                  
+                  {/* Layout adaptatif selon le nombre de photos */}
+                  {photoCount === 1 ? (
+                    // 1 photo : pleine largeur, hauteur réduite
+                    <View style={styles.photoContainerSingle}>
+                      <Image 
+                        src={getPhotoUrl(photos[0])} 
+                        style={[styles.photo, styles.photoFullWidth]}
+                      />
+                      {(photos[0].original_name || photos[0].name) && (
+                        <Text style={styles.photoLabel}>
+                          {photos[0].original_name || photos[0].name}
+                        </Text>
+                      )}
+                    </View>
+                  ) : photoCount === 2 ? (
+                    // 2 photos : côte à côte
+                    <View style={styles.photoRow}>
+                      {photos.map((photo, idx) => (
+                        <View key={photo.id || idx} style={styles.photoContainerHalf}>
+                          <Image 
+                            src={getPhotoUrl(photo)} 
+                            style={[styles.photo, styles.photoHalfWidth]}
+                          />
+                          {(photo.original_name || photo.name) && (
+                            <Text style={styles.photoLabel}>
+                              {photo.original_name || photo.name}
+                            </Text>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    // 3+ photos : grille 2 colonnes
+                    <View style={styles.photoGrid}>
+                      {photos.slice(0, 6).map((photo, idx) => (
+                        <View key={photo.id || idx} style={styles.photoContainerHalf}>
+                          <Image 
+                            src={getPhotoUrl(photo)} 
+                            style={[styles.photo, styles.photoSmall]}
+                          />
+                          {(photo.original_name || photo.name) && (
+                            <Text style={styles.photoLabel}>
+                              {photo.original_name || photo.name}
+                            </Text>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ))
+      ) : (
         <View style={styles.section}>
-          <Text style={styles.subsectionTitle}>Photos d'identification</Text>
-          <Text style={styles.emptyState}>
-            Aucune photo d'identification disponible pour cette pièce.
+          <Text style={styles.subsectionTitle}>Photos</Text>
+          <Text style={{ fontSize: 9, fontStyle: 'italic', color: '#999', marginTop: 8 }}>
+            No identification photos available for this part.
           </Text>
         </View>
       )}

@@ -326,7 +326,7 @@ const SectionPhotoManager = ({
           if (process.env.NODE_ENV === 'development') {
             
           }
-          return;
+          return [];
         }
         
         const batch = promises.slice(i, i + batchSize);
@@ -347,7 +347,7 @@ const SectionPhotoManager = ({
         if (process.env.NODE_ENV === 'development') {
           
         }
-        return;
+        return [];
       }
       throw error;
     }
@@ -527,16 +527,30 @@ const SectionPhotoManager = ({
                 organizedPhotos[groupKey][subgroupKey] = [];
               }
               
-              const enrichedFiles = files.map(file => ({
-                ...file,
-                sourceCategory: source.category,
-                sourceSubcategory: source.subcategory,
-                sourceLabel: source.label,
-                sourceDescription: source.description,
-                groupLabel: source.group || source.label,
-                subgroupLabel: source.subgroup || source.subcategory,
-                viewPath: fileService.getFilePreviewUrl(file.id)
-              }));
+              const enrichedFiles = files.map(file => {
+                // Construire l'URL absolue pour l'affichage
+                const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+                let absoluteUrl = file.viewPath;
+                
+                // Si viewPath est relatif, le rendre absolu
+                if (absoluteUrl && absoluteUrl.startsWith('/api/')) {
+                  absoluteUrl = API_BASE.replace('/api', '') + absoluteUrl;
+                } else if (!absoluteUrl) {
+                  absoluteUrl = `${API_BASE}/files/${file.id}`;
+                }
+                
+                return {
+                  ...file,
+                  sourceCategory: source.category,
+                  sourceSubcategory: source.subcategory,
+                  sourceLabel: source.label,
+                  sourceDescription: source.description,
+                  groupLabel: source.group || source.label,
+                  subgroupLabel: source.subgroup || source.subcategory,
+                  viewPath: absoluteUrl,
+                  url: absoluteUrl // Ajouter aussi 'url' pour compatibilité PDF
+                };
+              });
               
               organizedPhotos[groupKey][subgroupKey].push(...enrichedFiles);
             }
@@ -608,6 +622,9 @@ const SectionPhotoManager = ({
               category: photo.category || photo.sourceCategory || groupKey,
               subcategory: photo.subcategory || photo.sourceSubcategory || subgroupKey,
               viewPath: photo.viewPath,
+              url: photo.url || photo.viewPath, // URL absolue pour le PDF
+              original_name: photo.original_name || photo.name,
+              description: photo.description,
               sectionOrder: photoSectionOrder, // Numérotation indépendante pour cette section
               globalOrder: orderToUse[photo.id] || photoSectionOrder, // Ordre global de sélection
               // Ajouter d'autres métadonnées si nécessaires

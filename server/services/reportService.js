@@ -175,7 +175,8 @@ const FILE_SOURCES_CONFIG = {
     { category: 'load_design', subcategory: 'load_design' }
   ],
   identification: (partId) => [
-    { category: 'photos_identification', subcategory: 'photos_identification' }
+    // Récupérer TOUS les fichiers de la pièce, on filtrera pour ne garder que les images
+    { category: null, subcategory: null }
   ],
   recipe: (testId) => [
     { category: 'photos_recette', subcategory: 'photos_recette' }
@@ -214,10 +215,27 @@ const getAllSectionFiles = async (testId, partId, selectedSections) => {
         source.category, 
         source.subcategory
       );
-      allFiles.push(...files);
+      
+      // Pour l'identification, on ne veut que les images
+      if (sectionName === 'identification') {
+        const images = files.filter(f => f.mimeType && f.mimeType.startsWith('image/'));
+        allFiles.push(...images);
+      } else {
+        allFiles.push(...files);
+      }
     }
     
-    sectionFiles[sectionName] = allFiles;
+    // Déduplication par ID (au cas où plusieurs sources se chevauchent)
+    const uniqueFiles = Array.from(new Map(allFiles.map(item => [item.id, item])).values());
+    
+    logger.info(`📁 Section ${sectionName}: ${uniqueFiles.length} fichiers trouvés`, {
+      section: sectionName,
+      nodeId,
+      fileIds: uniqueFiles.map(f => f.id),
+      samplePaths: uniqueFiles.slice(0, 3).map(f => f.viewPath)
+    });
+    
+    sectionFiles[sectionName] = uniqueFiles;
   }
   
   return sectionFiles;

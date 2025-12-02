@@ -244,8 +244,11 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                       trialNodeId={trialId}
                       partNodeId={partId}
                       sectionType={section.type}
-                      onChange={(sectionType, photos) => setSectionPhotos(sectionType, photos)}
-                      initialSelectedPhotos={selectedPhotos[section.type] || []}
+                      onChange={(sectionType, photos) => {
+                        console.log(`📸 ReportConfiguration - Photos sélectionnées pour ${sectionType}:`, photos);
+                        setSectionPhotos(sectionType, photos);
+                      }}
+                      initialSelectedPhotos={selectedPhotos}
                       show={section.isEnabled}
                     />
                   </div>

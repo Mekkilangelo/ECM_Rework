@@ -152,12 +152,9 @@ export const useReport = (trialId, partId) => {
    * Génère un aperçu du PDF
    */
   const generatePreview = useCallback(async () => {
-    let currentReport = report;
-    
-    if (!currentReport) {
-      currentReport = await configure();
-      if (!currentReport) return null;
-    }
+    // Toujours reconfigurer avec les sections actuelles pour refléter les changements
+    const currentReport = await configure();
+    if (!currentReport) return null;
 
     setLoading(true);
     setError(null);
@@ -183,18 +180,15 @@ export const useReport = (trialId, partId) => {
       setLoading(false);
       setProgress(null);
     }
-  }, [report, configure, createPDFGenerator]);
+  }, [configure, createPDFGenerator]);
 
   /**
    * Exporte le rapport en PDF
    */
   const exportPDF = useCallback(async (options = {}) => {
-    let currentReport = report;
-    
-    if (!currentReport) {
-      currentReport = await configure();
-      if (!currentReport) return null;
-    }
+    // Toujours reconfigurer avec les sections actuelles pour refléter les changements
+    const currentReport = await configure();
+    if (!currentReport) return null;
 
     setLoading(true);
     setError(null);
@@ -221,7 +215,7 @@ export const useReport = (trialId, partId) => {
       setLoading(false);
       setProgress(null);
     }
-  }, [report, configure, createPDFGenerator]);
+  }, [configure, createPDFGenerator]);
 
   /**
    * Estime la taille du PDF

@@ -248,6 +248,8 @@ export const Table = ({ headers, rows }) => (
   </View>
 );
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
 /**
  * Helper pour normaliser les photos organisées vers un format simple
  */
@@ -256,7 +258,39 @@ const normalizePhotosForSection = (photos, sectionType) => {
   
   // Si c'est déjà un tableau, le retourner tel quel
   if (Array.isArray(photos)) {
-    return photos;
+    return photos.map(photo => {
+      // Construire l'URL si elle n'existe pas
+      let photoUrl = photo.url || photo.viewPath;
+      
+      if (photoUrl && photoUrl.startsWith('/')) {
+         // Si chemin relatif, ajouter l'URL de l'API (sans /api si déjà inclus ou ajuster)
+         // API_URL est souvent http://localhost:5001/api
+         // photoUrl est /api/files/123
+         // On veut http://localhost:5001/api/files/123
+         
+         // Si API_URL finit par /api et photoUrl commence par /api, on a un doublon
+         const baseUrl = API_URL.endsWith('/api') && photoUrl.startsWith('/api') 
+           ? API_URL.slice(0, -4) 
+           : API_URL;
+           
+         // Si baseUrl finit par / et photoUrl commence par /, enlever un /
+         if (baseUrl.endsWith('/') && photoUrl.startsWith('/')) {
+            photoUrl = `${baseUrl.slice(0, -1)}${photoUrl}`;
+         } else if (!baseUrl.endsWith('/') && !photoUrl.startsWith('/')) {
+            photoUrl = `${baseUrl}/${photoUrl}`;
+         } else {
+            photoUrl = `${baseUrl}${photoUrl}`;
+         }
+      } else if (!photoUrl && photo.id) {
+         photoUrl = `${API_URL}/files/${photo.id}`;
+      }
+
+      return {
+        ...photo,
+        url: photoUrl,
+        original_name: photo.name || photo.original_name,
+      };
+    });
   }
   
   // Si c'est un objet organisé, l'aplatir en tableau
@@ -269,12 +303,30 @@ const normalizePhotosForSection = (photos, sectionType) => {
       if (Array.isArray(categoryPhotos)) {
         // Ajouter les métadonnées de catégorie si elles n'existent pas
         categoryPhotos.forEach(photo => {
+          // Construire l'URL si elle n'existe pas
+          let photoUrl = photo.url || photo.viewPath;
+          
+          if (photoUrl && photoUrl.startsWith('/')) {
+             const baseUrl = API_URL.endsWith('/api') && photoUrl.startsWith('/api') 
+               ? API_URL.slice(0, -4) 
+               : API_URL;
+               
+             if (baseUrl.endsWith('/') && photoUrl.startsWith('/')) {
+                photoUrl = `${baseUrl.slice(0, -1)}${photoUrl}`;
+             } else if (!baseUrl.endsWith('/') && !photoUrl.startsWith('/')) {
+                photoUrl = `${baseUrl}/${photoUrl}`;
+             } else {
+                photoUrl = `${baseUrl}${photoUrl}`;
+             }
+          } else if (!photoUrl && photo.id) {
+             photoUrl = `${API_URL}/files/${photo.id}`;
+          }
+
           flatPhotos.push({
             ...photo,
             category: photo.category || categoryKey,
             subcategory: photo.subcategory || categoryKey,
-            // Construire l'URL si elle n'existe pas
-            url: photo.url || photo.viewPath || (photo.id ? `http://localhost:5001/api/files/${photo.id}/preview` : ''),
+            url: photoUrl,
             original_name: photo.name || photo.original_name,
           });
         });
@@ -391,8 +443,9 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           )}
           {(() => {
             try {
-
+              // UNIQUEMENT utiliser les photos sélectionnées manuellement
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.identification, 'identification');
+              console.log('🔍 PDF Identification - Photos normalisées:', normalizedPhotos.map(p => ({ id: p.id, url: p.url })));
               return (
                 <IdentificationSectionPDF 
                   report={report}

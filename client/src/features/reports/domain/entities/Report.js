@@ -47,6 +47,25 @@ export class Report {
     this.furnaceData = trialData?.furnace_data || null;
     this.resultsData = trialData?.results_data || null;
     this.loadData = trialData?.load_data || null;
+    
+    // Compiler les photos de toutes les sections pour faciliter l'accès
+    this.selectedPhotos = this._compileSelectedPhotos();
+  }
+
+  /**
+   * Compile les photos de toutes les sections dans un objet accessible
+   * @private
+   */
+  _compileSelectedPhotos() {
+    const photos = {};
+    
+    this.sections.forEach(section => {
+      if (section.photos && Object.keys(section.photos).length > 0) {
+        photos[section.type] = section.photos;
+      }
+    });
+    
+    return photos;
   }
 
   /**

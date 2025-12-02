@@ -167,6 +167,9 @@ export class ReportBuilder {
       // Ajouter les photos si disponibles
       if (selectedPhotos[sectionType]) {
         builder.setSectionPhotos(sectionType, selectedPhotos[sectionType]);
+      } else if (apiData.sectionFiles && apiData.sectionFiles[sectionType]) {
+        // Fallback aux fichiers retournés par l'API si aucune sélection manuelle
+        builder.setSectionPhotos(sectionType, apiData.sectionFiles[sectionType]);
       }
 
       // Ajouter les données spécifiques à la section

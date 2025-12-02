@@ -34,9 +34,9 @@ export class ReactPDFGenerator extends IPDFGenerator {
       const pdfOptions = options instanceof PDFOptions ? options : new PDFOptions(options);
 
       // Notifier le début
-      this._notifyProgress(pdfOptions, 'Initialisation', 0);
+      this._notifyProgress(pdfOptions, 'Génération du document', 0);
 
-      // Créer le document React-PDF
+      // Créer le document React-PDF (les images sont auto-redimensionnées par le serveur)
       const pdfDocument = this.documentRenderer(report, pdfOptions);
 
       this._notifyProgress(pdfOptions, 'Génération du PDF', 30);
@@ -85,6 +85,7 @@ export class ReactPDFGenerator extends IPDFGenerator {
 
       this._notifyProgress(pdfOptions, 'Création de l\'aperçu', 0);
 
+      // Les images sont auto-redimensionnées par le serveur
       const pdfDocument = this.documentRenderer(report, pdfOptions);
       
       if (!pdfDocument) {

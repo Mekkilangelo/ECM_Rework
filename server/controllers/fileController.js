@@ -4,6 +4,7 @@
  */
 
 const fs = require('fs');
+const sharp = require('sharp');
 const { fileService } = require('../services');
 const logger = require('../utils/logger');
 const apiResponse = require('../utils/apiResponse');
@@ -18,11 +19,11 @@ const { ValidationError } = require('../utils/errors');
  */
 const uploadFiles = async (req, res) => {
   try {
-  const { nodeId, category, subcategory } = req.body;
-  // Extraire les descriptions en objet (descriptions[0], descriptions[1], etc.)
-  const descriptions = req.body.descriptions || {};
-  const userId = req.user?.id;
-  
+    const { nodeId, category, subcategory, sampleNumber, resultIndex } = req.body;
+    // Extraire les descriptions en objet (descriptions[0], descriptions[1], etc.)
+    const descriptions = req.body.descriptions || {};
+    const userId = req.user?.id;
+    
     const files = req.files;
     
     if (!files || files.length === 0) {
@@ -33,6 +34,8 @@ const uploadFiles = async (req, res) => {
       nodeId, 
       category, 
       subcategory,
+      sampleNumber,
+      resultIndex,
       descriptionsCount: Object.keys(descriptions).length,
       fileCount: files.length 
     });
@@ -41,6 +44,8 @@ const uploadFiles = async (req, res) => {
       nodeId,
       category,
       subcategory,
+      sampleNumber, // Passer les métadonnées structurées
+      resultIndex,  // Passer les métadonnées structurées
       descriptions, // Tableau de descriptions indexées
       userId // ID utilisateur
     }, req);
@@ -109,19 +114,23 @@ const associateFiles = async (req, res) => {
 const getFilesByNode = async (req, res) => {
   try {
     const { nodeId } = req.params;
-    const { category, subcategory } = req.query;
+    const { category, subcategory, sampleNumber, resultIndex } = req.query;
     
     logger.info(`Récupération des fichiers par nœud`, { 
       nodeId, 
       category, 
-      subcategory 
+      subcategory,
+      sampleNumber,
+      resultIndex
     });
     
     // Déléguer au service
     const result = await fileService.getAllFilesByNode({
       nodeId,
       category,
-      subcategory
+      subcategory,
+      sampleNumber,
+      resultIndex
     });
     
     return apiResponse.success(res, { files: result.files }, 'Fichiers récupérés avec succès');
@@ -147,8 +156,39 @@ const getFileById = async (req, res) => {
     // Déléguer au service
     const fileData = await fileService.getFileById(fileId);
     
-    // Servir le fichier
+    // Pour toutes les images > 500KB, redimensionner automatiquement
+    const isImage = fileData.mime_type?.startsWith('image/');
+    const SIZE_LIMIT = 500 * 1024; // 500KB
+    
+    if (isImage && fileData.size > SIZE_LIMIT) {
+      try {
+        logger.info(`[AUTO-RESIZE] Image #${fileId}: ${(fileData.size / 1024).toFixed(2)} KB -> compression`);
+        
+        const buffer = await sharp(fileData.file_path)
+          .resize({ 
+            width: 1920, 
+            height: 1920, 
+            fit: 'inside', 
+            withoutEnlargement: true 
+          })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+        
+        logger.info(`[AUTO-RESIZE] Image #${fileId}: Nouvelle taille ${(buffer.length / 1024).toFixed(2)} KB (${((1 - buffer.length/fileData.size) * 100).toFixed(1)}% réduction)`);
+        
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Length', buffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        return res.send(buffer);
+      } catch (sharpError) {
+        logger.error(`[AUTO-RESIZE] Erreur image #${fileId}: ${sharpError.message}`);
+        // Fallback vers fichier original
+      }
+    }
+    
+    // Servir le fichier original (petites images ou non-images)
     res.setHeader('Content-Type', fileData.mime_type);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     fs.createReadStream(fileData.file_path).pipe(res);
     
   } catch (error) {
@@ -257,7 +297,7 @@ const getFileStats = async (req, res) => {
 const updateFile = async (req, res) => {
   try {
     const { fileId } = req.params;
-    const { newParentId, category, subcategory, name } = req.body;
+    const { newParentId, category, subcategory, name, description } = req.body;
     
     // Validation des données
     if (newParentId && !Number.isInteger(parseInt(newParentId))) {
@@ -268,7 +308,8 @@ const updateFile = async (req, res) => {
       newParentId, 
       category, 
       subcategory, 
-      name 
+      name,
+      description
     });
     
     // Déléguer au service
@@ -276,7 +317,8 @@ const updateFile = async (req, res) => {
       newParentId: newParentId ? parseInt(newParentId) : undefined,
       category,
       subcategory,
-      name
+      name,
+      description
     });
     
     return apiResponse.success(

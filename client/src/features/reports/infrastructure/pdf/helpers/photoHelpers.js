@@ -8,29 +8,30 @@
  * Gère les différents formats de photos (URL, file_path, ID)
  */
 export const getPhotoUrl = (photo) => {
-  if (!photo) return '';
-  
-  // URL directe
-  if (photo.url) return photo.url;
-  
-  // Chemin viewPath (prioritaire pour l'aperçu)
-  if (photo.viewPath) return photo.viewPath;
-  
-  // Chemin de fichier à convertir
-  if (photo.file_path) {
-    // Normaliser le chemin (remplacer \ par /)
-    const normalizedPath = photo.file_path.replace(/\\/g, '/');
-    // S'assurer que le chemin commence par /
-    const path = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-    return `http://localhost:5001${path}`;
+  if (!photo) {
+    console.warn('⚠️ getPhotoUrl: photo is null/undefined');
+    return '';
   }
   
-  // ID de photo à utiliser pour l'API preview
+  // URL directe (déjà absolue, construite par SectionPhotoManager)
+  if (photo.url) {
+    return photo.url;
+  }
+  
+  // Chemin viewPath (déjà absolu, construit par SectionPhotoManager)
+  if (photo.viewPath) {
+    return photo.viewPath;
+  }
+  
+  // Fallback : construire depuis l'ID
   if (photo.id || photo.node_id) {
-    return `http://localhost:5001/api/files/${photo.id || photo.node_id}/preview`;
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    const url = `${API_BASE}/files/${photo.id || photo.node_id}`;
+    console.log('⚙️ getPhotoUrl: Constructed from ID =', url, 'for photo:', photo);
+    return url;
   }
   
-
+  console.error('❌ getPhotoUrl: Impossible de construire l\'URL pour', photo);
   return '';
 };
 

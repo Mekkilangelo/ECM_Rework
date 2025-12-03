@@ -397,7 +397,7 @@
     "dateTo": "Date To",
     "dateToPlaceholder": "Select...",
     "clientName": "Client Name",
-    "clientNamePlaceholder": "Select a client...",
+    "clientNamePlaceholder": "Select one or more clients...",
     "clientCode": "Client Code",
     "clientCodePlaceholder": "Select a code...",
     "clientCountry": "Country",
@@ -415,11 +415,13 @@
     "partClientDesignation": "Client Designation",
     "partClientDesignationPlaceholder": "e.g: Gear-A",
     "steelGrade": "Grade",
-    "steelGradePlaceholder": "e.g: 16MnCr5",
+    "steelGradePlaceholder": "Select one or more grades...",
     "steelFamily": "Family",
     "steelFamilyPlaceholder": "Select...",
     "steelStandard": "Standard",
     "steelStandardPlaceholder": "Select...",
+    "includeEquivalents": "Include equivalents",
+    "includeEquivalentsHelp": "Also search by equivalent steels",
     "furnaceType": "Furnace Type",
     "furnaceTypePlaceholder": "Select...",
     "coolingMedia": "Cooling Media",
@@ -632,12 +634,14 @@
             "categories": {
               "heating": "Heating Curves",
               "cooling": "Cooling Curves",
+              "tempering": "Tempering Curves",
               "datapaq": "Datapaq Data",
               "alarms": "Alarms"
             },
             "descriptions": {
               "heating": "Temperature rise graphs",
               "cooling": "Cooling graphs",
+              "tempering": "Tempering treatment graphs",
               "datapaq": "Datapaq sensor readings",
               "alarms": "Alarm and event reports"
             }
@@ -962,6 +966,7 @@
         "title": "Furnace Report",
         "heating": "Heating Report",
         "cooling": "Quenching Report",
+        "tempering": "Tempering Report",
         "alarms": "Alarm Report",
         "datapaq": "DATAPAQ",
         "filesResponse": "Files retrieval response",

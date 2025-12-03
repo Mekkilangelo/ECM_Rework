@@ -14,35 +14,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create .env.dev from secrets (Windows)
-        uses: ./.github/actions/generate-env
-        with:
-          environment: 'development'
-          output-file: '.env.dev'
-          mysql-root-password: ${{ secrets.DEV_MYSQL_ROOT_PASSWORD }}
-          mysql-database: 'synergia'
-          db-host: 'database'
-          db-user: 'root'
-          db-password: ${{ secrets.DEV_DB_PASSWORD }}
-          db-sync-alter: 'true'
-          jwt-secret: ${{ secrets.DEV_JWT_SECRET }}
-          jwt-expire: '24h'
-          jwt-inactivity-expire: '10m'
-          client-url: 'http://localhost:3000'
-          api-url: 'http://localhost:5001/api'
-          react-app-api-url: 'http://localhost:5001/api'
-
-      - name: Add development-specific variables
+      - name: Create .env.dev
         shell: powershell
         run: |
-          Write-Host "Adding development-specific variables..."
           @"
+          NODE_ENV=development
+          MYSQL_ROOT_PASSWORD=${{ secrets.DEV_MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=synergia
+          DB_HOST=database
+          DB_USER=root
+          DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
+          DB_SYNC_ALTER=true
+          JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}
+          JWT_EXPIRE=24h
+          JWT_INACTIVITY_EXPIRE=10m
+          CLIENT_URL=http://localhost:3000
+          API_URL=http://localhost:5001/api
+          REACT_APP_API_URL=http://localhost:5001/api
           TAG=dev
           DB_PORT=3306
           SERVER_PORT=5001
           CLIENT_PORT=3000
-          "@ | Out-File -FilePath ".env.dev" -Append -Encoding UTF8
-          Write-Host ".env.dev configured successfully"
+          "@ | Out-File -FilePath ".env.dev" -Encoding UTF8
 
       - name: Clean up any existing containers (Windows)
         shell: powershell

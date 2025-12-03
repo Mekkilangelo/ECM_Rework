@@ -33,7 +33,11 @@ const trialSearchService = {
       if (filters.trialDateTo) queryParams.append('trialDateTo', filters.trialDateTo);
 
       // Filtres sur le client
-      if (filters.clientName) queryParams.append('clientName', filters.clientName);
+      if (filters.clientNames && Array.isArray(filters.clientNames) && filters.clientNames.length > 0) {
+        filters.clientNames.forEach(name => queryParams.append('clientNames[]', name));
+      } else if (filters.clientName) {
+        queryParams.append('clientName', filters.clientName);
+      }
       if (filters.clientCode) queryParams.append('clientCode', filters.clientCode);
       if (filters.clientCountry) queryParams.append('clientCountry', filters.clientCountry);
       if (filters.clientCity) queryParams.append('clientCity', filters.clientCity);
@@ -46,9 +50,14 @@ const trialSearchService = {
       if (filters.partClientDesignation) queryParams.append('partClientDesignation', filters.partClientDesignation);
 
       // Filtres sur l'acier
-      if (filters.steelGrade) queryParams.append('steelGrade', filters.steelGrade);
+      if (filters.steelGrades && Array.isArray(filters.steelGrades) && filters.steelGrades.length > 0) {
+        filters.steelGrades.forEach(grade => queryParams.append('steelGrades[]', grade));
+      } else if (filters.steelGrade) {
+        queryParams.append('steelGrade', filters.steelGrade);
+      }
       if (filters.steelFamily) queryParams.append('steelFamily', filters.steelFamily);
       if (filters.steelStandard) queryParams.append('steelStandard', filters.steelStandard);
+      if (filters.includeEquivalents) queryParams.append('includeEquivalents', 'true');
 
       // Filtres sur le four
       if (filters.furnaceType) queryParams.append('furnaceType', filters.furnaceType);

@@ -52,6 +52,7 @@ exports.searchTrials = async (req, res) => {
       
       // Filtres sur le client (via la hiérarchie des nodes)
       clientName,
+      clientNames, // NOUVEAU: support multi-sélection
       clientCountry,
       clientCity,
       clientGroup,
@@ -63,8 +64,10 @@ exports.searchTrials = async (req, res) => {
       
       // Filtres sur l'acier (via la pièce)
       steelGrade,
+      steelGrades, // NOUVEAU: support multi-sélection
       steelFamily,
       steelStandard,
+      includeEquivalents, // NOUVEAU: inclure les équivalents
       
       // Filtres sur le four
       furnaceType,
@@ -142,12 +145,19 @@ exports.searchTrials = async (req, res) => {
     const sqlReplacements = { nodeType: 'trial' };
 
     // Construire les sous-requêtes pour les filtres hiérarchiques
-    if (clientName || clientCountry || clientCity || clientGroup) {
+    // Support des filtres multiples pour clientNames (OR inclusif)
+    const clientNamesArray = Array.isArray(clientNames) ? clientNames : (clientNames ? [clientNames] : (clientName ? [clientName] : []));
+    
+    if (clientNamesArray.length > 0 || clientCountry || clientCity || clientGroup) {
       const clientConditions = [];
       
-      if (clientName) {
-        clientConditions.push('client_nodes.name LIKE :clientName');
-        sqlReplacements.clientName = `%${clientName}%`;
+      if (clientNamesArray.length > 0) {
+        const nameConditions = clientNamesArray.map((name, idx) => {
+          const paramName = `clientName${idx}`;
+          sqlReplacements[paramName] = `%${name}%`;
+          return `client_nodes.name LIKE :${paramName}`;
+        });
+        clientConditions.push(`(${nameConditions.join(' OR ')})`);
       }
       if (clientCountry) {
         clientConditions.push('clients.country LIKE :clientCountry');
@@ -173,7 +183,11 @@ exports.searchTrials = async (req, res) => {
     }
 
     // Filtres sur les pièces via la hiérarchie
-    if (partDesignation || partReference || partClientDesignation || steelGrade || steelFamily || steelStandard) {
+    // Support des filtres multiples pour steelGrades (OR inclusif) + équivalences
+    const steelGradesArray = Array.isArray(steelGrades) ? steelGrades : (steelGrades ? [steelGrades] : (steelGrade ? [steelGrade] : []));
+    const useEquivalents = includeEquivalents === 'true' || includeEquivalents === true;
+    
+    if (partDesignation || partReference || partClientDesignation || steelGradesArray.length > 0 || steelFamily || steelStandard) {
       const partConditions = [];
       
       if (partDesignation) {
@@ -189,16 +203,57 @@ exports.searchTrials = async (req, res) => {
         sqlReplacements.partClientDesignation = `%${partClientDesignation}%`;
       }
 
-      // Filtres sur l'acier
-      const steelJoin = (steelGrade || steelFamily || steelStandard) ? `
+      // Filtres sur l'acier avec gestion des équivalences
+      const steelJoin = (steelGradesArray.length > 0 || steelFamily || steelStandard) ? `
         JOIN nodes steel_nodes ON parts.steel_node_id = steel_nodes.id
         JOIN steels ON steel_nodes.id = steels.node_id
       ` : '';
 
-      if (steelGrade) {
-        partConditions.push('steels.grade LIKE :steelGrade');
-        sqlReplacements.steelGrade = `%${steelGrade}%`;
+      if (steelGradesArray.length > 0) {
+        if (useEquivalents) {
+          // Recherche avec équivalents : utiliser LIKE pour chaque grade
+          const gradeConditions = steelGradesArray.map((grade, idx) => {
+            const paramName = `steelGrade${idx}`;
+            sqlReplacements[paramName] = `%${grade}%`;
+            return `steels.grade LIKE :${paramName}`;
+          });
+          
+          const gradeEquivConditions = steelGradesArray.map((grade, idx) => {
+            const paramName = `steelGrade${idx}`;
+            return `base_steel.grade LIKE :${paramName}`;
+          });
+          
+          const gradeEquivConditions2 = steelGradesArray.map((grade, idx) => {
+            const paramName = `steelGrade${idx}`;
+            return `equiv_steel.grade LIKE :${paramName}`;
+          });
+          
+          partConditions.push(`(
+            (${gradeConditions.join(' OR ')})
+            OR EXISTS (
+              SELECT 1 FROM steel_equivalents se
+              JOIN steels base_steel ON se.steel_node_id = base_steel.node_id
+              WHERE se.equivalent_steel_node_id = steels.node_id
+              AND (${gradeEquivConditions.join(' OR ')})
+            )
+            OR EXISTS (
+              SELECT 1 FROM steel_equivalents se
+              JOIN steels equiv_steel ON se.equivalent_steel_node_id = equiv_steel.node_id
+              WHERE se.steel_node_id = steels.node_id
+              AND (${gradeEquivConditions2.join(' OR ')})
+            )
+          )`);
+        } else {
+          // Recherche simple sans équivalents (OR inclusif)
+          const gradeConditions = steelGradesArray.map((grade, idx) => {
+            const paramName = `steelGrade${idx}`;
+            sqlReplacements[paramName] = `%${grade}%`;
+            return `steels.grade LIKE :${paramName}`;
+          });
+          partConditions.push(`(${gradeConditions.join(' OR ')})`);
+        }
       }
+      
       if (steelFamily) {
         partConditions.push('steels.family LIKE :steelFamily');
         sqlReplacements.steelFamily = `%${steelFamily}%`;
@@ -221,6 +276,25 @@ exports.searchTrials = async (req, res) => {
 
     // Ajouter les conditions de recherche textuelle
     if (query) {
+      // Construire les conditions pour la recherche sur les nuances d'acier
+      const querySteelConditions = useEquivalents 
+        ? `(
+            steels.grade LIKE :query
+            OR EXISTS (
+              SELECT 1 FROM steel_equivalents se
+              JOIN steels base_steel ON se.steel_node_id = base_steel.node_id
+              WHERE se.equivalent_steel_node_id = steels.node_id
+              AND base_steel.grade LIKE :query
+            )
+            OR EXISTS (
+              SELECT 1 FROM steel_equivalents se
+              JOIN steels equiv_steel ON se.equivalent_steel_node_id = equiv_steel.node_id
+              WHERE se.steel_node_id = steels.node_id
+              AND equiv_steel.grade LIKE :query
+            )
+          )`
+        : 'steels.grade LIKE :query';
+      
       sqlWhere += ` AND (
         trials.load_number LIKE :query OR
         EXISTS (
@@ -235,7 +309,7 @@ exports.searchTrials = async (req, res) => {
           JOIN parts ON part_nodes.id = parts.node_id
           JOIN nodes steel_nodes ON parts.steel_node_id = steel_nodes.id
           JOIN steels ON steel_nodes.id = steels.node_id
-          WHERE c2.descendant_id = nodes.id AND steels.grade LIKE :query
+          WHERE c2.descendant_id = nodes.id AND ${querySteelConditions}
         )
       )`;
       sqlReplacements.query = `%${query}%`;

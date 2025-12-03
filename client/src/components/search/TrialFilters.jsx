@@ -54,14 +54,19 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
   const countActiveFilters = (category) => {
     const categoryFilters = {
       trial: ['loadNumber', 'status', 'location', 'mountingType', 'positionType', 'processType', 'trialDateFrom', 'trialDateTo'],
-      client: ['clientName', 'clientCountry', 'clientCity', 'clientGroup'],
+      client: ['clientNames', 'clientCountry', 'clientCity', 'clientGroup'],
       part: ['partDesignation', 'partReference', 'partClientDesignation'],
-      steel: ['steelGrade', 'steelFamily', 'steelStandard'],
+      steel: ['steelGrades', 'steelFamily', 'steelStandard', 'includeEquivalents'],
       furnace: ['furnaceType', 'furnaceSize', 'heatingCell', 'coolingMedia', 'quenchCell'],
       recipe: ['recipeNumber']
     };
 
-    return categoryFilters[category]?.filter(key => localFilters[key] && localFilters[key] !== '').length || 0;
+    return categoryFilters[category]?.filter(key => {
+      const value = localFilters[key];
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === 'boolean') return value;
+      return value && value !== '';
+    }).length || 0;
   };
 
   // Créer les options pour react-select
@@ -272,10 +277,11 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.clientName', 'Nom Client')}</Form.Label>
                   <Select
+                    isMulti
                     options={createOptions(safeFilterOptions.clientNames)}
-                    value={localFilters.clientName ? { value: localFilters.clientName, label: localFilters.clientName } : null}
-                    onChange={(option) => handleChange('clientName', option?.value || '')}
-                    placeholder={t('trialFilters.clientNamePlaceholder', 'Sélectionner un client...')}
+                    value={Array.isArray(localFilters.clientNames) ? localFilters.clientNames.map(v => ({ value: v, label: v })) : []}
+                    onChange={(options) => handleChange('clientNames', options ? options.map(o => o.value) : [])}
+                    placeholder={t('trialFilters.clientNamePlaceholder', 'Sélectionner un ou plusieurs clients...')}
                     isClearable
                     isSearchable
                     styles={customSelectStyles}
@@ -408,14 +414,15 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
           </Accordion.Header>
           <Accordion.Body>
             <Row>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.steelGrade', 'Nuance')}</Form.Label>
                   <Select
+                    isMulti
                     options={createOptions(safeFilterOptions.steelGrades)}
-                    value={localFilters.steelGrade ? { value: localFilters.steelGrade, label: localFilters.steelGrade } : null}
-                    onChange={(option) => handleChange('steelGrade', option?.value || '')}
-                    placeholder={t('trialFilters.steelGradePlaceholder', 'Sélectionner...')}
+                    value={Array.isArray(localFilters.steelGrades) ? localFilters.steelGrades.map(v => ({ value: v, label: v })) : []}
+                    onChange={(options) => handleChange('steelGrades', options ? options.map(o => o.value) : [])}
+                    placeholder={t('trialFilters.steelGradePlaceholder', 'Sélectionner une ou plusieurs nuances...')}
                     isClearable
                     isSearchable
                     styles={customSelectStyles}
@@ -423,6 +430,23 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     menuPosition="fixed"
                     noOptionsMessage={() => t('trialFilters.noOptions', 'Aucune option')}
                   />
+                </Form.Group>
+              </Col>
+              
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="small font-weight-bold">&nbsp;</Form.Label>
+                  <Form.Check
+                    type="switch"
+                    id="includeEquivalents"
+                    label={t('trialFilters.includeEquivalents', 'Inclure les équivalents')}
+                    checked={localFilters.includeEquivalents || false}
+                    onChange={(e) => handleChange('includeEquivalents', e.target.checked)}
+                    className="mt-2"
+                  />
+                  <Form.Text className="text-muted small">
+                    {t('trialFilters.includeEquivalentsHelp', 'Rechercher aussi par les aciers équivalents')}
+                  </Form.Text>
                 </Form.Group>
               </Col>
 

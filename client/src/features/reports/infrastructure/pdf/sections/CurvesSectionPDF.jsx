@@ -96,15 +96,16 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Organise les photos par catégorie (heating, cooling, alarms, datapaq, other)
+ * Organise les photos par catégorie (heating, cooling, tempering, alarms, datapaq, other)
  */
 const organizePhotosByCategory = (photos) => {
   const categories = {
-    heating: { name: 'Courbes de Chauffage', photos: [], order: 1 },
-    cooling: { name: 'Courbes de Refroidissement', photos: [], order: 2 },
-    alarms: { name: 'Alarmes et Événements', photos: [], order: 3 },
-    datapaq: { name: 'Rapports Datapaq', photos: [], order: 4 },
-    other: { name: 'Autres Courbes', photos: [], order: 5 }
+    heating: { name: 'Heating Curves', photos: [], order: 1 },
+    cooling: { name: 'Cooling Curves', photos: [], order: 2 },
+    tempering: { name: 'Tempering Curves', photos: [], order: 3 },
+    alarms: { name: 'Alarms and Events', photos: [], order: 4 },
+    datapaq: { name: 'Datapaq Reports', photos: [], order: 5 },
+    other: { name: 'Other Curves', photos: [], order: 6 }
   };
 
   // Normaliser photos en tableau
@@ -131,6 +132,8 @@ const organizePhotosByCategory = (photos) => {
       targetCategory = 'heating';
     } else if (subcategory === 'cooling' || subcategory === 'refroidissement') {
       targetCategory = 'cooling';
+    } else if (subcategory === 'tempering' || subcategory === 'revenu') {
+      targetCategory = 'tempering';
     } else if (subcategory === 'alarms' || subcategory === 'alarmes') {
       targetCategory = 'alarms';
     } else if (subcategory === 'datapaq') {
@@ -141,6 +144,8 @@ const organizePhotosByCategory = (photos) => {
       targetCategory = 'heating';
     } else if (name.includes('cooling') || name.includes('refroid') || name.includes('descent')) {
       targetCategory = 'cooling';
+    } else if (name.includes('tempering') || name.includes('revenu') || name.includes('temper')) {
+      targetCategory = 'tempering';
     } else if (name.includes('alarm') || name.includes('alert') || name.includes('erreur') || name.includes('event')) {
       targetCategory = 'alarms';
     } else if (name.includes('datapaq') || name.includes('sensor') || name.includes('capteur')) {
@@ -162,6 +167,7 @@ const formatCategoryName = (categoryKey) => {
   const names = {
     heating: 'Heating Curves',
     cooling: 'Cooling Curves',
+    tempering: 'Tempering Curves',
     alarms: 'Alarms and Events',
     datapaq: 'Datapaq Reports',
     other: 'Other Curves'
@@ -260,8 +266,8 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
     );
   }
 
-  // Ordre des categories : heating, cooling, alarms, datapaq, other
-  const categoryOrder = ['heating', 'cooling', 'alarms', 'datapaq', 'other'];
+  // Ordre des categories : heating, cooling, tempering, alarms, datapaq, other
+  const categoryOrder = ['heating', 'cooling', 'tempering', 'alarms', 'datapaq', 'other'];
 
   return (
     <>

@@ -400,7 +400,7 @@
     "dateTo": "Date Fin",
     "dateToPlaceholder": "Sélectionner...",
     "clientName": "Nom Client",
-    "clientNamePlaceholder": "Sélectionner un client...",
+    "clientNamePlaceholder": "Sélectionner un ou plusieurs clients...",
     "clientCode": "Code Client",
     "clientCodePlaceholder": "Sélectionner un code...",
     "clientCountry": "Pays",
@@ -418,11 +418,13 @@
     "partClientDesignation": "Désignation Client",
     "partClientDesignationPlaceholder": "Ex: Gear-A",
     "steelGrade": "Nuance",
-    "steelGradePlaceholder": "Ex: 16MnCr5",
+    "steelGradePlaceholder": "Sélectionner une ou plusieurs nuances...",
     "steelFamily": "Famille",
     "steelFamilyPlaceholder": "Sélectionner...",
     "steelStandard": "Norme",
     "steelStandardPlaceholder": "Sélectionner...",
+    "includeEquivalents": "Inclure les équivalents",
+    "includeEquivalentsHelp": "Rechercher aussi par les aciers équivalents",
     "furnaceType": "Type de Four",
     "furnaceTypePlaceholder": "Sélectionner...",
     "coolingMedia": "Milieu de Refroidissement",
@@ -635,12 +637,14 @@
             "categories": {
               "heating": "Courbes de chauffe",
               "cooling": "Courbes de refroidissement",
+              "tempering": "Courbes de revenu",
               "datapaq": "Données Datapaq",
               "alarms": "Alarmes"
             },
             "descriptions": {
               "heating": "Graphiques de montée en température",
               "cooling": "Graphiques de refroidissement",
+              "tempering": "Graphiques de traitement de revenu",
               "datapaq": "Relevés des capteurs Datapaq",
               "alarms": "Rapports d'alarmes et événements"
             }
@@ -967,6 +971,7 @@
         "title": "Rapport du four",
         "heating": "Rapport de chauffe",
         "cooling": "Rapport de trempe",
+        "tempering": "Rapport de revenu",
         "alarms": "Rapport d'alarme",
         "datapaq": "DATAPAQ",
         "filesResponse": "Réponse de récupération des fichiers",

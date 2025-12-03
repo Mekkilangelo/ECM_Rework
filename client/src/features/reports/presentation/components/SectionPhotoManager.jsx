@@ -248,6 +248,12 @@ const SectionPhotoManager = ({
           },
           { 
             category: 'furnace_report', 
+            subcategory: 'tempering',
+            label: tSafe('parts.photos.manager.sections.curves.categories.tempering', 'Courbes de revenu'),
+            description: tSafe('parts.photos.manager.sections.curves.descriptions.tempering', 'Graphiques de traitement de revenu')
+          },
+          { 
+            category: 'furnace_report', 
             subcategory: 'datapaq',
             label: tSafe('parts.photos.manager.sections.curves.categories.datapaq', 'Données Datapaq'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.datapaq', 'Relevés des capteurs Datapaq')
@@ -735,13 +741,15 @@ const SectionPhotoManager = ({
               
               // Mapper vers nos catégories attendues
               let targetCategory = realSubcategory;
-              if (!['heating', 'cooling', 'datapaq', 'alarms'].includes(realSubcategory)) {
+              if (!['heating', 'cooling', 'tempering', 'datapaq', 'alarms'].includes(realSubcategory)) {
                 // Si la sous-catégorie n'est pas reconnue, essayer de deviner par le nom
                 const photoName = photo.name?.toLowerCase() || '';
                 if (photoName.includes('heat') || photoName.includes('chauff') || photoName.includes('montee')) {
                   targetCategory = 'heating';
                 } else if (photoName.includes('cool') || photoName.includes('refroid') || photoName.includes('descent')) {
                   targetCategory = 'cooling';
+                } else if (photoName.includes('temper') || photoName.includes('revenu')) {
+                  targetCategory = 'tempering';
                 } else if (photoName.includes('datapaq') || photoName.includes('sensor') || photoName.includes('capteur')) {
                   targetCategory = 'datapaq';
                 } else if (photoName.includes('alarm') || photoName.includes('alert') || photoName.includes('erreur')) {

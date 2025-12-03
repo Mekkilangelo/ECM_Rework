@@ -25,6 +25,7 @@ const FurnaceReportSection = ({
   const views = [
     { id: 'heating', name: t('trials.after.furnaceReport.heating') },
     { id: 'cooling', name: t('trials.after.furnaceReport.cooling') },
+    { id: 'tempering', name: t('trials.after.furnaceReport.tempering') },
     { id: 'alarms', name: t('trials.after.furnaceReport.alarms') },
     { id: 'datapaq', name: t('trials.after.furnaceReport.datapaq') },
   ];

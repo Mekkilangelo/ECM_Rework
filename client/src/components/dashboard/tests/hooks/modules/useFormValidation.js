@@ -4,8 +4,8 @@ const useFormValidation = (formData, parentId, setErrors) => {
     
     if (!parentId) newErrors.parent = 'validation.required.parentPart';
     
-    // Rendre la date de test obligatoire
-    if (!formData.testDate) newErrors.testDate = 'validation.required.testDate';
+    // Rendre la date de trial obligatoire
+    if (!formData.trialDate) newErrors.trialDate = 'validation.required.trialDate';
     
     setErrors(newErrors);
     return {

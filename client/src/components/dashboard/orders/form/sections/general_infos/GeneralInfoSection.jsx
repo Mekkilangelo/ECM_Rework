@@ -14,17 +14,17 @@ const GeneralInfoSection = ({ formData, errors, handleChange, viewMode = false, 
             <Form.Label>{t('orders.generalInfo.requestDate')} {!viewMode && <span className="text-danger fw-bold">*</span>}</Form.Label>
             <Form.Control
               type="date"
-              name="order_date"
-              value={formData.order_date}
+              name="request_date"
+              value={formData.request_date}
               onChange={handleChange}
-              isInvalid={!viewMode && !!errors.order_date}
+              isInvalid={!viewMode && !!errors.request_date}
               disabled={viewMode}
               readOnly={viewMode}
               style={viewMode ? readOnlyFieldStyle : {}}
             />
             {!viewMode && (
               <Form.Control.Feedback type="invalid">
-                {errors.order_date && t(errors.order_date)}
+                {errors.request_date && t(errors.request_date)}
               </Form.Control.Feedback>
             )}
           </Form.Group>

@@ -47,9 +47,9 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
   const getOrderClause = (sortBy, sortOrder) => {
     const sortMapping = {
       'name': ['name', sortOrder],
-      'client_group': [{ model: client }, 'client_group', sortOrder],
-      'country': [{ model: client }, 'country', sortOrder],
-      'city': [{ model: client }, 'city', sortOrder],
+      'client_group': [{ model: client, as: 'client' }, 'client_group', sortOrder],
+      'country': [{ model: client, as: 'client' }, 'country', sortOrder],
+      'city': [{ model: client, as: 'client' }, 'city', sortOrder],
       'modified_at': ['modified_at', sortOrder],
       'created_at': ['created_at', sortOrder]
     };
@@ -61,6 +61,7 @@ const getAllClients = async ({ limit = 10, offset = 0, search = null, sortBy = '
     where: whereClause,
     include: [{
       model: client,
+      as: 'client',
       attributes: ['client_code', 'country', 'city', 'client_group', 'address']
     }],
     order: [getOrderClause(sortBy, sortOrder)],
@@ -93,6 +94,7 @@ const getClientById = async (clientId) => {
     where: { id: clientId, type: 'client' },
     include: [{
       model: client,
+      as: 'client',
       attributes: { exclude: ['node_id'] }
     }]
   });
@@ -174,6 +176,7 @@ const createClient = async (clientData) => {
   const newClient = await node.findByPk(result.id, {
     include: [{
       model: client,
+      as: 'client',
       attributes: { exclude: ['node_id'] }
     }]
   });
@@ -201,7 +204,8 @@ const updateClient = async (clientId, clientData) => {
   const foundNode = await node.findOne({
     where: { id: clientId, type: 'client' },
     include: [{
-      model: client
+      model: client,
+      as: 'client'
     }]
   });
   
@@ -277,6 +281,7 @@ const updateClient = async (clientId, clientData) => {
   const updatedClient = await node.findByPk(clientId, {
     include: [{
       model: client,
+      as: 'client',
       attributes: { exclude: ['node_id'] }
     }]
   });

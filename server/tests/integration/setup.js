@@ -10,12 +10,12 @@ process.env.JWT_EXPIRES_IN = '1h';
 
 // Setup global simplifié - chaque test gère sa propre base de données
 beforeAll(async () => {
-  console.log('Setup des tests d\'intégration initialisé');
+  
 });
 
 // Cleanup global
 afterAll(async () => {
-  console.log('Nettoyage des tests d\'intégration terminé');
+  
 });
 
 // Configuration des timeouts

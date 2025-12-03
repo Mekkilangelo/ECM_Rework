@@ -29,7 +29,7 @@ async function startServer() {
 
     // 2. Démarrer le serveur HTTP
     const server = app.listen(PORT, '0.0.0.0', () => {
-      logger.info(`✅ Serveur démarré sur le port ${PORT}`);
+      logger.success(`Serveur démarré sur le port ${PORT}`, { port: PORT });
       logger.info(`🌐 API accessible sur http://localhost:${PORT}/api`);
       
       if (process.env.NODE_ENV === 'production') {
@@ -40,7 +40,7 @@ async function startServer() {
     // 3. Configurer l'arrêt gracieux
     setupGracefulShutdown(server);
 
-    logger.info('✨ Application prête à recevoir des requêtes');
+    logger.success('Application prête à recevoir des requêtes');
 
   } catch (error) {
     logger.error('💥 Erreur fatale lors du démarrage', { 

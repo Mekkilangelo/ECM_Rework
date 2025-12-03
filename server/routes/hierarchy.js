@@ -3,7 +3,7 @@
  * 
  * Note : Ce module contient uniquement les opérations transversales
  * sur les nœuds. Les opérations CRUD spécifiques sont gérées par
- * les services dédiés (clientService, orderService, etc.)
+ * les services dédiés (clientService, trialRequestService, etc.)
  */
 
 const express = require('express');

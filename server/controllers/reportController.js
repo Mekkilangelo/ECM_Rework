@@ -1,21 +1,21 @@
 /**
  * Contrôleur pour la génération de rapports
- * Gère les requêtes HTTP liées aux rapports de tests
+ * Gère les requêtes HTTP liées aux rapports de trials
  */
 
 const reportService = require('../services/reportService');
 const logger = require('../utils/logger');
 
 /**
- * Génère les données d'un rapport de test
- * @route GET /api/reports/tests/:testId
+ * Génère les données d'un rapport de trial
+ * @route GET /api/reports/trials/:trialId
  */
-const getTestReportData = async (req, res) => {
+const getTrialReportData = async (req, res) => {
   try {
-    const { testId } = req.params;
+    const { trialId } = req.params;
     const { sections } = req.query;
     
-    logger.info(`Génération rapport test #${testId}`, { 
+    logger.info(`Génération rapport trial #${trialId}`, { 
       sections: sections ? JSON.parse(sections) : [] 
     });
 
@@ -29,7 +29,15 @@ const getTestReportData = async (req, res) => {
       }
     }
 
-    const reportData = await reportService.getTestReportData(testId, parsedSections);
+    const reportData = await reportService.getTrialReportData(trialId, parsedSections);
+
+    // Log pour déboguer le process_type envoyé au client
+    logger.info('📤 Données envoyées au client:', {
+      trialId,
+      process_type: reportData.trialData?.process_type,
+      processTypeRef: reportData.trialData?.processTypeRef?.name,
+      hasTrialData: !!reportData.trialData
+    });
 
     return res.status(200).json({
       success: true,
@@ -38,7 +46,7 @@ const getTestReportData = async (req, res) => {
 
   } catch (error) {
     logger.error('Erreur génération rapport', { 
-      testId: req.params.testId, 
+      trialId: req.params.trialId, 
       error: error.message 
     });
 
@@ -58,5 +66,5 @@ const getTestReportData = async (req, res) => {
 };
 
 module.exports = {
-  getTestReportData
+  getTrialReportData
 };

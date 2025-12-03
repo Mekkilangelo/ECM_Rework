@@ -9,6 +9,7 @@ import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
 import FormHeader from '../../../common/FormHeader/FormHeader';
 import SteelForm from '../form/SteelForm';
+import DeleteWithUsageModal from '../../../common/DeleteWithUsageModal/DeleteWithUsageModal';
 import steelService from '../../../../services/steelService';
 import '../../../../styles/dataList.css';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ import useModalState from '../../../../hooks/useModalState';
 import Pagination from '../../../common/Pagination/Pagination';
 import LimitSelector from '../../../common/LimitSelector/LimitSelector';
 import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
+import { toast } from 'react-toastify';
 
 const SteelList = () => {
   const { t } = useTranslation();
@@ -36,11 +38,16 @@ const SteelList = () => {
   
   // État pour le tri côté serveur
   const [sortBy, setSortBy] = useState('modified_at');
-  const [sortOrder, setSortOrder] = useState('desc');  // Déclarer fetchSteels avant de l'utiliser
+  const [sortOrder, setSortOrder] = useState('desc');
+  
+  // État pour le modal de suppression
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [steelToDelete, setSteelToDelete] = useState(null);
+  const [steelUsage, setSteelUsage] = useState(null);  // Déclarer fetchSteels avant de l'utiliser
   const fetchSteels = async () => {
     try {
-      console.log('=== FRONTEND SteelList fetchSteels called ===');
-      console.log('Paramètres:', { currentPage, itemsPerPage, sortBy, sortOrder, search: searchQuery });
+      
+      
       
       setLoading(true);
       const response = await steelService.getSteels(
@@ -51,20 +58,20 @@ const SteelList = () => {
         searchQuery.trim() || undefined
       );
       
-      console.log('Réponse complète steelService.getSteels:', response);
+      
       
       // Check the structure of the response based on your API
       if (response && response.steels) {
-        console.log('Structure trouvée: response.steels');
-        console.log('Aciers trouvés:', response.steels);
-        console.log('Pagination:', response.pagination);
+        
+        
+        
         
         // If the API returns { steels, pagination }
         setSteels(response.steels);
         
         // Set pagination data
         const { total, limit: responseLimit } = response.pagination || {};
-        console.log('Pagination data:', { total, responseLimit });
+        
         
         setTotal(total || 0);
         setTotalPages(Math.ceil((total || 0) / (responseLimit || itemsPerPage)));
@@ -74,8 +81,8 @@ const SteelList = () => {
           limitSelectorRef.current.updateTotal(total || 0);
         }
       } else if (response && response.data && response.data.steels) {
-        console.log('Structure trouvée: response.data.steels');
-        console.log('Aciers trouvés:', response.data.steels);
+        
+        
         
         setSteels(response.data.steels);
         
@@ -89,8 +96,7 @@ const SteelList = () => {
           limitSelectorRef.current.updateTotal(total || 0);
         }
       } else if (Array.isArray(response.data)) {
-        console.log('Structure trouvée: response.data (array)');
-        console.log('Aciers trouvés:', response.data);
+        
         
         // If the API directly returns an array of steels
         setSteels(response.data);
@@ -104,7 +110,7 @@ const SteelList = () => {
           limitSelectorRef.current.updateTotal(totalCount);
         }
       } else {
-        console.log('Structure non reconnue:', response);
+        
         setSteels([]);
         setTotal(0);
         setTotalPages(1);
@@ -273,9 +279,9 @@ const SteelList = () => {
   };
   // Fonction pour gérer le tri côté serveur
   const handleSort = (columnKey, direction) => {
-    console.log('=== SteelList handleSort called ===');
-    console.log('Tri demandé:', { columnKey, direction });
-    console.log('État actuel avant tri:', { sortBy, sortOrder, currentPage });
+    
+    
+    
     
     // Mapper les clés de colonnes vers les champs de base de données
     const sortMapping = {
@@ -289,7 +295,7 @@ const SteelList = () => {
     };
     
     const dbField = sortMapping[columnKey] || columnKey;
-    console.log('Mapping appliqué:', { columnKey, dbField });
+    
     
     setSortBy(dbField);
     setSortOrder(direction);
@@ -312,17 +318,66 @@ const SteelList = () => {
     const steelToDelete = steels.find(s => s.id === steelId);
     const steelName = steelToDelete?.steel?.grade || steelToDelete?.grade || 'cet acier';
     
-    const confirmed = await confirmDelete(steelName, 'l\'acier');
-    if (confirmed) {
-      try {
-        await steelService.deleteSteel(steelId);
-        alert(t("steels.deleteSuccess"));
-        fetchSteels();
-      } catch (err) {
-        console.error('Erreur lors de la suppression de l\'acier:', err);
-        alert(err.response?.data?.message || t("steels.deleteError"));
+    try {
+      // Vérifier l'utilisation de l'acier
+      const usage = await steelService.checkSteelUsage(steelId);
+      
+      if (usage.isUsed && usage.totalCount > 0) {
+        // Afficher le modal si l'acier est utilisé
+        setSteelToDelete({ id: steelId, name: steelName });
+        setSteelUsage(usage);
+        setShowDeleteModal(true);
+      } else {
+        // Supprimer directement si non utilisé
+        const confirmed = await confirmDelete(steelName, 'l\'acier');
+        if (confirmed) {
+          await steelService.deleteSteel(steelId);
+          toast.success(t('steels.deleteSuccess'));
+          fetchSteels();
+        }
       }
+    } catch (err) {
+      console.error('Erreur lors de la vérification/suppression de l\'acier:', err);
+      toast.error(err.response?.data?.message || t('steels.deleteError'));
     }
+  };
+  
+  const handleDeleteForce = async () => {
+    if (!steelToDelete) return;
+    
+    try {
+      await steelService.forceDeleteSteel(steelToDelete.id);
+      toast.success(t('steels.deleteSuccess'));
+      setShowDeleteModal(false);
+      setSteelToDelete(null);
+      setSteelUsage(null);
+      fetchSteels();
+    } catch (err) {
+      console.error('Erreur lors de la suppression forcée de l\'acier:', err);
+      toast.error(err.response?.data?.message || t('steels.deleteError'));
+    }
+  };
+  
+  const handleReplaceSteelAndDelete = async (oldSteelName, newSteelId) => {
+    if (!steelToDelete) return;
+    
+    try {
+      await steelService.replaceSteelAndDelete(steelToDelete.id, newSteelId);
+      toast.success(t('steels.replaceSuccess', { defaultValue: 'Acier remplacé et supprimé avec succès' }));
+      setShowDeleteModal(false);
+      setSteelToDelete(null);
+      setSteelUsage(null);
+      fetchSteels();
+    } catch (err) {
+      console.error('Erreur lors du remplacement de l\'acier:', err);
+      toast.error(err.response?.data?.message || t('steels.replaceError', { defaultValue: 'Erreur lors du remplacement de l\'acier' }));
+    }
+  };
+  
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setSteelToDelete(null);
+    setSteelUsage(null);
   };
 
   if (loading && steels.length === 0) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
@@ -510,6 +565,27 @@ const SteelList = () => {
           )}
         </Modal.Body>
       </Modal>
+      
+      {/* Modal de confirmation de suppression */}
+      <DeleteWithUsageModal
+        show={showDeleteModal}
+        onHide={handleCancelDelete}
+        onCancel={handleCancelDelete}
+        onDeleteForce={handleDeleteForce}
+        onReplace={handleReplaceSteelAndDelete}
+        itemName={steelToDelete?.name || ''}
+        itemType="steel"
+        usageCount={steelUsage?.totalCount || 0}
+        usage={steelUsage}
+        availableOptions={steels
+          .filter(s => s.id !== steelToDelete?.id)
+          .map(s => ({
+            value: s.id,
+            label: s.steel?.grade || s.grade || `Acier #${s.id}`
+          }))
+        }
+        showReplaceOption={true}
+      />
     </>
   );
 };

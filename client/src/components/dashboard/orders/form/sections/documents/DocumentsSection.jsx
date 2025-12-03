@@ -29,7 +29,6 @@ const DocumentsSection = ({
   const loadExistingFiles = async () => {
     try {
       const response = await fileService.getNodeFiles(orderNodeId, { category: 'documents' });
-      console.log('Réponse de récupération des fichiers', response.data);
       
       // Vérifier que la requête a réussi
       if (!response.data || response.data.success === false) {
@@ -56,11 +55,6 @@ const DocumentsSection = ({
     }
   };
   const handleFilesUploaded = (files, tempId, operation = 'add', fileId = null) => {
-    console.log("🔄 [DocumentsSection] handleFilesUploaded called:", {
-      operation,
-      filesCount: files.length,
-      fileNames: files.map(f => f.name)
-    });
     
     if (operation === 'delete') {
       // Pour une suppression, mettre à jour uniquement la sous-catégorie concernée
@@ -75,7 +69,6 @@ const DocumentsSection = ({
         return updatedFiles;
       });    } else if (operation === 'standby') {
       // En mode standby, stocker les fichiers dans notre état local
-      console.log("📦 [DocumentsSection] Storing pending files:", files.map(f => f.name));
       setPendingFiles(files);
     } else {
       // Mode normal : ajouter les fichiers uploadés
@@ -96,7 +89,6 @@ const DocumentsSection = ({
       const associationFunction = createAssociationFunction(
         uploaderRef.current.uploadPendingFiles,
         () => {
-          console.log("📋 [DocumentsSection] getPendingFiles called, returning:", pendingFiles.map(f => f.name));
           return pendingFiles; // Utiliser nos fichiers stockés localement
         },
         'documents',

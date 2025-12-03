@@ -205,7 +205,6 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
               // Tentative avec une URL alternative sans preview
               const alternateUrl = getFileUrl(file.id, false);
               if (e.target.src !== alternateUrl) {
-                console.log(`Tentative avec URL alternative: ${alternateUrl}`);
                 e.target.src = alternateUrl;
               }
             }}
@@ -245,7 +244,6 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
                 // Tentative avec une URL alternative sans paramètre preview
                 if (fileUrl.includes('?preview=true')) {
                   const alternateUrl = fileUrl.replace('?preview=true', '');
-                  console.log(`Tentative avec URL alternative: ${alternateUrl}`);
                   e.target.src = alternateUrl;
                 }
               }}

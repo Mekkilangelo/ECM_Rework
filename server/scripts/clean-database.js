@@ -17,15 +17,21 @@ class DatabaseCleaner {
 
     // Tables à vider dans un ordre spécifique (pour respecter les contraintes)
     this.tablesToClean = [
-      // Commencer par les tables sans dépendances (feuilles)
-      'tests',
+      // Ensuite specs
+      'specs_hardness',
+      'specs_ecd',
+      
+      // Puis les nodes métiers
+      'trials',
       'parts', 
-      'orders',
+      'trial_requests',
       'clients',
-      'files',
       'steels',
+      'steel_equivalents',
+      'files',
       'furnaces',
       'logs',
+      'contacts',
       
       // Ensuite les tables de relations
       'closure',
@@ -33,32 +39,153 @@ class DatabaseCleaner {
       // Enfin la table principale
       'nodes'
     ];
+    
+    // Tables de référence à vider (remplies dynamiquement)
+    this.referenceTablesToClean = [];
+    
+    // Tables recipe_* à vider (remplies dynamiquement)
+    this.recipeTablesToClean = [];
+    
+    // Tables results_* à vider (remplies dynamiquement)
+    this.resultsTablesToClean = [];
+  }
+
+  /**
+   * Récupère toutes les tables commençant par ref_
+   */
+  async getReferenceTables() {
+    try {
+      const [tables] = await sequelize.query(`
+        SELECT TABLE_NAME 
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME LIKE 'ref_%'
+        ORDER BY TABLE_NAME
+      `);
+      
+      this.referenceTablesToClean = tables.map(t => t.TABLE_NAME);
+      return this.referenceTablesToClean;
+    } catch (error) {
+      console.error('   ❌ Erreur récupération tables ref_ :', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Récupère toutes les tables commençant par recipe_
+   */
+  async getRecipeTables() {
+    try {
+      const [tables] = await sequelize.query(`
+        SELECT TABLE_NAME 
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME LIKE 'recipe_%'
+        ORDER BY TABLE_NAME
+      `);
+      
+      this.recipeTablesToClean = tables.map(t => t.TABLE_NAME);
+      // Ajouter 'recipes' à la fin si elle existe
+      const [recipesTable] = await sequelize.query(`
+        SELECT TABLE_NAME 
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'recipes'
+      `);
+      if (recipesTable.length > 0) {
+        this.recipeTablesToClean.push('recipes');
+      }
+      return this.recipeTablesToClean;
+    } catch (error) {
+      console.error('   ❌ Erreur récupération tables recipe_ :', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Récupère toutes les tables commençant par results_
+   */
+  async getResultsTables() {
+    try {
+      const [tables] = await sequelize.query(`
+        SELECT TABLE_NAME 
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME LIKE 'results_%'
+        ORDER BY TABLE_NAME DESC
+      `);
+      
+      this.resultsTablesToClean = tables.map(t => t.TABLE_NAME);
+      return this.resultsTablesToClean;
+    } catch (error) {
+      console.error('   ❌ Erreur récupération tables results_ :', error.message);
+      return [];
+    }
   }
 
   /**
    * Affiche un résumé avant nettoyage
    */
   async showSummary() {
-    console.log('📊 État actuel de la base de données :\n');
+    // Récupérer les tables dynamiquement
+    await this.getReferenceTables();
+    await this.getRecipeTables();
+    await this.getResultsTables();
     
+    console.log('\nResume des donnees en base:');
+    
+    console.log('\nTables metier:');
     for (const table of this.tablesToClean) {
       try {
         const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
         const count = results[0].count;
-        console.log(`   ${table}: ${count} enregistrements`);
+        console.log(`  - ${table}: ${count} lignes`);
       } catch (error) {
-        console.log(`   ${table}: ❌ Erreur (${error.message})`);
+        console.error(`  - ${table}: Erreur`);
+      }
+    }
+    
+    console.log(`\nTables de reference (ref_*): ${this.referenceTablesToClean.length} tables`);
+    for (const table of this.referenceTablesToClean) {
+      try {
+        const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+        const count = results[0].count;
+        console.log(`  - ${table}: ${count} lignes`);
+      } catch (error) {
+        console.error(`  - ${table}: Erreur`);
       }
     }
 
-    console.log('\n📋 Tables préservées :');
+    console.log(`\nTables recipe_* et recipes: ${this.recipeTablesToClean.length} tables`);
+    for (const table of this.recipeTablesToClean) {
+      try {
+        const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+        const count = results[0].count;
+        console.log(`  - ${table}: ${count} lignes`);
+      } catch (error) {
+        console.error(`  - ${table}: Erreur`);
+      }
+    }
+
+    console.log(`\nTables results_*: ${this.resultsTablesToClean.length} tables`);
+    for (const table of this.resultsTablesToClean) {
+      try {
+        const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+        const count = results[0].count;
+        console.log(`  - ${table}: ${count} lignes`);
+      } catch (error) {
+        console.error(`  - ${table}: Erreur`);
+      }
+    }
+
+    console.log('\nTables preservees:');
     for (const table of this.preservedTables) {
       try {
         const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
         const count = results[0].count;
-        console.log(`   ${table}: ${count} enregistrements (préservé)`);
+        console.log(`  - ${table}: ${count} lignes`);
       } catch (error) {
-        console.log(`   ${table}: ❌ Table non trouvée`);
+        console.error(`  - ${table}: Erreur`);
       }
     }
   }
@@ -68,9 +195,9 @@ class DatabaseCleaner {
    */
   async disableForeignKeyChecks() {
     try {
-      console.log('🔓 Désactivation des contraintes de clés étrangères...');
+      
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-      console.log('   ✅ Contraintes désactivées');
+      
     } catch (error) {
       console.error('   ❌ Erreur désactivation contraintes :', error.message);
       throw error;
@@ -82,9 +209,9 @@ class DatabaseCleaner {
    */
   async enableForeignKeyChecks() {
     try {
-      console.log('🔒 Réactivation des contraintes de clés étrangères...');
+      
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-      console.log('   ✅ Contraintes réactivées');
+      
     } catch (error) {
       console.error('   ❌ Erreur réactivation contraintes :', error.message);
       throw error;
@@ -97,7 +224,7 @@ class DatabaseCleaner {
   async truncateTable(tableName) {
     try {
       await sequelize.query(`TRUNCATE TABLE ${tableName}`);
-      console.log(`   ✅ ${tableName} vidée`);
+      
       return true;
     } catch (error) {
       console.error(`   ❌ Erreur vidage ${tableName}: ${error.message}`);
@@ -109,7 +236,7 @@ class DatabaseCleaner {
    * Nettoie toutes les tables (sauf celles préservées)
    */
   async cleanDatabase() {
-    console.log('\n🧹 Nettoyage de la base de données...\n');
+    
     
     let successCount = 0;
     let errorCount = 0;
@@ -121,9 +248,52 @@ class DatabaseCleaner {
       // Désactiver les contraintes
       await this.disableForeignKeyChecks();
 
-      // Vider les tables dans l'ordre
+      // Vider les tables results_* (enfants de trials)
+      console.log('\n📊 Nettoyage des tables results_*...');
+      for (const table of this.resultsTablesToClean) {
+        const success = await this.truncateTable(table);
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      // Vider les tables recipe_* (enfants de trials via recipes)
+      console.log('\n🧪 Nettoyage des tables recipe_* et recipes...');
+      for (const table of this.recipeTablesToClean) {
+        const success = await this.truncateTable(table);
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      // Vider les tables métier dans l'ordre
+      console.log('\n📦 Nettoyage des tables métier...');
       for (const table of this.tablesToClean) {
-        console.log(`🗑️  Nettoyage de la table "${table}"...`);
+        
+        const success = await this.truncateTable(table);
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      // Vider les tables de référence
+      console.log('\n🔖 Nettoyage des tables de référence (ref_*)...');
+      // Ordre important: tables avec FK doivent être vidées avant leurs parents
+      // ref_units doit être vidée avant ref_unit_types
+      const sortedRefTables = [...this.referenceTablesToClean].sort((a, b) => {
+        // ref_units avant ref_unit_types
+        if (a === 'ref_units' && b === 'ref_unit_types') return -1;
+        if (a === 'ref_unit_types' && b === 'ref_units') return 1;
+        return a.localeCompare(b);
+      });
+
+      for (const table of sortedRefTables) {
         const success = await this.truncateTable(table);
         if (success) {
           successCount++;
@@ -137,10 +307,10 @@ class DatabaseCleaner {
 
       await transaction.commit();
 
-      console.log('\n📈 Résumé du nettoyage :');
-      console.log(`   ✅ ${successCount} tables nettoyées avec succès`);
-      console.log(`   ❌ ${errorCount} erreurs rencontrées`);
-      console.log(`   🛡️  ${this.preservedTables.length} tables préservées`);
+      
+      
+      
+      
 
     } catch (error) {
       await transaction.rollback();
@@ -161,7 +331,7 @@ class DatabaseCleaner {
    * Remet à zéro les auto-increment
    */
   async resetAutoIncrements() {
-    console.log('\n🔄 Remise à zéro des auto-increments...');
+    
     
     const tablesWithAutoIncrement = ['nodes', 'users', 'logs'];
     
@@ -169,9 +339,9 @@ class DatabaseCleaner {
       if (!this.preservedTables.includes(table) || table === 'nodes') {
         try {
           await sequelize.query(`ALTER TABLE ${table} AUTO_INCREMENT = 1`);
-          console.log(`   ✅ ${table} auto-increment remis à 1`);
+          
         } catch (error) {
-          console.log(`   ⚠️  ${table}: ${error.message}`);
+          
         }
       }
     }
@@ -181,10 +351,48 @@ class DatabaseCleaner {
    * Vérifie l'état après nettoyage
    */
   async verifyCleanup() {
-    console.log('\n🔍 Vérification après nettoyage :\n');
+    
     
     let totalRemaining = 0;
     
+    // Vérifier les tables results_*
+    console.log('\n📊 Vérification des tables results_* :');
+    for (const table of this.resultsTablesToClean) {
+      try {
+        const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+        const count = results[0].count;
+        totalRemaining += count;
+        
+        if (count === 0) {
+          console.log(`   ✅ ${table} : vide`);
+        } else {
+          console.log(`   ⚠️  ${table} : ${count} lignes restantes`);
+        }
+      } catch (error) {
+        console.log(`   ❌ ${table} : erreur`);
+      }
+    }
+
+    // Vérifier les tables recipe_*
+    console.log('\n📊 Vérification des tables recipe_* :');
+    for (const table of this.recipeTablesToClean) {
+      try {
+        const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+        const count = results[0].count;
+        totalRemaining += count;
+        
+        if (count === 0) {
+          console.log(`   ✅ ${table} : vide`);
+        } else {
+          console.log(`   ⚠️  ${table} : ${count} lignes restantes`);
+        }
+      } catch (error) {
+        console.log(`   ❌ ${table} : erreur`);
+      }
+    }
+
+    // Vérifier les tables métier
+    console.log('\n📊 Vérification des tables métier :');
     for (const table of this.tablesToClean) {
       try {
         const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
@@ -192,21 +400,39 @@ class DatabaseCleaner {
         totalRemaining += count;
         
         if (count === 0) {
-          console.log(`   ✅ ${table}: vide`);
+          
         } else {
-          console.log(`   ⚠️  ${table}: ${count} enregistrements restants`);
+          
         }
       } catch (error) {
-        console.log(`   ❌ ${table}: Erreur vérification`);
+        
       }
     }
 
-    console.log(`\n📊 Total enregistrements restants dans les tables nettoyées : ${totalRemaining}`);
+    // Vérifier les tables de référence
+    console.log('\n📊 Vérification des tables de référence (ref_*) :');
+    for (const table of this.referenceTablesToClean) {
+      try {
+        const [results] = await sequelize.query(`SELECT COUNT(*) as count FROM ${table}`);
+        const count = results[0].count;
+        totalRemaining += count;
+        
+        if (count === 0) {
+          console.log(`   ✅ ${table} : vide`);
+        } else {
+          console.log(`   ⚠️  ${table} : ${count} lignes restantes`);
+        }
+      } catch (error) {
+        console.log(`   ❌ ${table} : erreur`);
+      }
+    }
+
+    
     
     if (totalRemaining === 0) {
-      console.log('🎉 Nettoyage réussi ! Toutes les tables ciblées sont vides.');
+      
     } else {
-      console.log('⚠️  Certaines tables contiennent encore des données.');
+      
     }
   }
 
@@ -215,7 +441,7 @@ class DatabaseCleaner {
    */
   async clean() {
     try {
-      console.log('🚀 Début du nettoyage de la base de données\n');
+      
       
       // 1. Afficher le résumé actuel
       await this.showSummary();
@@ -223,7 +449,7 @@ class DatabaseCleaner {
       // 2. Demander confirmation
       const confirmed = await this.askConfirmation();
       if (!confirmed) {
-        console.log('❌ Nettoyage annulé par l\'utilisateur');
+        
         return;
       }
 
@@ -236,7 +462,7 @@ class DatabaseCleaner {
       // 5. Vérifier le résultat
       await this.verifyCleanup();
 
-      console.log('\n✅ Nettoyage terminé avec succès !');
+      
 
     } catch (error) {
       console.error('\n💥 Erreur fatale pendant le nettoyage :', error);
@@ -267,14 +493,14 @@ class DatabaseCleaner {
  */
 async function cleanSilent() {
   const cleaner = new DatabaseCleaner();
-  console.log('🤖 Mode silencieux - nettoyage automatique');
+  
   
   await cleaner.showSummary();
   await cleaner.cleanDatabase();
   await cleaner.resetAutoIncrements();
   await cleaner.verifyCleanup();
   
-  console.log('✅ Nettoyage silencieux terminé');
+  
 }
 
 /**

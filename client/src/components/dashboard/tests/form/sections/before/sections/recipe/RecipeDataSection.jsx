@@ -31,7 +31,7 @@ const RecipeDataSection = ({
   handleOilQuenchSpeedRemove,
   loading,
   selectStyles,
-  test,
+  trial,
   handleFileAssociationNeeded,
   viewMode = false,
   readOnlyFieldStyle = {}
@@ -63,7 +63,7 @@ const RecipeDataSection = ({
       <Row>
         <Col md={12}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.recipeNumber')}</Form.Label>            <Form.Control
+            <Form.Label>{t('trials.before.recipeData.recipeNumber')}</Form.Label>            <Form.Control
               type="text"
               name="recipeData.recipeNumber"
               value={formData.recipeData?.recipeNumber}
@@ -91,9 +91,9 @@ const RecipeDataSection = ({
       />
       
       <CollapsibleSection
-        title={t('tests.before.recipeData.thermalCycle.title')}
+        title={t('trials.before.recipeData.thermalCycle.title')}
         isExpandedByDefault={true}
-        sectionId="test-thermal-cycle"
+        sectionId="trial-thermal-cycle"
         rememberState={true}
         level={1}
       >        {/* Thermal Cycle Section */}        <ThermalCycleSection
@@ -117,9 +117,9 @@ const RecipeDataSection = ({
       </CollapsibleSection>
       
       <CollapsibleSection
-        title={t('tests.before.recipeData.chemicalCycle.title')}
+        title={t('trials.before.recipeData.chemicalCycle.title')}
         isExpandedByDefault={true}
-        sectionId="test-chemical-cycle"
+        sectionId="trial-chemical-cycle"
         rememberState={true}
         level={1}
       >  
@@ -140,9 +140,9 @@ const RecipeDataSection = ({
       
       {/* Ajout de la nouvelle section pour la prévisualisation du graphique */}
       <CollapsibleSection
-        title={t('tests.before.recipeData.previewChart.title', 'Prévisualisation du graphique')}
+        title={t('trials.before.recipeData.previewChart.title', 'Prévisualisation du graphique')}
         isExpandedByDefault={false}
-        sectionId="test-recipe-preview"
+        sectionId="trial-recipe-preview"
         rememberState={true}
         level={1}
       >
@@ -150,9 +150,9 @@ const RecipeDataSection = ({
       </CollapsibleSection>
       
       <CollapsibleSection
-        title={t('tests.before.recipeData.quenchData.title')}
+        title={t('trials.before.recipeData.quenchData.title')}
         isExpandedByDefault={true}
-        sectionId="test-quench-data"
+        sectionId="trial-quench-data"
         rememberState={true}
         level={1}
       >

@@ -107,7 +107,7 @@ const getAllSteels = async (options = {}) => {
   
   if (steelColumns.includes(sortBy)) {
     // Si c'est une colonne de la table Steel, utiliser la syntaxe d'association
-    orderClause = [[{ model: steel }, sortBy, sortOrder]];
+    orderClause = [[{ model: steel, as: 'steel' }, sortBy, sortOrder]];
   } else {
     // Si c'est une colonne de Node (name, modified_at, etc.)
     orderClause = [[sortBy, sortOrder]];
@@ -122,7 +122,8 @@ const getAllSteels = async (options = {}) => {
       where: whereCondition,
       include: [{
         model: steel,
-        attributes: ['grade', 'family', 'standard', 'equivalents', 'chemistery', 'elements']
+        as: 'steel',
+        attributes: ['grade', 'family', 'standard', 'chemistery', 'elements']
       }],
       order: orderClause,
       limit: parseInt(limit),
@@ -140,6 +141,7 @@ const getAllSteels = async (options = {}) => {
       where: whereCondition,
       include: [{
         model: steel,
+        as: 'steel',
         attributes: []
       }]
     });
@@ -177,15 +179,17 @@ const getSteelGrades = async () => {
     where: { type: 'steel' },
     include: [{
       model: steel,
+      as: 'steel',
       attributes: ['grade', 'family', 'standard']
     }],
-    order: [[{ model: steel }, 'grade', 'ASC']]
+    order: [[{ model: steel, as: 'steel' }, 'grade', 'ASC']]
   });
   
-  // Extraire les grades uniques
+  // Extraire les grades avec leur node_id pour référence FK
   const grades = steels
     .filter(node => node.steel && node.steel.grade)
     .map(node => ({
+      id: node.id,           // ✅ AJOUTÉ : node_id pour FK steel_node_id
       grade: node.steel.grade,
       family: node.steel.family,
       standard: node.steel.standard
@@ -203,10 +207,14 @@ const getSteelGrades = async () => {
  * @returns {Promise<Object>} Détails de l'acier
  */
 const getSteelById = async (steelId) => {
+  logger.info(`=== getSteelById appelé avec ID: ${steelId} ===`);
+  
+  // Récupérer le node avec les données steel de base
   const steelNode = await node.findByPk(steelId, {
     include: [{
       model: steel,
-      attributes: ['grade', 'family', 'standard', 'equivalents', 'chemistery', 'elements']
+      as: 'steel',
+      attributes: ['node_id', 'grade', 'family', 'standard', 'chemistery', 'elements']
     }]
   });
   
@@ -214,7 +222,54 @@ const getSteelById = async (steelId) => {
     throw new NotFoundError('Acier non trouvé');
   }
   
-  return steelNode;
+  logger.info(`Node trouvé: ${steelNode.name}, type: ${steelNode.type}`);
+  
+  // Récupérer les équivalents depuis la table steel_equivalents avec une requête SQL brute
+  if (steelNode.steel) {
+    logger.info(`Recherche des équivalents pour steel_node_id = ${steelId}...`);
+    
+    // Récupérer les équivalents dans les DEUX directions (bidirectionnel)
+    const equivalentsData = await sequelize.query(
+      `SELECT DISTINCT s.node_id, s.grade, s.family, s.standard, n.id, n.name
+       FROM steel_equivalents se
+       INNER JOIN steels s ON (se.equivalent_steel_node_id = s.node_id OR se.steel_node_id = s.node_id)
+       INNER JOIN nodes n ON s.node_id = n.id
+       WHERE (se.steel_node_id = ? OR se.equivalent_steel_node_id = ?)
+       AND s.node_id != ?`,
+      {
+        replacements: [steelId, steelId, steelId],
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+    
+    logger.info(`Résultat de la requête SQL:`, JSON.stringify(equivalentsData, null, 2));
+    
+    // Formater les données pour correspondre à la structure attendue
+    const formattedEquivalents = equivalentsData && equivalentsData.length > 0 
+      ? equivalentsData.map(eq => ({
+          node_id: eq.node_id,
+          grade: eq.grade,
+          family: eq.family,
+          standard: eq.standard,
+          node: {
+            id: eq.id,
+            name: eq.name
+          }
+        }))
+      : [];
+    
+    logger.info(`${formattedEquivalents.length} équivalent(s) trouvé(s) pour l'acier ${steelId}`);
+    logger.info(`Équivalents formatés:`, JSON.stringify(formattedEquivalents, null, 2));
+    
+    // Convertir steelNode en objet plain et ajouter les équivalents
+    const result = steelNode.toJSON();
+    result.steel.equivalents = formattedEquivalents;
+    
+    logger.info(`Retour de getSteelById - steel.equivalents:`, result.steel.equivalents);
+    return result;
+  }
+  
+  return steelNode.toJSON();
 };
 
 /**
@@ -228,49 +283,22 @@ const addReciprocalEquivalents = async (steelId, equivalents, transaction) => {
   
   logger.info(`Ajout de réciprocité pour l'acier ${steelId} vers:`, equivalents.map(eq => eq.steel_id || eq.steelId || eq.id));
   
+  const now = new Date();
   for (const equivalent of equivalents) {
-    // Vérifier les différents formats possibles de l'ID
     const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
     
     if (equivalentId) {
-      logger.info(`Traitement de l'équivalent ${equivalentId}...`);
+      logger.info(`Ajout de la réciprocité: acier ${equivalentId} -> acier ${steelId}`);
       
-      // Récupérer l'acier équivalent
-      const equivalentSteel = await steel.findOne({
-        where: { node_id: equivalentId },
-        transaction
-      });
-      
-      if (equivalentSteel) {
-        let currentEquivalents = equivalentSteel.equivalents || [];
-        
-        logger.info(`Équivalents actuels de l'acier ${equivalentId}:`, currentEquivalents);
-        
-        // Vérifier si la réciprocité n'existe pas déjà
-        const alreadyExists = currentEquivalents.some(eq => {
-          const existingId = eq.steel_id || eq.steelId || eq.id;
-          return existingId == steelId;
-        });
-          if (!alreadyExists) {
-          currentEquivalents.push(standardizeEquivalent(steelId));
-          
-          logger.info(`Ajout de la réciprocité: acier ${equivalentId} -> acier ${steelId}`);
-          
-          // Utiliser une requête SQL directe pour forcer la mise à jour du JSON
-          await sequelize.query(
-            'UPDATE steels SET equivalents = ? WHERE node_id = ?',
-            {
-              replacements: [JSON.stringify(currentEquivalents), equivalentId],
-              type: sequelize.QueryTypes.UPDATE,
-              transaction
-            }
-          );
-        } else {
-          logger.info(`Réciprocité déjà existante: acier ${equivalentId} -> acier ${steelId}`);
+      // Insérer la relation réciproque dans steel_equivalents
+      await sequelize.query(
+        'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id, createdAt, updatedAt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id), updatedAt = VALUES(updatedAt)',
+        {
+          replacements: [equivalentId, steelId, now, now],
+          type: sequelize.QueryTypes.INSERT,
+          transaction
         }
-      } else {
-        logger.warn(`Acier équivalent ${equivalentId} non trouvé`);
-      }
+      );
     }
   }
 };
@@ -288,26 +316,17 @@ const removeReciprocalEquivalents = async (steelId, equivalents, transaction) =>
     const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
     
     if (equivalentId) {
-      const equivalentSteel = await steel.findOne({
-        where: { node_id: equivalentId },
-        transaction
-      });
+      logger.info(`Suppression de la réciprocité: acier ${equivalentId} -> acier ${steelId}`);
       
-      if (equivalentSteel && equivalentSteel.equivalents) {
-        const updatedEquivalents = equivalentSteel.equivalents.filter(
-          eq => eq.steel_id != steelId
-        );
-        
-        // Utiliser une requête SQL directe pour forcer la mise à jour du JSON
-        await sequelize.query(
-          'UPDATE steels SET equivalents = ? WHERE node_id = ?',
-          {
-            replacements: [JSON.stringify(updatedEquivalents), equivalentId],
-            type: sequelize.QueryTypes.UPDATE,
-            transaction
-          }
-        );
-      }
+      // Supprimer de la table steel_equivalents
+      await sequelize.query(
+        'DELETE FROM steel_equivalents WHERE steel_node_id = ? AND equivalent_steel_node_id = ?',
+        {
+          replacements: [equivalentId, steelId],
+          type: sequelize.QueryTypes.DELETE,
+          transaction
+        }
+      );
     }
   }
 };
@@ -333,6 +352,7 @@ const createSteel = async (steelData) => {
     where: { type: 'steel' },
     include: [{
       model: steel,
+      as: 'steel',
       where: {
         grade: grade,
         standard: standard || null
@@ -364,13 +384,28 @@ const createSteel = async (steelData) => {
       grade,
       family,
       standard,
-      equivalents: normalizedEquivalents,
       chemistery,
       elements
     }, { transaction: t });
     
-    // Ajouter la réciprocité des équivalents
+    // Ajouter les équivalents dans la table steel_equivalents
     if (normalizedEquivalents && normalizedEquivalents.length > 0) {
+      const now = new Date();
+      // Ajouter les relations directes
+      for (const equivalent of normalizedEquivalents) {
+        const equivalentId = equivalent.steel_id || equivalent.steelId || equivalent.id;
+        if (equivalentId) {
+          await sequelize.query(
+            'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id, createdAt, updatedAt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id), updatedAt = VALUES(updatedAt)',
+            {
+              replacements: [newNode.id, equivalentId, now, now],
+              type: sequelize.QueryTypes.INSERT,
+              transaction: t
+            }
+          );
+        }
+      }
+      // Ajouter la réciprocité
       await addReciprocalEquivalents(newNode.id, normalizedEquivalents, t);
     }
     
@@ -396,7 +431,8 @@ const updateSteel = async (steelId, steelData) => {
   const steelNode = await node.findOne({
     where: { id: steelId, type: 'steel' },
     include: [{
-      model: steel
+      model: steel,
+      as: 'steel'
     }]
   });
   
@@ -413,6 +449,7 @@ const updateSteel = async (steelId, steelData) => {
       },
       include: [{
         model: steel,
+        as: 'steel',
         where: {
           grade: steelData.grade,
           standard: steelData.standard
@@ -426,16 +463,29 @@ const updateSteel = async (steelId, steelData) => {
   }
   
   // Mettre à jour dans une transaction
-  await sequelize.transaction(async (t) => {    // Gérer les équivalents si modifiés
+  await sequelize.transaction(async (t) => {
+    // Gérer les équivalents si modifiés
     if (steelData.equivalents !== undefined) {
-      const oldEquivalents = normalizeEquivalents(steelNode.steel?.equivalents || []);
+      // Récupérer les anciens équivalents depuis la table steel_equivalents (bidirectionnel)
+      const oldEquivalentsResult = await sequelize.query(
+        `SELECT DISTINCT 
+          CASE 
+            WHEN se.steel_node_id = ? THEN se.equivalent_steel_node_id 
+            ELSE se.steel_node_id 
+          END as id
+         FROM steel_equivalents se
+         WHERE se.steel_node_id = ? OR se.equivalent_steel_node_id = ?`,
+        {
+          replacements: [steelId, steelId, steelId],
+          type: sequelize.QueryTypes.SELECT,
+          transaction: t
+        }
+      );
+      const oldEquivalents = oldEquivalentsResult.map(row => ({ id: row.id }));
       const newEquivalents = normalizeEquivalents(steelData.equivalents || []);
       
       // Identifier les équivalents à ajouter et à supprimer
-      const oldEquivalentIds = oldEquivalents.map(eq => {
-        const id = eq.steel_id || eq.steelId || eq.id;
-        return id ? parseInt(id) : null;
-      }).filter(id => id !== null);
+      const oldEquivalentIds = oldEquivalents.map(eq => parseInt(eq.id)).filter(id => !isNaN(id));
       
       const newEquivalentIds = newEquivalents.map(eq => {
         const id = eq.steel_id || eq.steelId || eq.id;
@@ -444,9 +494,8 @@ const updateSteel = async (steelId, steelData) => {
       
       // Équivalents à supprimer (présents dans l'ancien mais pas dans le nouveau)
       const equivalentsToRemove = oldEquivalents.filter(oldEq => {
-        const oldId = oldEq.steel_id || oldEq.steelId || oldEq.id;
-        const parsedOldId = oldId ? parseInt(oldId) : null;
-        return parsedOldId && !newEquivalentIds.includes(parsedOldId);
+        const oldId = parseInt(oldEq.id);
+        return !isNaN(oldId) && !newEquivalentIds.includes(oldId);
       });
       
       // Équivalents à ajouter (présents dans le nouveau mais pas dans l'ancien)
@@ -459,16 +508,40 @@ const updateSteel = async (steelId, steelData) => {
       logger.info(`Mise à jour des équivalents pour l'acier ${steelId}:`);
       logger.info(`- Anciens équivalents: ${oldEquivalentIds.join(', ')}`);
       logger.info(`- Nouveaux équivalents: ${newEquivalentIds.join(', ')}`);
-      logger.info(`- À supprimer: ${equivalentsToRemove.map(eq => eq.steel_id || eq.steelId || eq.id).join(', ')}`);
+      logger.info(`- À supprimer: ${equivalentsToRemove.map(eq => eq.id).join(', ')}`);
       logger.info(`- À ajouter: ${equivalentsToAdd.map(eq => eq.steel_id || eq.steelId || eq.id).join(', ')}`);
       
-      // Supprimer les réciprocités pour les équivalents supprimés
+      // Supprimer les anciennes relations dans les DEUX sens
       if (equivalentsToRemove.length > 0) {
-        await removeReciprocalEquivalents(steelId, equivalentsToRemove, t);
+        for (const equiv of equivalentsToRemove) {
+          // Supprimer dans les deux directions
+          await sequelize.query(
+            'DELETE FROM steel_equivalents WHERE (steel_node_id = ? AND equivalent_steel_node_id = ?) OR (steel_node_id = ? AND equivalent_steel_node_id = ?)',
+            {
+              replacements: [steelId, equiv.id, equiv.id, steelId],
+              type: sequelize.QueryTypes.DELETE,
+              transaction: t
+            }
+          );
+        }
       }
       
-      // Ajouter les réciprocités pour les nouveaux équivalents
+      // Ajouter les nouvelles relations directes
       if (equivalentsToAdd.length > 0) {
+        const now = new Date();
+        for (const equiv of equivalentsToAdd) {
+          const equivalentId = equiv.steel_id || equiv.steelId || equiv.id;
+          if (equivalentId) {
+            await sequelize.query(
+              'INSERT INTO steel_equivalents (steel_node_id, equivalent_steel_node_id, createdAt, updatedAt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE steel_node_id = VALUES(steel_node_id), updatedAt = VALUES(updatedAt)',
+              {
+                replacements: [steelId, equivalentId, now, now],
+                type: sequelize.QueryTypes.INSERT,
+                transaction: t
+              }
+            );
+          }
+        }
         await addReciprocalEquivalents(steelId, equivalentsToAdd, t);
       }
     }
@@ -514,12 +587,68 @@ const updateSteel = async (steelId, steelData) => {
  * @param {number} steelId - ID de l'acier à supprimer
  * @returns {Promise<boolean>} Résultat de l'opération
  */
+/**
+ * Vérifie l'utilisation d'un acier dans le système
+ * @param {number} steelId - ID de l'acier
+ * @returns {Promise<Object>} Informations sur l'utilisation
+ */
+const checkSteelUsage = async (steelId) => {
+  const usage = {
+    isUsed: false,
+    totalCount: 0,
+    details: []
+  };
+  
+  // 1. Vérifier si cet acier est utilisé comme équivalent par d'autres aciers
+  const equivalentReferences = await sequelize.query(
+    'SELECT steel_node_id FROM steel_equivalents WHERE equivalent_steel_node_id = ?',
+    {
+      replacements: [steelId],
+      type: sequelize.QueryTypes.SELECT
+    }
+  );
+  
+  if (equivalentReferences.length > 0) {
+    usage.isUsed = true;
+    usage.totalCount += equivalentReferences.length;
+    usage.details.push({
+      type: 'equivalent',
+      table: 'steel_equivalents',
+      count: equivalentReferences.length,
+      message: `Utilisé comme équivalent par ${equivalentReferences.length} autre(s) acier(s)`
+    });
+  }
+  
+  // 2. Vérifier si cet acier est utilisé par des pièces
+  const partReferences = await sequelize.query(
+    'SELECT COUNT(*) as count FROM parts WHERE steel_node_id = ?',
+    {
+      replacements: [steelId],
+      type: sequelize.QueryTypes.SELECT
+    }
+  );
+  
+  if (partReferences[0].count > 0) {
+    usage.isUsed = true;
+    usage.totalCount += partReferences[0].count;
+    usage.details.push({
+      type: 'part',
+      table: 'parts',
+      count: partReferences[0].count,
+      message: `Utilisé par ${partReferences[0].count} pièce(s)`
+    });
+  }
+  
+  return usage;
+};
+
 const deleteSteel = async (steelId) => {
   // Récupérer l'acier
   const steelNode = await node.findOne({
     where: { id: steelId, type: 'steel' },
     include: [{
-      model: steel
+      model: steel,
+      as: 'steel'
     }]
   });
   
@@ -529,50 +658,37 @@ const deleteSteel = async (steelId) => {
   
   try {
     // Vérifier les références avant suppression
+    const usage = await checkSteelUsage(steelId);
     
-    // 1. Vérifier si cet acier est utilisé comme équivalent par d'autres aciers
-    const steelsWithEquivalents = await steel.findAll({
-      where: {
-        equivalents: {
-          [Op.ne]: null
-        }
-      },
-      include: [{
-        model: node,
-        required: true
-      }]
-    });
-      // Chercher si l'acier à supprimer est référencé dans les équivalents
-    const referencingSteel = steelsWithEquivalents.find(s => {
-      if (s.equivalents && Array.isArray(s.equivalents)) {
-        return s.equivalents.some(equiv => {
-          const equivalentId = equiv.steel_id || equiv.steelId || equiv.id;
-          return equivalentId == steelId;
-        });
-      }
-      return false;
-    });
-    
-    if (referencingSteel) {
+    if (usage.isUsed) {
+      const messages = usage.details.map(d => d.message).join('. ');
       throw new ValidationError(
-        `Impossible de supprimer cet acier car il est utilisé comme équivalent par l'acier "${referencingSteel.Node.name}" (ID: ${referencingSteel.node_id}). Veuillez d'abord retirer cette référence.`
+        `Impossible de supprimer cet acier car il est utilisé dans le système. ${messages}. Veuillez d'abord retirer ces références.`
       );
     }
     
     // 2. Vérifier si cet acier est utilisé par des pièces
-    // (À implémenter selon la structure de votre base de données)    // Supprimer dans une transaction
+    // (À implémenter selon la structure de votre base de données)
+
+    // Supprimer dans une transaction
     await sequelize.transaction(async (t) => {
-      // Supprimer les réciprocités avant de supprimer l'acier
-      const equivalents = steelNode.steel?.equivalents || [];
-      await removeReciprocalEquivalents(steelId, equivalents, t);
+      // 1. Supprimer toutes les entrées d'équivalents dans steel_equivalents
+      await sequelize.query(
+        'DELETE FROM steel_equivalents WHERE steel_node_id = ? OR equivalent_steel_node_id = ?',
+        {
+          replacements: [steelId, steelId],
+          type: sequelize.QueryTypes.DELETE,
+          transaction: t
+        }
+      );
       
-      // 1. Supprimer les données Steel en premier (à cause de la clé étrangère)
+      // 2. Supprimer les données Steel (à cause de la clé étrangère)
       await steel.destroy({
         where: { node_id: steelId },
         transaction: t
       });
       
-      // 2. Supprimer toutes les entrées dans la table closure où ce nœud apparaît
+      // 3. Supprimer toutes les entrées dans la table closure où ce nœud apparaît
       const { closure: Closure } = require('../models');
       await closure.destroy({
         where: {
@@ -584,14 +700,212 @@ const deleteSteel = async (steelId) => {
         transaction: t
       });
       
-      // 3. Supprimer le nœud
+      // 4. Supprimer le nœud
       await steelNode.destroy({ transaction: t });
     });
     
     return true;
   } catch (error) {
     logger.error(`Erreur lors de la suppression de l'acier #${steelId}: ${error.message}`, error);
-    throw error;  }
+    throw error;
+  }
+};
+
+/**
+ * Supprime un acier en forçant (retire toutes les références)
+ * @param {number} steelId - ID de l'acier
+ * @returns {Promise<Object>} Résultat de l'opération
+ */
+const forceDeleteSteel = async (steelId) => {
+  // Récupérer l'acier
+  const steelNode = await node.findOne({
+    where: { id: steelId, type: 'steel' },
+    include: [{
+      model: steel,
+      as: 'steel'
+    }]
+  });
+  
+  if (!steelNode) {
+    throw new NotFoundError('Acier non trouvé');
+  }
+  
+  try {
+    // Vérifier l'utilisation
+    const usage = await checkSteelUsage(steelId);
+    
+    // Supprimer dans une transaction
+    await sequelize.transaction(async (t) => {
+      // 1. Retirer toutes les références dans steel_equivalents
+      await sequelize.query(
+        'DELETE FROM steel_equivalents WHERE steel_node_id = ? OR equivalent_steel_node_id = ?',
+        {
+          replacements: [steelId, steelId],
+          type: sequelize.QueryTypes.DELETE,
+          transaction: t
+        }
+      );
+      
+      // 2. Mettre à NULL les références dans les pièces
+      await sequelize.query(
+        'UPDATE parts SET steel_node_id = NULL WHERE steel_node_id = ?',
+        {
+          replacements: [steelId],
+          type: sequelize.QueryTypes.UPDATE,
+          transaction: t
+        }
+      );
+      
+      // 3. Supprimer les données Steel
+      await steel.destroy({
+        where: { node_id: steelId },
+        transaction: t
+      });
+      
+      // 4. Supprimer les entrées dans la table closure
+      const { closure: Closure } = require('../models');
+      await closure.destroy({
+        where: {
+          [Op.or]: [
+            { ancestor_id: steelId },
+            { descendant_id: steelId }
+          ]
+        },
+        transaction: t
+      });
+      
+      // 5. Supprimer le nœud
+      await steelNode.destroy({ transaction: t });
+    });
+    
+    return {
+      success: true,
+      message: `Acier supprimé avec succès (${usage.totalCount} référence(s) retirée(s))`,
+      removedReferences: usage.totalCount
+    };
+  } catch (error) {
+    logger.error(`Erreur lors de la suppression forcée de l'acier #${steelId}: ${error.message}`, error);
+    throw error;
+  }
+};
+
+/**
+ * Remplace toutes les références à un acier par un autre puis supprime l'ancien
+ * @param {number} oldSteelId - ID de l'acier à supprimer
+ * @param {number} newSteelId - ID de l'acier de remplacement
+ * @returns {Promise<Object>} Résultat de l'opération
+ */
+const replaceSteelAndDelete = async (oldSteelId, newSteelId) => {
+  // Vérifier que les deux aciers existent
+  const oldSteel = await node.findOne({
+    where: { id: oldSteelId, type: 'steel' },
+    include: [{ model: steel, as: 'steel' }]
+  });
+  
+  if (!oldSteel) {
+    throw new NotFoundError('Acier à supprimer non trouvé');
+  }
+  
+  const newSteel = await node.findOne({
+    where: { id: newSteelId, type: 'steel' },
+    include: [{ model: steel, as: 'steel' }]
+  });
+  
+  if (!newSteel) {
+    throw new NotFoundError('Acier de remplacement non trouvé');
+  }
+  
+  if (oldSteelId === newSteelId) {
+    throw new ValidationError('L\'acier de remplacement doit être différent de l\'acier à supprimer');
+  }
+  
+  try {
+    // Vérifier l'utilisation
+    const usage = await checkSteelUsage(oldSteelId);
+    
+    // Supprimer dans une transaction
+    await sequelize.transaction(async (t) => {
+      // 1. Remplacer dans steel_equivalents
+      await sequelize.query(
+        'UPDATE steel_equivalents SET steel_node_id = ? WHERE steel_node_id = ?',
+        {
+          replacements: [newSteelId, oldSteelId],
+          type: sequelize.QueryTypes.UPDATE,
+          transaction: t
+        }
+      );
+      
+      await sequelize.query(
+        'UPDATE steel_equivalents SET equivalent_steel_node_id = ? WHERE equivalent_steel_node_id = ?',
+        {
+          replacements: [newSteelId, oldSteelId],
+          type: sequelize.QueryTypes.UPDATE,
+          transaction: t
+        }
+      );
+      
+      // Supprimer les doublons potentiels
+      await sequelize.query(
+        'DELETE FROM steel_equivalents WHERE steel_node_id = equivalent_steel_node_id',
+        {
+          type: sequelize.QueryTypes.DELETE,
+          transaction: t
+        }
+      );
+      
+      // 2. Remplacer dans parts
+      await sequelize.query(
+        'UPDATE parts SET steel_node_id = ? WHERE steel_node_id = ?',
+        {
+          replacements: [newSteelId, oldSteelId],
+          type: sequelize.QueryTypes.UPDATE,
+          transaction: t
+        }
+      );
+      
+      // 3. Supprimer toutes les références restantes à l'ancien acier dans steel_equivalents
+      await sequelize.query(
+        'DELETE FROM steel_equivalents WHERE steel_node_id = ? OR equivalent_steel_node_id = ?',
+        {
+          replacements: [oldSteelId, oldSteelId],
+          type: sequelize.QueryTypes.DELETE,
+          transaction: t
+        }
+      );
+      
+      // 4. Supprimer les données Steel
+      await steel.destroy({
+        where: { node_id: oldSteelId },
+        transaction: t
+      });
+      
+      // 5. Supprimer les entrées dans la table closure
+      const { closure: Closure } = require('../models');
+      await closure.destroy({
+        where: {
+          [Op.or]: [
+            { ancestor_id: oldSteelId },
+            { descendant_id: oldSteelId }
+          ]
+        },
+        transaction: t
+      });
+      
+      // 6. Supprimer le nœud
+      await oldSteel.destroy({ transaction: t });
+    });
+    
+    return {
+      success: true,
+      message: `Acier remplacé et supprimé avec succès (${usage.totalCount} référence(s) mise(s) à jour)`,
+      oldSteelId,
+      newSteelId,
+      updatedReferences: usage.totalCount
+    };
+  } catch (error) {
+    logger.error(`Erreur lors du remplacement de l'acier #${oldSteelId} par #${newSteelId}: ${error.message}`, error);
+    throw error;
+  }
 };
 
 /**
@@ -650,5 +964,8 @@ module.exports = {
   createSteel,
   updateSteel,
   deleteSteel,
+  checkSteelUsage,
+  forceDeleteSteel,
+  replaceSteelAndDelete,
   cleanUpEquivalents // Fonction utilitaire pour la migration
 };

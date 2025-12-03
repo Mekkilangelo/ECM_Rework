@@ -18,7 +18,6 @@ const useClientData = (client, setFormData, setMessage, setFetchingClient) => {
           // Récupération des données du client avec la méthode refactorisée
           const clientData = await clientService.getClient(client.id);
           
-          console.log("Client data received:", clientData);
           
           setFormData({
             name: clientData.name || '',

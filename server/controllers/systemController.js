@@ -169,12 +169,12 @@ const cleanupTempFiles = async (req, res) => {
     // Récupérer les stats avant nettoyage
     const statsBefore = {};
     
-    console.log('🧹 Début du nettoyage manuel des fichiers temporaires...');
+    
     
     // Effectuer le nettoyage
     await cleanupOrphanedTempFiles();
     
-    console.log('✅ Nettoyage manuel terminé');
+    
     
     return res.status(200).json({
       success: true,

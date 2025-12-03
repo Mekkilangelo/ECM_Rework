@@ -11,7 +11,7 @@
 //  */
 // export const analyzeObjectStructure = (obj, objectName = 'Object', verbose = false) => {
 //   if (!obj) {
-//     console.log(`${objectName} est ${obj === null ? 'null' : 'undefined'}`);
+//     
 //     return;
 //   }
 
@@ -19,7 +19,7 @@
   
 //   const printProps = (object, prefix = '') => {
 //     if (typeof object !== 'object' || object === null) {
-//       console.log(`${prefix}: ${object}`);
+//       
 //       return;
 //     }
     
@@ -28,7 +28,7 @@
       
 //       if (value === null || value === undefined) {
 //         if (verbose) {
-//           console.log(`${fullPath}: ${value === null ? 'null' : 'undefined'}`);
+//           
 //         }
 //       } else if (typeof value === 'object' && !Array.isArray(value)) {
 //         console.group(`${fullPath} (object)`);
@@ -38,19 +38,19 @@
 //         console.group(`${fullPath} (array, length: ${value.length})`);
 //         if (value.length > 0) {
 //           if (typeof value[0] === 'object' && value[0] !== null) {
-//             console.log('Premier élément:');
+//             
 //             printProps(value[0], '');
 //             if (value.length > 1) {
-//               console.log(`... et ${value.length - 1} autres éléments`);
+//               
 //             }
 //           } else {
-//             console.log(`Valeurs: ${value.slice(0, 3).join(', ')}${value.length > 3 ? ', ...' : ''}`);
+//             .join(', ')}${value.length > 3 ? ', ...' : ''}`);
 //           }
 //         }
 //         console.groupEnd();
 //       } else {
 //         // const valueStr = typeof value === 'string' ? `"${value}"` : value;
-//         // console.log(`${fullPath}: ${valueStr} (${typeof value})`);
+//         // `);
 //       }
 //     });
 //   };
@@ -68,13 +68,13 @@
 // export const traceFunction = (fn, fnName = 'function') => {
 //   return (...args) => {
 //     console.group(`Exécution de ${fnName}`);
-//     console.log('Arguments:', ...args);
+//     
 //     try {
 //       const result = fn(...args);
 //       if (result instanceof Promise) {
 //         return result
 //           .then(res => {
-//             console.log('Résultat (promesse résolue):', res);
+//             :', res);
 //             console.groupEnd();
 //             return res;
 //           })
@@ -84,7 +84,7 @@
 //             throw err;
 //           });
 //       } else {
-//         console.log('Résultat:', result);
+//         
 //         console.groupEnd();
 //         return result;
 //       }

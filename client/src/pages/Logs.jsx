@@ -415,7 +415,8 @@ const Logs = () => {
                 ) : (
                   <>
                     <div className="table-responsive">
-                      <Table hover className="mb-0">                        <thead className="bg-light">
+                      <Table hover className="mb-0">
+                        <thead className="bg-light">
                           <tr>
                             <th width="5%">{t('logs.level')}</th>
                             <th width="20%">
@@ -449,14 +450,16 @@ const Logs = () => {
                                 <small className="text-muted">
                                   {new Date(log.timestamp).toLocaleString()}
                                 </small>
-                              </td>                              <td>
+                              </td>
+                              <td>
                                 <Badge bg="outline-secondary" className="user-badge">
                                   {log.username || 'Système'}
                                 </Badge>
                               </td>
                               <td>
                                 <code className="action-code">{log.action}</code>
-                              </td>                              <td>{log.message}</td>
+                              </td>
+                              <td>{log.message}</td>
                             </tr>
                           ))}
                         </tbody>

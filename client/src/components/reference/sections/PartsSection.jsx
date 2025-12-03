@@ -22,7 +22,7 @@ const PartsSection = () => {
         <Tab.Pane eventKey="designation">
           <Card>
             <Card.Body>
-              <EnumTableContent table="parts" column="designation" />
+              <EnumTableContent refTable="ref_designation" />
             </Card.Body>
           </Card>
         </Tab.Pane>

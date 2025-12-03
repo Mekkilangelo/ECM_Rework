@@ -237,11 +237,96 @@ const deleteSteel = async (req, res, next) => {
   }
 };
 
+/**
+ * Vérifie l'utilisation d'un acier
+ * @route GET /api/steels/:steelId/usage
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Informations sur l'utilisation
+ */
+const checkSteelUsage = async (req, res, next) => {
+  try {
+    const { steelId } = req.params;
+    
+    const usage = await steelService.checkSteelUsage(steelId);
+    
+    return apiResponse.success(res, usage, 'Vérification d\'utilisation réussie');
+  } catch (error) {
+    logger.error(`Erreur lors de la vérification d'utilisation de l'acier #${req.params.steelId}: ${error.message}`, error);
+    next(error);
+  }
+};
+
+/**
+ * Supprime un acier en forçant (retire toutes les références)
+ * @route DELETE /api/steels/:steelId/force
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Confirmation de suppression
+ */
+const forceDeleteSteel = async (req, res, next) => {
+  try {
+    const { steelId } = req.params;
+    
+    logger.info(`Suppression forcée de l'acier #${steelId}`);
+    
+    const result = await steelService.forceDeleteSteel(steelId);
+    
+    return apiResponse.success(res, {
+      deletedId: steelId,
+      removedReferences: result.removedReferences
+    }, result.message);
+  } catch (error) {
+    logger.error(`Erreur lors de la suppression forcée de l'acier #${req.params.steelId}: ${error.message}`, error);
+    next(error);
+  }
+};
+
+/**
+ * Remplace un acier par un autre puis supprime l'ancien
+ * @route PUT /api/steels/:steelId/replace
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Middleware suivant
+ * @returns {Object} Confirmation du remplacement
+ */
+const replaceSteelAndDelete = async (req, res, next) => {
+  try {
+    const { steelId } = req.params;
+    const { newSteelId } = req.body;
+    
+    if (!newSteelId) {
+      return res.status(400).json({
+        success: false,
+        message: 'L\'ID du nouvel acier est requis'
+      });
+    }
+    
+    logger.info(`Remplacement de l'acier #${steelId} par #${newSteelId}`);
+    
+    const result = await steelService.replaceSteelAndDelete(parseInt(steelId), parseInt(newSteelId));
+    
+    return apiResponse.success(res, {
+      oldSteelId: result.oldSteelId,
+      newSteelId: result.newSteelId,
+      updatedReferences: result.updatedReferences
+    }, result.message);
+  } catch (error) {
+    logger.error(`Erreur lors du remplacement de l'acier #${req.params.steelId}: ${error.message}`, error);
+    next(error);
+  }
+};
+
 module.exports = {
   getSteels,
   getSteelsGrades,
   getSteelById,
   createSteel,
   updateSteel,
-  deleteSteel
+  deleteSteel,
+  checkSteelUsage,
+  forceDeleteSteel,
+  replaceSteelAndDelete
 };

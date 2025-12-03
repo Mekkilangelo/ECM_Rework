@@ -1,24 +1,22 @@
 /**
  * Middleware pour pré-parser les données de formulaire multipart
- * et résoudre le chemin de fichier avant le stockage par multer
+ * et résoudre le chemin de fichier avant le stockage
+ * 
+ * VERSION REFACTORISÉE : Utilise un dossier temporaire unique par upload
+ * Les fichiers seront déplacés vers leur storage_key final par fileService
  */
 
 const multer = require('multer');
-const { node } = require('../models');
-const { buildPhysicalFilePath } = require('./file-path');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const crypto = require('crypto');
 
 /**
- * Middleware pour résoudre le chemin basé sur les données de la requête
- * Cette approche alternative utilise directement multer avec une logique conditionnelle
+ * Middleware pour gérer l'upload multipart
+ * Stocke temporairement tous les fichiers dans un dossier temp unique
  */
 const parseAndResolvePath = async (req, res, next) => {
   try {
-    console.log('🔍 [parseAndResolvePath] Début du parsing...');
-    
     // Créer un middleware multer temporaire qui accepte tout et parse les champs
     const tempStorage = multer.memoryStorage();
     const tempUpload = multer({ 
@@ -35,79 +33,58 @@ const parseAndResolvePath = async (req, res, next) => {
         console.error('❌ [parseAndResolvePath] Erreur multer temp:', err);
         return next(err);
       }
-        const { nodeId, category, subcategory } = req.body;
-      console.log('📋 [parseAndResolvePath] Données parsées:', { nodeId, category, subcategory });
-      console.log('📄 [parseAndResolvePath] Fichiers détectés:', req.files ? req.files.length : 0);
 
-      // Si pas de nodeId, passer au middleware suivant sans traitement
-      if (!nodeId) {
-        console.log('📂 [parseAndResolvePath] Pas de nodeId -> passage au middleware suivant');
+      // Si pas de fichiers, passer au middleware suivant
+      if (!req.files || req.files.length === 0) {
         return next();
       }
-      
+
       try {
-        // Récupérer les informations du nœud
-        const parentNode = await node.findByPk(nodeId);
-        console.log('🔍 [parseAndResolvePath] Nœud trouvé:', parentNode ? `${parentNode.id} - ${parentNode.name}` : 'null');
+        // Créer un dossier temporaire unique pour cet upload
+        const uploadBaseDir = process.env.UPLOAD_BASE_DIR || path.join(__dirname, '../uploads');
+        const tempUploadId = uuidv4();
+        const tempDir = path.join(uploadBaseDir, 'temp_uploads', tempUploadId);
         
-        if (!parentNode) {
-          return res.status(404).json({ message: 'Nœud non trouvé' });
+        // Créer le répertoire temporaire
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
         }
         
-        // Construire le chemin physique
-        const physicalPath = buildPhysicalFilePath(parentNode, category, subcategory);
-        console.log('📁 [parseAndResolvePath] Chemin physique résolu:', physicalPath);
+        // Convertir les fichiers en mémoire vers des fichiers temporaires sur disque
+        const convertedFiles = [];
         
-        // Créer le répertoire s'il n'existe pas
-        if (!fs.existsSync(physicalPath)) {
-          fs.mkdirSync(physicalPath, { recursive: true });
-          console.log('📁 [parseAndResolvePath] Répertoire créé:', physicalPath);
-        }
-        
-        // Stocker le chemin résolu
-        req.resolvedPath = physicalPath;
-        
-        // Convertir les fichiers en mémoire vers des fichiers sur disque
-        if (req.files && req.files.length > 0) {
-          const convertedFiles = [];
+        for (const file of req.files) {
+          // Générer un nom sûr et unique
+          const uniqueSuffix = uuidv4().split('-')[0];
+          const safeFileName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const fileName = `${uniqueSuffix}-${safeFileName}`;
+          const filePath = path.join(tempDir, fileName);
           
-          for (const file of req.files) {
-            // Générer un nom unique
-            const crypto = require('crypto');
-            const uniqueSuffix = crypto.randomBytes(8).toString('hex');
-            const safeFileName = file.originalname.replace(/\s+/g, '_');
-            const fileName = `${uniqueSuffix}-${safeFileName}`;
-            const filePath = path.join(physicalPath, fileName);
-            
-            // Écrire le fichier sur disque
-            fs.writeFileSync(filePath, file.buffer);
-            
-            // Créer un objet file compatible avec multer
-            convertedFiles.push({
-              fieldname: file.fieldname,
-              originalname: file.originalname,
-              encoding: file.encoding,
-              mimetype: file.mimetype,
-              size: file.size,
-              destination: physicalPath,
-              filename: fileName,
-              path: filePath,
-              buffer: undefined // Libérer la mémoire
-            });
-            
-            console.log('💾 [parseAndResolvePath] Fichier sauvé:', filePath);
-          }
+          // Écrire le fichier temporaire sur disque
+          fs.writeFileSync(filePath, file.buffer);
           
-          // Remplacer req.files par les fichiers convertis
-          req.files = convertedFiles;
+          // Créer un objet file compatible avec multer
+          convertedFiles.push({
+            fieldname: file.fieldname,
+            originalname: file.originalname,
+            encoding: file.encoding,
+            mimetype: file.mimetype,
+            size: file.size,
+            destination: tempDir,
+            filename: fileName,
+            path: filePath,
+            buffer: undefined // Libérer la mémoire
+          });
         }
         
-        console.log('✅ [parseAndResolvePath] Chemin résolu et fichiers traités');
+        // Remplacer req.files par les fichiers convertis
+        req.files = convertedFiles;
+        
         next();
         
-      } catch (dbError) {
-        console.error('❌ [parseAndResolvePath] Erreur base de données:', dbError);
-        next(dbError);
+      } catch (error) {
+        console.error('❌ [parseAndResolvePath] Erreur traitement fichiers:', error);
+        next(error);
       }
     });
     

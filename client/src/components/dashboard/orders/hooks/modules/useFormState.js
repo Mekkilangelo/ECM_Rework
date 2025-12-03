@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const useFormState = () => {
   const [formData, setFormData] = useState({
-    order_date: new Date().toISOString().split('T')[0],
+    request_date: new Date().toISOString().split('T')[0],
     description: '',
     commercial: '',
     contacts: [{ name: '', phone: '', email: '' }]

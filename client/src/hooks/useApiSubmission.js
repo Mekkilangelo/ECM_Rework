@@ -102,7 +102,7 @@ const useApiSubmission = ({
         }
       } else {
         // Mode création
-        console.log("Creating new entity with data:", apiData);
+        
         
         if (customApiService && customApiService.create) {
           response = await customApiService.create(apiData);
@@ -115,15 +115,15 @@ const useApiSubmission = ({
           response = await response.json();
         }
         
-        console.log("Entity created successfully:", response.data || response);
+        
         
         // Extraire l'ID du nœud créé
         const newNodeId = response.data?.id || response.id;
-        console.log("New node ID:", newNodeId);
+        
         
         // Associer les fichiers au nouvel ID de nœud
         if (fileAssociationCallback && newNodeId) {
-          console.log("Calling file association callback with nodeId:", newNodeId);
+          
           await fileAssociationCallback(newNodeId);
         } else {
           console.warn("File association skipped:", 

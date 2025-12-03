@@ -11,8 +11,8 @@ import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
 import SearchInput from '../../../common/SearchInput/SearchInput';
 import FormHeader from '../../../common/FormHeader/FormHeader';
-import OrderForm from '../form/OrderForm';
-import orderService from '../../../../services/orderService';
+import OrderForm from '../form/TrialRequestForm';
+import trialRequestService from '../../../../services/trialRequestService';
 import '../../../../styles/dataList.css';
 import useModalState from '../../../../hooks/useModalState';
 import useConfirmationDialog from '../../../../hooks/useConfirmationDialog';
@@ -68,7 +68,6 @@ const OrderList = () => {
     if (activeForm && activeForm.handleCopy) {
       activeForm.handleCopy();
     } else {
-      console.log('Aucun formulaire actif pour la copie');
     }
   };
 
@@ -77,7 +76,6 @@ const OrderList = () => {
     if (activeForm && activeForm.handlePaste) {
       activeForm.handlePaste();
     } else {
-      console.log('Aucun formulaire actif pour le collage');
     }
   };
 
@@ -104,24 +102,24 @@ const OrderList = () => {
       sortValue: (order) => order.name || ''
     },
     {
-      key: 'Order.commercial',
+      key: 'TrialRequest.commercial',
       label: t('orders.commercial'),
       cellClassName: 'text-center',
-      render: (order) => order.order?.commercial || "-",
-      sortValue: (order) => order.order?.commercial || ''
+      render: (order) => order.trialRequest?.commercial || "-",
+      sortValue: (order) => order.trialRequest?.commercial || ''
     },
     {
-      key: 'Order.order_date',
+      key: 'TrialRequest.trial_request_date',
       label: t('orders.date'),
       cellClassName: 'text-center',
-      render: (order) => order.order?.order_date
-        ? new Date(order.order?.order_date).toLocaleString('fr-FR', {
+      render: (order) => order.trialRequest?.trial_request_date
+        ? new Date(order.trialRequest?.trial_request_date).toLocaleString('fr-FR', {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric'
         })
         : t('common.unknown'),
-      sortValue: (order) => order.order?.order_date ? new Date(order.order?.order_date).getTime() : 0
+      sortValue: (order) => order.trialRequest?.trial_request_date ? new Date(order.trialRequest?.trial_request_date).getTime() : 0
     },
     {
       key: 'modified_at',
@@ -175,16 +173,16 @@ const OrderList = () => {
   };
   const handleDeleteOrder = async (orderId) => {
     const orderToDelete = data.find(o => o.id === orderId);
-    const orderName = orderToDelete?.name || 'cette commande';
+    const orderName = orderToDelete?.name || 'cette demande d\'essai';
     
-    const confirmed = await confirmDelete(orderName, 'la commande');
+    const confirmed = await confirmDelete(orderName, 'la demande d\'essai');
     if (confirmed) {
       try {
-        await orderService.deleteOrder(orderId);
+        await trialRequestService.deleteTrialRequest(orderId);
         alert(t('orders.deleteSuccess'));
         refreshData();
       } catch (err) {
-        console.error('Erreur lors de la suppression de la commande:', err);
+        console.error('Erreur lors de la suppression de la demande d\'essai:', err);
         alert(err.response?.data?.message || t('orders.deleteError'));
       }
     }

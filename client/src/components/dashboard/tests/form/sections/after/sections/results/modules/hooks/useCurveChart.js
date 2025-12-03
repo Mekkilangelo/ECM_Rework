@@ -134,7 +134,6 @@ export const useCurveChart = (curveData, options = {}) => {
 
     // Ajouter les lignes de spécification ECD si disponibles
     if (options.specifications && options.specifications.ecdSpecs && Array.isArray(options.specifications.ecdSpecs)) {
-      console.log('🔍 useCurveChart - Traitement des specs ECD:', options.specifications.ecdSpecs);
       
       // Couleurs originales plus foncées pour les lignes ECD
       const ecdColors = [
@@ -156,18 +155,15 @@ export const useCurveChart = (curveData, options = {}) => {
         });
       });
 
-      console.log('🔍 useCurveChart - Étendue X des données:', { minX, maxX });
 
       // Si pas de données principales, utiliser une étendue par défaut
       if (minX === Infinity || maxX === -Infinity) {
         minX = 0;
         maxX = 10;
-        console.log('🔍 useCurveChart - Pas de données principales, utilisation étendue par défaut:', { minX, maxX });
       }
 
       // Ajouter chaque spécification ECD comme ligne horizontale
       options.specifications.ecdSpecs.forEach((ecdSpec, index) => {
-        console.log('🔍 useCurveChart - Traitement ECD spec:', ecdSpec, 'index:', index);
         
         // Adapter le format des données ECD
         let yValue = null;
@@ -207,8 +203,6 @@ export const useCurveChart = (curveData, options = {}) => {
           }
         }
         
-        console.log('🔍 useCurveChart - Valeurs adaptées:', { yValue, depthMin, depthMax, range });
-        
         if (yValue !== null && depthMin !== null && depthMax !== null) {
           const colorIndex = index % ecdColors.length;
           const color = ecdColors[colorIndex];
@@ -216,8 +210,6 @@ export const useCurveChart = (curveData, options = {}) => {
           // Créer le label avec le format "ECD: 0.6-0.9mm at 555 HRC"
           const unit = ecdSpec.hardnessUnit || options.unit || 'HV';
           const label = `ECD${index > 0 ? index + 1 : ''}: ${range} at ${yValue} ${unit}`;
-          
-          console.log('🔍 useCurveChart - Création ligne ECD limitée:', { label, yValue, depthMin, depthMax, color });
           
           // Créer une ligne horizontale UNIQUEMENT entre depthMin et depthMax
           const ecdDataset = {
@@ -239,17 +231,14 @@ export const useCurveChart = (curveData, options = {}) => {
             order: 10, // Dessiner après les courbes principales
             hidden: false
           };
-          
-          console.log('🔍 useCurveChart - Dataset ECD créé:', ecdDataset);
+        
           datasets.push(ecdDataset);
         } else {
           console.warn('🔍 useCurveChart - ECD spec invalide, yValue ou range manquant:', { yValue, range, originalSpec: ecdSpec });
         }
       });
       
-      console.log('🔍 useCurveChart - Datasets finaux avec ECD:', datasets);
     } else {
-      console.log('🔍 useCurveChart - Pas de specs ECD trouvées dans options:', options);
     }
 
     return {

@@ -4,14 +4,14 @@ import ResultsDataSection from './sections/results/ResultsDataSection';
 import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
-import testService from '../../../../../../services/testService';
+import trialService from '../../../../../../services/trialService';
 
 const AfterTabContent = forwardRef(({
   formData, 
   errors, 
   loading, 
   formHandlers, 
-  test, 
+  trial, 
   handleFileAssociationNeeded, 
   viewMode = false, 
   readOnlyFieldStyle = {},
@@ -24,14 +24,14 @@ const AfterTabContent = forwardRef(({
   // Récupérer les spécifications de la pièce parente pour les passer aux courbes
   useEffect(() => {
     const fetchSpecifications = async () => {
-      if (!test || !test.id || !test.parent_id) {
+      if (!trial || !trial.id || !trial.parent_id) {
         return;
       }
 
       try {
-        const response = await testService.getTestSpecs(test.id, test.parent_id);
+        const response = await trialService.getTrialSpecs(trial.id, trial.parent_id);
         
-        console.log('🔍 AfterTabContent - Réponse testService:', response);
+        
         
         if (response && response.specifications !== undefined && response.specifications !== null) {
           let specs = response.specifications;
@@ -40,7 +40,7 @@ const AfterTabContent = forwardRef(({
           if (typeof specs === 'string') {
             try {
               specs = JSON.parse(specs);
-              console.log('🔍 AfterTabContent - Specs parsées:', specs);
+              
             } catch (parseError) {
               console.error('Erreur parsing specs dans AfterTabContent:', parseError);
               specs = { hardnessSpecs: [], ecdSpecs: [] };
@@ -49,8 +49,8 @@ const AfterTabContent = forwardRef(({
             specs = { hardnessSpecs: [], ecdSpecs: [] };
           }
           
-          console.log('🔍 AfterTabContent - Specs finales à passer aux courbes:', specs);
-          console.log('🔍 AfterTabContent - EcdSpecs trouvées:', specs.ecdSpecs);
+          
+          
           
           setSpecifications(specs);
         }
@@ -61,7 +61,7 @@ const AfterTabContent = forwardRef(({
     };
 
     fetchSpecifications();
-  }, [test]);
+  }, [trial]);
 
   // Expose flushAllCurves to parent
   useImperativeHandle(ref, () => ({
@@ -75,32 +75,32 @@ const AfterTabContent = forwardRef(({
   return (
     <>
       <CollapsibleSection
-        title={t('tests.after.specifications.title')}
+        title={t('trials.after.specifications.title')}
         isExpandedByDefault={true}
-        sectionId="test-specifications"
+        sectionId="trial-specifications"
         rememberState={false}
       >        <SpecificationsSection
-          testNodeId={test ? test.id : null}
-          parentId={test ? test.parent_id : null}
+          trialNodeId={trial ? trial.id : null}
+          parentId={trial ? trial.parent_id : null}
           viewMode={viewMode}
         />
       </CollapsibleSection>
       <CollapsibleSection
-        title={t('tests.after.furnaceReport.title')}
+        title={t('trials.after.furnaceReport.title')}
         isExpandedByDefault={false}
-        sectionId="test-furnace-report"
+        sectionId="trial-furnace-report"
         rememberState={false}
         level={0}
       >        <FurnaceReportSection
-          testNodeId={test ? test.id : null}
+          trialNodeId={trial ? trial.id : null}
           onFileAssociationNeeded={handleFileAssociationNeeded}
           viewMode={viewMode}
         />
       </CollapsibleSection>
       <CollapsibleSection
-        title={t('tests.after.results.title')}
+        title={t('trials.after.results.title')}
         isExpandedByDefault={true}
-        sectionId="test-results"
+        sectionId="trial-results"
         rememberState={false}
         level={0}
       >
@@ -120,7 +120,7 @@ const AfterTabContent = forwardRef(({
           handleSampleRemove={formHandlers.handleSampleRemove}
           loading={loading}
           selectStyles={formHandlers.selectStyles}
-          test={test}
+          trial={trial}
           handleFileAssociationNeeded={handleFileAssociationNeeded}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}

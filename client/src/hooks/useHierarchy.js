@@ -15,6 +15,11 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
     itemsPerPage 
   } = useNavigation();
   
+  // Extraire les IDs primitifs pour éviter les re-renders sur changement de référence d'objet
+  const clientId = hierarchyState?.clientId;
+  const orderId = hierarchyState?.orderId;
+  const partId = hierarchyState?.partId;
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -67,10 +72,11 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
             params.search = debouncedSearchQuery.trim();
           }
           break;
-        case 'order':
-          url = `${API_URL}/orders`;
+        case 'trial_request':
+        case 'order':  // Support ancien nom
+          url = `${API_URL}/trial-requests`;
           params = { 
-            parent_id: hierarchyState.clientId, 
+            parent_id: clientId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage,
             sortBy: sortBy,
@@ -84,7 +90,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         case 'part':
           url = `${API_URL}/parts`;
           params = { 
-            parent_id: hierarchyState.orderId, 
+            parent_id: orderId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage,
             sortBy: sortBy,
@@ -95,10 +101,11 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
             params.search = debouncedSearchQuery.trim();
           }
           break;
-        case 'test':
-          url = `${API_URL}/tests`;
+        case 'trial':
+        case 'test':  // Support ancien nom
+          url = `${API_URL}/trials`;
           params = { 
-            parent_id: hierarchyState.partId, 
+            parent_id: partId, 
             offset: (currentPage - 1) * itemsPerPage, 
             limit: itemsPerPage,
             sortBy: sortBy,
@@ -124,7 +131,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       }
       
       const response = await axios.get(url, { params });
-        // Adapter la structure de données selon la nouvelle API qui utilise data au lieu de clients/orders/etc.
+        // Adapter la structure de données selon la nouvelle API qui utilise data au lieu de clients/trialRequests/etc.
       if (response.data && response.data.data) {
         // La nouvelle structure a les données dans response.data.data
         setData(response.data.data || []);
@@ -133,16 +140,16 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         // Fallback pour l'ancienne structure API
         setData(response.data.clients || []);
         setTotalItems(response.data.pagination?.total || 0);
-      } else if (currentLevel === 'order') {
+      } else if (currentLevel === 'trial_request' || currentLevel === 'order') {
         // Fallback pour l'ancienne structure API
-        setData(response.data.orders || []);
+        setData(response.data.trialRequests || []);
         setTotalItems(response.data.pagination?.total || 0);
       } else if (currentLevel === 'part') {
         // Fallback pour l'ancienne structure API
         setData(response.data.parts || []);
         setTotalItems(response.data.pagination?.total || 0);
-      } else if (currentLevel === 'test') {
-        // Fallback pour l'ancienne structure API        setData(response.data.tests || []);
+      } else if (currentLevel === 'trial' || currentLevel === 'test') {
+        // Fallback pour l'ancienne structure API        setData(response.data.trials || []);
         setTotalItems(response.data.pagination?.total || 0);
       }
     } catch (err) {
@@ -153,10 +160,10 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       isFetchingRef.current = false;
     }
   };  // Recharger les données quand le niveau, la page, les filtres ou la recherche changent
+  // Utiliser les IDs primitifs au lieu de hierarchyState pour éviter les re-renders inutiles
   useEffect(() => {
     fetchData();
-  }, [currentLevel, hierarchyState.clientId, hierarchyState.orderId, 
-      hierarchyState.partId, currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
+  }, [currentLevel, clientId, orderId, partId, currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
   
   // Fonction pour gérer la recherche
   const handleSearch = (query) => {
@@ -177,18 +184,18 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       'client.client_group': 'client_group',
       'client.country': 'country', 
       'client.city': 'city',
-      // Orders
-      'order.commercial': 'commercial',
-      'order.order_date': 'order_date',
+      // Trial Requests
+      'trialRequest.commercial': 'commercial',
+      'trialRequest.request_date': 'request_date',
       // Parts
       'part.client_designation': 'client_designation',
       'part.reference': 'reference',
       'part.steel': 'steel',
       'part.quantity': 'quantity',
-      // Tests
-      'test.load_number': 'load_number',
-      'test.test_date': 'test_date',
-      'test.location': 'location',
+      // Trials
+      'trial.load_number': 'load_number',
+      'trial.test_date': 'test_date',
+      'trial.location': 'location',
       // Commun
       'modified_at': 'modified_at',
       'created_at': 'created_at'

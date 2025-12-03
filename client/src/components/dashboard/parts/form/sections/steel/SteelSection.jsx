@@ -83,7 +83,7 @@ const SteelSection = ({
         setFetchingSteelInfo(true);
         const isDev = process.env.NODE_ENV === 'development';
         if (isDev) {
-          console.log('🔍 Fetching steel details for nodeId:', selectedOption.nodeId);
+          
         }
         
         // Utiliser getSteel au lieu de getSteelById
@@ -109,12 +109,12 @@ const SteelSection = ({
           }
           
           if (isDev && steelData) {
-            console.log('🔧 Steel loaded:', steelData.grade || 'Unknown grade');
-            console.log('🔧 Steel data structure:', steelData);
-            console.log('🔧 Family:', steelData.family);
-            console.log('🔧 Standard:', steelData.standard);
-            console.log('🔧 Chemistry:', steelData.chemistery);
-            console.log('🔧 Equivalents:', steelData.equivalents);
+            
+            
+            
+            
+            
+            
           }
 
           if (steelData) {// Formatter la composition chimique depuis le champ chemistery (JSON)

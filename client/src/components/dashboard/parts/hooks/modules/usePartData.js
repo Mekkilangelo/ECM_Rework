@@ -17,20 +17,15 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
           // Utilisation du service refactorisé
           const partData = await partService.getPart(part.id);
           
-          const isDev = process.env.NODE_ENV === 'development';
-          if (isDev) {
-            console.log('🔧 Part data loaded:', partData?.name || 'Unknown part');
-          }
-          
           // Vérifier si les données sont dans la propriété Part ou directement dans partData
           const data = partData.part || partData;
           
           // S'assurer que dimensions et specifications sont des objets et non des chaînes
           let dimensions = {};
           try {
-            dimensions = typeof data.dimensions === 'string' 
-              ? JSON.parse(data.dimensions) 
-              : (data.dimensions || {});
+            dimensions = typeof partData.dimensions === 'string' 
+              ? JSON.parse(partData.dimensions) 
+              : (partData.dimensions || {});
           } catch (err) {
             console.error('Error parsing dimensions:', err);
             dimensions = {};
@@ -38,15 +33,26 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             
           let specifications = {};
           try {
-            specifications = typeof data.specifications === 'string' 
-              ? JSON.parse(data.specifications) 
-              : (data.specifications || {});
+            // Les specifications sont au niveau racine de partData, pas dans partData.part
+            specifications = typeof partData.specifications === 'string' 
+              ? JSON.parse(partData.specifications) 
+              : (partData.specifications || {});
           } catch (err) {
             console.error('Error parsing specifications:', err);
             specifications = {};
-          }// Parser les spécifications de dureté dynamiques
+          }
+          
+          // Parser les spécifications de dureté dynamiques
           let hardnessSpecs = [];
-          if (specifications.hardnessSpecs && Array.isArray(specifications.hardnessSpecs)) {
+          if (specifications.hardness && Array.isArray(specifications.hardness)) {
+            hardnessSpecs = specifications.hardness.map((spec) => ({
+              name: spec.name || '',
+              min: spec.min || '',
+              max: spec.max || '',
+              unit: spec.unit || ''
+            }));
+          } else if (specifications.hardnessSpecs && Array.isArray(specifications.hardnessSpecs)) {
+            // Fallback vers l'ancien nom si présent
             hardnessSpecs = specifications.hardnessSpecs.map((spec) => ({
               name: spec.name || '',
               min: spec.min || '',
@@ -85,7 +91,17 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
 
           // Parser les spécifications ECD dynamiques
           let ecdSpecs = [];
-          if (specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs)) {
+          if (specifications.ecd && Array.isArray(specifications.ecd)) {
+            ecdSpecs = specifications.ecd.map((spec) => ({
+              name: spec.name || '',
+              depthMin: spec.depthMin || '',
+              depthMax: spec.depthMax || '',
+              depthUnit: spec.depthUnit || '',
+              hardness: spec.hardness || '',
+              hardnessUnit: spec.hardnessUnit || ''
+            }));
+          } else if (specifications.ecdSpecs && Array.isArray(specifications.ecdSpecs)) {
+            // Fallback vers l'ancien nom si présent
             ecdSpecs = specifications.ecdSpecs.map((spec) => ({
               name: spec.name || '',
               depthMin: spec.depthMin || '',
@@ -95,8 +111,8 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
               hardnessUnit: spec.hardnessUnit || ''
             }));
           } else {
-            // Migration de l'ancienne spécification ECD vers le nouveau format
-            if (specifications.ecd && (specifications.ecd.depthMin || specifications.ecd.depthMax || specifications.ecd.hardness)) {
+            // Migration de l'ancienne spécification ECD vers le nouveau format (legacy)
+            if (specifications.ecd && !Array.isArray(specifications.ecd) && (specifications.ecd.depthMin || specifications.ecd.depthMax || specifications.ecd.hardness)) {
               ecdSpecs = [{
                 name: 'ECD',
                 depthMin: specifications.ecd.depthMin || '',
@@ -116,7 +132,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             reference: data.reference || '',
             quantity: data.quantity || '',
             description: partData.description || data.description || '',
-            steel: data.steel || '',
+            steel: partData.steel?.grade || '',  // L'acier est au niveau racine de partData
             
             // Dimensions avec gestion de valeurs potentiellement undefined
             length: dimensions?.rectangular?.length || '',
@@ -131,11 +147,8 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             
             // Nouvelles spécifications dynamiques
             hardnessSpecs: hardnessSpecs,
-            ecdSpecs: ecdSpecs,          };
-          
-          if (isDev) {
-            console.log('📝 Form data initialized');
-          }
+            ecdSpecs: ecdSpecs,
+          };
           
           // Mettre à jour l'état du formulaire
           setFormData(formValues);

@@ -71,7 +71,7 @@ const Login = () => {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      console.log('Tentative de connexion pour:', values.username);
+      
       
       // Utiliser le service d'authentification existant
       const result = await authService.login(values.username, values.password);

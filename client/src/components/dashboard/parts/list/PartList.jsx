@@ -111,8 +111,16 @@ const PartList = ({ orderId }) => {
       key: 'Part.steel',
       label: t('parts.steel.title'),
       cellClassName: 'text-center',
-      render: (part) => part.part?.steel || "-",
-      sortValue: (part) => part.part?.steel || ''
+      render: (part) => {
+        if (part.steel && part.steel.grade) {
+          // Afficher grade + standard si disponible
+          return part.steel.standard 
+            ? `${part.steel.grade} (${part.steel.standard})`
+            : part.steel.grade;
+        }
+        return "-";
+      },
+      sortValue: (part) => part.steel?.grade || ''
     },
     {
       key: 'Part.quantity',
@@ -169,7 +177,7 @@ const PartList = ({ orderId }) => {
     if (part.data_status === 'new') {
       updateItemStatus(part.id);
     }
-    navigateToLevel('test', part.id, part.name);
+    navigateToLevel('trial', part.id, part.name);
   };
 
   const handleViewDetails = (part) => {

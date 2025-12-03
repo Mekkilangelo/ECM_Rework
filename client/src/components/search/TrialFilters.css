@@ -1,0 +1,181 @@
+/* TrialFilters - Composant de filtres avancés */
+
+.trial-filters .accordion {
+  border-radius: 0.5rem;
+  overflow: visible; /* Changé de 'hidden' à 'visible' pour permettre aux menus de se superposer */
+}
+
+.trial-filters .accordion-item {
+  border: none;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem !important;
+  overflow: visible; /* Changé de 'hidden' à 'visible' */
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  position: relative; /* Ajout pour le contexte de superposition */
+  z-index: 1; /* Z-index de base */
+}
+
+.trial-filters .accordion-header {
+  border-radius: 0.5rem !important;
+}
+
+.trial-filters .accordion-button {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-size: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease;
+}
+
+.trial-filters .accordion-button:not(.collapsed) {
+  background-color: #fff;
+  color: #dc3545;
+  box-shadow: none;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.trial-filters .accordion-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  border-color: #dc3545;
+}
+
+.trial-filters .accordion-button::after {
+  transition: transform 0.2s ease;
+}
+
+.trial-filters .accordion-button:hover {
+  background-color: #e9ecef;
+}
+
+.trial-filters .accordion-body {
+  padding: 1.5rem;
+  background-color: #fff;
+}
+
+/* Labels des formulaires */
+.trial-filters .form-label {
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.trial-filters .form-label .fa,
+.trial-filters .form-label .svg-inline--fa {
+  color: #6c757d;
+  width: 1rem;
+}
+
+/* Contrôles de formulaire */
+.trial-filters .form-control,
+.trial-filters .react-datepicker-wrapper input {
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.trial-filters .form-control:focus,
+.trial-filters .react-datepicker-wrapper input:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.trial-filters .react-datepicker-wrapper {
+  width: 100%;
+}
+
+/* Badges de compteur */
+.trial-filters .accordion-button .badge {
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+/* Boutons d'action */
+.filter-actions {
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.filter-actions .btn {
+  min-width: 150px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.filter-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+/* Groupes de formulaire */
+.trial-filters .form-group {
+  margin-bottom: 0;
+}
+
+/* Animation d'ouverture */
+.trial-filters .accordion-collapse {
+  transition: height 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trial-filters .accordion-body {
+    padding: 1rem;
+  }
+
+  .trial-filters .form-label {
+    font-size: 0.8125rem;
+  }
+
+  .trial-filters .form-control,
+  .trial-filters .react-datepicker-wrapper input {
+    font-size: 0.8125rem;
+    padding: 0.5rem;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+  }
+
+  .filter-actions .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .filter-actions .btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Select personnalisé (react-select) */
+.trial-filters .select__control {
+  min-height: 38px;
+  border-radius: 0.375rem;
+  position: relative;
+  z-index: 1;
+}
+
+.trial-filters .select__control--is-focused {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.trial-filters .select__menu {
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  z-index: 99999 !important; /* Z-index extrêmement élevé */
+}
+
+.trial-filters .select__menu-portal {
+  z-index: 99999 !important; /* Pour le portail menu */
+}
+
+.trial-filters .select__option--is-selected {
+  background-color: #dc3545;
+}
+
+.trial-filters .select__option--is-focused {
+  background-color: rgba(220, 53, 69, 0.1);
+}

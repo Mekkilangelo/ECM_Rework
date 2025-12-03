@@ -28,11 +28,14 @@ const { writeAccess, publicAccess } = require('../middleware/access-control');
 // Routes publiques (accessibles sans authentification)
 router.get('/', publicAccess, steelController.getSteels);
 router.get('/grades', publicAccess, steelController.getSteelsGrades);
+router.get('/:steelId/usage', publicAccess, steelController.checkSteelUsage);
 router.get('/:steelId', publicAccess, steelController.getSteelById);
 
 // Routes de modification (nécessitent des droits d'écriture)
 router.post('/', writeAccess, steelController.createSteel);
+router.put('/:steelId/replace', writeAccess, steelController.replaceSteelAndDelete);
 router.put('/:steelId', writeAccess, steelController.updateSteel);
+router.delete('/:steelId/force', writeAccess, steelController.forceDeleteSteel);
 router.delete('/:steelId', writeAccess, steelController.deleteSteel);
 
 module.exports = router;

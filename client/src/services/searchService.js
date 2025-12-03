@@ -9,7 +9,7 @@ const searchService = {
    * Effectue une recherche avec des filtres avancés
    * @param {Object} params - Paramètres de recherche
    * @param {string} [params.q] - Terme de recherche
-   * @param {string} [params.entityTypes] - Types d'entités à rechercher (clients, commandes, pièces, tests, aciers)
+   * @param {string} [params.entityTypes] - Types d'entités à rechercher (clients, orders, parts, trials, steels)
    * @param {number} [params.page] - Numéro de page pour la pagination
    * @param {number} [params.limit] - Nombre d'éléments par page
    * @param {string} [params.clientGroup] - Groupe de client (filtre client)
@@ -33,17 +33,17 @@ const searchService = {
    * @param {number} [params.maxHeight] - Hauteur maximale (filtre pièce)
    * @param {number} [params.minCoreHardness] - Dureté à cœur minimale (filtre pièce)
    * @param {number} [params.maxCoreHardness] - Dureté à cœur maximale (filtre pièce)
-   * @param {string} [params.testStatus] - Statut du test (filtre test)
-   * @param {string} [params.testLocation] - Emplacement du test (filtre test)
-   * @param {string} [params.mountingType] - Type de montage (filtre test)
-   * @param {string} [params.processType] - Type de processus (filtre test)
-   * @param {string} [params.positionType] - Type de position (filtre test)
-   * @param {string} [params.testDateFrom] - Date de début du test (filtre test)
-   * @param {string} [params.testDateTo] - Date de fin du test (filtre test)
-   * @param {string} [params.loadNumber] - Numéro de charge (filtre test)
-   * @param {string} [params.furnaceType] - Type de four (filtre test)
-   * @param {string} [params.recipeNumber] - Numéro de recette (filtre test)
-   * @param {string} [params.preoxMedia] - Média de préoxydation (filtre test)
+   * @param {string} [params.trialStatus] - Statut de l'essai (filtre trial)
+   * @param {string} [params.trialLocation] - Emplacement de l'essai (filtre trial)
+   * @param {string} [params.mountingType] - Type de montage (filtre trial)
+   * @param {string} [params.processType] - Type de processus (filtre trial)
+   * @param {string} [params.positionType] - Type de position (filtre trial)
+   * @param {string} [params.trialDateFrom] - Date de début de l'essai (filtre trial)
+   * @param {string} [params.trialDateTo] - Date de fin de l'essai (filtre trial)
+   * @param {string} [params.loadNumber] - Numéro de charge (filtre trial)
+   * @param {string} [params.furnaceType] - Type de four (filtre trial)
+   * @param {string} [params.recipeNumber] - Numéro de recette (filtre trial)
+   * @param {string} [params.preoxMedia] - Média de préoxydation (filtre trial)
    * @param {string} [params.steelFamily] - Famille d'acier (filtre acier)
    * @param {string} [params.steelStandard] - Norme d'acier (filtre acier)
    * @param {string} [params.steelGrade] - Nuance d'acier (filtre acier)
@@ -93,14 +93,14 @@ const searchService = {
       if (params.minCoreHardness) queryParams.append('minCoreHardness', params.minCoreHardness);
       if (params.maxCoreHardness) queryParams.append('maxCoreHardness', params.maxCoreHardness);
       
-      // Ajouter les filtres pour les tests
-      if (params.testStatus) queryParams.append('testStatus', params.testStatus);
-      if (params.testLocation) queryParams.append('testLocation', params.testLocation);
+      // Ajouter les filtres pour les trials
+      if (params.trialStatus) queryParams.append('trialStatus', params.trialStatus);
+      if (params.trialLocation) queryParams.append('trialLocation', params.trialLocation);
       if (params.mountingType) queryParams.append('mountingType', params.mountingType);
       if (params.processType) queryParams.append('processType', params.processType);
       if (params.positionType) queryParams.append('positionType', params.positionType);
-      if (params.testDateFrom) queryParams.append('testDateFrom', params.testDateFrom);
-      if (params.testDateTo) queryParams.append('testDateTo', params.testDateTo);
+      if (params.trialDateFrom) queryParams.append('trialDateFrom', params.trialDateFrom);
+      if (params.trialDateTo) queryParams.append('trialDateTo', params.trialDateTo);
       if (params.loadNumber) queryParams.append('loadNumber', params.loadNumber);
       if (params.furnaceType) queryParams.append('furnaceType', params.furnaceType);
       if (params.recipeNumber) queryParams.append('recipeNumber', params.recipeNumber);

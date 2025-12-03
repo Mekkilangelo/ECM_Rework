@@ -164,12 +164,34 @@ const fileService = {
    * @returns {Promise<Object>} Statistiques des fichiers (par catégorie, etc.)
    * @throws {Error} En cas d'échec de la requête
    */
-  getFileStats: async (nodeId) => {    try {
+  getFileStats: async (nodeId) => {
+    try {
       const response = await api.get(`/files/stats/${nodeId}`);
       // On retourne directement la réponse pour une gestion uniforme
       return response;
     } catch (error) {
       console.error(`Erreur lors de la récupération des statistiques de fichiers pour le nœud ${nodeId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Met à jour les métadonnées d'un fichier (description, nom, etc.)
+   * @param {string|number} fileId - Identifiant du fichier
+   * @param {Object} updateData - Données à mettre à jour
+   * @param {string} [updateData.description] - Nouvelle description
+   * @param {string} [updateData.name] - Nouveau nom
+   * @param {string} [updateData.category] - Nouvelle catégorie
+   * @param {string} [updateData.subcategory] - Nouvelle sous-catégorie
+   * @returns {Promise<Object>} Résultat de la mise à jour
+   * @throws {Error} En cas d'échec de la requête
+   */
+  updateFile: async (fileId, updateData) => {
+    try {
+      const response = await api.put(`/files/${fileId}`, updateData);
+      return response;
+    } catch (error) {
+      console.error(`Erreur lors de la mise à jour du fichier ${fileId}:`, error);
       throw error;
     }
   }

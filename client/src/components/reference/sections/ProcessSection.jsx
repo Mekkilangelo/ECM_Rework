@@ -26,7 +26,7 @@ const ProcessSection = () => {
         <Tab.Pane eventKey="mounting_type">
           <Card>
             <Card.Body>
-              <EnumTableContent table="tests" column="mounting_type" />
+              <EnumTableContent refTable="ref_mounting_type" />
             </Card.Body>
           </Card>
         </Tab.Pane>
@@ -34,7 +34,7 @@ const ProcessSection = () => {
         <Tab.Pane eventKey="position_type">
           <Card>
             <Card.Body>
-              <EnumTableContent table="tests" column="position_type" />
+              <EnumTableContent refTable="ref_position_type" />
             </Card.Body>
           </Card>
         </Tab.Pane>
@@ -42,7 +42,7 @@ const ProcessSection = () => {
         <Tab.Pane eventKey="process_type">
           <Card>
             <Card.Body>
-              <EnumTableContent table="tests" column="process_type" />
+              <EnumTableContent refTable="ref_process_type" />
             </Card.Body>
           </Card>
         </Tab.Pane>

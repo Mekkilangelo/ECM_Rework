@@ -145,9 +145,9 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                 readOnly={viewMode}
                 style={inputFieldStyle}
               />
-              {!viewMode && (
-                <Form.Control.Feedback type="invalid">
-                  {errors.grade}
+              {!viewMode && errors.grade && (
+                <Form.Control.Feedback type="invalid" style={{ display: 'block' }}>
+                  {t(errors.grade)}
                 </Form.Control.Feedback>
               )}
             </Form.Group>
@@ -160,15 +160,19 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                 options={steelFamilyOptions}
                 value={getSelectedOption(steelFamilyOptions, formData.family)}
                 onChange={(option) => handleSelectChange(option, 'family')}
-                onCreateOption={handleCreateFamily}
+                onCreateOption={viewMode ? undefined : handleCreateFamily}
                 formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
                 isClearable={!viewMode}
-                isCreatable={!viewMode}
                 placeholder={t('steels.selectFamily')}
                 isLoading={loading && steelFamilyOptions.length === 0}
                 noOptionsMessage={() => t('steels.noFamilyAvailable')}
                 isDisabled={viewMode || loading}
               />
+              {!viewMode && errors.family && (
+                <div className="invalid-feedback" style={{ display: 'block' }}>
+                  {t(errors.family)}
+                </div>
+              )}
             </Form.Group>
           </Col>          <Col md={4}>
             <Form.Group className="mb-3">
@@ -179,15 +183,19 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                 options={steelStandardOptions}
                 value={getSelectedOption(steelStandardOptions, formData.standard)}
                 onChange={(option) => handleSelectChange(option, 'standard')}
-                onCreateOption={handleCreateStandard}
+                onCreateOption={viewMode ? undefined : handleCreateStandard}
                 formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
                 isClearable={!viewMode}
-                isCreatable={!viewMode}
                 placeholder={t('steels.selectStandard')}
                 isLoading={loading && steelStandardOptions.length === 0}
                 noOptionsMessage={() => t('steels.noStandardAvailable')}
                 isDisabled={viewMode || loading}
               />
+              {!viewMode && errors.standard && (
+                <div className="invalid-feedback" style={{ display: 'block' }}>
+                  {t(errors.standard)}
+                </div>
+              )}
             </Form.Group>
           </Col>
         </Row>
@@ -255,16 +263,23 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
               <tbody>
                 {formData.chemical_elements.map((element, index) => (
                   <tr key={`chemical-element-${index}`}>
-                    <td className="text-center align-middle">{index + 1}</td>                    <td style={{ paddingRight: '10px' }}>
+                    <td className="text-center align-middle">{index + 1}</td>
+                    <td style={{ paddingRight: '10px' }}>
                       <CreatableSelect
                         styles={getSelectStylesForViewMode()}
                         menuPortalTarget={document.body}
                         options={elementOptions}
                         value={getSelectedOption(elementOptions, element.element)}
                         onChange={(option) => handleChemicalElementChange(index, 'element', option?.value)}
-                        onCreateOption={handleCreateElement}
+                        onCreateOption={async (inputValue) => {
+                          if (inputValue && !viewMode) {
+                            const createdValue = await handleCreateElement(inputValue);
+                            if (createdValue) {
+                              handleChemicalElementChange(index, 'element', createdValue);
+                            }
+                          }
+                        }}
                         formatCreateLabel={(inputValue) => `${t('common.create')}: "${inputValue}"`}
-                        isCreatable={!viewMode}
                         placeholder={t('steels.element')}
                         isLoading={loading && elementOptions.length === 0}
                         noOptionsMessage={() => t('steels.noElementAvailable')}

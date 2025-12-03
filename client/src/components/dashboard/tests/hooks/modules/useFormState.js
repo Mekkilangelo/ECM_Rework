@@ -8,7 +8,7 @@ const useFormState = () => {
   const [formData, setFormData] = useState({
     // Informations de base
     name: '',
-    testDate: today, // Préremplir avec la date du jour
+    trialDate: today, // Préremplir avec la date du jour
     location: '',
     status: '',
     description: '',

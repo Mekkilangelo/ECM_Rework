@@ -22,7 +22,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Reference from './pages/Reference';
 import UserManagement from './pages/UserManagement';
-import Search from './pages/Search'; // Import de la nouvelle page de recherche
+import TrialSearch from './pages/TrialSearch'; // Nouvelle page de recherche d'essais moderne
 import Logs from './pages/Logs'; // Import de la page de logs
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -105,12 +105,12 @@ function App() {
                     </PrivateRouteComponent>
                   } 
                 />
-                  {/* Route pour la page de recherche */}
+                  {/* Route pour la page de recherche d'essais */}
                 <Route 
                   path="/search" 
                   element={
                     <PrivateRouteComponent>
-                      <Search />
+                      <TrialSearch />
                     </PrivateRouteComponent>
                   } 
                 />

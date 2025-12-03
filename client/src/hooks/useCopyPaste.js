@@ -42,7 +42,7 @@ const useCopyPaste = ({ formType, formData, setFormData, formatForApi, parseFrom
       // Effacer le message après 3 secondes
       setTimeout(() => setMessage(null), 3000);
       
-      console.log(`[Copy] ${formType} data copied successfully`);
+      
     } catch (error) {
       console.error('Erreur lors de la copie:', error);
       setMessage({
@@ -88,7 +88,7 @@ const useCopyPaste = ({ formType, formData, setFormData, formatForApi, parseFrom
       // Effacer le message après 3 secondes
       setTimeout(() => setMessage(null), 3000);
       
-      console.log(`[Paste] ${formType} data pasted successfully`);
+      
     } catch (error) {
       console.error('Erreur lors du collage:', error);
       setMessage({

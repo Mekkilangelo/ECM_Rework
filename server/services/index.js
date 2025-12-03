@@ -5,10 +5,10 @@
 
 const fileService = require('./fileService');
 const userService = require('./userService');
-const orderService = require('./orderService');
+const trialRequestService = require('./trialRequestService');
 const clientService = require('./clientService');
 const partService = require('./partService');
-const testService = require('./testService');
+const trialService = require('./trialService');
 const steelService = require('./steelService');
 const nodeService = require('./nodeService');
 const reportService = require('./reportService');
@@ -16,10 +16,10 @@ const reportService = require('./reportService');
 module.exports = {
   fileService,
   userService,
-  orderService,
+  trialRequestService,
   clientService,
   partService,
-  testService,
+  trialService,
   steelService,
   nodeService,
   reportService

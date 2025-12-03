@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
         
         // Si aucun token n'est présent ou malformé, terminer le chargement immédiatement
         if (!token) {
-          console.log('Aucun token valide trouvé au démarrage');
+          
           setLoading(false);
           // Indiquer que le chargement initial est terminé
           setInitialLoadComplete();
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
         
         // Vérifier que l'utilisateur a été correctement récupéré
         if (!storedUser) {
-          console.log('Données utilisateur invalides, nettoyage');
+          
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setLoading(false);

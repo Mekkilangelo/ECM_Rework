@@ -6,7 +6,7 @@ import useFileAssociation from '../../../../../../../../hooks/useFileAssociation
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const LoadDesignSection = ({
-  testNodeId,
+  trialNodeId,
   onFileAssociationNeeded,
   viewMode = false
 }) => {
@@ -22,24 +22,24 @@ const LoadDesignSection = ({
 
   // Charger les fichiers existants
   useEffect(() => {
-    if (testNodeId) {
+    if (trialNodeId) {
       loadExistingFiles();
     }
-  }, [testNodeId]);
+  }, [trialNodeId]);
 
   const loadExistingFiles = async () => {
     try {
-      const response = await fileService.getNodeFiles(testNodeId, { category: 'load_design' });
+      const response = await fileService.getNodeFiles(trialNodeId, { category: 'load_design' });
       
       if (!response.data || response.data.success === false) {
-        console.error(t('tests.before.loadDesign.loadFilesError'), response.data?.message);
+        console.error(t('trials.before.loadDesign.loadFilesError'), response.data?.message);
         return;
       }
       
       const files = response.data.data?.files || [];
       setUploadedFiles(files);
     } catch (error) {
-      console.error(t('tests.before.loadDesign.loadFilesError'), error);
+      console.error(t('trials.before.loadDesign.loadFilesError'), error);
     }
   };
   const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
@@ -47,7 +47,6 @@ const LoadDesignSection = ({
       setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
     } else if (operation === 'standby') {
       // En mode standby, stocker les fichiers dans notre état local
-      console.log("📦 [LoadDesignSection] Storing pending files:", files.map(f => f.name));
       setPendingFiles(files);
     } else {
       // Mode normal : ajouter les fichiers uploadés
@@ -67,7 +66,6 @@ const LoadDesignSection = ({
       const associationFunction = createAssociationFunction(
         uploaderRef.current.uploadPendingFiles,
         () => {
-          console.log("📋 [LoadDesignSection] getPendingFiles called, returning:", pendingFiles.map(f => f.name));
           return pendingFiles; // Utiliser nos fichiers stockés localement
         },
         'load_design',
@@ -83,7 +81,7 @@ const LoadDesignSection = ({
       <FileUploader
         category="load_design"
         subcategory="load_design"
-        nodeId={testNodeId}
+        nodeId={trialNodeId}
         onFilesUploaded={handleFilesUploaded}
         onUploaderReady={handleUploaderReady}
         maxFiles={50}
@@ -95,7 +93,7 @@ const LoadDesignSection = ({
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
           'image/*': ['.png', '.jpg', '.jpeg']
         }}
-        title={t('tests.before.loadDesign.importLoadDesign')}
+        title={t('trials.before.loadDesign.importLoadDesign')}
         fileIcon={faFile}
         height="150px"
         width="100%"

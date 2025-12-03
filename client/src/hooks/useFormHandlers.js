@@ -1,12 +1,33 @@
 // src/hooks/useFormHandlers.js
 import { useCallback } from 'react';
-import enumService from '../services/enumService';
+import referenceService from '../services/referenceService';
+
+// Mapping des anciennes colonnes ENUM vers les nouvelles tables de référence
+const ENUM_TO_REF_TABLE_MAPPING = {
+  'parts.designation': 'ref_designation',
+  'clients.country': 'ref_country',
+  'trials.status': 'ref_status',
+  'trials.location': 'ref_location',
+  'trials.mounting_type': 'ref_mounting_type',
+  'trials.position_type': 'ref_position_type',
+  'trials.process_type': 'ref_process_type',
+  'furnaces.furnace_type': 'ref_furnace_types',
+  'furnaces.furnace_size': 'ref_furnace_sizes',
+  'furnaces.heating_cell': 'ref_heating_cells',
+  'furnaces.cooling_media': 'ref_cooling_media',
+  'furnaces.quench_cell': 'ref_quench_cells',
+  'steels.family': 'ref_steel_family',
+  'steels.standard': 'ref_steel_standard',
+  'files.category': 'ref_file_category',
+  'files.subcategory': 'ref_file_subcategory',
+  'units': 'ref_units'
+};
 
 const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOptionsFunctions = {}, setModified = null) => {
   
   // Fonction utilitaire pour marquer le formulaire comme modifié
   const markAsModified = useCallback(() => {
-    console.log('🔄 markAsModified called in useFormHandlers');
+    
     if (setModified) {
       setModified(true);
     }
@@ -75,14 +96,13 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
         
         // Debug : vérifier que les données curve ont été mises à jour
         if (process.env.NODE_ENV === 'development' && name && name.includes('curveData')) {
-          console.log('=== VERIFICATION APRES MISE A JOUR ===');
-          console.log('Updated path:', parts.join('.'));
-          console.log('Final value set:', current[parts[parts.length - 1]]);
-          console.log('Full data structure at update point:', newData);
+          
+          
+          
           
           // FORCER UN NOUVEAU RENDU POUR LES DONNEES DE COURBE
-          console.log('=== FORCING DEEP CLONE FOR CURVE DATA ===');
-          console.log('Creating new reference for resultsData to force re-render...');
+          
+          
         }
         
         // Pour les données de courbe, forcer un deep clone pour garantir le re-render
@@ -252,8 +272,6 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
   // Fonction pour créer une nouvelle option dans un select
   const handleCreateOption = useCallback(async (inputValue, fieldName, tableName, columnName) => {
     try {
-      console.log('Creating new option for', fieldName, 'in', tableName, columnName);
-      console.log('Available refresh functions:', Object.keys(refreshOptionsFunctions));
       
       // Préparer la fonction de rafraîchissement basée sur le nom du champ
       let refreshFunction;
@@ -273,8 +291,40 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
         }
       }
       
-      // Appeler l'API pour ajouter la nouvelle valeur d'énumération
-      const response = await enumService.addEnumValue(tableName, columnName, inputValue);
+      // Déterminer la table de référence à utiliser
+      const refTableKey = `${tableName}.${columnName}`;
+      const refTable = ENUM_TO_REF_TABLE_MAPPING[refTableKey] || ENUM_TO_REF_TABLE_MAPPING[tableName];
+      
+      if (!refTable) {
+        console.error(`No reference table mapping found for ${refTableKey}`);
+        return null;
+      }
+      
+      // Préparer les données additionnelles pour ref_units
+      let additionalData = {};
+      
+      if (refTable === 'ref_units') {
+        // Mapper columnName vers unit_type
+        const unitTypeMapping = {
+          'length_units': 'length',
+          'weight_units': 'weight',
+          'temperature_units': 'temperature',
+          'time_units': 'time',
+          'pressure_units': 'pressure',
+          'hardness_units': 'hardness'
+        };
+        
+        const unitType = unitTypeMapping[columnName];
+        if (unitType) {
+          additionalData.unit_type = unitType;
+          
+        } else {
+          console.warn(`⚠️ Unknown unit column: ${columnName}, unit_type will be null`);
+        }
+      }
+      
+      // Appeler l'API pour ajouter la nouvelle valeur à la table de référence
+      const response = await referenceService.addValue(refTable, inputValue, additionalData);
       
       if (response && response.success) {
         // Mettre à jour le formulaire avec la nouvelle valeur
@@ -282,7 +332,7 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
         
         // Rafraîchir les options si une fonction est disponible
         if (refreshFunction && typeof refreshFunction === 'function') {
-          console.log(`Refreshing options with function:`, refreshFunction.name || 'anonymous');
+          
           await refreshFunction();
         } else {
           console.warn(`No refresh function found for field ${fieldName}, table ${tableName}, column ${columnName}`);
@@ -291,7 +341,7 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
           const refreshFnKeys = Object.keys(refreshOptionsFunctions).filter(key => key.startsWith('refresh') && typeof refreshOptionsFunctions[key] === 'function');
           
           if (refreshFnKeys.length > 0) {
-            console.log('Trying fallback refresh with:', refreshFnKeys[0]);
+            
             await refreshOptionsFunctions[refreshFnKeys[0]]();
           }
         }

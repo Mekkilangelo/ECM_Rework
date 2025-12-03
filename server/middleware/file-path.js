@@ -29,8 +29,8 @@ const buildPhysicalFilePath = (parentNode, category, subcategory) => {
   let categoryPath = category || 'general';
   let subcategoryPath = subcategory || '';
   
-  // Si le parent est un ordre, respecter la structure spécifique
-  if (parentNode.type === 'order') {
+  // Si le parent est une demande d'essai, respecter la structure spécifique
+  if (parentNode.type === 'trial_request') {
     categoryPath = 'documents';
     subcategoryPath = 'alldocuments';
   }

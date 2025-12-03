@@ -8,14 +8,14 @@
  * - clientService pour les clients
  * - orderService pour les commandes
  * - partService pour les pièces
- * - testService pour les tests
+ * - trialService pour les trials
  * 
  * Seules les fonctions transversales sont conservées ici :
  * - Gestion du statut (new → opened) utilisée par le dashboard
  * - Suppression en masse pour les environnements de dev/test
  */
 
-const { node, client, order, part, test, file, furnace, steel, closure, sequelize } = require('../models');
+const { node, client, trial_request, part, trial, file, furnace, steel, closure, sequelize } = require('../models');
 const { NotFoundError } = require('../utils/errors');
 const logger = require('../utils/logger');
 
@@ -67,9 +67,9 @@ const deleteAllNodes = async () => {
     // Liste des modèles à nettoyer dans l'ordre
     const models = [
       { name: 'Client', model: client },
-      { name: 'Order', model: order },
+      { name: 'TrialRequest', model: trial_request },
       { name: 'Part', model: part },
-      { name: 'Test', model: test },
+      { name: 'Trial', model: trial },
       { name: 'File', model: file },
       { name: 'Furnace', model: furnace },
       { name: 'Steel', model: steel },

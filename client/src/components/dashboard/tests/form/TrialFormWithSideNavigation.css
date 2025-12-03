@@ -1,0 +1,205 @@
+/* Styles pour TrialForm avec navigation verticale externe */
+
+/* Navigation verticale externe */
+.trial-external-navigation {
+  position: fixed;
+  left: calc(50% - 600px - 200px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1060;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  min-width: 180px;
+  pointer-events: auto;
+}
+
+/* Items de navigation externe */
+.trial-external-navigation .trial-nav-item {
+  margin-bottom: 15px;
+}
+
+.trial-external-navigation .trial-nav-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Boutons de navigation externe */
+.trial-external-navigation .trial-nav-button {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  color: #6c757d;
+  font-weight: 500;
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* Effet avant/après pour l'animation */
+.trial-external-navigation .trial-nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.6s;
+}
+
+.trial-external-navigation .trial-nav-button:hover::before {
+  left: 100%;
+}
+
+/* Bouton non actif - hover */
+.trial-external-navigation .trial-nav-button:not(.active):hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  color: #495057;
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: #dee2e6;
+}
+
+/* Bouton actif */
+.trial-external-navigation .trial-nav-button.active {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #ffffff;
+  font-weight: 600;
+  transform: translateX(12px) scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(220, 53, 69, 0.4),
+    0 0 30px rgba(220, 53, 69, 0.2);
+  border-color: #dc3545;
+  animation: activeButtonPulse 4s infinite;
+}
+
+/* Animation pour le bouton actif */
+@keyframes activeButtonPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 25px rgba(220, 53, 69, 0.4),
+      0 0 30px rgba(220, 53, 69, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 12px 35px rgba(220, 53, 69, 0.5),
+      0 0 40px rgba(220, 53, 69, 0.3);
+  }
+}
+
+/* Icônes de navigation externe */
+.trial-external-navigation .trial-nav-icon {
+  font-size: 1.3em;
+  margin-right: 14px;
+  min-width: 24px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.trial-external-navigation .trial-nav-button.active .trial-nav-icon {
+  transform: scale(1.1);
+}
+
+/* Texte de navigation externe */
+.trial-external-navigation .trial-nav-text {
+  font-size: 0.95em;
+  transition: font-weight 0.3s ease;
+}
+
+/* Modal avec navigation externe */
+.trial-modal.with-external-nav {
+  margin-left: 0;
+}
+
+.trial-modal.with-external-nav .modal-dialog {
+  max-width: 1200px;
+  margin: 1.75rem auto;
+}
+
+/* Responsive design */
+@media (max-width: 1400px) {
+  .trial-external-navigation {
+    left: calc(50% - 500px - 180px);
+    min-width: 160px;
+    padding: 15px;
+  }
+  
+  .trial-modal.with-external-nav .modal-dialog {
+    max-width: 1000px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .trial-external-navigation {
+    left: calc(50% - 400px - 160px);
+    min-width: 140px;
+    padding: 12px;
+  }
+  
+  .trial-external-navigation .trial-nav-button {
+    padding: 15px 16px;
+  }
+  
+  .trial-external-navigation .trial-nav-text {
+    font-size: 0.9em;
+  }
+  
+  .trial-modal.with-external-nav .modal-dialog {
+    max-width: 800px;
+  }
+}
+
+@media (max-width: 992px) {
+  /* Sur tablette et mobile, repasser en navigation interne */
+  .trial-external-navigation {
+    display: none;
+  }
+  
+  .trial-modal.with-external-nav {
+    margin-left: 0;
+  }
+  
+  .trial-modal.with-external-nav .modal-dialog {
+    max-width: 90vw;
+    margin: 1rem auto;
+  }
+}
+
+/* Animations d'entrée */
+.trial-external-navigation {
+  animation: slideInFromLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%) translateY(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(-50%);
+  }
+}
+
+/* Focus pour l'accessibilité */
+.trial-external-navigation .trial-nav-button:focus {
+  outline: 3px solid rgba(220, 53, 69, 0.5) !important;
+  outline-offset: 2px !important;
+}
+
+/* Amélioration pour les écrans haute résolution */
+@media (min-resolution: 192dpi) {
+  .trial-external-navigation {
+    backdrop-filter: blur(20px);
+  }
+}

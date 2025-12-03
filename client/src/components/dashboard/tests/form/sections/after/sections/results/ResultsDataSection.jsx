@@ -39,7 +39,7 @@ const ResultsDataSection = forwardRef(({
   handleSampleRemove,
   loading,
   selectStyles,
-  test,
+  trial,
   handleFileAssociationNeeded,
   viewMode = false,
   readOnlyFieldStyle = {},
@@ -276,14 +276,14 @@ const ResultsDataSection = forwardRef(({
   useImperativeHandle(ref, () => ({
     flushAllCurves: () => {
       // TODO: Implémenter quand les courbes seront ajoutées
-      console.log('flushAllCurves appelé - pas encore implémenté');
+      
     }
   }));
 
   return (
     <div>
       <h6 className="mb-3 d-flex justify-content-between align-items-center">
-        <span>{t('tests.after.results.resultsLabel')}</span>
+        <span>{t('trials.after.results.resultsLabel')}</span>
         {!viewMode && (
           <Button
             variant="outline-primary"
@@ -291,7 +291,7 @@ const ResultsDataSection = forwardRef(({
             onClick={handleResultBlocAdd}
             disabled={loading}
           >
-            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addResult')}
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.after.results.addResult')}
           </Button>
         )}
       </h6>
@@ -299,7 +299,7 @@ const ResultsDataSection = forwardRef(({
       {results.map((result, resultIndex) => (
         <CollapsibleSection 
           key={resultIndex} 
-          title={t('tests.after.results.resultNumber', { number: result.step })}
+          title={t('trials.after.results.resultNumber', { number: result.step })}
           isExpandedByDefault={resultIndex === 0}
           sectionId={`result-section-${resultIndex}`}
           rememberState={true}
@@ -320,7 +320,7 @@ const ResultsDataSection = forwardRef(({
           </div>
           
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.after.results.description')}</Form.Label>
+            <Form.Label>{t('trials.after.results.description')}</Form.Label>
             <Form.Control
               type="text"
               value={result.description || ''}
@@ -328,14 +328,14 @@ const ResultsDataSection = forwardRef(({
               disabled={loading || viewMode}
               readOnly={viewMode}
               style={viewMode ? readOnlyFieldStyle : {}}
-              placeholder={t('tests.after.results.enterDescription')}
+              placeholder={t('trials.after.results.enterDescription')}
             />
           </Form.Group>
 
           {/* Section des échantillons */}
           <div className="mb-3">
             <h6 className="mb-3 d-flex justify-content-between align-items-center">
-              <span>{t('tests.after.results.samples')}</span>
+              <span>{t('trials.after.results.samples')}</span>
               {!viewMode && (
                 <Button
                   variant="outline-secondary"
@@ -343,7 +343,7 @@ const ResultsDataSection = forwardRef(({
                   onClick={() => handleSampleAdd(resultIndex)}
                   disabled={loading}
                 >
-                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.after.results.addSample')}
+                  <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.after.results.addSample')}
                 </Button>
               )}
             </h6>
@@ -351,7 +351,7 @@ const ResultsDataSection = forwardRef(({
             {result.samples?.map((sample, sampleIndex) => (
               <CollapsibleSection 
                 key={sampleIndex} 
-                title={t('tests.after.results.sampleNumber', { number: sample.step })}
+                title={t('trials.after.results.sampleNumber', { number: sample.step })}
                 isExpandedByDefault={sampleIndex === 0}
                 sectionId={`sample-section-${resultIndex}-${sampleIndex}`}
                 rememberState={true}
@@ -372,7 +372,7 @@ const ResultsDataSection = forwardRef(({
                 </div>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>{t('tests.after.results.sampleDescription')}</Form.Label>
+                  <Form.Label>{t('trials.after.results.sampleDescription')}</Form.Label>
                   <Form.Control
                     type="text"
                     value={sample.description || ''}
@@ -380,7 +380,7 @@ const ResultsDataSection = forwardRef(({
                     disabled={loading || viewMode}
                     readOnly={viewMode}
                     style={viewMode ? readOnlyFieldStyle : {}}
-                    placeholder={t('tests.after.results.enterSampleDescription')}
+                    placeholder={t('trials.after.results.enterSampleDescription')}
                   />
                 </Form.Group>
 
@@ -395,7 +395,7 @@ const ResultsDataSection = forwardRef(({
                       className="me-2"
                     >
                       <FontAwesomeIcon icon={faFileExcel} className="me-1" />
-                      {t('tests.after.results.import.button')}
+                      {t('trials.after.results.import.button')}
                     </Button>
                     <input
                       ref={fileInputRef}
@@ -412,7 +412,7 @@ const ResultsDataSection = forwardRef(({
                   <Card.Header className="bg-light">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0 text-primary">
-                        <strong>{t('tests.after.results.hardness')}</strong>
+                        <strong>{t('trials.after.results.hardness')}</strong>
                       </h6>
                       {!viewMode && (
                         <Button
@@ -422,7 +422,7 @@ const ResultsDataSection = forwardRef(({
                           disabled={loading}
                         >
                           <FontAwesomeIcon icon={faPlus} className="me-1" /> 
-                          {t('tests.after.results.addPoint')}
+                          {t('trials.after.results.addPoint')}
                         </Button>
                       )}
                     </div>
@@ -444,10 +444,10 @@ const ResultsDataSection = forwardRef(({
                           <thead className="table-secondary">
                             <tr>
                               <th style={{ width: '35%' }}>
-                                {t('tests.after.results.position')}
+                                {t('trials.after.results.position')}
                               </th>
                               <th style={{ width: '25%' }}>
-                                {t('tests.after.results.value')}
+                                {t('trials.after.results.value')}
                               </th>
                               <th style={{ width: '25%' }}>
                                 {t('common.unit')}
@@ -465,7 +465,7 @@ const ResultsDataSection = forwardRef(({
                                     type="text"
                                     value={point.location || ''}
                                     onChange={(e) => handleHardnessChange(resultIndex, sampleIndex, hardnessIndex, 'location', e.target.value)}
-                                    placeholder={t('tests.after.results.enterPosition')}
+                                    placeholder={t('trials.after.results.enterPosition')}
                                     disabled={loading || viewMode}
                                     readOnly={viewMode}
                                     style={viewMode ? readOnlyFieldStyle : {}}
@@ -477,7 +477,7 @@ const ResultsDataSection = forwardRef(({
                                     type="number"
                                     value={point.value || ''}
                                     onChange={(e) => handleHardnessChange(resultIndex, sampleIndex, hardnessIndex, 'value', e.target.value)}
-                                    placeholder={t('tests.after.results.enterValue')}
+                                    placeholder={t('trials.after.results.enterValue')}
                                     disabled={loading || viewMode}
                                     readOnly={viewMode}
                                     style={viewMode ? readOnlyFieldStyle : {}}
@@ -551,7 +551,7 @@ const ResultsDataSection = forwardRef(({
                       <div className="alert alert-warning mt-3 mb-0">
                         <small>
                           <FontAwesomeIcon icon={faPlus} className="me-2" />
-                          {t('tests.after.results.noUnitsAvailable', 'Aucune unité de dureté disponible. Utilisation de "HV" par défaut.')}
+                          {t('trials.after.results.noUnitsAvailable', 'Aucune unité de dureté disponible. Utilisation de "HV" par défaut.')}
                         </small>
                       </div>
                     )}
@@ -563,7 +563,7 @@ const ResultsDataSection = forwardRef(({
                   <Card.Header className="bg-light">
                     <div className="d-flex justify-content-between align-items-center">
                       <h6 className="mb-0 text-primary">
-                        <strong>{t('tests.after.results.ecdPosition', 'Positions ECD')}</strong>
+                        <strong>{t('trials.after.results.ecdPosition', 'Positions ECD')}</strong>
                       </h6>
                       {!viewMode && (
                         <Button
@@ -573,7 +573,7 @@ const ResultsDataSection = forwardRef(({
                           disabled={loading}
                         >
                           <FontAwesomeIcon icon={faPlus} className="me-1" /> 
-                          {t('tests.after.results.addPosition', 'Ajouter Position')}
+                          {t('trials.after.results.addPosition', 'Ajouter Position')}
                         </Button>
                       )}
                     </div>
@@ -595,10 +595,10 @@ const ResultsDataSection = forwardRef(({
                           <thead className="table-secondary">
                             <tr>
                               <th style={{ width: '60%' }}>
-                                {t('tests.after.results.position')}
+                                {t('trials.after.results.position')}
                               </th>
                               <th style={{ width: '25%' }}>
-                                {t('tests.after.results.distance', 'Distance')} (mm)
+                                {t('trials.after.results.distance', 'Distance')} (mm)
                               </th>
                               <th style={{ width: '15%' }} className="text-center">
                                 {t('common.actions')}
@@ -613,7 +613,7 @@ const ResultsDataSection = forwardRef(({
                                     type="text"
                                     value={position.position || ''}
                                     onChange={(e) => handleEcdPositionChange(resultIndex, sampleIndex, ecdIndex, 'position', e.target.value)}
-                                    placeholder={t('tests.after.results.enterPosition')}
+                                    placeholder={t('trials.after.results.enterPosition')}
                                     disabled={loading || viewMode}
                                     readOnly={viewMode}
                                     style={viewMode ? readOnlyFieldStyle : {}}
@@ -625,7 +625,7 @@ const ResultsDataSection = forwardRef(({
                                     type="number"
                                     value={position.distance || ''}
                                     onChange={(e) => handleEcdPositionChange(resultIndex, sampleIndex, ecdIndex, 'distance', e.target.value)}
-                                    placeholder={t('tests.after.results.enterDistance', 'Entrer distance')}
+                                    placeholder={t('trials.after.results.enterDistance', 'Entrer distance')}
                                     disabled={loading || viewMode}
                                     readOnly={viewMode}
                                     style={viewMode ? readOnlyFieldStyle : {}}
@@ -656,14 +656,14 @@ const ResultsDataSection = forwardRef(({
 
                 {/* Section Courbes de dureté */}
                 <CollapsibleSection
-                  title={t('tests.after.results.curves.title', 'Courbes de dureté')}
+                  title={t('trials.after.results.curves.title', 'Courbes de dureté')}
                   isExpandedByDefault={true}
                   sectionId={`curves-result-${resultIndex}-sample-${sampleIndex}`}
                   rememberState={true}
                   level={1}
                 >
                   <ResultCurveSection
-                    testNodeId={test?.id}
+                    trialNodeId={trial?.id}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}
                     formData={formData}
@@ -677,14 +677,14 @@ const ResultsDataSection = forwardRef(({
 
                 {/* Section Micrographies */}
                 <CollapsibleSection
-                  title={t('tests.after.results.micrographs.title', 'Micrographies')}
+                  title={t('trials.after.results.micrographs.title', 'Micrographies')}
                   isExpandedByDefault={false}
                   sectionId={`micrographs-result-${resultIndex}-sample-${sampleIndex}`}
                   rememberState={true}
                   level={1}
                 >
                   <MicrographsSection
-                    testNodeId={test?.id}
+                    trialNodeId={trial?.id}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}
                     onFileAssociationNeeded={handleFileAssociationNeeded}
@@ -694,14 +694,14 @@ const ResultsDataSection = forwardRef(({
 
                 {/* Section Localisation de contrôle */}
                 <CollapsibleSection
-                  title={t('tests.after.results.controlLocation.title', 'Localisation de contrôle')}
+                  title={t('trials.after.results.controlLocation.title', 'Localisation de contrôle')}
                   isExpandedByDefault={false}
                   sectionId={`control-location-result-${resultIndex}-sample-${sampleIndex}`}
                   rememberState={true}
                   level={1}
                 >
                   <ControlLocationSection
-                    testNodeId={test?.id}
+                    trialNodeId={trial?.id}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}
                     onFileAssociationNeeded={handleFileAssociationNeeded}

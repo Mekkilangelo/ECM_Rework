@@ -26,9 +26,9 @@ const ThermalCycleSection = ({
   const { t } = useTranslation();
   
   const rampOptions = [
-    { value: 'up', label: t('tests.before.recipeData.thermalCycle.rampUp'), icon: faArrowUp },
-    { value: 'down', label: t('tests.before.recipeData.thermalCycle.rampDown'), icon: faArrowDown },
-    { value: 'continue', label: t('tests.before.recipeData.thermalCycle.rampContinue'), icon: faArrowRight }
+    { value: 'up', label: t('trials.before.recipeData.thermalCycle.rampUp'), icon: faArrowUp },
+    { value: 'down', label: t('trials.before.recipeData.thermalCycle.rampDown'), icon: faArrowDown },
+    { value: 'continue', label: t('trials.before.recipeData.thermalCycle.rampContinue'), icon: faArrowRight }
   ];
 
   // Fonction pour gérer la touche Entrée
@@ -64,10 +64,10 @@ const ThermalCycleSection = ({
       <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
         <thead className="bg-light">
           <tr>
-            <th style={{ width: '60px' }}>{t('tests.before.recipeData.thermalCycle.step')}</th>
-            <th style={{ width: '150px' }}>{t('tests.before.recipeData.thermalCycle.ramp')}</th>
-            <th>{t('tests.before.recipeData.thermalCycle.setpoint')} (°C)</th>
-            <th>{t('tests.before.recipeData.thermalCycle.duration')} (min)</th>
+            <th style={{ width: '60px' }}>{t('trials.before.recipeData.thermalCycle.step')}</th>
+            <th style={{ width: '150px' }}>{t('trials.before.recipeData.thermalCycle.ramp')}</th>
+            <th>{t('trials.before.recipeData.thermalCycle.setpoint')} (°C)</th>
+            <th>{t('trials.before.recipeData.thermalCycle.duration')} (min)</th>
             <th style={{ width: '80px' }}>{t('common.actions')}</th>
           </tr>
         </thead>
@@ -166,16 +166,16 @@ const ThermalCycleSection = ({
             onClick={handleThermalCycleAdd}
             disabled={loading}
           >
-            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('tests.before.recipeData.thermalCycle.addStep')}
+            <FontAwesomeIcon icon={faPlus} className="me-1" /> {t('trials.before.recipeData.thermalCycle.addStep')}
           </Button>
         </div>
       )}
         {/* Autres paramètres de recette */}
-      <h5 className="mt-4 mb-2">{t('tests.before.recipeData.thermalCycle.otherParameters')}</h5>
+      <h5 className="mt-4 mb-2">{t('trials.before.recipeData.thermalCycle.otherParameters')}</h5>
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.waitTime')} ({t('common.minutes')})</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.waitTime')} ({t('common.minutes')})</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.waitTime"
@@ -210,7 +210,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.programDuration')} ({t('common.minutes')})</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.programDuration')} ({t('common.minutes')})</Form.Label>
             <Form.Control
               type="number"
               value={calculateProgramDuration ? calculateProgramDuration() : '0'}
@@ -234,7 +234,7 @@ const ThermalCycleSection = ({
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.cellTemp')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.cellTemp')}</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.cellTemp"
@@ -249,7 +249,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.cellTempUnit"
               value={formData.recipeData?.cellTempUnit 
@@ -269,13 +269,13 @@ const ThermalCycleSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.thermalCycle.unit')}
+              placeholder={t('trials.before.recipeData.thermalCycle.unit')}
             />
           </Form.Group>
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.waitPressure')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.waitPressure')}</Form.Label>
             <Form.Control
               type="number"
               name="recipeData.waitPressure"
@@ -290,7 +290,7 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('tests.before.recipeData.thermalCycle.unit')}</Form.Label>
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.waitPressureUnit"
               value={formData.recipeData?.waitPressureUnit 
@@ -310,7 +310,7 @@ const ThermalCycleSection = ({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('tests.before.recipeData.thermalCycle.unit')}
+              placeholder={t('trials.before.recipeData.thermalCycle.unit')}
             />
           </Form.Group>
         </Col>

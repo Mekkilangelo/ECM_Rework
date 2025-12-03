@@ -9,7 +9,7 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
 
-  const handleUpload = async (nodeId, category, subcategory) => {
+  const handleUpload = async (nodeId, category, subcategory, fileDescriptions = {}) => {
     // En mode standby, ne pas faire d'upload immédiat
     if (standbyMode) {
       // Juste notifier le parent qu'il y a des fichiers en attente
@@ -28,8 +28,12 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     setError(null);
     
     const formData = new FormData();
-    files.forEach(file => {
+    files.forEach((file, index) => {
       formData.append('files', file);
+      // Ajouter la description correspondante si elle existe
+      if (fileDescriptions[index]) {
+        formData.append(`descriptions[${index}]`, fileDescriptions[index]);
+      }
     });
     
     if (nodeId) formData.append('nodeId', nodeId);
@@ -49,10 +53,6 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
       const newFiles = response.data.data.files;
       const tempId = response.data.data.tempId;
       
-      console.log("Upload response:", response.data);
-      console.log("New files:", newFiles);
-      console.log("Temp ID from server:", tempId);
-      
       setInternalUploadedFiles(prev => [...prev, ...newFiles]);
       setFiles([]);
       setUploadProgress(0);
@@ -68,18 +68,8 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     }
   };  // Fonction pour uploader les fichiers en attente après création du node
   const uploadPendingFiles = async (nodeId, category, subcategory, pendingFiles = files) => {
-    console.log("🚀 [useFileUpload] uploadPendingFiles called:", {
-      nodeId,
-      category,
-      subcategory,
-      pendingFilesCount: pendingFiles.length,
-      filesStateCount: files.length,
-      pendingFiles: pendingFiles.map(f => f.name),
-      filesState: files.map(f => f.name)
-    });
     
     if (pendingFiles.length === 0) {
-      console.log("⚠️ [useFileUpload] No pending files to upload");
       return { success: true, files: [] };
     }
     

@@ -1,0 +1,189 @@
+/* Styles personnalisés pour TrialForm avec navigation verticale */
+
+/* Layout principal avec navigation verticale */
+.trial-form-layout {
+  gap: 20px;
+  min-height: 500px;
+}
+
+/* Navigation verticale à gauche */
+.trial-navigation {
+  flex: 0 0 200px;
+  min-width: 200px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* Item de navigation */
+.trial-nav-item {
+  margin-bottom: 10px;
+}
+
+.trial-nav-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Bouton de navigation */
+.trial-nav-button {
+  display: flex;
+  align-items: center;
+  padding: 15px 18px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+
+/* Bouton non actif */
+.trial-nav-button:not(.active) {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  color: #6c757d;
+  border-color: #e9ecef;
+}
+
+.trial-nav-button:not(.active):hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  color: #495057;
+  transform: translateX(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #dee2e6;
+}
+
+/* Bouton actif */
+.trial-nav-button.active {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #ffffff;
+  font-weight: bold;
+  transform: translateX(8px);
+  box-shadow: 
+    0 6px 16px rgba(220, 53, 69, 0.3),
+    0 0 25px rgba(220, 53, 69, 0.15);
+  border-color: #dc3545;
+}
+
+/* Icône de navigation */
+.trial-nav-icon {
+  font-size: 1.2em;
+  margin-right: 12px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Texte de navigation */
+.trial-nav-text {
+  font-weight: 500;
+  font-size: 0.95em;
+}
+
+.trial-nav-button.active .trial-nav-text {
+  font-weight: 600;
+}
+
+/* Contenu principal */
+.trial-content {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Animation de transition */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Effet de pulse pour l'élément actif */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+  }
+  100% {
+    box-shadow: 0 6px 16px rgba(220, 53, 69, 0.3);
+  }
+}
+
+.trial-nav-button.active {
+  animation: pulse 3s infinite;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .trial-form-layout {
+    flex-direction: column;
+  }
+  
+  .trial-navigation {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    position: static;
+  }
+  
+  .trial-nav-item {
+    margin-bottom: 0;
+    flex: 1;
+  }
+  
+  .trial-nav-button {
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  .trial-nav-text {
+    display: none;
+  }
+  
+  .trial-nav-icon {
+    margin-right: 0;
+    font-size: 1.4em;
+  }
+}
+
+@media (max-width: 576px) {
+  .trial-content {
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .trial-navigation {
+    border-radius: 8px;
+  }
+  
+  .trial-nav-button {
+    padding: 10px;
+  }
+}
+
+/* Focus pour l'accessibilité */
+.trial-nav-button:focus {
+  outline: 3px solid rgba(220, 53, 69, 0.3) !important;
+  outline-offset: 2px !important;
+}
+
+/* Contenu en pleine largeur pour navigation externe */
+.trial-content.full-width {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+}

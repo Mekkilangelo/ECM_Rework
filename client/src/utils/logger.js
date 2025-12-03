@@ -49,7 +49,7 @@ export const logger = {
     if (!LOG_CONFIG[category]?.enabled) return;
     const levels = ['debug', 'info'];
     if (levels.includes(LOG_CONFIG[category].level)) {
-      console.log(`ℹ️ [${category.toUpperCase()}]`, message, data || '');
+      }]`, message, data || '');
     }
   },
 

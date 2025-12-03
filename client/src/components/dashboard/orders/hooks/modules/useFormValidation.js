@@ -3,7 +3,7 @@ const useFormValidation = (formData, parentId, setErrors) => {
   const validate = () => {
     const newErrors = {};
     
-    if (!formData.order_date.trim()) newErrors.order_date = 'validation.required.orderDate';
+    if (!formData.request_date.trim()) newErrors.request_date = 'validation.required.orderDate';
     if (!parentId) newErrors.parent = 'validation.required.parentClient';
     
     setErrors(newErrors);

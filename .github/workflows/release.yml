@@ -1,16 +1,13 @@
 name: Release Bundle Generation
 
 on:
-  pull_request:
-    branches: [ main ]
-    types: [ opened, synchronize, reopened ]
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
 
 jobs:
   build-and-bundle:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
@@ -22,21 +19,21 @@ jobs:
         run: echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" > client/.env
 
       - name: Generate backend .env
-        uses: ./.github/actions/generate-env
-        with:
-          environment: ${{ secrets.NODE_ENV }}
-          output-file: server/.env
-          mysql-root-password: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          mysql-database: ${{ secrets.MYSQL_DATABASE }}
-          db-host: ${{ secrets.DB_HOST }}
-          db-user: ${{ secrets.DB_USER }}
-          db-password: ${{ secrets.DB_PASSWORD }}
-          db-sync-alter: ${{ secrets.DB_SYNC_ALTER }}
-          jwt-secret: ${{ secrets.JWT_SECRET }}
-          jwt-expire: ${{ secrets.JWT_EXPIRE }}
-          jwt-inactivity-expire: ${{ secrets.JWT_INACTIVITY_EXPIRE }}
-          client-url: ${{ secrets.CLIENT_URL }}
-          api-url: ${{ secrets.API_URL }}
+        run: |
+          cat > server/.env << EOF
+          NODE_ENV=${{ secrets.NODE_ENV }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_SYNC_ALTER=${{ secrets.DB_SYNC_ALTER }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRE=${{ secrets.JWT_EXPIRE }}
+          JWT_INACTIVITY_EXPIRE=${{ secrets.JWT_INACTIVITY_EXPIRE }}
+          CLIENT_URL=${{ secrets.CLIENT_URL }}
+          API_URL=${{ secrets.API_URL }}
+          EOF
 
       - name: Clean Docker Buildx cache
         run: docker builder prune -af
@@ -53,17 +50,45 @@ jobs:
           echo "Version détectée: $VERSION"
 
       - name: Build Docker images
-        uses: ./.github/actions/build-images
-        with:
-          version: ${{ steps.version.outputs.version }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          echo "Building frontend..."
+          docker buildx build \
+            --load \
+            --cache-from=type=gha,scope=frontend \
+            --cache-to=type=gha,mode=max,scope=frontend \
+            --tag synergia-frontend:$VERSION \
+            --tag synergia-frontend:latest \
+            ./client
+          
+          echo "Building backend..."
+          docker buildx build \
+            --load \
+            --cache-from=type=gha,scope=backend \
+            --cache-to=type=gha,mode=max,scope=backend \
+            --tag synergia-backend:$VERSION \
+            --tag synergia-backend:latest \
+            ./server
 
-      - name: Export Docker images (including MySQL and Nginx)
-        uses: ./.github/actions/export-images
-        with:
-          version: ${{ steps.version.outputs.version }}
-          output-dir: release/images
-          include-mysql: 'true'
-          include-nginx: 'true'
+      - name: Export Docker images in single tar
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p release/images
+          
+          echo "Pulling external images..."
+          docker pull mysql:8.0
+          docker pull nginx:alpine
+          
+          echo "Exporting all images to single tar..."
+          docker save \
+            synergia-frontend:$VERSION \
+            synergia-backend:$VERSION \
+            mysql:8.0 \
+            nginx:alpine \
+            -o release/images/all-images.tar
+          
+          echo "Export complete: $(du -h release/images/all-images.tar | cut -f1)"
 
       - name: Prepare release files
         run: |

@@ -34,20 +34,15 @@ const CurveChart = ({
   options = {},
   showStats = true, // Nouvelle option pour afficher/masquer les statistiques
   specifications
-}) => {
-  console.log('🔍 CurveChart - Specifications reçues:', specifications);
-  console.log('🔍 CurveChart - Options reçues:', options);
-  
+}) => { 
   const chartOptions = {
-    title: title || t('tests.after.results.curves.chartTitle', 'Courbes de dureté'),
+    title: title || t('trials.after.results.curves.chartTitle', 'Courbes de dureté'),
     unit: unit,
-    yAxisLabel: `${t('tests.after.results.curves.hardness', 'Dureté')} (${unit})`,
+    yAxisLabel: `${t('trials.after.results.curves.hardness', 'Dureté')} (${unit})`,
     beginAtZero: false,
     specifications: specifications,
     ...options
   };
-  
-  console.log('🔍 CurveChart - ChartOptions avec specs:', chartOptions);
 
   const { 
     chartData, 
@@ -68,12 +63,12 @@ const CurveChart = ({
               <i className="fas fa-chart-line fa-3x opacity-50"></i>
             </div>
             <p className="mb-0">
-              {t('tests.after.results.curves.noDataToDisplay', 'Aucune donnée à afficher')}
+              {t('trials.after.results.curves.noDataToDisplay', 'Aucune donnée à afficher')}
             </p>
             <small>
               {stats.totalPoints > 0 ? 
                 `${stats.totalPoints} points disponibles, mais aucune valeur valide (> 0)` :
-                t('tests.after.results.curves.addDataToSeeChart', 'Ajoutez des données dans le tableau pour voir le graphique')
+                t('trials.after.results.curves.addDataToSeeChart', 'Ajoutez des données dans le tableau pour voir le graphique')
               }
             </small>
           </div>
@@ -97,12 +92,12 @@ const CurveChart = ({
           <div className="row">
             <div className="col-md-3">
               <small className="text-muted">
-                <strong>{t('tests.after.results.curves.series', 'Séries')}:</strong> {curveData.series.length}
+                <strong>{t('trials.after.results.curves.series', 'Séries')}:</strong> {curveData.series.length}
               </small>
             </div>
             <div className="col-md-3">
               <small className="text-muted">
-                <strong>{t('tests.after.results.curves.points', 'Points totaux')}:</strong> {curveData.distances?.length || 0}
+                <strong>{t('trials.after.results.curves.points', 'Points totaux')}:</strong> {curveData.distances?.length || 0}
               </small>
             </div>
             <div className="col-md-3">

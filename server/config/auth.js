@@ -14,10 +14,9 @@ const JWT_INACTIVITY_EXPIRE = config.JWT.INACTIVITY_EXPIRE;
 
 // Affichage des paramètres d'authentification en mode développement
 if (process.env.NODE_ENV === 'development') {
-  console.log('Configuration d\'authentification:');
-  console.log('- JWT_EXPIRE:', JWT_EXPIRE);
-  console.log('- JWT_INACTIVITY_EXPIRE:', JWT_INACTIVITY_EXPIRE);
-  console.log('- JWT_SECRET (longueur):', JWT_SECRET ? JWT_SECRET.length : 'non défini');
+  
+  
+  
 }
 
 /**
@@ -50,7 +49,6 @@ const generateToken = (user) => {
     if (tokenParts.length !== 3) {
       console.error('ERREUR: Token JWT généré malformé!');
     } else {
-      console.log(`Token JWT généré avec succès pour ${user.username} (ID: ${user.id}) (format valide)`);
     }
     
     return token;
@@ -89,7 +87,7 @@ const refreshToken = (oldToken) => {
     
     // Si l'inactivité dépasse la limite, rejeter le rafraîchissement
     if (inactiveTime > inactivityExpireMs) {
-      console.log('Rafraîchissement refusé - Inactivité trop longue pour', decoded.username);
+      
       return { 
         success: false, 
         message: 'Session expirée en raison d\'une inactivité prolongée' 

@@ -21,7 +21,6 @@ const useFileSelection = (files, setFiles, maxFiles, acceptedFileTypes, setError
       // Log condensé uniquement en mode debug et s'il y a vraiment des fichiers ajoutés
       const isDev = process.env.NODE_ENV === 'development';
       if (isDev && acceptedFiles.length > 0) {
-        console.log("📁 Files added:", acceptedFiles.length, acceptedFiles.map(f => f.name));
       }
       
       // En mode standby, notifier immédiatement le parent

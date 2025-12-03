@@ -16,7 +16,7 @@ const logger = require('../utils/logger');
 function getDBConfig() {
   return {
     host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'synergy',
+    database: process.env.DB_NAME || 'synergia',
     port: parseInt(process.env.DB_PORT || '3306', 10),
     username: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
@@ -157,8 +157,13 @@ class Database {
       await this.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
 
       const shouldAlter = process.env.DB_SYNC_ALTER === 'true';
+      const shouldForce = process.env.DB_SYNC_FORCE === 'true';
       
-      if (shouldAlter) {
+      if (shouldForce) {
+        // ⚠️ MODE DANGEREUX : Supprime et recrée TOUTES les tables
+        await this.sequelize.sync({ force: true });
+        logger.warn('🔥 Tables RECRÉÉES avec force: true (DONNÉES SUPPRIMÉES!)');
+      } else if (shouldAlter) {
         await this.sequelize.sync({ force: false, alter: true });
         logger.info('📊 Tables synchronisées avec alter: true');
       } else {

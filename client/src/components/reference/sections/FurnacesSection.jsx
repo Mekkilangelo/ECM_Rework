@@ -37,7 +37,7 @@ const FurnacesSection = () => {
         <Tab.Pane eventKey="furnace_type">
           <Card>
             <Card.Body>
-              <EnumTableContent table="furnaces" column="furnace_type" />
+              <EnumTableContent refTable="ref_furnace_types" />
             </Card.Body>
           </Card>
         </Tab.Pane>
@@ -45,7 +45,7 @@ const FurnacesSection = () => {
         <Tab.Pane eventKey="furnace_size">
           <Card>
             <Card.Body>
-              <EnumTableContent table="furnaces" column="furnace_size" />
+              <EnumTableContent refTable="ref_furnace_sizes" />
             </Card.Body>
           </Card>
         </Tab.Pane>
@@ -53,7 +53,7 @@ const FurnacesSection = () => {
         <Tab.Pane eventKey="heating_cell_type">
           <Card>
             <Card.Body>
-              <EnumTableContent table="furnaces" column="heating_cell_type" />
+              <EnumTableContent refTable="ref_heating_cells" />
             </Card.Body>
           </Card>
         </Tab.Pane>
@@ -61,7 +61,7 @@ const FurnacesSection = () => {
         <Tab.Pane eventKey="cooling_media">
           <Card>
             <Card.Body>
-              <EnumTableContent table="furnaces" column="cooling_media" />
+              <EnumTableContent refTable="ref_cooling_media" />
             </Card.Body>
           </Card>
         </Tab.Pane>
@@ -69,14 +69,14 @@ const FurnacesSection = () => {
         <Tab.Pane eventKey="process_type">
           <Card>
             <Card.Body>
-              <EnumTableContent table="furnaces" column="process_type" />
+              <EnumTableContent refTable="ref_process_type" />
             </Card.Body>
           </Card>
         </Tab.Pane>
         <Tab.Pane eventKey="quench_cell">
           <Card>
             <Card.Body>
-              <EnumTableContent table="furnaces" column="quench_cell" />
+              <EnumTableContent refTable="ref_quench_cells" />
             </Card.Body>
           </Card>
         </Tab.Pane>

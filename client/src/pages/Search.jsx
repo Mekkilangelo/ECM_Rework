@@ -37,8 +37,8 @@ const SearchPage = () => {
 
   const [availableFilters] = useState({
     partDesignations: ['InGear', 'OutGear', 'Ring', 'Shaft', 'Gear', 'Other'],
-    testStatuses: ['OK', 'NOK', 'Pending'],
-    testLocations: ['ECM', 'Client site'],
+    trialStatuses: ['OK', 'NOK', 'Pending'],
+    trialLocations: ['ECM', 'Client site'],
     mountingTypes: ['Support_Rack', 'Hanging', 'Fixture', 'Tray', 'Conveyor_Belt'],
     positionTypes: ['Horizontal', 'Vertical', 'Rotary', 'Stationary', 'Oscillating'],
     processTypes: ['Annealing', 'Quenching', 'Tempering', 'Carburizing', 'Nitriding']
@@ -111,7 +111,7 @@ const SearchPage = () => {
                     <div className="mt-4 p-4 bg-light rounded filter-container">
                       <p className="mb-3 fw-bold">{t('search.filterByType')}:</p>
                       <div className="d-flex flex-wrap">
-                        {['clients', 'orders', 'parts', 'tests', 'steels'].map(type => (
+                        {['clients', 'orders', 'parts', 'trials', 'steels'].map(type => (
                           <Form.Check
                             key={type}
                             type="checkbox"

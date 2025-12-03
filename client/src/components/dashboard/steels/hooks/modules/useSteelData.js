@@ -19,12 +19,12 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel, forceRef
         const fetchSteelData = async () => {
           try {
             setFetchingSteel(true);
-            console.log(`Fetching steel with ID: ${steelId}`);
+            
             
             // Utilisation de la méthode renommée getSteel au lieu de getSteelById
             const steelData = await steelService.getSteel(steelId);
             
-            console.log('API Response:', steelData);
+            
             
             // Récupérer les données du Node et du Steel (adaptation au nouveau format)
             const nodeData = steelData;
@@ -36,9 +36,24 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel, forceRef
               grade: steelProperties.grade || '',
               family: steelProperties.family || '',
               standard: steelProperties.standard || '',
-              equivalents: Array.isArray(steelProperties.equivalents) ? steelProperties.equivalents : [],
+              equivalents: [],
               chemical_elements: []
             };
+            
+            // Transformer les équivalents depuis la table steel_equivalents
+            // Les équivalents sont maintenant des objets Steel complets avec leur node
+            if (Array.isArray(steelProperties.equivalents)) {
+              formattedData.equivalents = steelProperties.equivalents.map(equiv => {
+                
+                return {
+                  steel_id: equiv.node_id,  // Utiliser steel_id pour la cohérence avec le reste du code
+                  grade: equiv.grade,
+                  family: equiv.family,
+                  standard: equiv.standard,
+                  name: equiv.node?.name || equiv.grade
+                };
+              });
+            }
               // Transformer les données de chimie en éléments chimiques pour le formulaire
             if (Array.isArray(steelProperties.chemistery)) {
               formattedData.chemical_elements = steelProperties.chemistery.map(chem => ({
@@ -70,7 +85,7 @@ const useSteelData = (steel, setFormData, setMessage, setFetchingSteel, forceRef
               formattedData.chemical_elements = [];
             }
             
-            console.log('Formatted data for form:', formattedData);
+            
             setFormData(formattedData);
           } catch (error) {
             console.error('Error fetching steel data:', error);

@@ -1,13 +1,13 @@
 import useApiSubmission from '../../../../../hooks/useApiSubmission';
-import orderService from '../../../../../services/orderService';
+import trialRequestService from '../../../../../services/trialRequestService';
 
 /**
- * Hook spécifique pour gérer les soumissions de commandes
-* @param {Object} formData - Données du formulaire de commande
+ * Hook spécifique pour gérer les soumissions de demandes d'essai
+ * @param {Object} formData - Données du formulaire de demande d'essai
  * @param {string} parentId - ID du client parent
  * @param {Function} setFormData - Fonction pour mettre à jour formData
  * @param {Function} validate - Fonction de validation
- * @param {Object} order - Commande existante (pour le mode édition)
+ * @param {Object} trialRequest - Demande d'essai existante (pour le mode édition)
  * @param {Function} setLoading - Fonction pour définir l'état de chargement
  * @param {Function} setMessage - Fonction pour définir les messages
  * @param {Function} onOrderCreated - Callback après création
@@ -20,7 +20,7 @@ const useOrderSubmission = (
   parentId,
   setFormData, 
   validate,
-  order, 
+  trialRequest, 
   setLoading, 
   setMessage, 
   onOrderCreated,
@@ -29,7 +29,7 @@ const useOrderSubmission = (
   fileAssociationCallback
 ) => {
   const initialFormState = {
-    order_date: new Date().toISOString().split('T')[0],
+    trial_request_date: new Date().toISOString().split('T')[0],
     description: '',
     commercial: '',
     contacts: [{ name: '', phone: '', email: '' }]
@@ -40,16 +40,16 @@ const useOrderSubmission = (
       contact.name.trim() !== '' || contact.phone.trim() !== '' || contact.email.trim() !== ''
     );
     
-    const formattedDate = formData.order_date ? new Date(formData.order_date).toISOString().split('T')[0] : null;
+    const formattedDate = formData.trial_request_date ? new Date(formData.trial_request_date).toISOString().split('T')[0] : null;
     
     // S'assurer que toutes les données nécessaires sont bien incluses
     return {
       parent_id: parentId,
-      order_date: formattedDate, // S'assurer que la date est au format ISO
+      trial_request_date: formattedDate, // S'assurer que la date est au format ISO
       description: formData.description,
       commercial: formData.commercial,
       contacts: filteredContacts,
-      name: order ? order.name : null // Conserver le nom si en mode édition
+      name: trialRequest ? trialRequest.name : null // Conserver le nom si en mode édition
     };
   };
   // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
@@ -65,7 +65,7 @@ const useOrderSubmission = (
     formData,
     setFormData,
     validate,
-    entity: order,
+    entity: trialRequest,
     setLoading,
     setMessage,
     onCreated: onOrderCreated,
@@ -73,10 +73,10 @@ const useOrderSubmission = (
     onClose,
     formatDataForApi,
     customApiService: {
-      create: orderService.createOrder,
-      update: orderService.updateOrder
+      create: trialRequestService.createTrialRequest,
+      update: trialRequestService.updateTrialRequest
     },
-    entityType: 'Commande',
+    entityType: 'Demande d\'essai',
     initialFormState,
     fileAssociationCallback: wrappedFileAssociationCallback,
     parentId

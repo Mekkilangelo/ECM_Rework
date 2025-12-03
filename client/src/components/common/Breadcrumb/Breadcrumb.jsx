@@ -19,27 +19,31 @@ const Breadcrumb = () => {
     });
     
     // Ajouter les niveaux suivants si nécessaire
-    if (hierarchyState.clientId && (currentLevel === 'order' || currentLevel === 'part' || currentLevel === 'test')) {
+    const isOrderLevel = currentLevel === 'trial_request' || currentLevel === 'order';
+    const isPartLevel = currentLevel === 'part';
+    const isTrialLevel = currentLevel === 'trial' || currentLevel === 'test';
+    
+    if (hierarchyState.clientId && (isOrderLevel || isPartLevel || isTrialLevel)) {
       items.push({
         level: 'order',
         name: `${hierarchyState.clientName} > ${t('navigation.hierarchy.requests')}`,
-        active: currentLevel === 'order'
+        active: isOrderLevel
       });
     }
     
-    if (hierarchyState.orderId && (currentLevel === 'part' || currentLevel === 'test')) {
+    if (hierarchyState.orderId && (isPartLevel || isTrialLevel)) {
       items.push({
         level: 'part',
         name: `${hierarchyState.orderName} > ${t('navigation.hierarchy.parts')}`,
-        active: currentLevel === 'part'
+        active: isPartLevel
       });
     }
     
-    if (hierarchyState.partId && currentLevel === 'test') {
+    if (hierarchyState.partId && isTrialLevel) {
       items.push({
-        level: 'test',
+        level: 'trial',
         name: `${hierarchyState.partName} > ${t('navigation.hierarchy.trials')}`,
-        active: currentLevel === 'test'
+        active: isTrialLevel
       });
     }
     
@@ -54,13 +58,13 @@ const Breadcrumb = () => {
         navigateToLevel('client', null, null);
         break;
       case 'order':
-        navigateToLevel('order', hierarchyState.clientId, hierarchyState.clientName);
+        navigateToLevel('trial_request', hierarchyState.clientId, hierarchyState.clientName);
         break;
       case 'part':
         navigateToLevel('part', hierarchyState.orderId, hierarchyState.orderName);
         break;
-      case 'test':
-        navigateToLevel('test', hierarchyState.partId, hierarchyState.partName);
+      case 'trial':
+        navigateToLevel('trial', hierarchyState.partId, hierarchyState.partName);
         break;
       default:
         break;

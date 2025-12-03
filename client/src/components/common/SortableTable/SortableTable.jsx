@@ -117,9 +117,9 @@ const SortableTable = ({
           'Client.client_group': 'client_group',
           'Client.country': 'country',
           'Client.city': 'city',
-          // Orders
-          'Order.commercial': 'commercial',
-          'Order.order_date': 'order_date',
+          // Trial Requests
+          'TrialRequest.commercial': 'commercial',
+          'TrialRequest.request_date': 'request_date',
           // Parts
           'Part.client_designation': 'client_designation',
           'Part.reference': 'reference',

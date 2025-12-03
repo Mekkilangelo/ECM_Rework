@@ -642,7 +642,38 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           )}
           {(() => {
             try {
-              return <ControlSectionPDF report={report} />;
+              // Organiser les photos de control location par result-sample
+              const controlLocationPhotos = {};
+              const rawPhotos = selectedPhotos?.controlLocation || {};
+              
+              console.log('🔍 Control Location - Raw photos:', rawPhotos);
+              console.log('🔍 Control Location - Raw photos type:', typeof rawPhotos);
+              console.log('🔍 Control Location - Raw photos is array?', Array.isArray(rawPhotos));
+              console.log('🔍 Control Location - Raw photos keys:', Object.keys(rawPhotos));
+              console.log('🔍 Control Location - All selectedPhotos:', selectedPhotos);
+              
+              // Si c'est un objet organisé
+              if (typeof rawPhotos === 'object' && !Array.isArray(rawPhotos)) {
+                Object.keys(rawPhotos).forEach(key => {
+                  const photos = Array.isArray(rawPhotos[key]) ? rawPhotos[key] : [];
+                  console.log(`🔍 Processing key "${key}":`, photos.length, 'photos');
+                  controlLocationPhotos[key] = normalizePhotosForSection(photos, 'controlLocation');
+                });
+              } else if (Array.isArray(rawPhotos)) {
+                // Si c'est un tableau, grouper par subcategory
+                const normalizedPhotos = normalizePhotosForSection(rawPhotos, 'controlLocation');
+                normalizedPhotos.forEach(photo => {
+                  const key = photo.subcategory || 'default';
+                  if (!controlLocationPhotos[key]) {
+                    controlLocationPhotos[key] = [];
+                  }
+                  controlLocationPhotos[key].push(photo);
+                });
+              }
+              
+              console.log('🔍 Control Location - Organized photos:', Object.keys(controlLocationPhotos));
+              
+              return <ControlSectionPDF report={report} photos={controlLocationPhotos} />;
             } catch (error) {
               console.error('❌ Error rendering ControlSectionPDF:', error);
               return (

@@ -67,36 +67,34 @@ const MicrographsSection = ({
     }
   };
   
-  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
+  const handleFilesUploaded = useCallback((viewId) => (files, newTempId, operation = 'add', fileId = null) => {
     if (operation === 'delete') {
-      // Pour une suppression, mettre à jour toutes les sous-catégories
-      setUploadedFiles(prev => {
-        const updatedFiles = { ...prev };
-        
-        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
-        Object.keys(updatedFiles).forEach(subcategory => {
-          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
-        });
-        
-        return updatedFiles;
-      });
-    } else {
-      // Pour l'ajout, mettre à jour la sous-catégorie spécifique
-      const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'x50';
-      
+      // Pour une suppression, mettre à jour la sous-catégorie spécifique
       setUploadedFiles(prev => ({
         ...prev,
-        [subcategory]: [...(prev[subcategory] || []), ...files]
+        [viewId]: (prev[viewId] || []).filter(file => file.id !== fileId)
+      }));
+    } else if (operation === 'update') {
+      // Pour une mise à jour (description), mettre à jour les fichiers existants
+      setUploadedFiles(prev => ({
+        ...prev,
+        [viewId]: files
+      }));
+    } else {
+      // Pour l'ajout, mettre à jour la sous-catégorie spécifique (viewId)
+      setUploadedFiles(prev => ({
+        ...prev,
+        [viewId]: [...(prev[viewId] || []), ...files]
       }));
       
       if (newTempId) {
         setTempIds(prev => ({
           ...prev,
-          [subcategory]: newTempId
+          [viewId]: newTempId
         }));
       }
     }
-  };  const associateFiles = useCallback(async (newTrialNodeId) => {
+  }, []);  const associateFiles = useCallback(async (newTrialNodeId) => {
     try {
       const currentTempIds = tempIdsRef.current;
       let allSuccessful = true;
@@ -148,7 +146,7 @@ const MicrographsSection = ({
               category="micrographs"
               subcategory={`result-${resultIndex}-sample-${sampleIndex}-${view.id}`}
               nodeId={trialNodeId}
-              onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
+              onFilesUploaded={handleFilesUploaded(view.id)}
               maxFiles={50}
               acceptedFileTypes={{
                 'application/pdf': ['.pdf'],

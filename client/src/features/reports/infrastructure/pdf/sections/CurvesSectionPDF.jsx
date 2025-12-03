@@ -1,150 +1,249 @@
 /**
- * INFRASTRUCTURE: Section Courbes pour le PDF - Version Améliorée
- * Affiche les courbes de température et rapports de four avec pagination intelligente
+ * INFRASTRUCTURE: Section Courbes pour le PDF
+ * Affiche les courbes de température et rapports de four avec layout intelligent
  */
 
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { getPhotoUrl, calculatePhotoLayout, validatePhotos } from '../helpers/photoHelpers';
+import { getPhotoUrl } from '../helpers/photoHelpers';
 
 const styles = StyleSheet.create({
+  // ========== LAYOUT ==========
   section: {
-    marginBottom: 20,
-    padding: 15,
-    border: '1pt solid #e0e0e0',
-    borderRadius: 4,
+    marginBottom: 12,
   },
+  
+  // ========== TITRES ==========
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#2c3e50',
-    borderBottom: '2pt solid #ff9800',
-    paddingBottom: 6,
-    textAlign: 'center',
+    marginBottom: 12,
+    marginTop: 4,
+    color: '#1a1a1a',
+    letterSpacing: 0.5,
   },
   categoryTitle: {
-    fontSize: 14,
+    fontSize: 9.5,
     fontWeight: 'bold',
-    marginTop: 15,
-    marginBottom: 10,
+    marginTop: 12,
+    marginBottom: 8,
     color: '#e65100',
-    backgroundColor: '#fff3e0',
-    padding: 8,
-    borderLeft: '4pt solid #ff9800',
+    letterSpacing: 0.3,
+  },
+  
+  // ========== PHOTOS - Layouts adaptatifs ==========
+  photoRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    justifyContent: 'space-between',
+    gap: 8,
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 15,
-    gap: 10,
+    marginTop: 8,
+    justifyContent: 'flex-start',
+    gap: 8,
   },
-  photoContainer: {
+  
+  // Conteneurs photo selon layout
+  photoContainerSingle: {
+    width: '100%',
+    marginBottom: 8,
     alignItems: 'center',
-    marginBottom: 12,
   },
+  photoContainerHalf: {
+    width: '48%',
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  
+  // Tailles de photos
   photo: {
     objectFit: 'cover',
-    border: '1pt solid #ddd',
-    borderRadius: 2,
+    border: '0.5pt solid #d0d0d0',
   },
+  photoFullWidth: {
+    width: 480,
+    height: 200,
+  },
+  photoHalfWidth: {
+    width: 235,
+    height: 176,
+  },
+  photoSmall: {
+    width: 235,
+    height: 140,
+  },
+  
+  // Légendes
   photoLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     textAlign: 'center',
-    marginTop: 4,
-    color: '#666',
-    maxWidth: 150,
-    lineHeight: 1.2,
+    marginTop: 3,
+    color: '#888',
+    fontStyle: 'italic',
   },
-  categoryLabel: {
-    fontSize: 7,
-    color: '#e65100',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 2,
-  },
+  
+  // ========== ÉTATS VIDES ==========
   emptyState: {
-    fontSize: 11,
+    fontSize: 9,
     fontStyle: 'italic',
     color: '#999',
     textAlign: 'center',
-    padding: 30,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 4,
+    padding: 20,
   },
-  analysisInfo: {
-    fontSize: 10,
-    color: '#555',
-    backgroundColor: '#f8f9fa',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 3,
-    border: '1pt solid #e9ecef',
-  },
-  photoCounter: {
-    fontSize: 7,
-    color: '#999',
-    textAlign: 'center',
-    marginTop: 1,
-  }
 });
 
 /**
- * Composant Section Courbes pour le PDF
+ * Organise les photos par catégorie (heating, cooling, alarms, datapaq, other)
+ */
+const organizePhotosByCategory = (photos) => {
+  const categories = {
+    heating: { name: 'Courbes de Chauffage', photos: [], order: 1 },
+    cooling: { name: 'Courbes de Refroidissement', photos: [], order: 2 },
+    alarms: { name: 'Alarmes et Événements', photos: [], order: 3 },
+    datapaq: { name: 'Rapports Datapaq', photos: [], order: 4 },
+    other: { name: 'Autres Courbes', photos: [], order: 5 }
+  };
+
+  // Normaliser photos en tableau
+  let allPhotos = [];
+  if (Array.isArray(photos)) {
+    allPhotos = photos;
+  } else if (typeof photos === 'object' && photos) {
+    Object.values(photos).forEach(categoryPhotos => {
+      if (Array.isArray(categoryPhotos)) {
+        allPhotos.push(...categoryPhotos);
+      }
+    });
+  }
+
+  // Classer chaque photo dans la bonne catégorie
+  allPhotos.forEach(photo => {
+    const subcategory = (photo.subcategory || '').toLowerCase();
+    const name = (photo.name || photo.original_name || '').toLowerCase();
+    
+    let targetCategory = 'other';
+    
+    // Priorité à la subcategory si elle correspond exactement
+    if (subcategory === 'heating' || subcategory === 'chauffage') {
+      targetCategory = 'heating';
+    } else if (subcategory === 'cooling' || subcategory === 'refroidissement') {
+      targetCategory = 'cooling';
+    } else if (subcategory === 'alarms' || subcategory === 'alarmes') {
+      targetCategory = 'alarms';
+    } else if (subcategory === 'datapaq') {
+      targetCategory = 'datapaq';
+    } 
+    // Sinon, essayer de deviner depuis le nom
+    else if (name.includes('heating') || name.includes('chauff') || name.includes('montée')) {
+      targetCategory = 'heating';
+    } else if (name.includes('cooling') || name.includes('refroid') || name.includes('descent')) {
+      targetCategory = 'cooling';
+    } else if (name.includes('alarm') || name.includes('alert') || name.includes('erreur') || name.includes('event')) {
+      targetCategory = 'alarms';
+    } else if (name.includes('datapaq') || name.includes('sensor') || name.includes('capteur')) {
+      targetCategory = 'datapaq';
+    }
+    
+    if (categories[targetCategory]) {
+      categories[targetCategory].photos.push(photo);
+    }
+  });
+
+  return categories;
+};
+
+/**
+ * Formate le nom d'une catégorie
+ */
+const formatCategoryName = (categoryKey) => {
+  const names = {
+    heating: 'Courbes de Chauffage',
+    cooling: 'Courbes de Refroidissement',
+    alarms: 'Alarmes et Événements',
+    datapaq: 'Rapports Datapaq',
+    other: 'Autres Courbes'
+  };
+  return names[categoryKey] || categoryKey;
+};
+
+/**
+ * Composant pour afficher un groupe de catégorie avec layout intelligent
+ */
+const CategoryGroup = ({ categoryKey, photos }) => {
+  const photoCount = photos.length;
+  
+  return (
+    <View style={styles.section}>
+      <Text style={styles.categoryTitle}>
+        {formatCategoryName(categoryKey)}
+      </Text>
+      
+      {/* Layout adaptatif selon le nombre de photos */}
+      {photoCount === 1 ? (
+        // 1 photo : pleine largeur
+        <View style={styles.photoContainerSingle}>
+          <Image 
+            src={getPhotoUrl(photos[0])} 
+            style={[styles.photo, styles.photoFullWidth]}
+          />
+          <Text style={styles.photoLabel}>
+            {photos[0].description && photos[0].description.trim() !== '' 
+              ? photos[0].description 
+              : (photos[0].original_name || photos[0].name || 'Document')}
+          </Text>
+        </View>
+      ) : photoCount === 2 ? (
+        // 2 photos : côte à côte
+        <View style={styles.photoRow}>
+          {photos.map((photo, idx) => (
+            <View key={photo.id || idx} style={styles.photoContainerHalf}>
+              <Image 
+                src={getPhotoUrl(photo)} 
+                style={[styles.photo, styles.photoHalfWidth]}
+              />
+              <Text style={styles.photoLabel}>
+                {photo.description && photo.description.trim() !== '' 
+                  ? photo.description 
+                  : (photo.original_name || photo.name || 'Document')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        // 3+ photos : grille 2 colonnes
+        <View style={styles.photoGrid}>
+          {photos.map((photo, idx) => (
+            <View key={photo.id || idx} style={styles.photoContainerHalf}>
+              <Image 
+                src={getPhotoUrl(photo)} 
+                style={[styles.photo, styles.photoSmall]}
+              />
+              <Text style={styles.photoLabel}>
+                {photo.description && photo.description.trim() !== '' 
+                  ? photo.description 
+                  : (photo.original_name || photo.name || 'Document')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
+
+/**
+ * Composant principal : Section Courbes
+ * Affiche toutes les courbes organisées par catégorie avec layout intelligent
  */
 export const CurvesSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
   // Organiser les photos par catégorie
-  const organizedPhotos = (() => {
-    let allPhotos = [];
-    
-    if (Array.isArray(photos)) {
-      allPhotos = photos;
-    } else if (typeof photos === 'object' && photos) {
-      Object.values(photos).forEach(categoryPhotos => {
-        if (Array.isArray(categoryPhotos)) {
-          allPhotos.push(...categoryPhotos);
-        }
-      });
-    }
-
-    // Organiser par catégorie
-    const categories = {
-      heating: { name: 'Courbes de Chauffage', photos: [], order: 1 },
-      cooling: { name: 'Courbes de Refroidissement', photos: [], order: 2 },
-      datapaq: { name: 'Rapports Datapaq', photos: [], order: 3 },
-      alarms: { name: 'Alarmes et Événements', photos: [], order: 4 },
-      other: { name: 'Autres Rapports', photos: [], order: 5 }
-    };
-
-    allPhotos.forEach(photo => {
-      const category = photo.category || photo.subcategory || 'other';
-      const name = (photo.name || photo.original_name || '').toLowerCase();
-      
-      // Déterminer la catégorie basée sur le nom ou la métadonnée
-      let targetCategory = 'other';
-      
-      if (category === 'heating' || name.includes('heating') || name.includes('chauff') || name.includes('montée')) {
-        targetCategory = 'heating';
-      } else if (category === 'cooling' || name.includes('cooling') || name.includes('refroid') || name.includes('descent')) {
-        targetCategory = 'cooling';
-      } else if (category === 'datapaq' || name.includes('datapaq') || name.includes('sensor') || name.includes('capteur')) {
-        targetCategory = 'datapaq';
-      } else if (category === 'alarms' || name.includes('alarm') || name.includes('alert') || name.includes('erreur')) {
-        targetCategory = 'alarms';
-      }
-      
-      if (categories[targetCategory]) {
-        categories[targetCategory].photos.push(photo);
-      }
-    });
-
-    return categories;
-  })();
-
-
-
+  const organizedPhotos = organizePhotosByCategory(photos);
+  
   // Compter le total de photos
   const totalPhotos = Object.values(organizedPhotos).reduce((total, category) => {
     return total + category.photos.length;
@@ -161,64 +260,28 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
     );
   }
 
+  // Ordre des catégories : heating, cooling, alarms, datapaq, other
+  const categoryOrder = ['heating', 'cooling', 'alarms', 'datapaq', 'other'];
+
   return (
     <>
-      <View style={styles.section} wrap={false}>
+      <View wrap={false}>
         <Text style={styles.sectionTitle}>COURBES ET RAPPORTS DE FOUR</Text>
-        
-        <Text style={styles.analysisInfo}>
-          Cette section présente les courbes de température et les rapports de four générés durant l'essai.
-          Les données incluent les phases de chauffage, refroidissement, ainsi que les rapports de capteurs et alarmes.
-          Total : {totalPhotos} document{totalPhotos > 1 ? 's' : ''}
-        </Text>
       </View>
 
-      {/* Parcourir les catégories */}
-      {Object.entries(organizedPhotos)
-        .filter(([_, category]) => category.photos.length > 0)
-        .sort((a, b) => a[1].order - b[1].order)
-        .map(([categoryKey, category]) => {
-          const layout = calculatePhotoLayout(category.photos.length, 'curves');
-          
-          return (
-            <View key={categoryKey} style={styles.section} wrap={false}>
-              <Text style={styles.categoryTitle}>
-                {category.name} ({category.photos.length} document{category.photos.length > 1 ? 's' : ''})
-              </Text>
-              
-              <View style={styles.photoGrid}>
-                {category.photos.map((photo, photoIndex) => (
-                  <View key={photo.id || photoIndex} style={[
-                    styles.photoContainer,
-                    { width: `${100 / layout.cols}%` }
-                  ]}>
-                    <Image 
-                      src={getPhotoUrl(photo)} 
-                      style={[
-                        styles.photo,
-                        { 
-                          width: layout.photoWidth, 
-                          height: layout.photoHeight 
-                        }
-                      ]}
-                    />
-                    {(photo.original_name || photo.name) && (
-                      <Text style={styles.photoLabel}>
-                        {photo.original_name || photo.name}
-                      </Text>
-                    )}
-                    <Text style={styles.categoryLabel}>
-                      {category.name}
-                    </Text>
-                    <Text style={styles.photoCounter}>
-                      {categoryKey.toUpperCase()}-{photoIndex + 1}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          );
-        })}
+      {/* Afficher toutes les catégories dans l'ordre */}
+      {categoryOrder.map(categoryKey => {
+        const category = organizedPhotos[categoryKey];
+        if (!category || category.photos.length === 0) return null;
+        
+        return (
+          <CategoryGroup 
+            key={categoryKey}
+            categoryKey={categoryKey}
+            photos={category.photos}
+          />
+        );
+      })}
     </>
   );
 };

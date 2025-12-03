@@ -198,6 +198,15 @@ const SectionPhotoManager = ({
         maxSamples: 3,  // Réduit à 3 pour optimiser (était 5)
         magnifications: ['x50', 'x500', 'x1000', 'other'] // Grossissements disponibles
       },
+      controlLocation: {
+        nodeId: trialNodeId,
+        title: tSafe('parts.photos.manager.sections.controlLocation.title', 'Localisation de contrôle'),
+        description: tSafe('parts.photos.manager.sections.controlLocation.description', 'Photos des zones de contrôle par résultat et échantillon'),
+        sources: [],
+        isDynamic: true,
+        maxResults: 5,
+        maxSamples: 3
+      },
       load: {
         nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.load.title', 'Photos de charge'),
@@ -380,12 +389,89 @@ const SectionPhotoManager = ({
     return sources;
   };
 
+  // Générer dynamiquement les sources pour la section controlLocation
+  const generateControlLocationSources = async (nodeId, config) => {
+    const sources = [];
+    const { maxResults = 5, maxSamples = 3 } = config;
+    
+    const tSafe = (key, fallback, options = {}) => {
+      try {
+        const translated = t(key, options);
+        return translated !== key ? translated : fallback;
+      } catch (error) {
+        console.warn(`Translation error for key "${key}":`, error);
+        return fallback;
+      }
+    };
+
+    const promises = [];
+    
+    for (let resultIndex = 0; resultIndex < maxResults; resultIndex++) {
+      for (let sampleIndex = 0; sampleIndex < maxSamples; sampleIndex++) {
+        const promise = fileService.getNodeFiles(
+          nodeId,
+          { 
+            category: 'control-location',
+            subcategory: `result-${resultIndex}-sample-${sampleIndex}`
+          }
+        ).then(response => {
+          if (response.data && response.data.success !== false) {
+            const files = response.data.data?.files || response.data.files || [];
+            if (files.length > 0) {
+              return {
+                category: 'control-location',
+                subcategory: `result-${resultIndex}-sample-${sampleIndex}`,
+                label: tSafe(
+                  'parts.photos.manager.sections.controlLocation.sourceLabel',
+                  `Résultat ${resultIndex + 1} - Échantillon ${sampleIndex + 1}`,
+                  { result: resultIndex + 1, sample: sampleIndex + 1 }
+                ),
+                description: tSafe(
+                  'parts.photos.manager.sections.controlLocation.sourceDescription',
+                  `Photos de localisation de contrôle`,
+                  { result: resultIndex + 1, sample: sampleIndex + 1 }
+                ),
+                group: tSafe('parts.photos.manager.sections.controlLocation.resultGroup', `Résultat ${resultIndex + 1}`, { result: resultIndex + 1 }),
+                subgroup: tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', `Échantillon ${sampleIndex + 1}`, { sample: sampleIndex + 1 }),
+                resultIndex,
+                sampleIndex
+              };
+            }
+          }
+          return null;
+        }).catch(error => {
+          if (error.name !== 'AbortError') {
+            console.error(`Error fetching control location for result ${resultIndex}, sample ${sampleIndex}:`, error);
+          }
+          return null;
+        });
+        
+        promises.push(promise);
+      }
+    }
+
+    try {
+      const allResults = await Promise.all(promises);
+      const validSources = allResults.filter(result => result !== null);
+      sources.push(...validSources);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return [];
+      }
+      throw error;
+    }
+    
+    return sources;
+  };
+
   // Charger les photos au montage du composant
   useEffect(() => {
     const sectionConfig = getSectionConfig();
-    const config = sectionConfig[sectionType];
+    // Mapper 'control' vers 'controlLocation' pour la configuration
+    const configKey = sectionType === 'control' ? 'controlLocation' : sectionType;
+    const config = sectionConfig[configKey];
     if (!config) {
-      console.error(`Configuration manquante pour la section ${sectionType}`);
+      console.error(`Configuration manquante pour la section ${sectionType} (configKey: ${configKey})`);
       return;
     }
     
@@ -474,7 +560,9 @@ const SectionPhotoManager = ({
     
     try {
       const sectionConfig = getSectionConfig();
-      const config = sectionConfig[sectionType];
+      // Mapper 'control' vers 'controlLocation' pour la configuration
+      const configKey = sectionType === 'control' ? 'controlLocation' : sectionType;
+      const config = sectionConfig[configKey];
       let nodeId = config?.nodeId;
       if (sectionType === 'identification' && partNodeId) {
         nodeId = partNodeId;
@@ -487,12 +575,14 @@ const SectionPhotoManager = ({
       }
       
       let sources = config.sources;
-        // Si c'est une section dynamique (comme micrography), générer les sources
+        // Si c'est une section dynamique (comme micrography ou controlLocation), générer les sources
       if (config.isDynamic && sectionType === 'micrography') {
         sources = await generateMicrographySources(nodeId, config);
         if (process.env.NODE_ENV === 'development') {
           
         }
+      } else if (config.isDynamic && (sectionType === 'controlLocation' || sectionType === 'control')) {
+        sources = await generateControlLocationSources(nodeId, config);
       }
 
       // Vérifier que sources est toujours valide après annulation potentielle

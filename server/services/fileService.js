@@ -844,12 +844,11 @@ const updateFile = async (fileId, updateData) => {
       throw new NotFoundError('Fichier non trouvé');
     }
     
-    const currentNode = currentFile.Node;
+    const currentNode = currentFile.node;
     let newLogicalPath = currentNode.path;
     let nodeUpdated = false;
     
     const nodeUpdates = {
-      data_status: 'updated',
       modified_at: new Date()
     };
 
@@ -864,6 +863,9 @@ const updateFile = async (fileId, updateData) => {
       if (!newParent) {
         throw new NotFoundError('Nouveau nœud parent non trouvé');
       }
+      
+      // Marquer comme modifié structurellement
+      nodeUpdates.data_status = 'old'; // Utiliser 'old' au lieu de 'updated'
       
       // Calculer le nouveau chemin logique
       const fileName = name || currentNode.name;
@@ -915,6 +917,9 @@ const updateFile = async (fileId, updateData) => {
     } else if (name && name !== currentNode.name) {
       // 2. Gestion du renommage (Logique uniquement)
       // On ne touche PAS au fichier physique, ni à sa storage_key
+      
+      // Marquer comme modifié structurellement
+      nodeUpdates.data_status = 'old'; // Utiliser 'old' au lieu de 'updated'
       
       newLogicalPath = currentNode.path.replace(currentNode.name, name);
       

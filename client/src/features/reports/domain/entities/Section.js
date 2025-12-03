@@ -180,7 +180,7 @@ export class SectionFactory {
         label: 'Contrôle',
         icon: 'faClipboardCheck',
         description: 'Résultats de mesures et contrôles',
-        hasPhotos: false,
+        hasPhotos: true,
         order: 6
       }
     };

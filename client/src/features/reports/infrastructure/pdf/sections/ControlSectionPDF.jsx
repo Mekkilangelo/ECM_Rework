@@ -94,12 +94,12 @@ const SERIES_COLORS = [
 /**
  * Génère un graphique SVG pour plusieurs courbes de filiation sur le même graphique
  */
-const FiliationChart = ({ seriesList, width = 500, height = 250 }) => {
+const FiliationChart = ({ seriesList, width = 500, height = 250, specifications, unit = 'HV' }) => {
   if (!seriesList || seriesList.length === 0) {
     return null;
   }
 
-  const padding = { top: 20, right: 30, bottom: 40, left: 50 };
+  const padding = { top: 20, right: 30, bottom: 50, left: 60 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
@@ -193,7 +193,7 @@ const FiliationChart = ({ seriesList, width = 500, height = 250 }) => {
         x2={padding.left}
         y2={padding.top + chartHeight}
         stroke="#333"
-        strokeWidth={1}
+        strokeWidth={1.5}
       />
       <SvgLine
         x1={padding.left}
@@ -201,8 +201,90 @@ const FiliationChart = ({ seriesList, width = 500, height = 250 }) => {
         x2={padding.left + chartWidth}
         y2={padding.top + chartHeight}
         stroke="#333"
-        strokeWidth={1}
+        strokeWidth={1.5}
       />
+
+      {/* Labels des axes X (distances) */}
+      {xTicks.map((tick, i) => (
+        <Text
+          key={`x-label-${i}`}
+          x={tick.x}
+          y={padding.top + chartHeight + 15}
+          style={styles.axisLabel}
+          textAnchor="middle"
+        >
+          {tick.label}
+        </Text>
+      ))}
+
+      {/* Labels des axes Y (valeurs) */}
+      {yTicks.map((tick, i) => (
+        <Text
+          key={`y-label-${i}`}
+          x={padding.left - 10}
+          y={tick.y + 3}
+          style={styles.axisLabel}
+          textAnchor="end"
+        >
+          {tick.label}
+        </Text>
+      ))}
+
+      {/* Titre axe X */}
+      <Text
+        x={padding.left + chartWidth / 2}
+        y={padding.top + chartHeight + 35}
+        style={[styles.axisLabel, { fontSize: 8, fontFamily: 'Helvetica-Bold' }]}
+        textAnchor="middle"
+      >
+        Distance (mm)
+      </Text>
+
+      {/* Titre axe Y */}
+      <Text
+        x={15}
+        y={padding.top + chartHeight / 2}
+        style={[styles.axisLabel, { fontSize: 8, fontFamily: 'Helvetica-Bold' }]}
+        textAnchor="middle"
+        transform={`rotate(-90 15 ${padding.top + chartHeight / 2})`}
+      >
+        Dureté ({unit})
+      </Text>
+
+      {/* Ligne de spécification ECD si disponible */}
+      {specifications && specifications.ecdSpecs && specifications.ecdSpecs.length > 0 && (
+        <>
+          {specifications.ecdSpecs.map((spec, specIndex) => {
+            const specValue = spec.hardness || spec.yValue;
+            if (!specValue) return null;
+            
+            const y = scaleY(specValue);
+            if (y === null) return null;
+
+            return (
+              <React.Fragment key={`spec-${specIndex}`}>
+                <SvgLine
+                  x1={padding.left}
+                  y1={y}
+                  x2={padding.left + chartWidth}
+                  y2={y}
+                  stroke="#2c3e50"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 2"
+                />
+                <Text
+                  x={padding.left + chartWidth + 5}
+                  y={y + 3}
+                  style={[styles.axisLabel, { fontSize: 6.5, fill: '#2c3e50' }]}
+                  textAnchor="start"
+                >
+                  Spec: {specValue}
+                </Text>
+              </React.Fragment>
+            );
+          })}
+        </>
+      )}
 
       {/* Tracer toutes les courbes */}
       {seriesList.map((series, seriesIndex) => {
@@ -255,7 +337,7 @@ const FiliationChart = ({ seriesList, width = 500, height = 250 }) => {
 /**
  * Section pour afficher toutes les courbes d'un échantillon sur le même graphique
  */
-const SampleCurvesSection = ({ sample, sampleNumber }) => {
+const SampleCurvesSection = ({ sample, sampleNumber, specifications, unit }) => {
   if (!sample.curveSeries || sample.curveSeries.length === 0) {
     return null;
   }
@@ -269,7 +351,13 @@ const SampleCurvesSection = ({ sample, sampleNumber }) => {
 
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Courbes de Filiation</Text>
-        <FiliationChart seriesList={sample.curveSeries} width={480} height={220} />
+        <FiliationChart 
+          seriesList={sample.curveSeries} 
+          width={480} 
+          height={240} 
+          specifications={specifications}
+          unit={unit}
+        />
         
         <View style={styles.chartLegend}>
           {sample.curveSeries.map((series, index) => {
@@ -294,7 +382,7 @@ const SampleCurvesSection = ({ sample, sampleNumber }) => {
 /**
  * Section pour un résultat complet
  */
-const ResultSection = ({ result, resultNumber }) => {
+const ResultSection = ({ result, resultNumber, specifications, unit }) => {
   if (!result.samples || result.samples.length === 0) {
     return null;
   }
@@ -311,6 +399,8 @@ const ResultSection = ({ result, resultNumber }) => {
           key={index} 
           sample={sample} 
           sampleNumber={sample.sampleNumber || index + 1}
+          specifications={specifications}
+          unit={unit}
         />
       ))}
     </View>
@@ -322,6 +412,10 @@ const ResultSection = ({ result, resultNumber }) => {
  */
 export const ControlSectionPDF = ({ report }) => {
   const resultsData = report?.resultsData;
+  const specifications = report?.part?.specifications;
+
+  // Déterminer l'unité de dureté (par défaut HV)
+  const unit = resultsData?.results?.[0]?.samples?.[0]?.hardnessPoints?.[0]?.unit || 'HV';
 
   if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
     return (
@@ -341,6 +435,8 @@ export const ControlSectionPDF = ({ report }) => {
           key={index} 
           result={result} 
           resultNumber={result.stepNumber || index + 1}
+          specifications={specifications}
+          unit={unit}
         />
       ))}
     </View>

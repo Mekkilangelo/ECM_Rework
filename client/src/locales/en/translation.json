@@ -608,6 +608,14 @@
               "other": "Other micrographs"
             }
           },
+          "controlLocation": {
+            "title": "Control Location",
+            "description": "Control zone photos by result and sample",
+            "sourceLabel": "Result {{result}} - Sample {{sample}}",
+            "sourceDescription": "Control location photographs",
+            "resultGroup": "Result {{result}}",
+            "sampleSubgroup": "Sample {{sample}}"
+          },
           "load": {
             "title": "Load Photos",
             "description": "Load arrangement and configuration",

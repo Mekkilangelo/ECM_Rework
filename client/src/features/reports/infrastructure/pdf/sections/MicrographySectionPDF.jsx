@@ -168,10 +168,10 @@ const organizePhotosByStructure = (photos) => {
  */
 const formatZoomName = (zoom) => {
   const zoomNames = {
-    'x50': 'Grossissement ×50',
-    'x500': 'Grossissement ×500',
-    'x1000': 'Grossissement ×1000',
-    'other': 'Autres grossissements'
+    'x50': 'Magnification ×50',
+    'x500': 'Magnification ×500',
+    'x1000': 'Magnification ×1000',
+    'other': 'Other magnifications'
   };
   return zoomNames[zoom] || zoom;
 };
@@ -249,10 +249,10 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData }) => {
     return (
       <View style={styles.section} wrap={false}>
         <Text style={styles.sectionTitle}>
-          MICROGRAPHIES - Résultat {resultIndex} - Échantillon {sampleIndex}
+          MICROGRAPHS - Result {resultIndex} - Sample {sampleIndex}
         </Text>
         <Text style={styles.emptyState}>
-          Aucune micrographie disponible pour cet échantillon
+          No micrograph available for this sample
         </Text>
       </View>
     );
@@ -272,7 +272,7 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData }) => {
   return (
     <View wrap={false}>
       <Text style={styles.sectionTitle}>
-        MICROGRAPHIES - Résultat {resultIndex} - Échantillon {sampleIndex}
+        MICROGRAPHS - Result {resultIndex} - Sample {sampleIndex}
       </Text>
       
       {/* Afficher tous les zooms sur la même page */}

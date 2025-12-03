@@ -440,31 +440,62 @@ const buildResultsData = (testData) => {
   const results = testData.resultSteps.map(step => ({
     stepNumber: step.step_number,
     description: step.description,
-    samples: (step.samples || []).map(sample => ({
-      sampleNumber: sample.sample_number,
-      description: sample.description,
-      ecdHardnessUnit: sample.ecd_hardness_unit,
-      ecdHardnessValue: sample.ecd_hardness_value,
+    samples: (step.samples || []).map(sample => {
+      // Transformer curveSeries en curveData (format attendu par le frontend)
+      let curveData = null;
+      if (sample.curveSeries && Array.isArray(sample.curveSeries) && sample.curveSeries.length > 0) {
+        // Extraire toutes les distances uniques
+        const distancesSet = new Set();
+        sample.curveSeries.forEach(series => {
+          (series.points || []).forEach(point => {
+            if (point.distance != null) {
+              distancesSet.add(Number(point.distance));
+            }
+          });
+        });
+        
+        const distances = Array.from(distancesSet).sort((a, b) => a - b);
+        
+        // Construire les séries au format curveData
+        const series = sample.curveSeries.map(curveSeries => {
+          const values = distances.map(distance => {
+            const point = (curveSeries.points || []).find(p => Number(p.distance) === distance);
+            return point ? point.value : '';
+          });
+          
+          return {
+            name: curveSeries.name,
+            values: values
+          };
+        });
+        
+        curveData = {
+          distances: distances,
+          series: series
+        };
+      }
       
-      hardnessPoints: (sample.hardnessPoints || []).map(point => ({
-        location: point.location,
-        value: point.value,
-        unit: point.unit
-      })),
-      
-      ecdPositions: (sample.ecdPositions || []).map(position => ({
-        distance: position.distance,
-        location: position.location
-      })),
-      
-      curveSeries: (sample.curveSeries || []).map(series => ({
-        name: series.name,
-        points: (series.points || []).map(point => ({
-          distance: point.distance,
-          value: point.value
-        }))
-      }))
-    }))
+      return {
+        sampleNumber: sample.sample_number,
+        description: sample.description,
+        ecdHardnessUnit: sample.ecd_hardness_unit,
+        ecdHardnessValue: sample.ecd_hardness_value,
+        
+        hardnessPoints: (sample.hardnessPoints || []).map(point => ({
+          location: point.location,
+          value: point.value,
+          unit: point.unit
+        })),
+        
+        ecdPositions: (sample.ecdPositions || []).map(position => ({
+          distance: position.distance,
+          location: position.location
+        })),
+        
+        // Nouveau format curveData au lieu de curveSeries
+        curveData: curveData
+      };
+    })
   }));
 
   console.log('✅ buildResultsData - results:', JSON.stringify(results, null, 2));

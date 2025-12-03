@@ -160,11 +160,11 @@ const organizePhotosByCategory = (photos) => {
  */
 const formatCategoryName = (categoryKey) => {
   const names = {
-    heating: 'Courbes de Chauffage',
-    cooling: 'Courbes de Refroidissement',
-    alarms: 'Alarmes et Événements',
-    datapaq: 'Rapports Datapaq',
-    other: 'Autres Courbes'
+    heating: 'Heating Curves',
+    cooling: 'Cooling Curves',
+    alarms: 'Alarms and Events',
+    datapaq: 'Datapaq Reports',
+    other: 'Other Curves'
   };
   return names[categoryKey] || categoryKey;
 };
@@ -252,21 +252,21 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
   if (totalPhotos === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>COURBES ET RAPPORTS DE FOUR</Text>
+        <Text style={styles.sectionTitle}>FURNACE CURVES AND REPORTS</Text>
         <Text style={styles.emptyState}>
-          Aucune courbe ou rapport de four disponible pour cet essai.
+          No furnace curves or reports available for this test.
         </Text>
       </View>
     );
   }
 
-  // Ordre des catégories : heating, cooling, alarms, datapaq, other
+  // Ordre des categories : heating, cooling, alarms, datapaq, other
   const categoryOrder = ['heating', 'cooling', 'alarms', 'datapaq', 'other'];
 
   return (
     <>
       <View wrap={false}>
-        <Text style={styles.sectionTitle}>COURBES ET RAPPORTS DE FOUR</Text>
+        <Text style={styles.sectionTitle}>FURNACE CURVES AND REPORTS</Text>
       </View>
 
       {/* Afficher toutes les catégories dans l'ordre */}

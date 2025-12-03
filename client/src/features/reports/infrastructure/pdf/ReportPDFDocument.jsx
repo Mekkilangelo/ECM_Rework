@@ -129,46 +129,202 @@ const PageFooter = ({ generatedDate }) => (
 );
 
 /**
- * Page de garde
+ * Page de garde moderne
  */
 export const CoverPage = ({ report, options }) => {
+  const logoUrl = '/images/logoECM.png';
+  
   return (
-    <Page size="A4" style={styles.page}>
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center' 
+    <Page size="A4" style={{ position: 'relative' }}>
+      {/* Bandeau supérieur avec logo */}
+      <View style={{
+        backgroundColor: '#1a1a2e',
+        padding: 30,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
-        <Text style={{ 
-          fontSize: 24, 
-          fontFamily: 'Helvetica-Bold',
-          marginBottom: 20,
-          color: '#DC3545'
-        }}>
-          RAPPORT D'ESSAI
-        </Text>
-        
-        <View style={{ marginTop: 40, width: '100%' }}>
-          <DataRow label="Code essai" value={report.testCode} />
-          <DataRow label="Date" value={report.testDate ? new Date(report.testDate).toLocaleDateString('fr-FR') : '-'} />
-          <DataRow label="Client" value={report.clientName} />
-          <DataRow label="Pièce" value={report.partName} />
-          <DataRow label="Statut" value={report.status} />
-          <DataRow label="Localisation" value={report.location} />
+        <View style={{ flex: 1 }}>
+          <Text style={{
+            fontSize: 32,
+            fontFamily: 'Helvetica-Bold',
+            color: '#ffffff',
+            letterSpacing: 1.5
+          }}>
+            Test Report
+          </Text>
+          <Text style={{
+            fontSize: 10,
+            color: '#DC3545',
+            marginTop: 8,
+            letterSpacing: 1
+          }}>
+            Quality Control & Heat Treatment
+          </Text>
         </View>
+        {logoUrl && (
+          <Image
+            src={logoUrl}
+            style={{
+              width: 80,
+              height: 80,
+              objectFit: 'contain'
+            }}
+          />
+        )}
+      </View>
 
-        <View style={{ 
-          position: 'absolute', 
-          bottom: 40,
-          fontSize: 8,
-          color: '#666666'
+      {/* Section client - Mise en avant */}
+      <View style={{
+        backgroundColor: '#f8f9fa',
+        padding: 25,
+        borderLeftWidth: 6,
+        borderLeftColor: '#DC3545',
+        marginTop: 40,
+        marginHorizontal: 40
+      }}>
+        <Text style={{
+          fontSize: 11,
+          color: '#666',
+          marginBottom: 8,
+          letterSpacing: 0.5
         }}>
-          <Text>Document confidentiel - {new Date().toLocaleDateString('fr-FR')}</Text>
+          CLIENT
+        </Text>
+        <Text style={{
+          fontSize: 20,
+          fontFamily: 'Helvetica-Bold',
+          color: '#1a1a2e',
+          marginBottom: 5
+        }}>
+          {report.clientName || 'Not specified'}
+        </Text>
+        {report.contact && (
+          <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>
+            Contact: {report.contact}
+          </Text>
+        )}
+      </View>
+
+      {/* Informations essai - Grille moderne */}
+      <View style={{
+        marginTop: 30,
+        marginHorizontal: 40,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 15
+      }}>
+        <InfoCard label="Test Code" value={report.testCode} />
+        <InfoCard label="Test Date" value={report.testDate ? new Date(report.testDate).toLocaleDateString('en-US') : '-'} />
+        <InfoCard label="Part" value={report.partName} />
+        <InfoCard label="Status" value={report.status} highlight={report.status === 'Complete' || report.status === 'Termine'} />
+        <InfoCard label="Location" value={report.location} />
+        <InfoCard label="Furnace" value={report.furnace} />
+      </View>
+
+      {/* Section spécifications */}
+      {report.part?.specifications && (
+        <View style={{
+          marginTop: 30,
+          marginHorizontal: 40,
+          padding: 20,
+          backgroundColor: '#fff8f0',
+          borderRadius: 4,
+          borderWidth: 1,
+          borderColor: '#ffe4cc'
+        }}>
+          <Text style={{
+            fontSize: 10,
+            fontFamily: 'Helvetica-Bold',
+            color: '#e65100',
+            marginBottom: 10
+          }}>
+            Technical Specifications
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 15 }}>
+            {report.part.specifications.targetHardness && (
+              <SpecItem label="Target Hardness" value={`${report.part.specifications.targetHardness} HV`} />
+            )}
+            {report.part.specifications.minHardness && (
+              <SpecItem label="Min Hardness" value={`${report.part.specifications.minHardness} HV`} />
+            )}
+            {report.part.specifications.maxHardness && (
+              <SpecItem label="Max Hardness" value={`${report.part.specifications.maxHardness} HV`} />
+            )}
+            {report.part.specifications.ecdTarget && (
+              <SpecItem label="Target ECD" value={`${report.part.specifications.ecdTarget} mm`} />
+            )}
+          </View>
         </View>
+      )}
+
+      {/* Pied de page */}
+      <View style={{
+        position: 'absolute',
+        bottom: 40,
+        left: 40,
+        right: 40,
+        paddingTop: 15,
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <View>
+          <Text style={{ fontSize: 8, color: '#999', marginBottom: 2 }}>Confidential Document</Text>
+          <Text style={{ fontSize: 7, color: '#ccc' }}>
+            Generated on {new Date().toLocaleDateString('en-US')} at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </View>
+        <Text style={{ fontSize: 8, color: '#DC3545', fontFamily: 'Helvetica-Bold' }}>
+          ECM - Excellence in Metallurgical Control
+        </Text>
       </View>
     </Page>
   );
 };
+
+/**
+ * Carte d'information moderne
+ */
+const InfoCard = ({ label, value, highlight }) => (
+  <View style={{
+    width: '30%',
+    padding: 15,
+    backgroundColor: highlight ? '#e8f5e9' : '#ffffff',
+    borderWidth: 1,
+    borderColor: highlight ? '#4caf50' : '#e0e0e0',
+    borderRadius: 4,
+    minHeight: 70
+  }}>
+    <Text style={{
+      fontSize: 8,
+      color: '#666',
+      marginBottom: 6,
+      letterSpacing: 0.5
+    }}>
+      {label}
+    </Text>
+    <Text style={{
+      fontSize: 11,
+      fontFamily: 'Helvetica-Bold',
+      color: highlight ? '#2e7d32' : '#1a1a2e'
+    }}>
+      {value || '-'}
+    </Text>
+  </View>
+);
+
+/**
+ * Item de spécification
+ */
+const SpecItem = ({ label, value }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+    <Text style={{ fontSize: 8, color: '#666', marginRight: 4 }}>{label}:</Text>
+    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#e65100' }}>{value}</Text>
+  </View>
+);
 
 /**
  * Ligne de données (label + valeur)
@@ -642,38 +798,13 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           )}
           {(() => {
             try {
-              // Organiser les photos de control location par result-sample
-              const controlLocationPhotos = {};
-              const rawPhotos = selectedPhotos?.controlLocation || {};
+              // Même principe que micrography : normaliser les photos en tableau simple
+              const normalizedPhotos = normalizePhotosForSection(
+                selectedPhotos?.control || selectedPhotos?.controlLocation, 
+                'control'
+              );
               
-              console.log('🔍 Control Location - Raw photos:', rawPhotos);
-              console.log('🔍 Control Location - Raw photos type:', typeof rawPhotos);
-              console.log('🔍 Control Location - Raw photos is array?', Array.isArray(rawPhotos));
-              console.log('🔍 Control Location - Raw photos keys:', Object.keys(rawPhotos));
-              console.log('🔍 Control Location - All selectedPhotos:', selectedPhotos);
-              
-              // Si c'est un objet organisé
-              if (typeof rawPhotos === 'object' && !Array.isArray(rawPhotos)) {
-                Object.keys(rawPhotos).forEach(key => {
-                  const photos = Array.isArray(rawPhotos[key]) ? rawPhotos[key] : [];
-                  console.log(`🔍 Processing key "${key}":`, photos.length, 'photos');
-                  controlLocationPhotos[key] = normalizePhotosForSection(photos, 'controlLocation');
-                });
-              } else if (Array.isArray(rawPhotos)) {
-                // Si c'est un tableau, grouper par subcategory
-                const normalizedPhotos = normalizePhotosForSection(rawPhotos, 'controlLocation');
-                normalizedPhotos.forEach(photo => {
-                  const key = photo.subcategory || 'default';
-                  if (!controlLocationPhotos[key]) {
-                    controlLocationPhotos[key] = [];
-                  }
-                  controlLocationPhotos[key].push(photo);
-                });
-              }
-              
-              console.log('🔍 Control Location - Organized photos:', Object.keys(controlLocationPhotos));
-              
-              return <ControlSectionPDF report={report} photos={controlLocationPhotos} />;
+              return <ControlSectionPDF report={report} photos={normalizedPhotos} />;
             } catch (error) {
               console.error('❌ Error rendering ControlSectionPDF:', error);
               return (

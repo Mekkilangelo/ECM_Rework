@@ -386,15 +386,11 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
 /**
  * Composant principal
  */
-export const ControlSectionPDF = ({ report, photos = {} }) => {
+export const ControlSectionPDF = ({ report, photos = [] }) => {
   const resultsData = report?.resultsData;
   const specifications = report?.part?.specifications;
   const unit = resultsData?.results?.[0]?.samples?.[0]?.hardnessPoints?.[0]?.unit || 
                resultsData?.results?.[0]?.samples?.[0]?.ecd?.hardnessUnit || 'HV';
-
-  console.log('🔍 ControlSectionPDF - Photos received:', photos);
-  console.log('🔍 ControlSectionPDF - Photos keys:', Object.keys(photos));
-  console.log('🔍 ControlSectionPDF - Results count:', resultsData?.results?.length);
 
   if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
     return (
@@ -405,8 +401,26 @@ export const ControlSectionPDF = ({ report, photos = {} }) => {
     );
   }
 
-  // Organiser les photos de control location par result-sample
-  const controlLocationPhotos = photos.controlLocation || photos;
+  // Organiser les photos par result-sample (comme dans MicrographySectionPDF)
+  const photosByResultSample = {};
+  
+  if (Array.isArray(photos)) {
+    photos.forEach(photo => {
+      // Parser la subcategory pour extraire result et sample
+      // Format: "result-0-sample-1"
+      const match = photo.subcategory?.match(/result-(\d+)-sample-(\d+)/);
+      if (match) {
+        const resultIndex = parseInt(match[1], 10);
+        const sampleIndex = parseInt(match[2], 10);
+        const key = `result-${resultIndex}-sample-${sampleIndex}`;
+        
+        if (!photosByResultSample[key]) {
+          photosByResultSample[key] = [];
+        }
+        photosByResultSample[key].push(photo);
+      }
+    });
+  }
 
   return (
     <View style={styles.section}>
@@ -422,9 +436,7 @@ export const ControlSectionPDF = ({ report, photos = {} }) => {
           {result.samples && result.samples.map((sample, sampleIndex) => {
             // Trouver les photos pour ce result-sample
             const photoKey = `result-${resultIndex}-sample-${sampleIndex}`;
-            const samplePhotos = controlLocationPhotos[photoKey] || [];
-            
-            console.log(`🔍 Sample ${resultIndex}-${sampleIndex} - Key: ${photoKey}, Photos:`, samplePhotos.length);
+            const samplePhotos = photosByResultSample[photoKey] || [];
             
             return (
               <SampleData

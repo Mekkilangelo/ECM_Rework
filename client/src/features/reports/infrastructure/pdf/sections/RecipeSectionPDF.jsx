@@ -131,9 +131,9 @@ const styles = StyleSheet.create({
  */
 const formatRamp = (ramp) => {
   const rampLabels = {
-    'up': '↑ Montée',
-    'down': '↓ Descente',
-    'continue': '→ Maintien'
+    'up': '↑ Up',
+    'down': '↓ Down',
+    'continue': '→ Hold'
   };
   return rampLabels[ramp] || ramp;
 };
@@ -168,7 +168,7 @@ const hasQuenchData = (quenchData) => {
 };
 
 /**
- * Section Préoxydation
+ * Section Preoxydation
  */
 const PreoxSection = ({ recipeData }) => {
   if (!recipeData?.preox || 
@@ -182,11 +182,11 @@ const PreoxSection = ({ recipeData }) => {
 
   return (
     <>
-      <Text style={styles.subsectionTitle}>Préoxydation</Text>
+      <Text style={styles.subsectionTitle}>Preoxidation</Text>
       
       {preox.temperature?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Température:</Text>
+          <Text style={styles.label}>Temperature:</Text>
           <Text style={styles.value}>
             {preox.temperature.value} {preox.temperature.unit || '°C'}
           </Text>
@@ -195,7 +195,7 @@ const PreoxSection = ({ recipeData }) => {
       
       {preox.duration?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Durée:</Text>
+          <Text style={styles.label}>Duration:</Text>
           <Text style={styles.value}>
             {preox.duration.value} {preox.duration.unit || 'min'}
           </Text>
@@ -204,7 +204,7 @@ const PreoxSection = ({ recipeData }) => {
       
       {preox.media && (
         <View style={styles.row}>
-          <Text style={styles.label}>Milieu:</Text>
+          <Text style={styles.label}>Media:</Text>
           <Text style={styles.value}>{preox.media}</Text>
         </View>
       )}
@@ -220,20 +220,20 @@ const ThermalCycleSection = ({ recipeData }) => {
     return null;
   }
 
-  // Si le tableau a peu d'éléments (< 20), on le garde ensemble sur une page
+  // Si le tableau a peu d'elements (< 20), on le garde ensemble sur une page
   const shouldKeepTogether = recipeData.thermal_cycle.length < 20;
 
   return (
     <View wrap={!shouldKeepTogether}>
-      <Text style={styles.subsectionTitle}>Cycle Thermique</Text>
+      <Text style={styles.subsectionTitle}>Thermal Cycle</Text>
       
       <View style={styles.table} wrap={!shouldKeepTogether}>
-        {/* En-tête */}
+        {/* En-tete */}
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableCellHeader, styles.colStep]}>Étape</Text>
-          <Text style={[styles.tableCellHeader, styles.colRamp]}>Rampe</Text>
-          <Text style={[styles.tableCellHeader, styles.colSetpoint]}>Consigne (°C)</Text>
-          <Text style={[styles.tableCellHeader, styles.colDuration]}>Durée (min)</Text>
+          <Text style={[styles.tableCellHeader, styles.colStep]}>Step</Text>
+          <Text style={[styles.tableCellHeader, styles.colRamp]}>Ramp</Text>
+          <Text style={[styles.tableCellHeader, styles.colSetpoint]}>Setpoint (°C)</Text>
+          <Text style={[styles.tableCellHeader, styles.colDuration]}>Duration (min)</Text>
         </View>
         
         {/* Lignes */}
@@ -258,30 +258,30 @@ const ChemicalCycleSection = ({ recipeData }) => {
     return null;
   }
 
-  // Détecter quels gaz sont utilisés
+  // Detecter quels gaz sont utilises
   const hasGas1 = recipeData.selected_gas1;
   const hasGas2 = recipeData.selected_gas2;
   const hasGas3 = recipeData.selected_gas3;
 
-  // Si le tableau a peu d'éléments (< 15), on le garde ensemble
+  // Si le tableau a peu d'elements (< 15), on le garde ensemble
   const shouldKeepTogether = recipeData.chemical_cycle.length < 15;
 
   return (
     <View wrap={!shouldKeepTogether}>
-      <Text style={styles.subsectionTitle}>Cycle Chimique</Text>
+      <Text style={styles.subsectionTitle}>Chemical Cycle</Text>
       
-      {/* Gaz sélectionnés */}
+      {/* Gaz selectionnes */}
       <View style={styles.row}>
-        <Text style={styles.label}>Gaz configurés:</Text>
+        <Text style={styles.label}>Configured Gases:</Text>
         <Text style={styles.value}>
-          {[hasGas1, hasGas2, hasGas3].filter(Boolean).join(', ') || 'Aucun'}
+          {[hasGas1, hasGas2, hasGas3].filter(Boolean).join(', ') || 'None'}
         </Text>
       </View>
       
-      {/* Paramètres d'attente */}
+      {/* Parametres d'attente */}
       {recipeData.wait_time?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Temps d'attente:</Text>
+          <Text style={styles.label}>Wait Time:</Text>
           <Text style={styles.value}>
             {recipeData.wait_time.value} {recipeData.wait_time.unit || 'min'}
           </Text>
@@ -290,7 +290,7 @@ const ChemicalCycleSection = ({ recipeData }) => {
       
       {recipeData.cell_temp?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Température cellule:</Text>
+          <Text style={styles.label}>Cell Temperature:</Text>
           <Text style={styles.value}>
             {recipeData.cell_temp.value} {recipeData.cell_temp.unit || '°C'}
           </Text>
@@ -299,7 +299,7 @@ const ChemicalCycleSection = ({ recipeData }) => {
       
       {recipeData.wait_pressure?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Pression d'attente:</Text>
+          <Text style={styles.label}>Wait Pressure:</Text>
           <Text style={styles.value}>
             {recipeData.wait_pressure.value} {recipeData.wait_pressure.unit || 'mb'}
           </Text>
@@ -309,12 +309,12 @@ const ChemicalCycleSection = ({ recipeData }) => {
       {/* Tableau du cycle */}
       <View style={styles.table} wrap={!shouldKeepTogether}>
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableCellHeader, styles.colChemStep]}>Étape</Text>
-          <Text style={[styles.tableCellHeader, styles.colTime]}>Temps (s)</Text>
+          <Text style={[styles.tableCellHeader, styles.colChemStep]}>Step</Text>
+          <Text style={[styles.tableCellHeader, styles.colTime]}>Time (s)</Text>
           {hasGas1 && <Text style={[styles.tableCellHeader, styles.colGas]}>{hasGas1} (Nl/h)</Text>}
           {hasGas2 && <Text style={[styles.tableCellHeader, styles.colGas]}>{hasGas2} (Nl/h)</Text>}
           {hasGas3 && <Text style={[styles.tableCellHeader, styles.colGas]}>{hasGas3} (Nl/h)</Text>}
-          <Text style={[styles.tableCellHeader, styles.colPressure]}>Pression (mb)</Text>
+          <Text style={[styles.tableCellHeader, styles.colPressure]}>Pressure (mb)</Text>
           <Text style={[styles.tableCellHeader, styles.colTurbine]}>Turbine</Text>
         </View>
         
@@ -326,7 +326,7 @@ const ChemicalCycleSection = ({ recipeData }) => {
             {hasGas2 && <Text style={[styles.tableCell, styles.colGas]}>{step.gases?.find(g => g.gas === hasGas2)?.debit || '-'}</Text>}
             {hasGas3 && <Text style={[styles.tableCell, styles.colGas]}>{step.gases?.find(g => g.gas === hasGas3)?.debit || '-'}</Text>}
             <Text style={[styles.tableCell, styles.colPressure]}>{step.pressure || '-'}</Text>
-            <Text style={[styles.tableCell, styles.colTurbine]}>{step.turbine ? 'Oui' : 'Non'}</Text>
+            <Text style={[styles.tableCell, styles.colTurbine]}>{step.turbine ? 'Yes' : 'No'}</Text>
           </View>
         ))}
       </View>
@@ -358,11 +358,11 @@ const GasQuenchSection = ({ quenchData }) => {
 
   return (
     <View wrap={!shouldKeepTogether}>
-      <Text style={styles.subsectionTitle}>Trempe Gaz</Text>
+      <Text style={styles.subsectionTitle}>Gas Quench</Text>
       
       {gasQuench.inerting_delay?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Délai d'inertage:</Text>
+          <Text style={styles.label}>Inerting Delay:</Text>
           <Text style={styles.value}>
             {gasQuench.inerting_delay.value} {gasQuench.inerting_delay.unit || 's'}
           </Text>
@@ -371,23 +371,23 @@ const GasQuenchSection = ({ quenchData }) => {
       
       {gasQuench.inerting_pressure?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Pression d'inertage:</Text>
+          <Text style={styles.label}>Inerting Pressure:</Text>
           <Text style={styles.value}>
             {gasQuench.inerting_pressure.value} {gasQuench.inerting_pressure.unit || 'mb'}
           </Text>
         </View>
       )}
       
-      {/* Paramètres de vitesse */}
+      {/* Parametres de vitesse */}
       {hasSpeedParams && (
         <View style={styles.table}>
           <Text style={{ fontSize: 10, fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>
-            Paramètres de vitesse
+            Speed Parameters
           </Text>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Étape</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Durée (s)</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchSpeed]}>Vitesse (rpm)</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Step</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Duration (s)</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchSpeed]}>Speed (rpm)</Text>
           </View>
           
           {gasQuench.speed_parameters.map((param, index) => (
@@ -400,16 +400,16 @@ const GasQuenchSection = ({ quenchData }) => {
         </View>
       )}
       
-      {/* Paramètres de pression */}
+      {/* Parametres de pression */}
       {hasPressureParams && (
         <View style={styles.table}>
           <Text style={{ fontSize: 10, fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>
-            Paramètres de pression
+            Pressure Parameters
           </Text>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Étape</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Durée (s)</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchPressure]}>Pression (mb)</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Step</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Duration (s)</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchPressure]}>Pressure (mb)</Text>
           </View>
           
           {gasQuench.pressure_parameters.map((param, index) => (
@@ -446,11 +446,11 @@ const OilQuenchSection = ({ quenchData }) => {
 
   return (
     <View wrap={false}>
-      <Text style={styles.subsectionTitle}>Trempe Huile</Text>
+      <Text style={styles.subsectionTitle}>Oil Quench</Text>
       
       {oilQuench.temperature?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Température huile:</Text>
+          <Text style={styles.label}>Oil Temperature:</Text>
           <Text style={styles.value}>
             {oilQuench.temperature.value} {oilQuench.temperature.unit || '°C'}
           </Text>
@@ -459,7 +459,7 @@ const OilQuenchSection = ({ quenchData }) => {
       
       {oilQuench.inerting_delay?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Délai d'inertage:</Text>
+          <Text style={styles.label}>Inerting Delay:</Text>
           <Text style={styles.value}>
             {oilQuench.inerting_delay.value} {oilQuench.inerting_delay.unit || 's'}
           </Text>
@@ -468,7 +468,7 @@ const OilQuenchSection = ({ quenchData }) => {
       
       {oilQuench.dripping_time?.value && (
         <View style={styles.row}>
-          <Text style={styles.label}>Temps d'égouttage:</Text>
+          <Text style={styles.label}>Dripping Time:</Text>
           <Text style={styles.value}>
             {oilQuench.dripping_time.value} {oilQuench.dripping_time.unit || 's'}
           </Text>
@@ -478,12 +478,12 @@ const OilQuenchSection = ({ quenchData }) => {
       {hasSpeedParams && (
         <View style={styles.table}>
           <Text style={{ fontSize: 10, fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>
-            Paramètres de vitesse
+            Speed Parameters
           </Text>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Étape</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Durée (s)</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchSpeed]}>Vitesse (rpm)</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Step</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Duration (s)</Text>
+            <Text style={[styles.tableCellHeader, styles.colQuenchSpeed]}>Speed (rpm)</Text>
           </View>
           
           {oilQuench.speed_parameters.map((param, index) => (
@@ -524,7 +524,7 @@ const RecipePhotosSection = ({ photos = [] }) => {
 };
 
 /**
- * Composant principal: Section Recette complète
+ * Composant principal: Section Recette complete
  */
 export const RecipeSectionPDF = ({ report }) => {
 
@@ -533,25 +533,25 @@ export const RecipeSectionPDF = ({ report }) => {
   const quenchData = report.quenchData;
   const photos = report.sectionFiles?.recipe || [];
 
-  // Si aucune donnée de recette
+  // Si aucune donnee de recette
   if (!recipeData && !quenchData) {
     return (
       <View style={styles.section} break>
-        <Text style={styles.sectionTitle}>2. Recette</Text>
-        <Text style={styles.noData}>Aucune donnée de recette disponible</Text>
+        <Text style={styles.sectionTitle}>2. Recipe</Text>
+        <Text style={styles.noData}>No recipe data available</Text>
       </View>
     );
   }
 
   return (
     <>
-      {/* Page principale : Titre + Numéro + Préox - toujours ensemble */}
-      <View style={styles.section} break wrap={false}>
-        <Text style={styles.sectionTitle}>2. Recette</Text>
+      {/* Page principale : Titre + Numero + Preox - toujours ensemble */}
+      <View style={styles.section} wrap={false}>
+        <Text style={styles.sectionTitle}>2. Recipe</Text>
         
         {recipeData?.number && (
           <View style={styles.row}>
-            <Text style={styles.label}>Numéro de recette:</Text>
+            <Text style={styles.label}>Recipe Number:</Text>
             <Text style={styles.value}>{recipeData.number}</Text>
           </View>
         )}

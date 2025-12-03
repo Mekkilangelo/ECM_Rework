@@ -7,13 +7,14 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 
 /**
- * Styles pour l'en-tête commune
+ * Styles pour l'en-tête commune - Design moderne et épuré
  */
 const styles = StyleSheet.create({
   headerContainer: {
-    borderBottom: '2px solid #DC3545',
+    borderBottom: '1.5px solid #2c3e50',
     paddingBottom: 10,
     marginBottom: 20,
+    position: 'relative',
   },
   
   // Section des logos
@@ -30,35 +31,37 @@ const styles = StyleSheet.create({
     width: 80,
     height: 'auto',
     objectFit: 'contain',
+    opacity: 0.95,
   },
   
   logoSynergy: {
     width: 60,
     height: 'auto',
     objectFit: 'contain',
+    opacity: 0.95,
   },
   
   // Section des informations
   infoSection: {
-    paddingRight: 100, // Espace pour les logos
+    paddingRight: 100,
   },
   
   // Titre principal
   title: {
     fontSize: 24,
     fontFamily: 'Helvetica-Bold',
-    color: '#DC3545',
+    color: '#1a1a1a',
     marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   
   // Nom du client
   clientName: {
     fontSize: 16,
-    fontFamily: 'Helvetica-Bold',
-    color: '#333333',
+    fontFamily: 'Helvetica',
+    color: '#2c3e50',
     marginBottom: 6,
+    paddingLeft: 2,
   },
   
   // Ligne d'informations (Load N° et Date)
@@ -68,32 +71,45 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontSize: 14,
     fontFamily: 'Helvetica',
+    paddingLeft: 2,
   },
   
   infoItem: {
     flexDirection: 'row',
+    alignItems: 'baseline',
   },
   
   infoLabel: {
-    fontFamily: 'Helvetica-Bold',
-    color: '#555555',
+    fontFamily: 'Helvetica',
+    color: '#666666',
     marginRight: 4,
+    fontSize: 11,
   },
   
   infoValue: {
-    color: '#333333',
+    color: '#1a1a1a',
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 12,
   },
   
   // Traitement
   treatment: {
     fontSize: 12,
     fontFamily: 'Helvetica',
-    color: '#555555',
+    color: '#666666',
+    paddingLeft: 2,
   },
   
   treatmentLabel: {
-    fontFamily: 'Helvetica-Bold',
+    fontFamily: 'Helvetica',
     marginRight: 4,
+    fontSize: 11,
+  },
+  
+  treatmentValue: {
+    fontFamily: 'Helvetica-Bold',
+    color: '#1a1a1a',
+    fontSize: 12,
   },
 });
 
@@ -144,7 +160,7 @@ export const CommonReportHeader = ({
 
   return (
     <View style={styles.headerContainer} fixed>
-      {/* Section des logos (coin supérieur droit) */}
+      {/* Section des logos (coin superieur droit) */}
       <View style={styles.logosSection}>
         <Image 
           src={fullLogoECMUrl} 
@@ -158,36 +174,36 @@ export const CommonReportHeader = ({
       
       {/* Section des informations */}
       <View style={styles.infoSection}>
-        {/* Titre H1 */}
+        {/* Titre principal */}
         <Text style={styles.title}>Trial Report</Text>
         
-        {/* Nom du client (directement, pas de label) */}
+        {/* Nom du client */}
         {clientName && (
           <Text style={styles.clientName}>{clientName}</Text>
         )}
         
-        {/* Ligne d'informations H2 : Load N° et Date */}
+        {/* Ligne d'informations : Load N° et Date */}
         <View style={styles.infoRow}>
           {loadNumber && (
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Load N°:</Text>
-              <Text style={styles.infoValue}>{loadNumber}</Text>
+              <Text style={styles.infoLabel}>Load</Text>
+              <Text style={styles.infoValue}> {loadNumber}</Text>
             </View>
           )}
           
           {trialDate && (
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Date:</Text>
-              <Text style={styles.infoValue}>{formattedDate}</Text>
+              <Text style={styles.infoLabel}>Date</Text>
+              <Text style={styles.infoValue}> {formattedDate}</Text>
             </View>
           )}
         </View>
         
-        {/* Traitement H3 */}
+        {/* Traitement */}
         {processType && (
           <View style={{ flexDirection: 'row' }}>
-            <Text style={[styles.treatment, styles.treatmentLabel]}>Traitement:</Text>
-            <Text style={styles.treatment}>{processType}</Text>
+            <Text style={styles.treatmentLabel}>Treatment</Text>
+            <Text style={styles.treatmentValue}> {processType}</Text>
           </View>
         )}
       </View>

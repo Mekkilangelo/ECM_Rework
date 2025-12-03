@@ -611,6 +611,14 @@
               "other": "Autres micrographies"
             }
           },
+          "controlLocation": {
+            "title": "Localisation de contrôle",
+            "description": "Photos des zones de contrôle par résultat et échantillon",
+            "sourceLabel": "Résultat {{result}} - Échantillon {{sample}}",
+            "sourceDescription": "Photos de localisation de contrôle",
+            "resultGroup": "Résultat {{result}}",
+            "sampleSubgroup": "Échantillon {{sample}}"
+          },
           "load": {
             "title": "Photos de charge",
             "description": "Disposition et configuration de la charge",

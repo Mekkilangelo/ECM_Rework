@@ -9,10 +9,12 @@
 
 INSERT INTO ref_file_category (name) VALUES
 ('control_location'),
+('control-location'),
 ('documents'),
 ('furnace_report'),
 ('load_design'),
 ('micrography'),
+('micrographs'),
 ('photos')
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 

@@ -198,6 +198,15 @@ const SectionPhotoManager = ({
         maxSamples: 3,  // Réduit à 3 pour optimiser (était 5)
         magnifications: ['x50', 'x500', 'x1000', 'other'] // Grossissements disponibles
       },
+      control: {
+        nodeId: trialNodeId,
+        title: tSafe('parts.photos.manager.sections.controlLocation.title', 'Localisation de contrôle'),
+        description: tSafe('parts.photos.manager.sections.controlLocation.description', 'Photos des zones de contrôle par résultat et échantillon'),
+        sources: [],
+        isDynamic: true,
+        maxResults: 5,
+        maxSamples: 3
+      },
       controlLocation: {
         nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.controlLocation.title', 'Localisation de contrôle'),
@@ -560,9 +569,8 @@ const SectionPhotoManager = ({
     
     try {
       const sectionConfig = getSectionConfig();
-      // Mapper 'control' vers 'controlLocation' pour la configuration
-      const configKey = sectionType === 'control' ? 'controlLocation' : sectionType;
-      const config = sectionConfig[configKey];
+      // Plus besoin de mapper car 'control' existe maintenant directement dans la config
+      const config = sectionConfig[sectionType];
       let nodeId = config?.nodeId;
       if (sectionType === 'identification' && partNodeId) {
         nodeId = partNodeId;
@@ -575,13 +583,13 @@ const SectionPhotoManager = ({
       }
       
       let sources = config.sources;
-        // Si c'est une section dynamique (comme micrography ou controlLocation), générer les sources
+        // Si c'est une section dynamique (comme micrography ou control), générer les sources
       if (config.isDynamic && sectionType === 'micrography') {
         sources = await generateMicrographySources(nodeId, config);
         if (process.env.NODE_ENV === 'development') {
           
         }
-      } else if (config.isDynamic && (sectionType === 'controlLocation' || sectionType === 'control')) {
+      } else if (config.isDynamic && (sectionType === 'control' || sectionType === 'controlLocation')) {
         sources = await generateControlLocationSources(nodeId, config);
       }
 

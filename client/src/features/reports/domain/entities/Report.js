@@ -38,6 +38,15 @@ export class Report {
     this.partId = partData?.node_id || partData?.id || null;
     this.partName = partData?.name || '';
     
+    // Expose partData as 'part' with specifications
+    this.part = partData ? {
+      ...partData,
+      specifications: {
+        ...(partData.hardnessSpecs || {}),
+        ecdSpecs: partData.ecdSpecs || []
+      }
+    } : null;
+    
     this.clientId = clientData?.node_id || clientData?.id || null;
     this.clientName = clientData?.name || '';
     

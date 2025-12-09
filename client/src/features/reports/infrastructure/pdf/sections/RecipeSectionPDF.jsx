@@ -11,24 +11,31 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#DC3545',
-    marginBottom: 15,
-    paddingBottom: 6,
-    borderBottomWidth: 2,
-    borderBottomColor: '#DC3545'
-  },
-  subsectionTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#333333',
-    marginTop: 10,
-    marginBottom: 6,
-    backgroundColor: '#F8F9FA',
-    padding: 6,
+    marginBottom: 12,
+    marginTop: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#ffffff',
+    backgroundColor: '#2c3e50',
+    letterSpacing: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#e74c3c',
+  },
+  subsectionTitle: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    marginTop: 12,
+    marginBottom: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    color: '#c0392b',
+    backgroundColor: '#fef5e7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     borderLeftWidth: 3,
-    borderLeftColor: '#DC3545'
+    borderLeftColor: '#e74c3c',
   },
   row: {
     flexDirection: 'row',
@@ -537,7 +544,7 @@ export const RecipeSectionPDF = ({ report }) => {
   if (!recipeData && !quenchData) {
     return (
       <View style={styles.section} break>
-        <Text style={styles.sectionTitle}>2. Recipe</Text>
+        <Text style={styles.sectionTitle}>RECIPE</Text>
         <Text style={styles.noData}>No recipe data available</Text>
       </View>
     );
@@ -547,7 +554,7 @@ export const RecipeSectionPDF = ({ report }) => {
     <>
       {/* Page principale : Titre + Numero + Preox - toujours ensemble */}
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>2. Recipe</Text>
+        <Text style={styles.sectionTitle}>RECIPE</Text>
         
         {recipeData?.number && (
           <View style={styles.row}>

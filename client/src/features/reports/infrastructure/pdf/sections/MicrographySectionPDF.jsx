@@ -25,20 +25,31 @@ const styles = StyleSheet.create({
   
   // ========== TITRES ==========
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 12,
-    marginTop: 4,
-    color: '#1a1a1a',
-    letterSpacing: 0.5,
+    marginTop: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#ffffff',
+    backgroundColor: '#2c3e50',
+    letterSpacing: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#9b59b6',
   },
-  zoomTitle: {
+  subsectionTitle: {
     fontSize: 9.5,
     fontWeight: 'bold',
     marginTop: 12,
     marginBottom: 8,
-    color: '#7b1fa2',
-    letterSpacing: 0.3,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    color: '#6c3483',
+    backgroundColor: '#f4ecf7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    borderLeftWidth: 3,
+    borderLeftColor: '#9b59b6',
   },
   
   // ========== PHOTOS - Layouts adaptatifs ==========
@@ -184,7 +195,7 @@ const ZoomGroup = ({ zoom, photos }) => {
   
   return (
     <View style={styles.section}>
-      <Text style={styles.zoomTitle}>
+      <Text style={styles.subsectionTitle}>
         {formatZoomName(zoom)} ({photoCount} image{photoCount > 1 ? 's' : ''})
       </Text>
       

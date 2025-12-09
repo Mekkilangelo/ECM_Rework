@@ -15,20 +15,31 @@ const styles = StyleSheet.create({
   
   // ========== TITRES ==========
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 12,
-    marginTop: 4,
-    color: '#1a1a1a',
-    letterSpacing: 0.5,
+    marginTop: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#ffffff',
+    backgroundColor: '#2c3e50',
+    letterSpacing: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#f39c12',
   },
-  categoryTitle: {
+  subsectionTitle: {
     fontSize: 9.5,
     fontWeight: 'bold',
     marginTop: 12,
     marginBottom: 8,
-    color: '#e65100',
-    letterSpacing: 0.3,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    color: '#d35400',
+    backgroundColor: '#fef9e7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f39c12',
   },
   
   // ========== PHOTOS - Layouts adaptatifs ==========
@@ -178,12 +189,15 @@ const formatCategoryName = (categoryKey) => {
 /**
  * Composant pour afficher un groupe de catégorie avec layout intelligent
  */
-const CategoryGroup = ({ categoryKey, photos }) => {
+const CategoryGroup = ({ categoryKey, photos, isFirst = false }) => {
   const photoCount = photos.length;
   
   return (
-    <View style={styles.section}>
-      <Text style={styles.categoryTitle}>
+    <View style={styles.section} wrap={false}>
+      {isFirst && (
+        <Text style={styles.sectionTitle}>FURNACE CURVES AND REPORTS</Text>
+      )}
+      <Text style={styles.subsectionTitle}>
         {formatCategoryName(categoryKey)}
       </Text>
       
@@ -271,12 +285,8 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
 
   return (
     <>
-      <View wrap={false}>
-        <Text style={styles.sectionTitle}>FURNACE CURVES AND REPORTS</Text>
-      </View>
-
       {/* Afficher toutes les catégories dans l'ordre */}
-      {categoryOrder.map(categoryKey => {
+      {categoryOrder.map((categoryKey, index) => {
         const category = organizedPhotos[categoryKey];
         if (!category || category.photos.length === 0) return null;
         
@@ -285,6 +295,7 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
             key={categoryKey}
             categoryKey={categoryKey}
             photos={category.photos}
+            isFirst={index === 0}
           />
         );
       })}

@@ -1,24 +1,15 @@
-/**
- * PRESENTATION: Composant principal de configuration du rapport
- * Version optimisée avec Clean Architecture
- */
-
-import React, { useMemo } from 'react';
-import { Card, Row, Col, Button, Badge, ListGroup, Tooltip, OverlayTrigger, Spinner, Alert, ProgressBar } from 'react-bootstrap';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Card, Nav, Tab, Button, Badge, Form, ListGroup, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faEye, 
   faFileDownload, 
-  faIdCard, 
-  faList, 
-  faCubes, 
-  faChartLine, 
-  faMicroscope, 
-  faClipboardCheck, 
-  faToggleOn, 
-  faToggleOff, 
+  faCheckSquare,
+  faSquare,
   faImages,
-  faInfoCircle 
+  faLayerGroup,
+  faToggleOn,
+  faToggleOff
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useReport } from '../hooks/useReport';
@@ -26,25 +17,9 @@ import ReportPreviewModal from './ReportPreviewModal';
 import SectionPhotoManager from './SectionPhotoManager';
 import './ReportConfiguration.css';
 
-/**
- * Mapping des icônes par type de section
- */
-const SECTION_ICONS = {
-  identification: faIdCard,
-  recipe: faList,
-  load: faCubes,
-  curves: faChartLine,
-  micrography: faMicroscope,
-  control: faClipboardCheck
-};
-
-/**
- * Composant de configuration du rapport
- */
 const ReportConfiguration = React.memo(({ trialId, partId }) => {
   const { t } = useTranslation();
-
-  // Hook personnalisé encapsulant toute la logique
+  
   const {
     sections,
     selectedPhotos,
@@ -61,273 +36,238 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
     estimateSize
   } = useReport(trialId, partId);
 
-  // État local pour la modal de prévisualisation
-  const [showPreview, setShowPreview] = React.useState(false);
-  const [previewData, setPreviewData] = React.useState(null);
+  const [activeTab, setActiveTab] = useState('sections');
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [filterSection, setFilterSection] = useState('all');
 
-  /**
-   * Gère l'ouverture de l'aperçu
-   */
-  const handlePreview = async () => {
+  // Helper pour obtenir le label traduit d'une section
+  const getSectionLabel = useCallback((sectionType) => {
+    return t(`report.sections.${sectionType}.label`, sectionType);
+  }, [t]);
+
+  const handlePreview = useCallback(async () => {
     const result = await generatePreview();
     if (result) {
       setPreviewData(result);
       setShowPreview(true);
     }
-  };
+  }, [generatePreview]);
 
-  /**
-   * Gère l'export PDF
-   */
-  const handleExport = async (quality = 'high') => {
+  const handleExport = useCallback(async (quality = 'high') => {
     await exportPDF({ quality });
-  };
+  }, [exportPDF]);
 
-  /**
-   * Estimation de taille
-   */
-  const sizeEstimate = useMemo(() => {
-    return estimateSize();
-  }, [estimateSize]);
+  const sizeEstimate = useMemo(() => estimateSize(), [estimateSize]);
+  
+  const photoSections = useMemo(() => sections.filter(s => s.hasPhotos), [sections]);
+  
+  const enabledSections = useMemo(() => sections.filter(s => s.isEnabled), [sections]);
+  
+  // Helper pour extraire les photos d'une section (gère tableau ou objet hiérarchique)
+  const getPhotosFromSection = useCallback((sectionType) => {
+    const sectionPhotos = selectedPhotos[sectionType];
+    if (!sectionPhotos) return [];
+    if (Array.isArray(sectionPhotos)) return sectionPhotos;
+    // Si c'est un objet, extraire toutes les photos des sous-catégories
+    if (typeof sectionPhotos === 'object') {
+      return Object.values(sectionPhotos).flat().filter(Boolean);
+    }
+    return [];
+  }, [selectedPhotos]);
 
-  /**
-   * Sections avec photos
-   */
-  const photoSections = useMemo(() => 
-    sections.filter(s => s.hasPhotos),
-    [sections]
-  );
+  // Compte le nombre de photos pour une section
+  const getPhotoCount = useCallback((sectionType) => {
+    return getPhotosFromSection(sectionType).length;
+  }, [getPhotosFromSection]);
+  
+  const allPhotos = useMemo(() => {
+    return photoSections.flatMap(section => 
+      getPhotosFromSection(section.type).map(photo => ({
+        ...photo,
+        sectionType: section.type,
+        sectionLabel: getSectionLabel(section.type)
+      }))
+    );
+  }, [photoSections, getPhotosFromSection, getSectionLabel]);
+  
+  const filteredPhotos = useMemo(() => {
+    if (filterSection === 'all') return allPhotos;
+    return allPhotos.filter(p => p.sectionType === filterSection);
+  }, [allPhotos, filterSection]);
 
   return (
-    <Card className="mt-3 shadow-sm report-configuration">
-      {/* En-tête */}
-      <Card.Header as="h5" className="bg-danger text-light d-flex justify-content-between align-items-center">
-        <span className="fw-bold">
-          {t('report.title', 'Rapport d\'essai')}
-        </span>
-        <div className="d-flex gap-2">
-          <Button
-            variant="warning"
-            size="sm"
-            onClick={handlePreview}
-            disabled={loading}
-            className="d-flex align-items-center"
-          >
-            {loading ? (
-              <Spinner animation="border" size="sm" className="me-1" />
-            ) : (
-              <FontAwesomeIcon icon={faEye} className="me-1" />
-            )}
-            {loading ? t('common.loading', 'Chargement...') : t('report.actions.preview', 'Prévisualiser')}
-          </Button>
-          
-          <Button
-            variant="outline-warning"
-            size="sm"
-            onClick={() => handleExport('high')}
-            disabled={loading}
-            className="d-flex align-items-center"
-          >
-            <FontAwesomeIcon icon={faFileDownload} className="me-1" />
-            {t('report.actions.downloadPdf', 'PDF')}
-          </Button>
-        </div>
-      </Card.Header>
-
-      <Card.Body>
-        {/* Barre de progression */}
-        {progress && (
-          <Alert variant="info" className="mb-3">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <span>{progress.message}</span>
-              <span>{progress.progress}%</span>
-            </div>
-            <ProgressBar 
-              now={progress.progress} 
-              variant="danger"
-              animated
-            />
-          </Alert>
-        )}
-
-        {/* Erreurs */}
-        {error && (
-          <Alert variant="danger" dismissible onClose={() => {}}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Statistiques */}
-        {statistics && (
-          <Card className="mb-3 border-info">
-            <Card.Body className="py-2">
-              <Row className="text-center">
-                <Col>
-                  <small className="text-muted">Sections</small>
-                  <div className="fw-bold">{statistics.sectionsCount}</div>
-                </Col>
-                <Col>
-                  <small className="text-muted">Photos</small>
-                  <div className="fw-bold">{statistics.photosCount}</div>
-                </Col>
-                <Col>
-                  <small className="text-muted">Pages estimées</small>
-                  <div className="fw-bold">{statistics.estimatedPages}</div>
-                </Col>
-                {sizeEstimate && (
-                  <Col>
-                    <small className="text-muted">Taille estimée</small>
-                    <div className="fw-bold">{sizeEstimate.sizeMb} MB</div>
-                  </Col>
+    <div className="report-configuration-layout">
+      <div className="report-content">
+        <Card className="report-configuration">
+          <Card.Header className="bg-danger text-light">
+            <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center gap-3">
+                <h5 className="mb-0 fw-bold">{t('report.title')}</h5>
+                {statistics && (
+                  <div className="d-flex gap-3 small">
+                    <Badge bg="light" text="dark">
+                      {t('report.stats.selectedSections', { count: enabledSections.length })}
+                    </Badge>
+                    <Badge bg="warning" text="dark">
+                      {t('report.stats.selectedPhotos', { count: allPhotos.length })}
+                    </Badge>
+                    {sizeEstimate && (
+                      <Badge bg="light" text="dark">
+                        {t('report.stats.estimatedSize', { size: sizeEstimate.sizeMb + ' MB' })}
+                      </Badge>
+                    )}
+                  </div>
                 )}
-              </Row>
-            </Card.Body>
-          </Card>
-        )}
+              </div>
+            </div>
+          </Card.Header>
 
-        <Row className="mb-4">
-          <Col lg={12}>
-            {/* Sélection des sections */}
-            <Card className="border-0 shadow-sm mb-3">
-              <Card.Header className="bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h6 className="mb-0 fw-bold">
-                    {t('report.sections.title', 'Sections du rapport')}
-                  </h6>
-                  <div>
-                    <Button 
-                      size="sm" 
-                      variant="outline-danger" 
-                      className="me-2"
-                      onClick={enableAllSections}
-                      type="button"
-                    >
-                      {t('common.selectAll', 'Tout sélectionner')}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline-secondary"
-                      onClick={disableAllSections}
-                      type="button"
-                    >
-                      {t('common.deselectAll', 'Tout désélectionner')}
-                    </Button>
+          <Card.Body className="p-0">
+            {error && (
+              <Alert variant="danger" className="m-3 mb-0">{error}</Alert>
+            )}
+            
+            <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
+              <Nav variant="tabs" className="border-bottom">
+                <Nav.Item>
+                  <Nav.Link eventKey="sections" className="d-flex align-items-center gap-2">
+                    <FontAwesomeIcon icon={faLayerGroup} />
+                    {t('report.tabs.sections')}
+                    <Badge bg="secondary" pill>{enabledSections.length}/{sections.length}</Badge>
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="photos" className="d-flex align-items-center gap-2">
+                    <FontAwesomeIcon icon={faImages} />
+                    {t('report.tabs.photos')}
+                    <Badge bg="danger" pill>{allPhotos.length}</Badge>
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+              
+              <Tab.Content className="p-3">
+                <Tab.Pane eventKey="sections">
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <div>
+                        <Button size="sm" variant="outline-danger" onClick={enableAllSections} className="me-2">
+                          <FontAwesomeIcon icon={faCheckSquare} className="me-1" />
+                          {t('common.selectAll')}
+                        </Button>
+                        <Button size="sm" variant="outline-secondary" onClick={disableAllSections}>
+                          <FontAwesomeIcon icon={faSquare} className="me-1" />
+                          {t('common.deselectAll')}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <ListGroup variant="flush">
+                      {sections.map(section => (
+                        <ListGroup.Item key={section.id} className="section-toggle-item">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div className="d-flex align-items-center flex-grow-1">
+                              <span className={section.isEnabled ? 'fw-bold' : 'text-muted'}>
+                                {getSectionLabel(section.type)}
+                              </span>
+                              {section.hasPhotos && getPhotoCount(section.type) > 0 && (
+                                <Badge bg="danger" className="ms-2" pill>
+                                  <FontAwesomeIcon icon={faImages} className="me-1" />
+                                  {getPhotoCount(section.type)}
+                                </Badge>
+                              )}
+                            </div>
+                            <FontAwesomeIcon 
+                              icon={section.isEnabled ? faToggleOn : faToggleOff}
+                              size="2x"
+                              className={`section-toggle ${section.isEnabled ? 'active' : ''}`}
+                              onClick={() => toggleSection(section.type)}
+                            />
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
                   </div>
-                </div>
-              </Card.Header>
+                </Tab.Pane>
 
-              <ListGroup variant="flush">
-                {sections.map((section) => (
-                  <SectionItem
-                    key={section.id}
-                    section={section}
-                    onToggle={() => toggleSection(section.type)}
-                    selectedPhotosCount={selectedPhotos[section.type]?.length || 0}
-                    icon={SECTION_ICONS[section.type]}
-                  />
-                ))}
-              </ListGroup>
-            </Card>
-
-            {/* Gestionnaire de photos */}
-            <Card className="border-0 shadow-sm">
-              <Card.Header className="bg-light">
-                <h6 className="mb-0 fw-bold">
-                  <FontAwesomeIcon icon={faImages} className="me-2" />
-                  {t('report.photos.title', 'Photos à inclure dans le rapport')}
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                {photoSections.map(section => (
-                  <div key={section.id} className="mb-3">
-                    <SectionPhotoManager
-                      trialNodeId={trialId}
-                      partNodeId={partId}
-                      sectionType={section.type}
-                      onChange={(sectionType, photos) => {
-                        console.log(`📸 ReportConfiguration - Photos sélectionnées pour ${sectionType}:`, photos);
-                        setSectionPhotos(sectionType, photos);
-                      }}
-                      initialSelectedPhotos={selectedPhotos}
-                      show={section.isEnabled}
-                    />
+                <Tab.Pane eventKey="photos">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <Form.Group className="mb-0">
+                      <Form.Label className="small text-muted mb-1">{t('report.photos.filter')}</Form.Label>
+                      <Form.Select 
+                        size="sm" 
+                        value={filterSection} 
+                        onChange={(e) => setFilterSection(e.target.value)}
+                        style={{ width: '250px' }}
+                      >
+                        <option value="all">{t('report.photos.allSections')}</option>
+                        {photoSections.map(section => (
+                          <option key={section.id} value={section.type}>
+                            {getSectionLabel(section.type)} ({getPhotoCount(section.type)})
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                    <Badge bg="light" text="dark" className="px-3 py-2">
+                      {filteredPhotos.length} / {allPhotos.length}
+                    </Badge>
                   </div>
-                ))}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Modal de prévisualisation */}
-        {showPreview && previewData && (
-          <ReportPreviewModal
-            show={showPreview}
-            handleClose={() => setShowPreview(false)}
-            previewData={previewData}
-          />
+                  
+                  {photoSections.map(section => (
+                    <div 
+                      key={section.id} 
+                      style={{ display: filterSection === 'all' || filterSection === section.type ? 'block' : 'none' }}
+                    >
+                      <SectionPhotoManager
+                        trialNodeId={trialId}
+                        partNodeId={partId}
+                        sectionType={section.type}
+                        onChange={(sectionType, photos) => setSectionPhotos(sectionType, photos)}
+                        initialSelectedPhotos={selectedPhotos}
+                        show={section.isEnabled}
+                      />
+                    </div>
+                  ))}
+                </Tab.Pane>
+              </Tab.Content>
+            </Tab.Container>
+          </Card.Body>
+        </Card>
+      </div>
+      
+      {/* Panel sticky à droite */}
+      <div className="report-actions-panel">
+        <div className="report-action-item" onClick={handlePreview}>
+          <div className={`report-action-button ${loading ? 'disabled' : ''}`}>
+            <FontAwesomeIcon icon={faEye} className="report-action-icon" />
+            <span className="report-action-text">{t('report.actions.preview')}</span>
+          </div>
+        </div>
+        <div className="report-action-item" onClick={() => !loading && handleExport('high')}>
+          <div className={`report-action-button ${loading ? 'disabled' : ''}`}>
+            <FontAwesomeIcon icon={faFileDownload} className="report-action-icon" />
+            <span className="report-action-text">{t('report.actions.downloadPdf')}</span>
+          </div>
+        </div>
+        {sizeEstimate && (
+          <div className="report-stats-box">
+            <div className="report-stats-label">{t('report.preview.size')}</div>
+            <div className="report-stats-value">{sizeEstimate.sizeMb} MB</div>
+          </div>
         )}
-      </Card.Body>
-    </Card>
+      </div>
+      
+      {showPreview && previewData && (
+        <ReportPreviewModal
+          show={showPreview}
+          handleClose={() => setShowPreview(false)}
+          previewData={previewData}
+        />
+      )}
+    </div>
   );
 });
 
-/**
- * Item de section individuel
- */
-const SectionItem = React.memo(({ section, onToggle, selectedPhotosCount, icon }) => {
-  const { t } = useTranslation();
-
-  const handleToggleClick = (e) => {
-    e.stopPropagation();
-    onToggle();
-  };
-
-  return (
-    <OverlayTrigger
-      placement="right"
-      overlay={<Tooltip id={`tooltip-${section.id}`}>{section.description}</Tooltip>}
-    >
-      <ListGroup.Item 
-        className="d-flex justify-content-between align-items-center border-start-0 border-end-0 section-item"
-      >
-        <div className="d-flex align-items-center flex-grow-1">
-          <FontAwesomeIcon 
-            icon={icon} 
-            className={`me-3 ${section.isEnabled ? 'text-danger' : 'text-muted'}`}
-            fixedWidth
-          />
-          <span className={section.isEnabled ? 'fw-bold' : 'text-muted'}>
-            {section.label}
-          </span>
-          
-          {section.hasPhotos && selectedPhotosCount > 0 && (
-            <Badge 
-              bg="warning" 
-              text="dark"
-              className="ms-3 fs-6 px-2 py-1"
-              pill
-            >
-              <FontAwesomeIcon icon={faImages} className="me-1" />
-              {selectedPhotosCount}
-            </Badge>
-          )}
-        </div>
-        
-        <div className="toggle-button">
-          <FontAwesomeIcon 
-            icon={section.isEnabled ? faToggleOn : faToggleOff} 
-            size="2x"
-            className={section.isEnabled ? 'text-danger' : 'text-secondary'}
-            style={{ cursor: 'pointer' }}
-            onClick={handleToggleClick}
-          />
-        </div>
-      </ListGroup.Item>
-    </OverlayTrigger>
-  );
-});
-
-SectionItem.displayName = 'SectionItem';
 ReportConfiguration.displayName = 'ReportConfiguration';
 
 export default ReportConfiguration;

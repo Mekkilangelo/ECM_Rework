@@ -1173,9 +1173,18 @@
   },
   "report": {
     "title": "Trial Report",
+    "tabs": {
+      "sections": "Sections",
+      "photos": "Photos"
+    },
+    "stats": {
+      "selectedSections": "{{count}} section(s) selected",
+      "selectedPhotos": "{{count}} photo(s) selected",
+      "estimatedSize": "Estimated size: {{size}}"
+    },
     "actions": {
       "preview": "Preview",
-      "downloadPdf": "PDF",
+      "downloadPdf": "Download PDF",
       "pdfFromPreview": "Use preview to generate PDF"
     },
     "preview": {
@@ -1187,6 +1196,7 @@
     },
     "sections": {
       "title": "Report Sections",
+      "description": "Select sections to include in the final report",
       "identification": {
         "label": "Identification",
         "description": "Trial and part identification information"
@@ -1213,7 +1223,9 @@
       }
     },
     "photos": {
-      "title": "Photos to include in report"
+      "title": "Photos to include in report",
+      "allSections": "All sections",
+      "filter": "Filter by section"
     }
   },
 

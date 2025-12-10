@@ -41,6 +41,11 @@ const getTestHierarchy = async (trialId) => {
                 model: db.specs_ecd,
                 as: 'ecdSpecs',
                 required: false
+              },
+              {
+                model: db.steel,
+                as: 'steel',
+                required: false
               }
             ]
           },

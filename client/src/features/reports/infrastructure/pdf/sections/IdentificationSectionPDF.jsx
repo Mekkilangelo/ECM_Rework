@@ -160,7 +160,13 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   
   // Extract data from report
   const partData = report.partData || report.part || {};
-  const steelGrade = partData.steel?.grade || partData.steelGrade || 'Not specified';
+  
+  // Steel grade - check multiple possible locations
+  const steelGrade = partData.steel?.grade 
+    || partData.steelGrade 
+    || partData.steel_grade
+    || (typeof partData.steel === 'string' ? partData.steel : null)
+    || 'Not specified';
 
   // Get specifications - check multiple locations
   const hardnessSpecs = partData.hardnessSpecs || [];

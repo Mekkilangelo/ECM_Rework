@@ -219,7 +219,7 @@ export const CoverPage = ({ report, options }) => {
         <InfoCard label="Part" value={report.partName} />
         <InfoCard label="Status" value={report.status} highlight={report.status === 'Complete' || report.status === 'Termine'} />
         <InfoCard label="Location" value={report.location} />
-        <InfoCard label="Furnace" value={report.furnace} />
+        <InfoCard label="Treatment" value={report.processType || report.trialData?.process_type || '-'} />
       </View>
 
       {/* Section spécifications */}

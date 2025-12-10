@@ -1185,6 +1185,15 @@
   },
   "report": {
     "title": "Rapport d'essai",
+    "tabs": {
+      "sections": "Sections",
+      "photos": "Photos"
+    },
+    "stats": {
+      "selectedSections": "{{count}} section(s) sélectionnée(s)",
+      "selectedPhotos": "{{count}} photo(s) sélectionnée(s)",
+      "estimatedSize": "Taille estimée: {{size}}"
+    },
     "actions": {
       "preview": "Prévisualiser",
       "downloadPdf": "PDF",
@@ -1225,7 +1234,9 @@
       }
     },
     "photos": {
-      "title": "Photos à inclure dans le rapport"
+      "title": "Photos à inclure dans le rapport",
+      "allSections": "Toutes les sections",
+      "filter": "Filtrer par section..."
     }
   },
 

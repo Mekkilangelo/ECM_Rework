@@ -880,7 +880,11 @@
           "unit": "Unit",
           "programDuration": "Program duration",
           "cellTemp": "Cell temperature",
-          "waitPressure": "Wait pressure"
+          "waitPressure": "Wait pressure",
+          "waitGas": "Preheat Gas",
+          "waitFlow": "Gas Flow Rate (Wait Flow)",
+          "selectGas": "Select gas...",
+          "enterFlow": "Enter flow rate"
         },
         
         "chemicalCycle": {

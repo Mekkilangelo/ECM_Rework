@@ -25,6 +25,15 @@ const ThermalCycleSection = ({
 }) => {
   const { t } = useTranslation();
   
+  // Options pour les gaz (même liste que dans ChemicalCycleSection)
+  const gasOptions = [
+    { value: 'N2', label: 'N2' },
+    { value: 'NH3', label: 'NH3' },
+    { value: 'C2H2', label: 'C2H2' },
+    { value: 'N2O', label: 'N2O' },
+    { value: 'CO2', label: 'CO2' }
+  ];
+  
   const rampOptions = [
     { value: 'up', label: t('trials.before.recipeData.thermalCycle.rampUp'), icon: faArrowUp },
     { value: 'down', label: t('trials.before.recipeData.thermalCycle.rampDown'), icon: faArrowDown },
@@ -311,6 +320,52 @@ const ThermalCycleSection = ({
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
               placeholder={t('trials.before.recipeData.thermalCycle.unit')}
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {/* Nouveaux champs pour wait gas et wait flow */}
+      <Row>
+        <Col md={6}>
+          <Form.Group className="mb-3">
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.waitGas')}</Form.Label>
+            <Select
+              name="recipeData.waitGas"
+              value={formData.recipeData?.waitGas 
+                ? getSelectedOption(gasOptions, formData.recipeData?.waitGas) 
+                : null}
+              onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitGas' })}
+              options={gasOptions}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
+              placeholder={t('trials.before.recipeData.thermalCycle.selectGas')}
+            />
+          </Form.Group>
+        </Col>
+        <Col md={6}>
+          <Form.Group className="mb-3">
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.waitFlow')}</Form.Label>
+            <Form.Control
+              type="number"
+              name="recipeData.waitFlow"
+              value={formData.recipeData?.waitFlow || ''}
+              onChange={handleChange}
+              step="0.1"
+              style={viewMode ? readOnlyFieldStyle : {}}
+              readOnly={viewMode}
+              disabled={loading || viewMode}
+              placeholder={t('trials.before.recipeData.thermalCycle.enterFlow')}
             />
           </Form.Group>
         </Col>

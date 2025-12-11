@@ -885,7 +885,11 @@
           "programDuration": "Durée du programme",
           "calculatedField": "Champ calculé automatiquement",
           "cellTemp": "Température cellule",
-          "waitPressure": "Pression d'attente"
+          "waitPressure": "Pression d'attente",
+          "waitGas": "Gaz de préchauffage",
+          "waitFlow": "Débit du gaz (Wait Flow)",
+          "selectGas": "Sélectionner un gaz...",
+          "enterFlow": "Entrer le débit"
         },
         
         "chemicalCycle": {

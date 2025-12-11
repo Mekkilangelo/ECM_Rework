@@ -27,7 +27,6 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
   
   // Fonction utilitaire pour marquer le formulaire comme modifié
   const markAsModified = useCallback(() => {
-    
     if (setModified) {
       setModified(true);
     }

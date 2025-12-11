@@ -180,6 +180,8 @@ const useTrialData = (trial, setFormData, setMessage, setFetchingTest) => {
               cellTempUnit: recipeData.cell_temp?.unit || '',
               waitPressure: recipeData.wait_pressure?.value || '',
               waitPressureUnit: recipeData.wait_pressure?.unit || '',
+              waitGas: recipeData.wait_gas || '',
+              waitFlow: recipeData.wait_flow || '',
             },
             
             // Quench data

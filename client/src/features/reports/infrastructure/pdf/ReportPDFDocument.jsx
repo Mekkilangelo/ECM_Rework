@@ -530,13 +530,13 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
   
   const generatedDate = new Date().toLocaleDateString('fr-FR');
   
-  // Récupérer les sections actives de manière sécurisée
+  // Récupérer les sections actives de manière sécurisée et les trier par order
   let activeSections = [];
   try {
     if (Array.isArray(report.sections)) {
-      activeSections = report.sections.filter(s => s && s.isEnabled);
+      activeSections = report.sections.filter(s => s && s.isEnabled).sort((a, b) => (a.order || 0) - (b.order || 0));
     } else if (report.getActiveSections && typeof report.getActiveSections === 'function') {
-      activeSections = report.getActiveSections();
+      activeSections = report.getActiveSections().sort((a, b) => (a.order || 0) - (b.order || 0));
     }
   } catch (error) {
     console.error('❌ Error getting active sections:', error);
@@ -628,88 +628,6 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         </Page>
       )}
 
-      {/* Section Micrographie - Page séparée */}
-      {activeSections.some(s => s.type === 'micrography') && report && (
-        <Page size="A4" style={styles.page}>
-          {includeHeader && (
-            <CommonReportHeader 
-              clientName={report.clientName}
-              loadNumber={report.trialData?.load_number}
-              trialDate={report.trialData?.trial_date}
-              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
-            />
-          )}
-          {(() => {
-            try {
-
-              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.micrography, 'micrography');
-              return (
-                <MicrographySectionPDF 
-                  report={report}
-                  photos={normalizedPhotos}
-                />
-              );
-            } catch (error) {
-              console.error('❌ Error rendering MicrographySectionPDF:', error);
-              return (
-                <Section title="ANALYSE MICROGRAPHIQUE">
-                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
-                    Erreur lors du rendu de la section micrographie
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
-                    {error.message}
-                  </Text>
-                </Section>
-              );
-            }
-          })()}
-          {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
-          )}
-        </Page>
-      )}
-
-      {/* Section Courbes - Page séparée */}
-      {activeSections.some(s => s.type === 'curves') && report && (
-        <Page size="A4" style={styles.page}>
-          {includeHeader && (
-            <CommonReportHeader 
-              clientName={report.clientName}
-              loadNumber={report.trialData?.load_number}
-              trialDate={report.trialData?.trial_date}
-              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
-            />
-          )}
-          {(() => {
-            try {
-
-              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.curves, 'curves');
-              return (
-                <CurvesSectionPDF 
-                  report={report}
-                  photos={normalizedPhotos}
-                />
-              );
-            } catch (error) {
-              console.error('❌ Error rendering CurvesSectionPDF:', error);
-              return (
-                <Section title="COURBES ET RAPPORTS DE FOUR">
-                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
-                    Erreur lors du rendu de la section courbes
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
-                    {error.message}
-                  </Text>
-                </Section>
-              );
-            }
-          })()}
-          {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
-          )}
-        </Page>
-      )}
-
       {/* Section Charge - Page séparée */}
       {activeSections.some(s => s.type === 'load') && report && (
         <Page size="A4" style={styles.page}>
@@ -737,6 +655,46 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
                 <Section title="CONFIGURATION DE CHARGE">
                   <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
                     Erreur lors du rendu de la section charge
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Courbes - Page séparée */}
+      {activeSections.some(s => s.type === 'curves') && report && (
+        <Page size="A4" style={styles.page}>
+          {includeHeader && (
+            <CommonReportHeader 
+              clientName={report.clientName}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+            />
+          )}
+          {(() => {
+            try {
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.curves, 'curves');
+              return (
+                <CurvesSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering CurvesSectionPDF:', error);
+              return (
+                <Section title="COURBES ET RAPPORTS DE FOUR">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section courbes
                   </Text>
                   <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
                     {error.message}
@@ -811,6 +769,46 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
                 <Section title="CONTRÔLE">
                   <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
                     Erreur lors du rendu de la section contrôle
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Micrographie - Page séparée */}
+      {activeSections.some(s => s.type === 'micrography') && report && (
+        <Page size="A4" style={styles.page}>
+          {includeHeader && (
+            <CommonReportHeader 
+              clientName={report.clientName}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+            />
+          )}
+          {(() => {
+            try {
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.micrography, 'micrography');
+              return (
+                <MicrographySectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering MicrographySectionPDF:', error);
+              return (
+                <Section title="ANALYSE MICROGRAPHIQUE">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section micrographie
                   </Text>
                   <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
                     {error.message}

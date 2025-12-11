@@ -9,7 +9,8 @@ import {
   faImages,
   faLayerGroup,
   faToggleOn,
-  faToggleOff
+  faToggleOff,
+  faFilePdf
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useReport } from '../hooks/useReport';
@@ -163,7 +164,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                     </div>
                     
                     <ListGroup variant="flush">
-                      {sections.map(section => (
+                      {sections.sort((a, b) => a.order - b.order).map(section => (
                         <ListGroup.Item key={section.id} className="section-toggle-item">
                           <div className="d-flex justify-content-between align-items-center">
                             <div className="d-flex align-items-center flex-grow-1">
@@ -237,6 +238,28 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
       
       {/* Panel sticky à droite */}
       <div className="report-actions-panel">
+        {loading && (
+          <div className="report-loading-indicator mb-3 p-3 bg-white rounded shadow-sm">
+            <div className="d-flex align-items-center mb-2">
+              <FontAwesomeIcon icon={faFilePdf} className="text-danger mr-2" />
+              <small className="text-muted">
+                {progress?.message || t('report.generating', 'Génération en cours...')}
+              </small>
+            </div>
+            {progress?.progress !== undefined && (
+              <div className="progress" style={{ height: '4px' }}>
+                <div 
+                  className="progress-bar bg-danger" 
+                  role="progressbar" 
+                  style={{ width: `${progress.progress}%` }}
+                  aria-valuenow={progress.progress} 
+                  aria-valuemin="0" 
+                  aria-valuemax="100"
+                />
+              </div>
+            )}
+          </div>
+        )}
         <div className="report-action-item" onClick={handlePreview}>
           <div className={`report-action-button ${loading ? 'disabled' : ''}`}>
             <FontAwesomeIcon icon={faEye} className="report-action-icon" />
@@ -257,11 +280,13 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
         )}
       </div>
       
-      {showPreview && previewData && (
+      {showPreview && (
         <ReportPreviewModal
           show={showPreview}
           handleClose={() => setShowPreview(false)}
           previewData={previewData}
+          loading={loading}
+          progress={progress}
         />
       )}
     </div>

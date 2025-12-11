@@ -4,17 +4,25 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUser, faCogs, faIndustry, faFlask, faFire,
   faCalendarAlt, faMapMarkerAlt, faBoxes, faArrowsAlt,
-  faFilter, faRotateLeft, faCheck
+  faFilter, faRotateLeft, faCheck, faRulerCombined, faWeight, faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import RangeInput from '../common/RangeInput';
+import RangeInputWithUnit from '../common/RangeInputWithUnit';
+import useUnits from '../../hooks/useUnits';
 import './TrialFilters.css';
 
 const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) => {
   const { t } = useTranslation();
   const [localFilters, setLocalFilters] = useState(filters);
+
+  // Charger les unités depuis ref_units
+  const { units: hardnessUnits } = useUnits('hardness');
+  const { units: lengthUnits } = useUnits('length');
+  const { units: weightUnits } = useUnits('weight');
 
   // Styles personnalisés pour react-select
   const customSelectStyles = {
@@ -55,7 +63,17 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
     const categoryFilters = {
       trial: ['loadNumber', 'status', 'location', 'mountingType', 'positionType', 'processType', 'trialDateFrom', 'trialDateTo'],
       client: ['clientNames', 'clientCountry', 'clientCity', 'clientGroup'],
-      part: ['partDesignation', 'partReference', 'partClientDesignation'],
+      part: [
+        'partDesignation', 'partReference', 'partClientDesignation',
+        'minWeight', 'maxWeight', 
+        'minLength', 'maxLength', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+        'minDiameterIn', 'maxDiameterIn', 'minDiameterOut', 'maxDiameterOut'
+      ],
+      specifications: [
+        'minHardness', 'maxHardness', 'hardnessUnit',
+        'minEcdDepth', 'maxEcdDepth', 'ecdDepthUnit',
+        'minEcdHardness', 'maxEcdHardness', 'ecdHardnessUnit'
+      ],
       steel: ['steelGrades', 'steelFamily', 'steelStandard', 'includeEquivalents'],
       furnace: ['furnaceType', 'furnaceSize', 'heatingCell', 'coolingMedia', 'quenchCell'],
       recipe: ['recipeNumber']
@@ -102,7 +120,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
         <Accordion.Item eventKey="0">
           <Accordion.Header>
             <FontAwesomeIcon icon={faFlask} className="mr-2 text-info" />
-            <strong>{t('trialFilters.trialInfo', 'Informations Essai')}</strong>
+            <strong>{t('trialFilters.trialInfo', 'Essai')}</strong>
             {countActiveFilters('trial') > 0 && (
               <Badge variant="danger" pill className="ml-2">{countActiveFilters('trial')}</Badge>
             )}
@@ -223,6 +241,27 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     menuPosition="fixed"
                   />
                 </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <RangeInputWithUnit
+                  label={
+                    <>
+                      <FontAwesomeIcon icon={faWeight} className="mr-1" />
+                      {t('trialFilters.loadWeight', 'Poids de la charge')}
+                    </>
+                  }
+                  minValue={localFilters.minLoadWeight}
+                  maxValue={localFilters.maxLoadWeight}
+                  onMinChange={(value) => handleChange('minLoadWeight', value)}
+                  onMaxChange={(value) => handleChange('maxLoadWeight', value)}
+                  unit={localFilters.loadWeightUnit || (weightUnits[0]?.value || 'kg')}
+                  onUnitChange={(value) => handleChange('loadWeightUnit', value)}
+                  unitOptions={weightUnits}
+                  minPlaceholder="0"
+                  maxPlaceholder="10000"
+                  step="0.1"
+                />
               </Col>
 
               <Col md={3}>
@@ -400,6 +439,127 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                 </Form.Group>
               </Col>
             </Row>
+
+            {/* Filtres de dimensions et poids */}
+            <div className="mt-2 pt-2 border-top">
+              <h6 className="text-muted mb-2" style={{ fontSize: '0.9rem' }}>
+                <FontAwesomeIcon icon={faRulerCombined} className="mr-2" />
+                {t('trialFilters.dimensionsAndWeight', 'Dimensions & Poids')}
+              </h6>
+              
+              <Row className="g-2">
+                {/* Poids */}
+                <Col md={6}>
+                  <RangeInputWithUnit
+                    label={
+                      <>
+                        <FontAwesomeIcon icon={faWeight} className="mr-1" />
+                        {t('trialFilters.weight', 'Poids')}
+                      </>
+                    }
+                    minValue={localFilters.minWeight}
+                    maxValue={localFilters.maxWeight}
+                    onMinChange={(value) => handleChange('minWeight', value)}
+                    onMaxChange={(value) => handleChange('maxWeight', value)}
+                    unit={localFilters.weightUnit || (weightUnits[0]?.value || 'kg')}
+                    onUnitChange={(value) => handleChange('weightUnit', value)}
+                    unitOptions={weightUnits}
+                    minPlaceholder="0"
+                    maxPlaceholder="1000"
+                    step="0.1"
+                  />
+                </Col>
+              </Row>
+
+              {/* Dimensions rectangulaires */}
+              <h6 className="text-muted mb-2 mt-2" style={{ fontSize: '0.9rem' }}>
+                {t('trialFilters.rectangularDimensions', 'Dimensions rectangulaires')}
+              </h6>
+              <Row className="g-2">
+                <Col md={6} lg={4}>
+                  <RangeInputWithUnit
+                    label={t('trialFilters.length', 'Longueur')}
+                    minValue={localFilters.minLength}
+                    maxValue={localFilters.maxLength}
+                    onMinChange={(value) => handleChange('minLength', value)}
+                    onMaxChange={(value) => handleChange('maxLength', value)}
+                    unit={localFilters.rectUnit || (lengthUnits[0]?.value || 'mm')}
+                    onUnitChange={(value) => handleChange('rectUnit', value)}
+                    unitOptions={lengthUnits}
+                    minPlaceholder="0"
+                    maxPlaceholder="1000"
+                    step="0.1"
+                  />
+                </Col>
+                <Col md={6} lg={4}>
+                  <RangeInputWithUnit
+                    label={t('trialFilters.width', 'Largeur')}
+                    minValue={localFilters.minWidth}
+                    maxValue={localFilters.maxWidth}
+                    onMinChange={(value) => handleChange('minWidth', value)}
+                    onMaxChange={(value) => handleChange('maxWidth', value)}
+                    unit={localFilters.rectUnit || (lengthUnits[0]?.value || 'mm')}
+                    onUnitChange={(value) => handleChange('rectUnit', value)}
+                    unitOptions={lengthUnits}
+                    minPlaceholder="0"
+                    maxPlaceholder="1000"
+                    step="0.1"
+                  />
+                </Col>
+                <Col md={6} lg={4}>
+                  <RangeInputWithUnit
+                    label={t('trialFilters.height', 'Hauteur')}
+                    minValue={localFilters.minHeight}
+                    maxValue={localFilters.maxHeight}
+                    onMinChange={(value) => handleChange('minHeight', value)}
+                    onMaxChange={(value) => handleChange('maxHeight', value)}
+                    unit={localFilters.rectUnit || (lengthUnits[0]?.value || 'mm')}
+                    onUnitChange={(value) => handleChange('rectUnit', value)}
+                    unitOptions={lengthUnits}
+                    minPlaceholder="0"
+                    maxPlaceholder="1000"
+                    step="0.1"
+                  />
+                </Col>
+              </Row>
+
+              {/* Dimensions circulaires */}
+              <h6 className="text-muted mb-2 mt-3" style={{ fontSize: '0.9rem' }}>
+                {t('trialFilters.circularDimensions', 'Dimensions circulaires')}
+              </h6>
+              <Row className="g-2">
+                <Col md={6}>
+                  <RangeInputWithUnit
+                    label={t('trialFilters.diameterIn', 'Diamètre intérieur')}
+                    minValue={localFilters.minDiameterIn}
+                    maxValue={localFilters.maxDiameterIn}
+                    onMinChange={(value) => handleChange('minDiameterIn', value)}
+                    onMaxChange={(value) => handleChange('maxDiameterIn', value)}
+                    unit={localFilters.circUnit || (lengthUnits[0]?.value || 'mm')}
+                    onUnitChange={(value) => handleChange('circUnit', value)}
+                    unitOptions={lengthUnits}
+                    minPlaceholder="0"
+                    maxPlaceholder="500"
+                    step="0.1"
+                  />
+                </Col>
+                <Col md={6}>
+                  <RangeInputWithUnit
+                    label={t('trialFilters.diameterOut', 'Diamètre extérieur')}
+                    minValue={localFilters.minDiameterOut}
+                    maxValue={localFilters.maxDiameterOut}
+                    onMinChange={(value) => handleChange('minDiameterOut', value)}
+                    onMaxChange={(value) => handleChange('maxDiameterOut', value)}
+                    unit={localFilters.circUnit || (lengthUnits[0]?.value || 'mm')}
+                    onUnitChange={(value) => handleChange('circUnit', value)}
+                    unitOptions={lengthUnits}
+                    minPlaceholder="0"
+                    maxPlaceholder="500"
+                    step="0.1"
+                  />
+                </Col>
+              </Row>
+            </div>
           </Accordion.Body>
         </Accordion.Item>
 
@@ -480,6 +640,75 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     menuPosition="fixed"
                   />
                 </Form.Group>
+              </Col>
+            </Row>
+          </Accordion.Body>
+        </Accordion.Item>
+
+        {/* Filtres Spécifications */}
+        <Accordion.Item eventKey="3bis">
+          <Accordion.Header>
+            <FontAwesomeIcon icon={faChartLine} className="mr-2 text-info" />
+            <strong>{t('trialFilters.specificationsInfo', 'Spécifications')}</strong>
+            {countActiveFilters('specifications') > 0 && (
+              <Badge variant="danger" pill className="ml-2">{countActiveFilters('specifications')}</Badge>
+            )}
+          </Accordion.Header>
+          <Accordion.Body>
+            <h6 className="text-muted mb-2" style={{ fontSize: '0.9rem' }}>
+              {t('trialFilters.hardness', 'Dureté')}
+            </h6>
+            <Row className="g-2">
+              <Col md={6}>
+                <RangeInputWithUnit
+                  label={t('trialFilters.hardnessValue', 'Valeur de dureté')}
+                  minValue={localFilters.minHardness}
+                  maxValue={localFilters.maxHardness}
+                  onMinChange={(value) => handleChange('minHardness', value)}
+                  onMaxChange={(value) => handleChange('maxHardness', value)}
+                  unit={localFilters.hardnessUnit || (hardnessUnits[0]?.value || 'HRC')}
+                  onUnitChange={(value) => handleChange('hardnessUnit', value)}
+                  unitOptions={hardnessUnits}
+                  minPlaceholder="0"
+                  maxPlaceholder="70"
+                  step="0.1"
+                />
+              </Col>
+            </Row>
+
+            <h6 className="text-muted mb-2 mt-3" style={{ fontSize: '0.9rem' }}>
+              {t('trialFilters.ecd', 'ECD (Profondeur de couche carburée)')}
+            </h6>
+            <Row className="g-2">
+              <Col md={6}>
+                <RangeInputWithUnit
+                  label={t('trialFilters.ecdDepth', 'Profondeur ECD')}
+                  minValue={localFilters.minEcdDepth}
+                  maxValue={localFilters.maxEcdDepth}
+                  onMinChange={(value) => handleChange('minEcdDepth', value)}
+                  onMaxChange={(value) => handleChange('maxEcdDepth', value)}
+                  unit={localFilters.ecdDepthUnit || (lengthUnits[0]?.value || 'mm')}
+                  onUnitChange={(value) => handleChange('ecdDepthUnit', value)}
+                  unitOptions={lengthUnits}
+                  minPlaceholder="0"
+                  maxPlaceholder="5"
+                  step="0.01"
+                />
+              </Col>
+              <Col md={6}>
+                <RangeInputWithUnit
+                  label={t('trialFilters.ecdHardness', 'Dureté ECD')}
+                  minValue={localFilters.minEcdHardness}
+                  maxValue={localFilters.maxEcdHardness}
+                  onMinChange={(value) => handleChange('minEcdHardness', value)}
+                  onMaxChange={(value) => handleChange('maxEcdHardness', value)}
+                  unit={localFilters.ecdHardnessUnit || (hardnessUnits[0]?.value || 'HRC')}
+                  onUnitChange={(value) => handleChange('ecdHardnessUnit', value)}
+                  unitOptions={hardnessUnits}
+                  minPlaceholder="0"
+                  maxPlaceholder="70"
+                  step="0.1"
+                />
               </Col>
             </Row>
           </Accordion.Body>

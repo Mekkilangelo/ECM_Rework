@@ -49,6 +49,31 @@ const trialSearchService = {
       if (filters.partReference) queryParams.append('partReference', filters.partReference);
       if (filters.partClientDesignation) queryParams.append('partClientDesignation', filters.partClientDesignation);
 
+      // Filtres de dimensions et poids
+      if (filters.minWeight) queryParams.append('minWeight', filters.minWeight);
+      if (filters.maxWeight) queryParams.append('maxWeight', filters.maxWeight);
+      if (filters.minLength) queryParams.append('minLength', filters.minLength);
+      if (filters.maxLength) queryParams.append('maxLength', filters.maxLength);
+      if (filters.minWidth) queryParams.append('minWidth', filters.minWidth);
+      if (filters.maxWidth) queryParams.append('maxWidth', filters.maxWidth);
+      if (filters.minHeight) queryParams.append('minHeight', filters.minHeight);
+      if (filters.maxHeight) queryParams.append('maxHeight', filters.maxHeight);
+      if (filters.minDiameterIn) queryParams.append('minDiameterIn', filters.minDiameterIn);
+      if (filters.maxDiameterIn) queryParams.append('maxDiameterIn', filters.maxDiameterIn);
+      if (filters.minDiameterOut) queryParams.append('minDiameterOut', filters.minDiameterOut);
+      if (filters.maxDiameterOut) queryParams.append('maxDiameterOut', filters.maxDiameterOut);
+
+      // Filtres de spécifications
+      if (filters.minHardness) queryParams.append('minHardness', filters.minHardness);
+      if (filters.maxHardness) queryParams.append('maxHardness', filters.maxHardness);
+      if (filters.hardnessUnit) queryParams.append('hardnessUnit', filters.hardnessUnit);
+      if (filters.minEcdDepth) queryParams.append('minEcdDepth', filters.minEcdDepth);
+      if (filters.maxEcdDepth) queryParams.append('maxEcdDepth', filters.maxEcdDepth);
+      if (filters.ecdDepthUnit) queryParams.append('ecdDepthUnit', filters.ecdDepthUnit);
+      if (filters.minEcdHardness) queryParams.append('minEcdHardness', filters.minEcdHardness);
+      if (filters.maxEcdHardness) queryParams.append('maxEcdHardness', filters.maxEcdHardness);
+      if (filters.ecdHardnessUnit) queryParams.append('ecdHardnessUnit', filters.ecdHardnessUnit);
+
       // Filtres sur l'acier
       if (filters.steelGrades && Array.isArray(filters.steelGrades) && filters.steelGrades.length > 0) {
         filters.steelGrades.forEach(grade => queryParams.append('steelGrades[]', grade));

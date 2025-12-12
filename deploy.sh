@@ -49,8 +49,8 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Vérifier les fichiers requis (avec MySQL et Nginx)
-    local required_files=("docker-compose.yaml" "images/frontend.tar" "images/backend.tar" "images/mysql.tar" "images/nginx.tar")
+    # Vérifier les fichiers requis (avec all-images.tar unique)
+    local required_files=("docker-compose.yaml" "images/all-images.tar")
     for file in "${required_files[@]}"; do
         if [ ! -f "$SCRIPT_DIR/$file" ]; then
             error "Fichier requis manquant: $file"
@@ -132,59 +132,17 @@ backup_current_version() {
 load_docker_images() {
     info "Chargement des nouvelles images Docker..."
     
-    # Chargement MySQL (en premier car c'est la base de données)
-    if [ -f "$SCRIPT_DIR/images/mysql.tar" ]; then
-        log "Chargement de l'image MySQL..."
-        if docker load < "$SCRIPT_DIR/images/mysql.tar"; then
-            success "Image MySQL chargée"
+    # Chargement de toutes les images depuis le fichier unique
+    if [ -f "$SCRIPT_DIR/images/all-images.tar" ]; then
+        log "Chargement de toutes les images (frontend, backend, mysql, nginx)..."
+        if docker load < "$SCRIPT_DIR/images/all-images.tar"; then
+            success "Toutes les images Docker chargées avec succès"
         else
-            error "Échec du chargement de l'image MySQL"
+            error "Échec du chargement des images Docker"
             exit 1
         fi
     else
-        error "Image mysql.tar non trouvée"
-        exit 1
-    fi
-    
-    # Chargement backend
-    if [ -f "$SCRIPT_DIR/images/backend.tar" ]; then
-        log "Chargement de l'image backend..."
-        if docker load < "$SCRIPT_DIR/images/backend.tar"; then
-            success "Image backend chargée"
-        else
-            error "Échec du chargement de l'image backend"
-            exit 1
-        fi
-    else
-        error "Image backend.tar non trouvée"
-        exit 1
-    fi
-    
-    # Chargement frontend
-    if [ -f "$SCRIPT_DIR/images/frontend.tar" ]; then
-        log "Chargement de l'image frontend..."
-        if docker load < "$SCRIPT_DIR/images/frontend.tar"; then
-            success "Image frontend chargée"
-        else
-            error "Échec du chargement de l'image frontend"
-            exit 1
-        fi
-    else
-        error "Image frontend.tar non trouvée"
-        exit 1
-    fi
-    
-    # Chargement nginx
-    if [ -f "$SCRIPT_DIR/images/nginx.tar" ]; then
-        log "Chargement de l'image Nginx..."
-        if docker load < "$SCRIPT_DIR/images/nginx.tar"; then
-            success "Image Nginx chargée"
-        else
-            error "Échec du chargement de l'image Nginx"
-            exit 1
-        fi
-    else
-        error "Image nginx.tar non trouvée"
+        error "Fichier images/all-images.tar non trouvé"
         exit 1
     fi
     

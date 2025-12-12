@@ -126,8 +126,7 @@ validate_required_files() {
         ".env.example"
         "deploy.sh"
         "rollback.sh"
-        "images/frontend.tar"
-        "images/backend.tar"
+        "images/all-images.tar"
         "release-notes.txt"
         "checksums.txt"
     )
@@ -166,36 +165,38 @@ validate_required_files() {
 validate_docker_images() {
     info "Validation des images Docker..."
     
-    local images=("frontend.tar" "backend.tar")
+    local image_path="$TEMP_DIR/images/all-images.tar"
     
-    for image in "${images[@]}"; do
-        local image_path="$TEMP_DIR/images/$image"
-        
-        if [ -f "$image_path" ]; then
-            # Vérifier que c'est bien une archive tar valide
-            if tar -tf "$image_path" >/dev/null 2>&1; then
-                success "Image Docker valide: $image"
-                
-                # Taille de l'image
-                local size=$(du -h "$image_path" | cut -f1)
-                info "  Taille: $size"
-                
-                # Essayer d'extraire des métadonnées basiques
-                local manifest_count=$(tar -tf "$image_path" | grep -c "manifest.json" || echo "0")
-                if [ "$manifest_count" -gt 0 ]; then
-                    success "  Métadonnées Docker présentes"
-                else
-                    warning "  Format Docker non standard détecté"
-                fi
+    if [ -f "$image_path" ]; then
+        # Vérifier que c'est bien une archive tar valide
+        if tar -tf "$image_path" >/dev/null 2>&1; then
+            success "Archive Docker valide: all-images.tar"
+            
+            # Taille de l'image
+            local size=$(du -h "$image_path" | cut -f1)
+            info "  Taille: $size"
+            
+            # Essayer d'extraire des métadonnées basiques
+            local manifest_count=$(tar -tf "$image_path" | grep -c "manifest.json" || echo "0")
+            if [ "$manifest_count" -gt 0 ]; then
+                success "  Métadonnées Docker présentes ($manifest_count images)"
             else
-                error "Image Docker corrompue: $image"
-                EXIT_CODE=1
+                warning "  Format Docker non standard détecté"
+            fi
+            
+            # Vérifier que l'archive contient bien plusieurs images
+            local repos_count=$(tar -tf "$image_path" | grep -c "repositories" || echo "0")
+            if [ "$repos_count" -gt 0 ]; then
+                success "  Archive multi-images détectée"
             fi
         else
-            error "Image Docker manquante: $image"
+            error "Archive Docker corrompue: all-images.tar"
             EXIT_CODE=1
         fi
-    done
+    else
+        error "Archive Docker manquante: all-images.tar"
+        EXIT_CODE=1
+    fi
 }
 
 validate_scripts() {

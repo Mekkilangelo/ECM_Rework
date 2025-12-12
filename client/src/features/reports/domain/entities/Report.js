@@ -34,6 +34,7 @@ export class Report {
     this.loadNumber = trialData?.load_number || '';
     this.status = trialData?.status || '';
     this.location = trialData?.location || '';
+    this.processType = trialData?.process_type || '';
     
     this.partId = partData?.node_id || partData?.id || null;
     this.partName = partData?.name || '';

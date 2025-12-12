@@ -43,6 +43,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    wait_gas: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    wait_flow: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
     cell_temp_unit: {
       type: DataTypes.STRING(100),
       allowNull: true,

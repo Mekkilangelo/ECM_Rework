@@ -71,6 +71,8 @@ const useTrialSubmission = (
       chemicalCycle: [{ step: 1, time: '', gas: '', debit: '', pressure: '' }],
       waitTime: '',
       waitTimeUnit: '',
+      waitGas: '',
+      waitFlow: '',
       programDuration: '',
       programDurationUnit: '',
       cellTemp: '',
@@ -233,7 +235,9 @@ const useTrialSubmission = (
       wait_pressure: {
         value: formData.recipeData.waitPressure || null,
         unit: formData.recipeData.waitPressureUnit || null
-      }
+      },
+      wait_gas: formData.recipeData.waitGas || null,
+      wait_flow: formData.recipeData.waitFlow || null
     };
     
     // Formatage des données de trempe au gaz

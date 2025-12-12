@@ -152,8 +152,8 @@ export class ReactPDFGenerator extends IPDFGenerator {
     link.click();
     document.body.removeChild(link);
     
-    // Nettoyer l'URL après un délai
-    setTimeout(() => URL.revokeObjectURL(link.href), 100);
+    // Nettoyer l'URL immédiatement (pas de délai qui pourrait causer des erreurs)
+    URL.revokeObjectURL(link.href);
   }
 
   /**

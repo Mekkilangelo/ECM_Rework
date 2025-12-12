@@ -385,6 +385,7 @@
     "trialCodePlaceholder": "Ex: T-2024-001",
     "loadNumber": "Numéro de Charge",
     "loadNumberPlaceholder": "Ex: LOAD-123",
+    "loadWeight": "Poids de la charge",
     "status": "Statut",
     "statusPlaceholder": "Sélectionner...",
     "location": "Localisation",
@@ -417,6 +418,21 @@
     "partReferencePlaceholder": "Ex: REF-123",
     "partClientDesignation": "Désignation Client",
     "partClientDesignationPlaceholder": "Ex: Gear-A",
+    "dimensionsAndWeight": "Dimensions & Poids",
+    "weight": "Poids",
+    "rectangularDimensions": "Dimensions rectangulaires",
+    "circularDimensions": "Dimensions circulaires",
+    "length": "Longueur",
+    "width": "Largeur",
+    "height": "Hauteur",
+    "diameterIn": "Diamètre intérieur",
+    "diameterOut": "Diamètre extérieur",
+    "specificationsInfo": "Spécifications",
+    "hardness": "Dureté",
+    "hardnessValue": "Valeur de dureté",
+    "ecd": "ECD (Profondeur de couche carburée)",
+    "ecdDepth": "Profondeur ECD",
+    "ecdHardness": "Dureté ECD",
     "steelGrade": "Nuance",
     "steelGradePlaceholder": "Sélectionner une ou plusieurs nuances...",
     "steelFamily": "Famille",
@@ -885,7 +901,11 @@
           "programDuration": "Durée du programme",
           "calculatedField": "Champ calculé automatiquement",
           "cellTemp": "Température cellule",
-          "waitPressure": "Pression d'attente"
+          "waitPressure": "Pression d'attente",
+          "waitGas": "Gaz de préchauffage",
+          "waitFlow": "Débit du gaz (Wait Flow)",
+          "selectGas": "Sélectionner un gaz...",
+          "enterFlow": "Entrer le débit"
         },
         
         "chemicalCycle": {
@@ -1185,6 +1205,15 @@
   },
   "report": {
     "title": "Rapport d'essai",
+    "tabs": {
+      "sections": "Sections",
+      "photos": "Photos"
+    },
+    "stats": {
+      "selectedSections": "{{count}} section(s) sélectionnée(s)",
+      "selectedPhotos": "{{count}} photo(s) sélectionnée(s)",
+      "estimatedSize": "Taille estimée: {{size}}"
+    },
     "actions": {
       "preview": "Prévisualiser",
       "downloadPdf": "PDF",
@@ -1225,7 +1254,9 @@
       }
     },
     "photos": {
-      "title": "Photos à inclure dans le rapport"
+      "title": "Photos à inclure dans le rapport",
+      "allSections": "Toutes les sections",
+      "filter": "Filtrer par section..."
     }
   },
 

@@ -218,33 +218,65 @@ export const useReport = (trialId, partId) => {
   }, [configure, createPDFGenerator]);
 
   /**
+   * Helper pour compter les photos (gère tableau ou objet hiérarchique)
+   */
+  const countPhotos = useCallback((photosData) => {
+    if (!photosData) return 0;
+    if (Array.isArray(photosData)) return photosData.length;
+    if (typeof photosData === 'object') {
+      return Object.values(photosData).reduce((count, value) => {
+        if (Array.isArray(value)) return count + value.length;
+        if (typeof value === 'object') return count + countPhotos(value);
+        return count;
+      }, 0);
+    }
+    return 0;
+  }, []);
+
+  /**
    * Estime la taille du PDF
    */
   const estimateSize = useCallback(() => {
-    if (!report) return null;
-
-    const generator = new ReactPDFGenerator();
-    return generator.estimateSize(report);
-  }, [report]);
+    // Estimation basée sur les sections et photos sélectionnées
+    const activeSections = sections.filter(s => s.isEnabled);
+    const totalPhotos = Object.values(selectedPhotos).reduce(
+      (total, photos) => total + countPhotos(photos),
+      0
+    );
+    
+    // Estimation approximative : 100KB par section + 200KB par photo
+    const baseSizeKB = 50; // En-tête, métadonnées
+    const sectionSizeKB = 100;
+    const photoSizeKB = 200;
+    
+    const estimatedKB = baseSizeKB + 
+      (activeSections.length * sectionSizeKB) + 
+      (totalPhotos * photoSizeKB);
+    
+    return {
+      sizeMb: (estimatedKB / 1024).toFixed(1),
+      sizeKb: estimatedKB,
+      sectionsCount: activeSections.length,
+      photosCount: totalPhotos
+    };
+  }, [sections, selectedPhotos, countPhotos]);
 
   /**
-   * Statistiques du rapport
+   * Statistiques du rapport (disponibles avant génération)
    */
   const statistics = useMemo(() => {
-    if (!report) return null;
-
     const activeSections = sections.filter(s => s.isEnabled);
-    const totalPhotos = activeSections.reduce(
-      (total, section) => total + section.getPhotoCount(),
+    const totalPhotos = Object.values(selectedPhotos).reduce(
+      (total, photos) => total + countPhotos(photos),
       0
     );
 
     return {
       sectionsCount: activeSections.length,
       photosCount: totalPhotos,
-      estimatedPages: report.estimatePageCount()
+      estimatedPages: Math.max(1, activeSections.length + Math.ceil(totalPhotos / 4))
     };
-  }, [report, sections]);
+  }, [sections, selectedPhotos]);
 
   return {
     // États

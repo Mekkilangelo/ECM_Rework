@@ -24,6 +24,17 @@ const useUnits = (unitType = null) => {
       try {
         setLoading(true);
         const response = await referenceService.getValues('ref_units');
+        console.log('[useUnits] Response from API:', response);
+        console.log('[useUnits] Response type:', typeof response);
+        console.log('[useUnits] Is array?:', Array.isArray(response));
+        if (response && response.length > 0) {
+          console.log('[useUnits] First item:', response[0]);
+          console.log('[useUnits] First 5 items with unit_type:', response.slice(0, 5).map(u => ({ name: u.name, unit_type: u.unit_type })));
+          
+          // Obtenir tous les unit_type uniques
+          const uniqueTypes = [...new Set(response.map(u => u.unit_type))];
+          console.log('[useUnits] UNIQUE UNIT_TYPES IN DATABASE:', uniqueTypes);
+        }
         
         if (isMounted) {
           setAllUnits(response || []);
@@ -50,22 +61,27 @@ const useUnits = (unitType = null) => {
 
   // Filtrer les unités par type (mémorisé pour performance)
   const filteredUnits = useMemo(() => {
+    console.log('[useUnits] Filtering - unitType:', unitType, 'allUnits length:', allUnits.length);
+    
     if (!unitType || allUnits.length === 0) {
       return allUnits;
     }
 
     // Si les unités sont des objets avec unit_type
     if (typeof allUnits[0] === 'object' && allUnits[0].unit_type !== undefined) {
-      return allUnits.filter(u => u.unit_type === unitType);
+      const filtered = allUnits.filter(u => u.unit_type === unitType);
+      console.log('[useUnits] Filtered by type', unitType, ':', filtered);
+      return filtered;
     }
 
     // Sinon retourner toutes (fallback)
+    console.log('[useUnits] Fallback - returning all units');
     return allUnits;
   }, [allUnits, unitType]);
 
   // Formater pour les dropdowns
   const formattedUnits = useMemo(() => {
-    return filteredUnits.map(unit => {
+    const formatted = filteredUnits.map(unit => {
       if (typeof unit === 'string') {
         return { value: unit, label: unit };
       }
@@ -76,6 +92,8 @@ const useUnits = (unitType = null) => {
         description: unit.description
       };
     });
+    console.log('[useUnits] Formatted units:', formatted);
+    return formatted;
   }, [filteredUnits]);
 
   // Grouper toutes les unités par type (pour affichage de toutes les catégories)

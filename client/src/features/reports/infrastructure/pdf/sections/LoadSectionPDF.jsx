@@ -12,12 +12,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
-    marginBottom: 16,
-    marginTop: 4,
-    color: '#1a1a1a',
-    letterSpacing: 0.5,
+    marginBottom: 12,
+    marginTop: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#ffffff',
+    backgroundColor: '#2c3e50',
+    letterSpacing: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#16a085',
   },
   // Layout 1 photo - full width, full page height
   photoFullPage: {

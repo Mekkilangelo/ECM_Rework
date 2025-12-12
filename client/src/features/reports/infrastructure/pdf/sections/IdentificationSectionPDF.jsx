@@ -12,21 +12,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
-    marginBottom: 16,
-    marginTop: 4,
-    color: '#1a1a1a',
-    letterSpacing: 0.5,
+    marginBottom: 12,
+    marginTop: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#ffffff',
+    backgroundColor: '#2c3e50',
+    letterSpacing: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3498db',
   },
   subsectionTitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: 'bold',
     marginTop: 14,
     marginBottom: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     color: '#2c3e50',
+    backgroundColor: '#ecf0f1',
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3498db',
   },
   infoRow: {
     flexDirection: 'row',
@@ -150,7 +160,13 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   
   // Extract data from report
   const partData = report.partData || report.part || {};
-  const steelGrade = partData.steel?.grade || partData.steelGrade || 'Not specified';
+  
+  // Steel grade - check multiple possible locations
+  const steelGrade = partData.steel?.grade 
+    || partData.steelGrade 
+    || partData.steel_grade
+    || (typeof partData.steel === 'string' ? partData.steel : null)
+    || 'Not specified';
 
   // Get specifications - check multiple locations
   const hardnessSpecs = partData.hardnessSpecs || [];

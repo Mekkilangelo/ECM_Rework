@@ -382,6 +382,7 @@
     "trialCodePlaceholder": "e.g: T-2024-001",
     "loadNumber": "Load Number",
     "loadNumberPlaceholder": "e.g: LOAD-123",
+    "loadWeight": "Load Weight",
     "status": "Status",
     "statusPlaceholder": "Select...",
     "location": "Location",
@@ -414,6 +415,21 @@
     "partReferencePlaceholder": "e.g: REF-123",
     "partClientDesignation": "Client Designation",
     "partClientDesignationPlaceholder": "e.g: Gear-A",
+    "dimensionsAndWeight": "Dimensions & Weight",
+    "weight": "Weight",
+    "rectangularDimensions": "Rectangular dimensions",
+    "circularDimensions": "Circular dimensions",
+    "length": "Length",
+    "width": "Width",
+    "height": "Height",
+    "diameterIn": "Inner diameter",
+    "diameterOut": "Outer diameter",
+    "specificationsInfo": "Specifications",
+    "hardness": "Hardness",
+    "hardnessValue": "Hardness value",
+    "ecd": "ECD (Effective Case Depth)",
+    "ecdDepth": "ECD Depth",
+    "ecdHardness": "ECD Hardness",
     "steelGrade": "Grade",
     "steelGradePlaceholder": "Select one or more grades...",
     "steelFamily": "Family",
@@ -880,7 +896,11 @@
           "unit": "Unit",
           "programDuration": "Program duration",
           "cellTemp": "Cell temperature",
-          "waitPressure": "Wait pressure"
+          "waitPressure": "Wait pressure",
+          "waitGas": "Preheat Gas",
+          "waitFlow": "Gas Flow Rate (Wait Flow)",
+          "selectGas": "Select gas...",
+          "enterFlow": "Enter flow rate"
         },
         
         "chemicalCycle": {
@@ -1173,9 +1193,18 @@
   },
   "report": {
     "title": "Trial Report",
+    "tabs": {
+      "sections": "Sections",
+      "photos": "Photos"
+    },
+    "stats": {
+      "selectedSections": "{{count}} section(s) selected",
+      "selectedPhotos": "{{count}} photo(s) selected",
+      "estimatedSize": "Estimated size: {{size}}"
+    },
     "actions": {
       "preview": "Preview",
-      "downloadPdf": "PDF",
+      "downloadPdf": "Download PDF",
       "pdfFromPreview": "Use preview to generate PDF"
     },
     "preview": {
@@ -1187,6 +1216,7 @@
     },
     "sections": {
       "title": "Report Sections",
+      "description": "Select sections to include in the final report",
       "identification": {
         "label": "Identification",
         "description": "Trial and part identification information"
@@ -1213,7 +1243,9 @@
       }
     },
     "photos": {
-      "title": "Photos to include in report"
+      "title": "Photos to include in report",
+      "allSections": "All sections",
+      "filter": "Filter by section"
     }
   },
 

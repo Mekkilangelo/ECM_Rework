@@ -4,31 +4,38 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Image } from '@react-pdf/renderer';
+import { View, Text, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   section: {
     marginBottom: 12
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#DC3545',
-    marginBottom: 15,
-    paddingBottom: 6,
-    borderBottomWidth: 2,
-    borderBottomColor: '#DC3545'
-  },
-  subsectionTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#333333',
-    marginTop: 10,
-    marginBottom: 6,
-    backgroundColor: '#F8F9FA',
-    padding: 6,
+    marginBottom: 12,
+    marginTop: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: '#ffffff',
+    backgroundColor: '#2c3e50',
+    letterSpacing: 1,
+    borderLeftWidth: 4,
+    borderLeftColor: '#e74c3c',
+  },
+  subsectionTitle: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    marginTop: 12,
+    marginBottom: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    color: '#c0392b',
+    backgroundColor: '#fef5e7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     borderLeftWidth: 3,
-    borderLeftColor: '#DC3545'
+    borderLeftColor: '#e74c3c',
   },
   row: {
     flexDirection: 'row',
@@ -87,9 +94,28 @@ const styles = StyleSheet.create({
   },
   // Colonnes spécifiques pour cycle thermique
   colStep: { width: '10%' },
-  colRamp: { width: '20%' },
+  colRamp: { width: '20%', alignItems: 'center', justifyContent: 'center' },
   colSetpoint: { width: '35%' },
   colDuration: { width: '35%' },
+  
+  // Style pour la cellule ramp avec icône
+  rampCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRightWidth: 1,
+    borderRightColor: '#EEEEEE',
+    width: '20%',
+  },
+  rampIcon: {
+    marginRight: 4,
+  },
+  rampText: {
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
   
   // Colonnes pour cycle chimique
   colChemStep: { width: '8%' },
@@ -127,7 +153,89 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Formater la direction de rampe
+ * Composant flèche SVG pour les ramps
+ */
+const RampArrow = ({ type }) => {
+  const size = 14;
+  
+  // Flèche vers le haut (montée en température)
+  if (type === 'up') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24">
+        <Path 
+          d="M12 4 L4 14 L9 14 L9 20 L15 20 L15 14 L20 14 Z" 
+          fill="#e74c3c"
+          stroke="#c0392b"
+          strokeWidth="1"
+        />
+      </Svg>
+    );
+  }
+  
+  // Flèche vers le bas (descente en température)
+  if (type === 'down') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24">
+        <Path 
+          d="M12 20 L4 10 L9 10 L9 4 L15 4 L15 10 L20 10 Z" 
+          fill="#3498db"
+          stroke="#2980b9"
+          strokeWidth="1"
+        />
+      </Svg>
+    );
+  }
+  
+  // Flèche horizontale (maintien) - pointe vers la droite
+  if (type === 'continue' || type === 'hold') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24">
+        <Path 
+          d="M20 12 L10 6 L10 10 L4 10 L4 14 L10 14 L10 18 Z" 
+          fill="#27ae60"
+          stroke="#1e8449"
+          strokeWidth="1"
+        />
+      </Svg>
+    );
+  }
+  
+  return null;
+};
+
+/**
+ * Composant cellule Ramp avec icône
+ */
+const RampCell = ({ ramp }) => {
+  const rampLabels = {
+    'up': 'Up',
+    'down': 'Down',
+    'continue': 'Hold',
+    'hold': 'Hold'
+  };
+  
+  const rampColors = {
+    'up': '#e74c3c',
+    'down': '#3498db',
+    'continue': '#27ae60',
+    'hold': '#27ae60'
+  };
+  
+  const label = rampLabels[ramp] || ramp || '-';
+  const color = rampColors[ramp] || '#666666';
+  
+  return (
+    <View style={styles.rampCell}>
+      <View style={styles.rampIcon}>
+        <RampArrow type={ramp} />
+      </View>
+      <Text style={[styles.rampText, { color }]}>{label}</Text>
+    </View>
+  );
+};
+
+/**
+ * Formater la direction de rampe (version texte simple - conservée pour compatibilité)
  */
 const formatRamp = (ramp) => {
   const rampLabels = {
@@ -240,7 +348,7 @@ const ThermalCycleSection = ({ recipeData }) => {
         {recipeData.thermal_cycle.map((step, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.tableCell, styles.colStep]}>{step.step || index + 1}</Text>
-            <Text style={[styles.tableCell, styles.colRamp]}>{formatRamp(step.ramp)}</Text>
+            <RampCell ramp={step.ramp} />
             <Text style={[styles.tableCell, styles.colSetpoint]}>{step.setpoint || '-'}</Text>
             <Text style={[styles.tableCell, styles.colDuration]}>{step.duration || '-'}</Text>
           </View>
@@ -537,7 +645,7 @@ export const RecipeSectionPDF = ({ report }) => {
   if (!recipeData && !quenchData) {
     return (
       <View style={styles.section} break>
-        <Text style={styles.sectionTitle}>2. Recipe</Text>
+        <Text style={styles.sectionTitle}>RECIPE</Text>
         <Text style={styles.noData}>No recipe data available</Text>
       </View>
     );
@@ -547,7 +655,7 @@ export const RecipeSectionPDF = ({ report }) => {
     <>
       {/* Page principale : Titre + Numero + Preox - toujours ensemble */}
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>2. Recipe</Text>
+        <Text style={styles.sectionTitle}>RECIPE</Text>
         
         {recipeData?.number && (
           <View style={styles.row}>

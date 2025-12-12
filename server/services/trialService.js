@@ -88,6 +88,8 @@ const createRecipeFromData = async (recipeData, transaction) => {
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
       wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      wait_gas: recipeData.wait_gas || null,
+      wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
       cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
@@ -114,7 +116,8 @@ const createRecipeFromData = async (recipeData, transaction) => {
       }
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 || 
-             recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp) {
+             recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp || 
+             recipeData.wait_gas || recipeData.wait_flow) {
     // Si pas de chemical_cycle array mais qu'on a les métadonnées, les enregistrer quand même
     await ChemicalModel.create({
       recipe_id: recipe.recipe_id,
@@ -125,6 +128,8 @@ const createRecipeFromData = async (recipeData, transaction) => {
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
       wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      wait_gas: recipeData.wait_gas || null,
+      wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
       cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
@@ -368,6 +373,8 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
       wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      wait_gas: recipeData.wait_gas || null,
+      wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
       cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
@@ -392,7 +399,8 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       }
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 || 
-             recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp) {
+             recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp || 
+             recipeData.wait_gas || recipeData.wait_flow) {
     // Si pas de chemical_cycle array mais qu'on a les métadonnées, les enregistrer quand même
     await sequelize.models.recipe_chemical_cycle.create({
       recipe_id: recipeId,
@@ -403,6 +411,8 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       wait_time_unit: recipeData.wait_time?.unit || null,
       wait_pressure_value: recipeData.wait_pressure?.value || null,
       wait_pressure_unit: recipeData.wait_pressure?.unit || null,
+      wait_gas: recipeData.wait_gas || null,
+      wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
       cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
@@ -821,6 +831,8 @@ const getTrialById = async (trialId) => {
             value: recipe.chemicalCycle.wait_pressure_value,
             unit: recipe.chemicalCycle.wait_pressure_unit
           };
+          trialData.recipe_data.wait_gas = recipe.chemicalCycle.wait_gas || '';
+          trialData.recipe_data.wait_flow = recipe.chemicalCycle.wait_flow || '';
           trialData.recipe_data.cell_temp = {
             value: recipe.chemicalCycle.cell_temp_value,
             unit: recipe.chemicalCycle.cell_temp_unit
@@ -849,6 +861,8 @@ const getTrialById = async (trialId) => {
             value: recipe.chemicalCycle.wait_pressure_value,
             unit: recipe.chemicalCycle.wait_pressure_unit
           };
+          trialData.recipe_data.wait_gas = recipe.chemicalCycle.wait_gas || '';
+          trialData.recipe_data.wait_flow = recipe.chemicalCycle.wait_flow || '';
           trialData.recipe_data.cell_temp = {
             value: recipe.chemicalCycle.cell_temp_value,
             unit: recipe.chemicalCycle.cell_temp_unit

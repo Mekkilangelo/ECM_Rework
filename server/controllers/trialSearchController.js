@@ -62,6 +62,31 @@ exports.searchTrials = async (req, res) => {
       partReference,
       partClientDesignation,
       
+      // Filtres de dimensions et poids (nouveaux)
+      minWeight,
+      maxWeight,
+      minLength,
+      maxLength,
+      minWidth,
+      maxWidth,
+      minHeight,
+      maxHeight,
+      minDiameterIn,
+      maxDiameterIn,
+      minDiameterOut,
+      maxDiameterOut,
+      
+      // Filtres de spécifications (nouveaux)
+      minHardness,
+      maxHardness,
+      hardnessUnit,
+      minEcdDepth,
+      maxEcdDepth,
+      ecdDepthUnit,
+      minEcdHardness,
+      maxEcdHardness,
+      ecdHardnessUnit,
+      
       // Filtres sur l'acier (via la pièce)
       steelGrade,
       steelGrades, // NOUVEAU: support multi-sélection
@@ -187,7 +212,14 @@ exports.searchTrials = async (req, res) => {
     const steelGradesArray = Array.isArray(steelGrades) ? steelGrades : (steelGrades ? [steelGrades] : (steelGrade ? [steelGrade] : []));
     const useEquivalents = includeEquivalents === 'true' || includeEquivalents === true;
     
-    if (partDesignation || partReference || partClientDesignation || steelGradesArray.length > 0 || steelFamily || steelStandard) {
+    // Déterminer si on a besoin de filtrer sur les pièces
+    const hasPartFilters = partDesignation || partReference || partClientDesignation || 
+                           steelGradesArray.length > 0 || steelFamily || steelStandard ||
+                           minWeight || maxWeight || minLength || maxLength || 
+                           minWidth || maxWidth || minHeight || maxHeight ||
+                           minDiameterIn || maxDiameterIn || minDiameterOut || maxDiameterOut;
+    
+    if (hasPartFilters) {
       const partConditions = [];
       
       if (partDesignation) {
@@ -201,6 +233,115 @@ exports.searchTrials = async (req, res) => {
       if (partClientDesignation) {
         partConditions.push('parts.client_designation LIKE :partClientDesignation');
         sqlReplacements.partClientDesignation = `%${partClientDesignation}%`;
+      }
+
+      // Filtres de dimensions et poids
+      if (minWeight) {
+        partConditions.push('CAST(parts.dim_weight_value AS DECIMAL(10,2)) >= :minWeight');
+        sqlReplacements.minWeight = parseFloat(minWeight);
+      }
+      if (maxWeight) {
+        partConditions.push('CAST(parts.dim_weight_value AS DECIMAL(10,2)) <= :maxWeight');
+        sqlReplacements.maxWeight = parseFloat(maxWeight);
+      }
+      if (minLength) {
+        partConditions.push('CAST(parts.dim_rect_length AS DECIMAL(10,2)) >= :minLength');
+        sqlReplacements.minLength = parseFloat(minLength);
+      }
+      if (maxLength) {
+        partConditions.push('CAST(parts.dim_rect_length AS DECIMAL(10,2)) <= :maxLength');
+        sqlReplacements.maxLength = parseFloat(maxLength);
+      }
+      if (minWidth) {
+        partConditions.push('CAST(parts.dim_rect_width AS DECIMAL(10,2)) >= :minWidth');
+        sqlReplacements.minWidth = parseFloat(minWidth);
+      }
+      if (maxWidth) {
+        partConditions.push('CAST(parts.dim_rect_width AS DECIMAL(10,2)) <= :maxWidth');
+        sqlReplacements.maxWidth = parseFloat(maxWidth);
+      }
+      if (minHeight) {
+        partConditions.push('CAST(parts.dim_rect_height AS DECIMAL(10,2)) >= :minHeight');
+        sqlReplacements.minHeight = parseFloat(minHeight);
+      }
+      if (maxHeight) {
+        partConditions.push('CAST(parts.dim_rect_height AS DECIMAL(10,2)) <= :maxHeight');
+        sqlReplacements.maxHeight = parseFloat(maxHeight);
+      }
+      if (minDiameterIn) {
+        partConditions.push('CAST(parts.dim_circ_diameterIn AS DECIMAL(10,2)) >= :minDiameterIn');
+        sqlReplacements.minDiameterIn = parseFloat(minDiameterIn);
+      }
+      if (maxDiameterIn) {
+        partConditions.push('CAST(parts.dim_circ_diameterIn AS DECIMAL(10,2)) <= :maxDiameterIn');
+        sqlReplacements.maxDiameterIn = parseFloat(maxDiameterIn);
+      }
+      if (minDiameterOut) {
+        partConditions.push('CAST(parts.dim_circ_diameterOut AS DECIMAL(10,2)) >= :minDiameterOut');
+        sqlReplacements.minDiameterOut = parseFloat(minDiameterOut);
+      }
+      if (maxDiameterOut) {
+        partConditions.push('CAST(parts.dim_circ_diameterOut AS DECIMAL(10,2)) <= :maxDiameterOut');
+        sqlReplacements.maxDiameterOut = parseFloat(maxDiameterOut);
+      }
+
+      // Filtres de spécifications - Hardness
+      if (minHardness || maxHardness || hardnessUnit) {
+        const hardnessConditions = [];
+        if (minHardness) {
+          hardnessConditions.push('CAST(specs_hardness.min AS DECIMAL(10,2)) >= :minHardness OR CAST(specs_hardness.max AS DECIMAL(10,2)) >= :minHardness');
+          sqlReplacements.minHardness = parseFloat(minHardness);
+        }
+        if (maxHardness) {
+          hardnessConditions.push('CAST(specs_hardness.min AS DECIMAL(10,2)) <= :maxHardness OR CAST(specs_hardness.max AS DECIMAL(10,2)) <= :maxHardness');
+          sqlReplacements.maxHardness = parseFloat(maxHardness);
+        }
+        if (hardnessUnit) {
+          hardnessConditions.push('specs_hardness.unit = :hardnessUnit');
+          sqlReplacements.hardnessUnit = hardnessUnit;
+        }
+        
+        partConditions.push(`EXISTS (
+          SELECT 1 FROM specs_hardness 
+          WHERE specs_hardness.part_node_id = parts.node_id 
+          AND (${hardnessConditions.join(' AND ')})
+        )`);
+      }
+
+      // Filtres de spécifications - ECD
+      if (minEcdDepth || maxEcdDepth || minEcdHardness || maxEcdHardness || ecdDepthUnit || ecdHardnessUnit) {
+        const ecdConditions = [];
+        
+        if (minEcdDepth) {
+          ecdConditions.push('CAST(specs_ecd.depthMin AS DECIMAL(10,2)) >= :minEcdDepth OR CAST(specs_ecd.depthMax AS DECIMAL(10,2)) >= :minEcdDepth');
+          sqlReplacements.minEcdDepth = parseFloat(minEcdDepth);
+        }
+        if (maxEcdDepth) {
+          ecdConditions.push('CAST(specs_ecd.depthMin AS DECIMAL(10,2)) <= :maxEcdDepth OR CAST(specs_ecd.depthMax AS DECIMAL(10,2)) <= :maxEcdDepth');
+          sqlReplacements.maxEcdDepth = parseFloat(maxEcdDepth);
+        }
+        if (ecdDepthUnit) {
+          ecdConditions.push('specs_ecd.depthUnit = :ecdDepthUnit');
+          sqlReplacements.ecdDepthUnit = ecdDepthUnit;
+        }
+        if (minEcdHardness) {
+          ecdConditions.push('CAST(specs_ecd.hardness AS DECIMAL(10,2)) >= :minEcdHardness');
+          sqlReplacements.minEcdHardness = parseFloat(minEcdHardness);
+        }
+        if (maxEcdHardness) {
+          ecdConditions.push('CAST(specs_ecd.hardness AS DECIMAL(10,2)) <= :maxEcdHardness');
+          sqlReplacements.maxEcdHardness = parseFloat(maxEcdHardness);
+        }
+        if (ecdHardnessUnit) {
+          ecdConditions.push('specs_ecd.hardnessUnit = :ecdHardnessUnit');
+          sqlReplacements.ecdHardnessUnit = ecdHardnessUnit;
+        }
+        
+        partConditions.push(`EXISTS (
+          SELECT 1 FROM specs_ecd 
+          WHERE specs_ecd.part_node_id = parts.node_id 
+          AND (${ecdConditions.join(' AND ')})
+        )`);
       }
 
       // Filtres sur l'acier avec gestion des équivalences

@@ -32,6 +32,8 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       cellTemp: formData.recipeData.cellTemp,
       waitTime: formData.recipeData.waitTime,
       waitTimeUnit: formData.recipeData.waitTimeUnit,
+      waitGas: formData.recipeData.waitGas,
+      waitFlow: formData.recipeData.waitFlow,
       selectedGas1: formData.recipeData.selectedGas1,
       selectedGas2: formData.recipeData.selectedGas2,
       selectedGas3: formData.recipeData.selectedGas3
@@ -42,6 +44,8 @@ const RecipePreviewChart = React.memo(({ formData }) => {
     formData?.recipeData?.cellTemp,
     formData?.recipeData?.waitTime,
     formData?.recipeData?.waitTimeUnit,
+    formData?.recipeData?.waitGas,
+    formData?.recipeData?.waitFlow,
     formData?.recipeData?.selectedGas1,
     formData?.recipeData?.selectedGas2,
     formData?.recipeData?.selectedGas3
@@ -176,6 +180,15 @@ const RecipePreviewChart = React.memo(({ formData }) => {
         relevantRecipeData.selectedGas3
       ].filter(Boolean);
       
+      // Ajouter le wait gas s'il est défini
+      const waitGas = relevantRecipeData.waitGas;
+      const waitFlow = parseFloat(relevantRecipeData.waitFlow) || 0;
+      
+      // Si on a un wait gas, l'ajouter aux gasTypes s'il n'y est pas déjà
+      if (waitGas && !gasTypes.includes(waitGas)) {
+        gasTypes.push(waitGas);
+      }
+      
       // CORRECTION : Calculer la durée totale du cycle chimique pour synchroniser avec le cycle thermique
       const totalChemicalTime = chemicalCycle.reduce((total, step) => {
         return total + ((parseInt(step.time) || 0) / 60); // Convertir secondes en minutes
@@ -193,10 +206,7 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       gasTypes.forEach(gas => {
         gasDatasets[gas] = {
           label: `Débit ${gas} (Nl/h)`,
-          data: [
-            // Commencer à zéro au début du cycle chimique
-            { x: waitTimeInMinutes, y: 0 }
-          ],
+          data: [],
           borderColor: getGasColor(gas),
           backgroundColor: getGasColor(gas, 0.2),
           borderWidth: 2,
@@ -209,6 +219,17 @@ const RecipePreviewChart = React.memo(({ formData }) => {
             borderWidth: 2
           }
         };
+        
+        // Si c'est le wait gas et qu'on a un wait time > 0, ajouter le segment de wait
+        if (gas === waitGas && waitTimeInMinutes > 0 && waitFlow > 0) {
+          // Gaz de préchauffage pendant le wait time
+          gasDatasets[gas].data.push({ x: 0, y: waitFlow });
+          gasDatasets[gas].data.push({ x: waitTimeInMinutes, y: waitFlow });
+          gasDatasets[gas].data.push({ x: waitTimeInMinutes, y: 0 }); // Retour à zéro au début du cycle chimique
+        } else {
+          // Commencer à zéro au début du cycle chimique
+          gasDatasets[gas].data.push({ x: waitTimeInMinutes, y: 0 });
+        }
       });
       
       // Parcourir chaque étape du cycle chimique
@@ -467,6 +488,8 @@ const arePropsEqual = (prevProps, nextProps) => {
     prevRecipe.cellTemp === nextRecipe.cellTemp &&
     prevRecipe.waitTime === nextRecipe.waitTime &&
     prevRecipe.waitTimeUnit === nextRecipe.waitTimeUnit &&
+    prevRecipe.waitGas === nextRecipe.waitGas &&
+    prevRecipe.waitFlow === nextRecipe.waitFlow &&
     prevRecipe.selectedGas1 === nextRecipe.selectedGas1 &&
     prevRecipe.selectedGas2 === nextRecipe.selectedGas2 &&
     prevRecipe.selectedGas3 === nextRecipe.selectedGas3

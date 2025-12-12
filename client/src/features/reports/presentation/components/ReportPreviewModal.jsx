@@ -4,15 +4,17 @@
  */
 
 import React from 'react';
-import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
+import { Modal, Button, Spinner, Alert, ProgressBar } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDownload, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faTimes, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 const ReportPreviewModal = ({ 
   show, 
   handleClose, 
   previewData,
+  loading = false,
+  progress = null,
   onDownload
 }) => {
   const { t } = useTranslation();
@@ -35,13 +37,37 @@ const ReportPreviewModal = ({
       </Modal.Header>
 
       <Modal.Body className="p-0 bg-secondary">
-        {!previewData ? (
+        {loading || !previewData ? (
           <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-            <div className="text-center">
-              <Spinner animation="border" variant="danger" size="lg" />
-              <p className="mt-3 text-white">
-                {t('report.preview.loading', 'Génération de l\'aperçu en cours...')}
+            <div className="text-center" style={{ width: '500px', padding: '40px' }}>
+              <div className="mb-4">
+                <FontAwesomeIcon icon={faFilePdf} className="text-danger" style={{ fontSize: '4rem' }} />
+              </div>
+              <h5 className="text-white font-weight-bold mb-2">
+                {progress?.message || t('report.preview.loading', 'Génération de l\'aperçu en cours...')}
+              </h5>
+              <p className="text-white-50 small mb-4">
+                {t('report.preview.loadingHint', 'Cela peut prendre quelques instants selon le nombre d\'images et la complexité du rapport.')}
               </p>
+              {progress?.progress !== undefined ? (
+                <>
+                  <ProgressBar 
+                    now={progress.progress} 
+                    variant="danger"
+                    style={{ height: '12px' }}
+                    className="mb-2"
+                  />
+                  <small className="text-white-50">{Math.round(progress.progress)}%</small>
+                </>
+              ) : (
+                <ProgressBar 
+                  animated 
+                  striped 
+                  variant="danger" 
+                  now={100} 
+                  style={{ height: '8px' }}
+                />
+              )}
             </div>
           </div>
         ) : previewData.url ? (

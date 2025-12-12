@@ -138,15 +138,6 @@ export class SectionFactory {
         hasPhotos: true,
         order: 1
       },
-      [this.SECTION_TYPES.RECIPE]: {
-        id: 'recipe',
-        type: 'recipe',
-        label: 'Recette',
-        icon: 'faList',
-        description: 'Paramètres de la recette utilisée',
-        hasPhotos: false,
-        order: 2
-      },
       [this.SECTION_TYPES.LOAD]: {
         id: 'load',
         type: 'load',
@@ -154,7 +145,7 @@ export class SectionFactory {
         icon: 'faCubes',
         description: 'Information sur la charge et le positionnement',
         hasPhotos: true,
-        order: 3
+        order: 2
       },
       [this.SECTION_TYPES.CURVES]: {
         id: 'curves',
@@ -163,16 +154,16 @@ export class SectionFactory {
         icon: 'faChartLine',
         description: 'Graphiques et courbes de température/puissance',
         hasPhotos: true,
-        order: 4
+        order: 3
       },
-      [this.SECTION_TYPES.MICROGRAPHY]: {
-        id: 'micrography',
-        type: 'micrography',
-        label: 'Micrographie',
-        icon: 'faMicroscope',
-        description: 'Images et analyses micrographiques',
-        hasPhotos: true,
-        order: 5
+      [this.SECTION_TYPES.RECIPE]: {
+        id: 'recipe',
+        type: 'recipe',
+        label: 'Recette',
+        icon: 'faList',
+        description: 'Paramètres de la recette utilisée',
+        hasPhotos: false,
+        order: 4
       },
       [this.SECTION_TYPES.CONTROL]: {
         id: 'control',
@@ -180,6 +171,15 @@ export class SectionFactory {
         label: 'Contrôle',
         icon: 'faClipboardCheck',
         description: 'Résultats de mesures et contrôles',
+        hasPhotos: true,
+        order: 5
+      },
+      [this.SECTION_TYPES.MICROGRAPHY]: {
+        id: 'micrography',
+        type: 'micrography',
+        label: 'Micrographie',
+        icon: 'faMicroscope',
+        description: 'Images et analyses micrographiques',
         hasPhotos: true,
         order: 6
       }

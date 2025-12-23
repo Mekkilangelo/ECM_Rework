@@ -5,6 +5,7 @@ import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
+import { isValidNewOption, customFilterOption, sortOptionsByRelevance } from '../../../../../../utils/selectHelpers';
 
 const SpecificationsSection = ({
   formData,
@@ -159,19 +160,22 @@ const SpecificationsSection = ({
                   <Form.Group>
                     <Form.Label className="small">{t('common.unit')}</Form.Label>
                     <CreatableSelect
-                      value={spec.unit 
-                        ? getSelectedOption(hardnessUnitOptions, spec.unit) 
+                      value={spec.unit
+                        ? getSelectedOption(hardnessUnitOptions, spec.unit)
                         : null}
                       onChange={(option) => updateHardnessSpec(index, 'unit', option?.value || '')}
-                      options={hardnessUnitOptions || []}
+                      options={sortOptionsByRelevance(hardnessUnitOptions || [], spec.unit || '')}
                       isClearable={!viewMode}
                       styles={customSelectStyles}
                       placeholder={t('common.selectUnit')}
                       className="react-select-container"
                       classNamePrefix="react-select"
                       isLoading={loading && (!hardnessUnitOptions || !hardnessUnitOptions.length)}
-                      formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}                      onCreateOption={(inputValue) => handleCreateHardnessUnit(inputValue, index, 'hardness')}
+                      formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
+                      onCreateOption={(inputValue) => handleCreateHardnessUnit(inputValue, index, 'hardness')}
                       isDisabled={viewMode}
+                      isValidNewOption={isValidNewOption}
+                      filterOption={customFilterOption}
                     />
                   </Form.Group>
                 </div>
@@ -270,10 +274,11 @@ const SpecificationsSection = ({
                   <Form.Group>
                     <Form.Label className="small">{t('parts.specifications.depthUnit')}</Form.Label>
                     <CreatableSelect
-                      value={spec.depthUnit 
-                        ? getSelectedOption(depthUnitOptions, spec.depthUnit) 
-                        : null}                      onChange={(option) => updateEcdSpec(index, 'depthUnit', option?.value || '')}
-                      options={depthUnitOptions || []}
+                      value={spec.depthUnit
+                        ? getSelectedOption(depthUnitOptions, spec.depthUnit)
+                        : null}
+                      onChange={(option) => updateEcdSpec(index, 'depthUnit', option?.value || '')}
+                      options={sortOptionsByRelevance(depthUnitOptions || [], spec.depthUnit || '')}
                       isClearable={!viewMode}
                       styles={customSelectStyles}
                       placeholder={t('common.selectUnit')}
@@ -283,6 +288,8 @@ const SpecificationsSection = ({
                       formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
                       onCreateOption={(inputValue) => handleCreateDepthUnit(inputValue, index)}
                       isDisabled={viewMode}
+                      isValidNewOption={isValidNewOption}
+                      filterOption={customFilterOption}
                     />
                   </Form.Group>
                 </div>
@@ -308,10 +315,11 @@ const SpecificationsSection = ({
                   <Form.Group>
                     <Form.Label className="small">{t('parts.specifications.hardnessUnit')}</Form.Label>
                     <CreatableSelect
-                      value={spec.hardnessUnit 
-                        ? getSelectedOption(hardnessUnitOptions, spec.hardnessUnit) 
-                        : null}                      onChange={(option) => updateEcdSpec(index, 'hardnessUnit', option?.value || '')}
-                      options={hardnessUnitOptions || []}
+                      value={spec.hardnessUnit
+                        ? getSelectedOption(hardnessUnitOptions, spec.hardnessUnit)
+                        : null}
+                      onChange={(option) => updateEcdSpec(index, 'hardnessUnit', option?.value || '')}
+                      options={sortOptionsByRelevance(hardnessUnitOptions || [], spec.hardnessUnit || '')}
                       isClearable={!viewMode}
                       styles={customSelectStyles}
                       placeholder={t('common.selectUnit')}
@@ -321,6 +329,8 @@ const SpecificationsSection = ({
                       formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
                       onCreateOption={(inputValue) => handleCreateHardnessUnit(inputValue, index, 'ecd')}
                       isDisabled={viewMode}
+                      isValidNewOption={isValidNewOption}
+                      filterOption={customFilterOption}
                     />
                   </Form.Group>
                 </div>

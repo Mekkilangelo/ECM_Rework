@@ -133,6 +133,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             quantity: data.quantity || '',
             description: partData.description || data.description || '',
             steel: partData.steel?.grade || '',  // L'acier est au niveau racine de partData
+            steelId: data.steel_node_id || partData.steel_node_id || null,  // Stocker aussi le steel_node_id
             
             // Dimensions avec gestion de valeurs potentiellement undefined
             length: dimensions?.rectangular?.length || '',

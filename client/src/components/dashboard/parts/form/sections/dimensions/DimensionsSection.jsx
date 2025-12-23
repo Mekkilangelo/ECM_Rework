@@ -2,6 +2,7 @@ import React from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
+import { isValidNewOption, customFilterOption, sortOptionsByRelevance } from '../../../../../../utils/selectHelpers';
 
 const DimensionsSection = ({
   formData,
@@ -139,11 +140,11 @@ const DimensionsSection = ({
             <Form.Label className="small">{t('common.unit')}</Form.Label>
             <CreatableSelect
               name="dimensionsUnit"
-              value={formData.dimensionsUnit 
-                ? getSelectedOption(lengthUnitOptions, formData.dimensionsUnit) 
+              value={formData.dimensionsUnit
+                ? getSelectedOption(lengthUnitOptions, formData.dimensionsUnit)
                 : (Array.isArray(lengthUnitOptions) && lengthUnitOptions.length > 0) ? lengthUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'dimensionsUnit' })}
-              options={lengthUnitOptions || []}
+              options={sortOptionsByRelevance(lengthUnitOptions || [], formData.dimensionsUnit || '')}
               isClearable={!viewMode}
               styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
@@ -153,6 +154,8 @@ const DimensionsSection = ({
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateDimensionsUnit}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </div>
@@ -197,11 +200,11 @@ const DimensionsSection = ({
             <Form.Label className="small">{t('common.unit')}</Form.Label>
             <CreatableSelect
               name="diameterUnit"
-              value={formData.diameterUnit 
-                ? getSelectedOption(lengthUnitOptions, formData.diameterUnit) 
+              value={formData.diameterUnit
+                ? getSelectedOption(lengthUnitOptions, formData.diameterUnit)
                 : (Array.isArray(lengthUnitOptions) && lengthUnitOptions.length > 0) ? lengthUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'diameterUnit' })}
-              options={lengthUnitOptions || []}
+              options={sortOptionsByRelevance(lengthUnitOptions || [], formData.diameterUnit || '')}
               isClearable={!viewMode}
               styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
@@ -211,6 +214,8 @@ const DimensionsSection = ({
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateDiameterUnit}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </div>
@@ -239,11 +244,11 @@ const DimensionsSection = ({
             <Form.Label className="small">{t('common.unit')}</Form.Label>
             <CreatableSelect
               name="weightUnit"
-              value={formData.weightUnit 
-                ? getSelectedOption(weightUnitOptions, formData.weightUnit) 
+              value={formData.weightUnit
+                ? getSelectedOption(weightUnitOptions, formData.weightUnit)
                 : (Array.isArray(weightUnitOptions) && weightUnitOptions.length > 0) ? weightUnitOptions[0] : null}
               onChange={(option) => handleSelectChange(option, { name: 'weightUnit' })}
-              options={weightUnitOptions || []}
+              options={sortOptionsByRelevance(weightUnitOptions || [], formData.weightUnit || '')}
               isClearable={!viewMode}
               styles={customSelectStyles}
               placeholder={t('common.selectUnit')}
@@ -253,6 +258,8 @@ const DimensionsSection = ({
               formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               onCreateOption={handleCreateWeightUnit}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </div>

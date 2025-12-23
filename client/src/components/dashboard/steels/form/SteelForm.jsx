@@ -8,6 +8,7 @@ import useSteelForm from '../hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../context/ThemeContext';
 import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
+import { isValidNewOption, customFilterOption, sortOptionsByRelevance } from '../../../../utils/selectHelpers';
 
 const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
@@ -167,6 +168,8 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                 isLoading={loading && steelFamilyOptions.length === 0}
                 noOptionsMessage={() => t('steels.noFamilyAvailable')}
                 isDisabled={viewMode || loading}
+                isValidNewOption={isValidNewOption}
+                filterOption={customFilterOption}
               />
               {!viewMode && errors.family && (
                 <div className="invalid-feedback" style={{ display: 'block' }}>
@@ -190,6 +193,8 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                 isLoading={loading && steelStandardOptions.length === 0}
                 noOptionsMessage={() => t('steels.noStandardAvailable')}
                 isDisabled={viewMode || loading}
+                isValidNewOption={isValidNewOption}
+                filterOption={customFilterOption}
               />
               {!viewMode && errors.standard && (
                 <div className="invalid-feedback" style={{ display: 'block' }}>
@@ -218,6 +223,8 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                     isLoading={loading && steelGradeOptions.length === 0}
                     noOptionsMessage={() => t('steels.noSteelAvailable')}
                     isDisabled={viewMode || loading}
+                    isValidNewOption={isValidNewOption}
+                    filterOption={customFilterOption}
                   />
                 </div>
                 {!viewMode && (
@@ -284,6 +291,8 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
                         isLoading={loading && elementOptions.length === 0}
                         noOptionsMessage={() => t('steels.noElementAvailable')}
                         isDisabled={viewMode || loading}
+                        isValidNewOption={isValidNewOption}
+                        filterOption={customFilterOption}
                       />
                     </td>
                     <td style={{ paddingRight: '10px' }}>

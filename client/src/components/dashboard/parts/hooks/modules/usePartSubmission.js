@@ -34,6 +34,7 @@ const usePartSubmission = (
     hardnessSpecs: [],
     ecdSpecs: [],
     steel: '',
+    steelId: null,
     description: ''
   };
     const formatDataForApi = () => {

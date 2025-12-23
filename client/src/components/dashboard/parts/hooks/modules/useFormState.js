@@ -33,7 +33,8 @@ const useFormState = () => {
     ecdDepthMax: '',
     ecdHardness: '',
     ecdHardnessUnit: '',
-    steel: ''
+    steel: '',
+    steelId: null
   });
   
   // États pour la gestion des erreurs, du chargement et des messages

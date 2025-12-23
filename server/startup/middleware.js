@@ -37,9 +37,9 @@ function setupMiddleware(app) {
     credentials: true
   }));
 
-  // Parsing du body
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Parsing du body avec limites augmentées pour l'upload de fichiers
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Middlewares de logging
   app.use(requestIdMiddleware);

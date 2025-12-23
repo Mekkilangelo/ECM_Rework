@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Row, Col, Form } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
+import { isValidNewOption, customFilterOption } from '../../../../../../../../utils/selectHelpers';
 
 const TrialTypeSection = ({
   formData,
@@ -60,6 +61,8 @@ const TrialTypeSection = ({
               classNamePrefix="react-select"
               isLoading={loading}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>
@@ -87,6 +90,8 @@ const TrialTypeSection = ({
               classNamePrefix="react-select"
               isLoading={loading}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>
@@ -114,6 +119,8 @@ const TrialTypeSection = ({
               classNamePrefix="react-select"
               isLoading={loading}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>

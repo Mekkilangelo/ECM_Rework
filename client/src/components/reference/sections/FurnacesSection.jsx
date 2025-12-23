@@ -26,9 +26,6 @@ const FurnacesSection = () => {
           <Nav.Link eventKey="cooling_media">{t('references.furnaces.cooling_media')}</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="process_type">{t('references.furnaces.process_type')}</Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
           <Nav.Link eventKey="quench_cell">{t('references.furnaces.quench_cell')}</Nav.Link>
         </Nav.Item>
       </Nav>
@@ -66,13 +63,6 @@ const FurnacesSection = () => {
           </Card>
         </Tab.Pane>
 
-        <Tab.Pane eventKey="process_type">
-          <Card>
-            <Card.Body>
-              <EnumTableContent refTable="ref_process_type" />
-            </Card.Body>
-          </Card>
-        </Tab.Pane>
         <Tab.Pane eventKey="quench_cell">
           <Card>
             <Card.Body>

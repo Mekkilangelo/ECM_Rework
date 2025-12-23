@@ -149,58 +149,24 @@ const SteelSection = ({
                 }
               })
               .join(', ');
-          }            // Formatter les équivalents depuis le champ equivalents (JSON)
+          }            // Formatter les équivalents depuis le champ equivalents (array)
+            // Les équivalents sont déjà récupérés par getSteelById avec toutes les infos nécessaires
             let equivalents = '';
             if (steelData.equivalents && Array.isArray(steelData.equivalents) && steelData.equivalents.length > 0) {
-              // Limiter le nombre de requêtes pour éviter les surcharges
-              const maxEquivalents = 3; // Réduire à 3 équivalents maximum
-              const equivalentsToProcess = steelData.equivalents.slice(0, maxEquivalents);
-              
-              // Récupérer les grades des aciers équivalents
-              const equivalentGrades = [];
-              try {
-                const promises = equivalentsToProcess.map(async (equiv) => {
-                  try {
-                    const steelId = equiv.steel_id || equiv.steelId || equiv.id;
-                    if (steelId) {
-                      const equivResponse = await steelService.getSteel(steelId);
-                      let equivData = null;
-                      
-                      // Utiliser la même logique de parsing simplifiée
-                      if (equivResponse && equivResponse.success && equivResponse.data && equivResponse.data.steel) {
-                        equivData = equivResponse.data.steel;
-                      } else if (equivResponse && equivResponse.data && equivResponse.data.steel) {
-                        equivData = equivResponse.data.steel;
-                      } else if (equivResponse && equivResponse.steel) {
-                        equivData = equivResponse.steel;
-                      } else if (equivResponse && equivResponse.Steel) {
-                        equivData = equivResponse.Steel;
-                      }
-                      
-                      if (equivData && equivData.grade) {
-                        return equivData.grade;
-                      }
-                    }
-                    return null;
-                  } catch (error) {
-                    console.warn('Erreur lors de la récupération de l\'équivalent:', error);
-                    return null;
-                  }
-                });
-                
-                const results = await Promise.all(promises);
-                equivalentGrades.push(...results.filter(grade => grade !== null));
-                
-                if (equivalentGrades.length > 0) {
-                  equivalents = equivalentGrades.join(', ');
-                  if (steelData.equivalents.length > maxEquivalents) {
-                    equivalents += ` (+${steelData.equivalents.length - maxEquivalents} autres)`;
-                  }
-                } else {
-                  equivalents = t('parts.steel.noEquivalents');
+              const maxEquivalents = 5;
+              const equivalentsToDisplay = steelData.equivalents.slice(0, maxEquivalents);
+
+              // Extraire les grades des équivalents (déjà disponibles dans la réponse)
+              const equivalentGrades = equivalentsToDisplay
+                .map(equiv => equiv.grade)
+                .filter(grade => grade);
+
+              if (equivalentGrades.length > 0) {
+                equivalents = equivalentGrades.join(', ');
+                if (steelData.equivalents.length > maxEquivalents) {
+                  equivalents += ` (+${steelData.equivalents.length - maxEquivalents} autres)`;
                 }
-              } catch (error) {
-                console.warn('Erreur lors du traitement des équivalents:', error);
+              } else {
                 equivalents = t('parts.steel.noEquivalents');
               }
             } else {

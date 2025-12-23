@@ -2,6 +2,7 @@ import React from 'react';
 import { Row, Col, Form } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
+import { isValidNewOption, customFilterOption } from '../../../../../../../../utils/selectHelpers';
 
 const FurnaceDataSection = ({
   formData,
@@ -63,6 +64,8 @@ const FurnaceDataSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>
@@ -91,6 +94,8 @@ const FurnaceDataSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>
@@ -119,6 +124,8 @@ const FurnaceDataSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>
@@ -149,6 +156,8 @@ const FurnaceDataSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>
@@ -177,6 +186,8 @@ const FurnaceDataSection = ({
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>

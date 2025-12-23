@@ -2,6 +2,7 @@ import React from 'react';
 import { Form } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
+import { isValidNewOption, customFilterOption } from '../../../../../../utils/selectHelpers';
 
 const BasicInfoSection = ({
   formData,
@@ -53,6 +54,8 @@ const BasicInfoSection = ({
             formatCreateLabel={(inputValue) =>  `${t('common.addOption')} "${inputValue}"`}
             onCreateOption={handleCreateDesignation}
             isDisabled={viewMode}
+            isValidNewOption={isValidNewOption}
+            filterOption={customFilterOption}
           />
           {!viewMode && errors.designation && (
             <div className="text-danger mt-1 small">

@@ -9,6 +9,7 @@ import CollapsibleSection from '../../../../../../../common/CollapsibleSection/C
 import MicrographsSection from './modules/MicrographsSection';
 import ControlLocationSection from './modules/ControlLocationSection';
 import ResultCurveSection from './modules/ResultCurveSection';
+import { isValidNewOption, customFilterOption } from '../../../../../../../../utils/selectHelpers';
 
 /**
  * ResultsDataSection - Version simplifiée et nettoyée
@@ -493,6 +494,8 @@ const ResultsDataSection = forwardRef(({
                                     placeholder={t('common.selectUnit')}
                                     isDisabled={loading || viewMode}
                                     menuPortalTarget={document.body}
+                                    isValidNewOption={isValidNewOption}
+                                    filterOption={customFilterOption}
                                     styles={{
                                       ...selectStyles,
                                       menuPortal: (base) => ({ ...base, zIndex: 9999 }),

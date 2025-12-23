@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Table, Button, Spinner, Alert, Modal, Card, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus, faList, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -54,12 +54,7 @@ const EnumTableContent = ({ table, column, refTable }) => {
     return null;
   }, [refTable, table, column]);
 
-  useEffect(() => {
-    if (activeRefTable) {
-      fetchReferenceValues();
-    }
-  }, [activeRefTable]);
-  const fetchReferenceValues = async () => {
+  const fetchReferenceValues = useCallback(async () => {
     
     setLoading(true);
     try {
@@ -83,7 +78,24 @@ const EnumTableContent = ({ table, column, refTable }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeRefTable]);
+
+  useEffect(() => {
+    if (activeRefTable) {
+      fetchReferenceValues();
+    }
+  }, [activeRefTable, fetchReferenceValues]);
+
+  // S'abonner aux changements de la table pour re-render automatiquement
+  useEffect(() => {
+    if (!activeRefTable) return;
+
+    const unsubscribe = referenceService.subscribe(activeRefTable, () => {
+      fetchReferenceValues();
+    });
+
+    return unsubscribe;
+  }, [activeRefTable, fetchReferenceValues]);
 
   const checkValueUsage = async (value) => {
     try {

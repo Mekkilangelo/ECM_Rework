@@ -85,9 +85,15 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
       await refreshSteels();
     }
     // Sélectionner automatiquement le nouvel acier
-    if (newSteel && newSteel.grade) {
+    // newSteel contient l'objet complet retourné par getSteelById
+    const steelData = newSteel.steel || newSteel;
+    if (steelData && steelData.grade) {
       handleSelectChange(
-        { value: newSteel.grade, label: `${newSteel.grade} (${newSteel.standard || ''})` },
+        {
+          value: steelData.grade,
+          label: `${steelData.grade} (${steelData.standard || ''})`,
+          nodeId: newSteel.id || steelData.node_id  // Inclure le node_id
+        },
         { name: 'steel' }
       );
     }

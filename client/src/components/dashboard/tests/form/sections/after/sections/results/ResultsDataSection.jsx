@@ -499,8 +499,8 @@ const ResultsDataSection = forwardRef(({
                                     styles={{
                                       ...selectStyles,
                                       menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                      control: (provided) => ({
-                                        ...provided,
+                                      control: (provided, state) => ({
+                                        ...(selectStyles.control ? selectStyles.control(provided, state) : provided),
                                         minHeight: '31px',
                                         height: '31px',
                                         fontSize: '0.875rem',
@@ -509,17 +509,17 @@ const ResultsDataSection = forwardRef(({
                                           cursor: 'default'
                                         } : {})
                                       }),
-                                      valueContainer: (provided) => ({
-                                        ...provided,
+                                      valueContainer: (provided, state) => ({
+                                        ...(selectStyles.valueContainer ? selectStyles.valueContainer(provided, state) : provided),
                                         height: '31px',
                                         padding: '0 8px'
                                       }),
-                                      input: (provided) => ({
-                                        ...provided,
+                                      input: (provided, state) => ({
+                                        ...(selectStyles.input ? selectStyles.input(provided, state) : provided),
                                         margin: '0px'
                                       }),
-                                      indicatorsContainer: (provided) => ({
-                                        ...provided,
+                                      indicatorsContainer: (provided, state) => ({
+                                        ...(selectStyles.indicatorsContainer ? selectStyles.indicatorsContainer(provided, state) : provided),
                                         height: '31px'
                                       }),
                                       ...(viewMode ? {

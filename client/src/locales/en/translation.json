@@ -994,6 +994,7 @@
         "associateError": "Error while associating files:",
         "import": "Import {{name}}"
       },      "results": {
+        "title": "Results",
         "resultsLabel": "Results",
         "addResult": "Add result",
         "resultNumber": "Result #{{number}}",
@@ -1024,6 +1025,7 @@
         "toothRoot": "Tooth root",
         "comment": "Comment",
         "selectPosition": "Position",
+        "enterPosition": "Enter position",
         "enterValue": "Value",
         "enterDistance": "Distance",
         "noUnitsAvailable": "No hardness units available. Using \"HV\" as default.",

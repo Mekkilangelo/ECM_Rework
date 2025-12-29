@@ -20,11 +20,27 @@ const RangeInputWithUnit = ({
   step = '0.01',
   className = ''
 }) => {
-  // Styles personnalisés pour react-select (cohérents avec TrialFilters)
+  // Détection du thème sombre
+  const isDarkTheme = document.documentElement.classList.contains('dark-theme');
+
+  // Couleurs adaptées au thème
+  const themeColors = {
+    controlBg: isDarkTheme ? '#333333' : 'white',
+    controlBorder: isDarkTheme ? '#555555' : '#dee2e6',
+    controlBorderFocus: '#dc3545',
+    menuBg: isDarkTheme ? '#333333' : 'white',
+    optionBg: isDarkTheme ? '#333333' : 'white',
+    optionText: isDarkTheme ? '#e0e0e0' : '#212529',
+    optionHoverBg: isDarkTheme ? 'rgba(220, 53, 69, 0.2)' : '#f8d7da',
+    inputText: isDarkTheme ? '#e0e0e0' : '#212529',
+  };
+
+  // Styles personnalisés pour react-select - Compatible dark mode
   const customSelectStyles = {
     control: (provided, state) => ({
       ...provided,
-      borderColor: state.isFocused ? '#dc3545' : '#dee2e6',
+      backgroundColor: themeColors.controlBg,
+      borderColor: state.isFocused ? themeColors.controlBorderFocus : themeColors.controlBorder,
       boxShadow: state.isFocused ? '0 0 0 0.2rem rgba(220, 53, 69, 0.25)' : 'none',
       '&:hover': {
         borderColor: '#dc3545',
@@ -41,6 +57,11 @@ const RangeInputWithUnit = ({
     input: (provided) => ({
       ...provided,
       margin: '0px',
+      color: themeColors.inputText
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: themeColors.inputText
     }),
     indicatorsContainer: (provided) => ({
       ...provided,
@@ -48,13 +69,14 @@ const RangeInputWithUnit = ({
     }),
     menu: (provided) => ({
       ...provided,
+      backgroundColor: themeColors.menuBg,
       zIndex: 9999,
       fontSize: '0.85rem'
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#dc3545' : state.isFocused ? '#f8d7da' : 'white',
-      color: state.isSelected ? 'white' : '#212529',
+      backgroundColor: state.isSelected ? '#dc3545' : state.isFocused ? themeColors.optionHoverBg : themeColors.optionBg,
+      color: state.isSelected ? 'white' : themeColors.optionText,
       '&:active': {
         backgroundColor: '#dc3545',
       }

@@ -93,22 +93,68 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   ], []);
 
   // ------ UTILITAIRES & STYLES ------
-  
-  // Style pour les composants Select
-  const selectStyles = useMemo(() => ({
-    control: (provided) => ({
-      ...provided,
-      borderColor: '#ced4da',
-      boxShadow: 'none',
-      '&:hover': {
-        borderColor: '#80bdff'
-      }
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 9999
-    })
-  }), []);
+
+  // Style pour les composants Select - Compatible dark mode
+  const selectStyles = useMemo(() => {
+    // Détection du thème sombre
+    const isDarkTheme = document.documentElement.classList.contains('dark-theme');
+
+    // Couleurs adaptées au thème
+    const themeColors = {
+      controlBg: isDarkTheme ? '#333333' : 'white',
+      controlBorder: isDarkTheme ? '#555555' : '#ced4da',
+      controlBorderHover: isDarkTheme ? '#666666' : '#80bdff',
+      menuBg: isDarkTheme ? '#333333' : 'white',
+      optionBg: isDarkTheme ? '#333333' : 'white',
+      optionText: isDarkTheme ? '#e0e0e0' : '#212529',
+      optionHoverBg: isDarkTheme ? '#343a40' : '#f8f9fa',
+      singleValueText: isDarkTheme ? '#e0e0e0' : '#212529',
+      placeholderText: isDarkTheme ? '#b0b0b0' : '#6c757d',
+      indicatorColor: isDarkTheme ? '#b0b0b0' : '#6c757d',
+    };
+
+    return {
+      control: (provided) => ({
+        ...provided,
+        backgroundColor: themeColors.controlBg,
+        borderColor: themeColors.controlBorder,
+        boxShadow: 'none',
+        '&:hover': {
+          borderColor: themeColors.controlBorderHover
+        }
+      }),
+      menu: (provided) => ({
+        ...provided,
+        backgroundColor: themeColors.menuBg,
+        zIndex: 9999
+      }),
+      option: (provided, state) => ({
+        ...provided,
+        backgroundColor: state.isFocused ? themeColors.optionHoverBg : themeColors.optionBg,
+        color: themeColors.optionText
+      }),
+      singleValue: (provided) => ({
+        ...provided,
+        color: themeColors.singleValueText
+      }),
+      placeholder: (provided) => ({
+        ...provided,
+        color: themeColors.placeholderText
+      }),
+      input: (provided) => ({
+        ...provided,
+        color: themeColors.optionText
+      }),
+      dropdownIndicator: (provided) => ({
+        ...provided,
+        color: themeColors.indicatorColor
+      }),
+      clearIndicator: (provided) => ({
+        ...provided,
+        color: themeColors.indicatorColor
+      })
+    };
+  }, []);
   
   // Fonction utilitaire pour obtenir l'option sélectionnée
   const getSelectedOption = useCallback((options, value) => {

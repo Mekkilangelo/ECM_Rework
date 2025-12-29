@@ -685,6 +685,174 @@
   background-color: var(--dark-bg-secondary) !important;
 }
 
+/* FileUploader - Dark mode support */
+.dark-theme .upload-dropzone {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  border-color: var(--dark-input-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .upload-dropzone.active {
+  background: linear-gradient(135deg, rgba(107, 197, 164, 0.2) 0%, rgba(107, 197, 164, 0.3) 100%) !important;
+  border-color: #6bc5a4 !important;
+}
+
+.dark-theme .upload-dropzone:hover:not(.disabled) {
+  background: linear-gradient(135deg, var(--dark-bg-quaternary) 0%, var(--dark-bg-tertiary) 100%) !important;
+  border-color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .thumbnail-container {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .thumbnail-container.non-image {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .selected-files h6,
+.dark-theme .uploaded-files h6 {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Search Components - Dark mode support */
+.dark-theme .entity-type-card {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .entity-tabs .nav-item .nav-link.active {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .filter-tab-card .card-body {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark-theme .entity-chip {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .entity-chip:hover {
+  background-color: var(--dark-bg-quaternary) !important;
+}
+
+.dark-theme .entity-type-item {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .entity-type-item:hover {
+  background-color: var(--dark-bg-quaternary) !important;
+}
+
+/* Active Filters - Dark mode support */
+.dark-theme .active-filters {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-left-color: var(--dark-accent) !important;
+}
+
+.dark-theme .active-filter-item {
+  background-color: var(--dark-bg-quaternary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .active-filter-item:hover {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark-theme .filter-remove {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Search Results - Dark mode support */
+.dark-theme .search-results-tabs .nav-item .nav-link.active {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .search-results-card .card-header {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark-theme .search-result-item:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Trial Form Navigation - Dark mode support */
+.dark-theme .trial-navigation,
+.dark-theme .trial-external-navigation {
+  background: linear-gradient(135deg, var(--dark-bg-secondary) 0%, var(--dark-bg-tertiary) 100%) !important;
+}
+
+.dark-theme .trial-nav-button:not(.active) {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  color: var(--dark-text-primary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .trial-nav-button:not(.active):hover {
+  background: linear-gradient(135deg, var(--dark-bg-quaternary) 0%, var(--dark-bg-tertiary) 100%) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .trial-content {
+  background: var(--dark-bg-secondary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Report Configuration - Dark mode support */
+.dark-theme .report-actions-panel {
+  background: linear-gradient(135deg, var(--dark-bg-secondary) 0%, var(--dark-bg-tertiary) 100%) !important;
+}
+
+.dark-theme .report-stats-box {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .report-stats-label {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .report-stats-value {
+  color: var(--dark-accent) !important;
+}
+
+/* Miscellaneous Components - Dark mode support */
+.dark-theme .results-toolbar {
+  background: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .range-input-label {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .range-input-unit {
+  background-color: var(--dark-bg-quaternary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .trial-card .card-footer {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark-theme .nav-tabs-modern .nav-link.active {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) var(--dark-border) var(--dark-bg-secondary) !important;
+}
+
 /* Bouton de basculement du thème */
 .theme-toggle-btn {
   display: flex;

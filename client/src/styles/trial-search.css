@@ -26,9 +26,9 @@
 
 /* Carte de recherche */
 .search-card {
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--collapsible-border);
   border-radius: 0.5rem;
-  background: white;
+  background: var(--collapsible-bg-collapsed);
   transition: box-shadow 0.2s ease;
 }
 
@@ -39,12 +39,12 @@
 .search-input-group {
   border-radius: 0.375rem;
   overflow: hidden;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--collapsible-border);
 }
 
 .search-input-group .input-group-text {
   border: none;
-  background: white;
+  background: var(--collapsible-bg-collapsed);
 }
 
 .search-input-group .form-control {
@@ -94,13 +94,13 @@
 .trial-filters .accordion-button {
   padding: 0.875rem 1.125rem;
   font-size: 0.95rem;
-  background: #f8f9fa;
+  background: var(--accordion-button-bg);
   border: none;
 }
 
 .trial-filters .accordion-button:not(.collapsed) {
-  background: white;
-  color: #212529;
+  background: var(--accordion-button-active-bg);
+  color: var(--text-primary, #212529);
   box-shadow: none;
 }
 
@@ -111,7 +111,7 @@
 
 .trial-filters .accordion-body {
   padding: 1.25rem;
-  background: white;
+  background: var(--accordion-body-bg);
 }
 
 /* Form labels plus discrets */

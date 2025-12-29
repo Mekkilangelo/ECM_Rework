@@ -222,6 +222,18 @@
   --dark-table-border: #444444;
   --dark-modal-bg: #2c2c2c;
   --dark-sidebar-bg: linear-gradient(180deg, #121212 0%, #1a1a1a 100%);
+
+  /* Variables pour collapsibles et accordions - Light mode */
+  --collapsible-bg-collapsed: #ffffff;
+  --collapsible-bg-expanded: #fff8f8;
+  --collapsible-header-bg: #ffffff;
+  --collapsible-border: #dee2e6;
+
+  /* Variables pour accordions Bootstrap - Light mode */
+  --accordion-bg: #fff;
+  --accordion-button-bg: #f8f9fa;
+  --accordion-button-active-bg: #fff;
+  --accordion-body-bg: #fff;
 }
 
 /* Mode sombre pour l'application */
@@ -263,6 +275,18 @@
   /* Styles globaux */
   background-color: var(--dark-bg-primary) !important;
   color: var(--dark-text-primary) !important;
+
+  /* Variables pour collapsibles - Dark mode */
+  --collapsible-bg-collapsed: var(--dark-bg-secondary);
+  --collapsible-bg-expanded: var(--dark-bg-tertiary);
+  --collapsible-header-bg: var(--dark-bg-secondary);
+  --collapsible-border: var(--dark-border);
+
+  /* Variables pour accordions Bootstrap - Dark mode */
+  --accordion-bg: var(--dark-bg-secondary);
+  --accordion-button-bg: var(--dark-bg-tertiary);
+  --accordion-button-active-bg: var(--dark-bg-secondary);
+  --accordion-body-bg: var(--dark-bg-secondary);
 }
 
 /* Corps de page et conteneur principal */
@@ -629,6 +653,36 @@
 
 .dark-theme .bg-white {
   background-color: var(--background-secondary) !important;
+}
+
+/* Accordion Bootstrap - Support dark mode */
+.dark-theme .accordion-item {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .accordion-button {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .accordion-button:not(.collapsed) {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .accordion-button:focus {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+}
+
+.dark-theme .accordion-body {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .accordion-collapse {
+  background-color: var(--dark-bg-secondary) !important;
 }
 
 /* Bouton de basculement du thème */

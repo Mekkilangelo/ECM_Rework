@@ -23,7 +23,8 @@ i18n
   // Initialise i18next
   .init({
     resources,
-    fallbackLng: 'fr', // Langue par défaut
+    lng: 'en', // Langue initiale: anglais
+    fallbackLng: 'en', // Langue par défaut: anglais
     debug: process.env.NODE_ENV === 'development',
     interpolation: {
       escapeValue: false, // React escape déjà par défaut

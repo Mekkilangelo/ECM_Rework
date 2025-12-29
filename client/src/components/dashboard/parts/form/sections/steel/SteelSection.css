@@ -1,7 +1,7 @@
 /* Styles pour la section d'informations d'acier */
 .steel-info-container {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 1px solid #dee2e6;
+  background: linear-gradient(135deg, var(--collapsible-bg-collapsed) 0%, var(--collapsible-bg-expanded) 100%);
+  border: 1px solid var(--collapsible-border);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -17,8 +17,8 @@
 }
 
 .steel-info-header:hover {
-  background-color: #e9ecef !important;
-  border-color: #adb5bd !important;
+  background-color: var(--collapsible-bg-expanded) !important;
+  border-color: var(--collapsible-border) !important;
 }
 
 .steel-info-header .chevron-icon {
@@ -39,8 +39,8 @@
 }
 
 .steel-info-container .info-value {
-  background-color: #ffffff;
-  border: 1px solid #ced4da;
+  background-color: var(--collapsible-bg-collapsed);
+  border: 1px solid var(--collapsible-border);
   border-radius: 4px;
   padding: 8px 12px;
   min-height: 38px;
@@ -102,4 +102,25 @@
 
 .steel-info-container .text-center {
   padding: 1.5rem 1rem;
+}
+
+/* Dark mode overrides */
+.dark-theme .steel-info-container {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .steel-info-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.dark-theme .steel-info-container .text-primary {
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .steel-info-container h6 {
+  color: var(--dark-text-primary);
+}
+
+.dark-theme .steel-info-container .info-value:hover {
+  border-color: var(--dark-accent);
 }

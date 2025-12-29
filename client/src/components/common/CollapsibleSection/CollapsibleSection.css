@@ -1,0 +1,211 @@
+/* CollapsibleSection.css - Styles pour sections collapsibles avec support dark mode */
+
+/* Styles de base pour toutes les sections collapsibles */
+.collapsible-section {
+  transition: all 0.2s ease;
+  margin-bottom: 0.75rem;
+  border: 1px solid;
+}
+
+/* En-tête collapsible */
+.collapsible-header {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+/* Niveau 0 - Section principale (rouge #dc3545) */
+.collapsible-section.level-0 {
+  border-color: #dc3545;
+}
+
+.collapsible-section.level-0.expanded {
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+.dark-theme .collapsible-section.level-0.expanded {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.collapsible-section.level-0 .collapsible-header {
+  padding: 0.9rem 1.2rem;
+}
+
+.collapsible-section.level-0 .collapsible-header.collapsed {
+  background-color: var(--collapsible-header-bg);
+  border-bottom: none;
+}
+
+.collapsible-section.level-0 .collapsible-header.expanded {
+  background-color: #dc3545;
+  border-bottom: 1px solid #dc3545;
+}
+
+.collapsible-section.level-0 .collapsible-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.collapsible-section.level-0 .collapsible-title.collapsed {
+  color: #dc3545;
+}
+
+.dark-theme .collapsible-section.level-0 .collapsible-title.collapsed {
+  color: var(--dark-accent);
+}
+
+.collapsible-section.level-0 .collapsible-title.expanded {
+  color: #ffffff;
+}
+
+.collapsible-section.level-0 .collapsible-body {
+  padding: 1.2rem;
+  background-color: var(--collapsible-bg-expanded);
+}
+
+/* Niveau 1 - Section secondaire (rouge clair #e35d6a) */
+.collapsible-section.level-1 {
+  border-color: #e35d6a;
+  margin-left: 0.25rem;
+}
+
+.collapsible-section.level-1 .collapsible-header {
+  padding: 0.8rem 1.1rem;
+}
+
+.collapsible-section.level-1 .collapsible-header.collapsed {
+  background-color: var(--collapsible-header-bg);
+  border-bottom: none;
+}
+
+.collapsible-section.level-1 .collapsible-header.expanded {
+  background-color: #e35d6a;
+  border-bottom: 1px solid #e35d6a;
+}
+
+.collapsible-section.level-1 .collapsible-title {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.collapsible-section.level-1 .collapsible-title.collapsed {
+  color: #e35d6a;
+}
+
+.dark-theme .collapsible-section.level-1 .collapsible-title.collapsed {
+  color: #e35d6a;
+}
+
+.collapsible-section.level-1 .collapsible-title.expanded {
+  color: #ffffff;
+}
+
+.collapsible-section.level-1 .collapsible-body {
+  padding: 1.1rem;
+  background-color: var(--collapsible-bg-collapsed);
+}
+
+/* Niveau 2 - Section tertiaire (rose clair #ea858f) */
+.collapsible-section.level-2 {
+  border-color: #ea858f;
+  margin-left: 0.5rem;
+}
+
+.collapsible-section.level-2 .collapsible-header {
+  padding: 0.7rem 1rem;
+}
+
+.collapsible-section.level-2 .collapsible-header.collapsed {
+  background-color: var(--collapsible-header-bg);
+  border-bottom: none;
+}
+
+.collapsible-section.level-2 .collapsible-header.expanded {
+  background-color: #ea858f;
+  border-bottom: 1px solid #ea858f;
+}
+
+.collapsible-section.level-2 .collapsible-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.collapsible-section.level-2 .collapsible-title.collapsed {
+  color: #ea858f;
+}
+
+.dark-theme .collapsible-section.level-2 .collapsible-title.collapsed {
+  color: #ea858f;
+}
+
+.collapsible-section.level-2 .collapsible-title.expanded {
+  color: #ffffff;
+}
+
+.collapsible-section.level-2 .collapsible-body {
+  padding: 1rem;
+  background-color: var(--collapsible-bg-collapsed);
+}
+
+/* Niveau 3 - Section quaternaire (rose très clair #f1adb4) */
+.collapsible-section.level-3 {
+  border-color: #f1adb4;
+  margin-left: 0.75rem;
+}
+
+.collapsible-section.level-3 .collapsible-header {
+  padding: 0.6rem 0.9rem;
+}
+
+.collapsible-section.level-3 .collapsible-header.collapsed {
+  background-color: var(--collapsible-header-bg);
+  border-bottom: none;
+}
+
+.collapsible-section.level-3 .collapsible-header.expanded {
+  background-color: #f1adb4;
+  border-bottom: 1px solid #f1adb4;
+}
+
+.collapsible-section.level-3 .collapsible-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.collapsible-section.level-3 .collapsible-title.collapsed {
+  color: #f1adb4;
+}
+
+.dark-theme .collapsible-section.level-3 .collapsible-title.collapsed {
+  color: #f1adb4;
+}
+
+.collapsible-section.level-3 .collapsible-title.expanded {
+  color: #ffffff;
+}
+
+.collapsible-section.level-3 .collapsible-body {
+  padding: 0.9rem;
+  background-color: var(--collapsible-bg-collapsed);
+}
+
+/* Icônes de toggle */
+.collapsible-icon {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.collapsible-icon.collapsed {
+  color: #dc3545;
+  transform: scale(1);
+}
+
+.dark-theme .collapsible-icon.collapsed {
+  color: var(--dark-accent);
+}
+
+.collapsible-icon.expanded {
+  color: #ffffff;
+  transform: scale(1.1);
+}

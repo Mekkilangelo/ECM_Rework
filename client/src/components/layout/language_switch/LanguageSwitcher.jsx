@@ -10,8 +10,7 @@ const LanguageSwitcher = () => {
   
   // Fonction pour changer la langue
   const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng);
-    localStorage.setItem('preferredLanguage', lng);
+    i18n.changeLanguage(lng); // i18next stocke automatiquement dans localStorage
     setIsOpen(false); // Ferme le dropdown après sélection
   };
   

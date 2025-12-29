@@ -20,8 +20,8 @@
 }
 
 .trial-filters .accordion-button {
-  background-color: #f8f9fa;
-  color: #212529;
+  background-color: var(--accordion-button-bg);
+  color: var(--text-primary, #212529);
   font-size: 1rem;
   padding: 1rem 1.25rem;
   border-radius: 0.5rem !important;
@@ -29,10 +29,10 @@
 }
 
 .trial-filters .accordion-button:not(.collapsed) {
-  background-color: #fff;
+  background-color: var(--accordion-button-active-bg);
   color: #dc3545;
   box-shadow: none;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--collapsible-border);
 }
 
 .trial-filters .accordion-button:focus {
@@ -45,12 +45,12 @@
 }
 
 .trial-filters .accordion-button:hover {
-  background-color: #e9ecef;
+  background-color: var(--collapsible-bg-expanded);
 }
 
 .trial-filters .accordion-body {
   padding: 1.5rem;
-  background-color: #fff;
+  background-color: var(--accordion-body-bg);
 }
 
 /* Labels des formulaires */

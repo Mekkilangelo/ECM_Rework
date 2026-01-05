@@ -1297,5 +1297,44 @@
       "position_type": "Position Type",
       "process_type": "Process Type"
     }
+  },
+
+  "logs": {
+    "title": "Activity Log",
+    "quickFilters": "Quick filters",
+    "all": "All",
+    "today": "Today",
+    "last24h": "24 hours",
+    "last7days": "7 days",
+    "errorsOnly": "Errors",
+    "errorsAndWarnings": "Err + Warn",
+    "hideSystemLogs": "Hide system logs",
+    "noUserLogs": "No user logs",
+    "actions": {
+      "userLogin": "User login",
+      "userLogout": "User logout",
+      "loginFailed": "Login failed",
+      "passwordChange": "Password change",
+      "clientCreate": "Create client",
+      "clientUpdate": "Update client",
+      "clientDelete": "Delete client",
+      "closureCreate": "Create order",
+      "closureUpdate": "Update order",
+      "closureDelete": "Delete order",
+      "partCreate": "Create part",
+      "partUpdate": "Update part",
+      "partDelete": "Delete part",
+      "trialCreate": "Create trial",
+      "trialUpdate": "Update trial",
+      "trialDelete": "Delete trial",
+      "reportGenerate": "Generate report",
+      "reportDownload": "Download report",
+      "fileUpload": "Upload file",
+      "fileDelete": "Delete file",
+      "systemStart": "System start",
+      "systemError": "System error",
+      "databaseError": "Database error",
+      "apiError": "API error"
+    }
   }
 }

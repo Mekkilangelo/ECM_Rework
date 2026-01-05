@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Row, Col, Form } from 'react-bootstrap';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
@@ -135,6 +135,7 @@ const RecipeDataSection = ({
           selectStyles={selectStyles}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}
+          trial={trial}
         />
       </CollapsibleSection>
       

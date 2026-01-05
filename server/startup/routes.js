@@ -22,6 +22,7 @@ const searchRoutes = require('../routes/search');
 const systemRoutes = require('../routes/system');
 const logRoutes = require('../routes/logs');
 const reportRoutes = require('../routes/reports');
+const recipeRoutes = require('../routes/recipe');
 
 /**
  * Monter toutes les routes de l'API
@@ -43,6 +44,7 @@ function setupRoutes(app) {
   app.use('/api/system', systemRoutes);
   app.use('/api/logs', logRoutes);
   app.use('/api/reports', reportRoutes);
+  app.use('/api/recipe', recipeRoutes);
 
   // Route racine de l'API
   app.get('/api', (req, res) => {

@@ -48,7 +48,9 @@
     "clickToAddValues": "Cliquez sur \"Ajouter une nouvelle valeur\" pour ajouter des valeurs à cette énumération",
     "valueUsedWarning": "Cette valeur est utilisée dans {{count}} enregistrement(s). La modification mettra à jour tous ces enregistrements.",
     "confirmDeletion": "Confirmer la suppression",
-    "usageDetails": "Détails de l'utilisation"
+    "usageDetails": "Détails de l'utilisation",
+    "error": "Erreur",
+    "success": "Succès"
   },
 
   "copyPaste": {
@@ -922,7 +924,9 @@
           "durationTotals": "Totaux de durée",
           "totalStepsSeconds": "Total étapes (s)",
           "totalStepsFormatted": "Total étapes (m:s)",
-          "totalGas": "Total"
+          "totalGas": "Total",
+          "predictRecipe": "Prédire la recette",
+          "predicting": "Prédiction en cours..."
         },
         
         "graphs": {

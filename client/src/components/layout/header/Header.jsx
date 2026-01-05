@@ -12,6 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../../context/ThemeContext'; // Import du contexte de thème
 import LanguageSwitcher from '../language_switch/LanguageSwitcher'; // Importez le composant personnalisé
 import ThemeToggle from '../../common/ThemeToggle/ThemeToggle'; // Import du composant ThemeToggle
 import ChangePasswordModal from '../../common/ChangePasswordModal/ChangePasswordModal';
@@ -19,6 +20,7 @@ import '../../../styles/header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const { isDarkTheme } = useTheme(); // Utiliser le contexte du thème
   const [searchTerm, setSearchTerm] = useState('');
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const { t } = useTranslation();
@@ -47,7 +49,7 @@ const Header = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+    <nav className={`navbar navbar-expand ${isDarkTheme ? 'navbar-dark' : 'navbar-light bg-white'} topbar mb-4 static-top shadow`}>
       {/* Sidebar Toggle (Topbar) - Mobile */}
       <button id="sidebarToggleTop" className="btn btn-link d-md-none rounded-circle mr-3">
         <FontAwesomeIcon icon={faBars} />

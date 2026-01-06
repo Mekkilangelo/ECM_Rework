@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import useGenericFormState from '../../../../../hooks/useGenericFormState';
 
+/**
+ * Hook pour gérer l'état du formulaire Test/Trial
+ * Utilise le hook générique useGenericFormState avec configuration spécifique
+ */
 const useFormState = () => {
   // Obtenir la date du jour au format YYYY-MM-DD pour le champ de type date
   const today = new Date().toISOString().split('T')[0];
 
-  // État du formulaire
-  const [formData, setFormData] = useState({
+  return useGenericFormState(
+    {
     // Informations de base
     name: '',
     trialDate: today, // Préremplir avec la date du jour
@@ -162,24 +166,13 @@ const useFormState = () => {
           ]
         }
       ]
+    },
+    {
+      entityName: 'Trial',
+      withFetching: false,
+      withParentId: false
     }
-  });
-  
-  // États pour la gestion des erreurs et du chargement
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
-  
-  return {
-    formData,
-    setFormData,
-    errors,
-    setErrors,
-    loading,
-    setLoading,
-    message,
-    setMessage
-  };
+  );
 };
 
 export default useFormState;

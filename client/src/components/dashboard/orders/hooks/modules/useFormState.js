@@ -1,33 +1,23 @@
-import { useState } from 'react';
+import useGenericFormState from '../../../../../hooks/useGenericFormState';
 
+/**
+ * Hook pour gérer l'état du formulaire Order
+ * Utilise le hook générique useGenericFormState avec configuration spécifique
+ */
 const useFormState = () => {
-  const [formData, setFormData] = useState({
-    request_date: new Date().toISOString().split('T')[0],
-    description: '',
-    commercial: '',
-    contacts: [{ name: '', phone: '', email: '' }]
-  });
-  
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
-  const [fetchingOrder, setFetchingOrder] = useState(false);
-  const [parentId, setParentId] = useState(null);
-  
-  return {
-    formData,
-    setFormData,
-    errors,
-    setErrors,
-    loading,
-    setLoading,
-    message,
-    setMessage,
-    fetchingOrder,
-    setFetchingOrder,
-    parentId,
-    setParentId
-  };
+  return useGenericFormState(
+    {
+      request_date: new Date().toISOString().split('T')[0],
+      description: '',
+      commercial: '',
+      contacts: [{ name: '', phone: '', email: '' }]
+    },
+    {
+      entityName: 'Order',
+      withFetching: true,
+      withParentId: true
+    }
+  );
 };
 
 export default useFormState;

@@ -1,6 +1,7 @@
 import api, { setIntentionalLogout } from './api';
 import { jwtDecode } from 'jwt-decode';
 import { authConfig, SESSION_INACTIVITY_TIMEOUT_SECONDS } from '../config';
+import logger from '../utils/logger';
 
 /**
  * Service d'authentification optimisé
@@ -66,7 +67,7 @@ const authService = {
         throw new Error('Token JWT invalide reçu du serveur');
       }
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error.message);
+      logger.auth.error('login', error, { username });
       throw error;
     }
   },
@@ -126,7 +127,7 @@ const authService = {
           authService.refreshToken();
         }
       } catch (error) {
-        console.error('Erreur lors de la vérification du token:', error);
+        logger.auth.error('token verification', error);
         authService.handleSessionExpired();
       }
     }, authService.tokenCheckInterval);// Variables pour suivre l'activité de l'utilisateur
@@ -159,7 +160,7 @@ const authService = {
           }
         }
       } catch (error) {
-        console.warn('Erreur de heartbeat:', error.message);        // En cas d'erreur 401, la session est expirée
+        logger.warn('auth', 'Heartbeat error', { message: error.message });        // En cas d'erreur 401, la session est expirée
         if (error.response && error.response.status === 401) {
           // Nettoyer les écouteurs d'événements avant la redirection
           authService.activityEvents.forEach(event => {
@@ -250,10 +251,10 @@ const authService = {
         }
       }
       
-      console.warn('Format de réponse invalide lors du rafraîchissement du token:', response.data);
+      logger.warn('auth', 'Invalid response format during token refresh', response.data);
       return null;
     } catch (error) {
-      console.error('Erreur lors du rafraîchissement du token:', error);
+      logger.auth.error('token refresh', error);
       if (error.response?.status === 401) {
         // Si le token est définitivement expiré, on ne considère pas cela comme une erreur critique
         // mais on laisse le système gérer naturellement cette expiration
@@ -293,7 +294,7 @@ const authService = {
       
       return token;
     } catch (error) {
-      console.error('Erreur lors de la récupération du token:', error);
+      logger.auth.error('getToken', error);
       return null;
     }
   },
@@ -309,7 +310,7 @@ const authService = {
       
       return JSON.parse(userString);
     } catch (error) {
-      console.error('Erreur lors de la récupération des données utilisateur:', error);
+      logger.auth.error('getUser', error);
       return null;
     }
   },
@@ -342,7 +343,7 @@ const authService = {
       
       return response.data;
     } catch (error) {
-      console.error('Erreur lors du changement de mot de passe:', error);
+      logger.auth.error('changePassword', error);
       throw error;
     }
   }

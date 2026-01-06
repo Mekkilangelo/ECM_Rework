@@ -166,13 +166,14 @@ const useFormState = () => {
           ]
         }
       ]
-    },
-    {
-      entityName: 'Trial',
-      withFetching: false,
-      withParentId: false
     }
-  );
+  },
+  {
+    entityName: 'Trial',
+    withFetching: false,
+    withParentId: false
+  }
+);
 };
 
 export default useFormState;

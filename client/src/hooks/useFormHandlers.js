@@ -1,6 +1,7 @@
 // src/hooks/useFormHandlers.js
 import { useCallback } from 'react';
 import referenceService from '../services/referenceService';
+import logger from '../utils/logger';
 
 // Mapping des anciennes colonnes ENUM vers les nouvelles tables de référence
 const ENUM_TO_REF_TABLE_MAPPING = {
@@ -37,29 +38,29 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
     const { name, value } = e.target;
     
     // Debug : tracer les mises à jour des données curve et resultsData
-    if (process.env.NODE_ENV === 'development' && (name === 'resultsData' || (name && name.includes('curveData')))) {
-      console.log('🔧 useFormHandlers - handleChange reçu:', {
+    if (name === 'resultsData' || (name && name.includes('curveData'))) {
+      logger.debug('forms', 'useFormHandlers - handleChange received', {
         fieldName: name,
         valueType: typeof value,
         isResultsData: name === 'resultsData',
         isCurveData: name && name.includes('curveData'),
         hasValue: !!value
       });
-      
+
       if (name === 'resultsData' && value) {
-        console.log('📊 Analyse des données resultsData reçues:', {
+        logger.debug('forms', 'Analyzing resultsData', {
           hasResults: !!value.results,
           resultsCount: value.results?.length || 0,
           firstResultSamples: value.results?.[0]?.samples?.length || 0
         });
-        
+
         // Vérifier les curveData dans chaque sample
         if (value.results) {
           value.results.forEach((result, rIndex) => {
             if (result.samples) {
               result.samples.forEach((sample, sIndex) => {
                 if (sample.curveData) {
-                  console.log(`📈 CurveData trouvée [${rIndex}][${sIndex}]:`, {
+                  logger.debug('forms', `CurveData found [${rIndex}][${sIndex}]`, {
                     hasDistances: !!sample.curveData.distances,
                     hasSeries: !!sample.curveData.series,
                     hasPoints: !!sample.curveData.points,
@@ -295,7 +296,7 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
       const refTable = ENUM_TO_REF_TABLE_MAPPING[refTableKey] || ENUM_TO_REF_TABLE_MAPPING[tableName];
       
       if (!refTable) {
-        console.error(`No reference table mapping found for ${refTableKey}`);
+        logger.error('forms', 'No reference table mapping found', null, { refTableKey, tableName, columnName });
         return null;
       }
       
@@ -318,7 +319,7 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
           additionalData.unit_type = unitType;
           
         } else {
-          console.warn(`⚠️ Unknown unit column: ${columnName}, unit_type will be null`);
+          logger.warn('forms', 'Unknown unit column, unit_type will be null', { columnName });
         }
       }
       
@@ -334,7 +335,7 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
           
           await refreshFunction();
         } else {
-          console.warn(`No refresh function found for field ${fieldName}, table ${tableName}, column ${columnName}`);
+          logger.warn('forms', 'No refresh function found for field', { fieldName, tableName, columnName });
           
           // Essayer de rafraîchir toutes les options disponibles si aucune fonction spécifique n'est trouvée
           const refreshFnKeys = Object.keys(refreshOptionsFunctions).filter(key => key.startsWith('refresh') && typeof refreshOptionsFunctions[key] === 'function');
@@ -347,11 +348,11 @@ const useFormHandlers = (formData, setFormData, errors, setErrors, refreshOption
         
         return { value: inputValue, label: inputValue };
       } else {
-        console.error(`Erreur lors de l'ajout de ${fieldName}:`, response);
+        logger.error('forms', `Failed to add ${fieldName}`, null, { fieldName, response });
         return null;
       }
     } catch (error) {
-      console.error(`Erreur lors de l'ajout de ${fieldName}:`, error);
+      logger.error('forms', `Error adding ${fieldName}`, error, { fieldName });
       return null;
     }
   }, [setFormData, refreshOptionsFunctions]);

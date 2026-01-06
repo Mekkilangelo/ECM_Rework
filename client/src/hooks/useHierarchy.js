@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import axios from 'axios';
+import logger from '../utils/logger';
 
 const API_URL = process.env.REACT_APP_API_URL;
 if (!API_URL) {
@@ -153,7 +154,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         setTotalItems(response.data.pagination?.total || 0);
       }
     } catch (err) {
-      console.error('Erreur lors du chargement des données:', err);
+      logger.hook.error('useHierarchy fetchData', err, { currentLevel, hierarchyState });
       setError(err.response?.data?.message || err.message || 'Une erreur est survenue lors du chargement des données');
     } finally {
       setLoading(false);
@@ -220,7 +221,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         )
       );
     } catch (err) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
+      logger.hook.error('useHierarchy updateItemStatus', err, { nodeId, level });
     }
   };    return {
     data,

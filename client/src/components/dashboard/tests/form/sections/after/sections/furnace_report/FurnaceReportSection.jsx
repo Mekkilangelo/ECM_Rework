@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
 import FileUploader from '../../../../../../../common/FileUploader/FileUploader';
 import fileService from '../../../../../../../../services/fileService';
-import { faFile, faImage } from '@fortawesome/free-solid-svg-icons';
+import { faFile } from '@fortawesome/free-solid-svg-icons';
 
 const FurnaceReportSection = ({
   trialNodeId,

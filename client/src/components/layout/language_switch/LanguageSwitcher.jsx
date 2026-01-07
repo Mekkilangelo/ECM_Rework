@@ -30,20 +30,19 @@ const LanguageSwitcher = () => {
   
   return (
     <li className="nav-item dropdown no-arrow mx-1" ref={dropdownRef}>
-      <a 
+      <button 
         className="nav-link dropdown-toggle"
-        href="#"
         onClick={(e) => {
           e.preventDefault();
           setIsOpen(!isOpen);
         }}
-        style={{ position: 'relative' }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}
       >
         <FontAwesomeIcon icon={faGlobe} />
         <span className="ml-1 d-none d-lg-inline small">
           {i18n.language === 'fr' ? 'FR' : 'EN'}
         </span>
-      </a>
+      </button>
       
       {isOpen && (
         <div 

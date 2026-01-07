@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, InputGroup, Collapse } from 'react-bootstrap';
+import { Form, Button, Collapse } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';

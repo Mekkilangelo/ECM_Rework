@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, InputGroup, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faSearch, faFilter, faTimes, faSliders, 
+  faSearch, faTimes, faSliders, 
   faChevronDown, faChevronUp, faSortAmountDown 
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ import '../styles/trial-search.css';
 
 const TrialSearch = () => {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // État de la recherche
   const [query, setQuery] = useState('');

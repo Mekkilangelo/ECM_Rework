@@ -15,7 +15,7 @@ const DashboardContent = () => {
   const { useHierarchy } = require('../hooks/useHierarchy');
   
   const { t } = useTranslation();
-  const { currentLevel, hierarchyState, currentPage, itemsPerPage, setItemsPerPage, setCurrentPage, navigateBack } = useNavigation();
+  const { currentLevel, currentPage, itemsPerPage, setItemsPerPage, setCurrentPage, navigateBack } = useNavigation();
   const { totalItems, refreshData } = useHierarchy();
   // Référence vers le LimitSelector pour pouvoir mettre à jour son total
   const limitSelectorRef = useRef(null);

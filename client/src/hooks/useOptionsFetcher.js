@@ -724,7 +724,6 @@ const useOptionsFetcher = (setLoading, options = {}) => {
       'ref_cooling_media': fetchPreoxMediaOptions,
       'ref_furnace_types': fetchFurnaceTypeOptions,
       'ref_heating_cells': fetchHeatingCellOptions,
-      'ref_cooling_media': fetchCoolingMediaOptions,
       'ref_furnace_sizes': fetchFurnaceSizeOptions,
       'ref_quench_cells': fetchQuenchCellOptions,
       // ref_units déjà abonné ci-dessus

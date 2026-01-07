@@ -424,25 +424,6 @@ const useTrialSubmission = (
       })
     } : null;
     
-    return {
-      parent_id: parentId,
-      name: formData.name,
-      location: formData.location || null,
-      status: formData.status || null,
-      load_number: formData.loadNumber || null,
-      trial_date: formData.trialDate || null,
-      description: formData.description || null,
-      mounting_type: formData.mountingType || null,
-      position_type: formData.positionType || null,
-      process_type: formData.processType || null,
-      preox_media: formData.preoxMedia || null,
-      furnace_data: furnaceData,
-      load_data: loadData,
-      recipe_data: recipeData,
-      quench_data: quenchData,
-      results_data: resultsData
-    };
-    
     // DEBUG LOG pour vérifier les données finales envoyées à l'API
     if (process.env.NODE_ENV === 'development') {
       console.log('📦 Payload final envoyé à l\'API:', {
@@ -491,6 +472,25 @@ const useTrialSubmission = (
         });
       }
     }
+    
+    return {
+      parent_id: parentId,
+      name: formData.name,
+      location: formData.location || null,
+      status: formData.status || null,
+      load_number: formData.loadNumber || null,
+      trial_date: formData.trialDate || null,
+      description: formData.description || null,
+      mounting_type: formData.mountingType || null,
+      position_type: formData.positionType || null,
+      process_type: formData.processType || null,
+      preox_media: formData.preoxMedia || null,
+      furnace_data: furnaceData,
+      load_data: loadData,
+      recipe_data: recipeData,
+      quench_data: quenchData,
+      results_data: resultsData
+    };
   };
   
   // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission

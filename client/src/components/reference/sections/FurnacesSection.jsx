@@ -1,8 +1,6 @@
 // src/components/reference/FurnacesSection.jsx
 import React, { useState } from 'react';
-import { Tab, Nav, Button, Card } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { Tab, Nav, Card } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import EnumTableContent from '../EnumTableContent';
 

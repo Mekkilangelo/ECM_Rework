@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { 
   Container, Card, Table, Form, Button, 
-  Modal, Badge, OverlayTrigger, Tooltip 
+  Modal, OverlayTrigger, Tooltip 
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 

@@ -82,18 +82,16 @@ const Header = () => {
       <ul className="navbar-nav ml-auto">
         {/* Nav Item - Search Dropdown (Only Visible in Mobile) */}
         <li className="nav-item dropdown no-arrow d-sm-none">
-          <a 
+          <button 
             className="nav-link" 
-            href="#" 
-            id="searchDropdown" 
-            role="button" 
             onClick={(e) => {
               e.preventDefault();
               document.getElementById('mobileSearchForm').classList.toggle('d-none');
             }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
           >
             <FontAwesomeIcon icon={faSearch} />
-          </a>
+          </button>
           <div 
             className="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in d-none" 
             id="mobileSearchForm"

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 
@@ -148,8 +148,6 @@ const useExcelImport = (
         Math.round(parseFloat(surfHval.toString().replace(',', '.')) * 100) / 100 : null;
       const chdNum = chd && chd !== '' && !chd.toString().startsWith('$') ? 
         Math.round(parseFloat(chd.toString().replace(',', '.')) * 100) / 100 : null;
-      const baseNum = base && base !== '' && !base.toString().startsWith('$') ? 
-        Math.round(parseFloat(base.toString().replace(',', '.')) * 100) / 100 : null;
       const meanNum = mean && mean !== '' && !mean.toString().startsWith('$') ? 
         Math.round(parseFloat(mean.toString().replace(',', '.')) * 100) / 100 : null;
 

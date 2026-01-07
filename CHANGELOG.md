@@ -5,6 +5,55 @@ All notable changes to Synergia ECM Monitoring will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed - Phase 2 Architecture Improvements (Task 2.1: GenericEntityList Migration)
+
+- **Completed migration of all entity lists to GenericEntityList pattern**
+  - Migrated `TrialRequestList` (OrderList): 359 lines → 75 lines (**79% reduction**, -284 lines)
+  - Migrated `PartList`: 364 lines → 96 lines (**74% reduction**, -268 lines)
+  - Migrated `TrialList`: 373 lines → 153 lines (**59% reduction**, -220 lines)
+  - Previously migrated: `ClientList` (76% reduction, -272 lines) and `SteelList` (67% reduction, -398 lines)
+
+- **Total code reduction across 5 entity lists: ~1,442 lines eliminated (68% average reduction)**
+  - Before: 2,043 lines of duplicated list code
+  - After: 601 lines (includes 528-line reusable GenericEntityList)
+  - Net reduction considering GenericEntityList: ~913 lines (45% overall reduction)
+
+### Added - GenericEntityList Enhancements
+
+- **New props for enhanced flexibility**
+  - `formProps`: Pass custom props to form components (e.g., `clientId`, `orderId`, `partId`)
+  - `contextDisplay`: Display parent entity name in header (e.g., "Orders - ClientName")
+  - `customFormWrapper`: Support for custom modal wrappers (TrialFormWithSideNavigation)
+
+- **Hierarchical navigation improvements**
+  - Automatic back button in hierarchical mode (`useHierarchyMode={true}`)
+  - Context display for parent entity names
+  - Preserved all navigation logic and status updates
+
+- **Auto-open functionality preserved in TrialList**
+  - SessionStorage-based trial opening from global search
+  - Modal handlers exposed via columns function
+  - Seamless integration with GenericEntityList lifecycle
+
+### Improved - Code Quality & Maintainability
+
+- **DRY principle enforced**: Centralized list logic in single reusable component
+- **Single point of maintenance**: Bug fixes and features now apply to all lists automatically
+- **Consistent UX**: All lists share identical behavior for modals, search, sorting, pagination
+- **Type safety**: Enhanced PropTypes with new configuration options
+- **Testability**: One component to test instead of five
+
+### Technical Details
+
+- GenericEntityList now supports both standard Modal-based forms and custom wrapper components
+- Column helpers (`createClickableNameColumn`, `createTextColumn`, `createDateColumn`) used consistently
+- Preserved all entity-specific logic (steel composite display, trial auto-open, delete modals)
+- All lists maintain backward compatibility with existing forms and services
+
+---
+
 ## [1.2.1] - 2025-12-23
 
 ### Added

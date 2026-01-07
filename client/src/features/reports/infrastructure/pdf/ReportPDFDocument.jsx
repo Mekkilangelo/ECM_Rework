@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Document, Page, View, Text, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer';
 import { 
   IdentificationSectionPDF,
   MicrographySectionPDF,
@@ -866,7 +866,7 @@ const SectionRenderer = ({ section, report, options, pageNumber, generatedDate }
  * Contenu spécifique d'une section
  */
 const SectionContent = ({ section, report, options }) => {
-  const { trialData, partData, clientData } = report;
+  const { partData, clientData } = report;
 
   switch (section.type) {
     case 'identification':

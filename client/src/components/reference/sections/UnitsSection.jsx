@@ -1,6 +1,6 @@
 // src/components/reference/UnitsSection.jsx
 import React, { useState, useEffect } from 'react';
-import { Tab, Nav, Button, Card, Table, Spinner, Alert, Modal, Form } from 'react-bootstrap';
+import { Tab, Nav, Button, Card, Table, Spinner, Modal, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faList } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';

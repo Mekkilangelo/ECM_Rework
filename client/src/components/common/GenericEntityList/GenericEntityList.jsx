@@ -1,8 +1,9 @@
 import React, { useContext, useRef, useState, useEffect } from 'react';
 import { Button, Spinner, Alert, Modal, Card, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from '../../../context/AuthContext';
+import { useNavigation } from '../../../context/NavigationContext';
 import { useTranslation } from 'react-i18next';
 import { useHierarchy } from '../../../hooks/useHierarchy';
 import useModalState from '../../../hooks/useModalState';
@@ -61,10 +62,14 @@ const GenericEntityList = ({
   defaultSortBy = 'modified_at',
   defaultSortOrder = 'desc',
   includeActionsColumn = true,
-  onDelete: customDeleteHandler
+  onDelete: customDeleteHandler,
+  formProps = {},
+  contextDisplay,
+  customFormWrapper = false
 }) => {
   const { t } = useTranslation();
   const { user } = useContext(AuthContext);
+  const { navigateBack } = useNavigation();
   const { confirmDelete } = useConfirmationDialog();
   const formRef = useRef(null);
   const limitSelectorRef = useRef(null);
@@ -312,10 +317,23 @@ const GenericEntityList = ({
     <>
       {/* Header with title and add button */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          {icon && <FontAwesomeIcon icon={icon} className="mr-2 text-danger" />}
-          {t(`${entityName}.title`)}
-        </h2>
+        <div className="d-flex align-items-center">
+          {useHierarchyMode && (
+            <Button
+              variant="outline-secondary"
+              className="mr-3"
+              onClick={navigateBack}
+              size="sm"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </Button>
+          )}
+          <h2 className="mb-0">
+            {icon && <FontAwesomeIcon icon={icon} className="mr-2 text-danger" />}
+            {t(`${entityName}.title`)}
+            {contextDisplay && ` - ${contextDisplay}`}
+          </h2>
+        </div>
         {hasEditRights && (
           <Button
             variant="danger"
@@ -412,79 +430,127 @@ const GenericEntityList = ({
       )}
 
       {/* Create Modal */}
-      <Modal
-        show={showCreateModal}
-        onHide={() => handleRequestClose('create', formRef)}
-        size={modalSize}
-      >
-        <Modal.Header closeButton className="bg-light">
-          <FormHeader
-            title={t(`${entityName}.add`)}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            viewMode={false}
-          />
-        </Modal.Header>
-        <Modal.Body>
-          <FormComponent
-            ref={formRef}
-            onClose={closeCreateModal}
-            {...{ [onCreatedPropName]: handleItemCreated }}
-          />
-        </Modal.Body>
-      </Modal>
+      {customFormWrapper ? (
+        <FormComponent
+          ref={formRef}
+          show={showCreateModal}
+          onHide={closeCreateModal}
+          onClose={closeCreateModal}
+          {...{ [onCreatedPropName]: handleItemCreated }}
+          title={t(`${entityName}.add`)}
+          onCopy={handleCopy}
+          onPaste={handlePaste}
+          viewMode={false}
+          {...formProps}
+        />
+      ) : (
+        <Modal
+          show={showCreateModal}
+          onHide={() => handleRequestClose('create', formRef)}
+          size={modalSize}
+        >
+          <Modal.Header closeButton className="bg-light">
+            <FormHeader
+              title={t(`${entityName}.add`)}
+              onCopy={handleCopy}
+              onPaste={handlePaste}
+              viewMode={false}
+            />
+          </Modal.Header>
+          <Modal.Body>
+            <FormComponent
+              ref={formRef}
+              onClose={closeCreateModal}
+              {...{ [onCreatedPropName]: handleItemCreated }}
+              {...formProps}
+            />
+          </Modal.Body>
+        </Modal>
+      )}
 
       {/* Edit Modal */}
-      <Modal
-        show={showEditModal}
-        onHide={() => handleRequestClose('edit', formRef)}
-        size={modalSize}
-      >
-        <Modal.Header closeButton className="bg-light">
-          <FormHeader
-            title={t(`${entityName}.edit`)}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            viewMode={false}
-          />
-        </Modal.Header>
-        <Modal.Body>
-          {selectedItem && (
-            <FormComponent
-              ref={formRef}
-              {...{ [entityType]: selectedItem }}
-              onClose={closeEditModal}
-              {...{ [onUpdatedPropName]: handleItemUpdated }}
+      {customFormWrapper ? (
+        <FormComponent
+          ref={formRef}
+          show={showEditModal}
+          onHide={() => handleRequestClose('edit', formRef)}
+          {...{ [entityType]: selectedItem }}
+          onClose={closeEditModal}
+          {...{ [onUpdatedPropName]: handleItemUpdated }}
+          title={t(`${entityName}.edit`)}
+          onCopy={handleCopy}
+          onPaste={handlePaste}
+          viewMode={false}
+          {...formProps}
+        />
+      ) : (
+        <Modal
+          show={showEditModal}
+          onHide={() => handleRequestClose('edit', formRef)}
+          size={modalSize}
+        >
+          <Modal.Header closeButton className="bg-light">
+            <FormHeader
+              title={t(`${entityName}.edit`)}
+              onCopy={handleCopy}
+              onPaste={handlePaste}
+              viewMode={false}
             />
-          )}
-        </Modal.Body>
-      </Modal>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedItem && (
+              <FormComponent
+                ref={formRef}
+                {...{ [entityType]: selectedItem }}
+                onClose={closeEditModal}
+                {...{ [onUpdatedPropName]: handleItemUpdated }}
+                {...formProps}
+              />
+            )}
+          </Modal.Body>
+        </Modal>
+      )}
 
       {/* Detail Modal */}
-      <Modal
-        show={showDetailModal}
-        onHide={() => handleRequestClose('detail', formRef)}
-        size={modalSize}
-      >
-        <Modal.Header closeButton className="bg-light">
-          <FormHeader
-            title={t(`${entityName}.details`)}
-            onCopy={handleCopy}
-            onPaste={handlePaste}
-            viewMode={true}
-          />
-        </Modal.Header>
-        <Modal.Body>
-          {selectedItem && (
-            <FormComponent
-              ref={formRef}
-              {...{ [entityType]: selectedItem }}
-              onClose={closeDetailModal}
+      {customFormWrapper ? (
+        <FormComponent
+          show={showDetailModal}
+          onHide={() => handleRequestClose('detail', formRef)}
+          {...{ [entityType]: selectedItem }}
+          onClose={closeDetailModal}
+          title={t(`${entityName}.details`)}
+          onCopy={handleCopy}
+          onPaste={handlePaste}
+          viewMode={true}
+          {...formProps}
+        />
+      ) : (
+        <Modal
+          show={showDetailModal}
+          onHide={() => handleRequestClose('detail', formRef)}
+          size={modalSize}
+        >
+          <Modal.Header closeButton className="bg-light">
+            <FormHeader
+              title={t(`${entityName}.details`)}
+              onCopy={handleCopy}
+              onPaste={handlePaste}
               viewMode={true}
             />
-          )}
-        </Modal.Body>
-      </Modal>
+          </Modal.Header>
+          <Modal.Body>
+            {selectedItem && (
+              <FormComponent
+                ref={formRef}
+                {...{ [entityType]: selectedItem }}
+                onClose={closeDetailModal}
+                viewMode={true}
+                {...formProps}
+              />
+            )}
+          </Modal.Body>
+        </Modal>
+      )}
 
       {/* Custom Delete Modal (if provided) */}
       {CustomDeleteModal && (
@@ -521,7 +587,10 @@ GenericEntityList.propTypes = {
   defaultSortBy: PropTypes.string,
   defaultSortOrder: PropTypes.oneOf(['asc', 'desc']),
   includeActionsColumn: PropTypes.bool,
-  onDelete: PropTypes.func
+  onDelete: PropTypes.func,
+  formProps: PropTypes.object,
+  contextDisplay: PropTypes.string,
+  customFormWrapper: PropTypes.bool
 };
 
 export default GenericEntityList;

@@ -1300,7 +1300,51 @@
   },
 
   "logs": {
-    "title": "Activity Log",
+    "title": "Activity Logs",
+    "filters": "Filters",
+    "refresh": "Refresh",
+    "export": "Export",
+    "dateFrom": "From date",
+    "dateTo": "To date",
+    "level": "Level",
+    "action": "Action",
+    "user": "User",
+    "allLevels": "All levels",
+    "error": "Error",
+    "warning": "Warning",
+    "success": "Success",
+    "info": "Information",
+    "actionPlaceholder": "Filter by action...",
+    "userPlaceholder": "Filter by user...",
+    "applyFilters": "Apply",
+    "resetFilters": "Reset",
+    "logHistory": "Activity history",
+    "entries": "entries",
+    "lastUpdate": "Last update",
+    "loading": "Loading logs...",
+    "noLogs": "No logs available",
+    "timestamp": "Timestamp",
+    "message": "Message",
+    "stats": {
+      "totalLogs": "Total logs",
+      "errors": "Errors",
+      "warnings": "Warnings",
+      "today": "Today"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "of": "of",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "messages": {
+      "refreshed": "Logs refreshed",
+      "exported": "Logs exported successfully"
+    },
+    "errors": {
+      "loadFailed": "Error loading logs",
+      "exportFailed": "Error exporting logs"
+    },
     "quickFilters": "Quick filters",
     "all": "All",
     "today": "Today",

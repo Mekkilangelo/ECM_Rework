@@ -235,18 +235,6 @@ const RampCell = ({ ramp }) => {
 };
 
 /**
- * Formater la direction de rampe (version texte simple - conservée pour compatibilité)
- */
-const formatRamp = (ramp) => {
-  const rampLabels = {
-    'up': '↑ Up',
-    'down': '↓ Down',
-    'continue': '→ Hold'
-  };
-  return rampLabels[ramp] || ramp;
-};
-
-/**
  * Vérifier si une section de trempe contient des données significatives
  */
 const hasQuenchData = (quenchData) => {

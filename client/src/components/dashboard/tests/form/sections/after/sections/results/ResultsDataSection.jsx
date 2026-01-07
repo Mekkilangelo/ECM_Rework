@@ -1,7 +1,6 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Button, Card, Table } from 'react-bootstrap';
-import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faFileExcel } from '@fortawesome/free-solid-svg-icons';

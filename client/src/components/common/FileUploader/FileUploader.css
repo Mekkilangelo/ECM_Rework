@@ -1,4 +1,9 @@
 /* src/components/common/FileUploader/FileUploader.css */
+
+/* Import des styles des viewers */
+@import './viewers/PDFViewer.css';
+@import './viewers/SpreadsheetViewer.css';
+
 .file-uploader {
   margin-bottom: 1.5rem;
 }
@@ -162,4 +167,15 @@
   margin-top: 5px;
   width: 100%;
   font-size: 0.8rem;
+}
+
+/* Ajustements pour la modal de prévisualisation avec les nouveaux viewers */
+.file-preview-modal .modal-body {
+  max-height: 85vh;
+  overflow: auto;
+  padding: 0;
+}
+
+.modal-90w {
+  max-width: 90vw;
 }

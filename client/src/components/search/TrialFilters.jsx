@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import RangeInput from '../common/RangeInput';
 import RangeInputWithUnit from '../common/RangeInputWithUnit';
 import useUnits from '../../hooks/useUnits';
 import './TrialFilters.css';

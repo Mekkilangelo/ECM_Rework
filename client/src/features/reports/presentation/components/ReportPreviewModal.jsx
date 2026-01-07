@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Modal, Button, Spinner, Alert, ProgressBar } from 'react-bootstrap';
+import { Modal, Button, Alert, ProgressBar } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faTimes, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';

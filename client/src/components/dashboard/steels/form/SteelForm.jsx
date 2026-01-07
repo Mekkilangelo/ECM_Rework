@@ -8,7 +8,7 @@ import useSteelForm from '../hooks/useSteelForm';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../../context/ThemeContext';
 import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfirmationModal';
-import { isValidNewOption, customFilterOption, sortOptionsByRelevance } from '../../../../utils/selectHelpers';
+import { isValidNewOption, customFilterOption } from '../../../../utils/selectHelpers';
 
 const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
@@ -43,9 +43,6 @@ const SteelForm = forwardRef(({ steel, onClose, onSteelCreated, onSteelUpdated, 
     handleCreateGrade,
     // Gestion de la confirmation de fermeture
     showConfirmModal,
-    pendingClose,
-    isModified,
-    setModified,
     handleCloseRequest,
     confirmClose,
     cancelClose,

@@ -15,6 +15,7 @@ import ActionButtons from '../ActionButtons';
 import Pagination from '../Pagination/Pagination';
 import LimitSelector from '../LimitSelector/LimitSelector';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import '../../../styles/dataList.css';
 import logger from '../../../utils/logger';
 
@@ -234,10 +235,11 @@ const GenericEntityList = ({
       try {
         await service.delete(itemId);
         logger.info('ui', `${entityType} deleted successfully`, { itemId });
+        toast.success(t(`${entityName}.deleteSuccess`, `${capitalizedEntityType} supprimé avec succès`));
         await refreshData();
       } catch (err) {
         logger.error('ui', `Failed to delete ${entityType}`, err, { itemId });
-        alert(err.response?.data?.message || t(`${entityName}.deleteError`));
+        toast.error(err.response?.data?.message || t(`${entityName}.deleteError`, 'Erreur lors de la suppression'));
       }
     }
   };

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 
 const useExcelImport = (
@@ -35,7 +36,7 @@ const useExcelImport = (
         processExcelFileData(jsonData, currentSampleInfo.resultIndex, currentSampleInfo.sampleIndex);
       } catch (error) {
         console.error('Erreur lors de la lecture du fichier Excel:', error);
-        alert(t('tests.after.results.import.error'));
+        toast.error(t('tests.after.results.import.error', 'Erreur lors de la lecture du fichier Excel'));
       }
     };
     reader.readAsArrayBuffer(file);
@@ -110,7 +111,7 @@ const useExcelImport = (
     }
 
     if (allFiliations.length === 0) {
-      alert(t('tests.after.results.import.noData'));
+      toast.warning(t('tests.after.results.import.noData', 'Aucune donnée trouvée dans le fichier Excel'));
       return;
     }
 
@@ -229,7 +230,7 @@ const useExcelImport = (
     );
 
     // Message de succès
-    alert(t('tests.after.results.import.success', { count: allFiliations.length }));
+    toast.success(t('tests.after.results.import.success', { count: allFiliations.length, defaultValue: `${allFiliations.length} point(s) importé(s) avec succès` }));
   };
 
   // Fonction pour mettre à jour le formData avec les données importées

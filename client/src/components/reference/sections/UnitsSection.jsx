@@ -4,6 +4,7 @@ import { Tab, Nav, Button, Card, Table, Spinner, Modal, Form } from 'react-boots
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faList } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import referenceService from '../../../services/referenceService';
 import useConfirmationDialog from '../../../hooks/useConfirmationDialog';
 
@@ -68,7 +69,7 @@ const UnitsSection = () => {
 
   const handleSave = async () => {
     if (!newUnitName.trim()) {
-      alert('Le nom de l\'unité est requis');
+      toast.warning('Le nom de l\'unité est requis');
       return;
     }
 
@@ -77,14 +78,15 @@ const UnitsSection = () => {
         unit_type: activePill,
         description: newUnitDescription.trim() || null
       });
-      
+
+      toast.success('Unité ajoutée avec succès');
       setShowModal(false);
       setNewUnitName('');
       setNewUnitDescription('');
       await fetchUnits();
     } catch (error) {
       console.error('Error adding unit:', error);
-      alert('Échec de l\'ajout de l\'unité');
+      toast.error('Échec de l\'ajout de l\'unité');
     }
   };
 
@@ -93,10 +95,11 @@ const UnitsSection = () => {
     if (confirmed) {
       try {
         await referenceService.deleteValue('ref_units', unit.name);
+        toast.success('Unité supprimée avec succès');
         await fetchUnits();
       } catch (error) {
         console.error('Error deleting unit:', error);
-        alert('Échec de la suppression');
+        toast.error('Échec de la suppression');
       }
     }
   };

@@ -3,6 +3,7 @@ import { Table, Button, Spinner, Alert, Modal, Card, Form } from 'react-bootstra
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus, faList, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 import referenceService from '../../services/referenceService';
 import '../../styles/dataList.css';
 import useConfirmationDialog from '../../hooks/useConfirmationDialog';
@@ -126,10 +127,11 @@ const EnumTableContent = ({ table, column, refTable }) => {
       if (confirmed) {
         try {
           await referenceService.deleteValue(activeRefTable, valueName);
+          toast.success('Valeur supprimée avec succès');
           await fetchReferenceValues();
         } catch (err) {
           console.error('Error deleting reference value:', err);
-          alert('Échec de la suppression. Veuillez réessayer.');
+          toast.error('Échec de la suppression. Veuillez réessayer.');
         }
       }
     }
@@ -138,26 +140,28 @@ const EnumTableContent = ({ table, column, refTable }) => {
   const handleDeleteForce = async (valueName) => {
     try {
       await referenceService.forceDelete(activeRefTable, valueName);
+      toast.success('Valeur supprimée avec succès');
       setShowDeleteModal(false);
       setValueToDelete(null);
       setUsageCount(0);
       await fetchReferenceValues();
     } catch (err) {
       console.error('Error force deleting reference value:', err);
-      alert('Échec de la suppression. Veuillez réessayer.');
+      toast.error('Échec de la suppression. Veuillez réessayer.');
     }
   };
-  
+
   const handleReplace = async (oldValue, newValue) => {
     try {
       await referenceService.replaceValue(activeRefTable, oldValue, newValue);
+      toast.success('Valeur remplacée et supprimée avec succès');
       setShowDeleteModal(false);
       setValueToDelete(null);
       setUsageCount(0);
       await fetchReferenceValues();
     } catch (err) {
       console.error('Error replacing reference value:', err);
-      alert('Échec du remplacement. Veuillez réessayer.');
+      toast.error('Échec du remplacement. Veuillez réessayer.');
     }
   };
   
@@ -201,7 +205,7 @@ const EnumTableContent = ({ table, column, refTable }) => {
   
   const handleSave = async () => {
     if (!currentValue.trim()) {
-      alert('La valeur ne peut pas être vide');
+      toast.warning('La valeur ne peut pas être vide');
       return;
     }
 
@@ -209,11 +213,13 @@ const EnumTableContent = ({ table, column, refTable }) => {
       if (modalMode === 'edit') {
         // Mode édition : renommer la valeur
         await referenceService.updateValue(activeRefTable, originalValue, currentValue.trim());
+        toast.success('Valeur modifiée avec succès');
       } else {
         // Mode ajout : ajouter une nouvelle valeur
         await referenceService.addValue(activeRefTable, currentValue.trim());
+        toast.success('Valeur ajoutée avec succès');
       }
-      
+
       // Réinitialiser les états du modal
       setCurrentValue('');
       setOriginalValue('');
@@ -221,12 +227,12 @@ const EnumTableContent = ({ table, column, refTable }) => {
       setUsageDetails([]);
       setModalMode('add');
       setShowModal(false);
-      
+
       // Rafraîchir la liste pour s'assurer de la cohérence
       await fetchReferenceValues();
     } catch (err) {
       console.error('Error saving reference value:', err);
-      alert('Échec de l\'enregistrement. Veuillez réessayer.');
+      toast.error('Échec de l\'enregistrement. Veuillez réessayer.');
     }
   };
 

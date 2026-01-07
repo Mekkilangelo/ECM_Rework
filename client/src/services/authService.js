@@ -1,6 +1,6 @@
 import api, { setIntentionalLogout } from './api';
 import { jwtDecode } from 'jwt-decode';
-import { authConfig, SESSION_INACTIVITY_TIMEOUT_SECONDS } from '../config';
+import { authConfig } from '../config';
 import logger from '../utils/logger';
 
 /**
@@ -132,7 +132,6 @@ const authService = {
       }
     }, authService.tokenCheckInterval);// Variables pour suivre l'activité de l'utilisateur
     authService.lastUserActivity = Date.now();
-    let inactiveTimeCount = 0;
     
     // Définir les événements d'activité (accessibles globalement dans authService)
     authService.activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
@@ -147,9 +146,7 @@ const authService = {
         if (authService.isLoggedIn()) {
           // Calculer le temps d'inactivité
           const inactiveTime = Date.now() - authService.lastUserActivity;
-          
-          // Incrémenter le compteur d'inactivité (pour les logs)
-          inactiveTimeCount += authService.heartbeatInterval;
+
           // Vérifier si l'utilisateur est actif
           // On n'envoie un heartbeat que si l'utilisateur est actif ET que l'inactivité est en-dessous
           // du seuil configuré

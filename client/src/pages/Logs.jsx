@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import Layout from '../components/layout/Layout';
 import { AuthContext } from '../context/AuthContext';
 import logService from '../services/logService';
+import logger from '../utils/logger';
 import '../styles/logs.css';
 
 const Logs = () => {
@@ -83,7 +84,7 @@ const Logs = () => {
       });
       
     } catch (err) {
-      console.error('Erreur lors du chargement des logs:', err);
+      logger.error('ui', 'Failed to load logs', err, { page, filterParams });
       setError(t('logs.errors.loadFailed'));
       toast.error(t('logs.errors.loadFailed'));
       setLogs([]);
@@ -99,7 +100,7 @@ const Logs = () => {
       const statsResponse = await logService.getStats();
       setStats(statsResponse);
     } catch (err) {
-      console.error('Erreur lors du chargement des statistiques:', err);
+      logger.error('ui', 'Failed to load log statistics', err);
     }
   };
 
@@ -312,7 +313,7 @@ const Logs = () => {
       
       toast.success(t('logs.messages.exported'));
     } catch (err) {
-      console.error('Erreur lors de l\'export:', err);
+      logger.error('ui', 'Failed to export logs', err, { format: 'csv' });
       toast.error(t('logs.errors.exportFailed'));
     } finally {
       setLoading(false);

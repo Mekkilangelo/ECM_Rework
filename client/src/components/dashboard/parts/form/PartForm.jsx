@@ -25,7 +25,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     designationOptions,
     steelOptions,
     lengthUnitOptions,
-    weightUnitOptions, 
+    weightUnitOptions,
     hardnessUnitOptions,
     handleChange,
     handleSelectChange,
@@ -42,15 +42,11 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     addEcdSpec,
     removeEcdSpec,
     updateEcdSpec,
-    showConfirmModal,
-    setShowConfirmModal, // Ajout pour les tests de debug
-    pendingClose,
-    isModified,
-    setModified,
     handleCloseRequest,
     confirmClose,
     cancelClose,
     saveAndClose,
+    showConfirmModal,
     // Copy/Paste functionality
     handleCopy,
     handlePaste

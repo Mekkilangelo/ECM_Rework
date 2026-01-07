@@ -289,6 +289,11 @@ const GenericEntityList = ({
     setCurrentPage(1);
   };
 
+  // Build callback prop names dynamically (e.g., onClientCreated, onClientUpdated)
+  const capitalizedEntityType = entityType.charAt(0).toUpperCase() + entityType.slice(1);
+  const onCreatedPropName = `on${capitalizedEntityType}Created`;
+  const onUpdatedPropName = `on${capitalizedEntityType}Updated`;
+
   // Render loading state
   if (loading && data.length === 0) {
     return (
@@ -424,7 +429,7 @@ const GenericEntityList = ({
           <FormComponent
             ref={formRef}
             onClose={closeCreateModal}
-            onEntityCreated={handleItemCreated}
+            {...{ [onCreatedPropName]: handleItemCreated }}
           />
         </Modal.Body>
       </Modal>
@@ -449,7 +454,7 @@ const GenericEntityList = ({
               ref={formRef}
               {...{ [entityType]: selectedItem }}
               onClose={closeEditModal}
-              onEntityUpdated={handleItemUpdated}
+              {...{ [onUpdatedPropName]: handleItemUpdated }}
             />
           )}
         </Modal.Body>

@@ -221,7 +221,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         )
       );
     } catch (err) {
-      logger.hook.error('useHierarchy updateItemStatus', err, { nodeId, level });
+      logger.hook.error('useHierarchy updateItemStatus', err, { nodeId, currentLevel });
     }
   };    return {
     data,

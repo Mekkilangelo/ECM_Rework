@@ -81,8 +81,8 @@ const GenericEntityList = ({
   const [independentSortBy, setIndependentSortBy] = useState(defaultSortBy);
   const [independentSortOrder, setIndependentSortOrder] = useState(defaultSortOrder);
 
-  // Hierarchical mode (useHierarchy hook)
-  const hierarchyData = useHierarchyMode ? useHierarchy() : null;
+  // Hierarchical mode (useHierarchy hook) - Always call to comply with Rules of Hooks
+  const hierarchyData = useHierarchy();
 
   // Determine which data source to use
   const data = useHierarchyMode ? hierarchyData.data : independentData;

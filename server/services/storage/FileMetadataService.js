@@ -214,7 +214,9 @@ class FileMetadataService {
       
       // Documents
       'all_documents': 'all_documents',
-      'alldocuments': 'all_documents'
+      'alldocuments': 'all_documents',
+      'part_documents': 'part_documents',
+      'partdocuments': 'part_documents'
     };
     
     // Vérifier si c'est une sous-catégorie dynamique (result-X-sample-Y)

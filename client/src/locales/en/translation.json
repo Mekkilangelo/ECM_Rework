@@ -566,7 +566,12 @@
       "diameterIn": "Inner diameter",
       "diameterOut": "Outer diameter",
       "weight": "Weight"
-    },    "photos": {
+    },
+    "documents": {
+      "uploadTitle": "Upload a document",
+      "loadError": "Error loading documents:"
+    },
+    "photos": {
       "views": {
         "front": "Front view",
         "profile": "Side view",

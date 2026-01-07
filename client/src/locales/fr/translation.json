@@ -569,7 +569,12 @@
       "diameterIn": "Diamètre int.",
       "diameterOut": "Diamètre ext.",
       "weight": "Poids"
-    },    "photos": {
+    },
+    "documents": {
+      "uploadTitle": "Importer un document",
+      "loadError": "Erreur lors du chargement des documents:"
+    },
+    "photos": {
       "views": {
         "front": "Vue de face",
         "profile": "Vue de profil",

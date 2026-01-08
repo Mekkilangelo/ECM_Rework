@@ -175,8 +175,6 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     handleEcdPositionAdd,
     handleEcdPositionRemove,
     handleEcdPositionChange,
-    handleHardnessChange,
-    handleEcdChange,
     flushAllCurveData, // Nouvelle fonction pour flusher les données de courbe
     convertSecondsToHMS,
     convertHMSToSeconds,

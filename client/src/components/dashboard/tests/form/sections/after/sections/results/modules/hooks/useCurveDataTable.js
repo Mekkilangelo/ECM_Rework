@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 /**
  * Hook pour gérer les données du tableau dynamique des courbes

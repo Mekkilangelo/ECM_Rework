@@ -1,46 +1,63 @@
 /* React-Select/Creatable : correction pour le mode sombre */
+/* Support pour tous les préfixes de classe possibles */
 .dark-theme .react-select__control,
-.dark-theme .creatable-select__control {
+.dark-theme .creatable-select__control,
+.dark-theme .select__control,
+.dark-theme div[class*="__control"] {
   background-color: var(--dark-input-bg) !important;
   border-color: var(--dark-input-border) !important;
   color: var(--dark-text-primary) !important;
 }
 
 .dark-theme .react-select__control:hover,
-.dark-theme .creatable-select__control:hover {
+.dark-theme .creatable-select__control:hover,
+.dark-theme .select__control:hover,
+.dark-theme div[class*="__control"]:hover {
   border-color: var(--dark-input-border) !important;
 }
 
 .dark-theme .react-select__control--is-focused,
-.dark-theme .creatable-select__control--is-focused {
+.dark-theme .creatable-select__control--is-focused,
+.dark-theme .select__control--is-focused,
+.dark-theme div[class*="__control--is-focused"] {
   border-color: var(--dark-accent) !important;
   box-shadow: 0 0 0 1px var(--dark-accent) !important;
 }
 
 /* Valeur sélectionnée dans le champ */
 .dark-theme .react-select__single-value,
-.dark-theme .creatable-select__single-value {
+.dark-theme .creatable-select__single-value,
+.dark-theme .select__single-value,
+.dark-theme div[class*="__single-value"] {
   color: var(--dark-text-primary) !important;
   background-color: transparent !important;
 }
 
 /* Placeholder */
 .dark-theme .react-select__placeholder,
-.dark-theme .creatable-select__placeholder {
+.dark-theme .creatable-select__placeholder,
+.dark-theme .select__placeholder,
+.dark-theme div[class*="__placeholder"] {
   color: var(--dark-text-secondary) !important;
 }
 
 /* Input pour la saisie */
 .dark-theme .react-select__input-container,
 .dark-theme .creatable-select__input-container,
+.dark-theme .select__input-container,
 .dark-theme .react-select__input,
-.dark-theme .creatable-select__input {
+.dark-theme .creatable-select__input,
+.dark-theme .select__input,
+.dark-theme div[class*="__input-container"],
+.dark-theme input[class*="__input"] {
   color: var(--dark-text-primary) !important;
 }
 
 /* Menu déroulant */
 .dark-theme .react-select__menu,
-.dark-theme .creatable-select__menu {
+.dark-theme .creatable-select__menu,
+.dark-theme .select__menu,
+.dark-theme div[class*="__menu"] {
   background-color: var(--dark-input-bg) !important;
   border: 1px solid var(--dark-input-border) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
@@ -48,21 +65,27 @@
 
 /* Options dans le menu */
 .dark-theme .react-select__option,
-.dark-theme .creatable-select__option {
+.dark-theme .creatable-select__option,
+.dark-theme .select__option,
+.dark-theme div[class*="__option"] {
   background-color: transparent !important;
   color: var(--dark-text-primary) !important;
 }
 
 /* Option au survol */
 .dark-theme .react-select__option--is-focused,
-.dark-theme .creatable-select__option--is-focused {
+.dark-theme .creatable-select__option--is-focused,
+.dark-theme .select__option--is-focused,
+.dark-theme div[class*="__option--is-focused"] {
   background-color: #343a40 !important;
   color: var(--dark-text-primary) !important;
 }
 
 /* Option sélectionnée dans le menu */
 .dark-theme .react-select__option--is-selected,
-.dark-theme .creatable-select__option--is-selected {
+.dark-theme .creatable-select__option--is-selected,
+.dark-theme .select__option--is-selected,
+.dark-theme div[class*="__option--is-selected"] {
   background-color: var(--dark-accent) !important;
   color: var(--dark-bg-primary) !important;
 }
@@ -71,41 +94,59 @@
 .dark-theme .react-select__dropdown-indicator,
 .dark-theme .react-select__clear-indicator,
 .dark-theme .creatable-select__dropdown-indicator,
-.dark-theme .creatable-select__clear-indicator {
+.dark-theme .creatable-select__clear-indicator,
+.dark-theme .select__dropdown-indicator,
+.dark-theme .select__clear-indicator,
+.dark-theme div[class*="__dropdown-indicator"],
+.dark-theme div[class*="__clear-indicator"] {
   color: var(--dark-text-secondary) !important;
 }
 
 .dark-theme .react-select__dropdown-indicator:hover,
 .dark-theme .react-select__clear-indicator:hover,
 .dark-theme .creatable-select__dropdown-indicator:hover,
-.dark-theme .creatable-select__clear-indicator:hover {
+.dark-theme .creatable-select__clear-indicator:hover,
+.dark-theme .select__dropdown-indicator:hover,
+.dark-theme .select__clear-indicator:hover,
+.dark-theme div[class*="__dropdown-indicator"]:hover,
+.dark-theme div[class*="__clear-indicator"]:hover {
   color: var(--dark-text-primary) !important;
 }
 
 /* Séparateur */
 .dark-theme .react-select__indicator-separator,
-.dark-theme .creatable-select__indicator-separator {
+.dark-theme .creatable-select__indicator-separator,
+.dark-theme .select__indicator-separator,
+.dark-theme div[class*="__indicator-separator"] {
   background-color: var(--dark-input-border) !important;
 }
 
 /* Multi-value (si utilisé) */
 .dark-theme .react-select__multi-value,
-.dark-theme .creatable-select__multi-value {
+.dark-theme .creatable-select__multi-value,
+.dark-theme .select__multi-value,
+.dark-theme div[class*="__multi-value"] {
   background-color: var(--dark-bg-quaternary) !important;
 }
 
 .dark-theme .react-select__multi-value__label,
-.dark-theme .creatable-select__multi-value__label {
+.dark-theme .creatable-select__multi-value__label,
+.dark-theme .select__multi-value__label,
+.dark-theme div[class*="__multi-value__label"] {
   color: var(--dark-text-primary) !important;
 }
 
 .dark-theme .react-select__multi-value__remove,
-.dark-theme .creatable-select__multi-value__remove {
+.dark-theme .creatable-select__multi-value__remove,
+.dark-theme .select__multi-value__remove,
+.dark-theme div[class*="__multi-value__remove"] {
   color: var(--dark-text-secondary) !important;
 }
 
 .dark-theme .react-select__multi-value__remove:hover,
-.dark-theme .creatable-select__multi-value__remove:hover {
+.dark-theme .creatable-select__multi-value__remove:hover,
+.dark-theme .select__multi-value__remove:hover,
+.dark-theme div[class*="__multi-value__remove"]:hover {
   background-color: var(--dark-danger) !important;
   color: #fff !important;
 }
@@ -157,6 +198,74 @@
 }
 .dark-theme .sortable-table .sort-icon.active {
   color: var(--dark-danger) !important;
+}
+
+/* Tables générales - thead et th avec bg-light */
+.dark-theme table thead,
+.dark-theme table thead tr,
+.dark-theme table thead th,
+.dark-theme thead.bg-light,
+.dark-theme thead.bg-light tr,
+.dark-theme thead.bg-light th,
+.dark-theme th.bg-light {
+  background-color: #23272b !important;
+  color: #fff !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme table tbody tr {
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark-theme table td {
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Backgrounds colorés pour inputs en lecture seule - Dark mode adaptation */
+/* Adaptation des couleurs info, success, warning, danger pour les inputs calculés */
+.dark-theme input[style*="background-color: rgb(209, 236, 241)"],
+.dark-theme input[style*="background-color:#d1ecf1"],
+.dark-theme input[style*="backgroundColor: '#d1ecf1'"],
+.dark-theme .form-control[style*="background-color: rgb(209, 236, 241)"],
+.dark-theme .form-control[style*="background-color:#d1ecf1"] {
+  background-color: rgba(23, 162, 184, 0.2) !important; /* Info dark */
+  border-color: rgba(23, 162, 184, 0.4) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme input[style*="background-color: rgb(212, 237, 218)"],
+.dark-theme input[style*="background-color:#d4edda"],
+.dark-theme input[style*="backgroundColor: '#d4edda'"],
+.dark-theme .form-control[style*="background-color: rgb(212, 237, 218)"],
+.dark-theme .form-control[style*="background-color:#d4edda"] {
+  background-color: rgba(40, 167, 69, 0.2) !important; /* Success dark */
+  border-color: rgba(40, 167, 69, 0.4) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme input[style*="background-color: rgb(255, 243, 205)"],
+.dark-theme input[style*="background-color:#fff3cd"],
+.dark-theme input[style*="backgroundColor: '#fff3cd'"],
+.dark-theme .form-control[style*="background-color: rgb(255, 243, 205)"],
+.dark-theme .form-control[style*="background-color:#fff3cd"] {
+  background-color: rgba(255, 193, 7, 0.2) !important; /* Warning dark */
+  border-color: rgba(255, 193, 7, 0.4) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme input[style*="background-color: rgb(248, 215, 218)"],
+.dark-theme input[style*="background-color:#f8d7da"],
+.dark-theme input[style*="backgroundColor: '#f8d7da'"],
+.dark-theme .form-control[style*="background-color: rgb(248, 215, 218)"],
+.dark-theme .form-control[style*="background-color:#f8d7da"] {
+  background-color: rgba(220, 53, 69, 0.2) !important; /* Danger dark */
+  border-color: rgba(220, 53, 69, 0.4) !important;
+  color: var(--dark-text-primary) !important;
 }
 /* SearchInput en mode sombre */
 .dark-theme .search-input-group,
@@ -222,6 +331,18 @@
   --dark-table-border: #444444;
   --dark-modal-bg: #2c2c2c;
   --dark-sidebar-bg: linear-gradient(180deg, #121212 0%, #1a1a1a 100%);
+
+  /* Variables pour collapsibles et accordions - Light mode */
+  --collapsible-bg-collapsed: #ffffff;
+  --collapsible-bg-expanded: #fff8f8;
+  --collapsible-header-bg: #ffffff;
+  --collapsible-border: #dee2e6;
+
+  /* Variables pour accordions Bootstrap - Light mode */
+  --accordion-bg: #fff;
+  --accordion-button-bg: #f8f9fa;
+  --accordion-button-active-bg: #fff;
+  --accordion-body-bg: #fff;
 }
 
 /* Mode sombre pour l'application */
@@ -263,6 +384,18 @@
   /* Styles globaux */
   background-color: var(--dark-bg-primary) !important;
   color: var(--dark-text-primary) !important;
+
+  /* Variables pour collapsibles - Dark mode */
+  --collapsible-bg-collapsed: var(--dark-bg-secondary);
+  --collapsible-bg-expanded: var(--dark-bg-tertiary);
+  --collapsible-header-bg: var(--dark-bg-secondary);
+  --collapsible-border: var(--dark-border);
+
+  /* Variables pour accordions Bootstrap - Dark mode */
+  --accordion-bg: var(--dark-bg-secondary);
+  --accordion-button-bg: var(--dark-bg-tertiary);
+  --accordion-button-active-bg: var(--dark-bg-secondary);
+  --accordion-body-bg: var(--dark-bg-secondary);
 }
 
 /* Corps de page et conteneur principal */
@@ -631,6 +764,204 @@
   background-color: var(--background-secondary) !important;
 }
 
+/* Accordion Bootstrap - Support dark mode */
+.dark-theme .accordion-item {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .accordion-button {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .accordion-button:not(.collapsed) {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .accordion-button:focus {
+  border-color: var(--dark-accent) !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
+}
+
+.dark-theme .accordion-body {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .accordion-collapse {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+/* FileUploader - Dark mode support */
+.dark-theme .upload-dropzone {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  border-color: var(--dark-input-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .upload-dropzone.active {
+  background: linear-gradient(135deg, rgba(107, 197, 164, 0.2) 0%, rgba(107, 197, 164, 0.3) 100%) !important;
+  border-color: #6bc5a4 !important;
+}
+
+.dark-theme .upload-dropzone:hover:not(.disabled) {
+  background: linear-gradient(135deg, var(--dark-bg-quaternary) 0%, var(--dark-bg-tertiary) 100%) !important;
+  border-color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .thumbnail-container {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .thumbnail-container.non-image {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .selected-files h6,
+.dark-theme .uploaded-files h6 {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Search Components - Dark mode support */
+.dark-theme .entity-type-card {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .entity-tabs .nav-item .nav-link.active {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .filter-tab-card .card-body {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark-theme .entity-chip {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .entity-chip:hover {
+  background-color: var(--dark-bg-quaternary) !important;
+}
+
+.dark-theme .entity-type-item {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .entity-type-item:hover {
+  background-color: var(--dark-bg-quaternary) !important;
+}
+
+/* Active Filters - Dark mode support */
+.dark-theme .active-filters {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-left-color: var(--dark-accent) !important;
+}
+
+.dark-theme .active-filter-item {
+  background-color: var(--dark-bg-quaternary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .active-filter-item:hover {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark-theme .filter-remove {
+  background-color: var(--dark-bg-tertiary) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+/* Search Results - Dark mode support */
+.dark-theme .search-results-tabs .nav-item .nav-link.active {
+  background-color: var(--dark-bg-secondary) !important;
+  color: var(--dark-accent) !important;
+}
+
+.dark-theme .search-results-card .card-header {
+  background-color: var(--dark-bg-secondary) !important;
+}
+
+.dark-theme .search-result-item:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Trial Form Navigation - Dark mode support */
+.dark-theme .trial-navigation,
+.dark-theme .trial-external-navigation {
+  background: linear-gradient(135deg, var(--dark-bg-secondary) 0%, var(--dark-bg-tertiary) 100%) !important;
+}
+
+.dark-theme .trial-nav-button:not(.active) {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  color: var(--dark-text-primary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .trial-nav-button:not(.active):hover {
+  background: linear-gradient(135deg, var(--dark-bg-quaternary) 0%, var(--dark-bg-tertiary) 100%) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .trial-content {
+  background: var(--dark-bg-secondary) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+/* Report Configuration - Dark mode support */
+.dark-theme .report-actions-panel {
+  background: linear-gradient(135deg, var(--dark-bg-secondary) 0%, var(--dark-bg-tertiary) 100%) !important;
+}
+
+.dark-theme .report-stats-box {
+  background: linear-gradient(135deg, var(--dark-bg-tertiary) 0%, var(--dark-bg-quaternary) 100%) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .report-stats-label {
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .report-stats-value {
+  color: var(--dark-accent) !important;
+}
+
+/* Miscellaneous Components - Dark mode support */
+.dark-theme .results-toolbar {
+  background: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) !important;
+}
+
+.dark-theme .range-input-label {
+  background-color: var(--dark-bg-tertiary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-secondary) !important;
+}
+
+.dark-theme .range-input-unit {
+  background-color: var(--dark-bg-quaternary) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text-primary) !important;
+}
+
+.dark-theme .trial-card .card-footer {
+  background-color: var(--dark-bg-tertiary) !important;
+}
+
+.dark-theme .nav-tabs-modern .nav-link.active {
+  background-color: var(--dark-bg-secondary) !important;
+  border-color: var(--dark-border) var(--dark-border) var(--dark-bg-secondary) !important;
+}
+
 /* Bouton de basculement du thème */
 .theme-toggle-btn {
   display: flex;
@@ -658,6 +989,33 @@
 .dark-theme .theme-toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--dark-accent);
+}
+
+/* Bootstrap Form.Select (utilisé pour filtres et sélections simples) */
+.dark-theme .form-select {
+  background-color: var(--dark-input-bg) !important;
+  border-color: var(--dark-input-border) !important;
+  color: var(--dark-text-primary) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e0e0e0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.dark-theme .form-select:focus {
+  background-color: var(--dark-input-bg) !important;
+  border-color: var(--dark-accent) !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.dark-theme .form-select:disabled,
+.dark-theme .form-select[readonly] {
+  background-color: #2a2a2a !important;
+  color: var(--dark-text-secondary) !important;
+  opacity: 0.6 !important;
+}
+
+.dark-theme .form-select option {
+  background-color: var(--dark-input-bg) !important;
+  color: var(--dark-text-primary) !important;
 }
 
 /* Transitions douces */

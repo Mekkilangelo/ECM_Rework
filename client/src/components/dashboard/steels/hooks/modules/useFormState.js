@@ -1,31 +1,24 @@
-import { useState } from 'react';
+import useGenericFormState from '../../../../../hooks/useGenericFormState';
 
+/**
+ * Hook pour gérer l'état du formulaire Steel
+ * Utilise le hook générique useGenericFormState avec configuration spécifique
+ */
 const useFormState = () => {
-  const [formData, setFormData] = useState({
-    grade: '',
-    family: '',
-    standard: '',
-    equivalents: [],
-    chemical_elements: []
-  });
-  
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
-  const [fetchingSteel, setFetchingSteel] = useState(false);
-
-  return {
-    formData,
-    setFormData,
-    errors,
-    setErrors,
-    loading,
-    setLoading,
-    message,
-    setMessage,
-    fetchingSteel,
-    setFetchingSteel
-  };
+  return useGenericFormState(
+    {
+      grade: '',
+      family: '',
+      standard: '',
+      equivalents: [],
+      chemical_elements: []
+    },
+    {
+      entityName: 'Steel',
+      withFetching: true,
+      withParentId: false
+    }
+  );
 };
 
 export default useFormState;

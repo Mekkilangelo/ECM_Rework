@@ -48,7 +48,9 @@
     "clickToAddValues": "Cliquez sur \"Ajouter une nouvelle valeur\" pour ajouter des valeurs à cette énumération",
     "valueUsedWarning": "Cette valeur est utilisée dans {{count}} enregistrement(s). La modification mettra à jour tous ces enregistrements.",
     "confirmDeletion": "Confirmer la suppression",
-    "usageDetails": "Détails de l'utilisation"
+    "usageDetails": "Détails de l'utilisation",
+    "error": "Erreur",
+    "success": "Succès"
   },
 
   "copyPaste": {
@@ -569,7 +571,12 @@
       "diameterIn": "Diamètre int.",
       "diameterOut": "Diamètre ext.",
       "weight": "Poids"
-    },    "photos": {
+    },
+    "documents": {
+      "uploadTitle": "Importer un document",
+      "loadError": "Erreur lors du chargement des documents:"
+    },
+    "photos": {
       "views": {
         "front": "Vue de face",
         "profile": "Vue de profil",
@@ -922,7 +929,9 @@
           "durationTotals": "Totaux de durée",
           "totalStepsSeconds": "Total étapes (s)",
           "totalStepsFormatted": "Total étapes (m:s)",
-          "totalGas": "Total"
+          "totalGas": "Total",
+          "predictRecipe": "Prédire la recette",
+          "predicting": "Prédiction en cours..."
         },
         
         "graphs": {
@@ -993,12 +1002,18 @@
         "cooling": "Rapport de trempe",
         "tempering": "Rapport de revenu",
         "alarms": "Rapport d'alarme",
-        "datapaq": "DATAPAQ",
         "filesResponse": "Réponse de récupération des fichiers",
         "loadError": "Erreur lors du chargement des fichiers:",
         "associateError": "Erreur lors de l'association des fichiers:",
         "import": "Importer une {{name}}"
-      },      "results": {
+      },
+      "datapaq": {
+        "title": "DATAPAQ",
+        "loadError": "Erreur lors du chargement des fichiers DATAPAQ:",
+        "associateError": "Erreur lors de l'association des fichiers DATAPAQ:",
+        "import": "Importer des fichiers DATAPAQ"
+      },
+      "results": {
         "title": "Résultats",
         "resultsLabel": "Résultats",
         "addResult": "Ajouter un résultat",
@@ -1305,6 +1320,45 @@
       "mounting_type": "Type de Montage",
       "position_type": "Type de Position",
       "process_type": "Type de Processus"
+    }
+  },
+
+  "logs": {
+    "title": "Journal des activités",
+    "quickFilters": "Filtres rapides",
+    "all": "Tous",
+    "today": "Aujourd'hui",
+    "last24h": "24 heures",
+    "last7days": "7 jours",
+    "errorsOnly": "Erreurs",
+    "errorsAndWarnings": "Err + Warn",
+    "hideSystemLogs": "Masquer les logs système",
+    "noUserLogs": "Aucun log utilisateur",
+    "actions": {
+      "userLogin": "Connexion utilisateur",
+      "userLogout": "Déconnexion utilisateur",
+      "loginFailed": "Échec de connexion",
+      "passwordChange": "Changement de mot de passe",
+      "clientCreate": "Création d'un client",
+      "clientUpdate": "Modification d'un client",
+      "clientDelete": "Suppression d'un client",
+      "closureCreate": "Création d'une commande",
+      "closureUpdate": "Modification d'une commande",
+      "closureDelete": "Suppression d'une commande",
+      "partCreate": "Création d'une pièce",
+      "partUpdate": "Modification d'une pièce",
+      "partDelete": "Suppression d'une pièce",
+      "trialCreate": "Création d'un essai",
+      "trialUpdate": "Modification d'un essai",
+      "trialDelete": "Suppression d'un essai",
+      "reportGenerate": "Génération de rapport",
+      "reportDownload": "Téléchargement de rapport",
+      "fileUpload": "Téléversement de fichier",
+      "fileDelete": "Suppression de fichier",
+      "systemStart": "Démarrage système",
+      "systemError": "Erreur système",
+      "databaseError": "Erreur base de données",
+      "apiError": "Erreur API"
     }
   }
 }

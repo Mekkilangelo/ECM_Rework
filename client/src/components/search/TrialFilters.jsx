@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import RangeInput from '../common/RangeInput';
 import RangeInputWithUnit from '../common/RangeInputWithUnit';
 import useUnits from '../../hooks/useUnits';
 import './TrialFilters.css';
@@ -24,21 +23,8 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
   const { units: lengthUnits } = useUnits('length');
   const { units: weightUnits } = useUnits('weight');
 
-  // Styles personnalisés pour react-select
+  // Styles personnalisés pour react-select (uniquement zIndex, le reste est géré par darkTheme.css)
   const customSelectStyles = {
-    control: (provided, state) => ({
-      ...provided,
-      borderColor: state.isFocused ? '#dc3545' : '#dee2e6',
-      boxShadow: state.isFocused ? '0 0 0 0.2rem rgba(220, 53, 69, 0.25)' : 'none',
-      '&:hover': {
-        borderColor: '#dc3545'
-      }
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isSelected ? '#dc3545' : state.isFocused ? 'rgba(220, 53, 69, 0.1)' : 'white',
-      color: state.isSelected ? 'white' : '#212529'
-    }),
     menuPortal: (provided) => ({
       ...provided,
       zIndex: 99999
@@ -133,7 +119,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     <FontAwesomeIcon icon={faBoxes} className="mr-1" />
                     {t('trialFilters.loadNumber', 'Numéro de Charge')}
                   </Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.loadNumbers)}
                     value={localFilters.loadNumber ? { value: localFilters.loadNumber, label: localFilters.loadNumber } : null}
                     onChange={(option) => handleChange('loadNumber', option?.value || '')}
@@ -154,7 +140,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     <FontAwesomeIcon icon={faFilter} className="mr-1" />
                     {t('trialFilters.status', 'Statut')}
                   </Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.statuses)}
                     value={localFilters.status ? { value: localFilters.status, label: localFilters.status } : null}
                     onChange={(option) => handleChange('status', option?.value || '')}
@@ -173,7 +159,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-1" />
                     {t('trialFilters.location', 'Localisation')}
                   </Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.locations)}
                     value={localFilters.location ? { value: localFilters.location, label: localFilters.location } : null}
                     onChange={(option) => handleChange('location', option?.value || '')}
@@ -192,7 +178,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     <FontAwesomeIcon icon={faBoxes} className="mr-1" />
                     {t('trialFilters.mountingType', 'Type de Montage')}
                   </Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.mountingTypes)}
                     value={localFilters.mountingType ? { value: localFilters.mountingType, label: localFilters.mountingType } : null}
                     onChange={(option) => handleChange('mountingType', option?.value || '')}
@@ -211,7 +197,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     <FontAwesomeIcon icon={faArrowsAlt} className="mr-1" />
                     {t('trialFilters.positionType', 'Type de Position')}
                   </Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.positionTypes)}
                     value={localFilters.positionType ? { value: localFilters.positionType, label: localFilters.positionType } : null}
                     onChange={(option) => handleChange('positionType', option?.value || '')}
@@ -230,7 +216,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
                     <FontAwesomeIcon icon={faFilter} className="mr-1" />
                     {t('trialFilters.processType', 'Type de Processus')}
                   </Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.processTypes)}
                     value={localFilters.processType ? { value: localFilters.processType, label: localFilters.processType } : null}
                     onChange={(option) => handleChange('processType', option?.value || '')}
@@ -315,7 +301,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.clientName', 'Nom Client')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     isMulti
                     options={createOptions(safeFilterOptions.clientNames)}
                     value={Array.isArray(localFilters.clientNames) ? localFilters.clientNames.map(v => ({ value: v, label: v })) : []}
@@ -334,7 +320,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.clientCountry', 'Pays')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.clientCountries)}
                     value={localFilters.clientCountry ? { value: localFilters.clientCountry, label: localFilters.clientCountry } : null}
                     onChange={(option) => handleChange('clientCountry', option?.value || '')}
@@ -352,7 +338,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.clientCity', 'Ville')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.clientCities)}
                     value={localFilters.clientCity ? { value: localFilters.clientCity, label: localFilters.clientCity } : null}
                     onChange={(option) => handleChange('clientCity', option?.value || '')}
@@ -370,7 +356,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.clientGroup', 'Groupe')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.clientGroups)}
                     value={localFilters.clientGroup ? { value: localFilters.clientGroup, label: localFilters.clientGroup } : null}
                     onChange={(option) => handleChange('clientGroup', option?.value || '')}
@@ -402,7 +388,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.partDesignation', 'Désignation')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.designations)}
                     value={localFilters.partDesignation ? { value: localFilters.partDesignation, label: localFilters.partDesignation } : null}
                     onChange={(option) => handleChange('partDesignation', option?.value || '')}
@@ -577,7 +563,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.steelGrade', 'Nuance')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     isMulti
                     options={createOptions(safeFilterOptions.steelGrades)}
                     value={Array.isArray(localFilters.steelGrades) ? localFilters.steelGrades.map(v => ({ value: v, label: v })) : []}
@@ -613,7 +599,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.steelFamily', 'Famille')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.steelFamilies)}
                     value={localFilters.steelFamily ? { value: localFilters.steelFamily, label: localFilters.steelFamily } : null}
                     onChange={(option) => handleChange('steelFamily', option?.value || '')}
@@ -629,7 +615,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.steelStandard', 'Norme')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.steelStandards)}
                     value={localFilters.steelStandard ? { value: localFilters.steelStandard, label: localFilters.steelStandard } : null}
                     onChange={(option) => handleChange('steelStandard', option?.value || '')}
@@ -728,7 +714,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.furnaceType', 'Type de Four')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(filterOptions.furnaceTypes)}
                     value={localFilters.furnaceType ? { value: localFilters.furnaceType, label: localFilters.furnaceType } : null}
                     onChange={(option) => handleChange('furnaceType', option?.value || '')}
@@ -744,7 +730,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.coolingMedia', 'Milieu de Refroidissement')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(filterOptions.coolingMedias)}
                     value={localFilters.coolingMedia ? { value: localFilters.coolingMedia, label: localFilters.coolingMedia } : null}
                     onChange={(option) => handleChange('coolingMedia', option?.value || '')}
@@ -774,7 +760,7 @@ const TrialFilters = ({ filters, filterOptions, onChange, onApply, onReset }) =>
               <Col md={12}>
                 <Form.Group>
                   <Form.Label className="small font-weight-bold">{t('trialFilters.recipeNumber', 'Numéro de Recette')}</Form.Label>
-                  <Select
+                  <Select classNamePrefix="select"
                     options={createOptions(safeFilterOptions.recipeNumbers)}
                     value={localFilters.recipeNumber ? { value: localFilters.recipeNumber, label: localFilters.recipeNumber } : null}
                     onChange={(option) => handleChange('recipeNumber', option?.value || '')}

@@ -1,8 +1,6 @@
 // src/components/reference/SteelsSection.jsx
-import React, { useState, useEffect } from 'react';
-import { Tab, Nav, Table, Button, Card } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import React, { useState } from 'react';
+import { Tab, Nav, Card } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import EnumTableContent from '../EnumTableContent';
 import SteelList from '../../dashboard/steels/list/SteelList';

@@ -269,4 +269,5 @@ class LogService {
   }
 }
 
-export default new LogService();
+const logServiceInstance = new LogService();
+export default logServiceInstance;

@@ -6,6 +6,7 @@ import { useNavigation } from '../../../../context/NavigationContext';
 import { useHierarchy } from '../../../../hooks/useHierarchy';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../../context/AuthContext';
+import { toast } from 'react-toastify';
 import StatusBadge from '../../../common/StatusBadge/StatusBadge';
 import ActionButtons from '../../../common/ActionButtons';
 import SortableTable from '../../../common/SortableTable';
@@ -179,11 +180,11 @@ const OrderList = () => {
     if (confirmed) {
       try {
         await trialRequestService.deleteTrialRequest(orderId);
-        alert(t('orders.deleteSuccess'));
+        toast.success(t('orders.deleteSuccess', 'Demande d\'essai supprimée avec succès'));
         refreshData();
       } catch (err) {
         console.error('Erreur lors de la suppression de la demande d\'essai:', err);
-        alert(err.response?.data?.message || t('orders.deleteError'));
+        toast.error(err.response?.data?.message || t('orders.deleteError', 'Erreur lors de la suppression'));
       }
     }
   };

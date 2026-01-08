@@ -13,6 +13,8 @@ import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { renderAsync } from 'docx-preview';
 import fileService from '../../../../../services/fileService';
+import PDFViewer from '../../viewers/PDFViewer';
+import SpreadsheetViewer from '../../viewers/SpreadsheetViewer';
 
 const useFilePreview = (defaultFileIcon = faFileAlt) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -252,22 +254,7 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
         );
 
       case 'pdf':
-        return (
-          <div className="pdf-preview-container">
-
-            
-            <div className="mt-3 text-center">
-              <a
-                href={fileUrl}
-                className="btn btn-primary"
-                download={file.name}
-              >
-                <FontAwesomeIcon icon={faDownload} className="me-2" />
-                Télécharger le PDF
-              </a>
-            </div>
-          </div>
-        );
+        return <PDFViewer fileUrl={fileUrl} fileName={file.name} />;
 
       case 'document':
         return (
@@ -307,52 +294,17 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
       case 'spreadsheet':
         if (sheetData) {
           return (
-            <div className="preview-spreadsheet-container">
-              {sheetNames.length > 1 && (
-                <div className="sheet-tabs mb-2">
-                  <div className="btn-group">
-                    {sheetNames.map((name, index) => (
-                      <button
-                        key={index}
-                        className={`btn btn-sm ${index === activeSheet ? 'btn-primary' : 'btn-outline-secondary'}`}
-                        onClick={() => changeSheet(index)}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="table-responsive">
-                <table className="table table-bordered table-striped table-hover">
-                  <tbody>
-                    {sheetData.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {Array.isArray(row) ? (
-                          row.map((cell, cellIndex) => (
-                            <td key={cellIndex}>{cell !== null && cell !== undefined ? cell.toString() : ''}</td>
-                          ))
-                        ) : (
-                          Object.values(row).map((cell, cellIndex) => (
-                            <td key={cellIndex}>{cell !== null && cell !== undefined ? cell.toString() : ''}</td>
-                          ))
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <a
-                href={fileUrl}
-                className="btn btn-primary mt-2"
-                download={file.name}
-              >
-                <FontAwesomeIcon icon={faDownload} className="me-2" />
-                Télécharger le fichier
-              </a>
-            </div>
+            <SpreadsheetViewer
+              sheetData={sheetData}
+              sheetNames={sheetNames}
+              activeSheet={activeSheet}
+              onSheetChange={changeSheet}
+              fileName={file.name}
+              fileUrl={fileUrl}
+            />
           );
         }
+        break;
 
       default:
         return (

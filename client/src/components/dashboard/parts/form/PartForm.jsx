@@ -7,6 +7,7 @@ import CloseConfirmationModal from '../../../common/CloseConfirmation/CloseConfi
 import usePartForm from '../hooks/usePartForm';
 // Section components
 import BasicInfoSection from './sections/basic_infos/BasicInfoSection';
+import DocumentsSection from './sections/documents/DocumentsSection';
 import DimensionsSection from './sections/dimensions/DimensionsSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import SteelSection from './sections/steel/SteelSection';
@@ -25,7 +26,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     designationOptions,
     steelOptions,
     lengthUnitOptions,
-    weightUnitOptions, 
+    weightUnitOptions,
     hardnessUnitOptions,
     handleChange,
     handleSelectChange,
@@ -42,15 +43,11 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     addEcdSpec,
     removeEcdSpec,
     updateEcdSpec,
-    showConfirmModal,
-    setShowConfirmModal, // Ajout pour les tests de debug
-    pendingClose,
-    isModified,
-    setModified,
     handleCloseRequest,
     confirmClose,
     cancelClose,
     saveAndClose,
+    showConfirmModal,
     // Copy/Paste functionality
     handleCopy,
     handlePaste
@@ -150,6 +147,19 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               selectStyles={selectStyles}
               viewMode={viewMode}
               readOnlyFieldStyle={readOnlyFieldStyle}
+            />
+          </CollapsibleSection>
+          
+          <CollapsibleSection
+            title={t('parts.sections.documents')}
+            isExpandedByDefault={false}
+            sectionId="part-documents"
+            rememberState={true}
+          >
+            <DocumentsSection
+              partNodeId={part ? part.id : null}
+              onFileAssociationNeeded={handleFileAssociationNeeded}
+              viewMode={viewMode}
             />
           </CollapsibleSection>
           

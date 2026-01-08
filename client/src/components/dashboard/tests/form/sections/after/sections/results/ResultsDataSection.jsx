@@ -1,7 +1,6 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Button, Card, Table } from 'react-bootstrap';
-import Select from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faFileExcel } from '@fortawesome/free-solid-svg-icons';
@@ -385,6 +384,23 @@ const ResultsDataSection = forwardRef(({
                   />
                 </Form.Group>
 
+                {/* Section Localisation de contrôle */}
+                <CollapsibleSection
+                  title={t('trials.after.results.controlLocation.title', 'Localisation de contrôle')}
+                  isExpandedByDefault={false}
+                  sectionId={`control-location-result-${resultIndex}-sample-${sampleIndex}`}
+                  rememberState={true}
+                  level={1}
+                >
+                  <ControlLocationSection
+                    trialNodeId={trial?.id}
+                    resultIndex={resultIndex}
+                    sampleIndex={sampleIndex}
+                    onFileAssociationNeeded={handleFileAssociationNeeded}
+                    viewMode={viewMode}
+                  />
+                </CollapsibleSection>
+
                 {/* Bouton d'import Excel pour l'échantillon */}
                 {!viewMode && fileInputRef && handleExcelImport && (
                   <div className="mb-3">
@@ -499,8 +515,8 @@ const ResultsDataSection = forwardRef(({
                                     styles={{
                                       ...selectStyles,
                                       menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                      control: (provided) => ({
-                                        ...provided,
+                                      control: (provided, state) => ({
+                                        ...(selectStyles.control ? selectStyles.control(provided, state) : provided),
                                         minHeight: '31px',
                                         height: '31px',
                                         fontSize: '0.875rem',
@@ -509,17 +525,17 @@ const ResultsDataSection = forwardRef(({
                                           cursor: 'default'
                                         } : {})
                                       }),
-                                      valueContainer: (provided) => ({
-                                        ...provided,
+                                      valueContainer: (provided, state) => ({
+                                        ...(selectStyles.valueContainer ? selectStyles.valueContainer(provided, state) : provided),
                                         height: '31px',
                                         padding: '0 8px'
                                       }),
-                                      input: (provided) => ({
-                                        ...provided,
+                                      input: (provided, state) => ({
+                                        ...(selectStyles.input ? selectStyles.input(provided, state) : provided),
                                         margin: '0px'
                                       }),
-                                      indicatorsContainer: (provided) => ({
-                                        ...provided,
+                                      indicatorsContainer: (provided, state) => ({
+                                        ...(selectStyles.indicatorsContainer ? selectStyles.indicatorsContainer(provided, state) : provided),
                                         height: '31px'
                                       }),
                                       ...(viewMode ? {
@@ -687,23 +703,6 @@ const ResultsDataSection = forwardRef(({
                   level={1}
                 >
                   <MicrographsSection
-                    trialNodeId={trial?.id}
-                    resultIndex={resultIndex}
-                    sampleIndex={sampleIndex}
-                    onFileAssociationNeeded={handleFileAssociationNeeded}
-                    viewMode={viewMode}
-                  />
-                </CollapsibleSection>
-
-                {/* Section Localisation de contrôle */}
-                <CollapsibleSection
-                  title={t('trials.after.results.controlLocation.title', 'Localisation de contrôle')}
-                  isExpandedByDefault={false}
-                  sectionId={`control-location-result-${resultIndex}-sample-${sampleIndex}`}
-                  rememberState={true}
-                  level={1}
-                >
-                  <ControlLocationSection
                     trialNodeId={trial?.id}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}

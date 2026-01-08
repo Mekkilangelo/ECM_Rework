@@ -1,6 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from 'react-bootstrap';
 import CollapsibleSection from '../../../../../../../../common/CollapsibleSection/CollapsibleSection';
 import { useCurveDataTable } from './hooks/useCurveDataTable';
 import CurveDataTable from './components/CurveDataTable';

@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import Chart from 'chart.js/auto';
-import { useTranslation } from 'react-i18next';
+import 'chart.js/auto';
 import { Alert } from 'react-bootstrap';
 
 const RecipePreviewChart = React.memo(({ formData }) => {
-  const { t } = useTranslation();
   const [chartData, setChartData] = useState(null);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(null);
 
   // Fonction pour obtenir une couleur pour chaque type de gaz
   const getGasColor = (gas, alpha = 1) => {
@@ -311,17 +308,17 @@ const RecipePreviewChart = React.memo(({ formData }) => {
       }
       
       // Stocker les informations de débogage
-      setDebugInfo({
-        cellTemp,
-        waitTime,
-        waitTimeInMinutes,
-        debugPoints,
-        temperaturePoints,
-        totalThermalTime,
-        totalChemicalTime,
-        availableChemicalDuration,
-        chemicalEndTime: chemTimeOffset
-      });
+      // setDebugInfo({
+      //   cellTemp,
+      //   waitTime,
+      //   waitTimeInMinutes,
+      //   debugPoints,
+      //   temperaturePoints,
+      //   totalThermalTime,
+      //   totalChemicalTime,
+      //   availableChemicalDuration,
+      //   chemicalEndTime: chemTimeOffset
+      // });
       
       setChartData({
         datasets

@@ -45,7 +45,8 @@
     "clickToAddValues": "Click \"Add new value\" to add values to this enumeration",
     "valueUsedWarning": "This value is used in {{count}} record(s). Modification will update all these records.",
     "confirmDeletion": "Confirm Deletion",
-    "usageDetails": "Usage Details"
+    "usageDetails": "Usage Details",
+    "calculated": "Calculated"
   },
 
   "copyPaste": {
@@ -566,7 +567,12 @@
       "diameterIn": "Inner diameter",
       "diameterOut": "Outer diameter",
       "weight": "Weight"
-    },    "photos": {
+    },
+    "documents": {
+      "uploadTitle": "Upload a document",
+      "loadError": "Error loading documents:"
+    },
+    "photos": {
       "views": {
         "front": "Front view",
         "profile": "Side view",
@@ -917,7 +923,9 @@
           "durationTotals": "Duration Totals",
           "totalStepsSeconds": "Total steps (s)",
           "totalStepsFormatted": "Total steps (m:s)",
-          "totalGas": "Total"
+          "totalGas": "Total",
+          "predictRecipe": "Predict Recipe",
+          "predicting": "Predicting..."
         },
         
         "graphs": {
@@ -988,12 +996,19 @@
         "cooling": "Quenching Report",
         "tempering": "Tempering Report",
         "alarms": "Alarm Report",
-        "datapaq": "DATAPAQ",
         "filesResponse": "Files retrieval response",
         "loadError": "Error while loading files:",
         "associateError": "Error while associating files:",
         "import": "Import {{name}}"
-      },      "results": {
+      },
+      "datapaq": {
+        "title": "DATAPAQ",
+        "loadError": "Error while loading DATAPAQ files:",
+        "associateError": "Error while associating DATAPAQ files:",
+        "import": "Import DATAPAQ files"
+      },
+      "results": {
+        "title": "Results",
         "resultsLabel": "Results",
         "addResult": "Add result",
         "resultNumber": "Result #{{number}}",
@@ -1024,6 +1039,7 @@
         "toothRoot": "Tooth root",
         "comment": "Comment",
         "selectPosition": "Position",
+        "enterPosition": "Enter position",
         "enterValue": "Value",
         "enterDistance": "Distance",
         "noUnitsAvailable": "No hardness units available. Using \"HV\" as default.",
@@ -1294,6 +1310,89 @@
       "mounting_type": "Mounting Type",
       "position_type": "Position Type",
       "process_type": "Process Type"
+    }
+  },
+
+  "logs": {
+    "title": "Activity Logs",
+    "filters": "Filters",
+    "refresh": "Refresh",
+    "export": "Export",
+    "dateFrom": "From date",
+    "dateTo": "To date",
+    "level": "Level",
+    "action": "Action",
+    "user": "User",
+    "allLevels": "All levels",
+    "error": "Error",
+    "warning": "Warning",
+    "success": "Success",
+    "info": "Information",
+    "actionPlaceholder": "Filter by action...",
+    "userPlaceholder": "Filter by user...",
+    "applyFilters": "Apply",
+    "resetFilters": "Reset",
+    "logHistory": "Activity history",
+    "entries": "entries",
+    "lastUpdate": "Last update",
+    "loading": "Loading logs...",
+    "noLogs": "No logs available",
+    "timestamp": "Timestamp",
+    "message": "Message",
+    "stats": {
+      "totalLogs": "Total logs",
+      "errors": "Errors",
+      "warnings": "Warnings",
+      "today": "Today"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "of": "of",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "messages": {
+      "refreshed": "Logs refreshed",
+      "exported": "Logs exported successfully"
+    },
+    "errors": {
+      "loadFailed": "Error loading logs",
+      "exportFailed": "Error exporting logs"
+    },
+    "quickFilters": "Quick filters",
+    "all": "All",
+    "today": "Today",
+    "last24h": "24 hours",
+    "last7days": "7 days",
+    "errorsOnly": "Errors",
+    "errorsAndWarnings": "Err + Warn",
+    "hideSystemLogs": "Hide system logs",
+    "noUserLogs": "No user logs",
+    "actions": {
+      "userLogin": "User login",
+      "userLogout": "User logout",
+      "loginFailed": "Login failed",
+      "passwordChange": "Password change",
+      "clientCreate": "Create client",
+      "clientUpdate": "Update client",
+      "clientDelete": "Delete client",
+      "closureCreate": "Create order",
+      "closureUpdate": "Update order",
+      "closureDelete": "Delete order",
+      "partCreate": "Create part",
+      "partUpdate": "Update part",
+      "partDelete": "Delete part",
+      "trialCreate": "Create trial",
+      "trialUpdate": "Update trial",
+      "trialDelete": "Delete trial",
+      "reportGenerate": "Generate report",
+      "reportDownload": "Download report",
+      "fileUpload": "Upload file",
+      "fileDelete": "Delete file",
+      "systemStart": "System start",
+      "systemError": "System error",
+      "databaseError": "Database error",
+      "apiError": "API error"
     }
   }
 }

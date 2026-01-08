@@ -1,7 +1,5 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
-import { Form, Badge, Dropdown, ButtonGroup } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { Badge, Dropdown, ButtonGroup } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 

@@ -52,8 +52,6 @@ const FileUploader = ({
     previewState,
     openPreviewModal,
     closePreviewModal,
-    isImage,
-    getFileType,
     renderThumbnail,
     renderPreviewContent,
     standbyMode,

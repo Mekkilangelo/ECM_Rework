@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Row, Col, Form, Button, Table } from 'react-bootstrap';
+import { Row, Col, Form, Button, Table, Alert, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faMagic, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import predictionService from '../../../../../../../../../../services/predictionService';
+import trialService from '../../../../../../../../../../services/trialService';
 
 const ChemicalCycleSection = ({
   formData,
@@ -16,10 +18,179 @@ const ChemicalCycleSection = ({
   loading,
   selectStyles,
   viewMode = false,
-  readOnlyFieldStyle = {}
+  readOnlyFieldStyle = {},
+  trial = null // Données complètes du trial pour accéder à la pièce parente
 }) => {
   const { t } = useTranslation();
-  
+
+  // State pour gérer la prédiction
+  const [predicting, setPredicting] = useState(false);
+  const [predictionError, setPredictionError] = useState(null);
+  const [predictionSuccess, setPredictionSuccess] = useState(null);
+
+  /**
+   * Handler pour prédire la recette via l'API ML
+   */
+  const handlePredictRecipe = async () => {
+    setPredicting(true);
+    setPredictionError(null);
+    setPredictionSuccess(null);
+
+    try {
+      // DEBUG: Logger ce qui est disponible
+      console.log('Trial prop:', trial);
+      console.log('Trial keys:', trial ? Object.keys(trial) : 'trial is null/undefined');
+      console.log('formData:', formData);
+
+      // 1. Récupérer l'ID du trial depuis formData ou trial
+      // Priorité: formData.id > trial.id > trial.node_id
+      const trialId = formData?.id || trial?.id || trial?.node_id;
+
+      if (!trialId) {
+        console.error('Trial object:', trial);
+        console.error('FormData object:', formData);
+        throw new Error('Impossible de prédire la recette : l\'essai doit d\'abord être sauvegardé. Veuillez enregistrer l\'essai avant d\'utiliser la prédiction.');
+      }
+
+      // 2. Récupérer les données de la pièce parente via l'API
+      // Le backend va charger toutes les relations nécessaires
+      console.log('Fetching trial with ID:', trialId);
+      const fullTrial = await trialService.getTrial(trialId);
+      console.log('Full trial received:', fullTrial);
+
+      // Vérifier que nous avons le node parent
+      if (!fullTrial || !fullTrial.node || !fullTrial.node.parent) {
+        throw new Error('Impossible de récupérer les données de la pièce parente. Assurez-vous que l\'essai est bien lié à une pièce.');
+      }
+
+      const parentPart = fullTrial.node.parent;
+
+      if (parentPart.type !== 'part') {
+        throw new Error('Le parent de l\'essai n\'est pas une pièce');
+      }
+
+      // 3. Valider et préparer les paramètres
+      const validation = predictionService.validateAndPrepareParams(formData, parentPart);
+
+      if (!validation.valid) {
+        setPredictionError({
+          message: 'Données manquantes pour effectuer la prédiction',
+          missing: validation.missing
+        });
+        return;
+      }
+
+      // 4. Appeler l'API de prédiction
+      console.log('Calling prediction API with params:', validation.params);
+      const predictionResult = await predictionService.predictRecipe(validation.params);
+      console.log('Prediction result received:', predictionResult);
+      console.log('Reconstructed recipe:', predictionResult.reconstructed_recipe);
+
+      // 5. Mapper la recette prédite vers le format de l'app
+      // Chaque step de simulation devient 2 steps (carb + diff)
+      // Le dernier step ajoute un 3ème step pour le temps final
+      const predictedCycles = predictionService.mapToChemicalCycles(
+        predictionResult.reconstructed_recipe
+      );
+      console.log('Predicted cycles (mapped):', predictedCycles);
+      console.log('Total steps generated:', predictedCycles.length);
+
+      // 6. Calculer le cycle thermique selon la logique HEAT CYCLE
+      // Utiliser la température de la recette (actuellement 950°C, sera variable plus tard)
+      const recipeTemperature = validation.params.recipe_temperature || 950;
+
+      const thermalCycleData = predictionService.calculateThermalCycle(
+        predictionResult.reconstructed_recipe,
+        {
+          rampUpTime: 60,        // 60 min de montée par défaut
+          treatmentTemp: recipeTemperature,    // Température de la recette
+          quenchTemp: null,      // Pas de refroidissement par défaut
+          coolingTime: 20        // 20 min si refroidissement activé
+        }
+      );
+      console.log('Thermal cycle calculated:', thermalCycleData);
+
+      // 7. Ajuster le dernier step de diffusion finale avec le temps calculé
+      if (thermalCycleData && predictedCycles.length > 0) {
+        const lastStep = predictedCycles[predictedCycles.length - 1];
+        lastStep.time = thermalCycleData.machineReadyFinalDiffSeconds;
+        console.log('Adjusted last step time:', lastStep.time, 'seconds');
+      }
+
+      // 8. Mettre à jour le formulaire avec les cycles prédits
+      handleChange({
+        target: {
+          name: 'recipeData.chemicalCycle',
+          value: predictedCycles
+        }
+      });
+
+      // 9. Mettre à jour le cycle thermique
+      if (thermalCycleData) {
+        // Mapper le cycle thermique au format de l'application
+        const thermalSteps = thermalCycleData.thermalCycle.map((step, index) => ({
+          step: index + 1,
+          setpoint: step.temperature,    // Setpoint (température cible)
+          temperature: step.temperature, // Température (même valeur que setpoint)
+          duration: step.duration,
+          tempUnit: '°C',
+          durationUnit: 'min'
+        }));
+
+        handleChange({
+          target: {
+            name: 'recipeData.thermalCycle',
+            value: thermalSteps
+          }
+        });
+
+        console.log('Thermal cycle steps set:', thermalSteps);
+      }
+
+      // 10. Pré-sélectionner les gaz si pas déjà fait
+      if (!formData.recipeData.selectedGas1) {
+        handleChange({
+          target: {
+            name: 'recipeData.selectedGas1',
+            value: 'C2H2' // Gaz de cémentation
+          }
+        });
+      }
+
+      if (!formData.recipeData.selectedGas2) {
+        handleChange({
+          target: {
+            name: 'recipeData.selectedGas2',
+            value: 'N2' // Gaz de diffusion
+          }
+        });
+      }
+
+      // 11. Afficher un message de succès
+      const successMessage =
+        `Recette prédite avec succès :\n` +
+        `• Cycle chimique : ${predictedCycles.length} step(s) généré(s)\n` +
+        `• Cycle thermique : ${thermalCycleData ? thermalCycleData.totalTimeMinutes + ' minutes de traitement' : 'non calculé'}\n` +
+        `• Gaz pré-sélectionnés : C2H2 (carburation), N2 (diffusion)\n\n` +
+        `N'oubliez pas de définir les débits de gaz et la pression pour chaque étape.`;
+
+      setPredictionSuccess(successMessage);
+
+    } catch (error) {
+      console.error('Erreur lors de la prédiction:', error);
+
+      const errorMessage = error.response?.data?.error || error.message || 'Erreur lors de la prédiction';
+      const errorDetails = error.response?.data?.details;
+
+      setPredictionError({
+        message: errorMessage,
+        details: errorDetails
+      });
+    } finally {
+      setPredicting(false);
+    }
+  };
+
   // Fonction pour calculer la durée totale du cycle chimique en minutes (incluant waitTime)
   const calculateChemicalCycleDurationMinutes = () => {
     if (!formData.recipeData?.chemicalCycle) return 0;
@@ -153,6 +324,60 @@ const ChemicalCycleSection = ({
   
   return (
     <>
+      {/* Bouton de prédiction et alertes */}
+      {!viewMode && (
+        <div className="mb-3">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <h6 className="mb-0">{t('trials.before.recipeData.chemicalCycle.title')}</h6>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handlePredictRecipe}
+              disabled={predicting || loading}
+            >
+              {predicting ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  {t('trials.before.recipeData.chemicalCycle.predicting', 'Prédiction en cours...')}
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faMagic} className="me-2" />
+                  {t('trials.before.recipeData.chemicalCycle.predictRecipe', 'Prédire la recette')}
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Alerte d'erreur */}
+          {predictionError && (
+            <Alert variant="danger" dismissible onClose={() => setPredictionError(null)}>
+              <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+              <strong>{t('common.error', 'Erreur')} :</strong> {predictionError.message}
+              {predictionError.details && (
+                <div className="mt-2 small">
+                  <strong>Détails :</strong> {predictionError.details}
+                </div>
+              )}
+              {predictionError.missing && predictionError.missing.length > 0 && (
+                <ul className="mb-0 mt-2">
+                  {predictionError.missing.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              )}
+            </Alert>
+          )}
+
+          {/* Alerte de succès */}
+          {predictionSuccess && (
+            <Alert variant="success" dismissible onClose={() => setPredictionSuccess(null)}>
+              <strong>{t('common.success', 'Succès')} :</strong> {predictionSuccess}
+            </Alert>
+          )}
+        </div>
+      )}
+
       {/* Global gas selection section */}
       <Row className="mb-3">
         <Col md={4}>
@@ -253,7 +478,7 @@ const ChemicalCycleSection = ({
           </tr>
         </thead>
         <tbody>
-          {formData.recipeData?.chemicalCycle?.map((cycle, index) => (
+          {formData.recipeData?.chemicalCycle?.sort((a, b) => a.step - b.step).map((cycle, index) => (
             <tr key={`chemical-cycle-${index}`}>
               <td className="text-center align-middle">{cycle.step}</td>
               <td>

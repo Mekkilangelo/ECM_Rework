@@ -2,28 +2,41 @@
  * Tests de sécurité pour la configuration JWT
  */
 
+// Importer crypto pour les tests
+const crypto = require('crypto');
+
 describe('JWT Security Configuration', () => {
   let originalEnv;
 
   beforeEach(() => {
     // Sauvegarder l'environnement original
     originalEnv = { ...process.env };
+    // Nettoyer le cache des modules AVANT de modifier l'environnement
+    jest.resetModules();
   });
 
   afterEach(() => {
     // Restaurer l'environnement
     process.env = originalEnv;
-    // Nettoyer le cache des modules
+    // Nettoyer le cache des modules après le test
     jest.resetModules();
   });
 
   describe('JWT_SECRET Validation', () => {
     test('devrait rejeter une configuration sans JWT_SECRET', () => {
+      // Sauvegarder et supprimer complètement JWT_SECRET
+      const savedSecret = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
-      
+
+      // Nettoyer le cache pour forcer un nouveau chargement
+      jest.resetModules();
+
       expect(() => {
         require('../../../config/config');
       }).toThrow('JWT_SECRET must be defined in environment variables for security reasons');
+
+      // Restaurer le secret pour ne pas affecter les autres tests
+      process.env.JWT_SECRET = savedSecret;
     });
 
     test('devrait rejeter un JWT_SECRET trop court (< 32 caractères)', () => {
@@ -102,18 +115,26 @@ describe('JWT Security Configuration', () => {
 
   describe('Security Best Practices', () => {
     test('ne devrait pas exposer de valeur par défaut pour JWT_SECRET', () => {
+      // Sauvegarder et supprimer complètement JWT_SECRET
+      const savedSecret = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
-      
+
+      // Nettoyer le cache pour forcer un nouveau chargement
+      jest.resetModules();
+
       let errorThrown = false;
       let errorMessage = '';
-      
+
       try {
         require('../../../config/config');
       } catch (error) {
         errorThrown = true;
         errorMessage = error.message;
       }
-      
+
+      // Restaurer le secret pour ne pas affecter les autres tests
+      process.env.JWT_SECRET = savedSecret;
+
       expect(errorThrown).toBe(true);
       expect(errorMessage).toContain('JWT_SECRET must be defined');
     });
@@ -161,14 +182,20 @@ describe('JWT Security Configuration', () => {
 
     test('devrait empêcher le démarrage en production sans secret fort', () => {
       process.env.NODE_ENV = 'production';
+
+      // Sauvegarder et supprimer complètement JWT_SECRET
+      const savedSecret = process.env.JWT_SECRET;
       delete process.env.JWT_SECRET;
-      
+
+      // Nettoyer le cache pour forcer un nouveau chargement
+      jest.resetModules();
+
       expect(() => {
         require('../../../config/config');
       }).toThrow();
+
+      // Restaurer l'environnement
+      process.env.JWT_SECRET = savedSecret;
     });
   });
 });
-
-// Importer crypto pour les tests
-const crypto = require('crypto');

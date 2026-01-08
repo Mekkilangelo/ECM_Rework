@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import Layout from '../components/layout/Layout';
 import { AuthContext } from '../context/AuthContext';
 import logService from '../services/logService';
+import logger from '../utils/logger';
 import '../styles/logs.css';
 
 const Logs = () => {
@@ -45,7 +46,12 @@ const Logs = () => {
     level: '',
     action: '',
     user: ''
-  });  const [showFilters, setShowFilters] = useState(false);
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filtres rapides
+  const [quickFilter, setQuickFilter] = useState('all'); // all, today, 24h, 7days, errors
+  const [hideSystemLogs, setHideSystemLogs] = useState(true); // Masquer les logs système par défaut
 
   // Vérification des droits d'accès - seuls les admin et superuser peuvent accéder aux logs
   useEffect(() => {
@@ -78,7 +84,7 @@ const Logs = () => {
       });
       
     } catch (err) {
-      console.error('Erreur lors du chargement des logs:', err);
+      logger.error('ui', 'Failed to load logs', err, { page, filterParams });
       setError(t('logs.errors.loadFailed'));
       toast.error(t('logs.errors.loadFailed'));
       setLogs([]);
@@ -94,7 +100,7 @@ const Logs = () => {
       const statsResponse = await logService.getStats();
       setStats(statsResponse);
     } catch (err) {
-      console.error('Erreur lors du chargement des statistiques:', err);
+      logger.error('ui', 'Failed to load log statistics', err);
     }
   };
 
@@ -144,6 +150,99 @@ const Logs = () => {
     if (filters.user) filterParams.user = filters.user;
     
     await loadLogs(newPage, filterParams);
+  };
+
+  // Fonction pour traduire les actions en format lisible
+  const translateAction = (action) => {
+    const actionMap = {
+      // Authentification
+      'USER_LOGIN': t('logs.actions.userLogin', 'Connexion utilisateur'),
+      'USER_LOGOUT': t('logs.actions.userLogout', 'Déconnexion utilisateur'),
+      'LOGIN_FAILED': t('logs.actions.loginFailed', 'Échec de connexion'),
+      'PASSWORD_CHANGE': t('logs.actions.passwordChange', 'Changement de mot de passe'),
+
+      // Clients
+      'CLIENT_CREATE': t('logs.actions.clientCreate', 'Création d\'un client'),
+      'CLIENT_UPDATE': t('logs.actions.clientUpdate', 'Modification d\'un client'),
+      'CLIENT_DELETE': t('logs.actions.clientDelete', 'Suppression d\'un client'),
+
+      // Commandes/Closures
+      'CLOSURE_CREATE': t('logs.actions.closureCreate', 'Création d\'une commande'),
+      'CLOSURE_UPDATE': t('logs.actions.closureUpdate', 'Modification d\'une commande'),
+      'CLOSURE_DELETE': t('logs.actions.closureDelete', 'Suppression d\'une commande'),
+
+      // Pièces
+      'PART_CREATE': t('logs.actions.partCreate', 'Création d\'une pièce'),
+      'PART_UPDATE': t('logs.actions.partUpdate', 'Modification d\'une pièce'),
+      'PART_DELETE': t('logs.actions.partDelete', 'Suppression d\'une pièce'),
+
+      // Essais/Trials
+      'TRIAL_CREATE': t('logs.actions.trialCreate', 'Création d\'un essai'),
+      'TRIAL_UPDATE': t('logs.actions.trialUpdate', 'Modification d\'un essai'),
+      'TRIAL_DELETE': t('logs.actions.trialDelete', 'Suppression d\'un essai'),
+
+      // Rapports
+      'REPORT_GENERATE': t('logs.actions.reportGenerate', 'Génération de rapport'),
+      'REPORT_DOWNLOAD': t('logs.actions.reportDownload', 'Téléchargement de rapport'),
+
+      // Fichiers
+      'FILE_UPLOAD': t('logs.actions.fileUpload', 'Téléversement de fichier'),
+      'FILE_DELETE': t('logs.actions.fileDelete', 'Suppression de fichier'),
+
+      // Système
+      'SYSTEM_START': t('logs.actions.systemStart', 'Démarrage système'),
+      'SYSTEM_ERROR': t('logs.actions.systemError', 'Erreur système'),
+      'DATABASE_ERROR': t('logs.actions.databaseError', 'Erreur base de données'),
+      'API_ERROR': t('logs.actions.apiError', 'Erreur API'),
+    };
+
+    return actionMap[action] || action;
+  };
+
+  // Fonction pour déterminer si un log est un log système
+  const isSystemLog = (log) => {
+    const systemActions = ['SYSTEM_START', 'SYSTEM_ERROR', 'DATABASE_ERROR', 'API_ERROR'];
+    return !log.username || log.username === 'Système' || systemActions.includes(log.action);
+  };
+
+  // Appliquer les filtres rapides
+  const applyQuickFilter = (filterType) => {
+    setQuickFilter(filterType);
+    const now = new Date();
+    let dateFrom = '';
+
+    switch (filterType) {
+      case 'today':
+        dateFrom = new Date(now.setHours(0, 0, 0, 0)).toISOString().slice(0, 16);
+        loadLogs(1, { startDate: dateFrom });
+        break;
+      case '24h':
+        dateFrom = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+        loadLogs(1, { startDate: dateFrom });
+        break;
+      case '7days':
+        dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+        loadLogs(1, { startDate: dateFrom });
+        break;
+      case 'errors':
+        loadLogs(1, { level: 'error' });
+        break;
+      case 'warnings':
+        loadLogs(1, { level: 'warning,error' });
+        break;
+      case 'all':
+      default:
+        loadLogs(1, {});
+        break;
+    }
+  };
+
+  // Filtrer les logs affichés (côté client pour masquer système)
+  const getDisplayedLogs = () => {
+    if (hideSystemLogs) {
+      return filteredLogs.filter(log => !isSystemLog(log));
+    }
+    return filteredLogs;
   };
 
   // Fonction pour obtenir l'icône selon le niveau
@@ -214,7 +313,7 @@ const Logs = () => {
       
       toast.success(t('logs.messages.exported'));
     } catch (err) {
-      console.error('Erreur lors de l\'export:', err);
+      logger.error('ui', 'Failed to export logs', err, { format: 'csv' });
       toast.error(t('logs.errors.exportFailed'));
     } finally {
       setLoading(false);
@@ -309,6 +408,75 @@ const Logs = () => {
               </Row>
             )}
 
+            {/* Filtres rapides */}
+            <Card className="mb-3 border-0 shadow-sm">
+              <Card.Body className="py-3">
+                <Row className="align-items-center">
+                  <Col md={8}>
+                    <div className="d-flex gap-2 flex-wrap align-items-center">
+                      <small className="text-muted fw-bold me-2">{t('logs.quickFilters', 'Filtres rapides')}:</small>
+                      <Button
+                        variant={quickFilter === 'all' ? 'primary' : 'outline-secondary'}
+                        size="sm"
+                        onClick={() => applyQuickFilter('all')}
+                      >
+                        {t('logs.all', 'Tous')}
+                      </Button>
+                      <Button
+                        variant={quickFilter === 'today' ? 'primary' : 'outline-secondary'}
+                        size="sm"
+                        onClick={() => applyQuickFilter('today')}
+                      >
+                        <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
+                        {t('logs.today', 'Aujourd\'hui')}
+                      </Button>
+                      <Button
+                        variant={quickFilter === '24h' ? 'primary' : 'outline-secondary'}
+                        size="sm"
+                        onClick={() => applyQuickFilter('24h')}
+                      >
+                        {t('logs.last24h', '24 heures')}
+                      </Button>
+                      <Button
+                        variant={quickFilter === '7days' ? 'primary' : 'outline-secondary'}
+                        size="sm"
+                        onClick={() => applyQuickFilter('7days')}
+                      >
+                        {t('logs.last7days', '7 jours')}
+                      </Button>
+                      <div className="vr mx-2" style={{ height: '24px' }}></div>
+                      <Button
+                        variant={quickFilter === 'errors' ? 'danger' : 'outline-danger'}
+                        size="sm"
+                        onClick={() => applyQuickFilter('errors')}
+                      >
+                        <FontAwesomeIcon icon={faBan} className="me-1" />
+                        {t('logs.errorsOnly', 'Erreurs')}
+                      </Button>
+                      <Button
+                        variant={quickFilter === 'warnings' ? 'warning' : 'outline-warning'}
+                        size="sm"
+                        onClick={() => applyQuickFilter('warnings')}
+                      >
+                        <FontAwesomeIcon icon={faExclamationTriangle} className="me-1" />
+                        {t('logs.errorsAndWarnings', 'Err + Warn')}
+                      </Button>
+                    </div>
+                  </Col>
+                  <Col md={4} className="text-end">
+                    <Form.Check
+                      type="checkbox"
+                      id="hideSystemLogs"
+                      label={t('logs.hideSystemLogs', 'Masquer les logs système')}
+                      checked={hideSystemLogs}
+                      onChange={(e) => setHideSystemLogs(e.target.checked)}
+                      className="d-inline-block"
+                    />
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
             {/* Filtres */}
             {showFilters && (
               <Card className="mb-4">
@@ -391,7 +559,7 @@ const Logs = () => {
             {/* Contenu principal */}
             <Card>              <Card.Header className="d-flex justify-content-between align-items-center">
                 <span>
-                  {t('logs.logHistory')} ({pagination.total} {t('logs.entries')})
+                  {t('logs.logHistory')} ({getDisplayedLogs().length} / {pagination.total} {t('logs.entries')})
                 </span>
                 <Badge bg="secondary">
                   {t('logs.lastUpdate')}: {new Date().toLocaleString()}
@@ -407,10 +575,10 @@ const Logs = () => {
                   <Alert variant="danger" className="m-3">
                     <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
                     {error}
-                  </Alert>                ) : filteredLogs.length === 0 ? (
+                  </Alert>                ) : getDisplayedLogs().length === 0 ? (
                   <div className="text-center py-5 text-muted">
                     <FontAwesomeIcon icon={faFileAlt} size="3x" className="mb-3" />
-                    <div>{t('logs.noLogs')}</div>
+                    <div>{hideSystemLogs ? t('logs.noUserLogs', 'Aucun log utilisateur') : t('logs.noLogs')}</div>
                   </div>
                 ) : (
                   <>
@@ -427,18 +595,18 @@ const Logs = () => {
                               <FontAwesomeIcon icon={faUser} className="me-1" />
                               {t('logs.user')}
                             </th>
-                            <th width="20%">{t('logs.action')}</th>
-                            <th width="40%">{t('logs.message')}</th>
+                            <th width="25%">{t('logs.action')}</th>
+                            <th width="35%">{t('logs.message')}</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {filteredLogs.map((log) => (
+                          {getDisplayedLogs().map((log) => (
                             <tr key={log.id} className="log-entry">
                               <td>
                                 <div className="d-flex align-items-center">
                                   {getLevelIcon(log.level)}
-                                  <Badge 
-                                    bg={getLevelBadgeVariant(log.level)} 
+                                  <Badge
+                                    bg={getLevelBadgeVariant(log.level)}
                                     className="ms-2"
                                     style={{ fontSize: '0.7rem' }}
                                   >
@@ -457,7 +625,7 @@ const Logs = () => {
                                 </Badge>
                               </td>
                               <td>
-                                <code className="action-code">{log.action}</code>
+                                <span className="fw-semibold">{translateAction(log.action)}</span>
                               </td>
                               <td>{log.message}</td>
                             </tr>

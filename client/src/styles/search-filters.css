@@ -28,7 +28,7 @@
 }
 
 .filter-accordion .accordion-body {
-  background-color: #fff;
+  background-color: var(--accordion-body-bg);
   padding: 1.25rem;
 }
 

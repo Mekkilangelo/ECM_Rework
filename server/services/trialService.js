@@ -664,11 +664,33 @@ const getAllTrials = async (options = {}) => {
 const getTrialById = async (trialId) => {
   const trialNode = await node.findOne({
     where: { id: trialId, type: 'trial' },
-    include: [{
-      model: trial,
-      as: 'trial',
-      attributes: { exclude: ['node_id'] }
-    }]
+    include: [
+      {
+        model: trial,
+        as: 'trial',
+        attributes: { exclude: ['node_id'] }
+      },
+      {
+        model: node,
+        as: 'parent',
+        include: [
+          {
+            model: sequelize.models.part,
+            as: 'part',
+            include: [
+              {
+                model: sequelize.models.specs_ecd,
+                as: 'ecdSpecs'
+              },
+              {
+                model: sequelize.models.steel,
+                as: 'steel'
+              }
+            ]
+          }
+        ]
+      }
+    ]
   });
   
   if (!trialNode) {
@@ -970,6 +992,15 @@ const getTrialById = async (trialId) => {
     }
   }
   
+  // Ajouter le node avec le parent pour la prédiction de recette
+  if (trialNode.parent) {
+    trialData.node = {
+      id: trialNode.id,
+      parent_id: trialNode.parent_id,
+      parent: trialNode.parent
+    };
+  }
+
   // DEBUG: Logger les données avant de les retourner
   logger.info(`Trial data structure pour trial ${trialId}:`, {
     has_furnace_data: !!trialData.furnace_data,
@@ -977,10 +1008,11 @@ const getTrialById = async (trialId) => {
     has_recipe_data: !!trialData.recipe_data,
     has_quench_data: !!trialData.quench_data,
     has_results_data: !!trialData.results_data,
+    has_node_parent: !!trialData.node?.parent,
     furnace_id: trialNode.trial?.furnace_id,
     recipe_id: trialNode.trial?.recipe_id
   });
-  
+
   return trialData;
 };
 

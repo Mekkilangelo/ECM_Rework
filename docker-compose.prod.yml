@@ -12,6 +12,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - ml-api
     networks:
       - app-network
 
@@ -43,10 +44,12 @@ services:
       JWT_INACTIVITY_EXPIRE: ${JWT_INACTIVITY_EXPIRE}
       CLIENT_URL: ${CLIENT_URL}
       API_URL: ${API_URL}
+      PYTHON_API_URL: ${PYTHON_API_URL:-http://ml-api:8000}
     volumes:
       - ./server/uploads:/app/uploads
     depends_on:
       - database
+      - ml-api
     networks:
       - app-network
     # Ports exposés seulement à l'intérieur du réseau Docker
@@ -64,6 +67,16 @@ services:
     expose:
       - "3000"
 
+  ml-api:
+    image: synergia-ml-api:latest
+    restart: unless-stopped
+    environment:
+      PYTHONUNBUFFERED: 1
+    networks:
+      - app-network
+    # Ports exposés seulement à l'intérieur du réseau Docker
+    expose:
+      - "8000"
 
 volumes:
   mysql_data_prod:

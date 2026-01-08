@@ -3,25 +3,26 @@ import React, { createContext, useState, useEffect } from 'react';
 // Création du contexte
 export const ThemeContext = createContext();
 
+// Fonction pour obtenir le thème initial (avant le montage de React)
+const getInitialTheme = () => {
+  const savedTheme = localStorage.getItem('dark-theme');
+
+  // Si une préférence existe, l'utiliser
+  if (savedTheme !== null) {
+    return savedTheme === 'true';
+  }
+
+  // Sinon, vérifier les préférences du système
+  const prefersDark = window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return prefersDark;
+};
+
 // Composant fournisseur du thème
 export const ThemeProvider = ({ children }) => {
   // État pour suivre si le thème est sombre ou clair
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
-
-  // Au chargement, vérifier si l'utilisateur a déjà défini une préférence
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('dark-theme');
-    
-    // Si une préférence existe, l'utiliser
-    if (savedTheme !== null) {
-      setIsDarkTheme(savedTheme === 'true');
-    } else {
-      // Sinon, vérifier les préférences du système
-      const prefersDark = window.matchMedia && 
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkTheme(prefersDark);
-    }
-  }, []);
+  // Initialiser directement avec la valeur du localStorage pour éviter le flash
+  const [isDarkTheme, setIsDarkTheme] = useState(() => getInitialTheme());
 
   // Quand l'état du thème change, mettre à jour la classe sur l'élément html
   useEffect(() => {

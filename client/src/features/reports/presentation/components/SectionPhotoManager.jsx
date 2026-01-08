@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback, useReducer, startTransition } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import { Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faImage, faTimes, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faImage, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../components/common/CollapsibleSection/CollapsibleSection';
 import fileService from '../../../../services/fileService';

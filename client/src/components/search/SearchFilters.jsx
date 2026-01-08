@@ -21,7 +21,7 @@ const SearchFilters = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('clients');
-  
+
   // Configuration des icônes et couleurs par type d'entité
   const entityConfig = {
     clients: { icon: faUser, color: 'primary' },
@@ -31,20 +31,41 @@ const SearchFilters = ({
     steels: { icon: faIndustry, color: 'secondary' }
   };
 
+  // Détection du thème sombre
+  const isDarkTheme = document.documentElement.classList.contains('dark-theme');
+
+  // Couleurs adaptées au thème
+  const themeColors = {
+    optionBg: isDarkTheme ? '#333333' : 'white',
+    optionText: isDarkTheme ? '#e0e0e0' : '#212529',
+    controlBorder: isDarkTheme ? '#555555' : '#dee2e6',
+    controlBorderHover: isDarkTheme ? '#666666' : '#ced4da',
+    controlBg: isDarkTheme ? '#333333' : 'white',
+  };
+
   // Style personnalisé pour les composants Select
   const customSelectStyles = {
     control: (provided) => ({
       ...provided,
-      border: '1px solid #dee2e6',
+      backgroundColor: themeColors.controlBg,
+      border: `1px solid ${themeColors.controlBorder}`,
       boxShadow: 'none',
       '&:hover': {
-        border: '1px solid #ced4da',
+        border: `1px solid ${themeColors.controlBorderHover}`,
       }
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#dc3545' : state.isFocused ? 'rgba(220, 53, 69, 0.1)' : 'white',
-      color: state.isSelected ? 'white' : '#212529',
+      backgroundColor: state.isSelected ? '#dc3545' : state.isFocused ? 'rgba(220, 53, 69, 0.1)' : themeColors.optionBg,
+      color: state.isSelected ? 'white' : themeColors.optionText,
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: themeColors.optionBg,
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: themeColors.optionText,
     }),
     multiValue: (provided) => ({
       ...provided,

@@ -5,7 +5,6 @@
 
 import { Report } from '../entities/Report';
 import { SectionFactory } from '../entities/Section';
-import { PhotoCollection } from '../entities/Photo';
 
 export class ReportBuilder {
   constructor() {

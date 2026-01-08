@@ -1,0 +1,143 @@
+/* PDFViewer.css */
+
+.pdf-viewer-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 70vh;
+}
+
+.pdf-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pdf-viewer-container.dark .pdf-controls {
+  background-color: var(--dark-bg-secondary);
+  border-bottom-color: var(--dark-border);
+}
+
+.pdf-controls-left,
+.pdf-controls-center,
+.pdf-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-controls .btn-group {
+  display: flex;
+  align-items: center;
+}
+
+.page-indicator,
+.zoom-indicator {
+  min-width: 80px;
+  text-align: center;
+  cursor: default;
+  pointer-events: none;
+  font-weight: 500;
+}
+
+.pdf-canvas-wrapper {
+  flex: 1;
+  overflow: auto;
+  background-color: #525659;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.pdf-viewer-container.dark .pdf-canvas-wrapper {
+  background-color: #1a1a1a;
+}
+
+.pdf-document {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pdf-page {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background-color: white;
+  margin: 0 auto;
+}
+
+.pdf-viewer-container.dark .pdf-page {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.pdf-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: #fff;
+}
+
+.pdf-viewer-container.dark .pdf-loading {
+  color: var(--dark-text-primary);
+}
+
+.pdf-viewer-error {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.pdf-viewer-error .alert {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Canvas PDF */
+.react-pdf__Page__canvas {
+  display: block;
+  user-select: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pdf-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pdf-controls-left,
+  .pdf-controls-center,
+  .pdf-controls-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pdf-canvas-wrapper {
+    padding: 10px;
+  }
+}
+
+/* Dark mode pour les boutons */
+.pdf-viewer-container.dark .btn-outline-light {
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border);
+}
+
+.pdf-viewer-container.dark .btn-outline-light:hover:not(:disabled) {
+  background-color: var(--dark-bg-tertiary);
+  border-color: var(--dark-accent);
+  color: var(--dark-accent);
+}
+
+.pdf-viewer-container.dark .btn-outline-light:disabled {
+  color: var(--dark-text-secondary);
+  border-color: var(--dark-border);
+  opacity: 0.6;
+}

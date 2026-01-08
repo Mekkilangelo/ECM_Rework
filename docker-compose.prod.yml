@@ -46,7 +46,7 @@ services:
       API_URL: ${API_URL}
       PYTHON_API_URL: ${PYTHON_API_URL:-http://ml-api:8000}
     volumes:
-      - ./server/uploads:/app/uploads
+      - uploads_data:/app/uploads
     depends_on:
       - database
       - ml-api
@@ -80,6 +80,9 @@ services:
 
 volumes:
   mysql_data_prod:
+    driver: local
+  uploads_data:
+    driver: local
 
 networks:
   app-network:

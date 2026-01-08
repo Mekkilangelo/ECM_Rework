@@ -91,6 +91,26 @@ tmp/
 /.nyc_output/
 /cypress/videos/
 /cypress/screenshots/
+**/coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.venv/
+venv/
+ENV/
+env/
 
 # Fichiers spécifiques à l'OS
 Thumbs.db

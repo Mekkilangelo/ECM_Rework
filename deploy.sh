@@ -213,6 +213,21 @@ server {
         proxy_set_header Connection "upgrade";
     }
 
+    # ML API Python (Prediction de recettes)
+    location /ml-api {
+        rewrite ^/ml-api/(.*) /$1 break;
+        proxy_pass http://ml-api:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Timeouts pour les prédictions ML (peuvent être longues)
+        proxy_read_timeout 120s;
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+    }
+
     # Logs
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log;

@@ -1002,12 +1002,18 @@
         "cooling": "Rapport de trempe",
         "tempering": "Rapport de revenu",
         "alarms": "Rapport d'alarme",
-        "datapaq": "DATAPAQ",
         "filesResponse": "Réponse de récupération des fichiers",
         "loadError": "Erreur lors du chargement des fichiers:",
         "associateError": "Erreur lors de l'association des fichiers:",
         "import": "Importer une {{name}}"
-      },      "results": {
+      },
+      "datapaq": {
+        "title": "DATAPAQ",
+        "loadError": "Erreur lors du chargement des fichiers DATAPAQ:",
+        "associateError": "Erreur lors de l'association des fichiers DATAPAQ:",
+        "import": "Importer des fichiers DATAPAQ"
+      },
+      "results": {
         "title": "Résultats",
         "resultsLabel": "Résultats",
         "addResult": "Ajouter un résultat",

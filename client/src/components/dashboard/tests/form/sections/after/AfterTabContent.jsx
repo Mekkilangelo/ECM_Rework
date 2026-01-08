@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } f
 import { useTranslation } from 'react-i18next';
 import ResultsDataSection from './sections/results/ResultsDataSection';
 import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection';
+import DatapaqSection from './sections/furnace_report/DatapaqSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 import trialService from '../../../../../../services/trialService';
@@ -92,6 +93,19 @@ const AfterTabContent = forwardRef(({
         rememberState={false}
         level={0}
       >        <FurnaceReportSection
+          trialNodeId={trial ? trial.id : null}
+          onFileAssociationNeeded={handleFileAssociationNeeded}
+          viewMode={viewMode}
+        />
+      </CollapsibleSection>
+      <CollapsibleSection
+        title={t('trials.after.datapaq.title')}
+        isExpandedByDefault={false}
+        sectionId="trial-datapaq"
+        rememberState={false}
+        level={0}
+      >
+        <DatapaqSection
           trialNodeId={trial ? trial.id : null}
           onFileAssociationNeeded={handleFileAssociationNeeded}
           viewMode={viewMode}

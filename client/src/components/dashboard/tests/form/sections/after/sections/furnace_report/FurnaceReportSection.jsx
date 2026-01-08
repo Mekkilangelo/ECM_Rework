@@ -21,13 +21,12 @@ const FurnaceReportSection = ({
     tempIdsRef.current = tempIds;
   }, [tempIds]);
   
-  // Configuration des différentes vues
+  // Configuration des différentes vues (Datapaq déplacé en section à part entière)
   const views = [
     { id: 'heating', name: t('trials.after.furnaceReport.heating') },
     { id: 'cooling', name: t('trials.after.furnaceReport.cooling') },
     { id: 'tempering', name: t('trials.after.furnaceReport.tempering') },
-    { id: 'alarms', name: t('trials.after.furnaceReport.alarms') },
-    { id: 'datapaq', name: t('trials.after.furnaceReport.datapaq') },
+    { id: 'alarms', name: t('trials.after.furnaceReport.alarms') }
   ];
   
   // Charger les fichiers existants

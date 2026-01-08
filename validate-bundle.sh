@@ -303,8 +303,8 @@ validate_configuration() {
         
         # Vérifier la présence des services essentiels
         local compose_content=$(cat "$TEMP_DIR/docker-compose.yaml")
-        local required_services=("database" "backend" "frontend")
-        
+        local required_services=("database" "backend" "frontend" "ml-api")
+
         for service in "${required_services[@]}"; do
             if echo "$compose_content" | grep -q "$service:"; then
                 success "Service présent dans compose: $service"

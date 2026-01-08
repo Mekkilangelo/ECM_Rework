@@ -384,6 +384,23 @@ const ResultsDataSection = forwardRef(({
                   />
                 </Form.Group>
 
+                {/* Section Localisation de contrôle */}
+                <CollapsibleSection
+                  title={t('trials.after.results.controlLocation.title', 'Localisation de contrôle')}
+                  isExpandedByDefault={false}
+                  sectionId={`control-location-result-${resultIndex}-sample-${sampleIndex}`}
+                  rememberState={true}
+                  level={1}
+                >
+                  <ControlLocationSection
+                    trialNodeId={trial?.id}
+                    resultIndex={resultIndex}
+                    sampleIndex={sampleIndex}
+                    onFileAssociationNeeded={handleFileAssociationNeeded}
+                    viewMode={viewMode}
+                  />
+                </CollapsibleSection>
+
                 {/* Bouton d'import Excel pour l'échantillon */}
                 {!viewMode && fileInputRef && handleExcelImport && (
                   <div className="mb-3">
@@ -686,23 +703,6 @@ const ResultsDataSection = forwardRef(({
                   level={1}
                 >
                   <MicrographsSection
-                    trialNodeId={trial?.id}
-                    resultIndex={resultIndex}
-                    sampleIndex={sampleIndex}
-                    onFileAssociationNeeded={handleFileAssociationNeeded}
-                    viewMode={viewMode}
-                  />
-                </CollapsibleSection>
-
-                {/* Section Localisation de contrôle */}
-                <CollapsibleSection
-                  title={t('trials.after.results.controlLocation.title', 'Localisation de contrôle')}
-                  isExpandedByDefault={false}
-                  sectionId={`control-location-result-${resultIndex}-sample-${sampleIndex}`}
-                  rememberState={true}
-                  level={1}
-                >
-                  <ControlLocationSection
                     trialNodeId={trial?.id}
                     resultIndex={resultIndex}
                     sampleIndex={sampleIndex}

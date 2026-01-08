@@ -31,10 +31,12 @@ jobs:
           CLIENT_URL=http://localhost:3000
           API_URL=http://localhost:5001/api
           REACT_APP_API_URL=http://localhost:5001/api
+          PYTHON_API_URL=http://ml-api:8000
           TAG=dev
           DB_PORT=3306
           SERVER_PORT=5001
           CLIENT_PORT=3000
+          ML_API_PORT=8000
           "@ | Out-File -FilePath ".env.dev" -Encoding UTF8
 
       - name: Clean up any existing containers (Windows)

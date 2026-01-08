@@ -52,7 +52,7 @@ jobs:
       - name: Build Docker images
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          
+
           echo "Building frontend..."
           docker buildx build \
             --load \
@@ -61,7 +61,7 @@ jobs:
             --tag synergia-frontend:$VERSION \
             --tag synergia-frontend:latest \
             ./client
-          
+
           echo "Building backend..."
           docker buildx build \
             --load \
@@ -71,23 +71,33 @@ jobs:
             --tag synergia-backend:latest \
             ./server
 
+          echo "Building ML API..."
+          docker buildx build \
+            --load \
+            --cache-from=type=gha,scope=ml-api \
+            --cache-to=type=gha,mode=max,scope=ml-api \
+            --tag synergia-ml-api:$VERSION \
+            --tag synergia-ml-api:latest \
+            ./api
+
       - name: Export Docker images in single tar
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           mkdir -p release/images
-          
+
           echo "Pulling external images..."
           docker pull mysql:8.0
           docker pull nginx:alpine
-          
+
           echo "Exporting all images to single tar..."
           docker save \
             synergia-frontend:$VERSION \
             synergia-backend:$VERSION \
+            synergia-ml-api:$VERSION \
             mysql:8.0 \
             nginx:alpine \
             -o release/images/all-images.tar
-          
+
           echo "Export complete: $(du -h release/images/all-images.tar | cut -f1)"
 
       - name: Prepare release files
@@ -97,10 +107,11 @@ jobs:
 
           # Copier et adapter le docker-compose.prod.yml
           cp docker-compose.prod.yml release/docker-compose.yaml
-          
+
           # S'assurer que les images pointent vers les bonnes versions
           sed -i "s/synergia-frontend:latest/synergia-frontend:$VERSION/g" release/docker-compose.yaml
           sed -i "s/synergia-backend:latest/synergia-backend:$VERSION/g" release/docker-compose.yaml
+          sed -i "s/synergia-ml-api:latest/synergia-ml-api:$VERSION/g" release/docker-compose.yaml
           
           # Créer .env.example basé sur les secrets et les noms de variables
           cat > release/.env.example << EOF
@@ -124,6 +135,7 @@ jobs:
           CLIENT_URL=${{ secrets.CLIENT_URL }}
           API_URL=${{ secrets.API_URL }}
           REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
+          PYTHON_API_URL=http://ml-api:8000
           EOF
 
           # Copier les scripts existants
@@ -152,6 +164,7 @@ jobs:
 
           - Frontend image: synergia-frontend:$VERSION
           - Backend image: synergia-backend:$VERSION
+          - ML API image: synergia-ml-api:$VERSION (Python FastAPI pour prédiction de recettes)
           - MySQL image: mysql:8.0
           - Nginx image: nginx:alpine (pour HTTPS)
           - Configuration: docker-compose.yaml + .env.example

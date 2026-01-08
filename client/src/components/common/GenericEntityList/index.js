@@ -1,1 +1,2 @@
-export { default } from './GenericEntityList';
+import GenericEntityList from './GenericEntityList';
+export default GenericEntityList;

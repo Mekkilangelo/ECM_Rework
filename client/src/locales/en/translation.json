@@ -996,12 +996,18 @@
         "cooling": "Quenching Report",
         "tempering": "Tempering Report",
         "alarms": "Alarm Report",
-        "datapaq": "DATAPAQ",
         "filesResponse": "Files retrieval response",
         "loadError": "Error while loading files:",
         "associateError": "Error while associating files:",
         "import": "Import {{name}}"
-      },      "results": {
+      },
+      "datapaq": {
+        "title": "DATAPAQ",
+        "loadError": "Error while loading DATAPAQ files:",
+        "associateError": "Error while associating DATAPAQ files:",
+        "import": "Import DATAPAQ files"
+      },
+      "results": {
         "title": "Results",
         "resultsLabel": "Results",
         "addResult": "Add result",

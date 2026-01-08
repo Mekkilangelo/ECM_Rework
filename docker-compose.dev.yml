@@ -35,7 +35,7 @@ services:
       CLIENT_URL: ${CLIENT_URL}
       PYTHON_API_URL: ${PYTHON_API_URL:-http://ml-api:8000}
     volumes:
-      - ./server/uploads:/app/uploads
+      - uploads_data_dev:/app/uploads
       - ./server:/app
       - /app/node_modules
     ports:
@@ -80,6 +80,9 @@ services:
 
 volumes:
   mysql_data_dev:
+    driver: local
+  uploads_data_dev:
+    driver: local
 
 networks:
   app-network:

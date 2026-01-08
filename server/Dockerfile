@@ -19,11 +19,11 @@ RUN if [ "$NODE_ENV" = "production" ]; then \
 
 COPY . .
 
-# Créer le dossier uploads avec les bonnes permissions
+# Créer les dossiers uploads et logs avec les bonnes permissions
 # Le conteneur Node tourne avec l'utilisateur node (uid 1000)
-RUN mkdir -p /app/uploads /app/uploads/temp && \
-    chown -R node:node /app/uploads && \
-    chmod -R 755 /app/uploads
+RUN mkdir -p /app/uploads /app/uploads/temp /app/logs && \
+    chown -R node:node /app/uploads /app/logs && \
+    chmod -R 755 /app/uploads /app/logs
 
 # Passer à l'utilisateur node pour plus de sécurité
 USER node

@@ -135,6 +135,7 @@ const RecipeDataSection = ({
           selectStyles={selectStyles}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}
+          trial={trial}
         />
       </CollapsibleSection>
       

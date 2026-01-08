@@ -45,7 +45,8 @@
     "clickToAddValues": "Click \"Add new value\" to add values to this enumeration",
     "valueUsedWarning": "This value is used in {{count}} record(s). Modification will update all these records.",
     "confirmDeletion": "Confirm Deletion",
-    "usageDetails": "Usage Details"
+    "usageDetails": "Usage Details",
+    "calculated": "Calculated"
   },
 
   "copyPaste": {
@@ -922,7 +923,9 @@
           "durationTotals": "Duration Totals",
           "totalStepsSeconds": "Total steps (s)",
           "totalStepsFormatted": "Total steps (m:s)",
-          "totalGas": "Total"
+          "totalGas": "Total",
+          "predictRecipe": "Predict Recipe",
+          "predicting": "Predicting..."
         },
         
         "graphs": {

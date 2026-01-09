@@ -152,7 +152,7 @@ const FileUploader = ({
                       {renderThumbnail(file, () => openPreviewModal({...file, previewUrl: file.preview}))}
                     </div>
                     <div>
-                      <div>{file.name}</div>
+                      <div>{fileDescriptions[index] || file.name}</div>
                       <small className="text-muted">({(file.size / 1024).toFixed(1)} KB)</small>
                     </div>
                   </div>

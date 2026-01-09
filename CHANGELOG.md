@@ -5,6 +5,22 @@ All notable changes to Synergia ECM Monitoring will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-01-09
+
+### Fixed - Critical File Upload Path Consistency
+
+- **Unified UPLOAD_BASE_DIR across all server modules**
+  - `FileStorageService.js`: Now imports from `utils/fileStorage.js` instead of using `process.env.UPLOAD_BASE_DIR`
+  - `parse-and-resolve.js`: Uses centralized `UPLOAD_BASE_DIR` constant
+  - `file-path.js`: Uses centralized `UPLOAD_BASE_DIR` constant
+  - `fileUtils.js`: Uses centralized `UPLOAD_BASE_DIR` constant
+  - `startup/routes.js`: Uses centralized `UPLOAD_BASE_DIR` constant
+
+- **Root cause**: In production (Docker), different modules used different path sources:
+  - Some used `process.env.UPLOAD_BASE_DIR` (undefined in docker-compose.prod.yml)
+  - Some used `path.join(__dirname, '../uploads')` (resolved to container path)
+  - This caused "Fichier physique introuvable" error for DatapaqSection uploads
+
 ## [Unreleased]
 
 ### Changed - Phase 2 Architecture Improvements (Task 2.1: GenericEntityList Migration)

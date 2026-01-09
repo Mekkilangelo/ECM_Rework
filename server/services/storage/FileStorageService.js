@@ -19,6 +19,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const logger = require('../../utils/logger');
+const { UPLOAD_BASE_DIR } = require('../../utils/fileStorage');
 
 class FileStorageService {
   /**
@@ -26,8 +27,8 @@ class FileStorageService {
    * @param {string} baseDir - Répertoire de base pour le stockage
    */
   constructor(baseDir = null) {
-    // Utiliser UPLOAD_BASE_DIR depuis config ou défaut
-    this.baseDir = baseDir || process.env.UPLOAD_BASE_DIR || path.join(__dirname, '../../uploads');
+    // Utiliser UPLOAD_BASE_DIR depuis fileStorage.js pour cohérence
+    this.baseDir = baseDir || UPLOAD_BASE_DIR;
     this.ensureBaseDirExists();
   }
 
@@ -112,8 +113,23 @@ class FileStorageService {
       // Créer les dossiers parents si nécessaire
       await fs.mkdir(dir, { recursive: true });
       
-      // Déplacer le fichier depuis le dossier temp vers la destination finale
-      await fs.rename(uploadedFile.path, physicalPath);
+      // Essayer de déplacer le fichier, sinon copier puis supprimer
+      // (fs.rename ne fonctionne pas entre différents systèmes de fichiers)
+      try {
+        await fs.rename(uploadedFile.path, physicalPath);
+      } catch (renameError) {
+        if (renameError.code === 'EXDEV') {
+          // Cross-device link: copier puis supprimer
+          logger.debug('Cross-device rename, utilisation de copy+delete', { 
+            source: uploadedFile.path, 
+            destination: physicalPath 
+          });
+          await fs.copyFile(uploadedFile.path, physicalPath);
+          await fs.unlink(uploadedFile.path);
+        } else {
+          throw renameError;
+        }
+      }
       
       logger.debug('Fichier sauvegardé', { 
         storageKey, 

@@ -5,6 +5,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const logger = require('../utils/logger');
+const { UPLOAD_BASE_DIR } = require('../utils/fileStorage');
 
 // Import des routes
 const authRoutes = require('../routes/auth');
@@ -101,11 +102,9 @@ function setupStaticFiles(app) {
  * Servir les uploads
  */
 function setupUploads(app) {
-  const uploadsPath = path.join(__dirname, '../uploads');
-  
-  if (fs.existsSync(uploadsPath)) {
-    app.use('/uploads', express.static(uploadsPath));
-    logger.info('📂 Dossier uploads accessible', { path: uploadsPath });
+  if (fs.existsSync(UPLOAD_BASE_DIR)) {
+    app.use('/uploads', express.static(UPLOAD_BASE_DIR));
+    logger.info('📂 Dossier uploads accessible', { path: UPLOAD_BASE_DIR });
   }
 
   // Servir les images publiques (logos, etc.) depuis client/public

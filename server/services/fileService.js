@@ -702,12 +702,31 @@ const getFileById = async (fileId) => {
     throw new NotFoundError('Fichier non trouvé');
   }
   
-  // Vérifier si le fichier existe physiquement
-  if (!fs.existsSync(fileData.file_path)) {
-    throw new NotFoundError('Fichier physique introuvable', { path: fileData.file_path });
+  // Déterminer le chemin physique réel
+  // Priorité: storage_key (nouveau système) > file_path (ancien système)
+  let physicalPath = fileData.file_path;
+  
+  if (fileData.storage_key) {
+    const storageKeyPath = fileStorageService.getPhysicalPath(fileData.storage_key);
+    if (fs.existsSync(storageKeyPath)) {
+      physicalPath = storageKeyPath;
+    }
   }
   
-  return fileData;
+  // Vérifier si le fichier existe physiquement
+  if (!fs.existsSync(physicalPath)) {
+    throw new NotFoundError('Fichier physique introuvable', { 
+      path: physicalPath,
+      storage_key: fileData.storage_key,
+      file_path: fileData.file_path
+    });
+  }
+  
+  // Retourner les données avec le chemin physique correct
+  return {
+    ...fileData.toJSON(),
+    file_path: physicalPath
+  };
 };
 
 /**
@@ -729,13 +748,28 @@ const downloadFile = async (fileId) => {
     throw new NotFoundError('Fichier non trouvé');
   }
   
+  // Déterminer le chemin physique réel
+  // Priorité: storage_key (nouveau système) > file_path (ancien système)
+  let physicalPath = fileData.file_path;
+  
+  if (fileData.storage_key) {
+    const storageKeyPath = fileStorageService.getPhysicalPath(fileData.storage_key);
+    if (fs.existsSync(storageKeyPath)) {
+      physicalPath = storageKeyPath;
+    }
+  }
+  
   // Vérifier si le fichier existe physiquement
-  if (!fs.existsSync(fileData.file_path)) {
-    throw new NotFoundError('Fichier physique introuvable', { path: fileData.file_path });
+  if (!fs.existsSync(physicalPath)) {
+    throw new NotFoundError('Fichier physique introuvable', { 
+      path: physicalPath,
+      storage_key: fileData.storage_key,
+      file_path: fileData.file_path
+    });
   }
   
   return { 
-    filePath: fileData.file_path, 
+    filePath: physicalPath, 
     originalName: fileData.original_name 
   };
 };

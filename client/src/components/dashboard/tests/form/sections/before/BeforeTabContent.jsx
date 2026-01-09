@@ -73,7 +73,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
     <>
       <CollapsibleSection
         title={t('trials.before.trialType.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-type"
         rememberState={false}
       >
@@ -93,7 +93,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       
       <CollapsibleSection
         title={t('trials.before.furnaceData.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-furnace-data"
         rememberState={true}
       >
@@ -115,7 +115,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       
       <CollapsibleSection
         title={t('trials.before.loadData.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-load-data"
         rememberState={true}
       >
@@ -134,7 +134,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       
       <CollapsibleSection
         title={t('trials.before.loadDesign.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-load-design"
         rememberState={true}
       >        <LoadDesignSection
@@ -146,7 +146,7 @@ const BeforeTabContent = React.memo(({ formData, errors, loading, formHandlers, 
       
       <CollapsibleSection
         title={t('trials.before.recipeData.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-recipe-data"
         rememberState={true}
       >        <RecipeDataSection

@@ -900,7 +900,7 @@ const SectionPhotoManager = ({
   const selectedPhotosInSection = selectedPhotoIds.length;  return (
     <CollapsibleSection
       title={`${config.title || t('parts.photos.manager.title')} (${selectedPhotosInSection}/${totalPhotosInSection})`}
-      isExpandedByDefault={true}
+      isExpandedByDefault={false}
       level={0}
       className="section-photo-manager mb-3"
       sectionId={`photo-manager-${sectionType}`}
@@ -949,7 +949,7 @@ const SectionPhotoManager = ({
               // Groupe principal avec sous-groupes
               <CollapsibleSection
                 title={groupKey}
-                isExpandedByDefault={expandedSections[groupKey] || false}
+                isExpandedByDefault={false}
                 onToggle={(isExpanded) => toggleSection(groupKey)}
                 level={1}
                 className="mb-2"
@@ -1012,7 +1012,7 @@ const SectionPhotoManager = ({
                     <CollapsibleSection
                       key={groupKey}
                       title={`${groupKey} (${subgroupSelectedCount}/${subgroupPhotos.length})`}
-                      isExpandedByDefault={expandedSections[groupKey] || false}
+                      isExpandedByDefault={false}
                       onToggle={(isExpanded) => toggleSection(groupKey)}
                       level={1}
                       className="mb-2"

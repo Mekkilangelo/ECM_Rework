@@ -1,88 +1,40 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../../../../../common/FileUploader/FileUploader';
-import fileService from '../../../../../../../../services/fileService';
+import useFileSectionState from '../../../../../../../../hooks/useFileSectionState';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
+/**
+ * Section Datapaq - Gestion des fichiers Datapaq pour les essais
+ * Utilise le hook unifié useFileSectionState pour une gestion correcte des uploads multiples
+ */
 const DatapaqSection = ({
   trialNodeId,
   onFileAssociationNeeded,
   viewMode = false
 }) => {
   const { t } = useTranslation();
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [tempId, setTempId] = useState(null);
-  const tempIdRef = useRef(null);
+  
+  // Utilisation du hook unifié
+  const {
+    uploadedFiles,
+    handleFilesUploaded,
+    loadExistingFiles,
+    associateFiles
+  } = useFileSectionState({
+    nodeId: trialNodeId,
+    category: 'datapaq',
+    onError: (msg, err) => console.error(t('trials.after.datapaq.loadError'), msg, err)
+  });
 
-  useEffect(() => {
-    tempIdRef.current = tempId;
-  }, [tempId]);
-
+  // Charger les fichiers existants quand trialNodeId change
   useEffect(() => {
     if (trialNodeId) {
       loadExistingFiles();
     }
-  }, [trialNodeId]);
+  }, [trialNodeId, loadExistingFiles]);
 
-  const loadExistingFiles = async () => {
-    try {
-      const response = await fileService.getNodeFiles(trialNodeId, {
-        category: 'datapaq'
-      });
-
-      // Vérifier que la requête a réussi
-      if (!response.data || response.data.success === false) {
-        console.error(t('trials.after.datapaq.loadError'), response.data?.message);
-        return;
-      }
-
-      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
-      setUploadedFiles(response.data.data?.files || []);
-    } catch (error) {
-      console.error(t('trials.after.datapaq.loadError'), error);
-    }
-  };
-
-  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
-    if (operation === 'delete') {
-      setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
-    } else {
-      setUploadedFiles(prev => [...prev, ...files]);
-
-      if (newTempId) {
-        setTempId(newTempId);
-      }
-    }
-  };
-
-  const associateFiles = useCallback(async (newTrialNodeId) => {
-    try {
-      if (tempIdRef.current) {
-        const response = await fileService.associateFiles(newTrialNodeId, tempIdRef.current, {
-          category: 'datapaq'
-        });
-
-        // Vérifier que l'association a réussi
-        if (!response.data || response.data.success === false) {
-          console.error(t('trials.after.datapaq.associateError'), response.data?.message);
-          return false;
-        }
-
-        setTempId(null);
-
-        if (newTrialNodeId === trialNodeId) {
-          loadExistingFiles();
-        }
-
-        return true;
-      }
-      return true; // Aucun fichier à associer
-    } catch (error) {
-      console.error(t('trials.after.datapaq.associateError'), error);
-      return false;
-    }
-  }, [trialNodeId, t]);
-
+  // Exposer la fonction d'association au parent
   useEffect(() => {
     if (onFileAssociationNeeded) {
       onFileAssociationNeeded(associateFiles);
@@ -94,7 +46,7 @@ const DatapaqSection = ({
       <FileUploader
         category="datapaq"
         nodeId={trialNodeId}
-        onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
+        onFilesUploaded={handleFilesUploaded}
         maxFiles={50}
         acceptedFileTypes={{
           'application/pdf': ['.pdf'],

@@ -189,7 +189,7 @@ const TrialForm = forwardRef(({
 
           <CollapsibleSection 
             title={t('trials.sections.basicInfo')}
-            isExpandedByDefault={true}
+            isExpandedByDefault={false}
             sectionId="trial-basic-info"
             rememberState={true}
             nestingLevel={0}

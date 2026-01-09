@@ -131,7 +131,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
         <Form onSubmit={handleSubmit} autoComplete="off">
           <CollapsibleSection
             title={t('parts.sections.basicInfo')}
-            isExpandedByDefault={true}
+            isExpandedByDefault={false}
             sectionId="part-basic-info"
             rememberState={true}
           >

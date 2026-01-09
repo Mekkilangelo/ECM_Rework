@@ -300,7 +300,7 @@ const ResultsDataSection = forwardRef(({
         <CollapsibleSection 
           key={resultIndex} 
           title={t('trials.after.results.resultNumber', { number: result.step })}
-          isExpandedByDefault={resultIndex === 0}
+          isExpandedByDefault={false}
           sectionId={`result-section-${resultIndex}`}
           rememberState={true}
           level={0}
@@ -352,7 +352,7 @@ const ResultsDataSection = forwardRef(({
               <CollapsibleSection 
                 key={sampleIndex} 
                 title={t('trials.after.results.sampleNumber', { number: sample.step })}
-                isExpandedByDefault={sampleIndex === 0}
+                isExpandedByDefault={false}
                 sectionId={`sample-section-${resultIndex}-${sampleIndex}`}
                 rememberState={true}
                 level={1}
@@ -676,7 +676,7 @@ const ResultsDataSection = forwardRef(({
                 {/* Section Courbes de dureté */}
                 <CollapsibleSection
                   title={t('trials.after.results.curves.title', 'Courbes de dureté')}
-                  isExpandedByDefault={true}
+                  isExpandedByDefault={false}
                   sectionId={`curves-result-${resultIndex}-sample-${sampleIndex}`}
                   rememberState={true}
                   level={1}

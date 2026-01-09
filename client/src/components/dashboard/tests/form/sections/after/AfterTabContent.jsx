@@ -8,19 +8,77 @@ import CollapsibleSection from '../../../../../common/CollapsibleSection/Collaps
 import trialService from '../../../../../../services/trialService';
 
 const AfterTabContent = forwardRef(({
-  formData, 
-  errors, 
-  loading, 
-  formHandlers, 
-  trial, 
-  handleFileAssociationNeeded, 
-  viewMode = false, 
+  formData,
+  errors,
+  loading,
+  formHandlers,
+  trial,
+  handleFileAssociationNeeded,
+  viewMode = false,
   readOnlyFieldStyle = {},
-  excelImportHandlers = {} 
+  excelImportHandlers = {}
 }, ref) => {
   const { t } = useTranslation();
   const resultsDataSectionRef = useRef();
   const [specifications, setSpecifications] = useState(null);
+
+  // États pour stocker les fonctions d'association de fichiers des sous-sections
+  const furnaceFileAssociationRef = useRef(null);
+  const datapaqFileAssociationRef = useRef(null);
+  const resultsFileAssociationRef = useRef(null);
+
+  const handleFileAssociationNeededRef = useRef(handleFileAssociationNeeded);
+
+  // Mettre à jour la ref quand la prop change
+  useEffect(() => {
+    handleFileAssociationNeededRef.current = handleFileAssociationNeeded;
+  }, [handleFileAssociationNeeded]);
+
+  // Gestionnaires pour recevoir les fonctions d'association des fichiers
+  const handleFurnaceFileAssociationNeeded = React.useCallback((associateFunc) => {
+    furnaceFileAssociationRef.current = associateFunc;
+  }, []);
+
+  const handleDatapaqFileAssociationNeeded = React.useCallback((associateFunc) => {
+    datapaqFileAssociationRef.current = associateFunc;
+  }, []);
+
+  const handleResultsFileAssociationNeeded = React.useCallback((associateFunc) => {
+    resultsFileAssociationRef.current = associateFunc;
+  }, []);
+
+  // Créer une fonction d'association qui appellera toutes les fonctions d'association
+  const combineFileAssociations = React.useCallback(async (nodeId) => {
+    const promises = [];
+    let results = { success: true };
+
+    if (furnaceFileAssociationRef.current) {
+      promises.push(furnaceFileAssociationRef.current(nodeId));
+    }
+
+    if (datapaqFileAssociationRef.current) {
+      promises.push(datapaqFileAssociationRef.current(nodeId));
+    }
+
+    if (resultsFileAssociationRef.current) {
+      promises.push(resultsFileAssociationRef.current(nodeId));
+    }
+
+    if (promises.length > 0) {
+      const allResults = await Promise.all(promises);
+      // Si au moins une association échoue, marquer comme échec
+      results.success = allResults.every(result => result !== false);
+    }
+
+    return results.success;
+  }, []);
+
+  // Transmettre la fonction combinée au parent une seule fois
+  useEffect(() => {
+    if (handleFileAssociationNeededRef.current) {
+      handleFileAssociationNeededRef.current(combineFileAssociations);
+    }
+  }, []); // Pas de dépendances - on ne fait cela qu'une seule fois
 
   // Récupérer les spécifications de la pièce parente pour les passer aux courbes
   useEffect(() => {
@@ -94,7 +152,7 @@ const AfterTabContent = forwardRef(({
         level={0}
       >        <FurnaceReportSection
           trialNodeId={trial ? trial.id : null}
-          onFileAssociationNeeded={handleFileAssociationNeeded}
+          onFileAssociationNeeded={handleFurnaceFileAssociationNeeded}
           viewMode={viewMode}
         />
       </CollapsibleSection>
@@ -107,7 +165,7 @@ const AfterTabContent = forwardRef(({
       >
         <DatapaqSection
           trialNodeId={trial ? trial.id : null}
-          onFileAssociationNeeded={handleFileAssociationNeeded}
+          onFileAssociationNeeded={handleDatapaqFileAssociationNeeded}
           viewMode={viewMode}
         />
       </CollapsibleSection>
@@ -135,7 +193,7 @@ const AfterTabContent = forwardRef(({
           loading={loading}
           selectStyles={formHandlers.selectStyles}
           trial={trial}
-          handleFileAssociationNeeded={handleFileAssociationNeeded}
+          handleFileAssociationNeeded={handleResultsFileAssociationNeeded}
           viewMode={viewMode}
           readOnlyFieldStyle={readOnlyFieldStyle}
           fileInputRef={excelImportHandlers.fileInputRef}

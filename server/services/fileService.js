@@ -419,22 +419,13 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
         transaction 
       });
     }
-    
-    // Nettoyer les dossiers temporaires vides après déplacement des fichiers
-    // Note: cleanupTempDirectories utilise file_path, qui est maintenant mis à jour
-    // On peut essayer de nettoyer le dossier temp racine de ce lot
-    // await cleanupTempDirectories(tempFiles); // A adapter pour le nouveau système si besoin
-    
+
     // Valider la transaction
     await transaction.commit();
-    
-    // Nettoyer les dossiers temporaires vides après déplacement des fichiers
+
     // Nettoyer les dossiers temporaires vides après déplacement des fichiers
     await cleanupTempDirectories(tempFiles);
-    
-    // Valider la transaction
-    await transaction.commit();
-    
+
     // Mettre à jour le modified_at du nœud parent et de ses ancêtres après association de fichiers
     await updateAncestorsModifiedAt(nodeId);
     

@@ -152,6 +152,10 @@ module.exports = (sequelize) => {
       as: 'categoryRef'
     });
 
+    // ⚠️ PAS de relation belongsTo vers ref_file_subcategory
+    // Les subcategories sont dynamiques (ex: result-0-sample-0-x1000)
+    // et ne doivent PAS avoir de contrainte FK
+
     // Relation avec l'utilisateur
     File.belongsTo(models.user, {
       foreignKey: 'uploaded_by',

@@ -165,7 +165,7 @@ const ResultCurveSection = forwardRef(({
       {/* Section des données */}
       <CollapsibleSection
         title="Données des courbes"
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId={`curve-data-result-${resultIndex}-sample-${sampleIndex}`}
         rememberState={true}
         level={2}
@@ -191,7 +191,7 @@ const ResultCurveSection = forwardRef(({
       {/* Section du graphique - Correction de l'échelle X */}
       <CollapsibleSection
         title="Visualisation"
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId={`curve-chart-result-${resultIndex}-sample-${sampleIndex}`}
         rememberState={true}
         level={2}

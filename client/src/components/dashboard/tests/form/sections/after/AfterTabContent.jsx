@@ -135,7 +135,7 @@ const AfterTabContent = forwardRef(({
     <>
       <CollapsibleSection
         title={t('trials.after.specifications.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-specifications"
         rememberState={false}
       >        <SpecificationsSection
@@ -171,7 +171,7 @@ const AfterTabContent = forwardRef(({
       </CollapsibleSection>
       <CollapsibleSection
         title={t('trials.after.results.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-results"
         rememberState={false}
         level={0}

@@ -1,81 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../../../../../common/FileUploader/FileUploader';
-import fileService from '../../../../../../../../services/fileService';
-import useFileAssociation from '../../../../../../../../hooks/useFileAssociation';
+import useFileSectionState from '../../../../../../../../hooks/useFileSectionState';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
+/**
+ * Section Load Design - Gestion des fichiers de conception de charge
+ * Utilise le hook unifié useFileSectionState pour une gestion correcte des uploads multiples
+ */
 const LoadDesignSection = ({
   trialNodeId,
   onFileAssociationNeeded,
   viewMode = false
 }) => {
   const { t } = useTranslation();
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [pendingFiles, setPendingFiles] = useState([]); // Nouveau : stocker les fichiers en attente
   
-  // Hook pour gérer l'association des fichiers
-  const { createAssociationFunction } = useFileAssociation();
-  
-  // Référence pour stocker les fonctions d'upload
-  const uploaderRef = useRef(null);
+  // Utilisation du hook unifié
+  const {
+    uploadedFiles,
+    handleFilesUploaded,
+    loadExistingFiles,
+    associateFiles,
+    handleUploaderReady
+  } = useFileSectionState({
+    nodeId: trialNodeId,
+    category: 'load_design',
+    subcategory: 'load_design',
+    onError: (msg, err) => console.error(t('trials.before.loadDesign.loadFilesError'), msg, err)
+  });
 
   // Charger les fichiers existants
   useEffect(() => {
     if (trialNodeId) {
       loadExistingFiles();
     }
-  }, [trialNodeId]);
+  }, [trialNodeId, loadExistingFiles]);
 
-  const loadExistingFiles = async () => {
-    try {
-      const response = await fileService.getNodeFiles(trialNodeId, { category: 'load_design' });
-      
-      if (!response.data || response.data.success === false) {
-        console.error(t('trials.before.loadDesign.loadFilesError'), response.data?.message);
-        return;
-      }
-      
-      const files = response.data.data?.files || [];
-      setUploadedFiles(files);
-    } catch (error) {
-      console.error(t('trials.before.loadDesign.loadFilesError'), error);
-    }
-  };
-  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
-    if (operation === 'delete') {
-      setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
-    } else if (operation === 'standby') {
-      // En mode standby, stocker les fichiers dans notre état local
-      setPendingFiles(files);
-    } else {
-      // Mode normal : ajouter les fichiers uploadés
-      setUploadedFiles(prev => [...prev, ...files]);
-    }
-  };
-
-  // Fonction pour enregistrer les références aux fonctions d'upload
-  const handleUploaderReady = (uploadPendingFiles, getPendingFiles) => {
-    uploaderRef.current = { uploadPendingFiles, getPendingFiles };
-  };
-
-  // Exposer la fonction d'association de fichiers
+  // Exposer la fonction d'association au parent
   useEffect(() => {
-    if (onFileAssociationNeeded && uploaderRef.current) {
-      // Créer la fonction d'association qui utilise nos fichiers stockés localement
-      const associationFunction = createAssociationFunction(
-        uploaderRef.current.uploadPendingFiles,
-        () => {
-          return pendingFiles; // Utiliser nos fichiers stockés localement
-        },
-        'load_design',
-        'load_design'
-      );
-      
-      // Exposer au composant parent
-      onFileAssociationNeeded(associationFunction);
+    if (onFileAssociationNeeded) {
+      onFileAssociationNeeded(associateFiles);
     }
-  }, [onFileAssociationNeeded, createAssociationFunction, pendingFiles]); // Ajouter pendingFiles comme dépendance
+  }, [onFileAssociationNeeded, associateFiles]);
+
   return (
     <div className="p-2">
       <FileUploader

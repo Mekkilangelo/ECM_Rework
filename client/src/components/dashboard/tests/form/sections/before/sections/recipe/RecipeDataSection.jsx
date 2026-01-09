@@ -92,7 +92,7 @@ const RecipeDataSection = ({
       
       <CollapsibleSection
         title={t('trials.before.recipeData.thermalCycle.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-thermal-cycle"
         rememberState={true}
         level={1}
@@ -118,7 +118,7 @@ const RecipeDataSection = ({
       
       <CollapsibleSection
         title={t('trials.before.recipeData.chemicalCycle.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-chemical-cycle"
         rememberState={true}
         level={1}
@@ -152,7 +152,7 @@ const RecipeDataSection = ({
       
       <CollapsibleSection
         title={t('trials.before.recipeData.quenchData.title')}
-        isExpandedByDefault={true}
+        isExpandedByDefault={false}
         sectionId="trial-quench-data"
         rememberState={true}
         level={1}

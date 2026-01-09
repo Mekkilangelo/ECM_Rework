@@ -1,108 +1,52 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploader from '../../../../../common/FileUploader/FileUploader';
-import fileService from '../../../../../../services/fileService';
-import useFileAssociation from '../../../../../../hooks/useFileAssociation';
+import useFileSectionState from '../../../../../../hooks/useFileSectionState';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
+/**
+ * Section Documents - Gestion des documents de commandes
+ * Utilise le hook unifié useFileSectionState pour une gestion correcte des uploads multiples
+ */
 const DocumentsSection = ({
   orderNodeId,
   onFileAssociationNeeded,
   viewMode = false
 }) => {
   const { t } = useTranslation();
-  const [uploadedFiles, setUploadedFiles] = useState({});
-  const [pendingFiles, setPendingFiles] = useState([]); // Nouveau : stocker les fichiers en attente
   
-  // Hook pour gérer l'association des fichiers
-  const { createAssociationFunction } = useFileAssociation();
-  
-  // Référence pour stocker les fonctions d'upload
-  const uploaderRef = useRef(null);
-  
+  // Utilisation du hook unifié
+  const {
+    uploadedFiles,
+    handleFilesUploaded,
+    loadExistingFiles,
+    associateFiles,
+    handleUploaderReady
+  } = useFileSectionState({
+    nodeId: orderNodeId,
+    category: 'documents',
+    subcategory: 'all_documents',
+    onError: (msg, err) => console.error(t('orders.documents.loadError'), msg, err)
+  });
+
   // Charger les fichiers existants
   useEffect(() => {
     if (orderNodeId) {
       loadExistingFiles();
     }
-  }, [orderNodeId]);
-  const loadExistingFiles = async () => {
-    try {
-      const response = await fileService.getNodeFiles(orderNodeId, { category: 'documents' });
-      
-      // Vérifier que la requête a réussi
-      if (!response.data || response.data.success === false) {
-        console.error(t('orders.documents.loadError'), response.data?.message);
-        return;
-      }
-      
-      // Organiser les fichiers par sous-catégorie
-      const filesBySubcategory = {};
-      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
-      const files = response.data.data?.files || [];
-      
-      files.forEach(file => {
-        const subcategory = file.subcategory || 'other';
-        if (!filesBySubcategory[subcategory]) {
-          filesBySubcategory[subcategory] = [];
-        }
-        filesBySubcategory[subcategory].push(file);
-      });
-      
-      setUploadedFiles(filesBySubcategory);
-    } catch (error) {
-      console.error(t('orders.documents.loadError'), error);
-    }
-  };
-  const handleFilesUploaded = (files, tempId, operation = 'add', fileId = null) => {
-    
-    if (operation === 'delete') {
-      // Pour une suppression, mettre à jour uniquement la sous-catégorie concernée
-      setUploadedFiles(prev => {
-        const updatedFiles = { ...prev };
-        
-        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
-        Object.keys(updatedFiles).forEach(subcategory => {
-          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
-        });
-        
-        return updatedFiles;
-      });    } else if (operation === 'standby') {
-      // En mode standby, stocker les fichiers dans notre état local
-      setPendingFiles(files);
-    } else {
-      // Mode normal : ajouter les fichiers uploadés
-      const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'all_documents';
-      
-      setUploadedFiles(prev => ({
-        ...prev,
-        [subcategory]: [...(prev[subcategory] || []), ...files]
-      }));
-    }
-  };// Fonction pour enregistrer les références aux fonctions d'upload
-  const handleUploaderReady = (uploadPendingFiles, getPendingFiles) => {
-    uploaderRef.current = { uploadPendingFiles, getPendingFiles };
-  };  // Exposer la fonction d'association de fichiers
+  }, [orderNodeId, loadExistingFiles]);
+
+  // Exposer la fonction d'association au parent
   useEffect(() => {
-    if (onFileAssociationNeeded && uploaderRef.current) {
-      // Créer la fonction d'association qui utilise nos fichiers stockés localement
-      const associationFunction = createAssociationFunction(
-        uploaderRef.current.uploadPendingFiles,
-        () => {
-          return pendingFiles; // Utiliser nos fichiers stockés localement
-        },
-        'documents',
-        'all_documents'
-      );
-      
-      // Exposer au composant parent
-      onFileAssociationNeeded(associationFunction);
+    if (onFileAssociationNeeded) {
+      onFileAssociationNeeded(associateFiles);
     }
-  }, [onFileAssociationNeeded, createAssociationFunction, pendingFiles]); // Ajouter pendingFiles comme dépendance
+  }, [onFileAssociationNeeded, associateFiles]);
   
   return (
     <>
-      <div className="p-2">        <FileUploader
+      <div className="p-2">
+        <FileUploader
           category="documents"
           subcategory="all_documents"
           nodeId={orderNodeId}
@@ -122,8 +66,7 @@ const DocumentsSection = ({
           height="150px"
           width="100%"
           showPreview={true}
-          // Correction : afficher tous les fichiers, peu importe la sous-catégorie
-          existingFiles={Object.values(uploadedFiles).flat()}
+          existingFiles={uploadedFiles}
           viewMode={viewMode}
         />
       </div>

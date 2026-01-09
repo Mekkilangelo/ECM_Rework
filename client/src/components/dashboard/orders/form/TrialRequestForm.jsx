@@ -74,7 +74,7 @@ const TrialRequestForm = forwardRef(({ order, clientId, onClose, onOrderCreated,
       <Form onSubmit={handleSubmit} autoComplete="off">
         <CollapsibleSection
           title={t('orders.sections.basicInfo')}
-          isExpandedByDefault={true}
+          isExpandedByDefault={false}
           sectionId="order-general-info"
           rememberState={true}
         >
@@ -89,7 +89,7 @@ const TrialRequestForm = forwardRef(({ order, clientId, onClose, onOrderCreated,
 
         <CollapsibleSection
           title={t('orders.sections.contacts')}
-          isExpandedByDefault={true}
+          isExpandedByDefault={false}
           sectionId="order-contacts"
           rememberState={true}
         >
@@ -105,7 +105,7 @@ const TrialRequestForm = forwardRef(({ order, clientId, onClose, onOrderCreated,
 
         <CollapsibleSection
           title={t('orders.sections.documents')}
-          isExpandedByDefault={true}
+          isExpandedByDefault={false}
           sectionId="order-documents"
           rememberState={true}
         >

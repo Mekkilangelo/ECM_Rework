@@ -73,18 +73,20 @@ const FileUploader = ({
       
       // Vérifier le succès
       if (response.data && response.data.success) {
-        // Mettre à jour l'état local immédiatement pour éviter les doublons
-        const updatedFile = uploadedFiles.find(f => f.id === fileId);
-        if (updatedFile) {
-          updatedFile.description = newDescription;
-        }
+        // CORRECTION: Créer une nouvelle référence pour le fichier mis à jour
+        // au lieu de muter directement l'objet existant
+        const updatedFiles = uploadedFiles.map(f => {
+          if (f.id === fileId) {
+            return { ...f, description: newDescription };
+          }
+          return f;
+        });
         
-        // Forcer un re-render en créant un nouveau tableau
-        const newUploadedFiles = [...uploadedFiles];
-        
-        // Notifier le parent pour qu'il puisse recharger si nécessaire
+        // Notifier le parent avec l'opération 'update' et le fichier mis à jour
         if (onFilesUploaded) {
-          onFilesUploaded(newUploadedFiles, null, 'update', fileId);
+          // Passer un tableau contenant uniquement le fichier mis à jour
+          const updatedFile = updatedFiles.find(f => f.id === fileId);
+          onFilesUploaded([updatedFile], null, 'update', fileId);
         }
       }
       

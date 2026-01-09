@@ -1,149 +1,60 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
 import FileUploader from '../../../../../../../common/FileUploader/FileUploader';
-import fileService from '../../../../../../../../services/fileService';
+import useMultiViewFileSectionState from '../../../../../../../../hooks/useMultiViewFileSectionState';
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 
+/**
+ * Section Furnace Report - Gestion des rapports de four par type
+ * Utilise le hook unifié useMultiViewFileSectionState pour une gestion correcte des uploads multiples
+ */
 const FurnaceReportSection = ({
   trialNodeId,
   onFileAssociationNeeded,
   viewMode = false
 }) => {
   const { t } = useTranslation();
-  const [uploadedFiles, setUploadedFiles] = useState({});
-  const [tempIds, setTempIds] = useState({});
-  // Utilisez une référence pour stocker tempIds sans déclencher de re-renders
-  const tempIdsRef = useRef({});
-  
-  // Mettez à jour la référence quand tempIds change
-  useEffect(() => {
-    tempIdsRef.current = tempIds;
-  }, [tempIds]);
   
   // Configuration des différentes vues (Datapaq déplacé en section à part entière)
-  const views = [
+  const views = useMemo(() => [
     { id: 'heating', name: t('trials.after.furnaceReport.heating') },
     { id: 'cooling', name: t('trials.after.furnaceReport.cooling') },
     { id: 'tempering', name: t('trials.after.furnaceReport.tempering') },
     { id: 'alarms', name: t('trials.after.furnaceReport.alarms') }
-  ];
+  ], [t]);
   
+  // Pour FurnaceReport, la subcategory est simplement le viewId
+  const buildSubcategory = useCallback((viewId) => viewId, []);
+  
+  // Utilisation du hook unifié multi-vues
+  const {
+    createHandleFilesUploaded,
+    loadExistingFiles,
+    associateFiles,
+    getFilesForView
+  } = useMultiViewFileSectionState({
+    nodeId: trialNodeId,
+    category: 'furnace_report',
+    views,
+    buildSubcategory,
+    onError: (msg, err) => console.error(t('trials.after.furnaceReport.loadError'), msg, err)
+  });
+
   // Charger les fichiers existants
   useEffect(() => {
     if (trialNodeId) {
       loadExistingFiles();
     }
-  }, [trialNodeId]);
-    const loadExistingFiles = async () => {
-    try {
-      const response = await fileService.getNodeFiles(trialNodeId, { category: 'furnace_report' });
-      if (process.env.NODE_ENV === 'development') {
-      }
-      
-      // Vérifier que la requête a réussi
-      if (!response.data || response.data.success === false) {
-        console.error(t('trials.after.furnaceReport.loadError'), response.data?.message);
-        return;
-      }
-      
-      // Organiser les fichiers par sous-catégorie
-      const filesBySubcategory = {};
-      // S'assurer que nous accédons aux fichiers au bon endroit dans la réponse
-      const files = response.data.data?.files || [];
-      
-      files.forEach(file => {
-        const subcategory = file.subcategory || 'other';
-        if (!filesBySubcategory[subcategory]) {
-          filesBySubcategory[subcategory] = [];
-        }
-        filesBySubcategory[subcategory].push(file);
-      });
-      setUploadedFiles(filesBySubcategory);
-    } catch (error) {
-      console.error(t('trials.after.furnaceReport.loadError'), error);
-    }
-  };
-  
-  const handleFilesUploaded = (files, newTempId, operation = 'add', fileId = null) => {
-    if (operation === 'delete') {
-      // Pour une suppression, mettre à jour toutes les sous-catégories
-      setUploadedFiles(prev => {
-        const updatedFiles = { ...prev };
-        
-        // Parcourir toutes les sous-catégories pour trouver et supprimer le fichier
-        Object.keys(updatedFiles).forEach(subcategory => {
-          updatedFiles[subcategory] = updatedFiles[subcategory].filter(file => file.id !== fileId);
-        });
-        
-        return updatedFiles;
-      });
-    } else {
-      // Pour l'ajout, mettre à jour la sous-catégorie spécifique
-      const subcategory = files.length > 0 && files[0].subcategory ? files[0].subcategory : 'all_documents';
-      
-      // Mettre à jour la liste des fichiers téléchargés
-      setUploadedFiles(prev => ({
-        ...prev,
-        [subcategory]: [...(prev[subcategory] || []), ...files]
-      }));
-      
-      // Stocker le tempId pour cette sous-catégorie
-      if (newTempId) {
-        setTempIds(prev => ({
-          ...prev,
-          [subcategory]: newTempId
-        }));
-      }
-    }
-  };
-    // Méthode pour associer les fichiers lors de la soumission du formulaire
-  // Utilisez useCallback pour mémoriser cette fonction
-  const associateFiles = useCallback(async (newTrialNodeId) => {
-    try {
-      // Utilisez la référence pour obtenir les tempIds les plus récents
-      const currentTempIds = tempIdsRef.current;
-      let allSuccessful = true;
-      
-      // Parcourir tous les tempIds et les associer
-      for (const [subcategory, tempId] of Object.entries(currentTempIds)) {
-        const response = await fileService.associateFiles(newTrialNodeId, tempId, {
-          category: 'furnace_report',
-          subcategory
-        });
-        
-        // Vérifier que l'association a réussi
-        if (!response.data || response.data.success === false) {
-          console.error(t('trials.after.furnaceReport.associateError'), response.data?.message);
-          allSuccessful = false;
-        }
-      }
-      
-      if (allSuccessful) {
-        // Réinitialiser les tempIds
-        setTempIds({});
-        
-        // Recharger les fichiers pour mettre à jour l'affichage si on met à jour la pièce existante
-        if (newTrialNodeId === trialNodeId) {
-          loadExistingFiles();
-        }
-      }
-      
-      return allSuccessful;
-    } catch (error) {
-      console.error(t('trials.after.furnaceReport.associateError'), error);
-      return false;
-    }
-  }, [trialNodeId]); // Ne dépend que de trialNodeId, pas de tempIds
-  
-  // Exposer la méthode d'association via le prop onFileAssociationNeeded
-  // Ne s'exécute qu'une fois lors du montage du composant ou si onFileAssociationNeeded change
+  }, [trialNodeId, loadExistingFiles]);
+
+  // Exposer la fonction d'association au parent
   useEffect(() => {
     if (onFileAssociationNeeded) {
       onFileAssociationNeeded(associateFiles);
     }
   }, [onFileAssociationNeeded, associateFiles]);
-  
+
   return (
     <>
       {views.map((view) => (
@@ -156,11 +67,12 @@ const FurnaceReportSection = ({
           className="mb-3"
           level={1}
         >
-          <div className="p-2">            <FileUploader
+          <div className="p-2">
+            <FileUploader
               category="furnace_report"
               subcategory={view.id}
               nodeId={trialNodeId}
-              onFilesUploaded={(files, newTempId, operation, fileId) => handleFilesUploaded(files, newTempId, operation, fileId)}
+              onFilesUploaded={createHandleFilesUploaded(view.id)}
               maxFiles={50}
               acceptedFileTypes={{
                 'application/pdf': ['.pdf'],
@@ -175,7 +87,7 @@ const FurnaceReportSection = ({
               height="150px"
               width="100%"
               showPreview={true}
-              existingFiles={uploadedFiles[view.id] || []}
+              existingFiles={getFilesForView(view.id)}
               readOnly={viewMode}
             />
           </div>

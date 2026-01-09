@@ -17,11 +17,10 @@ module.exports = (sequelize) => {
   });
 
   RefFileSubcategory.associate = function(models) {
-    RefFileSubcategory.hasMany(models.file, {
-      foreignKey: 'subcategory',
-      sourceKey: 'name',
-      as: 'files'
-    });
+    // ⚠️ PAS d'association avec files.subcategory
+    // Les subcategories sont dynamiques (ex: result-0-sample-0-x1000)
+    // et ne doivent PAS avoir de contrainte FK
+    // Garder cette table uniquement pour référence documentaire
   };
 
   return RefFileSubcategory;

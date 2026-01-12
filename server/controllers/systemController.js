@@ -259,10 +259,133 @@ const getTempFileStats = async (req, res) => {
   }
 };
 
+/**
+ * Diagnostic des fichiers - pour debug des problèmes d'upload
+ * @route GET /api/system/diagnose-files
+ */
+const diagnoseFiles = async (req, res) => {
+  try {
+    const { file: fileModel, sequelize } = require('../models');
+    const { UPLOAD_BASE_DIR, TEMP_DIR } = require('../utils/fileStorage');
+    const fileStorageService = require('../services/storage/FileStorageService');
+    
+    // Limiter à 20 fichiers récents
+    const limit = parseInt(req.query.limit) || 20;
+    const userId = req.query.userId; // Filtre optionnel par utilisateur
+    
+    const whereClause = userId ? { uploaded_by: userId } : {};
+    
+    const recentFiles = await fileModel.findAll({
+      where: whereClause,
+      order: [['uploaded_at', 'DESC']],
+      limit
+    });
+    
+    const diagnosticResults = [];
+    
+    for (const f of recentFiles) {
+      const result = {
+        node_id: f.node_id,
+        original_name: f.original_name,
+        storage_key: f.storage_key,
+        file_path: f.file_path,
+        uploaded_by: f.uploaded_by,
+        uploaded_at: f.uploaded_at,
+        size: f.size,
+        category: f.category,
+        subcategory: f.subcategory,
+        checks: {}
+      };
+      
+      // Vérifier via storage_key
+      if (f.storage_key) {
+        const storageKeyPath = fileStorageService.getPhysicalPath(f.storage_key);
+        result.checks.storage_key_path = storageKeyPath;
+        result.checks.storage_key_exists = fs.existsSync(storageKeyPath);
+        
+        // Si le fichier n'existe pas via storage_key, chercher dans temp_uploads
+        if (!result.checks.storage_key_exists) {
+          // Vérifier si un fichier similaire existe dans temp_uploads
+          const tempUploadsDir = path.join(UPLOAD_BASE_DIR, 'temp_uploads');
+          if (fs.existsSync(tempUploadsDir)) {
+            const searchInDir = (dir, filename) => {
+              try {
+                const entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                  const fullPath = path.join(dir, entry.name);
+                  if (entry.isDirectory()) {
+                    const found = searchInDir(fullPath, filename);
+                    if (found) return found;
+                  } else if (entry.name.includes(f.original_name.replace(/[^a-zA-Z0-9.-]/g, '_'))) {
+                    return fullPath;
+                  }
+                }
+              } catch (e) { /* ignore */ }
+              return null;
+            };
+            result.checks.found_in_temp = searchInDir(tempUploadsDir, f.original_name);
+          }
+        }
+      }
+      
+      // Vérifier via file_path
+      if (f.file_path) {
+        result.checks.file_path_exists = fs.existsSync(f.file_path);
+      }
+      
+      // Statut global
+      result.status = (result.checks.storage_key_exists || result.checks.file_path_exists) 
+        ? 'OK' 
+        : result.checks.found_in_temp 
+          ? 'FOUND_IN_TEMP' 
+          : 'MISSING';
+      
+      diagnosticResults.push(result);
+    }
+    
+    const summary = {
+      total: diagnosticResults.length,
+      ok: diagnosticResults.filter(r => r.status === 'OK').length,
+      found_in_temp: diagnosticResults.filter(r => r.status === 'FOUND_IN_TEMP').length,
+      missing: diagnosticResults.filter(r => r.status === 'MISSING').length
+    };
+    
+    // Lister les répertoires temp_uploads pour diagnostic
+    const tempUploadsDir = path.join(UPLOAD_BASE_DIR, 'temp_uploads');
+    let tempUploadsDirs = [];
+    if (fs.existsSync(tempUploadsDir)) {
+      tempUploadsDirs = fs.readdirSync(tempUploadsDir);
+    }
+    
+    return res.status(200).json({
+      success: true,
+      environment: {
+        UPLOAD_BASE_DIR,
+        TEMP_DIR,
+        serviceBaseDir: fileStorageService.baseDir,
+        NODE_ENV: process.env.NODE_ENV,
+        UPLOAD_PATH_ENV: process.env.UPLOAD_PATH || '(not set)',
+        cwd: process.cwd(),
+        tempUploadsDirCount: tempUploadsDirs.length
+      },
+      summary,
+      files: diagnosticResults
+    });
+  } catch (error) {
+    console.error('Erreur diagnostic fichiers:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur diagnostic fichiers',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getSystemSettings,
   updateReadOnlyMode,
   getSecurityInfo,
   cleanupTempFiles,
-  getTempFileStats
+  getTempFileStats,
+  diagnoseFiles
 };

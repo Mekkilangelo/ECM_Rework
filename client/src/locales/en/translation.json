@@ -7,12 +7,14 @@
     "close": "Close",
     "copy": "Copy",
     "create": "Create",
+    "creating": "Creating...",
     "delete": "Delete",
     "edit": "Edit",
     "loading": "Loading...",
     "max": "Max",
     "min": "Min",
     "modifiedAt": "Modified on",
+    "modifying": "Modifying...",
     "name": "Name",
     "no": "No",
     "paste": "Paste",
@@ -541,6 +543,7 @@
     "add": "Add part",
     "edit": "Edit part",
     "new": "New part",
+    "noItemsFound": "No parts found",
     "designation": "Designation",
     "clientDesignation": "Client designation",
     "reference": "Reference",
@@ -556,7 +559,8 @@
       "documents": "Documents",
       "dimensions": "Dimensions",
       "steel": "Steel",
-      "photos": "Photos"
+      "photos": "Photos",
+      "identificationReport": "Identification Sheet"
     },
     "dimensions": {
       "mainDimensions": "Main Dimensions",
@@ -1218,11 +1222,6 @@
       "selectedPhotos": "{{count}} photo(s) selected",
       "estimatedSize": "Estimated size: {{size}}"
     },
-    "actions": {
-      "preview": "Preview",
-      "downloadPdf": "Download PDF",
-      "pdfFromPreview": "Use preview to generate PDF"
-    },
     "preview": {
       "title": "Report Preview",
       "iframe": {
@@ -1262,6 +1261,23 @@
       "title": "Photos to include in report",
       "allSections": "All sections",
       "filter": "Filter by section"
+    },
+    "partIdentification": {
+      "title": "Identification Sheet",
+      "selectPhotos": "Select photos to include in the identification sheet.",
+      "noPhotos": "No photos available for view {{view}}",
+      "noPhotosAvailable": "No photos available for this part. Add photos in the Photos section.",
+      "loadError": "Error loading photos",
+      "generateError": "Error generating PDF",
+      "saveFirst": "Save the part first to generate the identification sheet.",
+      "selected": "selected"
+    },
+    "actions": {
+      "preview": "Preview",
+      "downloadPdf": "Download PDF",
+      "exportPDF": "Export PDF",
+      "pdfFromPreview": "Use preview to generate PDF",
+      "generating": "Generating..."
     }
   },
 

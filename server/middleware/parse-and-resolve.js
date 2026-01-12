@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { UPLOAD_BASE_DIR } = require('../utils/fileStorage');
+const logger = require('../utils/logger');
 
 /**
  * Middleware pour gérer l'upload multipart
@@ -31,7 +32,7 @@ const parseAndResolvePath = async (req, res, next) => {
     // Parser la requête
     tempUpload(req, res, async (err) => {
       if (err) {
-        console.error('❌ [parseAndResolvePath] Erreur multer temp:', err);
+        logger.error('[parseAndResolvePath] Erreur multer', { error: err.message });
         return next(err);
       }
 
@@ -44,6 +45,12 @@ const parseAndResolvePath = async (req, res, next) => {
         // Créer un dossier temporaire unique pour cet upload
         const tempUploadId = uuidv4();
         const tempDir = path.join(UPLOAD_BASE_DIR, 'temp_uploads', tempUploadId);
+        
+        logger.debug('[parseAndResolvePath] Création dossier temporaire', {
+          tempDir,
+          UPLOAD_BASE_DIR,
+          fileCount: req.files.length
+        });
         
         // Créer le répertoire temporaire
         if (!fs.existsSync(tempDir)) {
@@ -63,6 +70,22 @@ const parseAndResolvePath = async (req, res, next) => {
           // Écrire le fichier temporaire sur disque
           fs.writeFileSync(filePath, file.buffer);
           
+          // Vérifier que le fichier a bien été écrit
+          if (!fs.existsSync(filePath)) {
+            logger.error('[parseAndResolvePath] Échec écriture fichier temporaire', {
+              filePath,
+              originalname: file.originalname
+            });
+            throw new Error(`Échec écriture fichier temporaire: ${filePath}`);
+          }
+          
+          const stats = fs.statSync(filePath);
+          logger.debug('[parseAndResolvePath] Fichier temporaire créé', {
+            filePath,
+            originalname: file.originalname,
+            size: stats.size
+          });
+          
           // Créer un objet file compatible avec multer
           convertedFiles.push({
             fieldname: file.fieldname,
@@ -80,16 +103,21 @@ const parseAndResolvePath = async (req, res, next) => {
         // Remplacer req.files par les fichiers convertis
         req.files = convertedFiles;
         
+        logger.debug('[parseAndResolvePath] Fichiers prêts pour traitement', {
+          count: convertedFiles.length,
+          tempDir
+        });
+        
         next();
         
       } catch (error) {
-        console.error('❌ [parseAndResolvePath] Erreur traitement fichiers:', error);
+        logger.error('[parseAndResolvePath] Erreur traitement fichiers', { error: error.message });
         next(error);
       }
     });
     
   } catch (error) {
-    console.error('❌ [parseAndResolvePath] Erreur générale:', error);
+    logger.error('[parseAndResolvePath] Erreur générale', { error: error.message });
     next(error);
   }
 };

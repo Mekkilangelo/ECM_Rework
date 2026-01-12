@@ -1,41 +1,34 @@
 /**
  * INFRASTRUCTURE: Section Recette du rapport PDF
  * Affiche les données de recette (préox, cycles thermique/chimique, trempe)
+ * 
+ * Uses theme system for consistent styling
  */
 
 import React from 'react';
 import { View, Text, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
+import { COLORS, TYPOGRAPHY, SPACING, getAccentColor, getSubsectionBackground, getSubsectionTextColor } from '../theme';
+
+// Section type for accent colors
+const SECTION_TYPE = 'recipe';
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 12
+    marginBottom: SPACING.section.marginBottom
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 0,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#ffffff',
-    backgroundColor: '#2c3e50',
-    letterSpacing: 1,
+    ...TYPOGRAPHY.sectionTitle,
+    color: COLORS.text.white,
+    backgroundColor: COLORS.brand.secondary,
     borderLeftWidth: 4,
-    borderLeftColor: '#e74c3c',
+    borderLeftColor: getAccentColor(SECTION_TYPE),
   },
   subsectionTitle: {
-    fontSize: 9.5,
-    fontWeight: 'bold',
-    marginTop: 12,
-    marginBottom: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    color: '#c0392b',
-    backgroundColor: '#fef5e7',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...TYPOGRAPHY.subsectionTitle,
+    color: getSubsectionTextColor(SECTION_TYPE),
+    backgroundColor: getSubsectionBackground(SECTION_TYPE),
     borderLeftWidth: 3,
-    borderLeftColor: '#e74c3c',
+    borderLeftColor: getAccentColor(SECTION_TYPE),
   },
   row: {
     flexDirection: 'row',

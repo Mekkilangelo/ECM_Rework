@@ -159,14 +159,31 @@ const saveUploadedFiles = async (files, data, req = null) => {
       };
       
       // Storage key temporaire : temp/{tempId}/{filename}
-      storageKey = `temp/${tempId}/${uploadedFile.originalname}`;
+      // Utiliser un nom de fichier sûr (comme le fait parseAndResolvePath)
+      const safeFilename = uploadedFile.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      storageKey = `temp/${tempId}/${safeFilename}`;
     }
     
     // Ajouter l'ID temporaire au contexte (pour le retrouver plus tard)
     context.temp_id = tempId;
     
+    logger.info('Sauvegarde fichier uploadé', {
+      originalName: uploadedFile.originalname,
+      tempPath: uploadedFile.path,
+      storageKey,
+      hasParentNode: !!parentNode,
+      category,
+      subcategory
+    });
+    
     // ⭐ NOUVEAU SYSTÈME : Sauvegarder le fichier à sa destination finale (ou temp)
     const finalPath = await fileStorageService.saveFile(uploadedFile, storageKey);
+    
+    logger.info('Fichier sauvegardé avec succès', {
+      originalName: uploadedFile.originalname,
+      finalPath,
+      storageKey
+    });
     
     // Construire le chemin logique
     let nodePath;
@@ -349,9 +366,27 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
         tempFile.original_name
       );
 
+      logger.info('Association fichier temporaire', {
+        tempFileId: tempFile.node_id,
+        originalName: tempFile.original_name,
+        oldStorageKey: tempFile.storage_key,
+        newStorageKey,
+        oldFilePath: tempFile.file_path
+      });
+
       // 2. DÉPLACEMENT PHYSIQUE (Temp -> Final)
       // C'est le SEUL cas où on déplace physiquement un fichier
-      await fileStorageService.moveFile(tempFile.storage_key, newStorageKey);
+      try {
+        await fileStorageService.moveFile(tempFile.storage_key, newStorageKey);
+      } catch (moveError) {
+        logger.error('Échec déplacement fichier lors de l\'association', {
+          tempFileId: tempFile.node_id,
+          oldStorageKey: tempFile.storage_key,
+          newStorageKey,
+          error: moveError.message
+        });
+        throw moveError;
+      }
       
       // Construire le nouveau chemin logique pour le nœud
       const newNodePath = buildNodePath(parentNode, finalCategory, finalSubcategory, fileNode.name);
@@ -702,6 +737,14 @@ const getFileById = async (fileId) => {
     throw new NotFoundError('Fichier non trouvé');
   }
   
+  logger.debug('getFileById - Recherche fichier physique', {
+    fileId,
+    storage_key: fileData.storage_key,
+    file_path: fileData.file_path,
+    UPLOAD_BASE_DIR: UPLOAD_BASE_DIR,
+    baseDir: fileStorageService.baseDir
+  });
+  
   // Déterminer le chemin physique réel
   // Priorité: storage_key (nouveau système) > file_path (ancien système)
   let physicalPath = null;
@@ -720,6 +763,36 @@ const getFileById = async (fileId) => {
         checkedPath: storageKeyPath,
         UPLOAD_BASE_DIR: UPLOAD_BASE_DIR
       });
+      
+      // Tentative de récupération : le fichier est peut-être au bon endroit relatif
+      // mais le UPLOAD_BASE_DIR a changé. Cherchons via file_path si le nom correspond.
+      if (fileData.file_path && fs.existsSync(fileData.file_path)) {
+        // Le fichier existe à l'ancien chemin - le déplacer vers le nouveau
+        const targetDir = path.dirname(storageKeyPath);
+        try {
+          if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+          }
+          fs.copyFileSync(fileData.file_path, storageKeyPath);
+          // Mettre à jour file_path en DB pour cohérence future
+          await file.update(
+            { file_path: storageKeyPath },
+            { where: { node_id: fileId } }
+          );
+          physicalPath = storageKeyPath;
+          resolvedVia = 'migrated_from_file_path';
+          logger.info('Fichier migré vers storage_key path', { 
+            fileId, 
+            from: fileData.file_path, 
+            to: storageKeyPath 
+          });
+        } catch (migrateError) {
+          logger.warn('Échec migration fichier', { fileId, error: migrateError.message });
+          // Utiliser l'ancien chemin en fallback
+          physicalPath = fileData.file_path;
+          resolvedVia = 'file_path_fallback';
+        }
+      }
     }
   }
   

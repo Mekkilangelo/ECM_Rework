@@ -1,94 +1,61 @@
 /**
  * INFRASTRUCTURE: Load Configuration Section for PDF
  * Displays load configuration photos with intelligent layout
+ * 
+ * Layout Strategy: Hero-Pair pattern (1 large photo + 2 smaller below)
+ * This is the reference layout for photo display
+ * 
+ * Refactorisé pour utiliser le système de thème et les primitives
  */
 
 import React from 'react';
-import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { getPhotoUrl, validatePhotos } from '../helpers/photoHelpers';
+import { View, StyleSheet } from '@react-pdf/renderer';
+import { SPACING, PHOTO_SIZES } from '../theme';
+import { 
+  SectionTitle, 
+  PhotoContainer,
+  PhotoHero,
+  PhotoHeroPair,
+  PhotoRow,
+  PhotoGrid2,
+  EmptyState 
+} from '../primitives';
+import { validatePhotos } from '../helpers/photoHelpers';
 
+// Section-specific accent color
+const SECTION_TYPE = 'load';
+
+// Styles spécifiques à cette section
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 16,
+    marginBottom: SPACING.section.marginBottom,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 0,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#ffffff',
-    backgroundColor: '#2c3e50',
-    letterSpacing: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: '#16a085',
+  photoStack: {
+    flexDirection: 'column',
   },
-  // Layout 1 photo - full width, full page height
-  photoFullPage: {
-    width: 500,
-    height: 700,
-  },
-  // Layout 2 photos - stacked vertically, full width each
-  photoHalfPage: {
-    width: 500,
-    height: 340,
-    marginBottom: 12,
-  },
-  // Layout 3 photos - first full width centered, then 2 side by side below
-  photoFirstLarge: {
-    width: 500,
-    height: 280,
-    marginBottom: 8,
-  },
-  photoBottomRow: {
-    width: 244,
-    height: 200,
-  },
-  photoContainerCentered: {
-    marginBottom: 8,
-    alignItems: 'center',
-  },
-  // Layout grille 2x3 (6 photos par page)
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 12,
-  },
-  photoGridItem: {
-    width: 244,
-    height: 240,
-  },
-  photoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  photoContainer: {
-    marginBottom: 12,
-  },
-  photo: {
-    objectFit: 'cover',
-    border: '0.5pt solid #d0d0d0',
-  },
-  photoLabel: {
-    fontSize: 7.5,
-    textAlign: 'center',
-    marginTop: 3,
-    color: '#888',
-    fontStyle: 'italic',
-  },
-  emptyState: {
-    fontSize: 9,
-    fontStyle: 'italic',
-    color: '#999',
-    marginTop: 8,
+    gap: SPACING.photo.gap,
   },
 });
 
+// Photo sizes specific to Load section
+const LOAD_PHOTO_SIZES = {
+  fullPage: { width: 500, height: 700 },
+  halfPage: { width: 500, height: 340 },
+  heroLarge: { width: 500, height: 280 },
+  pairSmall: { width: 244, height: 200 },
+  gridItem: { width: 244, height: 240 },
+};
+
 /**
  * Calculate intelligent layout based on photo count
+ * - 1 photo: full page
+ * - 2 photos: stacked vertically  
+ * - 3 photos: hero + pair (1 large + 2 small)
+ * - 4+ photos: first page = hero + pair, then grid 2x2
  */
 const calculateLayout = (photoCount) => {
   if (photoCount === 1) {
@@ -98,15 +65,15 @@ const calculateLayout = (photoCount) => {
   } else if (photoCount === 3) {
     return { type: 'triple', pages: [[0, 1, 2]] };
   } else {
-    // Pour 4+ photos: 1ère page = 3 photos (1 grand + 2 petits), puis grille 2x2 (4 photos par page max)
+    // 4+ photos: first page = 3 (hero + pair), then grid 2x2
     const pages = [];
     let currentIndex = 0;
     
-    // Première page avec 3 photos (layout spécial)
+    // First page with special layout
     pages.push([0, 1, 2]);
     currentIndex = 3;
     
-    // Pages suivantes avec grille 2x2 (4 photos par page max pour éviter débordement)
+    // Following pages with grid (4 photos max per page)
     while (currentIndex < photoCount) {
       const remaining = photoCount - currentIndex;
       const photosThisPage = Math.min(remaining, 4);
@@ -123,6 +90,75 @@ const calculateLayout = (photoCount) => {
 };
 
 /**
+ * Single Photo Layout - Full page
+ */
+const SinglePhotoLayout = ({ photo }) => (
+  <PhotoContainer 
+    photo={photo} 
+    customSize={LOAD_PHOTO_SIZES.fullPage}
+  />
+);
+
+/**
+ * Double Photo Layout - Stacked vertically
+ */
+const DoublePhotoLayout = ({ photos }) => (
+  <View style={styles.photoStack}>
+    {photos.map((photo, idx) => (
+      <PhotoContainer 
+        key={photo.id || idx}
+        photo={photo} 
+        customSize={LOAD_PHOTO_SIZES.halfPage}
+      />
+    ))}
+  </View>
+);
+
+/**
+ * Triple Photo Layout - Hero + Pair pattern
+ * 1 large photo on top, 2 smaller photos below side by side
+ */
+const TriplePhotoLayout = ({ photos }) => {
+  const [heroPhoto, ...pairPhotos] = photos;
+  
+  return (
+    <View style={styles.photoStack}>
+      {/* Hero photo */}
+      <PhotoContainer 
+        photo={heroPhoto} 
+        customSize={LOAD_PHOTO_SIZES.heroLarge}
+      />
+      
+      {/* Pair row */}
+      <View style={styles.photoGrid}>
+        {pairPhotos.map((photo, idx) => (
+          <PhotoContainer 
+            key={photo.id || idx}
+            photo={photo} 
+            customSize={LOAD_PHOTO_SIZES.pairSmall}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
+
+/**
+ * Grid Photo Layout - 2x2 grid for subsequent pages
+ */
+const GridPhotoLayout = ({ photos }) => (
+  <View style={styles.photoGrid}>
+    {photos.map((photo, idx) => (
+      <PhotoContainer 
+        key={photo.id || idx}
+        photo={photo} 
+        customSize={LOAD_PHOTO_SIZES.gridItem}
+      />
+    ))}
+  </View>
+);
+
+/**
  * Load Configuration Section for PDF
  */
 export const LoadSectionPDF = ({ report, photos = [] }) => {
@@ -134,10 +170,10 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
   if (validPhotos.length === 0) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>LOAD CONFIGURATION</Text>
-        <Text style={styles.emptyState}>
-          No load configuration photos available for this trial.
-        </Text>
+        <SectionTitle sectionType={SECTION_TYPE}>
+          LOAD CONFIGURATION
+        </SectionTitle>
+        <EmptyState message="No load configuration photos available for this trial." />
       </View>
     );
   }
@@ -150,10 +186,10 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
         const isFirstPage = pageIndex === 0;
         const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
         
-        // Déterminer le type de layout pour cette page
+        // Determine layout type for this page
         let pageLayout = layout.type;
         if (layout.type === 'multiple' && !isFirstPage) {
-          pageLayout = 'grid'; // Pages suivantes utilisent toujours la grille
+          pageLayout = 'grid';
         }
         
         return (
@@ -162,94 +198,31 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
             style={styles.section}
             break={pageIndex > 0}
           >
-            <Text style={styles.sectionTitle}>
-              {pageIndex === 0 ? 'LOAD CONFIGURATION' : 'LOAD CONFIGURATION (suite)'}
-            </Text>
+            <SectionTitle 
+              sectionType={SECTION_TYPE} 
+              continuation={pageIndex > 0}
+            >
+              LOAD CONFIGURATION
+            </SectionTitle>
             
-            {/* Layout 1: Single photo - full page */}
+            {/* Single photo - full page */}
             {pageLayout === 'single' && (
-              <View style={styles.photoContainer}>
-                <Image 
-                  src={getPhotoUrl(pagePhotos[0])} 
-                  style={[styles.photo, styles.photoFullPage]}
-                />
-                {(pagePhotos[0].original_name || pagePhotos[0].name) && (
-                  <Text style={styles.photoLabel}>
-                    {pagePhotos[0].original_name || pagePhotos[0].name}
-                  </Text>
-                )}
-              </View>
+              <SinglePhotoLayout photo={pagePhotos[0]} />
             )}
 
-            {/* Layout 2: Two photos - stacked vertically */}
+            {/* Double photos - stacked vertically */}
             {pageLayout === 'double' && (
-              <>
-                {pagePhotos.map((photo, idx) => (
-                  <View key={idx} style={styles.photoContainer}>
-                    <Image 
-                      src={getPhotoUrl(photo)} 
-                      style={[styles.photo, styles.photoHalfPage]}
-                    />
-                    {(photo.original_name || photo.name) && (
-                      <Text style={styles.photoLabel}>
-                        {photo.original_name || photo.name}
-                      </Text>
-                    )}
-                  </View>
-                ))}
-              </>
+              <DoublePhotoLayout photos={pagePhotos} />
             )}
 
-            {/* Layout 3 ou Multiple première page: 1 large + 2 en dessous */}
+            {/* Triple or Multiple first page - hero + pair */}
             {(pageLayout === 'triple' || (pageLayout === 'multiple' && isFirstPage)) && (
-              <>
-                <View style={styles.photoContainerCentered}>
-                  <Image 
-                    src={getPhotoUrl(pagePhotos[0])} 
-                    style={[styles.photo, styles.photoFirstLarge]}
-                  />
-                  {(pagePhotos[0].original_name || pagePhotos[0].name) && (
-                    <Text style={styles.photoLabel}>
-                      {pagePhotos[0].original_name || pagePhotos[0].name}
-                    </Text>
-                  )}
-                </View>
-                
-                <View style={styles.photoRow}>
-                  {pagePhotos.slice(1).map((photo, idx) => (
-                    <View key={idx + 1} style={styles.photoContainer}>
-                      <Image 
-                        src={getPhotoUrl(photo)} 
-                        style={[styles.photo, styles.photoBottomRow]}
-                      />
-                      {(photo.original_name || photo.name) && (
-                        <Text style={styles.photoLabel}>
-                          {photo.original_name || photo.name}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
-                </View>
-              </>
+              <TriplePhotoLayout photos={pagePhotos} />
             )}
 
-            {/* Grille 2x3 pour les pages suivantes */}
+            {/* Grid layout for subsequent pages */}
             {pageLayout === 'grid' && (
-              <View style={styles.photoGrid}>
-                {pagePhotos.map((photo, idx) => (
-                  <View key={idx} style={styles.photoContainer}>
-                    <Image 
-                      src={getPhotoUrl(photo)} 
-                      style={[styles.photo, styles.photoGridItem]}
-                    />
-                    {(photo.original_name || photo.name) && (
-                      <Text style={styles.photoLabel}>
-                        {photo.original_name || photo.name}
-                      </Text>
-                    )}
-                  </View>
-                ))}
-              </View>
+              <GridPhotoLayout photos={pagePhotos} />
             )}
           </View>
         );

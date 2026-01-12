@@ -110,6 +110,24 @@ class FileStorageService {
       const physicalPath = this.getPhysicalPath(storageKey);
       const dir = path.dirname(physicalPath);
       
+      logger.debug('Début saveFile', {
+        sourcePath: uploadedFile.path,
+        storageKey,
+        targetPath: physicalPath,
+        size: uploadedFile.size
+      });
+      
+      // Vérifier que le fichier source existe
+      try {
+        await fs.access(uploadedFile.path);
+      } catch (accessError) {
+        logger.error('Fichier source introuvable dans saveFile', {
+          sourcePath: uploadedFile.path,
+          error: accessError.message
+        });
+        throw new Error(`Fichier source introuvable: ${uploadedFile.path}`);
+      }
+      
       // Créer les dossiers parents si nécessaire
       await fs.mkdir(dir, { recursive: true });
       
@@ -131,16 +149,28 @@ class FileStorageService {
         }
       }
       
-      logger.debug('Fichier sauvegardé', { 
-        storageKey, 
-        physicalPath,
-        size: uploadedFile.size 
-      });
+      // Vérifier que le fichier a bien été sauvegardé
+      try {
+        const stats = await fs.stat(physicalPath);
+        logger.debug('Fichier sauvegardé avec succès', { 
+          storageKey, 
+          physicalPath,
+          size: stats.size
+        });
+      } catch (verifyError) {
+        logger.error('Fichier non trouvé après sauvegarde!', {
+          storageKey,
+          physicalPath,
+          error: verifyError.message
+        });
+        throw new Error(`Échec de vérification après sauvegarde: ${physicalPath}`);
+      }
       
       return physicalPath;
     } catch (error) {
       logger.error('Erreur sauvegarde fichier', { 
-        storageKey, 
+        storageKey,
+        sourcePath: uploadedFile.path, 
         error: error.message 
       });
       throw error;
@@ -232,16 +262,54 @@ class FileStorageService {
     const newDir = path.dirname(newPath);
     
     try {
+      // Vérifier que le fichier source existe
+      try {
+        await fs.access(oldPath);
+      } catch (accessError) {
+        logger.error('Fichier source introuvable pour déplacement', {
+          oldStorageKey,
+          oldPath,
+          error: accessError.message
+        });
+        throw new Error(`Fichier source introuvable: ${oldPath}`);
+      }
+      
       // Créer le nouveau dossier si nécessaire
       await fs.mkdir(newDir, { recursive: true });
       
-      // Déplacer le fichier
-      await fs.rename(oldPath, newPath);
+      // Essayer de déplacer le fichier, sinon copier puis supprimer
+      // (fs.rename ne fonctionne pas entre différents systèmes de fichiers)
+      try {
+        await fs.rename(oldPath, newPath);
+      } catch (renameError) {
+        if (renameError.code === 'EXDEV') {
+          // Cross-device link: copier puis supprimer
+          logger.debug('Cross-device rename dans moveFile, utilisation de copy+delete', { 
+            source: oldPath, 
+            destination: newPath 
+          });
+          await fs.copyFile(oldPath, newPath);
+          await fs.unlink(oldPath);
+        } else {
+          throw renameError;
+        }
+      }
       
-      logger.debug('Fichier déplacé', { 
-        from: oldStorageKey, 
-        to: newStorageKey 
-      });
+      // Vérifier que le fichier a bien été déplacé
+      try {
+        await fs.access(newPath);
+        logger.debug('Fichier déplacé avec succès', { 
+          from: oldStorageKey, 
+          to: newStorageKey 
+        });
+      } catch (verifyError) {
+        logger.error('Fichier non trouvé après déplacement!', {
+          oldStorageKey,
+          newStorageKey,
+          newPath
+        });
+        throw new Error(`Échec de vérification après déplacement: ${newPath}`);
+      }
       
       // Nettoyer l'ancien dossier s'il est vide
       await this.cleanupEmptyDirectories(path.dirname(oldPath));
@@ -249,6 +317,8 @@ class FileStorageService {
       logger.error('Erreur déplacement fichier', { 
         oldStorageKey, 
         newStorageKey,
+        oldPath,
+        newPath,
         error: error.message 
       });
       throw error;

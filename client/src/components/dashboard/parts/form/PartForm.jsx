@@ -13,6 +13,7 @@ import SpecificationsSection from './sections/specifications/SpecificationsSecti
 import SteelSection from './sections/steel/SteelSection';
 import PhotosSection from './sections/photos/PhotosSection';
 import CollapsibleSection from '../../../common/CollapsibleSection/CollapsibleSection';
+import { PartIdentificationReport } from '../../../../features/reports';
 
 const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, viewMode = false }, ref) => {
   const { t } = useTranslation();
@@ -242,6 +243,39 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               viewMode={viewMode}
             />
           </CollapsibleSection>
+          
+          {/* Section Fiche d'identification - uniquement si la pièce est enregistrée */}
+          {part && part.id && (
+            <CollapsibleSection
+              title={t('parts.sections.identificationReport', 'Fiche d\'identification')}
+              isExpandedByDefault={false}
+              sectionId="part-identification-report"
+              rememberState={true}
+            >
+              <PartIdentificationReport
+                partNodeId={part.id}
+                partData={{
+                  ...formData,
+                  designation: formData.designation,
+                  part_number: formData.partNumber,
+                  drawing_number: formData.drawingNumber,
+                  steel: formData.steel,
+                  hardnessSpecs: formData.hardnessSpecs,
+                  ecdSpecs: formData.ecdSpecs,
+                  dim_rect_length: formData.dimRectLength,
+                  dim_rect_width: formData.dimRectWidth,
+                  dim_rect_height: formData.dimRectHeight,
+                  dim_rect_unit: formData.dimRectUnit,
+                  dim_circ_diameterOut: formData.dimCircDiameterOut,
+                  dim_circ_diameterIn: formData.dimCircDiameterIn,
+                  dim_circ_unit: formData.dimCircUnit,
+                  dim_weight_value: formData.dimWeightValue,
+                  dim_weight_unit: formData.dimWeightUnit
+                }}
+                clientData={part.client || null}
+              />
+            </CollapsibleSection>
+          )}
           
           <div className="d-flex justify-content-end mt-4">
             {viewMode ? (

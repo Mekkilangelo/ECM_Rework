@@ -545,6 +545,7 @@
     "add": "Ajouter une pièce",
     "edit": "Modifier la pièce",
     "new": "Nouvelle pièce",
+    "noItemsFound": "Aucune pièce trouvée",
     "designation": "Désignation",
     "clientDesignation": "Désignation client",
     "reference": "Référence",
@@ -560,7 +561,8 @@
       "documents": "Documents",
       "dimensions": "Dimensions",
       "steel": "Acier",
-      "photos": "Photos"
+      "photos": "Photos",
+      "identificationReport": "Fiche d'identification"
     },
     "dimensions": {
       "mainDimensions": "Dimensions principales",
@@ -1272,6 +1274,21 @@
       "title": "Photos à inclure dans le rapport",
       "allSections": "Toutes les sections",
       "filter": "Filtrer par section..."
+    },
+    "partIdentification": {
+      "title": "Fiche d'identification",
+      "selectPhotos": "Sélectionnez les photos à inclure dans la fiche d'identification.",
+      "noPhotos": "Aucune photo disponible pour la vue {{view}}",
+      "noPhotosAvailable": "Aucune photo disponible pour cette pièce. Ajoutez des photos dans la section Photos.",
+      "loadError": "Erreur lors du chargement des photos",
+      "generateError": "Erreur lors de la génération du PDF",
+      "saveFirst": "Enregistrez d'abord la pièce pour pouvoir générer la fiche d'identification.",
+      "selected": "sélectionné(s)"
+    },
+    "actions": {
+      "preview": "Prévisualiser",
+      "exportPDF": "Exporter PDF",
+      "generating": "Génération..."
     }
   },
 

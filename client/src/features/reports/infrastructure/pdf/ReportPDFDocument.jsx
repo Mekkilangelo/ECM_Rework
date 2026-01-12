@@ -106,13 +106,22 @@ const styles = StyleSheet.create({
 });
 
 /**
- * En-tête de page (ancienne version - conservée pour compatibilité)
+ * En-tête de page avec logos ECM et Synergy
  */
 const PageHeader = ({ clientName, trialCode, pageNumber }) => (
   <View style={styles.pageHeader} fixed>
-    <Text>{clientName || 'Rapport d\'essai'}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <Image
+        src="/images/logoECM.png"
+        style={{ width: 30, height: 30, objectFit: 'contain' }}
+      />
+      <Image
+        src="/images/synergy_logo.png"
+        style={{ width: 60, height: 20, objectFit: 'contain' }}
+      />
+    </View>
+    <Text style={{ flex: 1, textAlign: 'center' }}>{clientName || 'Rapport d\'essai'}</Text>
     <Text>{trialCode || ''}</Text>
-    <Text>Page {pageNumber}</Text>
   </View>
 );
 
@@ -132,11 +141,12 @@ const PageFooter = ({ generatedDate }) => (
  * Page de garde moderne
  */
 export const CoverPage = ({ report, options }) => {
-  const logoUrl = '/images/logoECM.png';
+  const logoEcmUrl = '/images/logoECM.png';
+  const logoSynergyUrl = '/images/synergy_logo.png';
   
   return (
     <Page size="A4" style={{ position: 'relative' }}>
-      {/* Bandeau supérieur avec logo */}
+      {/* Bandeau supérieur avec logos */}
       <View style={{
         backgroundColor: '#1a1a2e',
         padding: 30,
@@ -151,7 +161,7 @@ export const CoverPage = ({ report, options }) => {
             color: '#ffffff',
             letterSpacing: 1.5
           }}>
-            Test Report
+            Trial Report
           </Text>
           <Text style={{
             fontSize: 10,
@@ -162,16 +172,30 @@ export const CoverPage = ({ report, options }) => {
             Quality Control & Heat Treatment
           </Text>
         </View>
-        {logoUrl && (
-          <Image
-            src={logoUrl}
-            style={{
-              width: 80,
-              height: 80,
-              objectFit: 'contain'
-            }}
-          />
-        )}
+        {/* Logos ECM et Synergy */}
+        <View style={{ alignItems: 'center' }}>
+          {logoEcmUrl && (
+            <Image
+              src={logoEcmUrl}
+              style={{
+                width: 100,
+                height: 100,
+                objectFit: 'contain'
+              }}
+            />
+          )}
+          {logoSynergyUrl && (
+            <Image
+              src={logoSynergyUrl}
+              style={{
+                width: 120,
+                height: 40,
+                objectFit: 'contain',
+                marginTop: 8
+              }}
+            />
+          )}
+        </View>
       </View>
 
       {/* Section client - Mise en avant */}

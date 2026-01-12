@@ -37,4 +37,7 @@ router.put('/settings/readonly', superUserAccess, systemController.updateReadOnl
 router.post('/cleanup/temp-files', superUserAccess, systemController.cleanupTempFiles);
 router.get('/stats/temp-files', readAccess, systemController.getTempFileStats);
 
+// Diagnostic des fichiers (super-admin uniquement)
+router.get('/diagnose-files', superUserAccess, systemController.diagnoseFiles);
+
 module.exports = router;

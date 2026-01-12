@@ -21,7 +21,8 @@ COPY . .
 
 # Créer les dossiers uploads et logs avec les bonnes permissions
 # Le conteneur Node tourne avec l'utilisateur node (uid 1000)
-RUN mkdir -p /app/uploads /app/uploads/temp /app/logs && \
+# Note: temp_uploads est utilisé par le middleware pour le stockage temporaire
+RUN mkdir -p /app/uploads /app/uploads/temp /app/uploads/temp_uploads /app/logs && \
     chown -R node:node /app/uploads /app/logs && \
     chmod -R 755 /app/uploads /app/logs
 

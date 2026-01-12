@@ -2,8 +2,7 @@
 const { node } = require('../models');
 const path = require('path');
 const fs = require('fs');
-
-const UPLOAD_BASE_DIR = path.join(__dirname, '../uploads');
+const { UPLOAD_BASE_DIR } = require('../utils/fileStorage');
 
 /**
  * Construit le chemin physique pour un fichier à partir du chemin du nœud parent

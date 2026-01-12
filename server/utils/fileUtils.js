@@ -8,6 +8,7 @@ const path = require('path');
 const logger = require('./logger');
 const { node, file } = require('../models');
 const { Op } = require('sequelize');
+const { UPLOAD_BASE_DIR } = require('./fileStorage');
 
 /**
  * Supprime physiquement tous les fichiers associés à un nœud
@@ -68,7 +69,7 @@ const deletePhysicalFiles = async (nodeId, transaction = null) => {
 const deletePhysicalDirectory = async (nodePath, uploadsBasePath = null) => {
   try {
     // Obtenir le chemin de base des uploads
-    const baseDir = uploadsBasePath || process.env.UPLOAD_PATH || path.join(__dirname, '..', 'uploads');
+    const baseDir = uploadsBasePath || UPLOAD_BASE_DIR;
     
     // Construire le chemin physique complet
     // Le nodePath commence généralement par /, donc on l'enlève pour éviter les doublons

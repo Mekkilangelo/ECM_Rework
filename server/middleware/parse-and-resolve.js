@@ -10,6 +10,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const { UPLOAD_BASE_DIR } = require('../utils/fileStorage');
 
 /**
  * Middleware pour gérer l'upload multipart
@@ -41,9 +42,8 @@ const parseAndResolvePath = async (req, res, next) => {
 
       try {
         // Créer un dossier temporaire unique pour cet upload
-        const uploadBaseDir = process.env.UPLOAD_BASE_DIR || path.join(__dirname, '../uploads');
         const tempUploadId = uuidv4();
-        const tempDir = path.join(uploadBaseDir, 'temp_uploads', tempUploadId);
+        const tempDir = path.join(UPLOAD_BASE_DIR, 'temp_uploads', tempUploadId);
         
         // Créer le répertoire temporaire
         if (!fs.existsSync(tempDir)) {

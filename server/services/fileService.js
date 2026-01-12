@@ -164,8 +164,11 @@ const saveUploadedFiles = async (files, data, req = null) => {
       storageKey = `temp/${tempId}/${safeFilename}`;
     }
     
-    // Ajouter l'ID temporaire au contexte (pour le retrouver plus tard)
-    context.temp_id = tempId;
+    // Ajouter l'ID temporaire au contexte UNIQUEMENT pour les uploads temporaires (sans parent)
+    // Pour les uploads directs, on ne met pas de temp_id car le fichier est déjà à sa place finale
+    if (!parentNode) {
+      context.temp_id = tempId;
+    }
     
     logger.info('Sauvegarde fichier uploadé', {
       originalName: uploadedFile.originalname,
@@ -375,17 +378,35 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       });
 
       // 2. DÉPLACEMENT PHYSIQUE (Temp -> Final)
-      // C'est le SEUL cas où on déplace physiquement un fichier
-      try {
-        await fileStorageService.moveFile(tempFile.storage_key, newStorageKey);
-      } catch (moveError) {
-        logger.error('Échec déplacement fichier lors de l\'association', {
+      // Vérifier si le fichier a besoin d'être déplacé
+      // (il peut déjà être au bon endroit si l'upload était direct avec nodeId)
+      const needsMove = tempFile.storage_key && tempFile.storage_key.startsWith('temp/');
+      const finalStorageKey = needsMove ? newStorageKey : tempFile.storage_key;
+      
+      if (needsMove) {
+        try {
+          await fileStorageService.moveFile(tempFile.storage_key, newStorageKey);
+          logger.info('Fichier déplacé de temp vers emplacement final', {
+            tempFileId: tempFile.node_id,
+            from: tempFile.storage_key,
+            to: newStorageKey
+          });
+        } catch (moveError) {
+          logger.error('Échec déplacement fichier lors de l\'association', {
+            tempFileId: tempFile.node_id,
+            oldStorageKey: tempFile.storage_key,
+            newStorageKey,
+            error: moveError.message
+          });
+          throw moveError;
+        }
+      } else {
+        // Le fichier est déjà à sa place finale (upload direct avec nodeId)
+        // On garde le storage_key existant
+        logger.info('Fichier déjà à sa place finale, pas de déplacement nécessaire', {
           tempFileId: tempFile.node_id,
-          oldStorageKey: tempFile.storage_key,
-          newStorageKey,
-          error: moveError.message
+          existingStorageKey: tempFile.storage_key
         });
-        throw moveError;
       }
       
       // Construire le nouveau chemin logique pour le nœud
@@ -439,13 +460,16 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       // On nettoie temp_id et on met à jour le contexte avec les vraies infos
       const updatedContext = { ...newContext };
       updatedContext.associated_at = new Date().toISOString();
+      // Supprimer temp_id du contexte maintenant que l'association est faite
+      delete updatedContext.temp_id;
 
       // Obtenir le nouveau chemin physique absolu pour la compatibilité legacy
-      const newPhysicalPath = fileStorageService.getPhysicalPath(newStorageKey);
+      // Utiliser finalStorageKey qui est soit le nouveau chemin (si déplacé) soit l'existant (si déjà en place)
+      const newPhysicalPath = fileStorageService.getPhysicalPath(finalStorageKey);
 
       await file.update({
         file_path: newPhysicalPath, // Legacy path
-        storage_key: newStorageKey, // New system key
+        storage_key: finalStorageKey, // New system key (peut être inchangé si pas de déplacement)
         category: finalCategory || 'general',
         subcategory: finalSubcategory || '',
         context: updatedContext

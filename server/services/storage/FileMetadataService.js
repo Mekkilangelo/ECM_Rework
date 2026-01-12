@@ -173,7 +173,10 @@ class FileMetadataService {
       'all_documents': 'document',
       'furnace_report': 'furnace_report',
       'load_design': 'load_design',
-      'control_location': 'control_location'
+      'control_location': 'control_location',
+      
+      // DataPaq (ajouté explicitement)
+      'datapaq': 'datapaq'
     };
     
     // Vérifier si c'est une catégorie dynamique de micrographie

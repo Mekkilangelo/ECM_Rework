@@ -38,6 +38,7 @@ services:
       - uploads_data_dev:/app/uploads
       - ./server:/app
       - /app/node_modules
+      - /app/uploads  # Évite l'écrasement du volume uploads par le bind mount
     ports:
       - "${SERVER_PORT}:5001"
     depends_on:

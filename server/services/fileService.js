@@ -704,23 +704,56 @@ const getFileById = async (fileId) => {
   
   // Déterminer le chemin physique réel
   // Priorité: storage_key (nouveau système) > file_path (ancien système)
-  let physicalPath = fileData.file_path;
+  let physicalPath = null;
+  let resolvedVia = null;
   
+  // Essayer d'abord avec storage_key (nouveau système)
   if (fileData.storage_key) {
     const storageKeyPath = fileStorageService.getPhysicalPath(fileData.storage_key);
     if (fs.existsSync(storageKeyPath)) {
       physicalPath = storageKeyPath;
+      resolvedVia = 'storage_key';
+    } else {
+      logger.debug('Fichier non trouvé via storage_key', { 
+        fileId, 
+        storage_key: fileData.storage_key,
+        checkedPath: storageKeyPath,
+        UPLOAD_BASE_DIR: UPLOAD_BASE_DIR
+      });
+    }
+  }
+  
+  // Fallback sur file_path (ancien système ou chemin absolu)
+  if (!physicalPath && fileData.file_path) {
+    if (fs.existsSync(fileData.file_path)) {
+      physicalPath = fileData.file_path;
+      resolvedVia = 'file_path';
+    } else {
+      logger.debug('Fichier non trouvé via file_path', { 
+        fileId, 
+        file_path: fileData.file_path 
+      });
     }
   }
   
   // Vérifier si le fichier existe physiquement
-  if (!fs.existsSync(physicalPath)) {
+  if (!physicalPath) {
+    logger.error('Fichier physique introuvable', { 
+      fileId,
+      storage_key: fileData.storage_key,
+      file_path: fileData.file_path,
+      UPLOAD_BASE_DIR: UPLOAD_BASE_DIR,
+      category: fileData.category,
+      context: fileData.context
+    });
+    
     throw new NotFoundError('Fichier physique introuvable', { 
-      path: physicalPath,
       storage_key: fileData.storage_key,
       file_path: fileData.file_path
     });
   }
+  
+  logger.debug('Fichier résolu avec succès', { fileId, resolvedVia, path: physicalPath });
   
   // Retourner les données avec le chemin physique correct
   return {
@@ -748,10 +781,10 @@ const downloadFile = async (fileId) => {
     throw new NotFoundError('Fichier non trouvé');
   }
   
-  // Déterminer le chemin physique réel
-  // Priorité: storage_key (nouveau système) > file_path (ancien système)
-  let physicalPath = fileData.file_path;
+  // Déterminer le chemin physique réel (même logique que getFileById)
+  let physicalPath = null;
   
+  // Essayer d'abord avec storage_key (nouveau système)
   if (fileData.storage_key) {
     const storageKeyPath = fileStorageService.getPhysicalPath(fileData.storage_key);
     if (fs.existsSync(storageKeyPath)) {
@@ -759,10 +792,21 @@ const downloadFile = async (fileId) => {
     }
   }
   
+  // Fallback sur file_path (ancien système)
+  if (!physicalPath && fileData.file_path && fs.existsSync(fileData.file_path)) {
+    physicalPath = fileData.file_path;
+  }
+  
   // Vérifier si le fichier existe physiquement
-  if (!fs.existsSync(physicalPath)) {
+  if (!physicalPath) {
+    logger.error('Fichier physique introuvable pour téléchargement', { 
+      fileId,
+      storage_key: fileData.storage_key,
+      file_path: fileData.file_path,
+      UPLOAD_BASE_DIR: UPLOAD_BASE_DIR
+    });
+    
     throw new NotFoundError('Fichier physique introuvable', { 
-      path: physicalPath,
       storage_key: fileData.storage_key,
       file_path: fileData.file_path
     });

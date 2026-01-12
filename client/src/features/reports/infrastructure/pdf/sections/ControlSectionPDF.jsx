@@ -1,42 +1,35 @@
 /**
  * INFRASTRUCTURE: Section Contrôle complète pour le PDF
  * Affiche les résultats de contrôle : dureté, ECD, courbes avec specs
+ * 
+ * Uses theme system for consistent styling
  */
 
 import React from 'react';
 import { View, Text, Image, StyleSheet, Svg, Path, Line as SvgLine, Circle } from '@react-pdf/renderer';
 import { getPhotoUrl } from '../helpers/photoHelpers';
+import { COLORS, TYPOGRAPHY, SPACING, getAccentColor, getSubsectionBackground, getSubsectionTextColor } from '../theme';
+
+// Section type for accent colors
+const SECTION_TYPE = 'control';
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 15
+    marginBottom: SPACING.section.marginBottom
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 0,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#ffffff',
-    backgroundColor: '#2c3e50',
-    letterSpacing: 1,
+    ...TYPOGRAPHY.sectionTitle,
+    color: COLORS.text.white,
+    backgroundColor: COLORS.brand.secondary,
     borderLeftWidth: 4,
-    borderLeftColor: '#27ae60',
+    borderLeftColor: getAccentColor(SECTION_TYPE),
   },
   resultTitle: {
-    fontSize: 9.5,
-    fontWeight: 'bold',
-    marginTop: 12,
-    marginBottom: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    color: '#1e8449',
-    backgroundColor: '#eafaf1',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...TYPOGRAPHY.subsectionTitle,
+    color: getSubsectionTextColor(SECTION_TYPE),
+    backgroundColor: getSubsectionBackground(SECTION_TYPE),
     borderLeftWidth: 3,
-    borderLeftColor: '#27ae60',
+    borderLeftColor: getAccentColor(SECTION_TYPE),
   },
   sampleTitle: {
     fontSize: 9.5,

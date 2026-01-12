@@ -1,108 +1,51 @@
 /**
  * INFRASTRUCTURE: Section Courbes pour le PDF
  * Affiche les courbes de température et rapports de four avec layout intelligent
+ * 
+ * Refactorisé pour utiliser le système de thème et les primitives
  */
 
 import React from 'react';
-import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { getPhotoUrl } from '../helpers/photoHelpers';
+import { View, StyleSheet } from '@react-pdf/renderer';
+import { SPACING } from '../theme';
+import { 
+  SectionTitle, 
+  SubsectionTitle, 
+  PhotoContainer,
+  EmptyState 
+} from '../primitives';
+import { getPhotoUrl, validatePhotos } from '../helpers/photoHelpers';
 
+// Section-specific accent color
+const SECTION_TYPE = 'curves';
+
+// Styles spécifiques à cette section
 const styles = StyleSheet.create({
-  // ========== LAYOUT ==========
   section: {
-    marginBottom: 12,
+    marginBottom: SPACING.section.marginBottom,
   },
-  
-  // ========== TITRES ==========
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 0,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#ffffff',
-    backgroundColor: '#2c3e50',
-    letterSpacing: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: '#f39c12',
-  },
-  subsectionTitle: {
-    fontSize: 9.5,
-    fontWeight: 'bold',
-    marginTop: 12,
-    marginBottom: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    color: '#d35400',
-    backgroundColor: '#fef9e7',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    borderLeftWidth: 3,
-    borderLeftColor: '#f39c12',
-  },
-  
-  // ========== PHOTOS - Layouts adaptatifs ==========
   photoRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: SPACING.photo.marginBottom,
     justifyContent: 'space-between',
-    gap: 8,
+    gap: SPACING.photo.gap,
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
+    marginTop: SPACING.sm,
     justifyContent: 'flex-start',
-    gap: 8,
+    gap: SPACING.photo.gap,
   },
-  
-  // Conteneurs photo selon layout
   photoContainerSingle: {
     width: '100%',
-    marginBottom: 8,
+    marginBottom: SPACING.photo.marginBottom,
     alignItems: 'center',
   },
   photoContainerHalf: {
     width: '48%',
-    marginBottom: 8,
+    marginBottom: SPACING.photo.marginBottom,
     alignItems: 'center',
-  },
-  
-  // Tailles de photos
-  photo: {
-    objectFit: 'cover',
-    border: '0.5pt solid #d0d0d0',
-  },
-  photoFullWidth: {
-    width: 480,
-    height: 200,
-  },
-  photoHalfWidth: {
-    width: 235,
-    height: 176,
-  },
-  photoSmall: {
-    width: 235,
-    height: 140,
-  },
-  
-  // Légendes
-  photoLabel: {
-    fontSize: 7.5,
-    textAlign: 'center',
-    marginTop: 3,
-    color: '#888',
-    fontStyle: 'italic',
-  },
-  
-  // ========== ÉTATS VIDES ==========
-  emptyState: {
-    fontSize: 9,
-    fontStyle: 'italic',
-    color: '#999',
-    textAlign: 'center',
-    padding: 20,
   },
 });
 
@@ -187,6 +130,15 @@ const formatCategoryName = (categoryKey) => {
 };
 
 /**
+ * Get photo caption
+ */
+const getPhotoCaption = (photo) => {
+  return photo.description && photo.description.trim() !== '' 
+    ? photo.description 
+    : (photo.original_name || photo.name || 'Document');
+};
+
+/**
  * Composant pour afficher un groupe de catégorie avec layout intelligent
  */
 const CategoryGroup = ({ categoryKey, photos, isFirst = false }) => {
@@ -195,41 +147,34 @@ const CategoryGroup = ({ categoryKey, photos, isFirst = false }) => {
   return (
     <View style={styles.section} wrap={false}>
       {isFirst && (
-        <Text style={styles.sectionTitle}>FURNACE CURVES AND REPORTS</Text>
+        <SectionTitle sectionType={SECTION_TYPE}>
+          FURNACE CURVES AND REPORTS
+        </SectionTitle>
       )}
-      <Text style={styles.subsectionTitle}>
+      <SubsectionTitle sectionType={SECTION_TYPE}>
         {formatCategoryName(categoryKey)}
-      </Text>
+      </SubsectionTitle>
       
       {/* Layout adaptatif selon le nombre de photos */}
       {photoCount === 1 ? (
         // 1 photo : pleine largeur
         <View style={styles.photoContainerSingle}>
-          <Image 
-            src={getPhotoUrl(photos[0])} 
-            style={[styles.photo, styles.photoFullWidth]}
+          <PhotoContainer 
+            photo={photos[0]} 
+            size="fullWidth" 
+            captionText={getPhotoCaption(photos[0])}
           />
-          <Text style={styles.photoLabel}>
-            {photos[0].description && photos[0].description.trim() !== '' 
-              ? photos[0].description 
-              : (photos[0].original_name || photos[0].name || 'Document')}
-          </Text>
         </View>
       ) : photoCount === 2 ? (
         // 2 photos : côte à côte
         <View style={styles.photoRow}>
           {photos.map((photo, idx) => (
-            <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <Image 
-                src={getPhotoUrl(photo)} 
-                style={[styles.photo, styles.photoHalfWidth]}
-              />
-              <Text style={styles.photoLabel}>
-                {photo.description && photo.description.trim() !== '' 
-                  ? photo.description 
-                  : (photo.original_name || photo.name || 'Document')}
-              </Text>
-            </View>
+            <PhotoContainer 
+              key={photo.id || idx}
+              photo={photo} 
+              size="half"
+              captionText={getPhotoCaption(photo)}
+            />
           ))}
         </View>
       ) : (
@@ -237,15 +182,11 @@ const CategoryGroup = ({ categoryKey, photos, isFirst = false }) => {
         <View style={styles.photoGrid}>
           {photos.map((photo, idx) => (
             <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <Image 
-                src={getPhotoUrl(photo)} 
-                style={[styles.photo, styles.photoSmall]}
+              <PhotoContainer 
+                photo={photo} 
+                size="gridSmall"
+                captionText={getPhotoCaption(photo)}
               />
-              <Text style={styles.photoLabel}>
-                {photo.description && photo.description.trim() !== '' 
-                  ? photo.description 
-                  : (photo.original_name || photo.name || 'Document')}
-              </Text>
             </View>
           ))}
         </View>
@@ -272,20 +213,27 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
   if (totalPhotos === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>FURNACE CURVES AND REPORTS</Text>
-        <Text style={styles.emptyState}>
-          No furnace curves or reports available for this test.
-        </Text>
+        <SectionTitle sectionType={SECTION_TYPE}>
+          FURNACE CURVES AND REPORTS
+        </SectionTitle>
+        <EmptyState message="No furnace curves or reports available for this test." />
       </View>
     );
   }
 
-  // Ordre des categories : heating, cooling, tempering, alarms, datapaq, other
+  // Ordre des categories
   const categoryOrder = ['heating', 'cooling', 'tempering', 'alarms', 'datapaq', 'other'];
+
+  // Trouver le premier index avec des photos
+  let firstWithPhotos = -1;
+  categoryOrder.forEach((key, idx) => {
+    if (firstWithPhotos === -1 && organizedPhotos[key]?.photos.length > 0) {
+      firstWithPhotos = idx;
+    }
+  });
 
   return (
     <>
-      {/* Afficher toutes les catégories dans l'ordre */}
       {categoryOrder.map((categoryKey, index) => {
         const category = organizedPhotos[categoryKey];
         if (!category || category.photos.length === 0) return null;
@@ -295,7 +243,7 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
             key={categoryKey}
             categoryKey={categoryKey}
             photos={category.photos}
-            isFirst={index === 0}
+            isFirst={index === firstWithPhotos}
           />
         );
       })}

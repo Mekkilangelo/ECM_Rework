@@ -4,122 +4,55 @@
  * Affiche UNE PAGE de micrographies par échantillon avec tous les zooms organisés intelligemment.
  * Cette page vient après la page de résultats (dureté + courbes) de l'échantillon.
  * 
- * Organisation intelligente inspirée de IdentificationSection :
- * - Header en haut
- * - Tous les zooms sur la même page avec layout adaptatif
- * - 1 photo seule : pleine largeur
- * - 2 photos : côte à côte
- * - 3-4 photos : grille 2x2
- * - Format portrait A4
+ * Refactorisé pour utiliser le système de thème et les primitives
  */
 
 import React from 'react';
-import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { getPhotoUrl } from '../helpers/photoHelpers';
+import { View, Text, StyleSheet } from '@react-pdf/renderer';
+import { SPACING, TYPOGRAPHY, COLORS } from '../theme';
+import { 
+  SectionTitle, 
+  SubsectionTitle, 
+  PhotoContainer,
+  EmptyState 
+} from '../primitives';
+import { validatePhotos } from '../helpers/photoHelpers';
 
+// Section-specific accent color
+const SECTION_TYPE = 'micrography';
+
+// Styles spécifiques à cette section
 const styles = StyleSheet.create({
-  // ========== LAYOUT ==========
   section: {
-    marginBottom: 12,
+    marginBottom: SPACING.section.marginBottom,
   },
-  
-  // ========== TITRES ==========
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 0,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#ffffff',
-    backgroundColor: '#2c3e50',
-    letterSpacing: 1,
-    borderLeftWidth: 4,
-    borderLeftColor: '#9b59b6',
-  },
-  subsectionTitle: {
-    fontSize: 9.5,
-    fontWeight: 'bold',
-    marginTop: 12,
-    marginBottom: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    color: '#6c3483',
-    backgroundColor: '#f4ecf7',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    borderLeftWidth: 3,
-    borderLeftColor: '#9b59b6',
-  },
-  
-  // ========== PHOTOS - Layouts adaptatifs ==========
   photoRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: SPACING.photo.marginBottom,
     justifyContent: 'space-between',
-    gap: 8,
+    gap: SPACING.photo.gap,
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
+    marginTop: SPACING.sm,
     justifyContent: 'flex-start',
-    gap: 8,
+    gap: SPACING.photo.gap,
   },
-  
-  // Conteneurs photo selon layout
   photoContainerSingle: {
     width: '100%',
-    marginBottom: 8,
+    marginBottom: SPACING.photo.marginBottom,
     alignItems: 'center',
   },
   photoContainerHalf: {
     width: '48%',
-    marginBottom: 8,
+    marginBottom: SPACING.photo.marginBottom,
     alignItems: 'center',
-  },
-  
-  // Tailles de photos
-  photo: {
-    objectFit: 'cover',
-    border: '0.5pt solid #d0d0d0',
-  },
-  photoFullWidth: {
-    width: 480,
-    height: 200,
-  },
-  photoHalfWidth: {
-    width: 235,
-    height: 176,
-  },
-  photoSmall: {
-    width: 235,
-    height: 140,
-  },
-  
-  // Légendes
-  photoLabel: {
-    fontSize: 7.5,
-    textAlign: 'center',
-    marginTop: 3,
-    color: '#888',
-    fontStyle: 'italic',
-  },
-  
-  // ========== ÉTATS VIDES ==========
-  emptyState: {
-    fontSize: 9,
-    fontStyle: 'italic',
-    color: '#999',
-    textAlign: 'center',
-    padding: 20,
   },
 });
 
 /**
  * Organise les photos par résultat > échantillon > zoom
- * @param {Array} photos - Liste de toutes les photos de micrographies
- * @returns {Object} Structure organisée
  */
 const organizePhotosByStructure = (photos) => {
   const organized = {};
@@ -129,7 +62,6 @@ const organizePhotosByStructure = (photos) => {
   }
 
   photos.forEach(photo => {
-    // Parser les métadonnées depuis subcategory ou name
     const subcategory = photo.subcategory || '';
     const name = photo.name || photo.original_name || '';
     
@@ -188,6 +120,15 @@ const formatZoomName = (zoom) => {
 };
 
 /**
+ * Get photo caption
+ */
+const getPhotoCaption = (photo) => {
+  return photo.description && photo.description.trim() !== '' 
+    ? photo.description 
+    : (photo.original_name || photo.name || 'Image');
+};
+
+/**
  * Composant pour afficher un groupe de zoom avec layout intelligent
  */
 const ZoomGroup = ({ zoom, photos }) => {
@@ -195,55 +136,39 @@ const ZoomGroup = ({ zoom, photos }) => {
   
   return (
     <View style={styles.section}>
-      <Text style={styles.subsectionTitle}>
+      <SubsectionTitle sectionType={SECTION_TYPE}>
         {formatZoomName(zoom)} ({photoCount} image{photoCount > 1 ? 's' : ''})
-      </Text>
+      </SubsectionTitle>
       
       {/* Layout adaptatif selon le nombre de photos */}
       {photoCount === 1 ? (
-        // 1 photo : pleine largeur
         <View style={styles.photoContainerSingle}>
-          <Image 
-            src={getPhotoUrl(photos[0])} 
-            style={[styles.photo, styles.photoFullWidth]}
+          <PhotoContainer 
+            photo={photos[0]} 
+            size="fullWidth"
+            captionText={getPhotoCaption(photos[0])}
           />
-          <Text style={styles.photoLabel}>
-            {photos[0].description && photos[0].description.trim() !== '' 
-              ? photos[0].description 
-              : (photos[0].original_name || photos[0].name || 'Image')}
-          </Text>
         </View>
       ) : photoCount === 2 ? (
-        // 2 photos : côte à côte
         <View style={styles.photoRow}>
           {photos.map((photo, idx) => (
-            <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <Image 
-                src={getPhotoUrl(photo)} 
-                style={[styles.photo, styles.photoHalfWidth]}
-              />
-              <Text style={styles.photoLabel}>
-                {photo.description && photo.description.trim() !== '' 
-                  ? photo.description 
-                  : (photo.original_name || photo.name || 'Image')}
-              </Text>
-            </View>
+            <PhotoContainer 
+              key={photo.id || idx}
+              photo={photo} 
+              size="half"
+              captionText={getPhotoCaption(photo)}
+            />
           ))}
         </View>
       ) : (
-        // 3+ photos : grille 2 colonnes
         <View style={styles.photoGrid}>
           {photos.map((photo, idx) => (
             <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <Image 
-                src={getPhotoUrl(photo)} 
-                style={[styles.photo, styles.photoSmall]}
+              <PhotoContainer 
+                photo={photo} 
+                size="gridSmall"
+                captionText={getPhotoCaption(photo)}
               />
-              <Text style={styles.photoLabel}>
-                {photo.description && photo.description.trim() !== '' 
-                  ? photo.description 
-                  : (photo.original_name || photo.name || 'Image')}
-              </Text>
             </View>
           ))}
         </View>
@@ -259,12 +184,10 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData }) => {
   if (!sampleData || !sampleData.zooms || Object.keys(sampleData.zooms).length === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>
+        <SectionTitle sectionType={SECTION_TYPE}>
           MICROGRAPHS - Result {resultIndex} - Sample {sampleIndex}
-        </Text>
-        <Text style={styles.emptyState}>
-          No micrograph available for this sample
-        </Text>
+        </SectionTitle>
+        <EmptyState message="No micrograph available for this sample" />
       </View>
     );
   }
@@ -282,9 +205,9 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData }) => {
 
   return (
     <View wrap={false}>
-      <Text style={styles.sectionTitle}>
+      <SectionTitle sectionType={SECTION_TYPE}>
         MICROGRAPHS - Result {resultIndex} - Sample {sampleIndex}
-      </Text>
+      </SectionTitle>
       
       {/* Afficher tous les zooms sur la même page */}
       {availableZooms.map(zoom => {
@@ -303,8 +226,6 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData }) => {
 
 /**
  * Composant principal : Section Micrographies
- * Retourne UNE View par échantillon contenant tous les zooms
- * À intégrer dans le flux du document après chaque page de résultats
  */
 export const MicrographySectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
@@ -322,10 +243,9 @@ export const MicrographySectionPDF = ({ report, photos = [] }) => {
   }, 0);
 
   if (totalPhotos === 0) {
-    return null; // Pas de section si pas de photos
+    return null;
   }
 
-  // Générer une View par échantillon (pas de Page, juste des Views)
   const resultKeys = Object.keys(organizedPhotos).sort((a, b) => {
     return organizedPhotos[a].index - organizedPhotos[b].index;
   });

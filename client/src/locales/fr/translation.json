@@ -1231,11 +1231,6 @@
       "selectedPhotos": "{{count}} photo(s) sélectionnée(s)",
       "estimatedSize": "Taille estimée: {{size}}"
     },
-    "actions": {
-      "preview": "Prévisualiser",
-      "downloadPdf": "PDF",
-      "pdfFromPreview": "Utilisez la prévisualisation pour générer le PDF"
-    },
     "preview": {
       "title": "Aperçu du rapport",
       "iframe": {
@@ -1287,7 +1282,9 @@
     },
     "actions": {
       "preview": "Prévisualiser",
+      "downloadPdf": "Télécharger PDF",
       "exportPDF": "Exporter PDF",
+      "pdfFromPreview": "Utilisez la prévisualisation pour générer le PDF",
       "generating": "Génération..."
     }
   },

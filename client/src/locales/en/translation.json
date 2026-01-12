@@ -1222,11 +1222,6 @@
       "selectedPhotos": "{{count}} photo(s) selected",
       "estimatedSize": "Estimated size: {{size}}"
     },
-    "actions": {
-      "preview": "Preview",
-      "downloadPdf": "Download PDF",
-      "pdfFromPreview": "Use preview to generate PDF"
-    },
     "preview": {
       "title": "Report Preview",
       "iframe": {
@@ -1279,7 +1274,9 @@
     },
     "actions": {
       "preview": "Preview",
+      "downloadPdf": "Download PDF",
       "exportPDF": "Export PDF",
+      "pdfFromPreview": "Use preview to generate PDF",
       "generating": "Generating..."
     }
   },

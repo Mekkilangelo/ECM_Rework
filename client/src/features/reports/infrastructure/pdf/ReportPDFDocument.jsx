@@ -551,10 +551,9 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {!hasActiveSections && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <PageHeader 
+            <CommonReportHeader 
               clientName={report.clientName}
               trialCode={report.testCode}
-              pageNumber={2}
             />
           )}
           <View style={{ padding: 20, textAlign: 'center', marginTop: 100 }}>
@@ -823,10 +822,9 @@ const SectionRenderer = ({ section, report, options, pageNumber, generatedDate }
   return (
     <Page size="A4" style={styles.page}>
       {options.includeHeader && (
-        <PageHeader 
+        <CommonReportHeader 
           clientName={clientData?.name}
           trialCode={trialData?.trial_code}
-          pageNumber={pageNumber}
         />
       )}
 

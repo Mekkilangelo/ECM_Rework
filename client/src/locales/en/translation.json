@@ -79,27 +79,41 @@
       "name": "Name is required",
       "country": "Country is required",
       "clientName": "Client name is required",
-      "orderDate": "Order date is required",
-      "parentClient": "Parent client is required",
+      "partName": "Part name is required",
+      "orderDate": "Request date is required",
+      "parentClient": "Please select a parent client",
       "designation": "Designation is required",
-      "parentOrder": "Parent order is required",
-      "parentPart": "Parent part is required",
+      "parentOrder": "Please select a parent trial request",
+      "parentPart": "Please select a parent part",
       "trialDate": "Trial date is required",
       "grade": "Grade is required",
-      "family": "Family is required",      "element": "Element is required",
+      "family": "Family is required",
+      "element": "Element is required",
       "value": "Value is required",
       "minValue": "Minimum value is required",
       "maxValue": "Maximum value is required",
       "minOrMax": "At least one value (minimum or maximum) must be entered",
-      "equivalentSteel": "An equivalent steel must be selected"
-    },    "invalid": {
+      "equivalentSteel": "An equivalent steel must be selected",
+      "username": "Username is required",
+      "password": "Password is required",
+      "files": "No file provided"
+    },
+    "minLength": {
+      "username": "Username must be at least 3 characters",
+      "password": "Password must be at least 6 characters"
+    },
+    "invalid": {
       "data": "Invalid data",
-      "number": "This value must be a valid number"
+      "number": "This value must be a valid number",
+      "role": "Role must be: admin, user or superuser",
+      "email": "Email address is not valid",
+      "date": "Date is not valid"
     },
     "duplicate": {
       "clientName": "A client with this name already exists",
       "clientCode": "This client code already exists",
-      "steelGrade": "A steel with this grade already exists"
+      "steelGrade": "A steel with this grade already exists",
+      "username": "This username is already taken"
     },
     "range": {
       "minLessThanMax": "Minimum value must be less than maximum value"

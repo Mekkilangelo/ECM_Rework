@@ -158,41 +158,59 @@ const useApiSubmission = ({
       }
     } catch (error) {
       console.error(`Erreur lors de l'opération sur ${entityType}:`, error);
-      
+
+      // Fonction pour traduire une clé i18n si elle existe
+      const translateIfKey = (message) => {
+        if (message && message.startsWith('validation.')) {
+          const translated = t(message);
+          // Si la traduction existe (différente de la clé), on l'utilise
+          return translated !== message ? translated : message;
+        }
+        return message;
+      };
+
       // Gérer les erreurs de validation avec détails
-      let errorMessage = error.response?.data?.message || 
+      let errorMessage = error.response?.data?.message ||
         t('api.error.' + (entity ? 'update' : 'create'), { entityType });
-      
+
+      // Traduire le message principal s'il s'agit d'une clé i18n
+      errorMessage = translateIfKey(errorMessage);
+
       // Si l'erreur contient des détails de validation, les afficher
       if (error.response?.data?.errors && typeof error.response.data.errors === 'object') {
         const validationErrors = error.response.data.errors;
-        const errorMessages = Object.entries(validationErrors)
-          .map(([field, message]) => `${field}: ${message}`)
-          .join(', ');
-        errorMessage = `${errorMessage} - ${errorMessages}`;
-        
+
+        // Traduire et formater les messages d'erreur
+        const translatedErrors = Object.entries(validationErrors)
+          .map(([field, message]) => {
+            const translatedMessage = translateIfKey(message);
+            return translatedMessage;
+          });
+
+        // Créer un message lisible avec les erreurs traduites
+        if (translatedErrors.length > 0) {
+          errorMessage = translatedErrors.join('\n• ');
+          if (translatedErrors.length > 1) {
+            errorMessage = '• ' + errorMessage;
+          }
+        }
+
         // Mettre à jour les erreurs de champs spécifiques si setErrors est disponible
         if (setErrors) {
           const fieldErrors = {};
           Object.entries(validationErrors).forEach(([field, message]) => {
-            // Convertir les messages en clés de traduction si possible
-            if (field === 'name') {
-              fieldErrors.name = 'validation.required.clientName';
-            } else if (field === 'country') {
-              fieldErrors.country = 'validation.required.country';
-            } else {
-              fieldErrors[field] = message;
-            }
+            // Garder la clé i18n pour que le composant la traduise
+            fieldErrors[field] = message.startsWith('validation.') ? message : message;
           });
           setErrors(fieldErrors);
         }
       }
-      
+
       setMessage({
         type: 'danger',
         text: errorMessage
       });
-      
+
       // Afficher l'erreur dans un toast
       if (toast && toast.error) {
         toast.error(errorMessage);

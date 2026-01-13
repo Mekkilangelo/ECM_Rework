@@ -13,11 +13,12 @@ const { user, node } = require('../models');
  */
 const validateOrderData = (data) => {
   const errors = {};
-    // Validation des champs obligatoires
+
+  // Validation des champs obligatoires
   if (!data.parent_id) {
-    errors.parent_id = 'ID parent est requis';
+    errors.parent_id = 'validation.required.parentClient';
   }
-  
+
   // Support legacy 'order_date' for compatibility, prefer 'request_date'
   const hasRequestDate = data.request_date !== undefined && data.request_date !== null;
   const hasOrderDate = data.order_date !== undefined && data.order_date !== null;
@@ -26,10 +27,9 @@ const validateOrderData = (data) => {
   const effectiveDate = hasRequestDate ? data.request_date : (hasOrderDate ? data.order_date : undefined);
 
   if (!effectiveDate || (typeof effectiveDate === 'string' && effectiveDate.trim() === '')) {
-    // Use the canonical key 'request_date' in errors (front-end expects new name)
-    errors.request_date = 'La date est requise';
+    errors.request_date = 'validation.required.orderDate';
   }
-  
+
   return {
     isValid: Object.keys(errors).length === 0,
     errors
@@ -43,29 +43,29 @@ const validateOrderData = (data) => {
  */
 const validateUserData = (data) => {
   const errors = {};
-  
+
   // Validation des champs obligatoires, sauf si c'est juste une mise à jour du mot de passe
   const isPasswordOnlyUpdate = data.password && Object.keys(data).length === 1;
-  
+
   if (!isPasswordOnlyUpdate && (!data.username || data.username.trim() === '')) {
-    errors.username = 'Le nom d\'utilisateur est requis';
+    errors.username = 'validation.required.username';
   } else if (data.username && data.username.length < 3) {
-    errors.username = 'Le nom d\'utilisateur doit contenir au moins 3 caractères';
+    errors.username = 'validation.minLength.username';
   }
-  
+
   // Validation du mot de passe lors de la création
   if (data.isNew && (!data.password || data.password.trim() === '')) {
-    errors.password = 'Le mot de passe est requis';
+    errors.password = 'validation.required.password';
   } else if (data.password && data.password.length < 6) {
-    errors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    errors.password = 'validation.minLength.password';
   }
-  
+
   // Validation du rôle
   const validRoles = ['admin', 'user', 'superuser'];
   if (data.role && !validRoles.includes(data.role)) {
-    errors.role = `Le rôle doit être l'un de : ${validRoles.join(', ')}`;
+    errors.role = 'validation.invalid.role';
   }
-  
+
   return {
     isValid: Object.keys(errors).length === 0,
     errors

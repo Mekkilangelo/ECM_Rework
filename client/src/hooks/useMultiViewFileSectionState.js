@@ -19,12 +19,14 @@ import fileService from '../services/fileService';
  * @returns {Object} État et fonctions de gestion des fichiers
  */
 const useMultiViewFileSectionState = (options = {}) => {
-  const { 
-    nodeId, 
-    category, 
+  const {
+    nodeId,
+    category,
     views = [],
     buildSubcategory = (viewId) => viewId, // Par défaut, viewId = subcategory
-    onError = console.error 
+    sampleNumber,   // Numéro d'échantillon pour filtrage backend
+    resultIndex,    // Index du résultat pour filtrage backend
+    onError = console.error
   } = options;
 
   // État des fichiers uploadés par vue
@@ -60,13 +62,18 @@ const useMultiViewFileSectionState = (options = {}) => {
    */
   const loadExistingFiles = useCallback(async () => {
     if (!nodeId) return;
-    
+
     // Guard pour éviter les appels multiples simultanés
     if (isLoadingRef.current) return;
     isLoadingRef.current = true;
-    
+
     try {
-      const response = await fileService.getNodeFiles(nodeId, { category });
+      // Passer sampleNumber et resultIndex pour filtrage côté backend
+      const response = await fileService.getNodeFiles(nodeId, {
+        category,
+        sampleNumber,
+        resultIndex
+      });
       
       if (!response.data || response.data.success === false) {
         onErrorRef.current('Erreur lors du chargement des fichiers:', response.data?.message);
@@ -101,7 +108,7 @@ const useMultiViewFileSectionState = (options = {}) => {
     } finally {
       isLoadingRef.current = false;
     }
-  }, [nodeId, category, views, buildSubcategory]);
+  }, [nodeId, category, views, buildSubcategory, sampleNumber, resultIndex]);
 
   /**
    * Crée un handler spécifique pour une vue

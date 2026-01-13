@@ -38,19 +38,22 @@ const fileService = {
    */
   getNodeFiles: async (nodeId, options = {}) => {
     try {
-      const { category, subcategory } = options;
+      const { category, subcategory, sampleNumber, resultIndex } = options;
       let url = `/files/node/${nodeId}`;
-      
+
       // Ajouter les paramètres de requête si nécessaire
       const params = new URLSearchParams();
       if (category) params.append('category', category);
       if (subcategory) params.append('subcategory', subcategory);
-      
+      if (sampleNumber !== undefined) params.append('sampleNumber', sampleNumber);
+      if (resultIndex !== undefined) params.append('resultIndex', resultIndex);
+
       // Ajouter les paramètres à l'URL si nécessaires
       const queryString = params.toString();
       if (queryString) {
         url += `?${queryString}`;
-      }      const response = await api.get(url);
+      }
+      const response = await api.get(url);
       // On retourne directement la réponse pour une gestion uniforme
       return response;
     } catch (error) {

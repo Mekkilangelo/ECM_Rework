@@ -44,6 +44,8 @@ const MicrographsSection = ({
     category: 'micrographs',
     views,
     buildSubcategory,
+    sampleNumber: sampleIndex,   // Filtrage backend par sample
+    resultIndex: resultIndex,    // Filtrage backend par result
     onError: (msg, err) => console.error(t('trials.after.results.micrographs.loadError'), msg, err)
   });
 

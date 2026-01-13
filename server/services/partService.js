@@ -16,20 +16,20 @@ const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
  */
 const validatePartData = (data) => {
   const errors = {};
-  
+
   // Validation des champs obligatoires
   if (!data.name || !data.name.trim()) {
-    errors.name = 'Le nom est requis';
+    errors.name = 'validation.required.partName';
   }
-  
+
   if (!data.designation || !data.designation.trim()) {
-    errors.designation = 'La désignation est requise';
+    errors.designation = 'validation.required.designation';
   }
-  
+
   if (!data.parent_id) {
-    errors.parent = 'ID parent est requis';
+    errors.parent_id = 'validation.required.parentOrder';
   }
-  
+
   return {
     isValid: Object.keys(errors).length === 0,
     errors

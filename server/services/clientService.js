@@ -15,16 +15,16 @@ const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
  */
 const validateClientData = (data) => {
   const errors = {};
-  
+
   // Validation des champs obligatoires
   if (!data.name || !data.name.trim()) {
-    errors.name = 'Le nom du client est requis';
+    errors.name = 'validation.required.clientName';
   }
-  
+
   if (!data.country) {
-    errors.country = 'Le pays est requis';
+    errors.country = 'validation.required.country';
   }
-  
+
   return {
     isValid: Object.keys(errors).length === 0,
     errors

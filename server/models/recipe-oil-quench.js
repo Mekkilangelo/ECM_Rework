@@ -12,7 +12,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     recipe_id: {
       type: DataTypes.INTEGER,
-      unique: true,
       allowNull: true,
       references: {
         model: 'recipes',
@@ -49,7 +48,14 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'recipe_oil_quench',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ['recipe_id'],
+        name: 'unique_recipe_oil_quench'
+      }
+    ]
   });
 
   RecipeOilQuench.associate = (models) => {

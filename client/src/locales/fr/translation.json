@@ -81,27 +81,41 @@
       "name": "Le nom est requis",
       "country": "Le pays est requis",
       "clientName": "Le nom du client est requis",
-      "orderDate": "La date de commande est requise",
-      "parentClient": "Un client parent est requis",
+      "partName": "Le nom de la pièce est requis",
+      "orderDate": "La date de demande est requise",
+      "parentClient": "Veuillez sélectionner un client parent",
       "designation": "La désignation est requise",
-      "parentOrder": "Une commande parente est requise",
-      "parentPart": "Une pièce parente est requise",
-      "trialDate": "La date du trial est requise",
+      "parentOrder": "Veuillez sélectionner une demande d'essai parente",
+      "parentPart": "Veuillez sélectionner une pièce parente",
+      "trialDate": "La date de l'essai est requise",
       "grade": "Le grade est requis",
-      "family": "La famille est requise",      "element": "L'élément est requis",
+      "family": "La famille est requise",
+      "element": "L'élément est requis",
       "value": "La valeur est requise",
       "minValue": "La valeur minimale est requise",
       "maxValue": "La valeur maximale est requise",
       "minOrMax": "Au moins une valeur (minimum ou maximum) doit être saisie",
-      "equivalentSteel": "Un acier équivalent doit être sélectionné"
-    },    "invalid": {
+      "equivalentSteel": "Un acier équivalent doit être sélectionné",
+      "username": "Le nom d'utilisateur est requis",
+      "password": "Le mot de passe est requis",
+      "files": "Aucun fichier fourni"
+    },
+    "minLength": {
+      "username": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+      "password": "Le mot de passe doit contenir au moins 6 caractères"
+    },
+    "invalid": {
       "data": "Données invalides",
-      "number": "Cette valeur doit être un nombre valide"
+      "number": "Cette valeur doit être un nombre valide",
+      "role": "Le rôle doit être : admin, user ou superuser",
+      "email": "L'adresse email n'est pas valide",
+      "date": "La date n'est pas valide"
     },
     "duplicate": {
       "clientName": "Un client avec ce nom existe déjà",
       "clientCode": "Ce code client existe déjà",
-      "steelGrade": "Un acier avec ce grade existe déjà"
+      "steelGrade": "Un acier avec ce grade existe déjà",
+      "username": "Ce nom d'utilisateur est déjà utilisé"
     },
     "range": {
       "minLessThanMax": "La valeur minimum doit être inférieure à la valeur maximum"

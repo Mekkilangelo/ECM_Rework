@@ -252,8 +252,8 @@ const SectionPhotoManager = ({
             label: tSafe('parts.photos.manager.sections.curves.categories.tempering', 'Courbes de revenu'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.tempering', 'Graphiques de traitement de revenu')
           },
-          { 
-            category: 'furnace_report', 
+          {
+            category: 'datapaq',
             subcategory: 'datapaq',
             label: tSafe('parts.photos.manager.sections.curves.categories.datapaq', 'Données Datapaq'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.datapaq', 'Relevés des capteurs Datapaq')
@@ -309,8 +309,8 @@ const SectionPhotoManager = ({
                   subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`,
                   label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
                   description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
-                  group: tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 }),
-                  subgroup: tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 }),
+                  group: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })}`,
+                  subgroup: tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification),
                   filesCount: files.length,
                   resultIndex,
                   sampleIndex
@@ -446,8 +446,8 @@ const SectionPhotoManager = ({
                   `Photos de localisation de contrôle`,
                   { result: resultIndex + 1, sample: sampleIndex + 1 }
                 ),
-                group: tSafe('parts.photos.manager.sections.controlLocation.resultGroup', `Résultat ${resultIndex + 1}`, { result: resultIndex + 1 }),
-                subgroup: tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', `Échantillon ${sampleIndex + 1}`, { sample: sampleIndex + 1 }),
+                group: `${tSafe('parts.photos.manager.sections.controlLocation.resultGroup', 'Résultat {{result}}', { result: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', 'Échantillon {{sample}}', { sample: sampleIndex + 1 })}`,
+                subgroup: tSafe('parts.photos.manager.sections.controlLocation.title', 'Zones de contrôle'),
                 resultIndex,
                 sampleIndex
               };

@@ -16,9 +16,6 @@ module.exports = (sequelize) => {
     username: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: {
-        name: 'unique_username'
-      },
       comment: 'Nom d\'utilisateur unique'
     },
     password_hash: {

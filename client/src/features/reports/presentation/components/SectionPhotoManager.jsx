@@ -252,8 +252,8 @@ const SectionPhotoManager = ({
             label: tSafe('parts.photos.manager.sections.curves.categories.tempering', 'Courbes de revenu'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.tempering', 'Graphiques de traitement de revenu')
           },
-          { 
-            category: 'furnace_report', 
+          {
+            category: 'datapaq',
             subcategory: 'datapaq',
             label: tSafe('parts.photos.manager.sections.curves.categories.datapaq', 'Données Datapaq'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.datapaq', 'Relevés des capteurs Datapaq')

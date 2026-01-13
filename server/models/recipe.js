@@ -12,12 +12,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     recipe_number: {
       type: DataTypes.STRING(100),
-      unique: true,
       allowNull: true
     }
   }, {
     tableName: 'recipes',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ['recipe_number'],
+        name: 'unique_recipe_number'
+      }
+    ]
   });
 
   Recipe.associate = (models) => {

@@ -18,7 +18,6 @@ module.exports = (sequelize) => {
     },
     client_code: {
       type: DataTypes.STRING(50),
-      unique: true,
       allowNull: true,
       comment: 'Code unique du client'
     },

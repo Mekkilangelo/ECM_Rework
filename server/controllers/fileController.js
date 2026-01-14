@@ -74,23 +74,27 @@ const uploadFiles = async (req, res) => {
  */
 const associateFiles = async (req, res) => {
   try {
-    const { nodeId, tempId, category, subcategory } = req.body;
-    
-    logger.info(`Association de fichiers temporaires`, { 
-      nodeId, 
-      tempId, 
-      category, 
-      subcategory 
+    const { nodeId, tempId, category, subcategory, sampleNumber, resultIndex } = req.body;
+
+    logger.info(`Association de fichiers temporaires`, {
+      nodeId,
+      tempId,
+      category,
+      subcategory,
+      sampleNumber,
+      resultIndex
     });
-    
+
     if (!nodeId || !tempId) {
       return apiResponse.error(res, 'nodeId et tempId sont requis', 400);
     }
-    
+
     // Déléguer au service
-    const result = await fileService.associateFilesToNode(tempId, nodeId, { 
-      category, 
-      subcategory 
+    const result = await fileService.associateFilesToNode(tempId, nodeId, {
+      category,
+      subcategory,
+      sampleNumber,
+      resultIndex
     });
     
     return apiResponse.success(

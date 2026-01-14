@@ -192,10 +192,12 @@ const useMultiViewFileSectionState = (options = {}) => {
         // Associer chaque lot de fichiers pour cette vue
         for (const tempId of tempIdsForView) {
           const subcategory = buildSubcategory(viewId);
-          
+
           const response = await fileService.associateFiles(targetNodeId, tempId, {
             category,
-            subcategory
+            subcategory,
+            sampleNumber,
+            resultIndex
           });
           
           if (!response.data || response.data.success === false) {
@@ -220,7 +222,7 @@ const useMultiViewFileSectionState = (options = {}) => {
       onErrorRef.current('Erreur lors de l\'association des fichiers:', error);
       return false;
     }
-  }, [nodeId, category, buildSubcategory, loadExistingFiles]);
+  }, [nodeId, category, buildSubcategory, loadExistingFiles, sampleNumber, resultIndex]);
 
   /**
    * Crée un handler pour enregistrer les fonctions d'upload d'une vue

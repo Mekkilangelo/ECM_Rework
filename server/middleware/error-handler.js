@@ -12,12 +12,12 @@ const { ValidationError } = require('../utils/errors');
  * @param {Function} next - Fonction next d'Express
  */
 function errorHandler(err, req, res, next) {
-  const statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || 500;
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   // Génération d'un ID de requête pour faciliter le debugging
   const requestId = req.id || `req-${Date.now()}`;
-  
+
   // Log détaillé de l'erreur
   logger.error(`[${requestId}] ${err.name || 'Error'}: ${err.message}`, {
     stack: err.stack,
@@ -25,7 +25,7 @@ function errorHandler(err, req, res, next) {
     method: req.method,
     statusCode
   });
-  
+
   // Format de réponse selon le type d'erreur
   const response = {
     success: false,
@@ -34,17 +34,44 @@ function errorHandler(err, req, res, next) {
     message: err.message || 'Erreur interne du serveur',
     requestId
   };
-  
-  // Ajouter les détails de validation si disponibles
+
+  // Ajouter les détails de validation si disponibles (erreur personnalisée)
   if (err instanceof ValidationError && err.errors) {
     response.errors = err.errors;
   }
-  
+
+  // Gérer les erreurs Sequelize
+  if (err.name === 'SequelizeValidationError' || err.name === 'SequelizeUniqueConstraintError') {
+    statusCode = 400;
+    response.statusCode = 400;
+    response.message = 'validation.invalid.data';
+
+    // Extraire les détails des erreurs Sequelize
+    if (err.errors && Array.isArray(err.errors)) {
+      response.errors = {};
+      err.errors.forEach(validationError => {
+        const field = validationError.path || 'unknown';
+        const message = validationError.message || 'Valeur invalide';
+        response.errors[field] = message;
+      });
+    }
+  }
+
+  // Gérer les erreurs de contrainte de clé étrangère
+  if (err.name === 'SequelizeForeignKeyConstraintError') {
+    statusCode = 400;
+    response.statusCode = 400;
+    response.message = 'validation.invalid.foreignKey';
+    response.errors = {
+      foreignKey: `La référence "${err.index || 'inconnue'}" est invalide ou n'existe pas`
+    };
+  }
+
   // Inclure la stack trace seulement en développement
   if (!isProduction) {
     response.stack = err.stack;
   }
-  
+
   // Envoi de la réponse
   res.status(statusCode).json(response);
 }

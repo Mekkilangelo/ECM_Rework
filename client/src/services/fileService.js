@@ -143,16 +143,22 @@ const fileService = {
    * @param {Object} options - Options d'association
    * @param {string} [options.category] - Catégorie des fichiers
    * @param {string} [options.subcategory] - Sous-catégorie des fichiers
+   * @param {number} [options.sampleNumber] - Numéro d'échantillon
+   * @param {number} [options.resultIndex] - Index du résultat
    * @returns {Promise<Object>} Résultat de l'opération d'association
    * @throws {Error} En cas d'échec de la requête
    */
   associateFiles: async (nodeId, tempId, options = {}) => {
     try {
-      const { category, subcategory } = options;      const response = await api.post(`/files/associate`, {
+      const { category, subcategory, sampleNumber, resultIndex } = options;
+      const response = await api.post(`/files/associate`, {
         nodeId,
         tempId,
         category,
-        subcategory      });
+        subcategory,
+        sampleNumber,
+        resultIndex
+      });
       // On retourne directement la réponse pour une gestion uniforme
       return response;
     } catch (error) {

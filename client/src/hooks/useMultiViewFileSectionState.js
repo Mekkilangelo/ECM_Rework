@@ -89,9 +89,29 @@ const useMultiViewFileSectionState = (options = {}) => {
         // Essayer de trouver la vue correspondante à la subcategory
         const matchingView = views.find(view => {
           const expectedSubcategory = buildSubcategory(view.id);
-          return file.subcategory === expectedSubcategory || 
-                 file.subcategory === view.id ||
-                 (file.subcategory && file.subcategory.endsWith(`-${view.id}`));
+          
+          // 1. Correspondance exacte (Priorité haute)
+          if (file.subcategory === expectedSubcategory) return true;
+          
+          // 2. Correspondance Legacy (Juste l'ID de la vue)
+          if (file.subcategory === view.id) return true;
+          
+          // 3. Correspondance par suffixe - AVEC PROTECTION contre les interférences entre samples
+          if (file.subcategory && file.subcategory.endsWith(`-${view.id}`)) {
+             // Si la sous-catégorie contient des infos de structure dynamiques (result-X-sample-Y)
+             // on doit s'assurer qu'elle correspond bien à l'échantillon courant
+             if (file.subcategory.includes('result-') && file.subcategory.includes('-sample-')) {
+               // Si on a les infos de contexte courantes, on vérifie qu'elles correspondent
+               if (resultIndex !== undefined && sampleNumber !== undefined) {
+                 const currentContextPrefix = `result-${resultIndex}-sample-${sampleNumber}`;
+                 return file.subcategory.includes(currentContextPrefix);
+               }
+             }
+             // Si c'est un fichier legacy sans structure complexe, on accepte le suffixe
+             return true;
+          }
+          
+          return false;
         });
         
         const viewId = matchingView ? matchingView.id : (file.subcategory || 'other');

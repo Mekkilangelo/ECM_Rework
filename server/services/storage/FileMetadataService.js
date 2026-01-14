@@ -39,6 +39,25 @@ class FileMetadataService {
     const fileType = this.normalizeFileType(category);
     const fileSubtype = this.normalizeFileSubtype(subcategory, fileType);
     
+    // Tenter d'extraire sample et result depuis la subcategory si non fournis
+    // C'est crucial pour MicrographsSection car FileUploader ne passe pas ces infos explicitement
+    let finalSampleNumber = sampleNumber;
+    let finalResultIndex = resultIndex;
+    
+    if ((finalSampleNumber === undefined || finalSampleNumber === null) && subcategory) {
+      const match = subcategory.match(/result-(\d+)-sample-(\d+)/);
+      if (match) {
+        finalResultIndex = finalResultIndex !== undefined && finalResultIndex !== null ? finalResultIndex : parseInt(match[1]);
+        finalSampleNumber = finalSampleNumber !== undefined && finalSampleNumber !== null ? finalSampleNumber : parseInt(match[2]);
+        
+        logger.debug('Extraction métadonnées depuis subcategory', { 
+          subcategory, 
+          extractedResult: match[1], 
+          extractedSample: match[2] 
+        });
+      }
+    }
+
     // Construire le contexte
     const context = {
       // Informations d'entité
@@ -50,8 +69,8 @@ class FileMetadataService {
       file_subtype: fileSubtype,
       
       // Informations contextuelles
-      sample_number: sampleNumber || null,
-      result_index: resultIndex !== undefined ? resultIndex : null,
+      sample_number: finalSampleNumber !== undefined && finalSampleNumber !== null ? finalSampleNumber : null,
+      result_index: finalResultIndex !== undefined && finalResultIndex !== null ? finalResultIndex : null,
       
       // Informations parent
       parent_node_id: parentNode.id,

@@ -205,11 +205,12 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     return {
       // Informations de base
       name: data.name || '',
+      loadNumber: data.loadNumber || '',
       trialDate: data.trialDate || '',
       location: data.location || '',
       status: data.status || 'pending',
       description: data.description || '',
-      
+
       // Types de test
       mountingType: data.mountingType || '',
       positionType: data.positionType || '',
@@ -262,6 +263,8 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         // Autres paramètres de recette
         waitTime: data.recipeData?.waitTime || '',
         waitTimeUnit: data.recipeData?.waitTimeUnit || '',
+        waitGas: data.recipeData?.waitGas || '',
+        waitFlow: data.recipeData?.waitFlow || '',
         programDuration: data.recipeData?.programDuration || '',
         programDurationUnit: data.recipeData?.programDurationUnit || '',
         cellTemp: data.recipeData?.cellTemp || '',
@@ -299,6 +302,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     return {
       // Informations de base
       name: data.name || '',
+      loadNumber: data.loadNumber || '',
       trialDate: data.trialDate || '',
       location: data.location || '',
       status: data.status || 'pending',
@@ -356,6 +360,8 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         // Autres paramètres de recette
         waitTime: data.recipeData?.waitTime || '',
         waitTimeUnit: data.recipeData?.waitTimeUnit || '',
+        waitGas: data.recipeData?.waitGas || '',
+        waitFlow: data.recipeData?.waitFlow || '',
         programDuration: data.recipeData?.programDuration || '',
         programDurationUnit: data.recipeData?.programDurationUnit || '',
         cellTemp: data.recipeData?.cellTemp || '',

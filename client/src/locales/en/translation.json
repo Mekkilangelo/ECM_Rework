@@ -107,7 +107,8 @@
       "number": "This value must be a valid number",
       "role": "Role must be: admin, user or superuser",
       "email": "Email address is not valid",
-      "date": "Date is not valid"
+      "date": "Date is not valid",
+      "foreignKey": "A reference is invalid or does not exist"
     },
     "duplicate": {
       "clientName": "A client with this name already exists",

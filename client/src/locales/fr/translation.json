@@ -109,7 +109,8 @@
       "number": "Cette valeur doit être un nombre valide",
       "role": "Le rôle doit être : admin, user ou superuser",
       "email": "L'adresse email n'est pas valide",
-      "date": "La date n'est pas valide"
+      "date": "La date n'est pas valide",
+      "foreignKey": "Une référence est invalide ou n'existe pas"
     },
     "duplicate": {
       "clientName": "Un client avec ce nom existe déjà",

@@ -33,6 +33,8 @@ const ControlLocationSection = ({
     nodeId: trialNodeId,
     category: 'control-location',
     subcategory,
+    sampleNumber: sampleIndex,   // Passer pour association backend
+    resultIndex: resultIndex,    // Passer pour association backend
     onError: (msg, err) => console.error(t('trials.after.results.controlLocation.loadError'), msg, err)
   });
 

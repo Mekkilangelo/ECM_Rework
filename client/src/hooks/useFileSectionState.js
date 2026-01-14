@@ -16,11 +16,13 @@ import fileService from '../services/fileService';
  * @returns {Object} État et fonctions de gestion des fichiers
  */
 const useFileSectionState = (options = {}) => {
-  const { 
-    nodeId, 
-    category, 
+  const {
+    nodeId,
+    category,
     subcategory = null,
-    onError = console.error 
+    sampleNumber,   // Numéro d'échantillon pour association backend
+    resultIndex,    // Index du résultat pour association backend
+    onError = console.error
   } = options;
 
   // État des fichiers uploadés
@@ -149,7 +151,13 @@ const useFileSectionState = (options = {}) => {
         if (subcategory) {
           params.subcategory = subcategory;
         }
-        
+        if (sampleNumber !== undefined) {
+          params.sampleNumber = sampleNumber;
+        }
+        if (resultIndex !== undefined) {
+          params.resultIndex = resultIndex;
+        }
+
         const response = await fileService.associateFiles(targetNodeId, tempId, params);
         
         if (!response.data || response.data.success === false) {
@@ -174,7 +182,7 @@ const useFileSectionState = (options = {}) => {
       onErrorRef.current('Erreur lors de l\'association des fichiers:', error);
       return false;
     }
-  }, [nodeId, category, subcategory, loadExistingFiles]); // onError retiré des dépendances
+  }, [nodeId, category, subcategory, sampleNumber, resultIndex, loadExistingFiles]);
 
   /**
    * Enregistre les références aux fonctions d'upload (pour mode standby)

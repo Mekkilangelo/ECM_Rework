@@ -5,6 +5,7 @@ import { faImage, faExclamationTriangle } from '@fortawesome/free-solid-svg-icon
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../components/common/CollapsibleSection/CollapsibleSection';
 import fileService from '../../../../services/fileService';
+import trialService from '../../../../services/trialService';
 import PDFThumbnail from '../../../../components/common/FileUploader/viewers/PDFThumbnail';
 
 // Reducer pour gérer les états de sélection de façon synchrone
@@ -195,8 +196,6 @@ const SectionPhotoManager = ({
         // Configuration dynamique - sera générée dans loadPhotosForSection
         sources: [],
         isDynamic: true, // Flag pour indiquer que les sources doivent être générées dynamiquement
-        maxResults: 5, // Réduit à 5 pour optimiser (était 10)
-        maxSamples: 3,  // Réduit à 3 pour optimiser (était 5)
         magnifications: ['x50', 'x500', 'x1000', 'other'] // Grossissements disponibles
       },
       control: {
@@ -204,18 +203,14 @@ const SectionPhotoManager = ({
         title: tSafe('parts.photos.manager.sections.controlLocation.title', 'Localisation de contrôle'),
         description: tSafe('parts.photos.manager.sections.controlLocation.description', 'Photos des zones de contrôle par résultat et échantillon'),
         sources: [],
-        isDynamic: true,
-        maxResults: 5,
-        maxSamples: 3
+        isDynamic: true
       },
       controlLocation: {
         nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.controlLocation.title', 'Localisation de contrôle'),
         description: tSafe('parts.photos.manager.sections.controlLocation.description', 'Photos des zones de contrôle par résultat et échantillon'),
         sources: [],
-        isDynamic: true,
-        maxResults: 5,
-        maxSamples: 3
+        isDynamic: true
       },
       load: {
         nodeId: trialNodeId,
@@ -285,8 +280,8 @@ const SectionPhotoManager = ({
   };  // Générer dynamiquement les sources pour la section micrography
   const generateMicrographySources = async (nodeId, config) => {
     const sources = [];
-    const { maxResults = 10, maxSamples = 5, magnifications = ['x50', 'x500', 'x1000', 'other'] } = config;
-    
+    const { magnifications = ['x50', 'x500', 'x1000', 'other'] } = config;
+
     // Fonction helper pour les traductions avec fallback
     const tSafe = (key, fallback, options = {}) => {
       try {
@@ -298,133 +293,120 @@ const SectionPhotoManager = ({
       }
     };
 
-    if (process.env.NODE_ENV === 'development') {
-      // Recherche optimisée de micrographies
-    }
-
-    // Approche optimisée : une seule passe avec traitement en parallèle
-    const promises = [];
-    
-    for (let resultIndex = 0; resultIndex < maxResults; resultIndex++) {
-      for (let sampleIndex = 0; sampleIndex < maxSamples; sampleIndex++) {
-        for (const magnification of magnifications) {
-          
-          // Créer une promesse pour chaque combinaison
-          const promise = fileService.getNodeFiles(
-            nodeId,
-            { 
-              category: 'micrographs',
-              subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`
-            }
-          ).then(response => {
-            if (response.data && response.data.success !== false) {
-              const files = response.data.data?.files || response.data.files || [];
-              if (files.length > 0) {
-                return {
-                  category: 'micrographs',
-                  subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`,
-                  label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
-                  description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
-                  group: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })}`,
-                  subgroup: tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification),
-                  filesCount: files.length,
-                  resultIndex,
-                  sampleIndex
-                };
-              }
-            }
-            return null;
-          }).catch(error => {
-            // Ignorer silencieusement les combinaisons qui n'existent pas
-            return null;
-          });
-          
-          promises.push(promise);
-        }
-      }
-    }    if (process.env.NODE_ENV === 'development') {
-      // Lancement des requêtes en parallèle
-    }
-    
-    // Annuler les requêtes précédentes si elles existent
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    // Créer un nouveau contrôleur d'annulation
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-    
-    // Exécuter les promesses par lots pour éviter de surcharger le serveur
-    const batchSize = 10; // Réduit de 20 à 10 pour moins de charge
-    const allResults = [];
-    
     try {
+      // Récupérer les vraies données du trial pour connaître les results/samples
+      const trialResponse = await trialService.getTrial(nodeId);
+      const trialData = trialResponse?.data?.data || trialResponse?.data;
+      const resultsData = trialData?.results_data?.results || [];
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Micrography] Nombre réel de résultats: ${resultsData.length}`);
+      }
+
+      if (resultsData.length === 0) {
+        console.warn('[Micrography] Aucun résultat trouvé dans les données du trial');
+        return [];
+      }
+
+      // Annuler les requêtes précédentes si elles existent
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Créer un nouveau contrôleur d'annulation
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
+      // Générer les requêtes uniquement pour les results/samples qui existent réellement
+      const promises = [];
+
+      resultsData.forEach((result, resultIndex) => {
+        const samples = result.samples || [];
+
+        samples.forEach((sample, sampleIndex) => {
+          magnifications.forEach(magnification => {
+            // Créer une promesse pour chaque combinaison réelle
+            const promise = fileService.getNodeFiles(
+              nodeId,
+              {
+                category: 'micrographs',
+                subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`
+              }
+            ).then(response => {
+              if (response.data && response.data.success !== false) {
+                const files = response.data.data?.files || response.data.files || [];
+                if (files.length > 0) {
+                  return {
+                    category: 'micrographs',
+                    subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`,
+                    label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
+                    description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
+                    group: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })}`,
+                    subgroup: tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification),
+                    filesCount: files.length,
+                    resultIndex,
+                    sampleIndex
+                  };
+                }
+              }
+              return null;
+            }).catch(error => {
+              // Ignorer silencieusement les combinaisons qui n'existent pas
+              return null;
+            });
+
+            promises.push(promise);
+          });
+        });
+      });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Micrography] Génération de ${promises.length} requêtes pour ${resultsData.length} résultats`);
+      }
+
+      // Exécuter les promesses par lots pour éviter de surcharger le serveur
+      const batchSize = 10;
+      const allResults = [];
+
       for (let i = 0; i < promises.length; i += batchSize) {
         // Vérifier si l'opération a été annulée
         if (signal.aborted) {
-          if (process.env.NODE_ENV === 'development') {
-            
-          }
           return [];
         }
-        
+
         const batch = promises.slice(i, i + batchSize);
-        if (process.env.NODE_ENV === 'development') {
-          // Traitement en lots pour éviter la surcharge
-        }
-        
         const batchResults = await Promise.all(batch);
         allResults.push(...batchResults);
-        
-        // Pause plus longue entre les lots pour réduire la charge
+
+        // Pause entre les lots
         if (i + batchSize < promises.length) {
-          await new Promise(resolve => setTimeout(resolve, 200)); // Augmenté de 100ms à 200ms
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
+
+      // Filtrer les résultats valides
+      const validSources = allResults.filter(result => result !== null);
+      sources.push(...validSources);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Micrography] ${validSources.length} sources générées avec succès`);
+      }
+
     } catch (error) {
       if (error.name === 'AbortError') {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         return [];
       }
+      console.error('[Micrography] Erreur lors de la génération des sources:', error);
       throw error;
     }
-    
-    // Filtrer les résultats valides et les ajouter aux sources
-    const validSources = allResults.filter(result => result !== null);
-    sources.push(...validSources);
-      if (process.env.NODE_ENV === 'development') {
-      // Génération terminée avec succès
-    }
-    
-    // Afficher un résumé des résultats et échantillons trouvés (development only)
-    if (process.env.NODE_ENV === 'development' && sources.length > 0) {
-      const foundCombinations = new Set(sources.map(s => s.category));
-      const combinationsList = Array.from(foundCombinations).sort();
-      
-      // Statistiques par résultat
-      const statsByResult = {};
-      sources.forEach(source => {
-        const key = `Résultat ${source.resultIndex + 1}`;
-        if (!statsByResult[key]) statsByResult[key] = new Set();
-        statsByResult[key].add(source.sampleIndex + 1);
-      });
-      
-      Object.keys(statsByResult).forEach(result => {
-        const samples = Array.from(statsByResult[result]).sort((a, b) => a - b);
-      });
-    }
-    
+
     return sources;
   };
 
   // Générer dynamiquement les sources pour la section controlLocation
   const generateControlLocationSources = async (nodeId, config) => {
     const sources = [];
-    const { maxResults = 5, maxSamples = 3 } = config;
-    
+
     const tSafe = (key, fallback, options = {}) => {
       try {
         const translated = t(key, options);
@@ -435,63 +417,90 @@ const SectionPhotoManager = ({
       }
     };
 
-    const promises = [];
-    
-    for (let resultIndex = 0; resultIndex < maxResults; resultIndex++) {
-      for (let sampleIndex = 0; sampleIndex < maxSamples; sampleIndex++) {
-        const promise = fileService.getNodeFiles(
-          nodeId,
-          { 
-            category: 'control-location',
-            subcategory: `result-${resultIndex}-sample-${sampleIndex}`
-          }
-        ).then(response => {
-          if (response.data && response.data.success !== false) {
-            const files = response.data.data?.files || response.data.files || [];
-            if (files.length > 0) {
-              return {
-                category: 'control-location',
-                subcategory: `result-${resultIndex}-sample-${sampleIndex}`,
-                label: tSafe(
-                  'parts.photos.manager.sections.controlLocation.sourceLabel',
-                  `Résultat ${resultIndex + 1} - Échantillon ${sampleIndex + 1}`,
-                  { result: resultIndex + 1, sample: sampleIndex + 1 }
-                ),
-                description: tSafe(
-                  'parts.photos.manager.sections.controlLocation.sourceDescription',
-                  `Photos de localisation de contrôle`,
-                  { result: resultIndex + 1, sample: sampleIndex + 1 }
-                ),
-                group: `${tSafe('parts.photos.manager.sections.controlLocation.resultGroup', 'Résultat {{result}}', { result: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', 'Échantillon {{sample}}', { sample: sampleIndex + 1 })}`,
-                subgroup: tSafe('parts.photos.manager.sections.controlLocation.title', 'Zones de contrôle'),
-                resultIndex,
-                sampleIndex
-              };
-            }
-          }
-          return null;
-        }).catch(error => {
-          if (error.name !== 'AbortError') {
-            console.error(`Error fetching control location for result ${resultIndex}, sample ${sampleIndex}:`, error);
-          }
-          return null;
-        });
-        
-        promises.push(promise);
-      }
-    }
-
     try {
+      // Récupérer les vraies données du trial pour connaître les results/samples
+      const trialResponse = await trialService.getTrial(nodeId);
+      const trialData = trialResponse?.data?.data || trialResponse?.data;
+      const resultsData = trialData?.results_data?.results || [];
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Control Location] Nombre réel de résultats: ${resultsData.length}`);
+      }
+
+      if (resultsData.length === 0) {
+        console.warn('[Control Location] Aucun résultat trouvé dans les données du trial');
+        return [];
+      }
+
+      // Générer les requêtes uniquement pour les results/samples qui existent réellement
+      const promises = [];
+
+      resultsData.forEach((result, resultIndex) => {
+        const samples = result.samples || [];
+
+        samples.forEach((sample, sampleIndex) => {
+          const promise = fileService.getNodeFiles(
+            nodeId,
+            {
+              category: 'control-location',
+              subcategory: `result-${resultIndex}-sample-${sampleIndex}`
+            }
+          ).then(response => {
+            if (response.data && response.data.success !== false) {
+              const files = response.data.data?.files || response.data.files || [];
+              if (files.length > 0) {
+                return {
+                  category: 'control-location',
+                  subcategory: `result-${resultIndex}-sample-${sampleIndex}`,
+                  label: tSafe(
+                    'parts.photos.manager.sections.controlLocation.sourceLabel',
+                    `Résultat ${resultIndex + 1} - Échantillon ${sampleIndex + 1}`,
+                    { result: resultIndex + 1, sample: sampleIndex + 1 }
+                  ),
+                  description: tSafe(
+                    'parts.photos.manager.sections.controlLocation.sourceDescription',
+                    `Photos de localisation de contrôle`,
+                    { result: resultIndex + 1, sample: sampleIndex + 1 }
+                  ),
+                  group: `${tSafe('parts.photos.manager.sections.controlLocation.resultGroup', 'Résultat {{result}}', { result: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', 'Échantillon {{sample}}', { sample: sampleIndex + 1 })}`,
+                  subgroup: tSafe('parts.photos.manager.sections.controlLocation.title', 'Zones de contrôle'),
+                  resultIndex,
+                  sampleIndex
+                };
+              }
+            }
+            return null;
+          }).catch(error => {
+            if (error.name !== 'AbortError') {
+              console.error(`Error fetching control location for result ${resultIndex}, sample ${sampleIndex}:`, error);
+            }
+            return null;
+          });
+
+          promises.push(promise);
+        });
+      });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Control Location] Génération de ${promises.length} requêtes pour ${resultsData.length} résultats`);
+      }
+
       const allResults = await Promise.all(promises);
       const validSources = allResults.filter(result => result !== null);
       sources.push(...validSources);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Control Location] ${validSources.length} sources générées avec succès`);
+      }
+
     } catch (error) {
       if (error.name === 'AbortError') {
         return [];
       }
+      console.error('[Control Location] Erreur lors de la génération des sources:', error);
       throw error;
     }
-    
+
     return sources;
   };
 

@@ -1,6 +1,6 @@
 {
   "name": "client",
-  "version": "1.2.15",
+  "version": "1.2.16",
   "main": "index.js",
   "private": true,
   "scripts": {
@@ -27,7 +27,7 @@
     "i18next": "^23.7.16",
     "i18next-browser-languagedetector": "^7.1.0",
     "jwt-decode": "^4.0.0",
-    "pdfjs-dist": "^5.4.296",
+    "pdfjs-dist": "5.4.296",
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",

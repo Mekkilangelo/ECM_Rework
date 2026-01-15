@@ -8,7 +8,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-// Configure worker
+// Configure worker - utilise le fichier local (100% hors-ligne)
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const PDFThumbnail = ({ 

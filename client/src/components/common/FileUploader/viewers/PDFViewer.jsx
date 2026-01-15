@@ -15,8 +15,8 @@ import {
 import { Button, ButtonGroup, Spinner } from 'react-bootstrap';
 import './PDFViewer.css';
 
-// Configuration du worker PDF.js en local (pas de connexion Internet requise)
-pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
+// Configuration du worker PDF.js local (100% hors-ligne)
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const PDFViewer = ({ fileUrl, fileName }) => {
   const [numPages, setNumPages] = useState(null);

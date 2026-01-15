@@ -35,22 +35,8 @@ const createRecipeFromData = async (recipeData, transaction) => {
   const OilQuenchModel = sequelize.models.recipe_oil_quench;
   const OilQuenchSpeed = sequelize.models.recipe_oil_quench_speed;
 
-  // Vérifier si la recette existe déjà par son numéro
-  let recipe = null;
-  if (recipeData.number) {
-    recipe = await RecipeModel.findOne({ 
-      where: { recipe_number: recipeData.number },
-      transaction 
-    });
-  }
-
-  // Si la recette existe déjà, la retourner
-  if (recipe) {
-    return recipe.recipe_id;
-  }
-
-  // Sinon créer une nouvelle recette
-  recipe = await RecipeModel.create({ recipe_number: recipeData.number || null }, { transaction });
+  // Création d'une nouvelle recette à chaque fois (pas de déduplication par numéro)
+  let recipe = await RecipeModel.create({ recipe_number: recipeData.number || null }, { transaction });
 
   // Pré-oxydation
   if (recipeData.preox) {
@@ -338,7 +324,7 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
   await sequelize.models.recipe_thermal_cycle.destroy({ where: { recipe_id: recipeId }, transaction });
 
   // Mettre à jour le numéro
-  await RecipeModel.update({ recipe_number: recipeData.number || null }, { where: { recipe_id: recipeId }, transaction });
+  // await RecipeModel.update({ recipe_number: recipeData.number || null }, { where: { recipe_id: recipeId }, transaction });
 
   // Recreate sub-entities manually (targeting existing recipeId)
   if (recipeData.preox) {
@@ -472,6 +458,41 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
  */
 const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
   if (!trialNodeId) return;
+
+  // Calculer les résultats et samples conservés pour nettoyer les fichiers orphelins
+  const keptContextKeys = new Set();
+  if (resultsData && Array.isArray(resultsData.results)) {
+    resultsData.results.forEach(result => {
+      const resultIndex = result.step;
+      if (resultIndex !== undefined && resultIndex !== null && Array.isArray(result.samples)) {
+        result.samples.forEach(sample => {
+          const sampleNumber = sample.step;
+          if (sampleNumber !== undefined && sampleNumber !== null) {
+            keptContextKeys.add(`${resultIndex}-${sampleNumber}`);
+          }
+        });
+      }
+    });
+  }
+
+  // Si aucun résultat n'est conservé, cela supprimera tous les fichiers associés à des résultats
+  logger.info('Nettoyage des fichiers orphelins après mise à jour des résultats', { 
+    trialNodeId, 
+    keptCount: keptContextKeys.size 
+  });
+
+  // Supprimer les fichiers dont le contexte (sample/result) ne correspond plus à rien
+  await fileService.deleteFilesByContext(trialNodeId, (context) => {
+    // Si le fichier n'a pas de contexte de résultat/sample, on le garde
+    if (!context || context.result_index === undefined || context.result_index === null || 
+        context.sample_number === undefined || context.sample_number === null) {
+      return false;
+    }
+    
+    // Vérifier si la paire result-sample est conservée
+    const key = `${context.result_index}-${context.sample_number}`;
+    return !keptContextKeys.has(key);
+  }, transaction);
 
   // Supprimer les résultats existants dans l'ordre inverse des FK
   // 1. Points de courbe (FK vers series)
@@ -1406,8 +1427,13 @@ const updateTrial = async (trialId, trialData) => {
         }
         
         if (trialNode.trial && trialNode.trial.recipe_id) {
-          // Mise à jour
-          await updateRecipeFromData(trialNode.trial.recipe_id, completeRecipeData, transaction);
+          // Mise à jour : on préfère créer une nouvelle recette si le numéro change ou si on veut éviter les conflits
+          // Mais pour simplifier et résoudre le problème de contrainte unique, on crée TOUJOURS une nouvelle recette
+          // et on met à jour la référence dans le trial
+          const newRecipeId = await createRecipeFromData(completeRecipeData, transaction);
+          if (newRecipeId) {
+             await trialNode.trial.update({ recipe_id: newRecipeId }, { transaction });
+          }
         } else {
           // Création
           const createdId = await createRecipeFromData(completeRecipeData, transaction);
@@ -1476,6 +1502,9 @@ const deleteTrial = async (trialId) => {
   const transaction = await sequelize.transaction();
   
   try {
+    // Supprimer physiquement et logiquement tous les fichiers attachés au trial et ses descendants
+    await fileService.deleteFilesRecursively(trialId, transaction);
+
     // 1. D'abord supprimer toutes les relations de fermeture liées à ce test et ses descendants
     // Récupérer tous les IDs des descendants
     const descendantIds = descendants.map(desc => desc.descendant_id);

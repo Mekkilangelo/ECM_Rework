@@ -16,14 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'recipes',
-    timestamps: false,
-    indexes: [
-      {
-        unique: true,
-        fields: ['recipe_number'],
-        name: 'unique_recipe_number'
-      }
-    ]
+    timestamps: false
   });
 
   Recipe.associate = (models) => {

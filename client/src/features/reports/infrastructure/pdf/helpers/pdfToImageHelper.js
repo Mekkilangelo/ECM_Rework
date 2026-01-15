@@ -5,9 +5,9 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure worker - pdfjs-dist v5 utilise un worker différent
+// Configure worker - utilise le fichier local (100% hors-ligne)
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 }
 
 /**

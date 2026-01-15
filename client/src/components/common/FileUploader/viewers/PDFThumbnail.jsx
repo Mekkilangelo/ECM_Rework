@@ -4,15 +4,12 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Document, Page } from 'react-pdf';
-import * as pdfjs from 'pdfjs-dist';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilePdf, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-// Configure worker
-if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-}
+// Configure worker - utilise le fichier local (100% hors-ligne)
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const PDFThumbnail = ({ 
   fileUrl, 

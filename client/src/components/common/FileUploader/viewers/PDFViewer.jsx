@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Document, Page } from 'react-pdf';
-import * as pdfjs from 'pdfjs-dist';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faChevronLeft,
@@ -16,10 +15,8 @@ import {
 import { Button, ButtonGroup, Spinner } from 'react-bootstrap';
 import './PDFViewer.css';
 
-// Configuration du worker PDF.js avec CDN
-if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-}
+// Configuration du worker PDF.js local (100% hors-ligne)
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const PDFViewer = ({ fileUrl, fileName }) => {
   const [numPages, setNumPages] = useState(null);

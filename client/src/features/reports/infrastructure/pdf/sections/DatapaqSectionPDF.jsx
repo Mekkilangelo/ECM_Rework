@@ -1,17 +1,21 @@
 /**
  * INFRASTRUCTURE: Section Datapaq pour le PDF
  * Affiche les rapports et graphiques Datapaq
- * 
- * Utilise le système de thème et les primitives pour cohérence visuelle
+ *
+ * Layout Strategy (identique à Load Design):
+ * - 1 photo: full page
+ * - 2 photos: stacked vertically
+ * - 3 photos: hero + pair (1 large + 2 smaller below)
+ * - 4+ photos: first page = hero + pair, then grid 2x3 (6 par page)
  */
 
 import React from 'react';
 import { View, StyleSheet } from '@react-pdf/renderer';
 import { SPACING } from '../theme';
-import { 
-  SectionTitle, 
+import {
+  SectionTitle,
   PhotoContainer,
-  EmptyState 
+  EmptyState
 } from '../primitives';
 import { validatePhotos } from '../helpers/photoHelpers';
 
@@ -23,80 +27,130 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: SPACING.section.marginBottom,
   },
+  photoStack: {
+    flexDirection: 'column',
+  },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: SPACING.sm,
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     gap: SPACING.photo.gap,
-  },
-  photoContainerSingle: {
-    width: '100%',
-    marginBottom: SPACING.photo.marginBottom,
-    alignItems: 'center',
-  },
-  photoContainerHalf: {
-    width: '48%',
-    marginBottom: SPACING.photo.marginBottom,
-    alignItems: 'center',
   },
 });
 
+// Photo sizes specific to Datapaq section (same as Load)
+const DATAPAQ_PHOTO_SIZES = {
+  fullPage: { width: 500, height: 700 },
+  halfPage: { width: 500, height: 340 },
+  heroLarge: { width: 500, height: 280 },
+  pairSmall: { width: 244, height: 200 },
+  // Grille 2x3 (6 par page) pour pages suivantes
+  gridItem: { width: 244, height: 155 },
+};
+
 /**
- * Calcule le layout approprié selon le nombre de photos
+ * Calculate intelligent layout based on photo count
+ * - 1 photo: full page
+ * - 2 photos: stacked vertically
+ * - 3 photos: hero + pair (1 large + 2 small)
+ * - 4+ photos: first page = hero + pair, then grid 2x3 (6 par page)
  */
 const calculateLayout = (photoCount) => {
   if (photoCount === 1) {
     return { type: 'single', pages: [[0]] };
-  }
-  
-  if (photoCount === 2) {
+  } else if (photoCount === 2) {
     return { type: 'double', pages: [[0, 1]] };
+  } else if (photoCount === 3) {
+    return { type: 'triple', pages: [[0, 1, 2]] };
+  } else {
+    // 4+ photos: first page = 3 (hero + pair), then grid 2x3
+    const pages = [];
+    let currentIndex = 0;
+
+    // First page with special layout
+    pages.push([0, 1, 2]);
+    currentIndex = 3;
+
+    // Following pages with grid (6 photos max per page)
+    while (currentIndex < photoCount) {
+      const remaining = photoCount - currentIndex;
+      const photosThisPage = Math.min(remaining, 6);
+      const pageIndices = [];
+      for (let i = 0; i < photosThisPage; i++) {
+        pageIndices.push(currentIndex + i);
+      }
+      pages.push(pageIndices);
+      currentIndex += photosThisPage;
+    }
+
+    return { type: 'multiple', pages };
   }
-  
-  // Pour 3+ photos: première page avec 1 grande photo, pages suivantes avec 2 photos
-  const pages = [];
-  const photos = Array.from({ length: photoCount }, (_, i) => i);
-  
-  // Première page: 1 photo
-  pages.push([photos[0]]);
-  
-  // Pages suivantes: 2 photos par page
-  let remainingPhotos = photos.slice(1);
-  while (remainingPhotos.length > 0) {
-    pages.push(remainingPhotos.slice(0, 2));
-    remainingPhotos = remainingPhotos.slice(2);
-  }
-  
-  return { type: 'multiple', pages };
 };
 
 /**
- * Layout pour une seule photo (pleine page)
+ * Single Photo Layout - Full page
  */
 const SinglePhotoLayout = ({ photo }) => (
-  <PhotoContainer 
-    photo={photo} 
-    customSize={{ 
-      width: '100%', 
-      maxHeight: 500 
-    }}
+  <PhotoContainer
+    photo={photo}
+    customSize={DATAPAQ_PHOTO_SIZES.fullPage}
   />
 );
 
 /**
- * Layout pour deux photos (côte à côte)
+ * Double Photo Layout - Stacked vertically
  */
 const DoublePhotoLayout = ({ photos }) => (
+  <View style={styles.photoStack}>
+    {photos.map((photo, idx) => (
+      <PhotoContainer
+        key={photo.id || idx}
+        photo={photo}
+        customSize={DATAPAQ_PHOTO_SIZES.halfPage}
+      />
+    ))}
+  </View>
+);
+
+/**
+ * Triple Photo Layout - Hero + Pair pattern
+ * 1 large photo on top, 2 smaller photos below side by side
+ */
+const TriplePhotoLayout = ({ photos }) => {
+  const [heroPhoto, ...pairPhotos] = photos;
+
+  return (
+    <View style={styles.photoStack}>
+      {/* Hero photo */}
+      <PhotoContainer
+        photo={heroPhoto}
+        customSize={DATAPAQ_PHOTO_SIZES.heroLarge}
+      />
+
+      {/* Pair row */}
+      <View style={styles.photoGrid}>
+        {pairPhotos.map((photo, idx) => (
+          <PhotoContainer
+            key={photo.id || idx}
+            photo={photo}
+            customSize={DATAPAQ_PHOTO_SIZES.pairSmall}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
+
+/**
+ * Grid Photo Layout - 2x3 grid for subsequent pages
+ */
+const GridPhotoLayout = ({ photos }) => (
   <View style={styles.photoGrid}>
     {photos.map((photo, idx) => (
-      <PhotoContainer 
+      <PhotoContainer
         key={photo.id || idx}
-        photo={photo} 
-        customSize={{ 
-          width: '48%', 
-          maxHeight: 350 
-        }}
+        photo={photo}
+        customSize={DATAPAQ_PHOTO_SIZES.gridItem}
       />
     ))}
   </View>
@@ -110,9 +164,8 @@ export const DatapaqSectionPDF = ({ report, photos = [] }) => {
 
   // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
-  
+
   if (validPhotos.length === 0) {
-    // Retourner null au lieu d'un message vide - la section ne sera pas affichée
     return null;
   }
 
@@ -121,29 +174,46 @@ export const DatapaqSectionPDF = ({ report, photos = [] }) => {
   return (
     <>
       {layout.pages.map((photoIndices, pageIndex) => {
+        const isFirstPage = pageIndex === 0;
         const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
-        
+
+        // Determine layout type for this page
+        let pageLayout = layout.type;
+        if (layout.type === 'multiple' && !isFirstPage) {
+          pageLayout = 'grid';
+        }
+
         return (
-          <View 
-            key={`datapaq-page-${pageIndex}`} 
+          <View
+            key={`datapaq-page-${pageIndex}`}
             style={styles.section}
             break={pageIndex > 0}
           >
-            <SectionTitle 
-              sectionType={SECTION_TYPE} 
+            <SectionTitle
+              sectionType={SECTION_TYPE}
               continuation={pageIndex > 0}
             >
               DATAPAQ REPORTS
             </SectionTitle>
-            
+
             {/* Single photo - full page */}
-            {layout.type === 'single' && (
+            {pageLayout === 'single' && (
               <SinglePhotoLayout photo={pagePhotos[0]} />
             )}
 
-            {/* Double photos or multiple pages */}
-            {(layout.type === 'double' || layout.type === 'multiple') && (
+            {/* Double photos - stacked vertically */}
+            {pageLayout === 'double' && (
               <DoublePhotoLayout photos={pagePhotos} />
+            )}
+
+            {/* Triple or Multiple first page - hero + pair */}
+            {(pageLayout === 'triple' || (pageLayout === 'multiple' && isFirstPage)) && (
+              <TriplePhotoLayout photos={pagePhotos} />
+            )}
+
+            {/* Grid layout for subsequent pages */}
+            {pageLayout === 'grid' && (
+              <GridPhotoLayout photos={pagePhotos} />
             )}
           </View>
         );

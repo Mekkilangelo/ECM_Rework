@@ -678,15 +678,23 @@
               "heating": "Courbes de chauffe",
               "cooling": "Courbes de refroidissement",
               "tempering": "Courbes de revenu",
-              "datapaq": "Données Datapaq",
               "alarms": "Alarmes"
             },
             "descriptions": {
               "heating": "Graphiques de montée en température",
               "cooling": "Graphiques de refroidissement",
               "tempering": "Graphiques de traitement de revenu",
-              "datapaq": "Relevés des capteurs Datapaq",
               "alarms": "Rapports d'alarmes et événements"
+            }
+          },
+          "datapaq": {
+            "title": "Datapaq",
+            "description": "Rapports et graphiques des capteurs Datapaq",
+            "categories": {
+              "datapaq": "Données Datapaq"
+            },
+            "descriptions": {
+              "datapaq": "Relevés des capteurs Datapaq"
             }
           }
         }
@@ -1270,6 +1278,10 @@
       "curves": {
         "label": "Courbes",
         "description": "Graphiques et courbes de température/puissance"
+      },
+      "datapaq": {
+        "label": "Datapaq",
+        "description": "Relevés et rapports des capteurs Datapaq"
       },
       "micrography": {
         "label": "Micrographie",

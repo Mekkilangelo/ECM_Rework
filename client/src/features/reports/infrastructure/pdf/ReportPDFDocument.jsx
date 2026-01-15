@@ -11,6 +11,7 @@ import {
   IdentificationSectionPDF,
   MicrographySectionPDF,
   CurvesSectionPDF,
+  DatapaqSectionPDF,
   LoadSectionPDF,
   RecipeSectionPDF,
   ControlSectionPDF 
@@ -682,6 +683,46 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
                 <Section title="COURBES ET RAPPORTS DE FOUR">
                   <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
                     Erreur lors du rendu de la section courbes
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Datapaq - Page séparée */}
+      {activeSections.some(s => s.type === 'datapaq') && report && (
+        <Page size="A4" style={styles.page}>
+          {includeHeader && (
+            <CommonReportHeader 
+              clientName={report.clientName}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+            />
+          )}
+          {(() => {
+            try {
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.datapaq, 'datapaq');
+              return (
+                <DatapaqSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering DatapaqSectionPDF:', error);
+              return (
+                <Section title="RAPPORTS DATAPAQ">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section Datapaq
                   </Text>
                   <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
                     {error.message}

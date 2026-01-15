@@ -123,6 +123,7 @@ export class SectionFactory {
     RECIPE: 'recipe',
     LOAD: 'load',
     CURVES: 'curves',
+    DATAPAQ: 'datapaq',
     MICROGRAPHY: 'micrography',
     CONTROL: 'control'
   };
@@ -156,6 +157,15 @@ export class SectionFactory {
         hasPhotos: true,
         order: 3
       },
+      [this.SECTION_TYPES.DATAPAQ]: {
+        id: 'datapaq',
+        type: 'datapaq',
+        label: 'Datapaq',
+        icon: 'faChartArea',
+        description: 'Relevés et rapports des capteurs Datapaq',
+        hasPhotos: true,
+        order: 4
+      },
       [this.SECTION_TYPES.RECIPE]: {
         id: 'recipe',
         type: 'recipe',
@@ -163,7 +173,7 @@ export class SectionFactory {
         icon: 'faList',
         description: 'Paramètres de la recette utilisée',
         hasPhotos: false,
-        order: 4
+        order: 5
       },
       [this.SECTION_TYPES.CONTROL]: {
         id: 'control',
@@ -172,7 +182,7 @@ export class SectionFactory {
         icon: 'faClipboardCheck',
         description: 'Résultats de mesures et contrôles',
         hasPhotos: true,
-        order: 5
+        order: 6
       },
       [this.SECTION_TYPES.MICROGRAPHY]: {
         id: 'micrography',
@@ -181,7 +191,7 @@ export class SectionFactory {
         icon: 'faMicroscope',
         description: 'Images et analyses micrographiques',
         hasPhotos: true,
-        order: 6
+        order: 7
       }
     };
 

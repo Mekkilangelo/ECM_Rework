@@ -252,16 +252,24 @@ const SectionPhotoManager = ({
             label: tSafe('parts.photos.manager.sections.curves.categories.tempering', 'Courbes de revenu'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.tempering', 'Graphiques de traitement de revenu')
           },
-          {
-            category: 'datapaq',
-            subcategory: 'datapaq',
-            label: tSafe('parts.photos.manager.sections.curves.categories.datapaq', 'Données Datapaq'),
-            description: tSafe('parts.photos.manager.sections.curves.descriptions.datapaq', 'Relevés des capteurs Datapaq')
-          },
           { 
             category: 'furnace_report', 
             subcategory: 'alarms',
-            label: tSafe('parts.photos.manager.sections.curves.categories.alarms', 'Alarmes'),            description: tSafe('parts.photos.manager.sections.curves.descriptions.alarms', 'Rapports d\'alarmes et événements')
+            label: tSafe('parts.photos.manager.sections.curves.categories.alarms', 'Alarmes'),
+            description: tSafe('parts.photos.manager.sections.curves.descriptions.alarms', 'Rapports d\'alarmes et événements')
+          }
+        ]
+      },
+      datapaq: {
+        nodeId: trialNodeId,
+        title: tSafe('parts.photos.manager.sections.datapaq.title', 'Datapaq'),
+        description: tSafe('parts.photos.manager.sections.datapaq.description', 'Rapports et graphiques des capteurs Datapaq'),
+        sources: [
+          {
+            category: 'datapaq',
+            subcategory: 'datapaq',
+            label: tSafe('parts.photos.manager.sections.datapaq.categories.datapaq', 'Données Datapaq'),
+            description: tSafe('parts.photos.manager.sections.datapaq.descriptions.datapaq', 'Relevés des capteurs Datapaq')
           }
         ]
       }
@@ -854,7 +862,9 @@ const SectionPhotoManager = ({
         <div className="d-flex align-items-center">
           <FontAwesomeIcon icon={faImage} size="2x" className="me-3" />
           <div>
-            <h6 className="mb-0">{t('parts.photos.manager.noPhotosAvailable')}</h6>
+            <h6 className="mb-0">
+              {t('parts.photos.manager.noPhotosAvailable')} - <strong>{config.title}</strong>
+            </h6>
             <p className="mb-1 mt-1">
               {t('parts.photos.manager.noPhotosMessage')}
               {sectionType === 'identification' ? 
@@ -862,12 +872,12 @@ const SectionPhotoManager = ({
                 ` ${t('parts.photos.manager.verifyFilesMessage')}`
               }
             </p>
-            <div>
+            <div className="d-flex align-items-center gap-2">
+              <span className="badge bg-secondary">Section: {config.title}</span>
               <span className="text-muted small">ID {nodeTypeText}: {nodeId}</span>
               <Button 
                 size="sm" 
-                variant="outline-primary" 
-                className="ms-2"
+                variant="outline-primary"
                 onClick={loadPhotosForSection}
               >
                 {t('parts.photos.manager.refresh')}

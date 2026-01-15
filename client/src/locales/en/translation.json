@@ -676,15 +676,23 @@
               "heating": "Heating Curves",
               "cooling": "Cooling Curves",
               "tempering": "Tempering Curves",
-              "datapaq": "Datapaq Data",
               "alarms": "Alarms"
             },
             "descriptions": {
               "heating": "Temperature rise graphs",
               "cooling": "Cooling graphs",
               "tempering": "Tempering treatment graphs",
-              "datapaq": "Datapaq sensor readings",
               "alarms": "Alarm and event reports"
+            }
+          },
+          "datapaq": {
+            "title": "Datapaq",
+            "description": "Datapaq sensor reports and graphs",
+            "categories": {
+              "datapaq": "Datapaq Data"
+            },
+            "descriptions": {
+              "datapaq": "Datapaq sensor readings"
             }
           }
         }
@@ -1262,6 +1270,10 @@
       "curves": {
         "label": "Curves",
         "description": "Temperature/power charts and curves"
+      },
+      "datapaq": {
+        "label": "Datapaq",
+        "description": "Datapaq sensor readings and reports"
       },
       "micrography": {
         "label": "Micrography",

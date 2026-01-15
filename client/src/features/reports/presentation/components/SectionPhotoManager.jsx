@@ -295,11 +295,13 @@ const SectionPhotoManager = ({
 
     try {
       // Récupérer les vraies données du trial pour connaître les results/samples
-      const trialResponse = await trialService.getTrial(nodeId);
-      const trialData = trialResponse?.data?.data || trialResponse?.data;
+      // Note: trialService.getTrial retourne directement les données (pas un wrapper)
+      const trialData = await trialService.getTrial(nodeId);
       const resultsData = trialData?.results_data?.results || [];
 
       if (process.env.NODE_ENV === 'development') {
+        console.log(`[Micrography] trialData:`, trialData);
+        console.log(`[Micrography] results_data:`, trialData?.results_data);
         console.log(`[Micrography] Nombre réel de résultats: ${resultsData.length}`);
       }
 
@@ -419,11 +421,13 @@ const SectionPhotoManager = ({
 
     try {
       // Récupérer les vraies données du trial pour connaître les results/samples
-      const trialResponse = await trialService.getTrial(nodeId);
-      const trialData = trialResponse?.data?.data || trialResponse?.data;
+      // Note: trialService.getTrial retourne directement les données (pas un wrapper)
+      const trialData = await trialService.getTrial(nodeId);
       const resultsData = trialData?.results_data?.results || [];
 
       if (process.env.NODE_ENV === 'development') {
+        console.log(`[Control Location] trialData:`, trialData);
+        console.log(`[Control Location] results_data:`, trialData?.results_data);
         console.log(`[Control Location] Nombre réel de résultats: ${resultsData.length}`);
       }
 

@@ -110,8 +110,28 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
 
   // Récupérer les paramètres de la recette (format API snake_case)
   // IMPORTANT: cellTemp est la température de départ, comme dans RecipePreviewChart
-  const cellTemp = parseInt(recipeData.cell_temp?.value) || 20;
-  const waitTime = parseInt(recipeData.wait_time?.value) || 0;
+  // Gérer les deux formats possibles: { value, unit } ou valeur directe
+  const rawCellTemp = typeof recipeData.cell_temp === 'object' 
+    ? recipeData.cell_temp?.value 
+    : recipeData.cell_temp;
+  
+  // Si cell_temp n'est pas défini, utiliser le premier setpoint du thermal cycle comme fallback
+  // Cela permet d'avoir une valeur cohérente même si cell_temp n'est pas stocké
+  let cellTemp = parseInt(rawCellTemp);
+  if (!cellTemp || isNaN(cellTemp)) {
+    // Fallback: utiliser le premier setpoint du thermal cycle ou 20 par défaut
+    const firstThermalStep = thermalCycle[0];
+    if (firstThermalStep?.setpoint) {
+      cellTemp = parseInt(firstThermalStep.setpoint) || 20;
+    } else {
+      cellTemp = 20;
+    }
+  }
+  
+  const rawWaitTime = typeof recipeData.wait_time === 'object'
+    ? recipeData.wait_time?.value
+    : recipeData.wait_time;
+  const waitTime = parseInt(rawWaitTime) || 0;
   const waitTimeInMinutes = waitTime; // Déjà en minutes
   const waitGas = recipeData.wait_gas;
   const waitFlow = parseFloat(recipeData.wait_flow?.value) || 0;

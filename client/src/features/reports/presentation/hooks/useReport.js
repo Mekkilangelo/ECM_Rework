@@ -166,19 +166,43 @@ export const useReport = (trialId, partId) => {
       if (result.success) {
         // Désélectionner automatiquement les sections vides
         const reportWithAutoDeselection = autoDeselectEmptySections(result.report);
-        setReport(reportWithAutoDeselection);
+        
+        // Transférer les options des sections de l'état au rapport
+        const sectionsWithOptions = reportWithAutoDeselection.sections.map(reportSection => {
+          const stateSection = sections.find(s => s.type === reportSection.type);
+          if (stateSection && stateSection.options) {
+            // Copier les options de la section de l'état vers la section du rapport
+            let updatedSection = reportSection;
+            Object.entries(stateSection.options).forEach(([key, value]) => {
+              updatedSection = updatedSection.withOption(key, value);
+            });
+            return updatedSection;
+          }
+          return reportSection;
+        });
+        
+        const finalReport = reportWithAutoDeselection.withSections(sectionsWithOptions);
+        setReport(finalReport);
         
         // Mettre à jour les sections dans l'état pour refléter la désélection
+        // tout en préservant les options existantes
         const updatedSections = sections.map(section => {
-          const reportSection = reportWithAutoDeselection.sections.find(s => s.type === section.type);
+          const reportSection = finalReport.sections.find(s => s.type === section.type);
           if (reportSection && reportSection.isEnabled !== section.isEnabled) {
-            return reportSection;
+            // Préserver les options de la section d'état
+            let updatedReportSection = reportSection;
+            if (section.options) {
+              Object.entries(section.options).forEach(([key, value]) => {
+                updatedReportSection = updatedReportSection.withOption(key, value);
+              });
+            }
+            return updatedReportSection;
           }
           return section;
         });
         setSections(updatedSections);
         
-        return reportWithAutoDeselection;
+        return finalReport;
       } else {
         setError(result.error);
         return null;

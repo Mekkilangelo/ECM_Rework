@@ -3,10 +3,12 @@
  * Utilisé pour contourner la limitation de @react-pdf/renderer qui ne peut pas afficher de PDFs
  */
 
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// Configure worker - pdfjs-dist v5 utilise un worker différent
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+}
 
 /**
  * Convertit la première page d'un PDF en image base64

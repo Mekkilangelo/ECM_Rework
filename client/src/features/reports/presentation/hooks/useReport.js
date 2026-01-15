@@ -12,24 +12,6 @@ import { ReportPDFDocument } from '../../infrastructure/pdf/ReportPDFDocument';
 import { PDFGeneratorFactory } from '../../domain/services/PDFGenerator';
 
 /**
- * Désélectionne automatiquement les sections vides dans un rapport
- */
-const autoDeselectEmptySections = (report) => {
-  if (!report) return report;
-
-  const updatedSections = report.sections.map(section => {
-    // Si la section est activée mais vide, la désactiver
-    if (section.isEnabled && section.isEmpty()) {
-      console.log(`🔄 Auto-désélection de la section vide: ${section.type}`);
-      return section.toggle(); // Désactive la section
-    }
-    return section;
-  });
-
-  return report.withSections(updatedSections);
-};
-
-/**
  * Hook principal pour la gestion des rapports
  */
 export const useReport = (trialId, partId) => {
@@ -164,11 +146,8 @@ export const useReport = (trialId, partId) => {
       );
 
       if (result.success) {
-        // Désélectionner automatiquement les sections vides
-        const reportWithAutoDeselection = autoDeselectEmptySections(result.report);
-        
         // Transférer les options des sections de l'état au rapport
-        const sectionsWithOptions = reportWithAutoDeselection.sections.map(reportSection => {
+        const sectionsWithOptions = result.report.sections.map(reportSection => {
           const stateSection = sections.find(s => s.type === reportSection.type);
           if (stateSection && stateSection.options) {
             // Copier les options de la section de l'état vers la section du rapport
@@ -181,26 +160,8 @@ export const useReport = (trialId, partId) => {
           return reportSection;
         });
         
-        const finalReport = reportWithAutoDeselection.withSections(sectionsWithOptions);
+        const finalReport = result.report.withSections(sectionsWithOptions);
         setReport(finalReport);
-        
-        // Mettre à jour les sections dans l'état pour refléter la désélection
-        // tout en préservant les options existantes
-        const updatedSections = sections.map(section => {
-          const reportSection = finalReport.sections.find(s => s.type === section.type);
-          if (reportSection && reportSection.isEnabled !== section.isEnabled) {
-            // Préserver les options de la section d'état
-            let updatedReportSection = reportSection;
-            if (section.options) {
-              Object.entries(section.options).forEach(([key, value]) => {
-                updatedReportSection = updatedReportSection.withOption(key, value);
-              });
-            }
-            return updatedReportSection;
-          }
-          return section;
-        });
-        setSections(updatedSections);
         
         return finalReport;
       } else {

@@ -211,14 +211,8 @@ export const CurvesSectionPDF = ({ report, photos = [] }) => {
   }, 0);
 
   if (totalPhotos === 0) {
-    return (
-      <View style={styles.section} wrap={false}>
-        <SectionTitle sectionType={SECTION_TYPE}>
-          FURNACE CURVES AND REPORTS
-        </SectionTitle>
-        <EmptyState message="No furnace curves or reports available for this test." />
-      </View>
-    );
+    // Retourner null au lieu d'un message vide - la section ne sera pas affichée
+    return null;
   }
 
   // Ordre des categories

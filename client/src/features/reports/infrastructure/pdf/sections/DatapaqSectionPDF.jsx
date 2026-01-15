@@ -112,14 +112,8 @@ export const DatapaqSectionPDF = ({ report, photos = [] }) => {
   const validPhotos = validatePhotos(photos || []);
   
   if (validPhotos.length === 0) {
-    return (
-      <View style={styles.section}>
-        <SectionTitle sectionType={SECTION_TYPE}>
-          DATAPAQ REPORTS
-        </SectionTitle>
-        <EmptyState message="No Datapaq reports or graphs available for this trial." />
-      </View>
-    );
+    // Retourner null au lieu d'un message vide - la section ne sera pas affichée
+    return null;
   }
 
   const layout = calculateLayout(validPhotos.length);

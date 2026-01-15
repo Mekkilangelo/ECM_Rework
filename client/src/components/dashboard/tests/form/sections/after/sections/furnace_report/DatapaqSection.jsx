@@ -24,6 +24,8 @@ const DatapaqSection = ({
   } = useFileSectionState({
     nodeId: trialNodeId,
     category: 'datapaq',
+    // Ne pas spécifier subcategory ici pour charger TOUS les fichiers datapaq
+    // (compatibilité avec fichiers existants sans subcategory)
     onError: (msg, err) => console.error(t('trials.after.datapaq.loadError'), msg, err)
   });
 
@@ -45,6 +47,7 @@ const DatapaqSection = ({
     <div className="p-2">
       <FileUploader
         category="datapaq"
+        subcategory="datapaq"
         nodeId={trialNodeId}
         onFilesUploaded={handleFilesUploaded}
         maxFiles={50}

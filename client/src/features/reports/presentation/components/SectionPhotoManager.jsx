@@ -270,6 +270,13 @@ const SectionPhotoManager = ({
             subcategory: 'datapaq',
             label: tSafe('parts.photos.manager.sections.datapaq.categories.datapaq', 'Données Datapaq'),
             description: tSafe('parts.photos.manager.sections.datapaq.descriptions.datapaq', 'Relevés des capteurs Datapaq')
+          },
+          // Ajouter une source pour les fichiers sans sous-catégorie (compatibilité ascendante)
+          {
+            category: 'datapaq',
+            subcategory: null,
+            label: tSafe('parts.photos.manager.sections.datapaq.categories.datapaq', 'Données Datapaq'),
+            description: tSafe('parts.photos.manager.sections.datapaq.descriptions.datapaq', 'Relevés des capteurs Datapaq')
           }
         ]
       }

@@ -5,6 +5,7 @@ import { faImage, faExclamationTriangle } from '@fortawesome/free-solid-svg-icon
 import { useTranslation } from 'react-i18next';
 import CollapsibleSection from '../../../../components/common/CollapsibleSection/CollapsibleSection';
 import fileService from '../../../../services/fileService';
+import PDFThumbnail from '../../../../components/common/FileUploader/viewers/PDFThumbnail';
 
 // Reducer pour gérer les états de sélection de façon synchrone
 const selectionReducer = (state, action) => {
@@ -1131,18 +1132,29 @@ const PhotoGrid = React.memo(({ photos, selectedPhotoIds, photoOrder, onToggleSe
                 }} />
               )}
               
-              <Card.Img 
-                variant="top" 
-                src={photo.viewPath || fileService.getFilePreviewUrl(photo.id)} 
-                style={{ 
-                  height: '140px', // Image plus grande (était 120px)
-                  objectFit: 'cover', 
-                  background: '#f8f9fa'
-                }}
-                onError={(e) => {
-                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM2Yzc1N2QiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBub24gZGlzcG9uaWJsZTwvdGV4dD48L3N2Zz4=';
-                }}
-              />
+              {/* Afficher miniature PDF ou image selon le type */}
+              {photo.mimeType && photo.mimeType.includes('pdf') ? (
+                <PDFThumbnail
+                  fileUrl={photo.viewPath || fileService.getFilePreviewUrl(photo.id)}
+                  fileName={photo.name}
+                  width={200}
+                  height={140}
+                  className="w-100"
+                />
+              ) : (
+                <Card.Img 
+                  variant="top" 
+                  src={photo.viewPath || fileService.getFilePreviewUrl(photo.id)} 
+                  style={{ 
+                    height: '140px',
+                    objectFit: 'cover', 
+                    background: '#f8f9fa'
+                  }}
+                  onError={(e) => {
+                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM2Yzc1N2QiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBub24gZGlzcG9uaWJsZTwvdGV4dD48L3N2Zz4=';
+                  }}
+                />
+              )}
               
               {/* Indicateur de sélection */}
               <div style={{ 

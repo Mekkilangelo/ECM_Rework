@@ -863,10 +863,16 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           {(() => {
             try {
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.micrography, 'micrography');
+              // Récupérer aussi les photos de control location pour les afficher dans micrography
+              const controlLocationPhotos = normalizePhotosForSection(
+                selectedPhotos?.control || selectedPhotos?.controlLocation, 
+                'control'
+              );
               return (
                 <MicrographySectionPDF 
                   report={report}
                   photos={normalizedPhotos}
+                  controlLocationPhotos={controlLocationPhotos}
                 />
               );
             } catch (error) {

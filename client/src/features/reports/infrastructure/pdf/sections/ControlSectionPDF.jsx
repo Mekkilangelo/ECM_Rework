@@ -348,9 +348,15 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
 
   if (!hasHardness && !hasEcdPositions && !hasCurve && !hasPhotos) return null;
 
+  // Construire le titre de l'échantillon avec description
+  let sampleTitle = `Sample ${sampleIndex + 1}`;
+  if (sample.description) {
+    sampleTitle += ` - ${sample.description}`;
+  }
+
   return (
     <View wrap={false} style={{ marginBottom: 10 }}>
-      <Text style={styles.sampleTitle}>Sample {sampleIndex + 1}</Text>
+      <Text style={styles.sampleTitle}>{sampleTitle}</Text>
 
       {/* GRILLE: Tables de donnees + Photo de localisation */}
       {(hasHardness || hasEcdPositions || hasPhotos) && (

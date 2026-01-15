@@ -12,6 +12,24 @@ import { ReportPDFDocument } from '../../infrastructure/pdf/ReportPDFDocument';
 import { PDFGeneratorFactory } from '../../domain/services/PDFGenerator';
 
 /**
+ * Désélectionne automatiquement les sections vides dans un rapport
+ */
+const autoDeselectEmptySections = (report) => {
+  if (!report) return report;
+
+  const updatedSections = report.sections.map(section => {
+    // Si la section est activée mais vide, la désactiver
+    if (section.isEnabled && section.isEmpty()) {
+      console.log(`🔄 Auto-désélection de la section vide: ${section.type}`);
+      return section.toggle(); // Désactive la section
+    }
+    return section;
+  });
+
+  return report.withSections(updatedSections);
+};
+
+/**
  * Hook principal pour la gestion des rapports
  */
 export const useReport = (trialId, partId) => {
@@ -133,8 +151,21 @@ export const useReport = (trialId, partId) => {
       );
 
       if (result.success) {
-        setReport(result.report);
-        return result.report;
+        // Désélectionner automatiquement les sections vides
+        const reportWithAutoDeselection = autoDeselectEmptySections(result.report);
+        setReport(reportWithAutoDeselection);
+        
+        // Mettre à jour les sections dans l'état pour refléter la désélection
+        const updatedSections = sections.map(section => {
+          const reportSection = reportWithAutoDeselection.sections.find(s => s.type === section.type);
+          if (reportSection && reportSection.isEnabled !== section.isEnabled) {
+            return reportSection;
+          }
+          return section;
+        });
+        setSections(updatedSections);
+        
+        return reportWithAutoDeselection;
       } else {
         setError(result.error);
         return null;

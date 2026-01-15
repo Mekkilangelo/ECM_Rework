@@ -93,17 +93,52 @@ export class Section {
   }
 
   /**
+   * Vérifie si la section a du contenu (données ou photos)
+   */
+  hasContent() {
+    // Vérifier si la section a des photos
+    if (this.hasPhotos && this.getPhotoCount() > 0) {
+      return true;
+    }
+
+    // Vérifier si la section a des données
+    if (this.data && Object.keys(this.data).length > 0) {
+      return true;
+    }
+
+    // Pour certaines sections, vérifier des critères spécifiques
+    switch(this.type) {
+      case 'identification':
+      case 'load':
+        // Ces sections ont toujours du contenu si elles sont liées à un trial
+        return true;
+      case 'recipe':
+      case 'curves':
+      case 'datapaq':
+      case 'control':
+      case 'micrography':
+        // Ces sections nécessitent soit des données soit des photos
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Vérifie si la section est vide (pas de contenu)
+   */
+  isEmpty() {
+    return !this.hasContent();
+  }
+
+  /**
    * Valide si la section peut être générée
    */
   isValid() {
     if (!this.isEnabled) return false;
     
-    // Vérifier si des données sont requises
-    if (this.requiresData()) {
-      return this.data && Object.keys(this.data).length > 0;
-    }
-
-    return true;
+    // Vérifier si la section a du contenu
+    return this.hasContent();
   }
 
   /**

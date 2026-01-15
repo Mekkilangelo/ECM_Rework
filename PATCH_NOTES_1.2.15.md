@@ -51,7 +51,7 @@ Cette version apporte des améliorations majeures au système de rapports PDF av
 
 **Avantages:**
 - ✅ Support de n'importe quel nombre de résultats (5, 10, 50, 100+)
-- ✅ Beaucoup moins de requêtes API (seulement celles nécessaires)
+- ✅ Beaucoup moins de requêtes API
 - ✅ Plus rapide et moins de charge serveur
 - ✅ Plus maintenable (pas de limites arbitraires)
 

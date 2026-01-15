@@ -9,7 +9,8 @@ import {
   faRotateRight,
   faDownload,
   faExpand,
-  faCompress
+  faCompress,
+  faThList
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, ButtonGroup, Spinner } from 'react-bootstrap';
 import './PDFViewer.css';
@@ -25,6 +26,7 @@ const PDFViewer = ({ fileUrl, fileName }) => {
   const [isFullWidth, setIsFullWidth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('scroll'); // 'scroll' ou 'single'
 
   const isDarkTheme = document.documentElement.classList.contains('dark-theme');
 
@@ -64,6 +66,10 @@ const PDFViewer = ({ fileUrl, fileName }) => {
     setIsFullWidth((prev) => !prev);
   };
 
+  const toggleViewMode = () => {
+    setViewMode((prev) => prev === 'scroll' ? 'single' : 'scroll');
+  };
+
   const getScalePercentage = () => {
     return Math.round(scale * 100);
   };
@@ -90,7 +96,7 @@ const PDFViewer = ({ fileUrl, fileName }) => {
             <Button
               variant={isDarkTheme ? 'outline-light' : 'outline-secondary'}
               onClick={goToPrevPage}
-              disabled={pageNumber <= 1}
+              disabled={pageNumber <= 1 || viewMode === 'scroll'}
               title="Page précédente"
             >
               <FontAwesomeIcon icon={faChevronLeft} />
@@ -100,12 +106,12 @@ const PDFViewer = ({ fileUrl, fileName }) => {
               disabled
               className="page-indicator"
             >
-              {loading ? '...' : `${pageNumber} / ${numPages}`}
+              {loading ? '...' : viewMode === 'scroll' ? `${numPages} pages` : `${pageNumber} / ${numPages}`}
             </Button>
             <Button
               variant={isDarkTheme ? 'outline-light' : 'outline-secondary'}
               onClick={goToNextPage}
-              disabled={pageNumber >= numPages}
+              disabled={pageNumber >= numPages || viewMode === 'scroll'}
               title="Page suivante"
             >
               <FontAwesomeIcon icon={faChevronRight} />
@@ -143,6 +149,13 @@ const PDFViewer = ({ fileUrl, fileName }) => {
 
         <div className="pdf-controls-right">
           <ButtonGroup size="sm">
+            <Button
+              variant={isDarkTheme ? 'outline-light' : 'outline-secondary'}
+              onClick={toggleViewMode}
+              title={viewMode === 'scroll' ? 'Mode page unique' : 'Mode défilement'}
+            >
+              <FontAwesomeIcon icon={faThList} />
+            </Button>
             <Button
               variant={isDarkTheme ? 'outline-light' : 'outline-secondary'}
               onClick={rotateRight}
@@ -184,15 +197,32 @@ const PDFViewer = ({ fileUrl, fileName }) => {
           loading={<></>}
           className="pdf-document"
         >
-          <Page
-            pageNumber={pageNumber}
-            scale={scale}
-            rotate={rotation}
-            width={isFullWidth ? undefined : null}
-            className="pdf-page"
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
-          />
+          {viewMode === 'scroll' ? (
+            // Mode défilement : afficher toutes les pages
+            Array.from(new Array(numPages), (el, index) => (
+              <Page
+                key={`page_${index + 1}`}
+                pageNumber={index + 1}
+                scale={scale}
+                rotate={rotation}
+                width={isFullWidth ? undefined : null}
+                className="pdf-page"
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            ))
+          ) : (
+            // Mode page unique : afficher seulement la page courante
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              rotate={rotation}
+              width={isFullWidth ? undefined : null}
+              className="pdf-page"
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+            />
+          )}
         </Document>
       </div>
     </div>

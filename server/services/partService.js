@@ -8,6 +8,7 @@ const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
 const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
+const fileService = require('./fileService');
 
 /**
  * Fonction utilitaire pour valider les données de la pièce
@@ -542,6 +543,10 @@ const deletePart = async (partId) => {
 
     // Stocker le chemin physique de la pièce pour la suppression
     const partPhysicalPath = partNode.path;
+
+    // Supprimer physiquement et logiquement tous les fichiers attachés à la pièce et ses descendants
+    // Cette étape est cruciale pour nettoyer le nouveau système de stockage (FileStorageService)
+    await fileService.deleteFilesRecursively(partId, t);
     
     // 2. Trouver tous les descendants dans la table closure
     const closureEntries = await closure.findAll({

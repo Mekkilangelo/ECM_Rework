@@ -107,6 +107,19 @@ export const useReport = (trialId, partId) => {
   }, []);
 
   /**
+   * Met à jour une option d'une section
+   */
+  const setSectionOption = useCallback((sectionType, optionKey, value) => {
+    setSections(prevSections =>
+      prevSections.map(section =>
+        section.type === sectionType 
+          ? section.withOption(optionKey, value) 
+          : section
+      )
+    );
+  }, []);
+
+  /**
    * Configure le rapport (récupère les données)
    */
   const configure = useCallback(async () => {
@@ -133,8 +146,24 @@ export const useReport = (trialId, partId) => {
       );
 
       if (result.success) {
-        setReport(result.report);
-        return result.report;
+        // Transférer les options des sections de l'état au rapport
+        const sectionsWithOptions = result.report.sections.map(reportSection => {
+          const stateSection = sections.find(s => s.type === reportSection.type);
+          if (stateSection && stateSection.options) {
+            // Copier les options de la section de l'état vers la section du rapport
+            let updatedSection = reportSection;
+            Object.entries(stateSection.options).forEach(([key, value]) => {
+              updatedSection = updatedSection.withOption(key, value);
+            });
+            return updatedSection;
+          }
+          return reportSection;
+        });
+        
+        const finalReport = result.report.withSections(sectionsWithOptions);
+        setReport(finalReport);
+        
+        return finalReport;
       } else {
         setError(result.error);
         return null;
@@ -293,6 +322,7 @@ export const useReport = (trialId, partId) => {
     enableAllSections,
     disableAllSections,
     setSectionPhotos,
+    setSectionOption,
     configure,
     generatePreview,
     exportPDF,

@@ -133,6 +133,26 @@ export const isValidPhoto = (photo) => {
 };
 
 /**
+ * Vérifie si un fichier est un PDF
+ */
+export const isPDF = (photo) => {
+  if (!photo) return false;
+  
+  // Vérifier le mimeType
+  if (photo.mimeType && photo.mimeType.toLowerCase().includes('pdf')) {
+    return true;
+  }
+  
+  // Vérifier l'extension du nom de fichier
+  const fileName = photo.name || photo.original_name || '';
+  if (fileName.toLowerCase().endsWith('.pdf')) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
  * Filtre et valide un tableau de photos
  */
 export const validatePhotos = (photos) => {

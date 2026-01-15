@@ -14,7 +14,8 @@ export class Section {
     hasPhotos = false,
     photos = [],
     data = {},
-    order = 0
+    order = 0,
+    options = {} // Options de sous-section (ex: showRecipeCurve pour la section recipe)
   }) {
     this.id = id;
     this.type = type;
@@ -26,6 +27,27 @@ export class Section {
     this.photos = photos;
     this.data = data;
     this.order = order;
+    this.options = options;
+  }
+
+  /**
+   * Met à jour une option de la section
+   */
+  withOption(optionKey, value) {
+    return new Section({
+      ...this,
+      options: {
+        ...this.options,
+        [optionKey]: value
+      }
+    });
+  }
+
+  /**
+   * Récupère une option de la section
+   */
+  getOption(optionKey, defaultValue = null) {
+    return this.options[optionKey] !== undefined ? this.options[optionKey] : defaultValue;
   }
 
   /**
@@ -93,17 +115,52 @@ export class Section {
   }
 
   /**
+   * Vérifie si la section a du contenu (données ou photos)
+   */
+  hasContent() {
+    // Vérifier si la section a des photos
+    if (this.hasPhotos && this.getPhotoCount() > 0) {
+      return true;
+    }
+
+    // Vérifier si la section a des données
+    if (this.data && Object.keys(this.data).length > 0) {
+      return true;
+    }
+
+    // Pour certaines sections, vérifier des critères spécifiques
+    switch(this.type) {
+      case 'identification':
+      case 'load':
+        // Ces sections ont toujours du contenu si elles sont liées à un trial
+        return true;
+      case 'recipe':
+      case 'curves':
+      case 'datapaq':
+      case 'control':
+      case 'micrography':
+        // Ces sections nécessitent soit des données soit des photos
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Vérifie si la section est vide (pas de contenu)
+   */
+  isEmpty() {
+    return !this.hasContent();
+  }
+
+  /**
    * Valide si la section peut être générée
    */
   isValid() {
     if (!this.isEnabled) return false;
     
-    // Vérifier si des données sont requises
-    if (this.requiresData()) {
-      return this.data && Object.keys(this.data).length > 0;
-    }
-
-    return true;
+    // Vérifier si la section a du contenu
+    return this.hasContent();
   }
 
   /**
@@ -123,6 +180,7 @@ export class SectionFactory {
     RECIPE: 'recipe',
     LOAD: 'load',
     CURVES: 'curves',
+    DATAPAQ: 'datapaq',
     MICROGRAPHY: 'micrography',
     CONTROL: 'control'
   };
@@ -156,6 +214,15 @@ export class SectionFactory {
         hasPhotos: true,
         order: 3
       },
+      [this.SECTION_TYPES.DATAPAQ]: {
+        id: 'datapaq',
+        type: 'datapaq',
+        label: 'Datapaq',
+        icon: 'faChartArea',
+        description: 'Relevés et rapports des capteurs Datapaq',
+        hasPhotos: true,
+        order: 4
+      },
       [this.SECTION_TYPES.RECIPE]: {
         id: 'recipe',
         type: 'recipe',
@@ -163,7 +230,10 @@ export class SectionFactory {
         icon: 'faList',
         description: 'Paramètres de la recette utilisée',
         hasPhotos: false,
-        order: 4
+        order: 5,
+        options: {
+          showRecipeCurve: true // Afficher le graphique des cycles par défaut
+        }
       },
       [this.SECTION_TYPES.CONTROL]: {
         id: 'control',
@@ -172,7 +242,7 @@ export class SectionFactory {
         icon: 'faClipboardCheck',
         description: 'Résultats de mesures et contrôles',
         hasPhotos: true,
-        order: 5
+        order: 6
       },
       [this.SECTION_TYPES.MICROGRAPHY]: {
         id: 'micrography',
@@ -181,7 +251,7 @@ export class SectionFactory {
         icon: 'faMicroscope',
         description: 'Images et analyses micrographiques',
         hasPhotos: true,
-        order: 6
+        order: 7
       }
     };
 

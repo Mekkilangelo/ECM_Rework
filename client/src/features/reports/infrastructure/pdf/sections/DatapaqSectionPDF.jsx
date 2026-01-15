@@ -1,8 +1,8 @@
 /**
- * INFRASTRUCTURE: Load Configuration Section for PDF
- * Displays load configuration photos with intelligent layout
+ * INFRASTRUCTURE: Section Datapaq pour le PDF
+ * Affiche les rapports et graphiques Datapaq
  *
- * Layout Strategy:
+ * Layout Strategy (identique à Load Design):
  * - 1 photo: full page
  * - 2 photos: stacked vertically
  * - 3 photos: hero + pair (1 large + 2 smaller below)
@@ -11,20 +11,16 @@
 
 import React from 'react';
 import { View, StyleSheet } from '@react-pdf/renderer';
-import { SPACING, PHOTO_SIZES } from '../theme';
-import { 
-  SectionTitle, 
+import { SPACING } from '../theme';
+import {
+  SectionTitle,
   PhotoContainer,
-  PhotoHero,
-  PhotoHeroPair,
-  PhotoRow,
-  PhotoGrid2,
-  EmptyState 
+  EmptyState
 } from '../primitives';
 import { validatePhotos } from '../helpers/photoHelpers';
 
 // Section-specific accent color
-const SECTION_TYPE = 'load';
+const SECTION_TYPE = 'datapaq';
 
 // Styles spécifiques à cette section
 const styles = StyleSheet.create({
@@ -42,8 +38,8 @@ const styles = StyleSheet.create({
   },
 });
 
-// Photo sizes specific to Load section
-const LOAD_PHOTO_SIZES = {
+// Photo sizes specific to Datapaq section (same as Load)
+const DATAPAQ_PHOTO_SIZES = {
   fullPage: { width: 500, height: 700 },
   halfPage: { width: 500, height: 340 },
   heroLarge: { width: 500, height: 280 },
@@ -95,9 +91,9 @@ const calculateLayout = (photoCount) => {
  * Single Photo Layout - Full page
  */
 const SinglePhotoLayout = ({ photo }) => (
-  <PhotoContainer 
-    photo={photo} 
-    customSize={LOAD_PHOTO_SIZES.fullPage}
+  <PhotoContainer
+    photo={photo}
+    customSize={DATAPAQ_PHOTO_SIZES.fullPage}
   />
 );
 
@@ -107,10 +103,10 @@ const SinglePhotoLayout = ({ photo }) => (
 const DoublePhotoLayout = ({ photos }) => (
   <View style={styles.photoStack}>
     {photos.map((photo, idx) => (
-      <PhotoContainer 
+      <PhotoContainer
         key={photo.id || idx}
-        photo={photo} 
-        customSize={LOAD_PHOTO_SIZES.halfPage}
+        photo={photo}
+        customSize={DATAPAQ_PHOTO_SIZES.halfPage}
       />
     ))}
   </View>
@@ -122,22 +118,22 @@ const DoublePhotoLayout = ({ photos }) => (
  */
 const TriplePhotoLayout = ({ photos }) => {
   const [heroPhoto, ...pairPhotos] = photos;
-  
+
   return (
     <View style={styles.photoStack}>
       {/* Hero photo */}
-      <PhotoContainer 
-        photo={heroPhoto} 
-        customSize={LOAD_PHOTO_SIZES.heroLarge}
+      <PhotoContainer
+        photo={heroPhoto}
+        customSize={DATAPAQ_PHOTO_SIZES.heroLarge}
       />
-      
+
       {/* Pair row */}
       <View style={styles.photoGrid}>
         {pairPhotos.map((photo, idx) => (
-          <PhotoContainer 
+          <PhotoContainer
             key={photo.id || idx}
-            photo={photo} 
-            customSize={LOAD_PHOTO_SIZES.pairSmall}
+            photo={photo}
+            customSize={DATAPAQ_PHOTO_SIZES.pairSmall}
           />
         ))}
       </View>
@@ -146,38 +142,31 @@ const TriplePhotoLayout = ({ photos }) => {
 };
 
 /**
- * Grid Photo Layout - 2x2 grid for subsequent pages
+ * Grid Photo Layout - 2x3 grid for subsequent pages
  */
 const GridPhotoLayout = ({ photos }) => (
   <View style={styles.photoGrid}>
     {photos.map((photo, idx) => (
-      <PhotoContainer 
+      <PhotoContainer
         key={photo.id || idx}
-        photo={photo} 
-        customSize={LOAD_PHOTO_SIZES.gridItem}
+        photo={photo}
+        customSize={DATAPAQ_PHOTO_SIZES.gridItem}
       />
     ))}
   </View>
 );
 
 /**
- * Load Configuration Section for PDF
+ * Datapaq Section for PDF
  */
-export const LoadSectionPDF = ({ report, photos = [] }) => {
+export const DatapaqSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
   // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
-  
+
   if (validPhotos.length === 0) {
-    return (
-      <View style={styles.section}>
-        <SectionTitle sectionType={SECTION_TYPE}>
-          LOAD CONFIGURATION
-        </SectionTitle>
-        <EmptyState message="No load configuration photos available for this trial." />
-      </View>
-    );
+    return null;
   }
 
   const layout = calculateLayout(validPhotos.length);
@@ -187,26 +176,26 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
       {layout.pages.map((photoIndices, pageIndex) => {
         const isFirstPage = pageIndex === 0;
         const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
-        
+
         // Determine layout type for this page
         let pageLayout = layout.type;
         if (layout.type === 'multiple' && !isFirstPage) {
           pageLayout = 'grid';
         }
-        
+
         return (
-          <View 
-            key={`load-page-${pageIndex}`} 
+          <View
+            key={`datapaq-page-${pageIndex}`}
             style={styles.section}
             break={pageIndex > 0}
           >
-            <SectionTitle 
-              sectionType={SECTION_TYPE} 
+            <SectionTitle
+              sectionType={SECTION_TYPE}
               continuation={pageIndex > 0}
             >
-              LOAD CONFIGURATION
+              DATAPAQ REPORTS
             </SectionTitle>
-            
+
             {/* Single photo - full page */}
             {pageLayout === 'single' && (
               <SinglePhotoLayout photo={pagePhotos[0]} />
@@ -233,4 +222,4 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
   );
 };
 
-export default LoadSectionPDF;
+export default DatapaqSectionPDF;

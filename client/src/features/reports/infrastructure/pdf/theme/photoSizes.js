@@ -17,6 +17,12 @@ export const PHOTO_SIZES = {
     width: 480,
     height: 200,
   },
+
+  // Photo micrographie (optimisée pour 3 zooms par page)
+  micrographySingle: {
+    width: 480,
+    height: 165,
+  },
   
   // Grande photo empilée (pour layout vertical)
   stackedLarge: {

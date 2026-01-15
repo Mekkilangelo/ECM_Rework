@@ -339,8 +339,18 @@ const buildRecipeData = (trialData) => {
       unit: recipe.chemicalCycle.wait_pressure_unit
     } : null,
     
-    // cell_temp n'existe pas dans la table recipe_chemical_cycle
-    cell_temp: null
+    // Température cellule
+    cell_temp: recipe.chemicalCycle?.cell_temp_value ? {
+      value: recipe.chemicalCycle.cell_temp_value,
+      unit: recipe.chemicalCycle.cell_temp_unit || '°C'
+    } : null,
+    
+    // Wait gas et wait flow
+    wait_gas: recipe.chemicalCycle?.wait_gas || null,
+    wait_flow: recipe.chemicalCycle?.wait_flow ? {
+      value: recipe.chemicalCycle.wait_flow,
+      unit: 'Nl/h'
+    } : null
   };
   
   // Construire les données de trempe

@@ -54,3 +54,4 @@ async function startServer() {
 // Lancer le serveur
 startServer();
 
+// Restart trigger

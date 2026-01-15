@@ -20,6 +20,7 @@ import { SectionFactory } from '../../domain/entities/Section';
 import { ReactPDFGenerator } from '../../infrastructure/pdf/ReactPDFGenerator';
 import { ReportPDFDocument } from '../../infrastructure/pdf/ReportPDFDocument';
 import SectionPhotoManager from './SectionPhotoManager';
+import { useEnrichedPhotosForPDF } from '../hooks/useEnrichedPhotosForPDF';
 
 import './PartIdentificationReport.css';
 
@@ -34,6 +35,9 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
 
+  // Enrichir les photos en convertissant les PDFs en images
+  const { enrichedPhotos, isConverting, conversionError } = useEnrichedPhotosForPDF(selectedPhotos);
+
   // Callback pour recevoir les photos sélectionnées du SectionPhotoManager
   const handlePhotosChange = useCallback((sectionType, photos) => {
     console.log('Photos changed:', sectionType, photos);
@@ -46,20 +50,19 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
     [selectedPhotos]
   );
 
-  // Construire le rapport pour le PDF
+  // Construire le rapport pour le PDF avec les photos enrichies
   const buildReport = useCallback(() => {
-    // Les photos du SectionPhotoManager ont déjà le bon format avec url
-    // Format: { subcategory: [{ id, name, url, viewPath, subcategory, ... }] }
-    const photosArray = Object.entries(selectedPhotos).flatMap(([subcategory, photos]) => 
+    // Utiliser enrichedPhotos au lieu de selectedPhotos
+    const photosArray = Object.entries(enrichedPhotos).flatMap(([subcategory, photos]) => 
       (photos || []).map(photo => ({
         ...photo,
         subcategory: photo.subcategory || subcategory,
-        // Utiliser l'URL déjà fournie par SectionPhotoManager
+        // Utiliser l'URL déjà fournie (ou la version convertie du PDF)
         url: photo.url || photo.viewPath
       }))
     );
 
-    console.log('Building report with photos:', photosArray);
+    console.log('Building report with enriched photos:', photosArray);
 
     // Créer une section identification uniquement avec les photos
     const identificationSection = SectionFactory.createSection('identification', {
@@ -107,14 +110,14 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
     });
 
     return report;
-  }, [partNodeId, partData, clientData, selectedPhotos]);
+  }, [partNodeId, partData, clientData, enrichedPhotos]);
 
-  // Créer le générateur PDF avec les photos sélectionnées
+  // Créer le générateur PDF avec les photos enrichies
   const createPDFGenerator = useCallback(() => {
     const generator = new ReactPDFGenerator();
-    // Passer les photos sélectionnées avec le format attendu par ReportPDFDocument
+    // Passer les photos enrichies avec le format attendu par ReportPDFDocument
     // Format: { identification: { subcategory: [photos] } }
-    const photosForPDF = { identification: selectedPhotos };
+    const photosForPDF = { identification: enrichedPhotos };
     
     generator.setDocumentRenderer((report, options) => (
       <ReportPDFDocument 
@@ -124,7 +127,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
       />
     ));
     return generator;
-  }, [selectedPhotos]);
+  }, [enrichedPhotos]);
 
   // Générer et télécharger le PDF
   const handleExport = useCallback(async () => {
@@ -198,6 +201,20 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
           </Alert>
         )}
         
+        {conversionError && (
+          <Alert variant="warning">
+            <FontAwesomeIcon icon={faFilePdf} className="me-2" />
+            {t('report.partIdentification.pdfConversionWarning', 'Attention: Certains PDFs n\'ont pas pu être convertis')}
+          </Alert>
+        )}
+        
+        {isConverting && (
+          <Alert variant="info">
+            <Spinner animation="border" size="sm" className="me-2" />
+            {t('report.partIdentification.convertingPDFs', 'Conversion des PDFs en images...')}
+          </Alert>
+        )}
+        
         <p className="text-muted small mb-3">
           {t('report.partIdentification.selectPhotos')}
         </p>
@@ -217,7 +234,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
         <Button 
           variant="outline-secondary" 
           onClick={handlePreview}
-          disabled={generating || totalSelected === 0}
+          disabled={generating || isConverting || totalSelected === 0}
         >
           <FontAwesomeIcon icon={faEye} className="me-2" />
           {t('report.actions.preview')}
@@ -225,12 +242,17 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
         <Button 
           variant="danger" 
           onClick={handleExport}
-          disabled={generating || totalSelected === 0}
+          disabled={generating || isConverting || totalSelected === 0}
         >
           {generating ? (
             <>
               <Spinner animation="border" size="sm" className="me-2" />
               {t('report.actions.generating')}
+            </>
+          ) : isConverting ? (
+            <>
+              <Spinner animation="border" size="sm" className="me-2" />
+              {t('report.partIdentification.converting', 'Conversion...')}
             </>
           ) : (
             <>

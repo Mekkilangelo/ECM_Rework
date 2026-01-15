@@ -10,7 +10,8 @@ import {
   faLayerGroup,
   faToggleOn,
   faToggleOff,
-  faFilePdf
+  faFilePdf,
+  faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useReport } from '../hooks/useReport';
@@ -32,6 +33,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
     enableAllSections,
     disableAllSections,
     setSectionPhotos,
+    setSectionOption,
     generatePreview,
     exportPDF,
     estimateSize
@@ -185,6 +187,28 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                               onClick={() => toggleSection(section.type)}
                             />
                           </div>
+                          
+                          {/* Sous-options pour la section Recipe */}
+                          {section.type === 'recipe' && section.isEnabled && (
+                            <div className="ms-4 mt-2 pt-2 border-top">
+                              <Form.Check
+                                type="checkbox"
+                                id="showRecipeCurve"
+                                label={
+                                  <span className="small">
+                                    <FontAwesomeIcon icon={faChartLine} className="me-2 text-muted" />
+                                    {t('report.sections.recipe.options.showCurve', 'Show cycle chart')}
+                                  </span>
+                                }
+                                checked={section.options?.showRecipeCurve !== false}
+                                onChange={(e) => setSectionOption('recipe', 'showRecipeCurve', e.target.checked)}
+                                className="mb-0"
+                              />
+                              <small className="text-muted d-block ms-4">
+                                {t('report.sections.recipe.options.showCurveDescription', 'Display thermal and chemical cycle graph')}
+                              </small>
+                            </div>
+                          )}
                         </ListGroup.Item>
                       ))}
                     </ListGroup>

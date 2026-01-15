@@ -15,6 +15,7 @@ import { renderAsync } from 'docx-preview';
 import fileService from '../../../../../services/fileService';
 import PDFViewer from '../../viewers/PDFViewer';
 import SpreadsheetViewer from '../../viewers/SpreadsheetViewer';
+import PDFThumbnail from '../../viewers/PDFThumbnail';
 
 const useFilePreview = (defaultFileIcon = faFileAlt) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -212,6 +213,18 @@ const useFilePreview = (defaultFileIcon = faFileAlt) => {
             }}
           />
         </div>
+      );
+    } else if (fileType === 'pdf') {
+      // Afficher miniature de la première page pour les PDFs
+      return (
+        <PDFThumbnail
+          fileUrl={file.preview || getFileUrl(file.id)}
+          fileName={file.name}
+          width={120}
+          height={120}
+          onClick={handleClick}
+          className="file-thumbnail"
+        />
       );
     } else {
       return (

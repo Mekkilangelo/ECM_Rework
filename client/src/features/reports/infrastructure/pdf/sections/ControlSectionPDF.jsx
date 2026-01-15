@@ -34,19 +34,19 @@ const styles = StyleSheet.create({
   sampleTitle: {
     fontSize: 9.5,
     fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: 6,
+    marginTop: 6,
+    marginBottom: 4,
     color: '#555555'
   },
   subsectionTitle: {
     fontSize: 9,
     fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 4,
+    marginBottom: 3,
     color: '#666666'
   },
   table: {
-    marginBottom: 10,
+    marginBottom: 4,
     borderWidth: 0.5,
     borderColor: '#DDDDDD'
   },
@@ -66,8 +66,8 @@ const styles = StyleSheet.create({
     borderRightColor: '#DDDDDD'
   },
   chartContainer: {
-    marginBottom: 12,
-    padding: 10,
+    marginBottom: 8,
+    padding: 6,
     backgroundColor: '#FAFAFA',
     borderWidth: 1,
     borderColor: '#DDDDDD'
@@ -116,11 +116,19 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     alignItems: 'center',
   },
-  photo: {
+  photoWrapper: {
     width: 120,
     height: 90,
-    objectFit: 'cover',
+    backgroundColor: '#f5f5f5',
     border: '0.5pt solid #d0d0d0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
   },
   photoLabel: {
     fontSize: 6.5,
@@ -149,7 +157,7 @@ const SERIES_COLORS = [
 /**
  * Graphique SVG avec axes, légende, grille et ligne de spec
  */
-const CurveChart = ({ curveData, specifications, unit = 'HV', width = 520, height = 300 }) => {
+const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, height = 200 }) => {
   console.log('[CurveChart] specifications:', specifications);
   console.log('[CurveChart] ecdSpecs:', specifications?.ecdSpecs);
   
@@ -157,7 +165,7 @@ const CurveChart = ({ curveData, specifications, unit = 'HV', width = 520, heigh
     return null;
   }
 
-  const padding = { top: 20, right: 30, bottom: 50, left: 60 };
+  const padding = { top: 15, right: 25, bottom: 40, left: 50 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
@@ -340,13 +348,19 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
 
   if (!hasHardness && !hasEcdPositions && !hasCurve && !hasPhotos) return null;
 
+  // Construire le titre de l'échantillon avec description
+  let sampleTitle = `Sample ${sampleIndex + 1}`;
+  if (sample.description) {
+    sampleTitle += ` - ${sample.description}`;
+  }
+
   return (
-    <View style={{ marginBottom: 12 }}>
-      <Text style={styles.sampleTitle}>Sample {sampleIndex + 1}</Text>
+    <View wrap={false} style={{ marginBottom: 10 }}>
+      <Text style={styles.sampleTitle}>{sampleTitle}</Text>
 
       {/* GRILLE: Tables de donnees + Photo de localisation */}
       {(hasHardness || hasEcdPositions || hasPhotos) && (
-        <View wrap={false} style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
           {/* Colonne 1: Table Durete */}
           {hasHardness && (
             <View style={{ flex: 1 }}>
@@ -396,7 +410,9 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
               <Text style={styles.subsectionTitle}>Location</Text>
               {controlLocationPhotos.slice(0, 1).map((photo, idx) => (
                 <View key={idx} style={styles.photoContainer}>
-                  <Image src={getPhotoUrl(photo)} style={styles.photo} />
+                  <View style={styles.photoWrapper}>
+                    <Image src={getPhotoUrl(photo)} style={styles.photo} />
+                  </View>
                   {(photo.description || photo.original_name || photo.name) && (
                     <Text style={styles.photoLabel}>
                       {photo.description || photo.original_name || photo.name}
@@ -409,9 +425,9 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
         </View>
       )}
 
-      {/* COURBE: Pleine largeur avec hauteur maximale */}
+      {/* COURBE: Pleine largeur */}
       {hasCurve && (
-        <View wrap={false} style={styles.chartContainer}>
+        <View style={styles.chartContainer}>
           <Text style={styles.chartTitle}>Hardness Curves</Text>
           <CurveChart curveData={sample.curveData} specifications={specifications} unit={unit} />
           <View style={styles.chartLegend}>

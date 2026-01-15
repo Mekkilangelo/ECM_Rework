@@ -11,6 +11,7 @@ import {
   IdentificationSectionPDF,
   MicrographySectionPDF,
   CurvesSectionPDF,
+  DatapaqSectionPDF,
   LoadSectionPDF,
   RecipeSectionPDF,
   ControlSectionPDF 
@@ -518,6 +519,41 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
   
   const generatedDate = new Date().toLocaleDateString('fr-FR');
   
+  /**
+   * Helper pour vérifier si une section a du contenu réel
+   * Basé sur les photos sélectionnées et les données du rapport
+   */
+  const sectionHasContent = (sectionType) => {
+    // Compter les photos pour cette section
+    const photos = selectedPhotos?.[sectionType];
+    const hasPhotos = photos && (
+      (Array.isArray(photos) && photos.length > 0) ||
+      (typeof photos === 'object' && Object.keys(photos).length > 0)
+    );
+    
+    // Vérifier les données selon le type de section
+    switch (sectionType) {
+      case 'identification':
+      case 'load':
+        // Ces sections ont toujours du contenu si elles sont liées à un trial
+        return true;
+      case 'recipe':
+        // Recipe a du contenu si on a des données de recette
+        return !!(report.recipeData || report.trialData?.recipe_data);
+      case 'curves':
+      case 'datapaq':
+      case 'micrography':
+        // Ces sections nécessitent des photos
+        return hasPhotos;
+      case 'control':
+        // Contrôle a du contenu si on a des résultats OU des photos
+        const hasResults = !!(report.resultsData || report.trialData?.results_data);
+        return hasResults || hasPhotos;
+      default:
+        return hasPhotos;
+    }
+  };
+  
   // Récupérer les sections actives de manière sécurisée et les trier par order
   let activeSections = [];
   try {
@@ -656,8 +692,8 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         </Page>
       )}
 
-      {/* Section Courbes - Page séparée */}
-      {activeSections.some(s => s.type === 'curves') && report && (
+      {/* Section Courbes - Page séparée (seulement si a du contenu) */}
+      {activeSections.some(s => s.type === 'curves') && report && sectionHasContent('curves') && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
             <CommonReportHeader 
@@ -696,6 +732,46 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         </Page>
       )}
 
+      {/* Section Datapaq - Page séparée (seulement si a du contenu) */}
+      {activeSections.some(s => s.type === 'datapaq') && report && sectionHasContent('datapaq') && (
+        <Page size="A4" style={styles.page}>
+          {includeHeader && (
+            <CommonReportHeader 
+              clientName={report.clientName}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+            />
+          )}
+          {(() => {
+            try {
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.datapaq, 'datapaq');
+              return (
+                <DatapaqSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering DatapaqSectionPDF:', error);
+              return (
+                <Section title="RAPPORTS DATAPAQ">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section Datapaq
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
       {/* Section Recette - Page séparée */}
       {activeSections.some(s => s.type === 'recipe') && report && (
         <Page size="A4" style={styles.page}>
@@ -709,7 +785,10 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           )}
           {(() => {
             try {
-              return <RecipeSectionPDF report={report} />;
+              // Récupérer l'option showRecipeCurve depuis la section
+              const recipeSection = activeSections.find(s => s.type === 'recipe');
+              const showRecipeCurve = recipeSection?.options?.showRecipeCurve !== false;
+              return <RecipeSectionPDF report={report} showRecipeCurve={showRecipeCurve} />;
             } catch (error) {
               console.error('❌ Error rendering RecipeSectionPDF:', error);
               return (
@@ -770,8 +849,8 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         </Page>
       )}
 
-      {/* Section Micrographie - Page séparée */}
-      {activeSections.some(s => s.type === 'micrography') && report && (
+      {/* Section Micrographie - Page séparée (seulement si a du contenu) */}
+      {activeSections.some(s => s.type === 'micrography') && report && sectionHasContent('micrography') && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
             <CommonReportHeader 
@@ -784,10 +863,16 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           {(() => {
             try {
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.micrography, 'micrography');
+              // Récupérer aussi les photos de control location pour les afficher dans micrography
+              const controlLocationPhotos = normalizePhotosForSection(
+                selectedPhotos?.control || selectedPhotos?.controlLocation, 
+                'control'
+              );
               return (
                 <MicrographySectionPDF 
                   report={report}
                   photos={normalizedPhotos}
+                  controlLocationPhotos={controlLocationPhotos}
                 />
               );
             } catch (error) {

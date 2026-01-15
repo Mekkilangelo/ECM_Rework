@@ -1269,7 +1269,11 @@
       },
       "recipe": {
         "label": "Recette",
-        "description": "Paramètres de la recette utilisée"
+        "description": "Paramètres de la recette utilisée",
+        "options": {
+          "showCurve": "Afficher le graphique des cycles",
+          "showCurveDescription": "Affiche le graphique des cycles thermique et chimique"
+        }
       },
       "load": {
         "label": "Charge",

@@ -1261,7 +1261,11 @@
       },
       "recipe": {
         "label": "Recipe",
-        "description": "Recipe parameters used"
+        "description": "Recipe parameters used",
+        "options": {
+          "showCurve": "Show cycle chart",
+          "showCurveDescription": "Display thermal and chemical cycle graph"
+        }
       },
       "load": {
         "label": "Load",

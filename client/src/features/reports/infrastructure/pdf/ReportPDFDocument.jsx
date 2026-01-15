@@ -750,7 +750,10 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           )}
           {(() => {
             try {
-              return <RecipeSectionPDF report={report} />;
+              // Récupérer l'option showRecipeCurve depuis la section
+              const recipeSection = activeSections.find(s => s.type === 'recipe');
+              const showRecipeCurve = recipeSection?.options?.showRecipeCurve !== false;
+              return <RecipeSectionPDF report={report} showRecipeCurve={showRecipeCurve} />;
             } catch (error) {
               console.error('❌ Error rendering RecipeSectionPDF:', error);
               return (

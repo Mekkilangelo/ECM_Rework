@@ -125,6 +125,19 @@ export const useReport = (trialId, partId) => {
   }, []);
 
   /**
+   * Met à jour une option d'une section
+   */
+  const setSectionOption = useCallback((sectionType, optionKey, value) => {
+    setSections(prevSections =>
+      prevSections.map(section =>
+        section.type === sectionType 
+          ? section.withOption(optionKey, value) 
+          : section
+      )
+    );
+  }, []);
+
+  /**
    * Configure le rapport (récupère les données)
    */
   const configure = useCallback(async () => {
@@ -324,6 +337,7 @@ export const useReport = (trialId, partId) => {
     enableAllSections,
     disableAllSections,
     setSectionPhotos,
+    setSectionOption,
     configure,
     generatePreview,
     exportPDF,

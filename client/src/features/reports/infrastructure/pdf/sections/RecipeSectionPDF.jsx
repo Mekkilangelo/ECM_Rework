@@ -8,6 +8,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
 import { COLORS, TYPOGRAPHY, SPACING, getAccentColor, getSubsectionBackground, getSubsectionTextColor } from '../theme';
+import RecipeCurveChartPDF from '../components/RecipeCurveChartPDF';
 
 // Section type for accent colors
 const SECTION_TYPE = 'recipe';
@@ -614,9 +615,10 @@ const RecipePhotosSection = ({ photos = [] }) => {
 
 /**
  * Composant principal: Section Recette complete
+ * @param {Object} report - Les données du rapport
+ * @param {boolean} showRecipeCurve - Afficher ou non le graphique des cycles (défaut: true)
  */
-export const RecipeSectionPDF = ({ report }) => {
-
+export const RecipeSectionPDF = ({ report, showRecipeCurve = true }) => {
   
   const recipeData = report.recipeData;
   const quenchData = report.quenchData;
@@ -662,6 +664,17 @@ export const RecipeSectionPDF = ({ report }) => {
           <GasQuenchSection quenchData={quenchData} />
           <OilQuenchSection quenchData={quenchData} />
         </>
+      )}
+
+      {/* Graphique des cycles - affiché sous la trempe si activé */}
+      {showRecipeCurve && recipeData && (recipeData.thermal_cycle?.length > 0 || recipeData.chemical_cycle?.length > 0) && (
+        <View wrap={false}>
+          <RecipeCurveChartPDF 
+            recipeData={recipeData} 
+            width={500} 
+            height={160}
+          />
+        </View>
       )}
 
       {/* Photos - nouvelle page */}

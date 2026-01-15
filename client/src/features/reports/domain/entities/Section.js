@@ -14,7 +14,8 @@ export class Section {
     hasPhotos = false,
     photos = [],
     data = {},
-    order = 0
+    order = 0,
+    options = {} // Options de sous-section (ex: showRecipeCurve pour la section recipe)
   }) {
     this.id = id;
     this.type = type;
@@ -26,6 +27,27 @@ export class Section {
     this.photos = photos;
     this.data = data;
     this.order = order;
+    this.options = options;
+  }
+
+  /**
+   * Met à jour une option de la section
+   */
+  withOption(optionKey, value) {
+    return new Section({
+      ...this,
+      options: {
+        ...this.options,
+        [optionKey]: value
+      }
+    });
+  }
+
+  /**
+   * Récupère une option de la section
+   */
+  getOption(optionKey, defaultValue = null) {
+    return this.options[optionKey] !== undefined ? this.options[optionKey] : defaultValue;
   }
 
   /**
@@ -208,7 +230,10 @@ export class SectionFactory {
         icon: 'faList',
         description: 'Paramètres de la recette utilisée',
         hasPhotos: false,
-        order: 5
+        order: 5,
+        options: {
+          showRecipeCurve: true // Afficher le graphique des cycles par défaut
+        }
       },
       [this.SECTION_TYPES.CONTROL]: {
         id: 'control',

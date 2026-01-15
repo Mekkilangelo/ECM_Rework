@@ -1,6 +1,12 @@
 /**
  * INFRASTRUCTURE: Part Identification Section for PDF
- * Displays part identification, specifications, and photos organized by view
+ * Displays part identification, specifications, and photos with intelligent layout
+ * 
+ * Layout Strategy: Hero-Pair pattern (same as LoadSectionPDF)
+ * - Uses photo selection order, not separated by views
+ * - 1 photo: full page
+ * - 2 photos: stacked vertically
+ * - 3+ photos: hero + pair, then grid
  * 
  * Refactorisé pour utiliser le système de thème et les primitives
  */
@@ -12,9 +18,7 @@ import {
   SectionTitle, 
   SubsectionTitle, 
   DataRow, 
-  PhotoContainer, 
-  PhotoRow, 
-  PhotoGrid2,
+  PhotoContainer,
   EmptyState 
 } from '../primitives';
 import { validatePhotos } from '../helpers/photoHelpers';
@@ -26,9 +30,6 @@ const SECTION_TYPE = 'identification';
 const styles = StyleSheet.create({
   section: {
     marginBottom: SPACING.section.marginBottom,
-  },
-  viewContainer: {
-    marginBottom: SPACING.lg,
   },
   specGrid: {
     marginTop: SPACING.sm,
@@ -52,32 +53,25 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     fontSize: 8.5,
   },
-  photoGridContainer: {
+  photoStack: {
+    flexDirection: 'column',
+  },
+  photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    gap: SPACING.photo.gap,
-  },
-  photoGridItem: {
-    width: '48%',
-    marginBottom: SPACING.photo.marginBottom,
-    alignItems: 'center',
-  },
-  photoFullContainer: {
-    width: '100%',
-    marginBottom: SPACING.photo.marginBottom,
-    alignItems: 'center',
-  },
-  photoRowContainer: {
-    flexDirection: 'row',
-    marginBottom: SPACING.photo.marginBottom,
     justifyContent: 'space-between',
     gap: SPACING.photo.gap,
   },
-  pageBreak: {
-    marginTop: SPACING.lg,
-  },
 });
+
+// Photo sizes specific to Identification section (same as Load section)
+const IDENTIFICATION_PHOTO_SIZES = {
+  fullPage: { width: 500, height: 700 },
+  halfPage: { width: 500, height: 340 },
+  heroLarge: { width: 500, height: 280 },
+  pairSmall: { width: 244, height: 200 },
+  gridItem: { width: 244, height: 240 },
+};
 
 /**
  * Format dimensions helper
@@ -123,97 +117,112 @@ const getSteelGrade = (partData) => {
 };
 
 /**
- * Calculate page layout for photos organized by view
+ * Calculate intelligent layout based on photo count (same as LoadSectionPDF)
+ * - 1 photo: full page
+ * - 2 photos: stacked vertically  
+ * - 3 photos: hero + pair (1 large + 2 small)
+ * - 4+ photos: first page = hero + pair, then grid 2x2
  */
-const calculatePageLayout = (photosByView) => {
-  const layouts = [];
-  const pageHeight = 700;
-  let currentPage = { views: [], usedHeight: 0 };
-
-  Object.entries(photosByView).forEach(([viewName, photos]) => {
-    const photoCount = photos.length;
+const calculateLayout = (photoCount) => {
+  if (photoCount === 1) {
+    return { type: 'single', pages: [[0]] };
+  } else if (photoCount === 2) {
+    return { type: 'double', pages: [[0, 1]] };
+  } else if (photoCount === 3) {
+    return { type: 'triple', pages: [[0, 1, 2]] };
+  } else {
+    // 4+ photos: first page = 3 (hero + pair), then grid 2x2
+    const pages = [];
+    let currentIndex = 0;
     
-    // Calculate height needed for this view
-    let viewHeight = 80; // Header + margins
+    // First page with special layout
+    pages.push([0, 1, 2]);
+    currentIndex = 3;
     
-    if (photoCount === 1) {
-      viewHeight += 220;
-    } else if (photoCount === 2) {
-      viewHeight += 200;
-    } else if (photoCount <= 4) {
-      viewHeight += 360;
-    } else if (photoCount <= 6) {
-      viewHeight += 540;
-    } else {
-      viewHeight = pageHeight + 1; // Force new page
-    }
-
-    if (currentPage.usedHeight + viewHeight <= pageHeight && currentPage.views.length < 3) {
-      currentPage.views.push({ viewName, photos, height: viewHeight });
-      currentPage.usedHeight += viewHeight;
-    } else {
-      if (currentPage.views.length > 0) {
-        layouts.push(currentPage);
+    // Following pages with grid (4 photos max per page)
+    while (currentIndex < photoCount) {
+      const remaining = photoCount - currentIndex;
+      const photosThisPage = Math.min(remaining, 4);
+      const pageIndices = [];
+      for (let i = 0; i < photosThisPage; i++) {
+        pageIndices.push(currentIndex + i);
       }
-      currentPage = {
-        views: [{ viewName, photos, height: viewHeight }],
-        usedHeight: viewHeight
-      };
+      pages.push(pageIndices);
+      currentIndex += photosThisPage;
     }
-  });
-
-  if (currentPage.views.length > 0) {
-    layouts.push(currentPage);
+    
+    return { type: 'multiple', pages };
   }
-
-  return layouts;
 };
 
 /**
- * Photos View Component - Renders photos for a specific view
+ * Single Photo Layout - Full page
  */
-const PhotoView = ({ viewName, photos }) => {
-  const photoCount = photos.length;
-  const displayName = viewName.charAt(0).toUpperCase() + viewName.slice(1);
+const SinglePhotoLayout = ({ photo }) => (
+  <PhotoContainer 
+    photo={photo} 
+    customSize={IDENTIFICATION_PHOTO_SIZES.fullPage}
+  />
+);
+
+/**
+ * Double Photo Layout - Stacked vertically
+ */
+const DoublePhotoLayout = ({ photos }) => (
+  <View style={styles.photoStack}>
+    {photos.map((photo, idx) => (
+      <PhotoContainer 
+        key={photo.id || idx}
+        photo={photo} 
+        customSize={IDENTIFICATION_PHOTO_SIZES.halfPage}
+      />
+    ))}
+  </View>
+);
+
+/**
+ * Triple Photo Layout - Hero + Pair pattern
+ * 1 large photo on top, 2 smaller photos below side by side
+ */
+const TriplePhotoLayout = ({ photos }) => {
+  const [heroPhoto, ...pairPhotos] = photos;
   
   return (
-    <View style={styles.viewContainer}>
-      <SubsectionTitle sectionType={SECTION_TYPE}>
-        {displayName} View
-      </SubsectionTitle>
+    <View style={styles.photoStack}>
+      {/* Hero photo */}
+      <PhotoContainer 
+        photo={heroPhoto} 
+        customSize={IDENTIFICATION_PHOTO_SIZES.heroLarge}
+      />
       
-      {photoCount === 1 ? (
-        <View style={styles.photoFullContainer}>
+      {/* Pair row */}
+      <View style={styles.photoGrid}>
+        {pairPhotos.map((photo, idx) => (
           <PhotoContainer 
-            photo={photos[0]} 
-            size="fullWidth" 
+            key={photo.id || idx}
+            photo={photo} 
+            customSize={IDENTIFICATION_PHOTO_SIZES.pairSmall}
           />
-        </View>
-      ) : photoCount === 2 ? (
-        <View style={styles.photoRowContainer}>
-          {photos.map((photo, idx) => (
-            <PhotoContainer 
-              key={photo.id || idx} 
-              photo={photo} 
-              size="half" 
-            />
-          ))}
-        </View>
-      ) : (
-        <View style={styles.photoGridContainer}>
-          {photos.slice(0, 6).map((photo, idx) => (
-            <View key={photo.id || idx} style={styles.photoGridItem}>
-              <PhotoContainer 
-                photo={photo} 
-                size="gridSmall"
-              />
-            </View>
-          ))}
-        </View>
-      )}
+        ))}
+      </View>
     </View>
   );
 };
+
+/**
+ * Grid Photo Layout - 2x2 grid for subsequent pages
+ */
+const GridPhotoLayout = ({ photos }) => (
+  <View style={styles.photoGrid}>
+    {photos.map((photo, idx) => (
+      <PhotoContainer 
+        key={photo.id || idx}
+        photo={photo} 
+        customSize={IDENTIFICATION_PHOTO_SIZES.gridItem}
+      />
+    ))}
+  </View>
+);
 
 /**
  * Specifications Component - Renders hardness and ECD specs
@@ -298,17 +307,8 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   const hardnessSpecs = partData.hardnessSpecs || [];
   const ecdSpecs = partData.ecdSpecs || [];
 
-  // Group photos by subcategory (view)
-  const photosByView = {};
-  validPhotos.forEach(photo => {
-    const view = photo.subcategory || 'other';
-    if (!photosByView[view]) {
-      photosByView[view] = [];
-    }
-    photosByView[view].push(photo);
-  });
-
-  const pageLayouts = calculatePageLayout(photosByView);
+  // Calculate layout based on photo count (not separated by views)
+  const layout = validPhotos.length > 0 ? calculateLayout(validPhotos.length) : null;
 
   return (
     <>
@@ -329,32 +329,57 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
       {/* Specifications */}
       <Specifications hardnessSpecs={hardnessSpecs} ecdSpecs={ecdSpecs} />
 
-      {/* Photos organized by view */}
-      {pageLayouts.length > 0 ? (
-        pageLayouts.map((page, pageIndex) => (
-          <View 
-            key={`photo-page-${pageIndex}`} 
-            style={[styles.section, pageIndex > 0 && styles.pageBreak]} 
-            wrap={false}
-          >
-            {pageIndex > 0 && (
-              <SectionTitle sectionType={SECTION_TYPE} continuation>
-                PART IDENTIFICATION
-              </SectionTitle>
-            )}
-            
-            {page.views.map((viewData, viewIndex) => (
-              <PhotoView 
-                key={`view-${viewData.viewName}-${viewIndex}`}
-                viewName={viewData.viewName}
-                photos={viewData.photos}
-              />
-            ))}
-          </View>
-        ))
+      {/* Photos with intelligent layout (same as LoadSectionPDF) */}
+      {layout ? (
+        layout.pages.map((photoIndices, pageIndex) => {
+          const isFirstPage = pageIndex === 0;
+          const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
+          
+          // Determine layout type for this page
+          let pageLayout = layout.type;
+          if (layout.type === 'multiple' && !isFirstPage) {
+            pageLayout = 'grid';
+          }
+          
+          return (
+            <View 
+              key={`identification-page-${pageIndex}`} 
+              style={styles.section}
+              break={pageIndex > 0}
+            >
+              {pageIndex > 0 && (
+                <SectionTitle 
+                  sectionType={SECTION_TYPE} 
+                  continuation
+                >
+                  PART IDENTIFICATION
+                </SectionTitle>
+              )}
+              
+              {/* Single photo - full page */}
+              {pageLayout === 'single' && (
+                <SinglePhotoLayout photo={pagePhotos[0]} />
+              )}
+
+              {/* Double photos - stacked vertically */}
+              {pageLayout === 'double' && (
+                <DoublePhotoLayout photos={pagePhotos} />
+              )}
+
+              {/* Triple or Multiple first page - hero + pair */}
+              {(pageLayout === 'triple' || (pageLayout === 'multiple' && isFirstPage)) && (
+                <TriplePhotoLayout photos={pagePhotos} />
+              )}
+
+              {/* Grid layout for subsequent pages */}
+              {pageLayout === 'grid' && (
+                <GridPhotoLayout photos={pagePhotos} />
+              )}
+            </View>
+          );
+        })
       ) : (
         <View style={styles.section}>
-          <SubsectionTitle sectionType={SECTION_TYPE}>Photos</SubsectionTitle>
           <EmptyState message="No identification photos available for this part." />
         </View>
       )}

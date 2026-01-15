@@ -1,11 +1,12 @@
 /**
  * INFRASTRUCTURE: Load Configuration Section for PDF
  * Displays load configuration photos with intelligent layout
- * 
- * Layout Strategy: Hero-Pair pattern (1 large photo + 2 smaller below)
- * This is the reference layout for photo display
- * 
- * Refactorisé pour utiliser le système de thème et les primitives
+ *
+ * Layout Strategy:
+ * - 1 photo: full page
+ * - 2 photos: stacked vertically
+ * - 3 photos: hero + pair (1 large + 2 smaller below)
+ * - 4+ photos: first page = hero + pair, then grid 2x3 (6 par page)
  */
 
 import React from 'react';
@@ -47,15 +48,16 @@ const LOAD_PHOTO_SIZES = {
   halfPage: { width: 500, height: 340 },
   heroLarge: { width: 500, height: 280 },
   pairSmall: { width: 244, height: 200 },
-  gridItem: { width: 244, height: 240 },
+  // Grille 2x3 (6 par page) pour pages suivantes
+  gridItem: { width: 244, height: 155 },
 };
 
 /**
  * Calculate intelligent layout based on photo count
  * - 1 photo: full page
- * - 2 photos: stacked vertically  
+ * - 2 photos: stacked vertically
  * - 3 photos: hero + pair (1 large + 2 small)
- * - 4+ photos: first page = hero + pair, then grid 2x2
+ * - 4+ photos: first page = hero + pair, then grid 2x3 (6 par page)
  */
 const calculateLayout = (photoCount) => {
   if (photoCount === 1) {
@@ -65,18 +67,18 @@ const calculateLayout = (photoCount) => {
   } else if (photoCount === 3) {
     return { type: 'triple', pages: [[0, 1, 2]] };
   } else {
-    // 4+ photos: first page = 3 (hero + pair), then grid 2x2
+    // 4+ photos: first page = 3 (hero + pair), then grid 2x3
     const pages = [];
     let currentIndex = 0;
-    
+
     // First page with special layout
     pages.push([0, 1, 2]);
     currentIndex = 3;
-    
-    // Following pages with grid (4 photos max per page)
+
+    // Following pages with grid (6 photos max per page)
     while (currentIndex < photoCount) {
       const remaining = photoCount - currentIndex;
-      const photosThisPage = Math.min(remaining, 4);
+      const photosThisPage = Math.min(remaining, 6);
       const pageIndices = [];
       for (let i = 0; i < photosThisPage; i++) {
         pageIndices.push(currentIndex + i);
@@ -84,7 +86,7 @@ const calculateLayout = (photoCount) => {
       pages.push(pageIndices);
       currentIndex += photosThisPage;
     }
-    
+
     return { type: 'multiple', pages };
   }
 };

@@ -182,9 +182,9 @@ const CategoryGroup = ({ categoryKey, photos, isFirst = false }) => {
         <View style={styles.photoGrid}>
           {photos.map((photo, idx) => (
             <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <PhotoContainer 
-                photo={photo} 
-                size="gridSmall"
+              <PhotoContainer
+                photo={photo}
+                size="small"
                 captionText={getPhotoCaption(photo)}
               />
             </View>

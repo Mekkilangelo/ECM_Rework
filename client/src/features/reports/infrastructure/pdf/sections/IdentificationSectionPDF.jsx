@@ -1,14 +1,12 @@
 /**
  * INFRASTRUCTURE: Part Identification Section for PDF
  * Displays part identification, specifications, and photos with intelligent layout
- * 
- * Layout Strategy: Hero-Pair pattern (same as LoadSectionPDF)
- * - Uses photo selection order, not separated by views
- * - 1 photo: full page
- * - 2 photos: stacked vertically
- * - 3+ photos: hero + pair, then grid
- * 
- * Refactorisé pour utiliser le système de thème et les primitives
+ *
+ * Layout Strategy:
+ * - Page 1: Titre + Données + Specs + 1ère photo (hero 430x180)
+ * - Pages suivantes: Grille 2x3 (6 photos par page, 244x155 chacune)
+ *
+ * Optimisé pour que le texte et la première photo tiennent sur la même page
  */
 
 import React from 'react';
@@ -53,9 +51,6 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     fontSize: 8.5,
   },
-  photoStack: {
-    flexDirection: 'column',
-  },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -64,13 +59,13 @@ const styles = StyleSheet.create({
   },
 });
 
-// Photo sizes specific to Identification section (same as Load section)
+// Photo sizes specific to Identification section
+// Optimisées pour tenir avec le texte + specs sur la même page
 const IDENTIFICATION_PHOTO_SIZES = {
-  fullPage: { width: 500, height: 700 },
-  halfPage: { width: 500, height: 340 },
-  heroLarge: { width: 500, height: 280 },
-  pairSmall: { width: 244, height: 200 },
-  gridItem: { width: 244, height: 240 },
+  // Première photo : compacte pour laisser place au texte + plusieurs specs
+  heroFirst: { width: 430, height: 180 },
+  // Photos en grille 2x3 (6 par page) - réduit pour tenir sur une page
+  gridItem: { width: 244, height: 155 },
 };
 
 /**
@@ -117,107 +112,53 @@ const getSteelGrade = (partData) => {
 };
 
 /**
- * Calculate intelligent layout based on photo count (same as LoadSectionPDF)
- * - 1 photo: full page
- * - 2 photos: stacked vertically  
- * - 3 photos: hero + pair (1 large + 2 small)
- * - 4+ photos: first page = hero + pair, then grid 2x2
+ * Calculate layout for Identification section
+ * - Page 1: texte + 1ère photo (hero)
+ * - Pages suivantes: grille 2x3 (6 photos par page)
  */
 const calculateLayout = (photoCount) => {
-  if (photoCount === 1) {
-    return { type: 'single', pages: [[0]] };
-  } else if (photoCount === 2) {
-    return { type: 'double', pages: [[0, 1]] };
-  } else if (photoCount === 3) {
-    return { type: 'triple', pages: [[0, 1, 2]] };
-  } else {
-    // 4+ photos: first page = 3 (hero + pair), then grid 2x2
-    const pages = [];
-    let currentIndex = 0;
-    
-    // First page with special layout
-    pages.push([0, 1, 2]);
-    currentIndex = 3;
-    
-    // Following pages with grid (4 photos max per page)
-    while (currentIndex < photoCount) {
-      const remaining = photoCount - currentIndex;
-      const photosThisPage = Math.min(remaining, 4);
-      const pageIndices = [];
-      for (let i = 0; i < photosThisPage; i++) {
-        pageIndices.push(currentIndex + i);
-      }
-      pages.push(pageIndices);
-      currentIndex += photosThisPage;
+  if (photoCount === 0) return null;
+
+  const pages = [];
+
+  // Page 1: première photo seulement (avec le texte)
+  pages.push({ type: 'hero', indices: [0] });
+
+  // Pages suivantes: grille 2x3 (6 photos par page)
+  let currentIndex = 1;
+  while (currentIndex < photoCount) {
+    const remaining = photoCount - currentIndex;
+    const photosThisPage = Math.min(remaining, 6);
+    const indices = [];
+    for (let i = 0; i < photosThisPage; i++) {
+      indices.push(currentIndex + i);
     }
-    
-    return { type: 'multiple', pages };
+    pages.push({ type: 'grid', indices });
+    currentIndex += photosThisPage;
   }
+
+  return pages;
 };
 
 /**
- * Single Photo Layout - Full page
+ * Hero Photo Layout - First photo with text
  */
-const SinglePhotoLayout = ({ photo }) => (
-  <PhotoContainer 
-    photo={photo} 
-    customSize={IDENTIFICATION_PHOTO_SIZES.fullPage}
+const HeroPhotoLayout = ({ photo }) => (
+  <PhotoContainer
+    photo={photo}
+    customSize={IDENTIFICATION_PHOTO_SIZES.heroFirst}
   />
 );
 
 /**
- * Double Photo Layout - Stacked vertically
- */
-const DoublePhotoLayout = ({ photos }) => (
-  <View style={styles.photoStack}>
-    {photos.map((photo, idx) => (
-      <PhotoContainer 
-        key={photo.id || idx}
-        photo={photo} 
-        customSize={IDENTIFICATION_PHOTO_SIZES.halfPage}
-      />
-    ))}
-  </View>
-);
-
-/**
- * Triple Photo Layout - Hero + Pair pattern
- * 1 large photo on top, 2 smaller photos below side by side
- */
-const TriplePhotoLayout = ({ photos }) => {
-  const [heroPhoto, ...pairPhotos] = photos;
-  
-  return (
-    <View style={styles.photoStack}>
-      {/* Hero photo */}
-      <PhotoContainer 
-        photo={heroPhoto} 
-        customSize={IDENTIFICATION_PHOTO_SIZES.heroLarge}
-      />
-      
-      {/* Pair row */}
-      <View style={styles.photoGrid}>
-        {pairPhotos.map((photo, idx) => (
-          <PhotoContainer 
-            key={photo.id || idx}
-            photo={photo} 
-            customSize={IDENTIFICATION_PHOTO_SIZES.pairSmall}
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-/**
- * Grid Photo Layout - 2x2 grid for subsequent pages
+ * Grid Photo Layout - 2x2 grid
  */
 const GridPhotoLayout = ({ photos }) => (
   <View style={styles.photoGrid}>
     {photos.map((photo, idx) => (
-      <PhotoContainer 
+      <PhotoContainer
         key={photo.id || idx}
-        photo={photo} 
+        photo={photo}
         customSize={IDENTIFICATION_PHOTO_SIZES.gridItem}
       />
     ))}
@@ -329,50 +270,28 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
       {/* Specifications */}
       <Specifications hardnessSpecs={hardnessSpecs} ecdSpecs={ecdSpecs} />
 
-      {/* Photos with intelligent layout (same as LoadSectionPDF) */}
+      {/* Photos: 1ère avec le texte, reste en grille sur pages suivantes */}
       {layout ? (
-        layout.pages.map((photoIndices, pageIndex) => {
-          const isFirstPage = pageIndex === 0;
-          const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
-          
-          // Determine layout type for this page
-          let pageLayout = layout.type;
-          if (layout.type === 'multiple' && !isFirstPage) {
-            pageLayout = 'grid';
-          }
-          
+        layout.map((page, pageIndex) => {
+          const pagePhotos = page.indices.map(idx => validPhotos[idx]);
+
           return (
-            <View 
-              key={`identification-page-${pageIndex}`} 
+            <View
+              key={`identification-page-${pageIndex}`}
               style={styles.section}
               break={pageIndex > 0}
             >
               {pageIndex > 0 && (
-                <SectionTitle 
-                  sectionType={SECTION_TYPE} 
-                  continuation
-                >
+                <SectionTitle sectionType={SECTION_TYPE} continuation>
                   PART IDENTIFICATION
                 </SectionTitle>
               )}
-              
-              {/* Single photo - full page */}
-              {pageLayout === 'single' && (
-                <SinglePhotoLayout photo={pagePhotos[0]} />
+
+              {page.type === 'hero' && (
+                <HeroPhotoLayout photo={pagePhotos[0]} />
               )}
 
-              {/* Double photos - stacked vertically */}
-              {pageLayout === 'double' && (
-                <DoublePhotoLayout photos={pagePhotos} />
-              )}
-
-              {/* Triple or Multiple first page - hero + pair */}
-              {(pageLayout === 'triple' || (pageLayout === 'multiple' && isFirstPage)) && (
-                <TriplePhotoLayout photos={pagePhotos} />
-              )}
-
-              {/* Grid layout for subsequent pages */}
-              {pageLayout === 'grid' && (
+              {page.type === 'grid' && (
                 <GridPhotoLayout photos={pagePhotos} />
               )}
             </View>

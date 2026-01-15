@@ -21,32 +21,32 @@ import { validatePhotos } from '../helpers/photoHelpers';
 // Section-specific accent color
 const SECTION_TYPE = 'micrography';
 
-// Styles spécifiques à cette section
+// Styles spécifiques à cette section (optimisés pour 3 zooms par page)
 const styles = StyleSheet.create({
   section: {
-    marginBottom: SPACING.section.marginBottom,
+    marginBottom: 6,
   },
   photoRow: {
     flexDirection: 'row',
-    marginBottom: SPACING.photo.marginBottom,
+    marginBottom: 4,
     justifyContent: 'space-between',
     gap: SPACING.photo.gap,
   },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: SPACING.sm,
+    marginTop: 4,
     justifyContent: 'flex-start',
     gap: SPACING.photo.gap,
   },
   photoContainerSingle: {
     width: '100%',
-    marginBottom: SPACING.photo.marginBottom,
+    marginBottom: 4,
     alignItems: 'center',
   },
   photoContainerHalf: {
     width: '48%',
-    marginBottom: SPACING.photo.marginBottom,
+    marginBottom: 4,
     alignItems: 'center',
   },
 });
@@ -143,18 +143,18 @@ const ZoomGroup = ({ zoom, photos }) => {
       {/* Layout adaptatif selon le nombre de photos */}
       {photoCount === 1 ? (
         <View style={styles.photoContainerSingle}>
-          <PhotoContainer 
-            photo={photos[0]} 
-            size="fullWidth"
+          <PhotoContainer
+            photo={photos[0]}
+            size="micrographySingle"
             captionText={getPhotoCaption(photos[0])}
           />
         </View>
       ) : photoCount === 2 ? (
         <View style={styles.photoRow}>
           {photos.map((photo, idx) => (
-            <PhotoContainer 
+            <PhotoContainer
               key={photo.id || idx}
-              photo={photo} 
+              photo={photo}
               size="half"
               captionText={getPhotoCaption(photo)}
             />
@@ -164,9 +164,9 @@ const ZoomGroup = ({ zoom, photos }) => {
         <View style={styles.photoGrid}>
           {photos.map((photo, idx) => (
             <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <PhotoContainer 
-                photo={photo} 
-                size="gridSmall"
+              <PhotoContainer
+                photo={photo}
+                size="small"
                 captionText={getPhotoCaption(photo)}
               />
             </View>

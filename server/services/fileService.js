@@ -592,28 +592,37 @@ const getFileDetails = async (fileId) => {
 /**
  * Supprime un fichier
  * @param {number} fileId - ID du fichier à supprimer
+ * @param {Object} options - Options (transaction)
  * @returns {Promise<boolean>} Résultat de l'opération
  */
-const deleteFile = async (fileId) => {
-  const transaction = await sequelize.transaction();
+const deleteFile = async (fileId, options = {}) => {
+  const t = options.transaction || await sequelize.transaction();
+  const commit = !options.transaction; // Commiter seulement si transaction locale
+
   try {
     // Récupérer les détails du fichier
     // D'abord, vérifions que le nœud existe et qu'il s'agit bien d'un fichier
     const fileNode = await node.findOne({
       where: { id: fileId, type: 'file' },
-      transaction
+      transaction: t
     });
+    
     if (!fileNode) {
+      if (commit) await t.rollback();
       throw new NotFoundError('Nœud de fichier non trouvé');
     }
+
     // Ensuite, récupérons les informations du fichier associé
     const fileRecord = await file.findOne({
       where: { node_id: fileId },
-      transaction
+      transaction: t
     });
+    
     if (!fileRecord) {
+      if (commit) await t.rollback();
       throw new NotFoundError('Fichier non trouvé');
     }
+
     // 1. Supprimer toutes les relations de fermeture liées à ce fichier
     await closure.destroy({
       where: {
@@ -622,30 +631,142 @@ const deleteFile = async (fileId) => {
           { descendant_id: fileId }
         ]
       },
-      transaction
+      transaction: t
     });
-    // 2. Supprimer le fichier physique
-    if (fs.existsSync(fileRecord.file_path)) {
-      fs.unlinkSync(fileRecord.file_path);
-    }
-    // 3. Supprimer les enregistrements en base
+
+    // 2. Supprimer les enregistrements en base
     await file.destroy({
       where: { node_id: fileId },
-      transaction
+      transaction: t
     });
+    
     await node.destroy({
       where: { id: fileId },
-      transaction
+      transaction: t
     });
-    // Valider la transaction
-    await transaction.commit();
+
+    // 3. Supprimer le fichier physique (APRÈS les opérations DB pour éviter orphelins si DB fail)
+    // On le fait seulement si le commit va réussir (ou si on est dans une grosse transaction, on espère qu'elle réussira)
+    // Note: Si la transaction englobante rollback, le fichier physique sera quand même supprimé.
+    // C'est un compromis acceptable : mieux vaut un fichier manquant (mais supprimé en DB) qu'un fichier orphelin.
+    if (fileRecord.storage_key) {
+      // Utiliser le service de stockage (gère le nettoyage des dossiers)
+      await fileStorageService.deleteFile(fileRecord.storage_key);
+    } else if (fileRecord.file_path && fs.existsSync(fileRecord.file_path)) {
+      // Fallback legacy
+      try {
+        fs.unlinkSync(fileRecord.file_path);
+        // Tenter de nettoyer le dossier parent si vide
+        const parentDir = path.dirname(fileRecord.file_path);
+        if (fs.readdirSync(parentDir).length === 0) {
+          fs.rmdirSync(parentDir);
+        }
+      } catch (err) {
+        logger.warn('Erreur suppression fichier physique legacy', { path: fileRecord.file_path, error: err.message });
+      }
+    }
+
+    // Valider la transaction locale si nécessaire
+    if (commit) await t.commit();
     return true;
   } catch (error) {
-    // Annuler la transaction en cas d'erreur
-    await transaction.rollback();
+    // Annuler la transaction locale si nécessaire
+    if (commit) await t.rollback();
     throw error;
   }
 };
+
+/**
+ * Supprime récursivement tous les fichiers descendants d'un nœud
+ * @param {number} nodeId - ID du nœud parent
+ * @param {Object} transaction - Transaction externe
+ */
+const deleteFilesRecursively = async (nodeId, transaction) => {
+  logger.info('Suppression récursive des fichiers du nœud', { nodeId });
+  
+  // Trouver tous les descendants de type 'file'
+  const descendantFiles = await node.findAll({
+    include: [{
+      model: closure,
+      as: 'ancestors', // Relation définie par alias dans models/index.js (souvent 'ancestors' ou implicitly via closure table logic)
+      where: { ancestor_id: nodeId },
+      attributes: []
+    }],
+    where: { type: 'file' },
+    transaction
+  });
+
+  // NOTE: Si l'association 'ancestors' n'est pas configurée correctement pour ce type de requête directe,
+  // on passe par la table closure directement.
+  const descendants = await closure.findAll({
+    where: { ancestor_id: nodeId },
+    attributes: ['descendant_id'],
+    transaction
+  });
+  
+  const descendantIds = descendants.map(d => d.descendant_id);
+  
+  const fileNodes = await node.findAll({
+    where: { 
+      id: { [Op.in]: descendantIds },
+      type: 'file'
+    },
+    transaction
+  });
+
+  logger.info(`Found ${fileNodes.length} files to delete recursively under node ${nodeId}`);
+
+  let deletedCount = 0;
+  for (const fileNode of fileNodes) {
+    try {
+      await deleteFile(fileNode.id, { transaction });
+      deletedCount++;
+    } catch (error) {
+      logger.error('Failed to delete file during recursive delete', { fileId: fileNode.id, error: error.message });
+      // On continue pour essayer de supprimer les autres
+    }
+  }
+  
+  return deletedCount;
+};
+
+/**
+ * Supprime les fichiers d'un nœud parent basés sur des critères de contexte (ex: sample supprimé)
+ * @param {number} parentNodeId - ID du nœud parent (ex: Trial)
+ * @param {Function} predicate - Fonction (context) => boolean. Si true, le fichier est supprimé.
+ * @param {Object} transaction - Transaction
+ */
+const deleteFilesByContext = async (parentNodeId, predicate, transaction) => {
+  logger.info('Suppression conditionnelle des fichiers', { parentNodeId });
+  
+  // 1. Récupérer tous les fichiers du parent
+  // On utilise getAllFilesByNode logic mais avec transaction
+  const descendants = await closure.findAll({
+    where: { ancestor_id: parentNodeId },
+    attributes: ['descendant_id'],
+    transaction
+  });
+  
+  const descendantIds = descendants.map(d => d.descendant_id);
+  
+  // Récupérer les infos complètes des fichiers (avec contexte)
+  const files = await file.findAll({
+    where: { node_id: { [Op.in]: descendantIds } },
+    transaction
+  });
+  
+  let deletedCount = 0;
+  for (const f of files) {
+    if (f.context && predicate(f.context)) {
+      logger.info('Suppression fichier suite à suppression de contexte', { fileId: f.node_id, context: f.context });
+      await deleteFile(f.node_id, { transaction });
+      deletedCount++;
+    }
+  }
+  
+  return deletedCount;
+};
+
 
 /**
  * Récupère tous les fichiers associés à un nœud avec filtrage optionnel
@@ -1163,5 +1284,7 @@ module.exports = {
   getFileById,
   downloadFile,
   getFileStats,
-  updateFile
+  updateFile,
+  deleteFilesRecursively,
+  deleteFilesByContext
 };

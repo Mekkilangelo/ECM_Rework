@@ -21,7 +21,9 @@ const FileUploader = ({
   existingFiles = [],
   enableStandbyMode = false, // Nouveau prop pour activer le mode standby
   onUploaderReady = null, // Callback pour exposer les fonctions d'upload
-  readOnly = false // Nouveau prop pour désactiver l'édition
+  readOnly = false, // Nouveau prop pour désactiver l'édition
+  sampleNumber, // Nouveau: numéro d'échantillon pour les métadonnées
+  resultIndex // Nouveau: index du résultat pour les métadonnées
 }) => {
   // État pour les descriptions personnalisées de chaque fichier
   const [fileDescriptions, setFileDescriptions] = useState({});
@@ -36,7 +38,9 @@ const FileUploader = ({
     fileIcon,
     existingFiles,
     onFilesUploaded,
-    enableStandbyMode: enableStandbyMode || !nodeId // Mode standby si explicitement activé ou si pas de nodeId
+    enableStandbyMode: enableStandbyMode || !nodeId, // Mode standby si explicitement activé ou si pas de nodeId
+    sampleNumber, // Passer au hook
+    resultIndex // Passer au hook
   });
     const { 
     files, 
@@ -175,7 +179,7 @@ const FileUploader = ({
             <Button
               variant="primary"
               className="mt-2"
-              onClick={() => handleUpload(nodeId, category, subcategory, fileDescriptions)}
+              onClick={() => handleUpload(nodeId, category, subcategory, fileDescriptions, sampleNumber, resultIndex)}
               disabled={uploading}
             >
               {uploading ? 'Téléchargement en cours...' : 'Télécharger les fichiers'}

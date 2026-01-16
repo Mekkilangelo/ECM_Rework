@@ -4,12 +4,12 @@ import fileService from '../../../../../services/fileService';
 /**
  * Hook gérant le processus d'upload de fichiers
  */
-const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploaded, standbyMode = false) => {
+const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploaded, standbyMode = false, sampleNumber, resultIndex) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
 
-  const handleUpload = async (nodeId, category, subcategory, fileDescriptions = {}) => {
+  const handleUpload = async (nodeId, category, subcategory, fileDescriptions = {}, uploadSampleNumber, uploadResultIndex) => {
     // En mode standby, ne pas faire d'upload immédiat
     if (standbyMode) {
       // Juste notifier le parent qu'il y a des fichiers en attente
@@ -39,6 +39,11 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     if (nodeId) formData.append('nodeId', nodeId);
     if (category) formData.append('category', category);
     if (subcategory) formData.append('subcategory', subcategory);
+    // Ajouter les métadonnées de contexte
+    const finalSampleNumber = uploadSampleNumber !== undefined ? uploadSampleNumber : sampleNumber;
+    const finalResultIndex = uploadResultIndex !== undefined ? uploadResultIndex : resultIndex;
+    if (finalSampleNumber !== undefined && finalSampleNumber !== null) formData.append('sampleNumber', finalSampleNumber);
+    if (finalResultIndex !== undefined && finalResultIndex !== null) formData.append('resultIndex', finalResultIndex);
     
     try {      const response = await fileService.uploadFiles(formData, (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -84,6 +89,9 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
     formData.append('nodeId', nodeId);
     if (category) formData.append('category', category);
     if (subcategory) formData.append('subcategory', subcategory);
+    // Ajouter les métadonnées de contexte pour uploadPendingFiles aussi
+    if (sampleNumber !== undefined && sampleNumber !== null) formData.append('sampleNumber', sampleNumber);
+    if (resultIndex !== undefined && resultIndex !== null) formData.append('resultIndex', resultIndex);
     
     try {
       const response = await fileService.uploadFiles(formData, (progressEvent) => {

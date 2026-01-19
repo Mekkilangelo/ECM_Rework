@@ -78,14 +78,14 @@ const useFileSectionState = (options = {}) => {
       
       const files = response.data.data?.files || [];
       
-      console.log(`[useFileSectionState] Fichiers reçus:`, {
-        count: files.length,
-        category,
-        subcategory,
-        sampleNumber,
-        resultIndex,
-        files: files.map(f => ({ id: f.id, name: f.name, subcategory: f.subcategory }))
-      });
+      // console.log(`[useFileSectionState] Fichiers reçus:`, {
+      //   count: files.length,
+      //   category,
+      //   subcategory,
+      //   sampleNumber,
+      //   resultIndex,
+      //   files: files.map(f => ({ id: f.id, name: f.name, subcategory: f.subcategory }))
+      // });
       
       setUploadedFiles(files);
     } catch (error) {

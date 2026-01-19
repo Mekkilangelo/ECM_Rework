@@ -45,7 +45,7 @@ const OilQuenchSection = ({
           </tr>
         </thead>
         <tbody>
-          {formData.quenchData?.oilQuenchSpeed?.sort((a, b) => a.step - b.step).map((step, index) => (
+          {formData.quenchData?.oilQuenchSpeed?.slice().sort((a, b) => a.step - b.step).map((step, index) => (
             <tr key={`oil-quench-speed-${index}`}>
               <td className="text-center align-middle">{step.step}</td>
               <td>

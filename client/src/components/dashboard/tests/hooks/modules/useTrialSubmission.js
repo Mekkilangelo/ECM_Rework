@@ -494,19 +494,20 @@ const useTrialSubmission = (
   };
   
   // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
-  const wrappedFileAssociationCallback = fileAssociationCallback ? 
+  const wrappedFileAssociationCallback = fileAssociationCallback ?
     async (nodeId) => {
       if (typeof fileAssociationCallback === 'function') {
-        
+        console.log('🔗🔗🔗 [FILE_ASSOC] wrappedFileAssociationCallback appelé avec nodeId:', nodeId);
         try {
           const result = await fileAssociationCallback(nodeId);
-          
+          console.log('🔗🔗🔗 [FILE_ASSOC] Résultat association:', result);
           return result;
         } catch (error) {
-          console.error(`Erreur lors de l'association de fichiers:`, error);
+          console.error('🔗🔗🔗 [FILE_ASSOC] Erreur lors de l\'association de fichiers:', error);
           return false;
         }
-      }      return true;
+      }
+      return true;
     } : null;
   
   const handleSubmit = async (e, isCloseAfterSave = false) => {

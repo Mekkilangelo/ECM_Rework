@@ -89,13 +89,13 @@ const useMultiViewFileSectionState = (options = {}) => {
       
       const files = response.data.data?.files || [];
       
-      console.log(`[useMultiViewFileSectionState] Fichiers reçus:`, {
-        count: files.length,
-        category,
-        sampleNumber,
-        resultIndex,
-        files: files.map(f => ({ id: f.id, name: f.name, subcategory: f.subcategory }))
-      });
+      // console.log(`[useMultiViewFileSectionState] Fichiers reçus:`, {
+      //   count: files.length,
+      //   category,
+      //   sampleNumber,
+      //   resultIndex,
+      //   files: files.map(f => ({ id: f.id, name: f.name, subcategory: f.subcategory }))
+      // });
       
       // Organiser les fichiers par vue/subcategory
       const filesByView = {};
@@ -132,13 +132,13 @@ const useMultiViewFileSectionState = (options = {}) => {
         
         const viewId = matchingView ? matchingView.id : (file.subcategory || 'other');
         
-        console.log(`[useMultiViewFileSectionState] Matching pour fichier:`, {
-          fileName: file.name,
-          fileSubcategory: file.subcategory,
-          matchingViewId: matchingView?.id,
-          finalViewId: viewId,
-          expectedSubcategories: views.map(v => ({ viewId: v.id, expected: buildSubcategory(v.id) }))
-        });
+        // console.log(`[useMultiViewFileSectionState] Matching pour fichier:`, {
+        //   fileName: file.name,
+        //   fileSubcategory: file.subcategory,
+        //   matchingViewId: matchingView?.id,
+        //   finalViewId: viewId,
+        //   expectedSubcategories: views.map(v => ({ viewId: v.id, expected: buildSubcategory(v.id) }))
+        // });
         
         if (!filesByView[viewId]) {
           filesByView[viewId] = [];
@@ -146,13 +146,13 @@ const useMultiViewFileSectionState = (options = {}) => {
         filesByView[viewId].push(file);
       });
       
-      console.log(`[useMultiViewFileSectionState] Fichiers organisés par vue:`, {
-        filesByView: Object.keys(filesByView).map(viewId => ({
-          viewId,
-          count: filesByView[viewId].length,
-          files: filesByView[viewId].map(f => f.name)
-        }))
-      });
+      // console.log(`[useMultiViewFileSectionState] Fichiers organisés par vue:`, {
+      //   filesByView: Object.keys(filesByView).map(viewId => ({
+      //     viewId,
+      //     count: filesByView[viewId].length,
+      //     files: filesByView[viewId].map(f => f.name)
+      //   }))
+      // });
       
       setUploadedFilesByView(filesByView);
     } catch (error) {
@@ -296,11 +296,11 @@ const useMultiViewFileSectionState = (options = {}) => {
    */
   const getFilesForView = useCallback((viewId) => {
     const files = uploadedFilesByView[viewId] || [];
-    console.log(`[getFilesForView] ViewId: ${viewId}`, {
-      filesCount: files.length,
-      uploadedFilesByView: Object.keys(uploadedFilesByView),
-      files: files.map(f => f.name)
-    });
+    // console.log(`[getFilesForView] ViewId: ${viewId}`, {
+    //   filesCount: files.length,
+    //   uploadedFilesByView: Object.keys(uploadedFilesByView),
+    //   files: files.map(f => f.name)
+    // });
     return files;
   }, [uploadedFilesByView]);
 

@@ -300,12 +300,21 @@ const saveUploadedFiles = async (files, data, req = null) => {
  */
 const associateFilesToNode = async (tempId, nodeId, options = {}) => {
   const { category, subcategory } = options;
-  
+
+  logger.info('🔗🔗🔗 [FILE_ASSOC_SERVER] Début association', {
+    tempId,
+    nodeId,
+    category,
+    subcategory,
+    options
+  });
+
   // Utiliser une transaction
   const transaction = await sequelize.transaction();
   try {
     // Récupérer les fichiers temporaires en utilisant le champ context.temp_id
     // Utiliser l'opérateur JSON de Sequelize
+    // IMPORTANT: Ne pas utiliser required: true car les fichiers temporaires n'ont pas encore de node associé
     const tempFiles = await file.findAll({
       where: sequelize.where(
         sequelize.json('context.temp_id'),
@@ -314,17 +323,29 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
       include: [{
         model: node,
         as: 'node',
-        required: true
-      }]
+        required: false  // LEFT JOIN pour inclure les fichiers sans node
+      }],
+      transaction
     });
-    
+
+    logger.info('🔗🔗🔗 [FILE_ASSOC_SERVER] Fichiers temporaires trouvés', {
+      count: tempFiles.length,
+      files: tempFiles.map(f => ({
+        node_id: f.node_id,
+        original_name: f.original_name,
+        hasNode: !!f.node
+      }))
+    });
+
     if (!tempFiles.length) {
+      logger.error('🔗🔗🔗 [FILE_ASSOC_SERVER] Aucun fichier trouvé avec tempId', { tempId });
       throw new NotFoundError('Aucun fichier temporaire trouvé avec cet ID');
     }
-    
+
     // Vérifier que le nœud parent existe
     const parentNode = await node.findByPk(nodeId);
     if (!parentNode) {
+      logger.error('🔗🔗🔗 [FILE_ASSOC_SERVER] Parent node non trouvé', { nodeId });
       throw new NotFoundError('Nœud parent non trouvé');
     }
     
@@ -341,9 +362,21 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     // Mettre à jour chaque fichier et le déplacer vers le répertoire final
     for (const tempFile of tempFiles) {
       // Récupérer le nœud associé au fichier
-      const fileNode = tempFile.node;
+      // Avec required: false, le node peut ne pas être chargé, donc on doit le charger explicitement
+      let fileNode = tempFile.node;
+
       if (!fileNode) {
-        throw new Error('Node is not associated to file!');
+        // Charger le node explicitement s'il n'a pas été inclus
+        fileNode = await node.findByPk(tempFile.node_id, { transaction });
+
+        if (!fileNode) {
+          logger.error('Node manquant pour fichier temporaire', {
+            tempFileNodeId: tempFile.node_id,
+            tempId,
+            originalName: tempFile.original_name
+          });
+          throw new Error(`Node ${tempFile.node_id} not found for temporary file ${tempFile.original_name}`);
+        }
       }
 
       // 1. Générer la nouvelle storage_key définitive
@@ -480,14 +513,21 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     }
 
     // Valider la transaction
+    logger.info('🔗🔗🔗 [FILE_ASSOC_SERVER] Commit transaction', { filesCount: tempFiles.length });
     await transaction.commit();
+    logger.info('🔗🔗🔗 [FILE_ASSOC_SERVER] Transaction committed avec succès');
 
     // Nettoyer les dossiers temporaires vides après déplacement des fichiers
     await cleanupTempDirectories(tempFiles);
 
     // Mettre à jour le modified_at du nœud parent et de ses ancêtres après association de fichiers
     await updateAncestorsModifiedAt(nodeId);
-    
+
+    logger.info('🔗🔗🔗 [FILE_ASSOC_SERVER] Association terminée avec succès', {
+      nodeId,
+      filesAssociated: tempFiles.length
+    });
+
     return {
       success: true,
       count: tempFiles.length,
@@ -495,6 +535,12 @@ const associateFilesToNode = async (tempId, nodeId, options = {}) => {
     };
   } catch (error) {
     // Annuler la transaction en cas d'erreur
+    logger.error('🔗🔗🔗 [FILE_ASSOC_SERVER] Erreur lors de l\'association', {
+      tempId,
+      nodeId,
+      error: error.message,
+      stack: error.stack
+    });
     await transaction.rollback();
     throw error;
   }

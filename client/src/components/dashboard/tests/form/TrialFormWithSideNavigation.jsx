@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useEffect, useCallback, useRef } from 'react';
 import { Modal } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFlask, faCheckCircle, faFileAlt } from '@fortawesome/free-solid-svg-icons';
@@ -24,6 +24,27 @@ const TrialFormWithSideNavigation = forwardRef(({
   const [activeTab, setActiveTab] = useState('before');
   const [isMobile, setIsMobile] = useState(false);
   const trialFormRef = React.useRef();
+  
+  // Utiliser useRef pour stocker les fonctions copy/paste (évite les re-renders infinis)
+  const copyPasteFunctionsRef = useRef({ handleCopy: null, handlePaste: null });
+
+  // Callback pour recevoir les fonctions copy/paste du TrialForm
+  const onCopyPasteReady = useCallback((functions) => {
+    copyPasteFunctionsRef.current = functions;
+  }, []);
+
+  // Fonctions locales pour copy/paste qui appellent directement les fonctions du TrialForm
+  const localHandleCopy = useCallback(() => {
+    if (copyPasteFunctionsRef.current.handleCopy) {
+      copyPasteFunctionsRef.current.handleCopy();
+    }
+  }, []);
+
+  const localHandlePaste = useCallback(() => {
+    if (copyPasteFunctionsRef.current.handlePaste) {
+      copyPasteFunctionsRef.current.handlePaste();
+    }
+  }, []);
 
   // Détecter la taille d'écran pour responsive
   useEffect(() => {
@@ -45,17 +66,9 @@ const TrialFormWithSideNavigation = forwardRef(({
         onHide();
       }
     },
-    handleCopy: () => {
-      if (trialFormRef.current && trialFormRef.current.handleCopy) {
-        trialFormRef.current.handleCopy();
-      }
-    },
-    handlePaste: () => {
-      if (trialFormRef.current && trialFormRef.current.handlePaste) {
-        trialFormRef.current.handlePaste();
-      }
-    }
-  }));
+    handleCopy: localHandleCopy,
+    handlePaste: localHandlePaste
+  }), [localHandleCopy, localHandlePaste, onHide]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -85,8 +98,8 @@ const TrialFormWithSideNavigation = forwardRef(({
         <Modal.Header closeButton className="bg-light">
           <FormHeader 
             title={title}
-            onCopy={onCopy}
-            onPaste={onPaste}
+            onCopy={localHandleCopy}
+            onPaste={localHandlePaste}
             viewMode={viewMode}
           />
         </Modal.Header>
@@ -102,23 +115,33 @@ const TrialFormWithSideNavigation = forwardRef(({
             activeTab={activeTab}
             onTabChange={handleTabChange}
             useExternalNavigation={false}
+            onCopyPasteReady={onCopyPasteReady}
           />
         </Modal.Body>
       </Modal>
     );
   }
 
+  // Définir les onglets disponibles selon le mode
+  const availableTabs = isEditMode 
+    ? [
+        { key: 'before', label: t('trials.tabs.before'), icon: faFlask },
+        { key: 'after', label: t('trials.tabs.after'), icon: faCheckCircle },
+        { key: 'report', label: t('trials.tabs.report'), icon: faFileAlt }
+      ]
+    : [
+        { key: 'before', label: t('trials.tabs.before'), icon: faFlask },
+        { key: 'after', label: t('trials.tabs.after'), icon: faCheckCircle }
+        // Report n'est pas disponible en mode création car il nécessite un trial.id
+      ];
+
   // Version desktop avec navigation externe
   return (
     <>
-      {/* Navigation verticale externe - seulement si en mode édition et desktop */}
-      {show && isEditMode && (
+      {/* Navigation verticale externe - affichée en desktop (mode edit ou new) */}
+      {show && (
         <div className="trial-external-navigation">
-          {[
-            { key: 'before', label: t('trials.tabs.before'), icon: faFlask },
-            { key: 'after', label: t('trials.tabs.after'), icon: faCheckCircle },
-            { key: 'report', label: t('trials.tabs.report'), icon: faFileAlt }
-          ].map((item) => (
+          {availableTabs.map((item) => (
             <div key={item.key} className="trial-nav-item">
               <div
                 className={`trial-nav-button ${activeTab === item.key ? 'active' : ''}`}
@@ -145,15 +168,15 @@ const TrialFormWithSideNavigation = forwardRef(({
         show={show}
         onHide={onHide}
         size="xl"
-        className={`trial-modal ${isEditMode && !isMobile ? 'with-external-nav' : ''}`}
+        className={`trial-modal ${!isMobile ? 'with-external-nav' : ''}`}
         backdrop={true}
         keyboard={true}
       >
         <Modal.Header closeButton className="bg-light">
           <FormHeader 
             title={title}
-            onCopy={onCopy}
-            onPaste={onPaste}
+            onCopy={localHandleCopy}
+            onPaste={localHandlePaste}
             viewMode={viewMode}
           />
         </Modal.Header>
@@ -168,7 +191,8 @@ const TrialFormWithSideNavigation = forwardRef(({
             viewMode={viewMode}
             activeTab={activeTab}
             onTabChange={handleTabChange}
-            useExternalNavigation={isEditMode && !isMobile}
+            useExternalNavigation={!isMobile}
+            onCopyPasteReady={onCopyPasteReady}
           />
         </Modal.Body>
       </Modal>

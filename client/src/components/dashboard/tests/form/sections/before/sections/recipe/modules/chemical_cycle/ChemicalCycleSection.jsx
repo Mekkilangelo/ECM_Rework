@@ -478,7 +478,7 @@ const ChemicalCycleSection = ({
           </tr>
         </thead>
         <tbody>
-          {formData.recipeData?.chemicalCycle?.sort((a, b) => a.step - b.step).map((cycle, index) => (
+          {formData.recipeData?.chemicalCycle?.slice().sort((a, b) => a.step - b.step).map((cycle, index) => (
             <tr key={`chemical-cycle-${index}`}>
               <td className="text-center align-middle">{cycle.step}</td>
               <td>

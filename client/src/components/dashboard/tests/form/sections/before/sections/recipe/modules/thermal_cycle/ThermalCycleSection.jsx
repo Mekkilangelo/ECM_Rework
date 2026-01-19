@@ -81,7 +81,7 @@ const ThermalCycleSection = ({
           </tr>
         </thead>
         <tbody>
-          {formData.recipeData?.thermalCycle?.sort((a, b) => a.step - b.step).map((cycle, index) => (
+          {formData.recipeData?.thermalCycle?.slice().sort((a, b) => a.step - b.step).map((cycle, index) => (
             <tr key={`thermal-cycle-${index}`}>
               <td className="text-center align-middle">{cycle.step}</td>
               <td>

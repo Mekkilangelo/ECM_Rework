@@ -23,7 +23,8 @@ const TrialForm = forwardRef(({
   viewMode = false,
   activeTab: externalActiveTab,
   onTabChange: externalOnTabChange,
-  useExternalNavigation = false
+  useExternalNavigation = false,
+  onCopyPasteReady
 }, ref) => {
   const { t } = useTranslation();
   
@@ -76,17 +77,7 @@ const TrialForm = forwardRef(({
     return results.success;
   }, [fileAssociationMethods]);
 
-  // Exposer handleCloseRequest et copy/paste à travers la référence
-  useImperativeHandle(ref, () => ({
-    handleCloseRequest,
-    handleCopy,
-    handlePaste,
-    setActiveTab: (tab) => {
-      if (!useExternalNavigation) {
-        setInternalActiveTab(tab);
-      }
-    }
-  }));  const {
+  const {
     formData,
     errors,
     loading,
@@ -115,6 +106,27 @@ const TrialForm = forwardRef(({
     handlePaste,
     ...formHandlers
   } = useTrialForm(trial, onClose, onTrialCreated, onTrialUpdated, viewMode);
+
+  // Exposer handleCloseRequest et copy/paste à travers la référence
+  // IMPORTANT: Ce hook doit être APRÈS useTrialForm pour que les fonctions soient définies
+  useImperativeHandle(ref, () => ({
+    handleCloseRequest,
+    handleCopy,
+    handlePaste,
+    setActiveTab: (tab) => {
+      if (!useExternalNavigation) {
+        setInternalActiveTab(tab);
+      }
+    }
+  }), [handleCloseRequest, handleCopy, handlePaste, useExternalNavigation]);
+
+  // Notifier le parent que les fonctions copy/paste sont prêtes (une seule fois au montage)
+  useEffect(() => {
+    if (onCopyPasteReady) {
+      onCopyPasteReady({ handleCopy, handlePaste });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onCopyPasteReady]); // Seulement quand onCopyPasteReady change (au montage)
 
   // Style pour les champs en mode lecture seule
   const readOnlyFieldStyle = viewMode ? {
@@ -210,95 +222,81 @@ const TrialForm = forwardRef(({
           </CollapsibleSection>
           
           {/* Navigation verticale à gauche avec contenu principal */}
-          {isEditMode ? (
-            <div className="trial-form-layout d-flex">
-              {/* Navigation verticale à gauche - masquée si navigation externe */}
-              {!useExternalNavigation && (
-                <div className="trial-navigation">
-                <div className="trial-nav-item" onClick={() => handleTabChange('before')}>
-                  <div className={`trial-nav-button ${activeTab === 'before' ? 'active' : ''}`}>
-                    <FontAwesomeIcon icon={faFlask} className="trial-nav-icon" />
-                    <span className="trial-nav-text">{t('trials.tabs.before')}</span>
-                  </div>
+          <div className="trial-form-layout d-flex">
+            {/* Navigation verticale à gauche - masquée si navigation externe */}
+            {!useExternalNavigation && (
+              <div className="trial-navigation">
+              <div className="trial-nav-item" onClick={() => handleTabChange('before')}>
+                <div className={`trial-nav-button ${activeTab === 'before' ? 'active' : ''}`}>
+                  <FontAwesomeIcon icon={faFlask} className="trial-nav-icon" />
+                  <span className="trial-nav-text">{t('trials.tabs.before')}</span>
                 </div>
-                <div className="trial-nav-item" onClick={() => handleTabChange('after')}>
-                  <div className={`trial-nav-button ${activeTab === 'after' ? 'active' : ''}`}>
-                    <FontAwesomeIcon icon={faCheckCircle} className="trial-nav-icon" />
-                    <span className="trial-nav-text">{t('trials.tabs.after')}</span>
-                  </div>
+              </div>
+              <div className="trial-nav-item" onClick={() => handleTabChange('after')}>
+                <div className={`trial-nav-button ${activeTab === 'after' ? 'active' : ''}`}>
+                  <FontAwesomeIcon icon={faCheckCircle} className="trial-nav-icon" />
+                  <span className="trial-nav-text">{t('trials.tabs.after')}</span>
                 </div>
+              </div>
+              {/* L'onglet Report n'est disponible qu'en mode édition car il nécessite un trial.id */}
+              {isEditMode && (
                 <div className="trial-nav-item" onClick={() => handleTabChange('report')}>
                   <div className={`trial-nav-button ${activeTab === 'report' ? 'active' : ''}`}>
                     <FontAwesomeIcon icon={faFileAlt} className="trial-nav-icon" />
                     <span className="trial-nav-text">{t('trials.tabs.report')}</span>
                   </div>
                 </div>
-              </div>
+              )}
+            </div>
+            )}
+            
+            {/* Contenu principal */}
+            <div className={`trial-content ${useExternalNavigation ? 'full-width' : ''}`}>
+              {activeTab === 'before' && (
+                <BeforeTabContent 
+                  formData={formData}
+                  errors={errors}
+                  loading={loading}
+                  formHandlers={formHandlers}
+                  trial={trial}
+                  handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
+                  viewMode={viewMode}
+                  readOnlyFieldStyle={readOnlyFieldStyle}
+                  calculateProgramDuration={calculateProgramDuration}
+                />
               )}
               
-              {/* Contenu principal */}
-              <div className={`trial-content ${useExternalNavigation ? 'full-width' : ''}`}>
-                {activeTab === 'before' && (
-                  <BeforeTabContent 
-                    formData={formData}
-                    errors={errors}
-                    loading={loading}
-                    formHandlers={formHandlers}
-                    trial={trial}
-                    handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
-                    viewMode={viewMode}
-                    readOnlyFieldStyle={readOnlyFieldStyle}
-                    calculateProgramDuration={calculateProgramDuration}
-                  />
-                )}
-                
-                {activeTab === 'after' && (
-                  <AfterTabContent
-                    ref={afterTabContentRef}
-                    formData={formData}
-                    errors={errors}
-                    loading={loading}
-                    formHandlers={formHandlers}
-                    trial={trial}
-                    handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
-                    viewMode={viewMode}
-                    readOnlyFieldStyle={readOnlyFieldStyle}
-                    // Passer les fonctions d'import Excel
-                    excelImportHandlers={{
-                      fileInputRef,
-                      getCurveSectionRef,
-                      handleExcelImport,
-                      processExcelData,
-                      handleEcdChange,
-                      handleHardnessChange
-                    }}
-                  />
-                )}
-                
-                {activeTab === 'report' && (
-                  <ReportConfiguration 
-                    trialId={trial.id}
-                    partId={trial.parent_id}
-                  />
-                )}
-              </div>
+              {activeTab === 'after' && (
+                <AfterTabContent
+                  ref={afterTabContentRef}
+                  formData={formData}
+                  errors={errors}
+                  loading={loading}
+                  formHandlers={formHandlers}
+                  trial={trial}
+                  handleFileAssociationNeeded={handleAfterFileAssociationNeeded}
+                  viewMode={viewMode}
+                  readOnlyFieldStyle={readOnlyFieldStyle}
+                  // Passer les fonctions d'import Excel
+                  excelImportHandlers={{
+                    fileInputRef,
+                    getCurveSectionRef,
+                    handleExcelImport,
+                    processExcelData,
+                    handleEcdChange,
+                    handleHardnessChange
+                  }}
+                />
+              )}
+              
+              {activeTab === 'report' && isEditMode && (
+                <ReportConfiguration 
+                  trialId={trial.id}
+                  partId={trial.parent_id}
+                />
+              )}
             </div>
-          ) : (
-            // En mode création, on affiche directement le contenu de l'onglet "Before"
-            <div className="mt-4">
-              <BeforeTabContent 
-                formData={formData}
-                errors={errors}
-                loading={loading}
-                formHandlers={formHandlers}
-                trial={trial}
-                handleFileAssociationNeeded={handleBeforeFileAssociationNeeded}
-                viewMode={viewMode}
-                readOnlyFieldStyle={readOnlyFieldStyle}
-                calculateProgramDuration={calculateProgramDuration}
-              />
-            </div>
-          )}          {/* Boutons de soumission */}
+          </div>          {/* Boutons de soumission */}
           <div className="d-flex justify-content-end mt-4">
             {viewMode ? (
               <Button variant="secondary" onClick={onClose}>

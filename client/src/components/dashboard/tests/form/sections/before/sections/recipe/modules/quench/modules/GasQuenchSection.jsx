@@ -52,7 +52,7 @@ const GasQuenchSection = ({
           </tr>
         </thead>
         <tbody>
-          {formData.quenchData?.gasQuenchSpeed?.sort((a, b) => a.step - b.step).map((step, index) => (
+          {formData.quenchData?.gasQuenchSpeed?.slice().sort((a, b) => a.step - b.step).map((step, index) => (
             <tr key={`gas-quench-speed-${index}`}>
               <td className="text-center align-middle">{step.step}</td>
               <td>
@@ -117,7 +117,7 @@ const GasQuenchSection = ({
           </tr>
         </thead>
         <tbody>
-          {formData.quenchData?.gasQuenchPressure?.sort((a, b) => a.step - b.step).map((step, index) => (
+          {formData.quenchData?.gasQuenchPressure?.slice().sort((a, b) => a.step - b.step).map((step, index) => (
             <tr key={`gas-quench-pressure-${index}`}>
               <td className="text-center align-middle">{step.step}</td>
               <td>

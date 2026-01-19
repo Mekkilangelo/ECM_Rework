@@ -51,29 +51,38 @@ const TrialForm = forwardRef(({
   }, []);
   // Combiner toutes les fonctions d'association de fichiers (optimisé)
   const combineFileAssociations = useCallback(async (nodeId) => {
+    console.log('🔗🔗🔗 [FILE_ASSOC] combineFileAssociations appelé avec nodeId:', nodeId);
+    console.log('🔗🔗🔗 [FILE_ASSOC] fileAssociationMethods:', fileAssociationMethods);
+
     const promises = [];
     let results = { success: true };
-    
+
     // Parcourir toutes les méthodes d'association disponibles
     Object.entries(fileAssociationMethods).forEach(([tab, method]) => {
       if (method) {
+        console.log(`🔗🔗🔗 [FILE_ASSOC] Ajout méthode pour tab: ${tab}`);
         promises.push(method(nodeId));
       }
-    });    
+    });
+
+    console.log(`🔗🔗🔗 [FILE_ASSOC] ${promises.length} promises à exécuter`);
+
     if (promises.length > 0) {
       try {
         const associationResults = await Promise.all(promises);
+        console.log('🔗🔗🔗 [FILE_ASSOC] Résultats des associations:', associationResults);
         // Si l'un des résultats est false, on considère que l'opération a échoué
         if (associationResults.some(result => result === false)) {
           results.success = false;
         }
       } catch (error) {
-        console.error("Error in file associations:", error);
+        console.error("🔗🔗🔗 [FILE_ASSOC] Error in file associations:", error);
         results.success = false;
         results.error = error;
       }
     }
-    
+
+    console.log('🔗🔗🔗 [FILE_ASSOC] Retour final:', results.success);
     return results.success;
   }, [fileAssociationMethods]);
 

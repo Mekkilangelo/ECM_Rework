@@ -68,12 +68,12 @@ const MicrographsSection = ({
     <>
       {views.map((view) => {
         const filesForView = getFilesForView(view.id);
-        console.log(`[MicrographsSection] View ${view.id} pour result ${resultIndex} sample ${sampleIndex}:`, {
-          viewId: view.id,
-          filesCount: filesForView.length,
-          files: filesForView
-        });
-        
+        // console.log(`[MicrographsSection] View ${view.id} pour result ${resultIndex} sample ${sampleIndex}:`, {
+        //   viewId: view.id,
+        //   filesCount: filesForView.length,
+        //   files: filesForView
+        // });
+
         return (
         <CollapsibleSection
           key={`${resultIndex}-${sampleIndex}-${view.id}`}

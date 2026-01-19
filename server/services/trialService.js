@@ -459,9 +459,17 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
 const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
   if (!trialNodeId) return;
 
+  // ⚠️ FIX: Si resultsData est null/undefined, on ne touche PAS aux fichiers existants
+  // Cela signifie que l'utilisateur n'a pas modifié les résultats, il a juste sauvegardé le trial
+  // Supprimer les fichiers dans ce cas serait une erreur catastrophique !
+  if (!resultsData) {
+    logger.info('Pas de resultsData fourni, conservation des fichiers existants', { trialNodeId });
+    return; // Ne pas supprimer les résultats existants ni les fichiers
+  }
+
   // Calculer les résultats et samples conservés pour nettoyer les fichiers orphelins
   const keptContextKeys = new Set();
-  if (resultsData && Array.isArray(resultsData.results)) {
+  if (Array.isArray(resultsData.results)) {
     resultsData.results.forEach(result => {
       const resultIndex = result.step;
       if (resultIndex !== undefined && resultIndex !== null && Array.isArray(result.samples)) {
@@ -475,7 +483,19 @@ const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
     });
   }
 
-  // Si aucun résultat n'est conservé, cela supprimera tous les fichiers associés à des résultats
+  // ⚠️ FIX: Si resultsData.results est vide mais qu'on a explicitement des résultats (tableau vide),
+  // on ne supprime pas les fichiers non plus - l'utilisateur doit explicitement supprimer des résultats
+  if (keptContextKeys.size === 0 && (!resultsData.results || resultsData.results.length === 0)) {
+    logger.info('Aucun résultat dans resultsData, conservation des fichiers existants par sécurité', { 
+      trialNodeId,
+      hasResultsArray: Array.isArray(resultsData.results),
+      resultsLength: resultsData.results?.length || 0
+    });
+    // Ne pas nettoyer les fichiers si aucun résultat n'est fourni
+    // Les fichiers uploadés AVANT la création des résultats doivent être conservés
+    return;
+  }
+
   logger.info('Nettoyage des fichiers orphelins après mise à jour des résultats', { 
     trialNodeId, 
     keptCount: keptContextKeys.size 

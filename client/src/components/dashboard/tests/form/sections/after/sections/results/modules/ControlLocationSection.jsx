@@ -18,8 +18,9 @@ const ControlLocationSection = ({
   const { t } = useTranslation();
   
   // Subcategory dynamique basée sur result et sample
+  // IMPORTANT: Les fichiers en base utilisent des index base-1, pas base-0
   const subcategory = useMemo(() => 
-    `result-${resultIndex}-sample-${sampleIndex}`, 
+    `result-${resultIndex + 1}-sample-${sampleIndex + 1}`, 
     [resultIndex, sampleIndex]
   );
   
@@ -69,6 +70,8 @@ const ControlLocationSection = ({
         showPreview={true}
         existingFiles={uploadedFiles}
         readOnly={viewMode}
+        sampleNumber={sampleIndex}
+        resultIndex={resultIndex}
       />
     </div>
   );

@@ -68,11 +68,18 @@ const useMultiViewFileSectionState = (options = {}) => {
     isLoadingRef.current = true;
 
     try {
-      // Passer sampleNumber et resultIndex pour filtrage côté backend
+      // Construire un pattern de subcategory pour récupérer tous les fichiers
+      // de ce result/sample peu importe la vue (x50, x500, etc.)
+      // IMPORTANT: Les fichiers en base utilisent des index base-1, pas base-0
+      // Exemple: "result-1-sample-1-%" pour récupérer result-1-sample-1-x50, result-1-sample-1-x500, etc.
+      let subcategoryPattern = null;
+      if (resultIndex !== undefined && sampleNumber !== undefined) {
+        subcategoryPattern = `result-${resultIndex + 1}-sample-${sampleNumber + 1}-%`;
+      }
+      
       const response = await fileService.getNodeFiles(nodeId, {
         category,
-        sampleNumber,
-        resultIndex
+        subcategory: subcategoryPattern
       });
       
       if (!response.data || response.data.success === false) {
@@ -81,6 +88,14 @@ const useMultiViewFileSectionState = (options = {}) => {
       }
       
       const files = response.data.data?.files || [];
+      
+      console.log(`[useMultiViewFileSectionState] Fichiers reçus:`, {
+        count: files.length,
+        category,
+        sampleNumber,
+        resultIndex,
+        files: files.map(f => ({ id: f.id, name: f.name, subcategory: f.subcategory }))
+      });
       
       // Organiser les fichiers par vue/subcategory
       const filesByView = {};
@@ -102,8 +117,9 @@ const useMultiViewFileSectionState = (options = {}) => {
              // on doit s'assurer qu'elle correspond bien à l'échantillon courant
              if (file.subcategory.includes('result-') && file.subcategory.includes('-sample-')) {
                // Si on a les infos de contexte courantes, on vérifie qu'elles correspondent
+               // IMPORTANT: Les fichiers en base utilisent base-1, donc +1
                if (resultIndex !== undefined && sampleNumber !== undefined) {
-                 const currentContextPrefix = `result-${resultIndex}-sample-${sampleNumber}`;
+                 const currentContextPrefix = `result-${resultIndex + 1}-sample-${sampleNumber + 1}`;
                  return file.subcategory.includes(currentContextPrefix);
                }
              }
@@ -116,10 +132,26 @@ const useMultiViewFileSectionState = (options = {}) => {
         
         const viewId = matchingView ? matchingView.id : (file.subcategory || 'other');
         
+        console.log(`[useMultiViewFileSectionState] Matching pour fichier:`, {
+          fileName: file.name,
+          fileSubcategory: file.subcategory,
+          matchingViewId: matchingView?.id,
+          finalViewId: viewId,
+          expectedSubcategories: views.map(v => ({ viewId: v.id, expected: buildSubcategory(v.id) }))
+        });
+        
         if (!filesByView[viewId]) {
           filesByView[viewId] = [];
         }
         filesByView[viewId].push(file);
+      });
+      
+      console.log(`[useMultiViewFileSectionState] Fichiers organisés par vue:`, {
+        filesByView: Object.keys(filesByView).map(viewId => ({
+          viewId,
+          count: filesByView[viewId].length,
+          files: filesByView[viewId].map(f => f.name)
+        }))
       });
       
       setUploadedFilesByView(filesByView);
@@ -263,7 +295,13 @@ const useMultiViewFileSectionState = (options = {}) => {
    * @returns {Array} Fichiers de cette vue
    */
   const getFilesForView = useCallback((viewId) => {
-    return uploadedFilesByView[viewId] || [];
+    const files = uploadedFilesByView[viewId] || [];
+    console.log(`[getFilesForView] ViewId: ${viewId}`, {
+      filesCount: files.length,
+      uploadedFilesByView: Object.keys(uploadedFilesByView),
+      files: files.map(f => f.name)
+    });
+    return files;
   }, [uploadedFilesByView]);
 
   /**

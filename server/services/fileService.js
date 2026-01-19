@@ -776,7 +776,14 @@ const deleteFilesByContext = async (parentNodeId, predicate, transaction) => {
 const getAllFilesByNode = async (options) => {
   const { nodeId, category, subcategory, sampleNumber, resultIndex } = options;
   
-  logger.debug('Recherche fichiers par nœud', { nodeId, category, subcategory, sampleNumber, resultIndex });
+  logger.info('🔍 [getAllFilesByNode] Recherche fichiers', { 
+    nodeId, 
+    category, 
+    subcategory, 
+    sampleNumber, 
+    resultIndex,
+    isLikePattern: subcategory && subcategory.includes('%')
+  });
   
   // D'abord, récupérer tous les descendants du nœud (y compris lui-même)
   const descendantClosure = await closure.findAll({
@@ -798,10 +805,19 @@ const getAllFilesByNode = async (options) => {
   // Filtrer par catégorie et sous-catégorie si fournis
   const fileConditions = {};
   if (category) fileConditions.category = category;
-  if (subcategory) fileConditions.subcategory = subcategory;
+  if (subcategory) {
+    // Support pour pattern matching si subcategory contient '%'
+    if (subcategory.includes('%')) {
+      fileConditions.subcategory = { [Op.like]: subcategory };
+    } else {
+      fileConditions.subcategory = subcategory;
+    }
+  }
   
   // Filtrer par métadonnées JSON (sampleNumber, resultIndex)
-  if (sampleNumber !== undefined || resultIndex !== undefined) {
+  // IMPORTANT: Appliquer ce filtre SEULEMENT si subcategory n'est pas fournie
+  // pour éviter les conflits avec le matching par subcategory
+  if (!subcategory && (sampleNumber !== undefined || resultIndex !== undefined)) {
     // Utiliser l'opérateur JSON de Sequelize pour filtrer dans le champ context
     const contextConditions = [];
     
@@ -863,7 +879,10 @@ const getAllFilesByNode = async (options) => {
     viewPath: nodeItem.id ? `/api/files/${nodeItem.id}` : null
   }));
   
-  logger.debug('Fichiers retournés', { count: files.length });
+  logger.info('📦 [getAllFilesByNode] Fichiers retournés', { 
+    count: files.length,
+    subcategories: files.length > 0 ? [...new Set(files.map(f => f.subcategory))] : []
+  });
   
   return { files };
 };

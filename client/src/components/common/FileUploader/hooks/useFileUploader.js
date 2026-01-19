@@ -14,7 +14,9 @@ const useFileUploader = ({
   fileIcon = faFile,
   existingFiles = [],
   onFilesUploaded,
-  enableStandbyMode = false
+  enableStandbyMode = false,
+  sampleNumber,
+  resultIndex
 }) => {  // États
   const [files, setFiles] = useState([]);
   const [internalUploadedFiles, setInternalUploadedFiles] = useState([]);
@@ -25,7 +27,7 @@ const useFileUploader = ({
     setInternalUploadedFiles([...existingFiles]);
   }, [existingFiles]);
   // Utilisation des hooks spécialisés
-  const fileUpload = useFileUpload(files, setFiles, setInternalUploadedFiles, onFilesUploaded, standbyMode);
+  const fileUpload = useFileUpload(files, setFiles, setInternalUploadedFiles, onFilesUploaded, standbyMode, sampleNumber, resultIndex);
   const filePreview = useFilePreview(fileIcon);
     const fileSelection = useFileSelection(
     files, 

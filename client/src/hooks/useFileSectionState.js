@@ -66,6 +66,8 @@ const useFileSectionState = (options = {}) => {
       if (subcategory) {
         params.subcategory = subcategory;
       }
+      // Ne PAS passer sampleNumber et resultIndex pour le chargement
+      // car on veut matcher par subcategory complète, pas par contexte JSON
       
       const response = await fileService.getNodeFiles(nodeId, params);
       
@@ -75,6 +77,16 @@ const useFileSectionState = (options = {}) => {
       }
       
       const files = response.data.data?.files || [];
+      
+      console.log(`[useFileSectionState] Fichiers reçus:`, {
+        count: files.length,
+        category,
+        subcategory,
+        sampleNumber,
+        resultIndex,
+        files: files.map(f => ({ id: f.id, name: f.name, subcategory: f.subcategory }))
+      });
+      
       setUploadedFiles(files);
     } catch (error) {
       onErrorRef.current('Erreur lors du chargement des fichiers:', error);

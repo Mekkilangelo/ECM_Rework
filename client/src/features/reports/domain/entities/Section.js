@@ -232,6 +232,7 @@ export class SectionFactory {
         hasPhotos: false,
         order: 5,
         options: {
+          showRecipeDetails: true, // Afficher les détails (tableaux, données) par défaut
           showRecipeCurve: true // Afficher le graphique des cycles par défaut
         }
       },

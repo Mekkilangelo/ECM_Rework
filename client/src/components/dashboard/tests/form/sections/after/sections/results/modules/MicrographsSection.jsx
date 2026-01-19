@@ -27,8 +27,9 @@ const MicrographsSection = ({
   ], [t]);
   
   // Fonction pour construire la subcategory basée sur result, sample et viewId
+  // IMPORTANT: Les fichiers en base utilisent des index base-1, pas base-0
   const buildSubcategory = useCallback((viewId) => 
-    `result-${resultIndex}-sample-${sampleIndex}-${viewId}`, 
+    `result-${resultIndex + 1}-sample-${sampleIndex + 1}-${viewId}`, 
     [resultIndex, sampleIndex]
   );
   
@@ -65,7 +66,15 @@ const MicrographsSection = ({
 
   return (
     <>
-      {views.map((view) => (
+      {views.map((view) => {
+        const filesForView = getFilesForView(view.id);
+        console.log(`[MicrographsSection] View ${view.id} pour result ${resultIndex} sample ${sampleIndex}:`, {
+          viewId: view.id,
+          filesCount: filesForView.length,
+          files: filesForView
+        });
+        
+        return (
         <CollapsibleSection
           key={`${resultIndex}-${sampleIndex}-${view.id}`}
           title={view.name}
@@ -95,12 +104,14 @@ const MicrographsSection = ({
               height="150px"
               width="100%"
               showPreview={true}
-              existingFiles={getFilesForView(view.id)}
+              existingFiles={filesForView}
               readOnly={viewMode}
+              sampleNumber={sampleIndex}
+              resultIndex={resultIndex}
             />
           </div>
         </CollapsibleSection>
-      ))}
+      )})}
     </>
   );
 }; 

@@ -618,7 +618,7 @@ const RecipePhotosSection = ({ photos = [] }) => {
  * @param {Object} report - Les données du rapport
  * @param {boolean} showRecipeCurve - Afficher ou non le graphique des cycles (défaut: true)
  */
-export const RecipeSectionPDF = ({ report, showRecipeCurve = true }) => {
+export const RecipeSectionPDF = ({ report, showRecipeDetails = true, showRecipeCurve = true }) => {
   
   const recipeData = report.recipeData;
   const quenchData = report.quenchData;
@@ -634,32 +634,42 @@ export const RecipeSectionPDF = ({ report, showRecipeCurve = true }) => {
     );
   }
 
+  // Si aucune option n'est activée, ne rien afficher
+  if (!showRecipeDetails && !showRecipeCurve) {
+    return null;
+  }
+
   return (
     <>
-      {/* Page principale : Titre + Numero + Preox - toujours ensemble */}
+      {/* Titre de section - toujours affiché si la section est active */}
       <View style={styles.section} wrap={false}>
         <Text style={styles.sectionTitle}>RECIPE</Text>
         
-        {recipeData?.number && (
-          <View style={styles.row}>
-            <Text style={styles.label}>Recipe Number:</Text>
-            <Text style={styles.value}>{recipeData.number}</Text>
-          </View>
+        {/* Recipe Details - afficher uniquement si showRecipeDetails est true */}
+        {showRecipeDetails && (
+          <>
+            {recipeData?.number && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Recipe Number:</Text>
+                <Text style={styles.value}>{recipeData.number}</Text>
+              </View>
+            )}
+            
+            <PreoxSection recipeData={recipeData} />
+          </>
         )}
-        
-        <PreoxSection recipeData={recipeData} />
       </View>
         
       {/* Cycle Thermique - wrap intelligent selon taille */}
-      <ThermalCycleSection recipeData={recipeData} />
+      {showRecipeDetails && <ThermalCycleSection recipeData={recipeData} />}
 
       {/* Cycle chimique - wrap intelligent selon taille */}
-      {recipeData?.chemical_cycle && recipeData.chemical_cycle.length > 0 && (
+      {showRecipeDetails && recipeData?.chemical_cycle && recipeData.chemical_cycle.length > 0 && (
         <ChemicalCycleSection recipeData={recipeData} />
       )}
 
       {/* Trempe - afficher uniquement si données significatives */}
-      {hasQuenchData(quenchData) && (
+      {showRecipeDetails && hasQuenchData(quenchData) && (
         <>
           <GasQuenchSection quenchData={quenchData} />
           <OilQuenchSection quenchData={quenchData} />
@@ -677,8 +687,8 @@ export const RecipeSectionPDF = ({ report, showRecipeCurve = true }) => {
         </View>
       )}
 
-      {/* Photos - nouvelle page */}
-      {photos.length > 0 && (
+      {/* Photos - nouvelle page - afficher si showRecipeDetails est true */}
+      {showRecipeDetails && photos.length > 0 && (
         <View break>
           <RecipePhotosSection photos={photos} />
         </View>

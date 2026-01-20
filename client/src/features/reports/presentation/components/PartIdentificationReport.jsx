@@ -7,8 +7,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Card, Button, Badge, Alert, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faFileDownload, 
+import {
+  faFileDownload,
   faEye,
   faImage,
   faFilePdf
@@ -29,14 +29,20 @@ import './PartIdentificationReport.css';
  */
 const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   const { t } = useTranslation();
-  
+
   // États
   const [selectedPhotos, setSelectedPhotos] = useState({});
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
 
+  // IMPORTANT: Mémoriser les options pour éviter une boucle infinie de reconversion
+  const conversionOptions = useMemo(() => ({
+    scale: 1.5,  // Réduit de 2 à 1.5 pour économiser mémoire (encore bonne qualité)
+    maxWidth: 1000  // Réduit de 1200 à 1000px
+  }), []);
+
   // Enrichir les photos en convertissant les PDFs en images
-  const { enrichedPhotos, isConverting, conversionError } = useEnrichedPhotosForPDF(selectedPhotos);
+  const { enrichedPhotos, isConverting, conversionError } = useEnrichedPhotosForPDF(selectedPhotos, conversionOptions);
 
   // Callback pour recevoir les photos sélectionnées du SectionPhotoManager
   const handlePhotosChange = useCallback((sectionType, photos) => {
@@ -231,18 +237,18 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
       </Card.Body>
       
       <Card.Footer className="d-flex justify-content-end gap-2">
-        <Button 
-          variant="outline-secondary" 
+        <Button
+          variant="outline-secondary"
           onClick={handlePreview}
-          disabled={generating || isConverting || totalSelected === 0}
+          disabled={generating || isConverting}
         >
           <FontAwesomeIcon icon={faEye} className="me-2" />
           {t('report.actions.preview')}
         </Button>
-        <Button 
-          variant="danger" 
+        <Button
+          variant="danger"
           onClick={handleExport}
-          disabled={generating || isConverting || totalSelected === 0}
+          disabled={generating || isConverting}
         >
           {generating ? (
             <>

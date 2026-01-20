@@ -146,9 +146,15 @@ load_docker_images() {
         exit 1
     fi
     
-    # Afficher les images chargées
+    # Afficher les images chargées (ignorer SIGPIPE=141, afficher autres erreurs)
     info "Images Docker disponibles:"
-    docker images | grep -E "(synergia|mysql|nginx)" | head -10 || true
+    set +o pipefail
+    docker images | grep -E "(synergia|mysql|nginx)" | head -10
+    local pipe_status=$?
+    set -o pipefail
+    if [ $pipe_status -ne 0 ] && [ $pipe_status -ne 141 ]; then
+        warning "Erreur lors de l'affichage des images (code: $pipe_status)"
+    fi
 }
 
 prepare_nginx() {

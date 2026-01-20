@@ -148,7 +148,7 @@ load_docker_images() {
     
     # Afficher les images chargées
     info "Images Docker disponibles:"
-    docker images | grep -E "(synergia|mysql|nginx)" | head -10
+    docker images | grep -E "(synergia|mysql|nginx)" | head -10 || true
 }
 
 prepare_nginx() {

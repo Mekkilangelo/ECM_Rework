@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.2.18",
+  "version": "1.2.19",
   "main": "server.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --forceExit --detectOpenHandles",

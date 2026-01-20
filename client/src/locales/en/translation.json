@@ -852,10 +852,10 @@
       "title": "Basic Information",
       "loadNumber": "Load Number",
       "trialDate": "Trial Date",
-      "location": "Location",
+      "location": "Trial Location",
       "status": "Status",
       "description": "Description",
-      "selectLocation": "Select a location",
+      "selectLocation": "Select trial location (ECM, Client site...)",
       "selectStatus": "Select a status"
     },
     

@@ -855,10 +855,10 @@
       "title": "Informations de base",
       "loadNumber": "Numéro de charge",
       "trialDate": "Date de l'essai",
-      "location": "Localisation",
+      "location": "Lieu de l'essai",
       "status": "Statut",
       "description": "Description",
-      "selectLocation": "Sélectionner une localisation",
+      "selectLocation": "Sélectionner le lieu de l'essai (ECM, Site client...)",
       "selectStatus": "Sélectionner un statut"
     },
     

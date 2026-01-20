@@ -499,6 +499,8 @@
     "noName": "No name",
     "noClientsFound": "No clients found",
     "clickToAddClient": "Click on \"Add client\" to create a new client",
+    "noItemsFound": "No clients found",
+    "clickToAdd": "Click on \"Add client\" to create a new client",
     "deleteSuccess": "Client successfully deleted",
     "deleteError": "An error occurred while deleting the client",
     "confirmDelete": "Are you sure you want to delete this client? This action is irreversible.",
@@ -520,6 +522,8 @@
     "noReference": "No reference",
     "noOrdersFound": "No trial requests found for this client",
     "clickToAddOrder": "Click on \"Add trial request\" to create one",
+    "noItemsFound": "No trial requests found",
+    "clickToAdd": "Click on \"Add trial request\" to create one",
     "deleteSuccess": "Trial request successfully deleted",
     "deleteError": "An error occurred while deleting the trial request",
     "confirmDelete": "Are you sure you want to delete this trial request? This action is irreversible.",
@@ -1264,7 +1268,9 @@
         "description": "Recipe parameters used",
         "options": {
           "showCurve": "Show cycle chart",
-          "showCurveDescription": "Display thermal and chemical cycle graph"
+          "showCurveDescription": "Display thermal and chemical cycle graph",
+          "showDetails": "Show recipe details",
+          "showDetailsDescription": "Display recipe number, preox, thermal/chemical cycles, and quench data"
         }
       },
       "load": {

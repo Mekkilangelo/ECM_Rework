@@ -7,8 +7,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Card, Button, Badge, Alert, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faFileDownload, 
+import {
+  faFileDownload,
   faEye,
   faImage,
   faFilePdf
@@ -29,18 +29,23 @@ import './PartIdentificationReport.css';
  */
 const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   const { t } = useTranslation();
-  
+
   // États
   const [selectedPhotos, setSelectedPhotos] = useState({});
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
 
+  // IMPORTANT: Mémoriser les options pour éviter une boucle infinie de reconversion
+  const conversionOptions = useMemo(() => ({
+    scale: 1.5,  // Réduit de 2 à 1.5 pour économiser mémoire (encore bonne qualité)
+    maxWidth: 1000  // Réduit de 1200 à 1000px
+  }), []);
+
   // Enrichir les photos en convertissant les PDFs en images
-  const { enrichedPhotos, isConverting, conversionError } = useEnrichedPhotosForPDF(selectedPhotos);
+  const { enrichedPhotos, isConverting, conversionError } = useEnrichedPhotosForPDF(selectedPhotos, conversionOptions);
 
   // Callback pour recevoir les photos sélectionnées du SectionPhotoManager
   const handlePhotosChange = useCallback((sectionType, photos) => {
-    console.log('Photos changed:', sectionType, photos);
     setSelectedPhotos(photos);
   }, []);
 
@@ -53,7 +58,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   // Construire le rapport pour le PDF avec les photos enrichies
   const buildReport = useCallback(() => {
     // Utiliser enrichedPhotos au lieu de selectedPhotos
-    const photosArray = Object.entries(enrichedPhotos).flatMap(([subcategory, photos]) => 
+    const photosArray = Object.entries(enrichedPhotos).flatMap(([subcategory, photos]) =>
       (photos || []).map(photo => ({
         ...photo,
         subcategory: photo.subcategory || subcategory,
@@ -61,8 +66,6 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
         url: photo.url || photo.viewPath
       }))
     );
-
-    console.log('Building report with enriched photos:', photosArray);
 
     // Créer une section identification uniquement avec les photos
     const identificationSection = SectionFactory.createSection('identification', {
@@ -115,15 +118,29 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   // Créer le générateur PDF avec les photos enrichies
   const createPDFGenerator = useCallback(() => {
     const generator = new ReactPDFGenerator();
-    // Passer les photos enrichies avec le format attendu par ReportPDFDocument
-    // Format: { identification: { subcategory: [photos] } }
-    const photosForPDF = { identification: enrichedPhotos };
-    
+
+    // IMPORTANT: SectionPhotoManager retourne { photos: [photo1, photo2, photo3] }
+    // mais ReportPDFDocument attend { identification: { subcategory: [photos] } }
+    //
+    // Pour l'identification sheet, on veut TOUTES les photos dans une seule liste
+    // donc on aplatit toutes les subcategories en un seul tableau
+
+    // Aplatir toutes les photos des différentes subcategories
+    const allPhotos = Object.values(enrichedPhotos).flat();
+
+    // Organiser dans la structure attendue par ReportPDFDocument
+    // On met toutes les photos sous la clé 'all' pour la section identification
+    const photosForPDF = {
+      identification: {
+        all: allPhotos  // Toutes les photos dans une seule liste
+      }
+    };
+
     generator.setDocumentRenderer((report, options) => (
-      <ReportPDFDocument 
-        report={report} 
+      <ReportPDFDocument
+        report={report}
         selectedPhotos={photosForPDF}
-        options={options} 
+        options={options}
       />
     ));
     return generator;
@@ -231,18 +248,18 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
       </Card.Body>
       
       <Card.Footer className="d-flex justify-content-end gap-2">
-        <Button 
-          variant="outline-secondary" 
+        <Button
+          variant="outline-secondary"
           onClick={handlePreview}
-          disabled={generating || isConverting || totalSelected === 0}
+          disabled={generating || isConverting}
         >
           <FontAwesomeIcon icon={faEye} className="me-2" />
           {t('report.actions.preview')}
         </Button>
-        <Button 
-          variant="danger" 
+        <Button
+          variant="danger"
           onClick={handleExport}
-          disabled={generating || isConverting || totalSelected === 0}
+          disabled={generating || isConverting}
         >
           {generating ? (
             <>

@@ -257,20 +257,20 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
                 partData={{
                   ...formData,
                   designation: formData.designation,
-                  part_number: formData.partNumber,
-                  drawing_number: formData.drawingNumber,
+                  part_number: formData.reference,
+                  drawing_number: formData.clientDesignation,
                   steel: formData.steel,
                   hardnessSpecs: formData.hardnessSpecs,
                   ecdSpecs: formData.ecdSpecs,
-                  dim_rect_length: formData.dimRectLength,
-                  dim_rect_width: formData.dimRectWidth,
-                  dim_rect_height: formData.dimRectHeight,
-                  dim_rect_unit: formData.dimRectUnit,
-                  dim_circ_diameterOut: formData.dimCircDiameterOut,
-                  dim_circ_diameterIn: formData.dimCircDiameterIn,
-                  dim_circ_unit: formData.dimCircUnit,
-                  dim_weight_value: formData.dimWeightValue,
-                  dim_weight_unit: formData.dimWeightUnit
+                  dim_rect_length: formData.length,
+                  dim_rect_width: formData.width,
+                  dim_rect_height: formData.height,
+                  dim_rect_unit: formData.dimensionsUnit,
+                  dim_circ_diameterOut: formData.diameterOut,
+                  dim_circ_diameterIn: formData.diameterIn,
+                  dim_circ_unit: formData.diameterUnit,
+                  dim_weight_value: formData.weight,
+                  dim_weight_unit: formData.weightUnit
                 }}
                 clientData={part.client || null}
               />

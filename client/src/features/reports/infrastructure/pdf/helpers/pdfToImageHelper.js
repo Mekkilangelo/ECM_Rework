@@ -14,12 +14,12 @@ if (typeof window !== 'undefined') {
  * Convertit la première page d'un PDF en image base64
  * @param {string} pdfUrl - URL du PDF à convertir
  * @param {Object} options - Options de rendu
- * @param {number} options.scale - Échelle de rendu (défaut: 2 pour bonne qualité)
- * @param {number} options.maxWidth - Largeur maximale de l'image (défaut: 1200px)
+ * @param {number} options.scale - Échelle de rendu (défaut: 1.5 pour équilibre qualité/performance)
+ * @param {number} options.maxWidth - Largeur maximale de l'image (défaut: 1000px)
  * @returns {Promise<string>} - URL data:image/png;base64,... de l'image
  */
 export const convertPDFFirstPageToImage = async (pdfUrl, options = {}) => {
-  const { scale = 2, maxWidth = 1200 } = options;
+  const { scale = 1.5, maxWidth = 1000 } = options;
   
   try {
     // Charger le PDF
@@ -65,9 +65,11 @@ export const convertPDFFirstPageToImage = async (pdfUrl, options = {}) => {
     };
     
     await page.render(renderContext).promise;
-    
+
     // Convertir le canvas en image base64
-    const imageDataUrl = canvas.toDataURL('image/png', 0.95);
+    // Utiliser JPEG avec compression pour réduire la taille (PNG est très lourd)
+    // Qualité 0.85 = bon compromis entre qualité et taille
+    const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
     
     // Nettoyer
     page.cleanup();

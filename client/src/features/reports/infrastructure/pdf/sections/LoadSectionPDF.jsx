@@ -169,15 +169,9 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
   // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
   
+  // Si aucune photo, ne pas rendre la section du tout
   if (validPhotos.length === 0) {
-    return (
-      <View style={styles.section}>
-        <SectionTitle sectionType={SECTION_TYPE}>
-          LOAD CONFIGURATION
-        </SectionTitle>
-        <EmptyState message="No load configuration photos available for this trial." />
-      </View>
-    );
+    return null;
   }
 
   const layout = calculateLayout(validPhotos.length);

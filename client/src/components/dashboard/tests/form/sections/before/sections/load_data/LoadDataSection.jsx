@@ -174,7 +174,7 @@ const LoadDataSection = ({
               name="loadData.weightUnit"
               value={formData.loadData?.weightUnit 
                 ? getSelectedOption(weightUnitOptions, formData.loadData?.weightUnit) 
-                : lengthUnitOptions[0] || null}
+                : weightUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'loadData.weightUnit' })}
               options={weightUnitOptions}
               isClearable={!viewMode}

@@ -501,6 +501,8 @@
     "noName": "Sans nom",
     "noClientsFound": "Aucun client trouvé",
     "clickToAddClient": "Cliquez sur \"Ajouter un client\" pour créer un nouveau client",
+    "noItemsFound": "Aucun client trouvé",
+    "clickToAdd": "Cliquez sur \"Ajouter un client\" pour créer un nouveau client",
     "deleteSuccess": "Client supprimé avec succès",
     "deleteError": "Une erreur est survenue lors de la suppression du client",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.",
@@ -522,6 +524,8 @@
     "noReference": "Sans référence",
     "noOrdersFound": "Aucune demande d'essai trouvée pour ce client",
     "clickToAddOrder": "Cliquez sur \"Ajouter une demande d'essai\" pour en créer une",
+    "noItemsFound": "Aucune demande d'essai trouvée",
+    "clickToAdd": "Cliquez sur \"Ajouter une demande d'essai\" pour en créer une",
     "deleteSuccess": "Demande d'essai supprimée avec succès",
     "deleteError": "Une erreur est survenue lors de la suppression de la demande d'essai",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette demande d'essai ? Cette action est irréversible.",
@@ -1272,7 +1276,9 @@
         "description": "Paramètres de la recette utilisée",
         "options": {
           "showCurve": "Afficher le graphique des cycles",
-          "showCurveDescription": "Affiche le graphique des cycles thermique et chimique"
+          "showCurveDescription": "Affiche le graphique des cycles thermique et chimique",
+          "showDetails": "Afficher les détails de la recette",
+          "showDetailsDescription": "Affiche le numéro de recette, préox, cycles thermique/chimique et trempe"
         }
       },
       "load": {

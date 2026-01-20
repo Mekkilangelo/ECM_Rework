@@ -294,104 +294,73 @@ const SectionPhotoManager = ({
     };
 
     try {
-      // Récupérer les vraies données du trial pour connaître les results/samples
-      // Note: trialService.getTrial retourne directement les données (pas un wrapper)
-      const trialData = await trialService.getTrial(nodeId);
-      const resultsData = trialData?.results_data?.results || [];
+      // STRATÉGIE MODIFIÉE: Au lieu de se baser sur results_data du trial (qui peut être vide si pas encore sauvegardé),
+      // on va chercher TOUS les fichiers avec category='micrographs' et extraire les result/sample de leurs subcategories
+      const allMicrographsResponse = await fileService.getNodeFiles(nodeId, { category: 'micrographs' });
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Micrography] trialData:`, trialData);
-        console.log(`[Micrography] results_data:`, trialData?.results_data);
-        console.log(`[Micrography] Nombre réel de résultats: ${resultsData.length}`);
-      }
-
-      if (resultsData.length === 0) {
-        console.warn('[Micrography] Aucun résultat trouvé dans les données du trial');
+      if (!allMicrographsResponse.data || allMicrographsResponse.data.success === false) {
+        console.warn('[Micrography] Aucun fichier trouvé');
         return [];
       }
 
-      // Annuler les requêtes précédentes si elles existent
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      const allFiles = allMicrographsResponse.data.data?.files || allMicrographsResponse.data.files || [];
+
+      if (allFiles.length === 0) {
+        console.warn('[Micrography] Aucun fichier micrographique trouvé');
+        return [];
       }
 
-      // Créer un nouveau contrôleur d'annulation
-      abortControllerRef.current = new AbortController();
-      const signal = abortControllerRef.current.signal;
+      // Parser les subcategories pour extraire les combinaisons result/sample/magnification existantes
+      const existingCombinations = new Set();
+      allFiles.forEach(file => {
+        const subcategory = file.subcategory || '';
+        // Format attendu: result-1-sample-1-x50
+        const match = subcategory.match(/^result-(\d+)-sample-(\d+)-(.+)$/);
+        if (match) {
+          const [, resultNum, sampleNum, mag] = match;
+          existingCombinations.add(`${resultNum}-${sampleNum}-${mag}`);
+        }
+      });
 
-      // Générer les requêtes uniquement pour les results/samples qui existent réellement
-      const promises = [];
+      if (existingCombinations.size === 0) {
+        console.warn('[Micrography] Aucune combinaison result/sample/magnification trouvée dans les subcategories');
+        return [];
+      }
 
-      resultsData.forEach((result, resultIndex) => {
-        const samples = result.samples || [];
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Micrography] ${existingCombinations.size} combinaisons trouvées:`, Array.from(existingCombinations));
+      }
 
-        samples.forEach((sample, sampleIndex) => {
-          magnifications.forEach(magnification => {
-            // Créer une promesse pour chaque combinaison réelle
-            const promise = fileService.getNodeFiles(
-              nodeId,
-              {
-                category: 'micrographs',
-                subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`
-              }
-            ).then(response => {
-              if (response.data && response.data.success !== false) {
-                const files = response.data.data?.files || response.data.files || [];
-                if (files.length > 0) {
-                  return {
-                    category: 'micrographs',
-                    subcategory: `result-${resultIndex}-sample-${sampleIndex}-${magnification}`,
-                    label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
-                    description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
-                    group: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: sampleIndex + 1 })}`,
-                    subgroup: tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification),
-                    filesCount: files.length,
-                    resultIndex,
-                    sampleIndex
-                  };
-                }
-              }
-              return null;
-            }).catch(error => {
-              // Ignorer silencieusement les combinaisons qui n'existent pas
-              return null;
-            });
+      // Générer les sources basées sur les combinaisons EXISTANTES dans les fichiers
+      existingCombinations.forEach(combo => {
+        const [resultNum, sampleNum, mag] = combo.split('-');
+        const fileResultNumber = parseInt(resultNum);
+        const fileSampleNumber = parseInt(sampleNum);
+        const magnification = mag;
 
-            promises.push(promise);
-          });
+        // Filtrer les fichiers pour cette combinaison spécifique
+        const filesForCombo = allFiles.filter(file => {
+          const subcategory = file.subcategory || '';
+          return subcategory === `result-${resultNum}-sample-${sampleNum}-${mag}`;
         });
+
+        if (filesForCombo.length > 0) {
+          sources.push({
+            category: 'micrographs',
+            subcategory: `result-${resultNum}-sample-${sampleNum}-${mag}`,
+            label: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: fileResultNumber })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: fileSampleNumber })} - ${tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification)}`,
+            description: tSafe(`parts.photos.manager.sections.micrography.descriptions.${magnification}`, `Micrographies au grossissement ${magnification}`),
+            group: `${tSafe('parts.photos.manager.sections.micrography.result', 'Résultat {{number}}', { number: fileResultNumber })} - ${tSafe('parts.photos.manager.sections.micrography.sample', 'Échantillon {{number}}', { number: fileSampleNumber })}`,
+            subgroup: tSafe(`parts.photos.manager.sections.micrography.magnifications.${magnification}`, magnification),
+            filesCount: filesForCombo.length,
+            resultIndex: fileResultNumber - 1,  // Convertir en base-0 pour compatibilité
+            sampleIndex: fileSampleNumber - 1   // Convertir en base-0 pour compatibilité
+          });
+        }
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Micrography] Génération de ${promises.length} requêtes pour ${resultsData.length} résultats`);
-      }
-
-      // Exécuter les promesses par lots pour éviter de surcharger le serveur
-      const batchSize = 10;
-      const allResults = [];
-
-      for (let i = 0; i < promises.length; i += batchSize) {
-        // Vérifier si l'opération a été annulée
-        if (signal.aborted) {
-          return [];
-        }
-
-        const batch = promises.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch);
-        allResults.push(...batchResults);
-
-        // Pause entre les lots
-        if (i + batchSize < promises.length) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      }
-
-      // Filtrer les résultats valides
-      const validSources = allResults.filter(result => result !== null);
-      sources.push(...validSources);
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Micrography] ${validSources.length} sources générées avec succès`);
+        console.log(`[Micrography] ${sources.length} sources générées avec succès`);
       }
 
     } catch (error) {
@@ -420,81 +389,79 @@ const SectionPhotoManager = ({
     };
 
     try {
-      // Récupérer les vraies données du trial pour connaître les results/samples
-      // Note: trialService.getTrial retourne directement les données (pas un wrapper)
-      const trialData = await trialService.getTrial(nodeId);
-      const resultsData = trialData?.results_data?.results || [];
+      // STRATÉGIE MODIFIÉE: Chercher TOUS les fichiers avec category='control-location'
+      // et extraire les result/sample de leurs subcategories
+      const allControlLocationResponse = await fileService.getNodeFiles(nodeId, { category: 'control-location' });
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Control Location] trialData:`, trialData);
-        console.log(`[Control Location] results_data:`, trialData?.results_data);
-        console.log(`[Control Location] Nombre réel de résultats: ${resultsData.length}`);
-      }
-
-      if (resultsData.length === 0) {
-        console.warn('[Control Location] Aucun résultat trouvé dans les données du trial');
+      if (!allControlLocationResponse.data || allControlLocationResponse.data.success === false) {
+        console.warn('[Control Location] Aucun fichier trouvé');
         return [];
       }
 
-      // Générer les requêtes uniquement pour les results/samples qui existent réellement
-      const promises = [];
+      const allFiles = allControlLocationResponse.data.data?.files || allControlLocationResponse.data.files || [];
 
-      resultsData.forEach((result, resultIndex) => {
-        const samples = result.samples || [];
+      if (allFiles.length === 0) {
+        console.warn('[Control Location] Aucun fichier de localisation de contrôle trouvé');
+        return [];
+      }
 
-        samples.forEach((sample, sampleIndex) => {
-          const promise = fileService.getNodeFiles(
-            nodeId,
-            {
-              category: 'control-location',
-              subcategory: `result-${resultIndex}-sample-${sampleIndex}`
-            }
-          ).then(response => {
-            if (response.data && response.data.success !== false) {
-              const files = response.data.data?.files || response.data.files || [];
-              if (files.length > 0) {
-                return {
-                  category: 'control-location',
-                  subcategory: `result-${resultIndex}-sample-${sampleIndex}`,
-                  label: tSafe(
-                    'parts.photos.manager.sections.controlLocation.sourceLabel',
-                    `Résultat ${resultIndex + 1} - Échantillon ${sampleIndex + 1}`,
-                    { result: resultIndex + 1, sample: sampleIndex + 1 }
-                  ),
-                  description: tSafe(
-                    'parts.photos.manager.sections.controlLocation.sourceDescription',
-                    `Photos de localisation de contrôle`,
-                    { result: resultIndex + 1, sample: sampleIndex + 1 }
-                  ),
-                  group: `${tSafe('parts.photos.manager.sections.controlLocation.resultGroup', 'Résultat {{result}}', { result: resultIndex + 1 })} - ${tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', 'Échantillon {{sample}}', { sample: sampleIndex + 1 })}`,
-                  subgroup: tSafe('parts.photos.manager.sections.controlLocation.title', 'Zones de contrôle'),
-                  resultIndex,
-                  sampleIndex
-                };
-              }
-            }
-            return null;
-          }).catch(error => {
-            if (error.name !== 'AbortError') {
-              console.error(`Error fetching control location for result ${resultIndex}, sample ${sampleIndex}:`, error);
-            }
-            return null;
-          });
+      // Parser les subcategories pour extraire les combinaisons result/sample existantes
+      const existingCombinations = new Set();
+      allFiles.forEach(file => {
+        const subcategory = file.subcategory || '';
+        // Format attendu: result-1-sample-1
+        const match = subcategory.match(/^result-(\d+)-sample-(\d+)$/);
+        if (match) {
+          const [, resultNum, sampleNum] = match;
+          existingCombinations.add(`${resultNum}-${sampleNum}`);
+        }
+      });
 
-          promises.push(promise);
+      if (existingCombinations.size === 0) {
+        console.warn('[Control Location] Aucune combinaison result/sample trouvée dans les subcategories');
+        return [];
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Control Location] ${existingCombinations.size} combinaisons trouvées:`, Array.from(existingCombinations));
+      }
+
+      // Générer les sources basées sur les combinaisons EXISTANTES dans les fichiers
+      existingCombinations.forEach(combo => {
+        const [resultNum, sampleNum] = combo.split('-');
+        const fileResultNumber = parseInt(resultNum);
+        const fileSampleNumber = parseInt(sampleNum);
+
+        // Filtrer les fichiers pour cette combinaison spécifique
+        const filesForCombo = allFiles.filter(file => {
+          const subcategory = file.subcategory || '';
+          return subcategory === `result-${resultNum}-sample-${sampleNum}`;
         });
+
+        if (filesForCombo.length > 0) {
+          sources.push({
+            category: 'control-location',
+            subcategory: `result-${resultNum}-sample-${sampleNum}`,
+            label: tSafe(
+              'parts.photos.manager.sections.controlLocation.sourceLabel',
+              `Résultat ${fileResultNumber} - Échantillon ${fileSampleNumber}`,
+              { result: fileResultNumber, sample: fileSampleNumber }
+            ),
+            description: tSafe(
+              'parts.photos.manager.sections.controlLocation.sourceDescription',
+              `Photos de localisation de contrôle`,
+              { result: fileResultNumber, sample: fileSampleNumber }
+            ),
+            group: `${tSafe('parts.photos.manager.sections.controlLocation.resultGroup', 'Résultat {{result}}', { result: fileResultNumber })} - ${tSafe('parts.photos.manager.sections.controlLocation.sampleSubgroup', 'Échantillon {{sample}}', { sample: fileSampleNumber })}`,
+            subgroup: tSafe('parts.photos.manager.sections.controlLocation.title', 'Zones de contrôle'),
+            resultIndex: fileResultNumber - 1,  // Convertir en base-0 pour compatibilité
+            sampleIndex: fileSampleNumber - 1   // Convertir en base-0 pour compatibilité
+          });
+        }
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Control Location] Génération de ${promises.length} requêtes pour ${resultsData.length} résultats`);
-      }
-
-      const allResults = await Promise.all(promises);
-      const validSources = allResults.filter(result => result !== null);
-      sources.push(...validSources);
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Control Location] ${validSources.length} sources générées avec succès`);
+        console.log(`[Control Location] ${sources.length} sources générées avec succès`);
       }
 
     } catch (error) {

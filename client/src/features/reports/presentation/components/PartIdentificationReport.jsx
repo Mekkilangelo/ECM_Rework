@@ -46,7 +46,6 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
 
   // Callback pour recevoir les photos sélectionnées du SectionPhotoManager
   const handlePhotosChange = useCallback((sectionType, photos) => {
-    console.log('Photos changed:', sectionType, photos);
     setSelectedPhotos(photos);
   }, []);
 
@@ -59,7 +58,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   // Construire le rapport pour le PDF avec les photos enrichies
   const buildReport = useCallback(() => {
     // Utiliser enrichedPhotos au lieu de selectedPhotos
-    const photosArray = Object.entries(enrichedPhotos).flatMap(([subcategory, photos]) => 
+    const photosArray = Object.entries(enrichedPhotos).flatMap(([subcategory, photos]) =>
       (photos || []).map(photo => ({
         ...photo,
         subcategory: photo.subcategory || subcategory,
@@ -67,8 +66,6 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
         url: photo.url || photo.viewPath
       }))
     );
-
-    console.log('Building report with enriched photos:', photosArray);
 
     // Créer une section identification uniquement avec les photos
     const identificationSection = SectionFactory.createSection('identification', {
@@ -121,15 +118,29 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   // Créer le générateur PDF avec les photos enrichies
   const createPDFGenerator = useCallback(() => {
     const generator = new ReactPDFGenerator();
-    // Passer les photos enrichies avec le format attendu par ReportPDFDocument
-    // Format: { identification: { subcategory: [photos] } }
-    const photosForPDF = { identification: enrichedPhotos };
-    
+
+    // IMPORTANT: SectionPhotoManager retourne { photos: [photo1, photo2, photo3] }
+    // mais ReportPDFDocument attend { identification: { subcategory: [photos] } }
+    //
+    // Pour l'identification sheet, on veut TOUTES les photos dans une seule liste
+    // donc on aplatit toutes les subcategories en un seul tableau
+
+    // Aplatir toutes les photos des différentes subcategories
+    const allPhotos = Object.values(enrichedPhotos).flat();
+
+    // Organiser dans la structure attendue par ReportPDFDocument
+    // On met toutes les photos sous la clé 'all' pour la section identification
+    const photosForPDF = {
+      identification: {
+        all: allPhotos  // Toutes les photos dans une seule liste
+      }
+    };
+
     generator.setDocumentRenderer((report, options) => (
-      <ReportPDFDocument 
-        report={report} 
+      <ReportPDFDocument
+        report={report}
         selectedPhotos={photosForPDF}
-        options={options} 
+        options={options}
       />
     ));
     return generator;

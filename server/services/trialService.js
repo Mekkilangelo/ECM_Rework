@@ -476,7 +476,12 @@ const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
         result.samples.forEach(sample => {
           const sampleNumber = sample.step;
           if (sampleNumber !== undefined && sampleNumber !== null) {
-            keptContextKeys.add(`${resultIndex}-${sampleNumber}`);
+            // IMPORTANT: Convertir les step (base-1) en index (base-0) pour matcher le contexte des fichiers
+            // Les fichiers sont uploadés avec result_index/sample_number en base-0
+            // Les résultats en BDD utilisent step en base-1
+            const fileResultIndex = String(resultIndex - 1);
+            const fileSampleNumber = String(sampleNumber - 1);
+            keptContextKeys.add(`${fileResultIndex}-${fileSampleNumber}`);
           }
         });
       }
@@ -498,22 +503,32 @@ const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
     return;
   }
 
-  logger.info('Nettoyage des fichiers orphelins après mise à jour des résultats', { 
-    trialNodeId, 
-    keptCount: keptContextKeys.size 
+  logger.info('Nettoyage des fichiers orphelins après mise à jour des résultats', {
+    trialNodeId,
+    keptCount: keptContextKeys.size,
+    keptContexts: Array.from(keptContextKeys)  // Debug: voir les contextes conservés
   });
 
   // Supprimer les fichiers dont le contexte (sample/result) ne correspond plus à rien
   await fileService.deleteFilesByContext(trialNodeId, (context) => {
     // Si le fichier n'a pas de contexte de résultat/sample, on le garde
-    if (!context || context.result_index === undefined || context.result_index === null || 
+    if (!context || context.result_index === undefined || context.result_index === null ||
         context.sample_number === undefined || context.sample_number === null) {
       return false;
     }
-    
+
     // Vérifier si la paire result-sample est conservée
     const key = `${context.result_index}-${context.sample_number}`;
-    return !keptContextKeys.has(key);
+    const shouldDelete = !keptContextKeys.has(key);
+
+    // Debug: log pour comprendre les suppressions
+    logger.debug('Vérification fichier pour suppression', {
+      contextKey: key,
+      isKept: !shouldDelete,
+      keptContexts: Array.from(keptContextKeys)
+    });
+
+    return shouldDelete;
   }, transaction);
 
   // Supprimer les résultats existants dans l'ordre inverse des FK

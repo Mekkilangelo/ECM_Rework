@@ -69,34 +69,42 @@ const IDENTIFICATION_PHOTO_SIZES = {
 };
 
 /**
- * Format dimensions helper
+ * Format dimensions helper with explicit labels
  */
 const formatDimensions = (part) => {
   const dims = [];
-  
-  // Rectangular dimensions
+
+  // Rectangular dimensions with explicit labels
   if (part.dim_rect_length || part.dim_rect_width || part.dim_rect_height) {
-    const rectDims = [part.dim_rect_length, part.dim_rect_width, part.dim_rect_height]
-      .filter(d => d)
-      .join(' × ');
-    if (rectDims) {
-      dims.push(`${rectDims}${part.dim_rect_unit ? ` ${part.dim_rect_unit}` : ''}`);
+    const rectParts = [];
+    if (part.dim_rect_length) rectParts.push(`Length: ${part.dim_rect_length}`);
+    if (part.dim_rect_width) rectParts.push(`Width: ${part.dim_rect_width}`);
+    if (part.dim_rect_height) rectParts.push(`Height: ${part.dim_rect_height}`);
+
+    if (rectParts.length > 0) {
+      const unit = part.dim_rect_unit || '';
+      dims.push(`${rectParts.join(' × ')}${unit ? ` ${unit}` : ''}`);
     }
   }
-  
-  // Circular dimensions
+
+  // Circular dimensions with explicit labels
   if (part.dim_circ_diameterOut || part.dim_circ_diameterIn) {
-    const circDims = [];
-    if (part.dim_circ_diameterOut) circDims.push(`⌀ ext: ${part.dim_circ_diameterOut}`);
-    if (part.dim_circ_diameterIn) circDims.push(`⌀ int: ${part.dim_circ_diameterIn}`);
-    dims.push(`${circDims.join(', ')}${part.dim_circ_unit ? ` ${part.dim_circ_unit}` : ''}`);
+    const circParts = [];
+    if (part.dim_circ_diameterOut) circParts.push(`⌀ Ext: ${part.dim_circ_diameterOut}`);
+    if (part.dim_circ_diameterIn) circParts.push(`⌀ Int: ${part.dim_circ_diameterIn}`);
+
+    if (circParts.length > 0) {
+      const unit = part.dim_circ_unit || '';
+      dims.push(`${circParts.join(', ')}${unit ? ` ${unit}` : ''}`);
+    }
   }
-  
-  // Weight
+
+  // Weight with explicit label
   if (part.dim_weight_value) {
-    dims.push(`${part.dim_weight_value}${part.dim_weight_unit ? ` ${part.dim_weight_unit}` : ''}`);
+    const unit = part.dim_weight_unit || '';
+    dims.push(`Weight: ${part.dim_weight_value}${unit ? ` ${unit}` : ''}`);
   }
-  
+
   return dims.join(' | ') || '';
 };
 

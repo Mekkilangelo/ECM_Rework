@@ -712,17 +712,30 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
       // Sérialiser les données part pour inclure tous les champs et relations
       if (partNode.part) {
-        reportData.partData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
+        const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
 
-        logger.debug('Données pièce ajoutées', {
+        // S'assurer que les champs FK string sont bien présents même avec les includes
+        reportData.partData = {
+          ...plainPartData,
+          // Forcer la présence des champs FK string en les récupérant directement de l'instance Sequelize
+          dim_weight_unit: partNode.part.dim_weight_unit || plainPartData.dim_weight_unit,
+          dim_rect_unit: partNode.part.dim_rect_unit || plainPartData.dim_rect_unit,
+          dim_circ_unit: partNode.part.dim_circ_unit || plainPartData.dim_circ_unit
+        };
+
+        logger.info('📦 Données pièce sérialisées pour rapport', {
           partId: partNode.id,
           partName: partNode.name,
           hasPartData: true,
-          hasDimensions: {
-            weight_unit: !!reportData.partData.dim_weight_unit,
-            rect_unit: !!reportData.partData.dim_rect_unit,
-            circ_unit: !!reportData.partData.dim_circ_unit
-          }
+          dimensionUnits: {
+            dim_weight_unit: reportData.partData.dim_weight_unit,
+            dim_rect_unit: reportData.partData.dim_rect_unit,
+            dim_circ_unit: reportData.partData.dim_circ_unit,
+            weightUnit: reportData.partData.weightUnit,
+            rectUnit: reportData.partData.rectUnit,
+            circUnit: reportData.partData.circUnit
+          },
+          allPartKeys: Object.keys(reportData.partData)
         });
       } else {
         reportData.partData = null;

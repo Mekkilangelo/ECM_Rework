@@ -74,6 +74,19 @@ const IDENTIFICATION_PHOTO_SIZES = {
 const formatDimensions = (part) => {
   const dims = [];
 
+  // Debug: Log toutes les propriétés de part liées aux unités
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[IdentificationPDF] Part data received:', {
+      dim_rect_unit: part.dim_rect_unit,
+      dim_circ_unit: part.dim_circ_unit,
+      dim_weight_unit: part.dim_weight_unit,
+      rectUnit: part.rectUnit,
+      circUnit: part.circUnit,
+      weightUnit: part.weightUnit,
+      allKeys: Object.keys(part)
+    });
+  }
+
   // Rectangular dimensions with explicit labels
   if (part.dim_rect_length || part.dim_rect_width || part.dim_rect_height) {
     const rectParts = [];
@@ -82,7 +95,9 @@ const formatDimensions = (part) => {
     if (part.dim_rect_height) rectParts.push(`Height: ${part.dim_rect_height}`);
 
     if (rectParts.length > 0) {
-      const unit = part.dim_rect_unit || '';
+      // Essayer plusieurs sources pour l'unité
+      const unit = part.dim_rect_unit || part.rectUnit?.name || part.rectUnit || '';
+      console.log('[IdentificationPDF] Rect unit resolved:', unit);
       dims.push(`${rectParts.join(' × ')}${unit ? ` ${unit}` : ''}`);
     }
   }
@@ -94,14 +109,18 @@ const formatDimensions = (part) => {
     if (part.dim_circ_diameterIn) circParts.push(`⌀ Int: ${part.dim_circ_diameterIn}`);
 
     if (circParts.length > 0) {
-      const unit = part.dim_circ_unit || '';
+      // Essayer plusieurs sources pour l'unité
+      const unit = part.dim_circ_unit || part.circUnit?.name || part.circUnit || '';
+      console.log('[IdentificationPDF] Circ unit resolved:', unit);
       dims.push(`${circParts.join(', ')}${unit ? ` ${unit}` : ''}`);
     }
   }
 
   // Weight with explicit label
   if (part.dim_weight_value) {
-    const unit = part.dim_weight_unit || '';
+    // Essayer plusieurs sources pour l'unité
+    const unit = part.dim_weight_unit || part.weightUnit?.name || part.weightUnit || '';
+    console.log('[IdentificationPDF] Weight unit resolved:', unit);
     dims.push(`Weight: ${part.dim_weight_value}${unit ? ` ${unit}` : ''}`);
   }
 

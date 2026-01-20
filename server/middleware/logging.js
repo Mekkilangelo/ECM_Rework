@@ -312,6 +312,12 @@ const logCrudSuccess = async (req, res, next) => {
 const logAuthError = async (req, res, next) => {
   const originalSend = res.send;
   res.send = function(body) {
+    // Ignorer le refresh-token pour éviter le spam de logs
+    // C'est un comportement normal qu'un token expire
+    if (req.originalUrl.includes('/auth/refresh-token')) {
+      return originalSend.call(this, body);
+    }
+
     if (res.statusCode === 401 || res.statusCode === 403) {      loggingService.logSecurityEvent(
         'auth_failed',
         `Unauthorized access attempt to ${req.originalUrl}`,
@@ -330,7 +336,7 @@ const logAuthError = async (req, res, next) => {
         }
       );
     }
-    
+
     originalSend.call(this, body);
   };
 

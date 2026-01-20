@@ -21,7 +21,9 @@ function getDBConfig() {
     username: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     dialect: 'mysql',
-    logging: process.env.NODE_ENV === 'development' ? (msg) => logger.debug(msg) : false,
+    // Désactiver complètement le logging SQL pour éviter le spam
+    // Activer seulement si DB_LOGGING=true est explicitement défini
+    logging: process.env.DB_LOGGING === 'true' ? (msg) => logger.debug(msg) : false,
     pool: {
       max: 10,
       min: 0,

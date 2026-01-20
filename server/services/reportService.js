@@ -27,9 +27,9 @@ const getTestHierarchy = async (trialId) => {
         model: node,
         as: 'ancestor',
         include: [
-          { 
-            model: part, 
-            as: 'part', 
+          {
+            model: part,
+            as: 'part',
             required: false,
             include: [
               {
@@ -45,6 +45,21 @@ const getTestHierarchy = async (trialId) => {
               {
                 model: db.steel,
                 as: 'steel',
+                required: false
+              },
+              {
+                model: db.ref_units,
+                as: 'weightUnit',
+                required: false
+              },
+              {
+                model: db.ref_units,
+                as: 'rectUnit',
+                required: false
+              },
+              {
+                model: db.ref_units,
+                as: 'circUnit',
                 required: false
               }
             ]
@@ -694,13 +709,25 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
     if (partNode) {
       reportData.partId = partNode.id;
       reportData.partName = partNode.name;
-      reportData.partData = partNode.part;
-      
-      logger.debug('Données pièce ajoutées', {
-        partId: partNode.id,
-        partName: partNode.name,
-        hasPartData: !!partNode.part
-      });
+
+      // Sérialiser les données part pour inclure tous les champs et relations
+      if (partNode.part) {
+        reportData.partData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
+
+        logger.debug('Données pièce ajoutées', {
+          partId: partNode.id,
+          partName: partNode.name,
+          hasPartData: true,
+          hasDimensions: {
+            weight_unit: !!reportData.partData.dim_weight_unit,
+            rect_unit: !!reportData.partData.dim_rect_unit,
+            circ_unit: !!reportData.partData.dim_circ_unit
+          }
+        });
+      } else {
+        reportData.partData = null;
+        logger.debug('Pièce sans données part', { partId: partNode.id });
+      }
     } else {
       logger.warn('Aucune pièce trouvée pour le trial', { trialId });
     }

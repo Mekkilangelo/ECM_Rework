@@ -483,16 +483,18 @@ const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
     });
   }
 
-  // ⚠️ FIX: Si resultsData.results est vide mais qu'on a explicitement des résultats (tableau vide),
-  // on ne supprime pas les fichiers non plus - l'utilisateur doit explicitement supprimer des résultats
-  if (keptContextKeys.size === 0 && (!resultsData.results || resultsData.results.length === 0)) {
-    logger.info('Aucun résultat dans resultsData, conservation des fichiers existants par sécurité', { 
+  // ⚠️ FIX CRITIQUE: Si keptContextKeys est vide, on ne supprime AUCUN fichier
+  // Cela arrive quand:
+  // 1. resultsData.results est vide/absent
+  // 2. resultsData.results contient des éléments MAIS sans step/samples valides
+  // Dans les deux cas, supprimer tous les fichiers contextuels serait une erreur !
+  // Les fichiers uploadés AVANT la création des résultats doivent être conservés
+  if (keptContextKeys.size === 0) {
+    logger.info('Aucun contexte de résultat valide, conservation de tous les fichiers existants', {
       trialNodeId,
       hasResultsArray: Array.isArray(resultsData.results),
       resultsLength: resultsData.results?.length || 0
     });
-    // Ne pas nettoyer les fichiers si aucun résultat n'est fourni
-    // Les fichiers uploadés AVANT la création des résultats doivent être conservés
     return;
   }
 

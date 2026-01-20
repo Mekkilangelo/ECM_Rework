@@ -80,7 +80,7 @@ const formatDimensions = (part) => {
       .filter(d => d)
       .join(' × ');
     if (rectDims) {
-      dims.push(`${rectDims} ${part.dim_rect_unit || 'mm'}`);
+      dims.push(`${rectDims}${part.dim_rect_unit ? ` ${part.dim_rect_unit}` : ''}`);
     }
   }
   
@@ -89,15 +89,15 @@ const formatDimensions = (part) => {
     const circDims = [];
     if (part.dim_circ_diameterOut) circDims.push(`⌀ ext: ${part.dim_circ_diameterOut}`);
     if (part.dim_circ_diameterIn) circDims.push(`⌀ int: ${part.dim_circ_diameterIn}`);
-    dims.push(`${circDims.join(', ')} ${part.dim_circ_unit || 'mm'}`);
+    dims.push(`${circDims.join(', ')}${part.dim_circ_unit ? ` ${part.dim_circ_unit}` : ''}`);
   }
   
   // Weight
   if (part.dim_weight_value) {
-    dims.push(`${part.dim_weight_value} ${part.dim_weight_unit || 'kg'}`);
+    dims.push(`${part.dim_weight_value}${part.dim_weight_unit ? ` ${part.dim_weight_unit}` : ''}`);
   }
   
-  return dims.join(' | ') || 'Not specified';
+  return dims.join(' | ') || '';
 };
 
 /**

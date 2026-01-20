@@ -89,11 +89,14 @@ jobs:
           docker pull mysql:8.0
           docker pull nginx:alpine
 
-          echo "Exporting all images to single tar..."
+          echo "Exporting all images to single tar (with version AND latest tags)..."
           docker save \
             synergia-frontend:$VERSION \
+            synergia-frontend:latest \
             synergia-backend:$VERSION \
+            synergia-backend:latest \
             synergia-ml-api:$VERSION \
+            synergia-ml-api:latest \
             mysql:8.0 \
             nginx:alpine \
             -o release/images/all-images.tar

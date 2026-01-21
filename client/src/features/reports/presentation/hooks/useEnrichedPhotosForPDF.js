@@ -27,11 +27,25 @@ export const useEnrichedPhotosForPDF = (selectedPhotos, options = {}) => {
   // Cache des conversions PDF (photo.id -> imageDataUrl)
   const conversionCacheRef = useRef(new Map());
 
-  // Mémoriser la stringification de selectedPhotos pour détecter les vrais changements
-  const selectedPhotosKey = useMemo(() =>
-    JSON.stringify(Object.keys(selectedPhotos).sort()),
-    [selectedPhotos]
-  );
+  // Mémoriser la stringification complète de selectedPhotos pour détecter les vrais changements
+  // On doit inclure les IDs des photos, pas juste les clés de l'objet
+  const selectedPhotosKey = useMemo(() => {
+    const photoIds = [];
+    if (selectedPhotos && typeof selectedPhotos === 'object') {
+      Object.values(selectedPhotos).forEach(value => {
+        if (Array.isArray(value)) {
+          value.forEach(photo => photo?.id && photoIds.push(photo.id));
+        } else if (typeof value === 'object' && value !== null) {
+          Object.values(value).forEach(subValue => {
+            if (Array.isArray(subValue)) {
+              subValue.forEach(photo => photo?.id && photoIds.push(photo.id));
+            }
+          });
+        }
+      });
+    }
+    return JSON.stringify(photoIds.sort());
+  }, [selectedPhotos]);
 
   useEffect(() => {
     const convertPDFs = async () => {

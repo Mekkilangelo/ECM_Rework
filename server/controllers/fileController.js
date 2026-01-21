@@ -169,19 +169,19 @@ const getFileById = async (req, res) => {
         logger.info(`[AUTO-RESIZE] Image #${fileId}: ${(fileData.size / 1024).toFixed(2)} KB -> compression`);
         
         // Traiter l'image avec Sharp
-        // Note: Par défaut, Sharp depuis v0.30 applique automatiquement la rotation EXIF
-        // Pour préserver l'orientation exacte du fichier source sans rotation automatique,
-        // on doit explicitement définir l'angle de rotation à false
+        // Note: Sharp depuis v0.30 applique automatiquement la rotation EXIF par défaut
+        // On laisse Sharp appliquer l'orientation EXIF pour afficher correctement les photos
+        // prises avec un smartphone ou un appareil photo
         const buffer = await sharp(fileData.file_path, {
           // failOnError: false permet de continuer même si l'image a des problèmes
           failOnError: false
         })
-          .rotate(0) // Forcer angle 0 = pas de rotation (ignore EXIF orientation)
-          .resize({ 
-            width: 1920, 
-            height: 1920, 
-            fit: 'inside', 
-            withoutEnlargement: true 
+          .rotate() // Applique automatiquement l'orientation EXIF
+          .resize({
+            width: 1920,
+            height: 1920,
+            fit: 'inside',
+            withoutEnlargement: true
           })
           .jpeg({ quality: 85 })
           .toBuffer();

@@ -268,7 +268,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
 
   // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
-  
+
   // Extract data from report
   const partData = report.partData || report.part || {};
   const steelGrade = getSteelGrade(partData);

@@ -275,6 +275,19 @@ const SectionPhotoManager = ({
             description: tSafe('parts.photos.manager.sections.datapaq.descriptions.datapaq', 'Relevés des capteurs Datapaq')
           }
         ]
+      },
+      postTreatment: {
+        nodeId: trialNodeId,
+        title: tSafe('parts.photos.manager.sections.postTreatment.title', 'Post-traitement'),
+        description: tSafe('parts.photos.manager.sections.postTreatment.description', 'Photos du post-traitement'),
+        sources: [
+          {
+            category: 'post_treatment',
+            subcategory: 'post_treatment',
+            label: tSafe('parts.photos.manager.sections.postTreatment.categories.post_treatment', 'Photos post-traitement'),
+            description: tSafe('parts.photos.manager.sections.postTreatment.descriptions.post_treatment', 'Photos du post-traitement')
+          }
+        ]
       }
     };
   };  // Générer dynamiquement les sources pour la section micrography

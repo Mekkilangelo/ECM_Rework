@@ -700,6 +700,16 @@
             "descriptions": {
               "datapaq": "Relevés des capteurs Datapaq"
             }
+          },
+          "postTreatment": {
+            "title": "Post-traitement",
+            "description": "Photos du post-traitement",
+            "categories": {
+              "post_treatment": "Photos post-traitement"
+            },
+            "descriptions": {
+              "post_treatment": "Photos du post-traitement"
+            }
           }
         }
       }
@@ -1042,6 +1052,12 @@
         "associateError": "Erreur lors de l'association des fichiers DATAPAQ:",
         "import": "Importer des fichiers DATAPAQ"
       },
+      "postTreatment": {
+        "title": "Post-traitement",
+        "loadError": "Erreur lors du chargement des photos de post-traitement:",
+        "associateError": "Erreur lors de l'association des photos de post-traitement:",
+        "import": "Importer des photos de post-traitement"
+      },
       "results": {
         "title": "Résultats",
         "resultsLabel": "Résultats",
@@ -1292,6 +1308,10 @@
       "datapaq": {
         "label": "Datapaq",
         "description": "Relevés et rapports des capteurs Datapaq"
+      },
+      "postTreatment": {
+        "label": "Post-traitement",
+        "description": "Photos du post-traitement"
       },
       "micrography": {
         "label": "Micrographie",

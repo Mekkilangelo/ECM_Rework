@@ -17,6 +17,7 @@ export const COLORS = {
     load: '#16a085',            // Vert teal
     curves: '#f39c12',          // Orange
     datapaq: '#e67e22',         // Orange foncé
+    postTreatment: '#8e44ad',   // Violet
     recipe: '#e74c3c',          // Rouge
     control: '#27ae60',         // Vert
     micrography: '#9b59b6',     // Violet
@@ -43,6 +44,7 @@ export const COLORS = {
     load: '#e8f6f3',
     curves: '#fef9e7',
     datapaq: '#fef5e7',
+    postTreatment: '#f5eef8',
     recipe: '#fef5e7',
     control: '#eafaf1',
     micrography: '#f4ecf7',
@@ -54,6 +56,7 @@ export const COLORS = {
     load: '#117864',
     curves: '#d35400',
     datapaq: '#ba4a00',
+    postTreatment: '#6c3483',
     recipe: '#c0392b',
     control: '#1e8449',
     micrography: '#6c3483',

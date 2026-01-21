@@ -254,9 +254,10 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
     controlLocationPhotos.forEach(photo => {
       const match = photo.subcategory?.match(/result-(\d+)-sample-(\d+)/);
       if (match) {
-        const resultIndex = parseInt(match[1], 10);
-        const sampleIndex = parseInt(match[2], 10);
-        const key = `result-${resultIndex}-sample-${sampleIndex}`;
+        // Garder les indices tels quels (base-1) pour la clé
+        const resultNum = match[1];
+        const sampleNum = match[2];
+        const key = `result-${resultNum}-sample-${sampleNum}`;
         
         if (!controlPhotosByResultSample[key]) {
           controlPhotosByResultSample[key] = [];
@@ -281,18 +282,21 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
 
   /**
    * Récupère les descriptions pour un result/sample spécifique
+   * IMPORTANT: resultIndex et sampleIndex sont en base-1, mais les tableaux JS sont en base-0
    */
   const getResultSampleData = (resultIndex, sampleIndex) => {
     let resultDescription = null;
     let sampleDescription = null;
     
     if (resultsData?.results && Array.isArray(resultsData.results)) {
-      const resultData = resultsData.results[resultIndex];
+      // Convertir de base-1 à base-0 pour l'accès au tableau
+      const resultData = resultsData.results[resultIndex - 1];
       if (resultData) {
         resultDescription = resultData.description;
         
         if (resultData.samples && Array.isArray(resultData.samples)) {
-          const sampleData = resultData.samples[sampleIndex];
+          // Convertir de base-1 à base-0 pour l'accès au tableau
+          const sampleData = resultData.samples[sampleIndex - 1];
           if (sampleData) {
             sampleDescription = sampleData.description;
           }
@@ -320,6 +324,7 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
           const { resultDescription, sampleDescription } = getResultSampleData(result.index, sample.index);
           
           // Récupérer les photos de control location pour ce result-sample
+          // IMPORTANT: Les fichiers utilisent des indices base-1
           const photoKey = `result-${result.index}-sample-${sample.index}`;
           const sampleControlPhotos = controlPhotosByResultSample[photoKey] || [];
           

@@ -6,6 +6,7 @@ export { IdentificationSectionPDF } from './IdentificationSectionPDF';
 export { MicrographySectionPDF } from './MicrographySectionPDF';
 export { CurvesSectionPDF } from './CurvesSectionPDF';
 export { DatapaqSectionPDF } from './DatapaqSectionPDF';
+export { PostTreatmentSectionPDF } from './PostTreatmentSectionPDF';
 export { LoadSectionPDF } from './LoadSectionPDF';
 export { RecipeSectionPDF } from './RecipeSectionPDF';
 export { ControlSectionPDF } from './ControlSectionPDF';

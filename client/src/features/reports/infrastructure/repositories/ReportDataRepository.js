@@ -27,7 +27,20 @@ export class ReportDataRepository {
       const url = `/reports/trials/${trialId}${params.toString() ? `?${params.toString()}` : ''}`;
       const response = await api.get(url);
 
-      return response.data.data || response.data;
+      const data = response.data.data || response.data;
+      
+      // DEBUG: Log les données reçues de l'API
+      console.log('🔍 [ReportDataRepository] Données reçues de l\'API:', {
+        hasPartData: !!data.partData,
+        dim_weight_unit: data.partData?.dim_weight_unit,
+        dim_rect_unit: data.partData?.dim_rect_unit,
+        dim_circ_unit: data.partData?.dim_circ_unit,
+        dim_weight_value: data.partData?.dim_weight_value,
+        weightUnit: data.partData?.weightUnit,
+        rectUnit: data.partData?.rectUnit
+      });
+
+      return data;
 
     } catch (error) {
       console.error(`Error fetching report data for trial ${trialId}:`, error);

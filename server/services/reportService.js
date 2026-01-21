@@ -717,7 +717,26 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
         const dimRectUnit = partNode.part.dim_rect_unit;
         const dimCircUnit = partNode.part.dim_circ_unit;
 
+        // Log pour debug
+        logger.info('📏 Units extraites de part:', {
+          dim_weight_unit: dimWeightUnit,
+          dim_rect_unit: dimRectUnit,
+          dim_circ_unit: dimCircUnit,
+          dim_weight_value: partNode.part.dim_weight_value,
+          dim_rect_height: partNode.part.dim_rect_height,
+          hasWeightUnitRelation: !!partNode.part.weightUnit,
+          weightUnitRelationName: partNode.part.weightUnit?.name
+        });
+
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
+
+        // Log plainPartData units
+        logger.info('📏 plainPartData après get({plain:true}):', {
+          dim_weight_unit: plainPartData.dim_weight_unit,
+          dim_rect_unit: plainPartData.dim_rect_unit,
+          dim_circ_unit: plainPartData.dim_circ_unit,
+          weightUnit: plainPartData.weightUnit
+        });
 
         // IMPORTANT: Forcer les valeurs FK string dans l'objet final
         // Même logique que PartForm qui passe directement les strings
@@ -727,6 +746,13 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
           dim_rect_unit: dimRectUnit,
           dim_circ_unit: dimCircUnit
         };
+
+        // Log final partData
+        logger.info('📏 Final reportData.partData units:', {
+          dim_weight_unit: reportData.partData.dim_weight_unit,
+          dim_rect_unit: reportData.partData.dim_rect_unit,
+          dim_circ_unit: reportData.partData.dim_circ_unit
+        });
       } else {
         reportData.partData = null;
         logger.debug('Pièce sans données part', { partId: partNode.id });

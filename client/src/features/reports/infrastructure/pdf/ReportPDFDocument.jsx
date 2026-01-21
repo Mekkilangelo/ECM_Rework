@@ -12,6 +12,7 @@ import {
   MicrographySectionPDF,
   CurvesSectionPDF,
   DatapaqSectionPDF,
+  PostTreatmentSectionPDF,
   LoadSectionPDF,
   RecipeSectionPDF,
   ControlSectionPDF 
@@ -758,6 +759,46 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
                 <Section title="RAPPORTS DATAPAQ">
                   <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
                     Erreur lors du rendu de la section Datapaq
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {includeFooter && (
+            <PageFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Post-traitement - Page séparée (seulement si a du contenu) */}
+      {activeSections.some(s => s.type === 'postTreatment') && report && sectionHasContent('postTreatment') && (
+        <Page size="A4" style={styles.page}>
+          {includeHeader && (
+            <CommonReportHeader 
+              clientName={report.clientName}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+            />
+          )}
+          {(() => {
+            try {
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.postTreatment, 'postTreatment');
+              return (
+                <PostTreatmentSectionPDF 
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering PostTreatmentSectionPDF:', error);
+              return (
+                <Section title="POST-TRAITEMENT">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section Post-traitement
                   </Text>
                   <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
                     {error.message}

@@ -23,7 +23,16 @@ export class ConfigureReportUseCase {
         selectedSections
       );
 
-
+      // DEBUG: Log des données brutes de l'API
+      console.log('🔍 [ConfigureReportUseCase] rawData.partData from API:', {
+        hasPartData: !!rawData.partData,
+        dim_weight_unit: rawData.partData?.dim_weight_unit,
+        dim_rect_unit: rawData.partData?.dim_rect_unit,
+        dim_circ_unit: rawData.partData?.dim_circ_unit,
+        dim_weight_value: rawData.partData?.dim_weight_value,
+        weightUnit: rawData.partData?.weightUnit,
+        rectUnit: rawData.partData?.rectUnit
+      });
 
       // 2. Transformer les données
       const sanitized = DataTransformer.sanitizeReportData(rawData);

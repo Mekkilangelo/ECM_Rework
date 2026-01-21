@@ -23,6 +23,8 @@ const useFileUploader = ({
   const [standbyMode] = useState(enableStandbyMode);
   
   // Mise à jour de l'état interne lorsque existingFiles change
+  // IMPORTANT: existingFiles est la source de vérité (vient du serveur via props)
+  // Mais setInternalUploadedFiles dans useFileUpload.js peut ajouter des fichiers localement
   useEffect(() => {
     setInternalUploadedFiles([...existingFiles]);
   }, [existingFiles]);

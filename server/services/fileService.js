@@ -263,8 +263,10 @@ const saveUploadedFiles = async (files, data, req = null) => {
       fileRecords.push({
         id: fileNode.id,
         name: uploadedFile.originalname,
+        description: fileDescription, // Inclure la description pour le client
         size: uploadedFile.size,
         type: uploadedFile.mimetype,
+        mimeType: uploadedFile.mimetype, // Ajouter aussi mimeType pour cohérence
         category,
         subcategory
       });

@@ -712,15 +712,21 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
       // Sérialiser les données part pour inclure tous les champs et relations
       if (partNode.part) {
+        // IMPORTANT: Récupérer les valeurs FK AVANT la sérialisation
+        // car .get({ plain: true }) peut perdre ces valeurs quand des includes sont présents
+        const rawDimWeightUnit = partNode.part.getDataValue('dim_weight_unit');
+        const rawDimRectUnit = partNode.part.getDataValue('dim_rect_unit');
+        const rawDimCircUnit = partNode.part.getDataValue('dim_circ_unit');
+
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
 
-        // S'assurer que les champs FK string sont bien présents même avec les includes
+        // S'assurer que les champs FK string sont bien présents
         reportData.partData = {
           ...plainPartData,
-          // Forcer la présence des champs FK string en les récupérant directement de l'instance Sequelize
-          dim_weight_unit: partNode.part.dim_weight_unit || plainPartData.dim_weight_unit,
-          dim_rect_unit: partNode.part.dim_rect_unit || plainPartData.dim_rect_unit,
-          dim_circ_unit: partNode.part.dim_circ_unit || plainPartData.dim_circ_unit
+          // Utiliser les valeurs raw récupérées AVANT la sérialisation
+          dim_weight_unit: rawDimWeightUnit || plainPartData.dim_weight_unit,
+          dim_rect_unit: rawDimRectUnit || plainPartData.dim_rect_unit,
+          dim_circ_unit: rawDimCircUnit || plainPartData.dim_circ_unit
         };
 
         logger.info('📦 Données pièce sérialisées pour rapport', {

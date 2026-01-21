@@ -1,41 +1,29 @@
 /**
  * INFRASTRUCTURE: Section Micrographies pour PDF
  *
- * Affiche les micrographies par échantillon avec zooms organisés intelligemment.
- * Chaque groupe de zoom (x50, x500, x1000) reste groupé (wrap={false}).
- * Si le contenu dépasse une page, les zooms s'étalent sur plusieurs pages.
- *
- * Layout par zoom:
- * - 1 photo: micrographySingle (480x165)
- * - 2 photos: half (235x176) côte à côte
- * - 3+ photos: small (235x140) en grille
+ * Affiche les micrographies en grille 2x2 unifiée :
+ * - Control location photo en PREMIÈRE position (si existe)
+ * - Suivie des micrographies dans l'ordre : x50, x500, x1000, other
+ * - 4 photos maximum par page (grille 2x2)
+ * - Saut de page automatique si plus de 4 photos
+ * - Chaque photo dans la grille utilise la taille 'half' (235x176)
  */
 
 import React from 'react';
-import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
-import { SPACING, TYPOGRAPHY, COLORS } from '../theme';
-import { 
-  SectionTitle, 
-  SubsectionTitle, 
+import { View, StyleSheet } from '@react-pdf/renderer';
+import { SPACING } from '../theme';
+import {
+  SectionTitle,
   PhotoContainer,
-  EmptyState 
+  EmptyState
 } from '../primitives';
-import { validatePhotos, getPhotoUrl } from '../helpers/photoHelpers';
+import { getPhotoUrl } from '../helpers/photoHelpers';
 
 // Section-specific accent color
 const SECTION_TYPE = 'micrography';
 
-// Styles spécifiques à cette section (optimisés pour 3 zooms par page)
+// Styles spécifiques : grille 2x2 unifiée (control location + micros)
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: 6,
-  },
-  photoRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-    justifyContent: 'space-between',
-    gap: SPACING.photo.gap,
-  },
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -43,50 +31,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: SPACING.photo.gap,
   },
-  photoContainerSingle: {
-    width: '100%',
-    marginBottom: 4,
-    alignItems: 'center',
-  },
   photoContainerHalf: {
     width: '48%',
     marginBottom: 4,
     alignItems: 'center',
-  },
-  // Styles pour control location
-  controlLocationContainer: {
-    marginBottom: 8,
-    padding: 6,
-    backgroundColor: '#FAFAFA',
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-  },
-  controlLocationTitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: '#666666',
-  },
-  controlPhotoWrapper: {
-    width: 150,
-    height: 112,
-    backgroundColor: '#f5f5f5',
-    border: '0.5pt solid #d0d0d0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  controlPhoto: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-  },
-  controlPhotoLabel: {
-    fontSize: 6.5,
-    textAlign: 'center',
-    marginTop: 2,
-    color: '#888',
-    fontStyle: 'italic',
   },
 });
 
@@ -167,55 +115,6 @@ const getPhotoCaption = (photo) => {
     : (photo.original_name || photo.name || 'Image');
 };
 
-/**
- * Composant pour afficher un groupe de zoom avec layout intelligent
- * wrap={false} pour garder chaque zoom groupé sur la même page
- */
-const ZoomGroup = ({ zoom, photos }) => {
-  const photoCount = photos.length;
-
-  return (
-    <View style={styles.section} wrap={false}>
-      <SubsectionTitle sectionType={SECTION_TYPE}>
-        {formatZoomName(zoom)} ({photoCount} image{photoCount > 1 ? 's' : ''})
-      </SubsectionTitle>
-
-      {/* Layout adaptatif selon le nombre de photos */}
-      {photoCount === 1 ? (
-        <View style={styles.photoContainerSingle}>
-          <PhotoContainer
-            photo={photos[0]}
-            size="micrographySingle"
-            captionText={getPhotoCaption(photos[0])}
-          />
-        </View>
-      ) : photoCount === 2 ? (
-        <View style={styles.photoRow}>
-          {photos.map((photo, idx) => (
-            <PhotoContainer
-              key={photo.id || idx}
-              photo={photo}
-              size="half"
-              captionText={getPhotoCaption(photo)}
-            />
-          ))}
-        </View>
-      ) : (
-        <View style={styles.photoGrid}>
-          {photos.map((photo, idx) => (
-            <View key={photo.id || idx} style={styles.photoContainerHalf}>
-              <PhotoContainer
-                photo={photo}
-                size="small"
-                captionText={getPhotoCaption(photo)}
-              />
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-};
 
 /**
  * Génère le titre formaté pour une page micrographs
@@ -235,13 +134,14 @@ const formatMicrographTitle = (resultIndex, sampleIndex, resultDescription, samp
 };
 
 /**
- * Composant pour afficher toutes les micrographies d'un échantillon sur UNE page
+ * Composant pour afficher toutes les micrographies d'un échantillon en grille 2x2
+ * Grille unifiée : control location (si existe) + toutes les micros
+ * 4 photos par page maximum, puis saut de page
  */
 const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDescription, sampleDescription, controlLocationPhotos }) => {
   // Générer le titre formaté
   const title = formatMicrographTitle(resultIndex, sampleIndex, resultDescription, sampleDescription);
-  const hasControlPhotos = controlLocationPhotos && controlLocationPhotos.length > 0;
-  
+
   if (!sampleData || !sampleData.zooms || Object.keys(sampleData.zooms).length === 0) {
     return (
       <View style={styles.section} wrap={false}>
@@ -264,45 +164,75 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDes
       return indexA - indexB;
     });
 
-  return (
-    <View>
-      <SectionTitle sectionType={SECTION_TYPE}>
-        {title}
-      </SectionTitle>
+  // Collecter TOUTES les photos dans un seul tableau
+  // 1. D'abord la control location (si existe)
+  // 2. Puis toutes les micros dans l'ordre des zooms
+  const allPhotos = [];
 
-      {/* Photo de localisation de contrôle */}
-      {hasControlPhotos && (
-        <View wrap={false} style={styles.controlLocationContainer}>
-          <Text style={styles.controlLocationTitle}>Control Location</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {controlLocationPhotos.slice(0, 2).map((photo, idx) => (
-              <View key={idx} style={{ alignItems: 'center' }}>
-                <View style={styles.controlPhotoWrapper}>
-                  <Image src={getPhotoUrl(photo)} style={styles.controlPhoto} />
-                </View>
-                {(photo.description || photo.original_name || photo.name) && (
-                  <Text style={styles.controlPhotoLabel}>
-                    {photo.description || photo.original_name || photo.name}
-                  </Text>
-                )}
+  // Ajouter la control location en PREMIER (prend 1 place dans la grille)
+  if (controlLocationPhotos && controlLocationPhotos.length > 0) {
+    allPhotos.push({
+      ...controlLocationPhotos[0],
+      isControlLocation: true,
+      caption: 'Control Location'
+    });
+  }
+
+  // Ajouter toutes les micrographies par ordre de zoom
+  availableZooms.forEach(zoom => {
+    const photos = sampleData.zooms[zoom];
+    photos.forEach(photo => {
+      allPhotos.push({
+        ...photo,
+        zoomLabel: formatZoomName(zoom),
+        caption: getPhotoCaption(photo)
+      });
+    });
+  });
+
+  // Paginer : 4 photos par page (grille 2x2)
+  const photosPerPage = 4;
+  const pages = [];
+  for (let i = 0; i < allPhotos.length; i += photosPerPage) {
+    pages.push(allPhotos.slice(i, i + photosPerPage));
+  }
+
+  return (
+    <>
+      {pages.map((pagePhotos, pageIndex) => (
+        <View key={pageIndex} wrap={false} style={{ marginBottom: 8 }}>
+          {/* Titre seulement sur la première page */}
+          {pageIndex === 0 && (
+            <SectionTitle sectionType={SECTION_TYPE}>
+              {title}
+            </SectionTitle>
+          )}
+
+          {/* Titre de continuation sur les pages suivantes */}
+          {pageIndex > 0 && (
+            <SectionTitle sectionType={SECTION_TYPE} continuation>
+              {title} (continued)
+            </SectionTitle>
+          )}
+
+          {/* Grille 2x2 */}
+          <View style={styles.photoGrid}>
+            {pagePhotos.map((photo, idx) => (
+              <View key={idx} style={styles.photoContainerHalf}>
+                <PhotoContainer
+                  photo={photo}
+                  size="half"
+                  captionText={photo.isControlLocation
+                    ? 'Control Location'
+                    : `${photo.zoomLabel} - ${photo.caption}`
+                  }
+                />
               </View>
             ))}
           </View>
         </View>
-      )}
-
-      {/* Afficher les zooms - chaque ZoomGroup a wrap={false} pour rester groupé */}
-      {availableZooms.map(zoom => {
-        const photos = sampleData.zooms[zoom];
-        return (
-          <ZoomGroup
-            key={zoom}
-            zoom={zoom}
-            photos={photos}
-          />
-        );
-      })}
-    </View>
+      ))}
+    </>
   );
 };
 

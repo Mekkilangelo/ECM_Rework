@@ -712,37 +712,21 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
       // Sérialiser les données part pour inclure tous les champs et relations
       if (partNode.part) {
-        // IMPORTANT: Récupérer les valeurs FK AVANT la sérialisation
-        // car .get({ plain: true }) peut perdre ces valeurs quand des includes sont présents
-        const rawDimWeightUnit = partNode.part.getDataValue('dim_weight_unit');
-        const rawDimRectUnit = partNode.part.getDataValue('dim_rect_unit');
-        const rawDimCircUnit = partNode.part.getDataValue('dim_circ_unit');
+        // Accès direct aux valeurs FK string depuis l'instance Sequelize
+        const dimWeightUnit = partNode.part.dim_weight_unit;
+        const dimRectUnit = partNode.part.dim_rect_unit;
+        const dimCircUnit = partNode.part.dim_circ_unit;
 
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
 
-        // S'assurer que les champs FK string sont bien présents
+        // IMPORTANT: Forcer les valeurs FK string dans l'objet final
+        // Même logique que PartForm qui passe directement les strings
         reportData.partData = {
           ...plainPartData,
-          // Utiliser les valeurs raw récupérées AVANT la sérialisation
-          dim_weight_unit: rawDimWeightUnit || plainPartData.dim_weight_unit,
-          dim_rect_unit: rawDimRectUnit || plainPartData.dim_rect_unit,
-          dim_circ_unit: rawDimCircUnit || plainPartData.dim_circ_unit
+          dim_weight_unit: dimWeightUnit,
+          dim_rect_unit: dimRectUnit,
+          dim_circ_unit: dimCircUnit
         };
-
-        logger.info('📦 Données pièce sérialisées pour rapport', {
-          partId: partNode.id,
-          partName: partNode.name,
-          hasPartData: true,
-          dimensionUnits: {
-            dim_weight_unit: reportData.partData.dim_weight_unit,
-            dim_rect_unit: reportData.partData.dim_rect_unit,
-            dim_circ_unit: reportData.partData.dim_circ_unit,
-            weightUnit: reportData.partData.weightUnit,
-            rectUnit: reportData.partData.rectUnit,
-            circUnit: reportData.partData.circUnit
-          },
-          allPartKeys: Object.keys(reportData.partData)
-        });
       } else {
         reportData.partData = null;
         logger.debug('Pièce sans données part', { partId: partNode.id });

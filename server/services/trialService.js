@@ -1011,7 +1011,9 @@ const getTrialById = async (trialId) => {
       ],
       order: [
         ['step_number', 'ASC'],
-        [{ model: sequelize.models.results_sample, as: 'samples' }, 'sample_number', 'ASC']
+        [{ model: sequelize.models.results_sample, as: 'samples' }, 'sample_number', 'ASC'],
+        [{ model: sequelize.models.results_sample, as: 'samples' }, { model: sequelize.models.results_hardness_point, as: 'hardnessPoints' }, 'hardness_point_id', 'ASC'],
+        [{ model: sequelize.models.results_sample, as: 'samples' }, { model: sequelize.models.results_ecd_position, as: 'ecdPositions' }, 'ecd_position_id', 'ASC']
       ]
     });
     

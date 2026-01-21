@@ -128,6 +128,14 @@ export class ReportBuilder {
   static fromApiData(apiData, selectedSections = {}, selectedPhotos = {}) {
     const builder = new ReportBuilder();
 
+    console.log('🔍 [ReportBuilder] fromApiData - apiData.partData reçu:', {
+      hasPartData: !!apiData.partData,
+      dim_rect_unit: apiData.partData?.dim_rect_unit,
+      dim_circ_unit: apiData.partData?.dim_circ_unit,
+      dim_weight_unit: apiData.partData?.dim_weight_unit,
+      allKeys: apiData.partData ? Object.keys(apiData.partData) : []
+    });
+
     builder
       .setTrialId(apiData.trialId || apiData.testId)
       .setTrialData({

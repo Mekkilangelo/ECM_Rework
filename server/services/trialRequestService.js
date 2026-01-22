@@ -12,6 +12,8 @@ const {
 } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
 const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
+const logger = require('../utils/logger');
+const fileService = require('./fileService');
 
 /**
  * Récupère toutes les demandes d'essai avec pagination et filtrage
@@ -529,7 +531,10 @@ const deleteTrialRequest = async (trialRequestId) => {
     return true;
   } catch (error) {
     // Annuler la transaction en cas d'erreur
-    await transaction.rollback();
+    // IMPORTANT: Vérifier que la transaction n'est pas déjà terminée avant le rollback
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     throw error;
   }
 };

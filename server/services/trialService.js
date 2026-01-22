@@ -1584,17 +1584,18 @@ const deleteTrial = async (trialId) => {
     // NOUVELLE FONCTIONNALITÉ : Supprimer le dossier physique du trial
     // Cette opération se fait après la validation de la transaction pour éviter
     // de supprimer les fichiers si la transaction échoue
+    // IMPORTANT: Les erreurs ici ne doivent PAS faire échouer l'opération car la transaction est déjà commitée
     try {
-      const deletionResult = await deletePhysicalDirectory(testPhysicalPath);
+      const deletionResult = await deletePhysicalDirectory(trialPhysicalPath);
       if (deletionResult) {
-        logger.info('Dossier physique test supprimé', { testId });
+        logger.info('Dossier physique trial supprimé', { trialId });
       } else {
-        logger.warn('Échec suppression dossier physique test', { testId });
+        logger.warn('Échec suppression dossier physique trial', { trialId });
       }
     } catch (physicalDeleteError) {
       // Log l'erreur mais ne pas faire échouer l'opération car la DB a été nettoyée
-      logger.error('Erreur suppression dossier physique test', { 
-        testId, 
+      logger.error('Erreur suppression dossier physique trial', { 
+        trialId, 
         error: physicalDeleteError.message 
       });
     }
@@ -1602,7 +1603,10 @@ const deleteTrial = async (trialId) => {
     return true;
   } catch (error) {
     // Annuler la transaction en cas d'erreur
-    await transaction.rollback();
+    // IMPORTANT: Vérifier que la transaction n'est pas déjà terminée avant le rollback
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     logger.error(`Erreur lors de la suppression du trial #${trialId}: ${error.message}`, error);
     throw error;
   }

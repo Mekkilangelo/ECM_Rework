@@ -732,20 +732,7 @@ const deleteFile = async (fileId, options = {}) => {
 const deleteFilesRecursively = async (nodeId, transaction) => {
   logger.info('Suppression récursive des fichiers du nœud', { nodeId });
   
-  // Trouver tous les descendants de type 'file'
-  const descendantFiles = await node.findAll({
-    include: [{
-      model: closure,
-      as: 'ancestors', // Relation définie par alias dans models/index.js (souvent 'ancestors' ou implicitly via closure table logic)
-      where: { ancestor_id: nodeId },
-      attributes: []
-    }],
-    where: { type: 'file' },
-    transaction
-  });
-
-  // NOTE: Si l'association 'ancestors' n'est pas configurée correctement pour ce type de requête directe,
-  // on passe par la table closure directement.
+  // Passer par la table closure directement pour éviter l'ambiguïté des associations
   const descendants = await closure.findAll({
     where: { ancestor_id: nodeId },
     attributes: ['descendant_id'],
@@ -753,6 +740,11 @@ const deleteFilesRecursively = async (nodeId, transaction) => {
   });
   
   const descendantIds = descendants.map(d => d.descendant_id);
+  
+  // Si pas de descendants, retourner
+  if (descendantIds.length === 0) {
+    return;
+  }
   
   const fileNodes = await node.findAll({
     where: { 

@@ -266,7 +266,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
   // Hook pour la fonctionnalité copy/paste
   const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
     formType: 'parts',
-    formData,
+    getFormData: () => formData,
     setFormData,
     formatForApi,
     parseFromApi

@@ -397,7 +397,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
   // Hook pour la fonctionnalité copy/paste
   const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
     formType: 'trials',
-    formData,
+    getFormData: () => formData,
     setFormData,
     formatForApi,
     parseFromApi

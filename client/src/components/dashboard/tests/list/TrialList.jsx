@@ -70,6 +70,11 @@ const TrialList = ({ partId }) => {
   }, [hasEditRights, updateItemStatus]);
 
   const handleTrialClick = (trial, { openEditModal, openDetailModal }) => {
+    // Marquer comme vu si nouveau
+    if (trial.data_status === 'new') {
+      updateItemStatus(trial.id);
+    }
+    
     if (hasEditRights) {
       openEditModal(trial);
     } else {

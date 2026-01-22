@@ -12,6 +12,7 @@ const useFormState = () => {
     {
     // Informations de base
     name: '',
+    loadNumber: '', // Numéro de charge
     trialDate: today, // Préremplir avec la date du jour
     location: '',
     status: '',

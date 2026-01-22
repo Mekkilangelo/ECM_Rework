@@ -20,6 +20,9 @@ const ProcessSection = () => {
         <Nav.Item>
           <Nav.Link eventKey="process_type">{t('references.process.process_type')}</Nav.Link>
         </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="location">{t('references.process.location')}</Nav.Link>
+        </Nav.Item>
       </Nav>
 
       <Tab.Content>
@@ -43,6 +46,14 @@ const ProcessSection = () => {
           <Card>
             <Card.Body>
               <EnumTableContent refTable="ref_process_type" />
+            </Card.Body>
+          </Card>
+        </Tab.Pane>
+
+        <Tab.Pane eventKey="location">
+          <Card>
+            <Card.Body>
+              <EnumTableContent refTable="ref_location" />
             </Card.Body>
           </Card>
         </Tab.Pane>

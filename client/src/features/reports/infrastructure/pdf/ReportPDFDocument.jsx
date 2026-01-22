@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer';
-import { 
+import {
   IdentificationSectionPDF,
   MicrographySectionPDF,
   CurvesSectionPDF,
@@ -15,9 +15,10 @@ import {
   PostTreatmentSectionPDF,
   LoadSectionPDF,
   RecipeSectionPDF,
-  ControlSectionPDF 
+  ControlSectionPDF
 } from './sections';
 import { CommonReportHeader } from './components/CommonReportHeader';
+import { CommonReportFooter } from './components/CommonReportFooter';
 import { COLORS, TYPOGRAPHY, SPACING, COMMON_STYLES } from './theme';
 
 /**
@@ -26,20 +27,9 @@ import { COLORS, TYPOGRAPHY, SPACING, COMMON_STYLES } from './theme';
 const styles = StyleSheet.create({
   page: {
     ...COMMON_STYLES.page,
+    paddingBottom: 60, // Espace pour le footer
   },
-  pageFooter: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border.medium,
-    fontSize: 8,
-    color: COLORS.text.secondary
-  },
+  // pageFooter removed - replaced by component
   section: {
     marginBottom: SPACING.section.marginBottom
   },
@@ -94,14 +84,7 @@ const styles = StyleSheet.create({
 /**
  * Pied de page
  */
-const PageFooter = ({ generatedDate }) => (
-  <View style={styles.pageFooter} fixed>
-    <Text>Généré le {generatedDate}</Text>
-    <Text render={({ pageNumber, totalPages }) => 
-      `${pageNumber} / ${totalPages}`
-    } />
-  </View>
-);
+
 
 /**
  * Page de garde moderne
@@ -109,7 +92,7 @@ const PageFooter = ({ generatedDate }) => (
 export const CoverPage = ({ report, options }) => {
   const logoEcmUrl = '/images/logoECM.png';
   const logoSynergyUrl = '/images/synergy_logo.png';
-  
+
   return (
     <Page size="A4" style={{ position: 'relative' }}>
       {/* Bandeau supérieur avec logos */}
@@ -346,8 +329,8 @@ export const PhotoGrid = ({ photos, getPhotoUrl }) => {
     <View style={styles.photoGrid}>
       {photos.map((photo, index) => (
         <View key={index} style={styles.photoItem} wrap={false}>
-          <Image 
-            src={getPhotoUrl(photo)} 
+          <Image
+            src={getPhotoUrl(photo)}
             style={styles.photoImage}
           />
           <Text style={styles.photoCaption}>
@@ -365,8 +348,8 @@ export const PhotoGrid = ({ photos, getPhotoUrl }) => {
 export const Table = ({ headers, rows }) => (
   <View style={{ marginTop: 10 }}>
     {/* En-têtes */}
-    <View style={{ 
-      flexDirection: 'row', 
+    <View style={{
+      flexDirection: 'row',
       backgroundColor: '#F0F0F0',
       padding: 5,
       fontFamily: 'Helvetica-Bold',
@@ -376,11 +359,11 @@ export const Table = ({ headers, rows }) => (
         <Text key={index} style={{ flex: 1 }}>{header}</Text>
       ))}
     </View>
-    
+
     {/* Lignes */}
     {rows.map((row, rowIndex) => (
-      <View key={rowIndex} style={{ 
-        flexDirection: 'row', 
+      <View key={rowIndex} style={{
+        flexDirection: 'row',
         padding: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#EEEEEE',
@@ -401,34 +384,34 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
  */
 const normalizePhotosForSection = (photos, sectionType) => {
   if (!photos) return [];
-  
+
   // Si c'est déjà un tableau, le retourner tel quel
   if (Array.isArray(photos)) {
     return photos.map(photo => {
       // Construire l'URL si elle n'existe pas
       let photoUrl = photo.url || photo.viewPath;
-      
+
       if (photoUrl && photoUrl.startsWith('/')) {
-         // Si chemin relatif, ajouter l'URL de l'API (sans /api si déjà inclus ou ajuster)
-         // API_URL est souvent http://localhost:5001/api
-         // photoUrl est /api/files/123
-         // On veut http://localhost:5001/api/files/123
-         
-         // Si API_URL finit par /api et photoUrl commence par /api, on a un doublon
-         const baseUrl = API_URL.endsWith('/api') && photoUrl.startsWith('/api') 
-           ? API_URL.slice(0, -4) 
-           : API_URL;
-           
-         // Si baseUrl finit par / et photoUrl commence par /, enlever un /
-         if (baseUrl.endsWith('/') && photoUrl.startsWith('/')) {
-            photoUrl = `${baseUrl.slice(0, -1)}${photoUrl}`;
-         } else if (!baseUrl.endsWith('/') && !photoUrl.startsWith('/')) {
-            photoUrl = `${baseUrl}/${photoUrl}`;
-         } else {
-            photoUrl = `${baseUrl}${photoUrl}`;
-         }
+        // Si chemin relatif, ajouter l'URL de l'API (sans /api si déjà inclus ou ajuster)
+        // API_URL est souvent http://localhost:5001/api
+        // photoUrl est /api/files/123
+        // On veut http://localhost:5001/api/files/123
+
+        // Si API_URL finit par /api et photoUrl commence par /api, on a un doublon
+        const baseUrl = API_URL.endsWith('/api') && photoUrl.startsWith('/api')
+          ? API_URL.slice(0, -4)
+          : API_URL;
+
+        // Si baseUrl finit par / et photoUrl commence par /, enlever un /
+        if (baseUrl.endsWith('/') && photoUrl.startsWith('/')) {
+          photoUrl = `${baseUrl.slice(0, -1)}${photoUrl}`;
+        } else if (!baseUrl.endsWith('/') && !photoUrl.startsWith('/')) {
+          photoUrl = `${baseUrl}/${photoUrl}`;
+        } else {
+          photoUrl = `${baseUrl}${photoUrl}`;
+        }
       } else if (!photoUrl && photo.id) {
-         photoUrl = `${API_URL}/files/${photo.id}`;
+        photoUrl = `${API_URL}/files/${photo.id}`;
       }
 
       return {
@@ -438,34 +421,34 @@ const normalizePhotosForSection = (photos, sectionType) => {
       };
     });
   }
-  
+
   // Si c'est un objet organisé, l'aplatir en tableau
   if (typeof photos === 'object') {
     const flatPhotos = [];
-    
+
     Object.keys(photos).forEach(categoryKey => {
       const categoryPhotos = photos[categoryKey];
-      
+
       if (Array.isArray(categoryPhotos)) {
         // Ajouter les métadonnées de catégorie si elles n'existent pas
         categoryPhotos.forEach(photo => {
           // Construire l'URL si elle n'existe pas
           let photoUrl = photo.url || photo.viewPath;
-          
+
           if (photoUrl && photoUrl.startsWith('/')) {
-             const baseUrl = API_URL.endsWith('/api') && photoUrl.startsWith('/api') 
-               ? API_URL.slice(0, -4) 
-               : API_URL;
-               
-             if (baseUrl.endsWith('/') && photoUrl.startsWith('/')) {
-                photoUrl = `${baseUrl.slice(0, -1)}${photoUrl}`;
-             } else if (!baseUrl.endsWith('/') && !photoUrl.startsWith('/')) {
-                photoUrl = `${baseUrl}/${photoUrl}`;
-             } else {
-                photoUrl = `${baseUrl}${photoUrl}`;
-             }
+            const baseUrl = API_URL.endsWith('/api') && photoUrl.startsWith('/api')
+              ? API_URL.slice(0, -4)
+              : API_URL;
+
+            if (baseUrl.endsWith('/') && photoUrl.startsWith('/')) {
+              photoUrl = `${baseUrl.slice(0, -1)}${photoUrl}`;
+            } else if (!baseUrl.endsWith('/') && !photoUrl.startsWith('/')) {
+              photoUrl = `${baseUrl}/${photoUrl}`;
+            } else {
+              photoUrl = `${baseUrl}${photoUrl}`;
+            }
           } else if (!photoUrl && photo.id) {
-             photoUrl = `${API_URL}/files/${photo.id}`;
+            photoUrl = `${API_URL}/files/${photo.id}`;
           }
 
           flatPhotos.push({
@@ -478,10 +461,10 @@ const normalizePhotosForSection = (photos, sectionType) => {
         });
       }
     });
-    
+
     return flatPhotos;
   }
-  
+
 
   return [];
 };
@@ -503,23 +486,23 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       </Document>
     );
   }
-  
+
   // Appliquer les valeurs par défaut pour les options
   const {
     includeHeader = true,
     includeFooter = true,
     includeCoverPage = true
   } = options;
-  
+
   // Log pour déboguer les options
   console.log('🔍 ReportPDFDocument options:', { includeHeader, includeFooter, includeCoverPage });
-  
+
   if (process.env.NODE_ENV === 'development') {
 
   }
-  
+
   const generatedDate = new Date().toLocaleDateString('fr-FR');
-  
+
   /**
    * Helper pour vérifier si une section a du contenu réel
    * Basé sur les photos sélectionnées et les données du rapport
@@ -531,7 +514,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       (Array.isArray(photos) && photos.length > 0) ||
       (typeof photos === 'object' && Object.keys(photos).length > 0)
     );
-    
+
     // Vérifier les données selon le type de section
     switch (sectionType) {
       case 'identification':
@@ -554,7 +537,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         return hasPhotos;
     }
   };
-  
+
   // Récupérer les sections actives de manière sécurisée et les trier par order
   let activeSections = [];
   try {
@@ -567,7 +550,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
     console.error('❌ Error getting active sections:', error);
     activeSections = [];
   }
-  
+
   // Si aucune section active, afficher au moins la page de garde
   const hasActiveSections = activeSections.length > 0;
 
@@ -588,7 +571,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {!hasActiveSections && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               trialCode={report.testCode}
             />
@@ -605,7 +588,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             </Text>
           </View>
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -614,7 +597,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'identification') && report && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -627,7 +610,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.identification, 'identification');
               console.log('🔍 PDF Identification - Photos normalisées:', normalizedPhotos.map(p => ({ id: p.id, url: p.url })));
               return (
-                <IdentificationSectionPDF 
+                <IdentificationSectionPDF
                   report={report}
                   photos={normalizedPhotos}
                 />
@@ -647,7 +630,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -656,7 +639,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'load') && report && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -668,7 +651,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
 
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.load, 'load');
               return (
-                <LoadSectionPDF 
+                <LoadSectionPDF
                   report={report}
                   photos={normalizedPhotos}
                 />
@@ -688,7 +671,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -697,7 +680,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'curves') && report && sectionHasContent('curves') && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -708,7 +691,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             try {
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.curves, 'curves');
               return (
-                <CurvesSectionPDF 
+                <CurvesSectionPDF
                   report={report}
                   photos={normalizedPhotos}
                 />
@@ -728,7 +711,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -737,7 +720,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'datapaq') && report && sectionHasContent('datapaq') && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -748,7 +731,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             try {
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.datapaq, 'datapaq');
               return (
-                <DatapaqSectionPDF 
+                <DatapaqSectionPDF
                   report={report}
                   photos={normalizedPhotos}
                 />
@@ -768,7 +751,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -777,7 +760,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'postTreatment') && report && sectionHasContent('postTreatment') && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -788,7 +771,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             try {
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.postTreatment, 'postTreatment');
               return (
-                <PostTreatmentSectionPDF 
+                <PostTreatmentSectionPDF
                   report={report}
                   photos={normalizedPhotos}
                 />
@@ -808,7 +791,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -817,7 +800,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'recipe') && report && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -846,7 +829,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -855,7 +838,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'control') && report && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -866,10 +849,10 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             try {
               // Même principe que micrography : normaliser les photos en tableau simple
               const normalizedPhotos = normalizePhotosForSection(
-                selectedPhotos?.control || selectedPhotos?.controlLocation, 
+                selectedPhotos?.control || selectedPhotos?.controlLocation,
                 'control'
               );
-              
+
               return <ControlSectionPDF report={report} photos={normalizedPhotos} />;
             } catch (error) {
               console.error('❌ Error rendering ControlSectionPDF:', error);
@@ -886,7 +869,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -895,7 +878,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       {activeSections.some(s => s.type === 'micrography') && report && sectionHasContent('micrography') && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
-            <CommonReportHeader 
+            <CommonReportHeader
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -907,11 +890,11 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.micrography, 'micrography');
               // Récupérer aussi les photos de control location pour les afficher dans micrography
               const controlLocationPhotos = normalizePhotosForSection(
-                selectedPhotos?.control || selectedPhotos?.controlLocation, 
+                selectedPhotos?.control || selectedPhotos?.controlLocation,
                 'control'
               );
               return (
-                <MicrographySectionPDF 
+                <MicrographySectionPDF
                   report={report}
                   photos={normalizedPhotos}
                   controlLocationPhotos={controlLocationPhotos}
@@ -932,7 +915,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
             }
           })()}
           {includeFooter && (
-            <PageFooter generatedDate={generatedDate} />
+            <CommonReportFooter generatedDate={generatedDate} />
           )}
         </Page>
       )}
@@ -949,7 +932,7 @@ const SectionRenderer = ({ section, report, options, pageNumber, generatedDate }
   return (
     <Page size="A4" style={styles.page}>
       {options.includeHeader && (
-        <CommonReportHeader 
+        <CommonReportHeader
           clientName={clientData?.name}
           trialCode={trialData?.trial_code}
         />
@@ -958,10 +941,10 @@ const SectionRenderer = ({ section, report, options, pageNumber, generatedDate }
       <Section title={section.label}>
         {/* Contenu spécifique selon le type de section */}
         <SectionContent section={section} report={report} options={options} />
-        
+
         {/* Photos si disponibles */}
         {section.hasPhotos && section.photos.length > 0 && (
-          <PhotoGrid 
+          <PhotoGrid
             photos={section.photos}
             getPhotoUrl={(photo) => photo.url || photo.getOptimizedUrl?.() || ''}
           />
@@ -969,7 +952,7 @@ const SectionRenderer = ({ section, report, options, pageNumber, generatedDate }
       </Section>
 
       {options.includeFooter && (
-        <PageFooter generatedDate={generatedDate} />
+        <CommonReportFooter generatedDate={generatedDate} />
       )}
     </Page>
   );

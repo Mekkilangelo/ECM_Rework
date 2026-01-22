@@ -1,282 +1,233 @@
 /**
  * INFRASTRUCTURE: Part Identification Section for PDF
- * Displays part identification, specifications, and photos with intelligent layout
- *
- * Layout Strategy:
- * - Page 1: Titre + Données + Specs + 1ère photo (hero 430x180)
- * - Pages suivantes: Grille 2x3 (6 photos par page, 244x155 chacune)
- *
- * Optimisé pour que le texte et la première photo tiennent sur la même page
+ * Displays part identification, specifications, and photos with optimized layout
+ * 
+ * New Design:
+ * - 3-Column Data Layout (Customer Data, Dimensions, Weight)
+ * - Compact Technical Specs
+ * - Hero Photo + 2 small photos (if space allows) on first page
+ * - Section Header with pagination
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import { COLORS, TYPOGRAPHY, SPACING } from '../theme';
-import { 
-  SectionTitle, 
-  SubsectionTitle, 
-  DataRow, 
-  PhotoContainer,
-  EmptyState 
-} from '../primitives';
+import { PhotoContainer, EmptyState } from '../primitives';
 import { validatePhotos } from '../helpers/photoHelpers';
 
-// Section-specific accent color
-const SECTION_TYPE = 'identification';
+// Dark Blue brand color for headers
+const BRAND_DARK = '#1e293b';
+const BRAND_RED = '#ef4444';
+const TEXT_DARK = '#1a1a1a';
+const TEXT_GRAY = '#64748b';
 
-// Styles spécifiques à cette section (non partagés)
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: SPACING.section.marginBottom,
+  // Main Section Container
+  sectionContainer: {
+    marginBottom: 20,
+    fontFamily: 'Helvetica',
   },
-  specGrid: {
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  specRow: {
+
+  // Section Header (Dark Blue Bar)
+  sectionHeader: {
+    backgroundColor: BRAND_DARK,
     flexDirection: 'row',
-    marginBottom: SPACING.sm,
-    paddingBottom: SPACING.xs,
-    borderBottomWidth: 0.5,
-    borderBottomColor: COLORS.border.subtle,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 5, // Reduced vertical padding
+    marginBottom: 8,
   },
-  specLabel: {
-    ...TYPOGRAPHY.label,
-    width: '28%',
-    color: COLORS.text.secondary,
+  sectionTitle: {
+    color: '#ffffff',
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 14,
+    textTransform: 'uppercase',
   },
-  specValue: {
-    ...TYPOGRAPHY.value,
-    width: '72%',
-    color: COLORS.text.primary,
-    fontSize: 8.5,
+  sectionPagination: {
+    color: '#cbd5e1', // Light gray 
+    fontSize: 10,
+    fontFamily: 'Helvetica',
   },
-  photoGrid: {
+
+  // 3-Column Data Layout
+  dataGrid: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: BRAND_DARK,
+    paddingBottom: 8,
+  },
+
+  // Columns
+  colCustomerData: {
+    width: '40%',
+    paddingRight: 10,
+    borderRightWidth: 1,
+    borderRightColor: '#e2e8f0',
+  },
+  colDimensions: {
+    width: '35%', // Reduced width
+    paddingHorizontal: 10,
+    borderRightWidth: 1,
+    borderRightColor: '#e2e8f0',
+  },
+  colWeight: {
+    width: '25%', // Increased width slightly
+    paddingLeft: 10,
+  },
+
+  // Column Header
+  colHeaderLabel: {
+    backgroundColor: '#0f4c81', // Blue accent for sub-headers
+    color: '#ffffff',
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    marginBottom: 6,
+    borderRadius: 2,
+    alignSelf: 'flex-start', // Fit content width
+  },
+
+  // Data Rows
+  row: {
+    flexDirection: 'row',
+    marginBottom: 3,
+    alignItems: 'baseline',
+  },
+  label: {
+    fontFamily: 'Helvetica-Bold', // Bold for visibility
+    fontSize: 8, // Smaller font
+    color: TEXT_GRAY,
+    width: '50%',
+    textTransform: 'uppercase',
+  },
+  value: {
+    fontFamily: 'Helvetica',
+    fontSize: 9,
+    color: TEXT_DARK,
+    width: '50%',
+  },
+
+  // Dimensions List
+  dimList: {
+    flexDirection: 'column',
+  },
+  dimRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  dimLabel: {
+    fontSize: 9,
+    color: TEXT_DARK,
+  },
+  dimValue: {
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
+    color: TEXT_DARK,
+  },
+
+  // Weight Large
+  weightValue: {
+    fontSize: 14,
+    fontFamily: 'Helvetica-Bold',
+    color: TEXT_DARK,
+    marginTop: 5,
+  },
+
+  // Technical Specs Block
+  specsContainer: {
+    marginTop: 5,
+    marginBottom: 15,
+  },
+  specsTitle: {
+    backgroundColor: BRAND_DARK,
+    color: '#ffffff',
+    fontSize: 12,
+    marginTop: 20,
+    fontFamily: 'Helvetica-Bold',
+    paddingVertical: 4,
+    paddingHorizontal: 15,
+    marginBottom: 5,
+  },
+  specsContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  specItem: {
+    fontSize: 10,
+    color: TEXT_DARK,
+    maxWidth: '48%',
+  },
+
+  // Photos Section
+  photosTitle: {
+    backgroundColor: BRAND_DARK,
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    paddingVertical: 4,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+
+  // Photo Layouts
+  heroLayout: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 10,
+  },
+  heroRowSmall: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 10,
+  },
+
+  gridLayout: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: SPACING.photo.gap,
-  },
+    rowGap: 15,
+  }
 });
 
-// Photo sizes specific to Identification section
-// Optimisées pour tenir avec le texte + specs sur la même page
-const IDENTIFICATION_PHOTO_SIZES = {
-  // Première photo : compacte pour laisser place au texte + plusieurs specs
-  heroFirst: { width: 430, height: 180 },
-  // Photos en grille 2x3 (6 par page) - réduit pour tenir sur une page
-  gridItem: { width: 244, height: 155 },
+// Photo Sizes
+const SIZES = {
+  heroLarge: { width: 340, height: 190 }, // Reduced from 380 to ensure fit
+  heroSmall: { width: 165, height: 110 }, // Reduced proportional
+  gridItem: { width: 220, height: 140 },  // Reduced from 240x160 to fit 6 per page
 };
 
 /**
- * Helper pour extraire une unité depuis différentes sources possibles
- * Gère: string directe, objet {name: 'unit'}, ou valeur dans nested object
+ * Helper to resolve units (handles strings vs object relations)
  */
 const resolveUnit = (directUnit, relationUnit) => {
-  // 1. Priorité à la valeur directe (string FK)
-  if (directUnit && typeof directUnit === 'string') {
-    return directUnit;
-  }
-  
-  // 2. Essayer depuis l'objet relation Sequelize (relationUnit.name)
-  if (relationUnit && typeof relationUnit === 'object' && relationUnit.name) {
-    return relationUnit.name;
-  }
-  
-  // 3. Si relationUnit est directement une string
-  if (relationUnit && typeof relationUnit === 'string') {
-    return relationUnit;
-  }
-  
+  if (directUnit && typeof directUnit === 'string') return directUnit;
+  if (relationUnit && typeof relationUnit === 'object' && relationUnit.name) return relationUnit.name;
+  if (relationUnit && typeof relationUnit === 'string') return relationUnit;
   return '';
 };
 
 /**
- * Format dimensions helper with explicit labels
+ * Format specs string (Hardness / ECD)
  */
-const formatDimensions = (part) => {
-  const dims = [];
+const formatSpecs = (hardnessSpecs = [], ecdSpecs = []) => {
+  const specs = [];
 
-  // Debug: Log toutes les propriétés de part liées aux unités (toujours actif pour debug)
-  console.log('[IdentificationPDF] formatDimensions - Part data:', {
-    dim_rect_unit: part.dim_rect_unit,
-    dim_circ_unit: part.dim_circ_unit,
-    dim_weight_unit: part.dim_weight_unit,
-    rectUnit: part.rectUnit,
-    circUnit: part.circUnit,
-    weightUnit: part.weightUnit,
-    dim_weight_value: part.dim_weight_value,
-    dim_rect_height: part.dim_rect_height
-  });
-
-  // Rectangular dimensions with explicit labels
-  if (part.dim_rect_length || part.dim_rect_width || part.dim_rect_height) {
-    const rectParts = [];
-    if (part.dim_rect_length) rectParts.push(`Length: ${part.dim_rect_length}`);
-    if (part.dim_rect_width) rectParts.push(`Width: ${part.dim_rect_width}`);
-    if (part.dim_rect_height) rectParts.push(`Height: ${part.dim_rect_height}`);
-
-    if (rectParts.length > 0) {
-      const unit = resolveUnit(part.dim_rect_unit, part.rectUnit);
-      console.log('[IdentificationPDF] Rect unit resolved:', unit, 'from:', { dim_rect_unit: part.dim_rect_unit, rectUnit: part.rectUnit });
-      dims.push(`${rectParts.join(' × ')}${unit ? ` ${unit}` : ''}`);
-    }
+  if (hardnessSpecs.length > 0) {
+    const hText = hardnessSpecs.map(h => `${h.name || 'Hardness'}: ${h.min}-${h.max} ${h.unit || ''}`).join('; ');
+    specs.push({ label: 'Hardness', text: hText });
   }
 
-  // Circular dimensions with explicit labels
-  if (part.dim_circ_diameterOut || part.dim_circ_diameterIn) {
-    const circParts = [];
-    if (part.dim_circ_diameterOut) circParts.push(`⌀ Ext: ${part.dim_circ_diameterOut}`);
-    if (part.dim_circ_diameterIn) circParts.push(`⌀ Int: ${part.dim_circ_diameterIn}`);
-
-    if (circParts.length > 0) {
-      const unit = resolveUnit(part.dim_circ_unit, part.circUnit);
-      console.log('[IdentificationPDF] Circ unit resolved:', unit, 'from:', { dim_circ_unit: part.dim_circ_unit, circUnit: part.circUnit });
-      dims.push(`${circParts.join(', ')}${unit ? ` ${unit}` : ''}`);
-    }
+  if (ecdSpecs.length > 0) {
+    const eText = ecdSpecs.map(e => `${e.name || 'ECD'}: ${e.depthMin}-${e.depthMax} ${e.depthUnit || 'mm'}`).join('; ');
+    specs.push({ label: 'ECD', text: eText });
   }
 
-  // Weight with explicit label
-  if (part.dim_weight_value) {
-    const unit = resolveUnit(part.dim_weight_unit, part.weightUnit);
-    console.log('[IdentificationPDF] Weight unit resolved:', unit, 'from:', { dim_weight_unit: part.dim_weight_unit, weightUnit: part.weightUnit });
-    dims.push(`Weight: ${part.dim_weight_value}${unit ? ` ${unit}` : ''}`);
-  }
-
-  return dims.join(' | ') || '';
-};
-
-/**
- * Get steel grade from various possible locations
- */
-const getSteelGrade = (partData) => {
-  return partData.steel?.grade 
-    || partData.steelGrade 
-    || partData.steel_grade
-    || (typeof partData.steel === 'string' ? partData.steel : null)
-    || 'Not specified';
-};
-
-/**
- * Calculate layout for Identification section
- * - Page 1: texte + 1ère photo (hero)
- * - Pages suivantes: grille 2x3 (6 photos par page)
- */
-const calculateLayout = (photoCount) => {
-  if (photoCount === 0) return null;
-
-  const pages = [];
-
-  // Page 1: première photo seulement (avec le texte)
-  pages.push({ type: 'hero', indices: [0] });
-
-  // Pages suivantes: grille 2x3 (6 photos par page)
-  let currentIndex = 1;
-  while (currentIndex < photoCount) {
-    const remaining = photoCount - currentIndex;
-    const photosThisPage = Math.min(remaining, 6);
-    const indices = [];
-    for (let i = 0; i < photosThisPage; i++) {
-      indices.push(currentIndex + i);
-    }
-    pages.push({ type: 'grid', indices });
-    currentIndex += photosThisPage;
-  }
-
-  return pages;
-};
-
-/**
- * Hero Photo Layout - First photo with text
- */
-const HeroPhotoLayout = ({ photo }) => (
-  <PhotoContainer
-    photo={photo}
-    customSize={IDENTIFICATION_PHOTO_SIZES.heroFirst}
-  />
-);
-
-/**
- * Grid Photo Layout - 2x2 grid
- */
-const GridPhotoLayout = ({ photos }) => (
-  <View style={styles.photoGrid}>
-    {photos.map((photo, idx) => (
-      <PhotoContainer
-        key={photo.id || idx}
-        photo={photo}
-        customSize={IDENTIFICATION_PHOTO_SIZES.gridItem}
-      />
-    ))}
-  </View>
-);
-
-/**
- * Specifications Component - Renders hardness and ECD specs
- */
-const Specifications = ({ hardnessSpecs, ecdSpecs }) => {
-  if (hardnessSpecs.length === 0 && ecdSpecs.length === 0) {
-    return null;
-  }
-  
-  return (
-    <View style={styles.section} wrap={false}>
-      {/* Hardness Specifications */}
-      {hardnessSpecs.length > 0 && (
-        <>
-          <SubsectionTitle sectionType={SECTION_TYPE}>
-            Hardness Specifications
-          </SubsectionTitle>
-          <View style={styles.specGrid}>
-            {hardnessSpecs.map((spec, index) => (
-              <View key={`hardness-${index}`} style={styles.specRow}>
-                <Text style={styles.specLabel}>
-                  {spec.name || `Spec ${index + 1}`}:
-                </Text>
-                <Text style={styles.specValue}>
-                  {spec.min && spec.max 
-                    ? `${spec.min} - ${spec.max} ${spec.unit || ''}`
-                    : spec.min 
-                      ? `Min: ${spec.min} ${spec.unit || ''}`
-                      : spec.max 
-                        ? `Max: ${spec.max} ${spec.unit || ''}`
-                        : 'Not specified'}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-
-      {/* ECD Specifications */}
-      {ecdSpecs.length > 0 && (
-        <>
-          <SubsectionTitle sectionType={SECTION_TYPE}>
-            ECD Specifications
-          </SubsectionTitle>
-          <View style={styles.specGrid}>
-            {ecdSpecs.map((spec, index) => (
-              <View key={`ecd-${index}`} style={styles.specRow}>
-                <Text style={styles.specLabel}>
-                  {spec.name || `ECD ${index + 1}`}:
-                </Text>
-                <Text style={styles.specValue}>
-                  Depth: {spec.depthMin && spec.depthMax 
-                    ? `${spec.depthMin} - ${spec.depthMax} ${spec.depthUnit || 'mm'}`
-                    : spec.depthMin 
-                      ? `Min: ${spec.depthMin} ${spec.depthUnit || 'mm'}`
-                      : spec.depthMax 
-                        ? `Max: ${spec.depthMax} ${spec.depthUnit || 'mm'}`
-                        : 'Not specified'}
-                  {spec.hardness && ` | Hardness: ${spec.hardness} ${spec.hardnessUnit || ''}`}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-    </View>
-  );
+  return specs;
 };
 
 /**
@@ -285,84 +236,198 @@ const Specifications = ({ hardnessSpecs, ecdSpecs }) => {
 export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
-  // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
-
-  // Extract data from report
   const partData = report.partData || report.part || {};
-  
-  // DEBUG: Log complet des données partData reçues
-  console.log('🔍 [IdentificationSectionPDF] report.partData:', {
-    hasPartData: !!report.partData,
-    hasPart: !!report.part,
-    dim_weight_unit: partData.dim_weight_unit,
-    dim_rect_unit: partData.dim_rect_unit,
-    dim_circ_unit: partData.dim_circ_unit,
-    dim_weight_value: partData.dim_weight_value,
-    dim_rect_height: partData.dim_rect_height,
-    weightUnit: partData.weightUnit,
-    rectUnit: partData.rectUnit,
-    allKeys: Object.keys(partData)
-  });
-  
-  const steelGrade = getSteelGrade(partData);
-  const hardnessSpecs = partData.hardnessSpecs || [];
-  const ecdSpecs = partData.ecdSpecs || [];
 
-  // Calculate layout based on photo count (not separated by views)
-  const layout = validPhotos.length > 0 ? calculateLayout(validPhotos.length) : null;
+  // Data Extraction
+  const steelGrade = partData.steel?.grade || partData.steelGrade || 'Not specified';
+
+  // Dimensions extraction
+  const length = partData.dim_rect_length;
+  const width = partData.dim_rect_width;
+  const height = partData.dim_rect_height || partData.dim_circ_height; // Fallback
+  const diameter = partData.dim_circ_diameterOut;
+  const unitRect = resolveUnit(partData.dim_rect_unit, partData.rectUnit);
+  const unitCirc = resolveUnit(partData.dim_circ_unit, partData.circUnit);
+
+  // Weight
+  const weight = partData.dim_weight_value;
+  const unitWeight = resolveUnit(partData.dim_weight_unit, partData.weightUnit);
+
+  // Specs
+  const activeSpecs = formatSpecs(partData.hardnessSpecs, partData.ecdSpecs);
+
+  // --- Layout Logic ---
+  // Page 1 available space logic:
+  // We have Headers + Data + Specs roughly taking 1/3 to 1/2 page.
+  // We can fit 1 Large Hero photo comfortably.
+  // If we have >= 3 photos, we can try 1 Large + 2 Small on Page 1 (if strict space allows, but usually safer to do just 1 Hero).
+  // Strategy:
+  // Page 1: Data + Specs + Photo #1 (Hero) + (Optional Photo #2 & #3 if they exist)
+  // Page 2+: Remaining photos in Grid 2x3
+
+  // Let's go with: Page 1 = Data + Specs + Up to 3 photos (1 Big, 2 Small below).
+
+  const layoutPages = [];
+
+  if (validPhotos.length > 0) {
+    // Page 1 Photos
+    const page1Photos = [];
+    let remainingStartIndex = 0;
+
+    // Add first photo (Hero)
+    page1Photos.push({ ...validPhotos[0], size: SIZES.heroLarge });
+    remainingStartIndex = 1;
+
+    // If we have at least 2 more, add them as small row
+    if (validPhotos.length >= 3) {
+      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
+      page1Photos.push({ ...validPhotos[2], size: SIZES.heroSmall });
+      remainingStartIndex = 3;
+    } else if (validPhotos.length === 2) {
+      // Just 2 photos total? Maybe put 2nd one large too? Or side by side?
+      // Let's stick to simple: 2nd photo is small or just pushed to next page?
+      // Let's put 2nd photo as small to be safe
+      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
+      remainingStartIndex = 2;
+    }
+
+    layoutPages.push({ type: 'initial', photos: page1Photos });
+
+    // Subsequent Pages (Grid 2x3 = 6 photos max)
+    const GRID_SIZE = 6;
+    while (remainingStartIndex < validPhotos.length) {
+      const chunk = validPhotos.slice(remainingStartIndex, remainingStartIndex + GRID_SIZE);
+      layoutPages.push({ type: 'grid', photos: chunk });
+      remainingStartIndex += GRID_SIZE;
+    }
+  } else {
+    // No photos, still need 1 page for data
+    layoutPages.push({ type: 'initial_no_photos', photos: [] });
+  }
+
+  const totalPages = layoutPages.length;
 
   return (
     <>
-      {/* Section Title */}
-      <SectionTitle sectionType={SECTION_TYPE}>
-        PART IDENTIFICATION
-      </SectionTitle>
+      {layoutPages.map((page, index) => {
+        const isFirstPage = index === 0;
+        const pageNum = index + 1;
 
-      {/* Part Identification Data */}
-      <View style={styles.section} wrap={false}>
-        <DataRow label="Client Designation" value={partData.client_designation} />
-        <DataRow label="Reference" value={partData.reference} />
-        <DataRow label="Quantity" value={partData.quantity} />
-        <DataRow label="Steel Grade" value={steelGrade} />
-        <DataRow label="Dimensions" value={formatDimensions(partData)} noBorder />
-      </View>
+        return (
+          // Use 'minPresenceAhead' or wrap logic delicately. 
+          // To prevent "Header on P2, Content on P3", we wrap the Header AND Content together in a View with wrap={false} IF it's likely to fit. 
+          // But a whole page won't fit. 
+          // Better strategy: The Header is small. If we keep 'break' logic, content follows.
+          // Is the Grid getting pushed?? 
+          // Let's remove 'wrap={false}' from gridLayout strictly.
+          <View key={index} style={styles.sectionContainer} break={!isFirstPage}>
 
-      {/* Specifications */}
-      <Specifications hardnessSpecs={hardnessSpecs} ecdSpecs={ecdSpecs} />
+            {/* Wrap Header and Content in a View that *allows* breaking internally but tries to keep header with start of content */}
 
-      {/* Photos: 1ère avec le texte, reste en grille sur pages suivantes */}
-      {layout ? (
-        layout.map((page, pageIndex) => {
-          const pagePhotos = page.indices.map(idx => validPhotos[idx]);
-
-          return (
-            <View
-              key={`identification-page-${pageIndex}`}
-              style={styles.section}
-              break={pageIndex > 0}
-            >
-              {pageIndex > 0 && (
-                <SectionTitle sectionType={SECTION_TYPE} continuation>
-                  PART IDENTIFICATION
-                </SectionTitle>
-              )}
-
-              {page.type === 'hero' && (
-                <HeroPhotoLayout photo={pagePhotos[0]} />
-              )}
-
-              {page.type === 'grid' && (
-                <GridPhotoLayout photos={pagePhotos} />
-              )}
+            {/* --- Section Header --- */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>PART IDENTIFICATION</Text>
+              <Text style={styles.sectionPagination}>{pageNum} / {totalPages}</Text>
             </View>
-          );
-        })
-      ) : (
-        <View style={styles.section}>
-          <EmptyState message="No identification photos available for this part." />
-        </View>
-      )}
+
+            {/* --- Page 1 Content (Data & Specs) --- */}
+            {isFirstPage && (
+              <>
+                <View style={styles.dataGrid}>
+                  {/* ... Cols ... */}
+                  <View style={styles.colCustomerData}>
+                    <Text style={styles.colHeaderLabel}>CUSTOMER DATA</Text>
+                    <View style={styles.row}>
+                      <Text style={styles.label}>CLIENT DESIGNATION:</Text>
+                      <Text style={styles.value}>{partData.client_designation || '-'}</Text>
+                    </View>
+                    <View style={styles.row}>
+                      <Text style={styles.label}>REFERENCE:</Text>
+                      <Text style={styles.value}>{partData.reference || '-'}</Text>
+                    </View>
+                    <View style={styles.row}>
+                      <Text style={styles.label}>QUANTITY:</Text>
+                      <Text style={styles.value}>{partData.quantity || '-'}</Text>
+                    </View>
+                    <View style={styles.row}>
+                      <Text style={styles.label}>STEEL GRADE:</Text>
+                      <Text style={styles.value}>{steelGrade}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.colDimensions}>
+                    <Text style={styles.colHeaderLabel}>DIMENSIONS</Text>
+                    <View style={styles.dimList}>
+                      {length && <View style={styles.dimRow}><Text style={styles.dimLabel}>Length :</Text><Text style={styles.dimValue}>{length} {unitRect}</Text></View>}
+                      {width && <View style={styles.dimRow}><Text style={styles.dimLabel}>Width :</Text><Text style={styles.dimValue}>{width} {unitRect}</Text></View>}
+                      {diameter && <View style={styles.dimRow}><Text style={styles.dimLabel}>Diameter :</Text><Text style={styles.dimValue}>{diameter} {unitCirc}</Text></View>}
+                      {height && <View style={styles.dimRow}><Text style={styles.dimLabel}>Height :</Text><Text style={styles.dimValue}>{height} {unitRect}</Text></View>}
+                    </View>
+                  </View>
+
+                  <View style={styles.colWeight}>
+                    <Text style={styles.colHeaderLabel}>WEIGHT</Text>
+                    <Text style={styles.weightValue}>
+                      {weight ? `${weight} ${unitWeight}` : '-'}
+                    </Text>
+                  </View>
+                </View>
+
+                {activeSpecs.length > 0 && (
+                  <View style={styles.specsContainer}>
+                    <Text style={styles.specsTitle}>TECHNICAL SPECIFICATIONS</Text>
+                    <View style={styles.specsContent}>
+                      {activeSpecs.map((spec, i) => (
+                        <View key={i} style={styles.specItem}>
+                          <Text style={{ fontFamily: 'Helvetica-Bold' }}>{spec.label}: </Text>
+                          <Text>{spec.text}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
+
+            {/* --- Photos --- */}
+            {page.photos.length > 0 && (
+              <View>
+                {isFirstPage && <Text style={styles.photosTitle}>PICTURES</Text>}
+
+                {/* Layout: Initial */}
+                {page.type === 'initial' && (
+                  <View style={styles.heroLayout}>
+                    {page.photos[0] && (
+                      <View wrap={false}>
+                        <PhotoContainer photo={page.photos[0]} customSize={page.photos[0].size} />
+                      </View>
+                    )}
+                    {page.photos.length > 1 && (
+                      <View style={{ ...styles.heroRowSmall, width: SIZES.heroLarge.width }} wrap={false}>
+                        {page.photos.slice(1).map((p, i) => (
+                          <PhotoContainer key={i} photo={p} customSize={p.size} />
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Layout: Grid */}
+                {page.type === 'grid' && (
+                  <View style={styles.gridLayout}> {/* Removed wrap={false} */}
+                    {page.photos.map((p, i) => (
+                      <View key={i} wrap={false}>
+                        <PhotoContainer photo={p} customSize={SIZES.gridItem} />
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        );
+      })}
     </>
   );
 };

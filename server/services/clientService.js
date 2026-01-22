@@ -7,6 +7,7 @@ const { node, client, closure, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
+const logger = require('../utils/logger');
 
 /**
  * Fonction utilitaire pour valider les données du client
@@ -346,7 +347,10 @@ const deleteClient = async (clientId) => {
     return true;
   } catch (error) {
     // En cas d'erreur, annuler toutes les modifications
-    await t.rollback();
+    // IMPORTANT: Vérifier que la transaction n'est pas déjà terminée avant le rollback
+    if (!t.finished) {
+      await t.rollback();
+    }
     throw error;
   }
 };

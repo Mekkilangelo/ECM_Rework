@@ -866,6 +866,7 @@
       "status": "Status",
       "description": "Description",
       "selectLocation": "Select trial location (ECM, Client site...)",
+      "selectOrAddLocation": "Select or add a location",
       "selectStatus": "Select a status"
     },
     
@@ -1382,7 +1383,8 @@
     "process": {
       "mounting_type": "Mounting Type",
       "position_type": "Position Type",
-      "process_type": "Process Type"
+      "process_type": "Process Type",
+      "location": "Location"
     }
   },
 

@@ -210,16 +210,23 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
   // Mettre à jour le statut d'un élément (nouveau -> lu)
   const updateItemStatus = async (nodeId) => {
     try {
-      await axios.put(`${API_URL}/nodes/${nodeId}/status`, {
+      const response = await axios.put(`${API_URL}/nodes/${nodeId}/status`, {
         status: 'opened'
       });
       
-      // Mettre à jour l'état local après succès
+      // Mettre à jour l'état local immédiatement pour un feedback instantané
       setData(prevData => 
         prevData.map(item => 
           item.id === nodeId ? { ...item, data_status: 'opened' } : item
         )
       );
+      
+      // Forcer un refresh pour s'assurer que toutes les instances sont synchronisées
+      // Utiliser un délai court pour permettre au serveur de traiter la requête
+      setTimeout(() => {
+        fetchData();
+      }, 100);
+      
     } catch (err) {
       logger.hook.error('useHierarchy updateItemStatus', err, { nodeId, currentLevel });
     }

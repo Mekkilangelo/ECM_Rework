@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '../../../../context/NavigationContext';
 import { AuthContext } from '../../../../context/AuthContext';
-import { useHierarchy } from '../../../../hooks/useHierarchy';
 import { faFlask } from '@fortawesome/free-solid-svg-icons';
 import GenericEntityList from '../../../common/GenericEntityList/GenericEntityList';
 import TrialFormWithSideNavigation from '../form/TrialFormWithSideNavigation';
@@ -17,7 +16,6 @@ const TrialList = ({ partId }) => {
   const { t } = useTranslation();
   const { hierarchyState } = useNavigation();
   const { user } = useContext(AuthContext);
-  const { updateItemStatus } = useHierarchy();
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
   
   // Ref pour éviter les appels multiples
@@ -55,8 +53,8 @@ const TrialList = ({ partId }) => {
             }
             
             // Marquer comme vu si nouveau
-            if (trial.data_status === 'new') {
-              updateItemStatus(trial.id);
+            if (trial.data_status === 'new' && modalHandlersRef.current.updateItemStatus) {
+              await modalHandlersRef.current.updateItemStatus(trial.id);
             }
           }
         } catch (error) {
@@ -67,19 +65,24 @@ const TrialList = ({ partId }) => {
       loadTrial();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasEditRights, updateItemStatus]);
-
-  const handleTrialClick = (trial, { openEditModal, openDetailModal }) => {
-    if (hasEditRights) {
-      openEditModal(trial);
-    } else {
-      openDetailModal(trial);
-    }
-  };
+  }, [hasEditRights]);
 
   const columns = (handlers) => {
     // Stocker les handlers pour l'auto-open
     modalHandlersRef.current = handlers;
+    
+    const handleTrialClick = async (trial, { openEditModal, openDetailModal }) => {
+      // Marquer comme vu si nouveau
+      if (trial.data_status === 'new' && handlers.updateItemStatus) {
+        await handlers.updateItemStatus(trial.id);
+      }
+      
+      if (hasEditRights) {
+        openEditModal(trial);
+      } else {
+        openDetailModal(trial);
+      }
+    };
     
     return [
       createClickableNameColumn({

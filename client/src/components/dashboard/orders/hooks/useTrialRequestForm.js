@@ -108,7 +108,7 @@ const useTrialRequestForm = (order, onClose, onOrderCreated, onOrderUpdated, vie
     message: copyPasteMessage
   } = useCopyPaste({
     formType: 'orders',
-    formData,
+    getFormData: () => formData,
     setFormData,
     formatForApi,
     parseFromApi

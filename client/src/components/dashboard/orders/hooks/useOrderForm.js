@@ -108,7 +108,7 @@ const useOrderForm = (order, onClose, onOrderCreated, onOrderUpdated, viewMode =
     message: copyPasteMessage
   } = useCopyPaste({
     formType: 'orders',
-    formData,
+    getFormData: () => formData,
     setFormData,
     formatForApi,
     parseFromApi

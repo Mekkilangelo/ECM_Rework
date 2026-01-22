@@ -869,6 +869,7 @@
       "status": "Statut",
       "description": "Description",
       "selectLocation": "Sélectionner le lieu de l'essai (ECM, Site client...)",
+      "selectOrAddLocation": "Sélectionner ou ajouter un lieu",
       "selectStatus": "Sélectionner un statut"
     },
     
@@ -1390,7 +1391,8 @@
     "process": {
       "mounting_type": "Type de Montage",
       "position_type": "Type de Position",
-      "process_type": "Type de Processus"
+      "process_type": "Type de Processus",
+      "location": "Localisation"
     }
   },
 

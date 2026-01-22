@@ -139,7 +139,7 @@ const useClientForm = (client, onClose, onClientCreated, onClientUpdated, viewMo
   // Hook pour la fonctionnalité copy/paste
   const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
     formType: 'clients',
-    formData,
+    getFormData: () => formData,
     setFormData,
     formatForApi,
     parseFromApi

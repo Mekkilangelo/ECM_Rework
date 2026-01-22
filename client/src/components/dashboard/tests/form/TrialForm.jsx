@@ -220,6 +220,7 @@ const TrialForm = forwardRef(({
               errors={errors}
               handleChange={formHandlers.handleChange}
               handleSelectChange={formHandlers.handleSelectChange}
+              handleCreateOption={formHandlers.handleCreateOption}
               getSelectedOption={formHandlers.getSelectedOption}
               locationOptions={formHandlers.locationOptions}
               statusOptions={formHandlers.statusOptions}

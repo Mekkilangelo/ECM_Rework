@@ -1,13 +1,16 @@
 import React from 'react';
 import { Row, Col, Form } from 'react-bootstrap';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { useTranslation } from 'react-i18next';
+import { isValidNewOption, customFilterOption } from '../../../../../../utils/selectHelpers';
 
 const BasicInfoSection = React.memo(({
   formData,
   errors,
   handleChange,
   handleSelectChange,
+  handleCreateOption,
   getSelectedOption,
   locationOptions,
   statusOptions,
@@ -20,6 +23,10 @@ const BasicInfoSection = React.memo(({
   
   // Définir le format de date en fonction de la langue
   const dateFormat = i18n.language === 'fr' ? 'JJ/MM/AAAA' : 'DD/MM/YYYY';
+
+  // Handler pour créer une nouvelle location
+  const handleCreateLocation = (inputValue) =>
+    handleCreateOption(inputValue, 'location', 'trials', 'location');
 
   return (
     <>
@@ -62,10 +69,11 @@ const BasicInfoSection = React.memo(({
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>{t('trials.basicInfo.location')}</Form.Label>            <Select
+            <Form.Label>{t('trials.basicInfo.location')}</Form.Label>            <CreatableSelect
               name="location"
               value={getSelectedOption(locationOptions, formData.location)}
               onChange={(option) => handleSelectChange(option, { name: 'location' })}
+              onCreateOption={handleCreateLocation}
               options={locationOptions}
               isClearable
               styles={viewMode ? {
@@ -78,11 +86,14 @@ const BasicInfoSection = React.memo(({
                 dropdownIndicator: () => ({ display: 'none' }),
                 indicatorSeparator: () => ({ display: 'none' })
               } : selectStyles}
-              placeholder={t('trials.basicInfo.selectLocation')}
+              placeholder={t('trials.basicInfo.selectOrAddLocation')}
+              formatCreateLabel={(inputValue) => `${t('common.addOption')} "${inputValue}"`}
               className="react-select-container"
               classNamePrefix="react-select"
               isLoading={loading}
               isDisabled={viewMode}
+              isValidNewOption={isValidNewOption}
+              filterOption={customFilterOption}
             />
           </Form.Group>
         </Col>

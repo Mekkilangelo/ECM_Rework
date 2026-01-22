@@ -9,6 +9,7 @@ const { ValidationError, NotFoundError } = require('../utils/errors');
 const { deletePhysicalDirectory } = require('../utils/fileUtils');
 const { updateAncestorsModifiedAt } = require('../utils/hierarchyUtils');
 const fileService = require('./fileService');
+const logger = require('../utils/logger');
 
 /**
  * Fonction utilitaire pour valider les données de la pièce
@@ -584,6 +585,7 @@ const deletePart = async (partId) => {
     // NOUVELLE FONCTIONNALITÉ : Supprimer le dossier physique de la pièce
     // Cette opération se fait après la validation de la transaction pour éviter
     // de supprimer les fichiers si la transaction échoue
+    // IMPORTANT: Les erreurs ici ne doivent PAS faire échouer l'opération car la transaction est déjà commitée
     try {
       const deletionResult = await deletePhysicalDirectory(partPhysicalPath);
       if (deletionResult) {
@@ -602,7 +604,10 @@ const deletePart = async (partId) => {
     return true;
   } catch (error) {
     // En cas d'erreur, annuler toutes les modifications
-    await t.rollback();
+    // IMPORTANT: Vérifier que la transaction n'est pas déjà terminée avant le rollback
+    if (!t.finished) {
+      await t.rollback();
+    }
     throw error;
   }
 };

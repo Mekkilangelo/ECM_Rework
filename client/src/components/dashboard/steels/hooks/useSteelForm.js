@@ -191,7 +191,7 @@ const useSteelForm = (steel, onClose, onSteelCreated, onSteelUpdated, viewMode =
   // Hook pour la fonctionnalité copy/paste
   const { handleCopy, handlePaste, message: copyPasteMessage } = useCopyPaste({
     formType: 'steels',
-    formData,
+    getFormData: () => formData,
     setFormData,
     formatForApi,
     parseFromApi

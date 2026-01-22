@@ -126,7 +126,16 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
     // donc on aplatit toutes les subcategories en un seul tableau
 
     // Aplatir toutes les photos des différentes subcategories
-    const allPhotos = Object.values(enrichedPhotos).flat();
+    // enrichedPhotos peut être soit un objet { category: [photos] } soit directement un tableau
+    let allPhotos = [];
+
+    if (Array.isArray(enrichedPhotos)) {
+      // Si c'est déjà un tableau, l'utiliser directement
+      allPhotos = enrichedPhotos;
+    } else if (typeof enrichedPhotos === 'object' && enrichedPhotos !== null) {
+      // Si c'est un objet, aplatir toutes les valeurs
+      allPhotos = Object.values(enrichedPhotos).flat();
+    }
 
     // Organiser dans la structure attendue par ReportPDFDocument
     // On met toutes les photos sous la clé 'all' pour la section identification

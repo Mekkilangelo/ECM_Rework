@@ -69,34 +69,80 @@ const IDENTIFICATION_PHOTO_SIZES = {
 };
 
 /**
- * Format dimensions helper
+ * Helper pour extraire une unité depuis différentes sources possibles
+ * Gère: string directe, objet {name: 'unit'}, ou valeur dans nested object
+ */
+const resolveUnit = (directUnit, relationUnit) => {
+  // 1. Priorité à la valeur directe (string FK)
+  if (directUnit && typeof directUnit === 'string') {
+    return directUnit;
+  }
+  
+  // 2. Essayer depuis l'objet relation Sequelize (relationUnit.name)
+  if (relationUnit && typeof relationUnit === 'object' && relationUnit.name) {
+    return relationUnit.name;
+  }
+  
+  // 3. Si relationUnit est directement une string
+  if (relationUnit && typeof relationUnit === 'string') {
+    return relationUnit;
+  }
+  
+  return '';
+};
+
+/**
+ * Format dimensions helper with explicit labels
  */
 const formatDimensions = (part) => {
   const dims = [];
-  
-  // Rectangular dimensions
+
+  // Debug: Log toutes les propriétés de part liées aux unités (toujours actif pour debug)
+  console.log('[IdentificationPDF] formatDimensions - Part data:', {
+    dim_rect_unit: part.dim_rect_unit,
+    dim_circ_unit: part.dim_circ_unit,
+    dim_weight_unit: part.dim_weight_unit,
+    rectUnit: part.rectUnit,
+    circUnit: part.circUnit,
+    weightUnit: part.weightUnit,
+    dim_weight_value: part.dim_weight_value,
+    dim_rect_height: part.dim_rect_height
+  });
+
+  // Rectangular dimensions with explicit labels
   if (part.dim_rect_length || part.dim_rect_width || part.dim_rect_height) {
-    const rectDims = [part.dim_rect_length, part.dim_rect_width, part.dim_rect_height]
-      .filter(d => d)
-      .join(' × ');
-    if (rectDims) {
-      dims.push(`${rectDims}${part.dim_rect_unit ? ` ${part.dim_rect_unit}` : ''}`);
+    const rectParts = [];
+    if (part.dim_rect_length) rectParts.push(`Length: ${part.dim_rect_length}`);
+    if (part.dim_rect_width) rectParts.push(`Width: ${part.dim_rect_width}`);
+    if (part.dim_rect_height) rectParts.push(`Height: ${part.dim_rect_height}`);
+
+    if (rectParts.length > 0) {
+      const unit = resolveUnit(part.dim_rect_unit, part.rectUnit);
+      console.log('[IdentificationPDF] Rect unit resolved:', unit, 'from:', { dim_rect_unit: part.dim_rect_unit, rectUnit: part.rectUnit });
+      dims.push(`${rectParts.join(' × ')}${unit ? ` ${unit}` : ''}`);
     }
   }
-  
-  // Circular dimensions
+
+  // Circular dimensions with explicit labels
   if (part.dim_circ_diameterOut || part.dim_circ_diameterIn) {
-    const circDims = [];
-    if (part.dim_circ_diameterOut) circDims.push(`⌀ ext: ${part.dim_circ_diameterOut}`);
-    if (part.dim_circ_diameterIn) circDims.push(`⌀ int: ${part.dim_circ_diameterIn}`);
-    dims.push(`${circDims.join(', ')}${part.dim_circ_unit ? ` ${part.dim_circ_unit}` : ''}`);
+    const circParts = [];
+    if (part.dim_circ_diameterOut) circParts.push(`⌀ Ext: ${part.dim_circ_diameterOut}`);
+    if (part.dim_circ_diameterIn) circParts.push(`⌀ Int: ${part.dim_circ_diameterIn}`);
+
+    if (circParts.length > 0) {
+      const unit = resolveUnit(part.dim_circ_unit, part.circUnit);
+      console.log('[IdentificationPDF] Circ unit resolved:', unit, 'from:', { dim_circ_unit: part.dim_circ_unit, circUnit: part.circUnit });
+      dims.push(`${circParts.join(', ')}${unit ? ` ${unit}` : ''}`);
+    }
   }
-  
-  // Weight
+
+  // Weight with explicit label
   if (part.dim_weight_value) {
-    dims.push(`${part.dim_weight_value}${part.dim_weight_unit ? ` ${part.dim_weight_unit}` : ''}`);
+    const unit = resolveUnit(part.dim_weight_unit, part.weightUnit);
+    console.log('[IdentificationPDF] Weight unit resolved:', unit, 'from:', { dim_weight_unit: part.dim_weight_unit, weightUnit: part.weightUnit });
+    dims.push(`Weight: ${part.dim_weight_value}${unit ? ` ${unit}` : ''}`);
   }
-  
+
   return dims.join(' | ') || '';
 };
 
@@ -241,9 +287,24 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
 
   // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
-  
+
   // Extract data from report
   const partData = report.partData || report.part || {};
+  
+  // DEBUG: Log complet des données partData reçues
+  console.log('🔍 [IdentificationSectionPDF] report.partData:', {
+    hasPartData: !!report.partData,
+    hasPart: !!report.part,
+    dim_weight_unit: partData.dim_weight_unit,
+    dim_rect_unit: partData.dim_rect_unit,
+    dim_circ_unit: partData.dim_circ_unit,
+    dim_weight_value: partData.dim_weight_value,
+    dim_rect_height: partData.dim_rect_height,
+    weightUnit: partData.weightUnit,
+    rectUnit: partData.rectUnit,
+    allKeys: Object.keys(partData)
+  });
+  
   const steelGrade = getSteelGrade(partData);
   const hardnessSpecs = partData.hardnessSpecs || [];
   const ecdSpecs = partData.ecdSpecs || [];

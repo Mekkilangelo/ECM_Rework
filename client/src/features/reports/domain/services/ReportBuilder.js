@@ -128,6 +128,53 @@ export class ReportBuilder {
   static fromApiData(apiData, selectedSections = {}, selectedPhotos = {}) {
     const builder = new ReportBuilder();
 
+    const partData = apiData.partData || {};
+    
+    console.log('🔍 [ReportBuilder] fromApiData - apiData.partData reçu:', {
+      hasPartData: !!apiData.partData,
+      dim_rect_unit: partData.dim_rect_unit,
+      dim_circ_unit: partData.dim_circ_unit,
+      dim_weight_unit: partData.dim_weight_unit,
+      rectUnit: partData.rectUnit,
+      circUnit: partData.circUnit,
+      weightUnit: partData.weightUnit,
+      allKeys: Object.keys(partData)
+    });
+
+    // Normaliser partData pour s'assurer que les unités sont dans le bon format
+    // Même logique que PartIdentificationReport pour cohérence
+    const normalizedPartData = {
+      ...partData,
+      node_id: apiData.partId,
+      name: apiData.partName,
+      id: apiData.partId,
+      // Normaliser les dimensions (camelCase et snake_case)
+      dim_rect_length: partData.dimRectLength || partData.dim_rect_length,
+      dim_rect_width: partData.dimRectWidth || partData.dim_rect_width,
+      dim_rect_height: partData.dimRectHeight || partData.dim_rect_height,
+      dim_circ_diameterOut: partData.dimCircDiameterOut || partData.dim_circ_diameterOut,
+      dim_circ_diameterIn: partData.dimCircDiameterIn || partData.dim_circ_diameterIn,
+      dim_weight_value: partData.dimWeightValue || partData.dim_weight_value,
+      // S'assurer que les unités sont des strings (pas des objets)
+      // Priorité: valeur snake_case directe > camelCase > objet.name
+      dim_rect_unit: partData.dim_rect_unit || partData.dimRectUnit || 
+                     (partData.rectUnit?.name) || (typeof partData.rectUnit === 'string' ? partData.rectUnit : null),
+      dim_circ_unit: partData.dim_circ_unit || partData.dimCircUnit || 
+                     (partData.circUnit?.name) || (typeof partData.circUnit === 'string' ? partData.circUnit : null),
+      dim_weight_unit: partData.dim_weight_unit || partData.dimWeightUnit || 
+                       (partData.weightUnit?.name) || (typeof partData.weightUnit === 'string' ? partData.weightUnit : null),
+      // Garder aussi les objets relation pour compatibilité
+      rectUnit: partData.rectUnit,
+      circUnit: partData.circUnit,
+      weightUnit: partData.weightUnit
+    };
+
+    console.log('🔍 [ReportBuilder] Normalized partData units:', {
+      dim_rect_unit: normalizedPartData.dim_rect_unit,
+      dim_circ_unit: normalizedPartData.dim_circ_unit,
+      dim_weight_unit: normalizedPartData.dim_weight_unit
+    });
+
     builder
       .setTrialId(apiData.trialId || apiData.testId)
       .setTrialData({
@@ -144,12 +191,7 @@ export class ReportBuilder {
         results_data: apiData.resultsData,
         load_data: apiData.loadData
       })
-      .setPartData({
-        ...(apiData.partData || {}),
-        node_id: apiData.partId,
-        name: apiData.partName,
-        id: apiData.partId
-      })
+      .setPartData(normalizedPartData)
       .setClientData({
         ...(apiData.clientData || {}),
         node_id: apiData.clientId,

@@ -698,6 +698,16 @@
             "descriptions": {
               "datapaq": "Datapaq sensor readings"
             }
+          },
+          "postTreatment": {
+            "title": "Post-treatment",
+            "description": "Post-treatment photos",
+            "categories": {
+              "post_treatment": "Post-treatment photos"
+            },
+            "descriptions": {
+              "post_treatment": "Post-treatment photos"
+            }
           }
         }
       }
@@ -852,10 +862,10 @@
       "title": "Basic Information",
       "loadNumber": "Load Number",
       "trialDate": "Trial Date",
-      "location": "Location",
+      "location": "Trial Location",
       "status": "Status",
       "description": "Description",
-      "selectLocation": "Select a location",
+      "selectLocation": "Select trial location (ECM, Client site...)",
       "selectStatus": "Select a status"
     },
     
@@ -1037,6 +1047,12 @@
         "loadError": "Error while loading DATAPAQ files:",
         "associateError": "Error while associating DATAPAQ files:",
         "import": "Import DATAPAQ files"
+      },
+      "postTreatment": {
+        "title": "Post-treatment",
+        "loadError": "Error while loading post-treatment photos:",
+        "associateError": "Error while associating post-treatment photos:",
+        "import": "Import post-treatment photos"
       },
       "results": {
         "title": "Results",
@@ -1284,6 +1300,10 @@
       "datapaq": {
         "label": "Datapaq",
         "description": "Datapaq sensor readings and reports"
+      },
+      "postTreatment": {
+        "label": "Post-treatment",
+        "description": "Post-treatment photos"
       },
       "micrography": {
         "label": "Micrography",

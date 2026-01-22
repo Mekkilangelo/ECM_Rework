@@ -137,6 +137,7 @@ export class Section {
       case 'recipe':
       case 'curves':
       case 'datapaq':
+      case 'postTreatment':
       case 'control':
       case 'micrography':
         // Ces sections nécessitent soit des données soit des photos
@@ -181,6 +182,7 @@ export class SectionFactory {
     LOAD: 'load',
     CURVES: 'curves',
     DATAPAQ: 'datapaq',
+    POST_TREATMENT: 'postTreatment',
     MICROGRAPHY: 'micrography',
     CONTROL: 'control'
   };
@@ -223,6 +225,15 @@ export class SectionFactory {
         hasPhotos: true,
         order: 4
       },
+      [this.SECTION_TYPES.POST_TREATMENT]: {
+        id: 'postTreatment',
+        type: 'postTreatment',
+        label: 'Post-traitement',
+        icon: 'faImage',
+        description: 'Photos du post-traitement',
+        hasPhotos: true,
+        order: 5
+      },
       [this.SECTION_TYPES.RECIPE]: {
         id: 'recipe',
         type: 'recipe',
@@ -230,7 +241,7 @@ export class SectionFactory {
         icon: 'faList',
         description: 'Paramètres de la recette utilisée',
         hasPhotos: false,
-        order: 5,
+        order: 6,
         options: {
           showRecipeDetails: true, // Afficher les détails (tableaux, données) par défaut
           showRecipeCurve: true // Afficher le graphique des cycles par défaut
@@ -243,7 +254,7 @@ export class SectionFactory {
         icon: 'faClipboardCheck',
         description: 'Résultats de mesures et contrôles',
         hasPhotos: true,
-        order: 6
+        order: 7
       },
       [this.SECTION_TYPES.MICROGRAPHY]: {
         id: 'micrography',
@@ -252,7 +263,7 @@ export class SectionFactory {
         icon: 'faMicroscope',
         description: 'Images et analyses micrographiques',
         hasPhotos: true,
-        order: 7
+        order: 8
       }
     };
 

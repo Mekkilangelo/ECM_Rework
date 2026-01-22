@@ -58,6 +58,8 @@ const useFileUpload = (files, setFiles, setInternalUploadedFiles, onFilesUploade
       const newFiles = response.data.data.files;
       const tempId = response.data.data.tempId;
       
+      // Mettre à jour l'état interne avec les fichiers retournés par le serveur
+      // (qui contiennent maintenant les descriptions)
       setInternalUploadedFiles(prev => [...prev, ...newFiles]);
       setFiles([]);
       setUploadProgress(0);

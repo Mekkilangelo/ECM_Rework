@@ -700,6 +700,16 @@
             "descriptions": {
               "datapaq": "Relevés des capteurs Datapaq"
             }
+          },
+          "postTreatment": {
+            "title": "Post-traitement",
+            "description": "Photos du post-traitement",
+            "categories": {
+              "post_treatment": "Photos post-traitement"
+            },
+            "descriptions": {
+              "post_treatment": "Photos du post-traitement"
+            }
           }
         }
       }
@@ -855,10 +865,10 @@
       "title": "Informations de base",
       "loadNumber": "Numéro de charge",
       "trialDate": "Date de l'essai",
-      "location": "Localisation",
+      "location": "Lieu de l'essai",
       "status": "Statut",
       "description": "Description",
-      "selectLocation": "Sélectionner une localisation",
+      "selectLocation": "Sélectionner le lieu de l'essai (ECM, Site client...)",
       "selectStatus": "Sélectionner un statut"
     },
     
@@ -1041,6 +1051,12 @@
         "loadError": "Erreur lors du chargement des fichiers DATAPAQ:",
         "associateError": "Erreur lors de l'association des fichiers DATAPAQ:",
         "import": "Importer des fichiers DATAPAQ"
+      },
+      "postTreatment": {
+        "title": "Post-traitement",
+        "loadError": "Erreur lors du chargement des photos de post-traitement:",
+        "associateError": "Erreur lors de l'association des photos de post-traitement:",
+        "import": "Importer des photos de post-traitement"
       },
       "results": {
         "title": "Résultats",
@@ -1292,6 +1308,10 @@
       "datapaq": {
         "label": "Datapaq",
         "description": "Relevés et rapports des capteurs Datapaq"
+      },
+      "postTreatment": {
+        "label": "Post-traitement",
+        "description": "Photos du post-traitement"
       },
       "micrography": {
         "label": "Micrographie",

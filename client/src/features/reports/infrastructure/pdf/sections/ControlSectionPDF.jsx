@@ -499,12 +499,13 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
   if (Array.isArray(photos)) {
     photos.forEach(photo => {
       // Parser la subcategory pour extraire result et sample
-      // Format: "result-0-sample-1"
+      // Format: "result-1-sample-1" (indices base-1)
       const match = photo.subcategory?.match(/result-(\d+)-sample-(\d+)/);
       if (match) {
-        const resultIndex = parseInt(match[1], 10);
-        const sampleIndex = parseInt(match[2], 10);
-        const key = `result-${resultIndex}-sample-${sampleIndex}`;
+        // Garder les indices tels quels (base-1) pour la clé
+        const resultNum = match[1];
+        const sampleNum = match[2];
+        const key = `result-${resultNum}-sample-${sampleNum}`;
         
         if (!photosByResultSample[key]) {
           photosByResultSample[key] = [];
@@ -527,7 +528,8 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
           
           {result.samples && result.samples.map((sample, sampleIndex) => {
             // Trouver les photos pour ce result-sample
-              const photoKey = `result-${resultIndex}-sample-${sampleIndex}`;
+            // IMPORTANT: Les fichiers utilisent des indices base-1, pas base-0
+              const photoKey = `result-${resultIndex + 1}-sample-${sampleIndex + 1}`;
               const samplePhotos = photosByResultSample[photoKey] || [];
               
               return (

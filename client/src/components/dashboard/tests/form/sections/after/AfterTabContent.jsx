@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ResultsDataSection from './sections/results/ResultsDataSection';
 import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection';
 import DatapaqSection from './sections/furnace_report/DatapaqSection';
+import PostTreatmentSection from './sections/furnace_report/PostTreatmentSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 import trialService from '../../../../../../services/trialService';
@@ -25,6 +26,7 @@ const AfterTabContent = forwardRef(({
   // États pour stocker les fonctions d'association de fichiers des sous-sections
   const furnaceFileAssociationRef = useRef(null);
   const datapaqFileAssociationRef = useRef(null);
+  const postTreatmentFileAssociationRef = useRef(null);
   const resultsFileAssociationRef = useRef(null);
 
   const handleFileAssociationNeededRef = useRef(handleFileAssociationNeeded);
@@ -43,6 +45,10 @@ const AfterTabContent = forwardRef(({
     datapaqFileAssociationRef.current = associateFunc;
   }, []);
 
+  const handlePostTreatmentFileAssociationNeeded = React.useCallback((associateFunc) => {
+    postTreatmentFileAssociationRef.current = associateFunc;
+  }, []);
+
   const handleResultsFileAssociationNeeded = React.useCallback((associateFunc) => {
     resultsFileAssociationRef.current = associateFunc;
   }, []);
@@ -58,6 +64,10 @@ const AfterTabContent = forwardRef(({
 
     if (datapaqFileAssociationRef.current) {
       promises.push(datapaqFileAssociationRef.current(nodeId));
+    }
+
+    if (postTreatmentFileAssociationRef.current) {
+      promises.push(postTreatmentFileAssociationRef.current(nodeId));
     }
 
     if (resultsFileAssociationRef.current) {
@@ -166,6 +176,19 @@ const AfterTabContent = forwardRef(({
         <DatapaqSection
           trialNodeId={trial ? trial.id : null}
           onFileAssociationNeeded={handleDatapaqFileAssociationNeeded}
+          viewMode={viewMode}
+        />
+      </CollapsibleSection>
+      <CollapsibleSection
+        title={t('trials.after.postTreatment.title')}
+        isExpandedByDefault={false}
+        sectionId="trial-post-treatment"
+        rememberState={false}
+        level={0}
+      >
+        <PostTreatmentSection
+          trialNodeId={trial ? trial.id : null}
+          onFileAssociationNeeded={handlePostTreatmentFileAssociationNeeded}
           viewMode={viewMode}
         />
       </CollapsibleSection>

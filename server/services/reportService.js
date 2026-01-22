@@ -27,9 +27,9 @@ const getTestHierarchy = async (trialId) => {
         model: node,
         as: 'ancestor',
         include: [
-          { 
-            model: part, 
-            as: 'part', 
+          {
+            model: part,
+            as: 'part',
             required: false,
             include: [
               {
@@ -45,6 +45,21 @@ const getTestHierarchy = async (trialId) => {
               {
                 model: db.steel,
                 as: 'steel',
+                required: false
+              },
+              {
+                model: db.ref_units,
+                as: 'weightUnit',
+                required: false
+              },
+              {
+                model: db.ref_units,
+                as: 'rectUnit',
+                required: false
+              },
+              {
+                model: db.ref_units,
+                as: 'circUnit',
                 required: false
               }
             ]
@@ -694,13 +709,54 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
     if (partNode) {
       reportData.partId = partNode.id;
       reportData.partName = partNode.name;
-      reportData.partData = partNode.part;
-      
-      logger.debug('Données pièce ajoutées', {
-        partId: partNode.id,
-        partName: partNode.name,
-        hasPartData: !!partNode.part
-      });
+
+      // Sérialiser les données part pour inclure tous les champs et relations
+      if (partNode.part) {
+        // Accès direct aux valeurs FK string depuis l'instance Sequelize
+        const dimWeightUnit = partNode.part.dim_weight_unit;
+        const dimRectUnit = partNode.part.dim_rect_unit;
+        const dimCircUnit = partNode.part.dim_circ_unit;
+
+        // Log pour debug
+        logger.info('📏 Units extraites de part:', {
+          dim_weight_unit: dimWeightUnit,
+          dim_rect_unit: dimRectUnit,
+          dim_circ_unit: dimCircUnit,
+          dim_weight_value: partNode.part.dim_weight_value,
+          dim_rect_height: partNode.part.dim_rect_height,
+          hasWeightUnitRelation: !!partNode.part.weightUnit,
+          weightUnitRelationName: partNode.part.weightUnit?.name
+        });
+
+        const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
+
+        // Log plainPartData units
+        logger.info('📏 plainPartData après get({plain:true}):', {
+          dim_weight_unit: plainPartData.dim_weight_unit,
+          dim_rect_unit: plainPartData.dim_rect_unit,
+          dim_circ_unit: plainPartData.dim_circ_unit,
+          weightUnit: plainPartData.weightUnit
+        });
+
+        // IMPORTANT: Forcer les valeurs FK string dans l'objet final
+        // Même logique que PartForm qui passe directement les strings
+        reportData.partData = {
+          ...plainPartData,
+          dim_weight_unit: dimWeightUnit,
+          dim_rect_unit: dimRectUnit,
+          dim_circ_unit: dimCircUnit
+        };
+
+        // Log final partData
+        logger.info('📏 Final reportData.partData units:', {
+          dim_weight_unit: reportData.partData.dim_weight_unit,
+          dim_rect_unit: reportData.partData.dim_rect_unit,
+          dim_circ_unit: reportData.partData.dim_circ_unit
+        });
+      } else {
+        reportData.partData = null;
+        logger.debug('Pièce sans données part', { partId: partNode.id });
+      }
     } else {
       logger.warn('Aucune pièce trouvée pour le trial', { trialId });
     }

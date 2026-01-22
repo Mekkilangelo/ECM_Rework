@@ -195,7 +195,10 @@ class FileMetadataService {
       'control_location': 'control_location',
       
       // DataPaq (ajouté explicitement)
-      'datapaq': 'datapaq'
+      'datapaq': 'datapaq',
+      
+      // Post-traitement
+      'post_treatment': 'post_treatment'
     };
     
     // Vérifier si c'est une catégorie dynamique de micrographie
@@ -233,6 +236,9 @@ class FileMetadataService {
       'cooling': 'cooling',
       'alarms': 'alarms',
       'datapaq': 'datapaq',
+      
+      // Post-traitement
+      'post_treatment': 'post_treatment',
       
       // Documents
       'all_documents': 'all_documents',

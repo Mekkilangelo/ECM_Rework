@@ -80,6 +80,30 @@ const OrderList = () => {
     }
   };
 
+  const handleOrderClick = async (order) => {
+    if (order.data_status === 'new') {
+      await updateItemStatus(order.id);
+    }
+    navigateToLevel('part', order.id, order.name);
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    const orderToDelete = data.find(o => o.id === orderId);
+    const orderName = orderToDelete?.name || 'cette demande d\'essai';
+    
+    const confirmed = await confirmDelete(orderName, 'la demande d\'essai');
+    if (confirmed) {
+      try {
+        await trialRequestService.deleteTrialRequest(orderId);
+        toast.success(t('orders.deleteSuccess', 'Demande d\'essai supprimée avec succès'));
+        refreshData();
+      } catch (err) {
+        console.error('Erreur lors de la suppression de la demande d\'essai:', err);
+        toast.error(err.response?.data?.message || t('orders.deleteError', 'Erreur lors de la suppression'));
+      }
+    }
+  };
+
   // Configuration des colonnes pour la table triable
   const columns = [
     {
@@ -165,29 +189,6 @@ const OrderList = () => {
       )
     }
   ];
-
-  const handleOrderClick = (order) => {
-    if (order.data_status === 'new') {
-      updateItemStatus(order.id);
-    }
-    navigateToLevel('part', order.id, order.name);
-  };
-  const handleDeleteOrder = async (orderId) => {
-    const orderToDelete = data.find(o => o.id === orderId);
-    const orderName = orderToDelete?.name || 'cette demande d\'essai';
-    
-    const confirmed = await confirmDelete(orderName, 'la demande d\'essai');
-    if (confirmed) {
-      try {
-        await trialRequestService.deleteTrialRequest(orderId);
-        toast.success(t('orders.deleteSuccess', 'Demande d\'essai supprimée avec succès'));
-        refreshData();
-      } catch (err) {
-        console.error('Erreur lors de la suppression de la demande d\'essai:', err);
-        toast.error(err.response?.data?.message || t('orders.deleteError', 'Erreur lors de la suppression'));
-      }
-    }
-  };
 
   if (loading) return <div className="text-center my-5"><Spinner animation="border" variant="danger" /></div>;
   if (error) return <Alert variant="danger">{error}</Alert>;

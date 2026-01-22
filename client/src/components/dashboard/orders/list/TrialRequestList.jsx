@@ -15,40 +15,46 @@ const TrialRequestList = () => {
   const { t } = useTranslation();
   const { navigateToLevel, hierarchyState } = useNavigation();
 
-  const handleOrderClick = (order) => {
-    navigateToLevel('part', order.id, order.name);
-  };
+  const columns = (handlers) => {
+    const handleOrderClick = async (order) => {
+      // Marquer comme vu si nouveau
+      if (order.data_status === 'new' && handlers.updateItemStatus) {
+        await handlers.updateItemStatus(order.id);
+      }
+      navigateToLevel('part', order.id, order.name);
+    };
 
-  const columns = [
-    createClickableNameColumn({
-      key: 'name',
-      label: t('orders.reference'),
-      onClick: handleOrderClick,
-      getValue: (order) => order.name,
-      getStatus: (order) => order.data_status,
-      noValueText: t('orders.noReference')
-    }),
-    createTextColumn({
-      key: 'TrialRequest.commercial',
-      label: t('orders.commercial'),
-      getValue: (order) => order.trialRequest?.commercial,
-      centered: true,
-      emptyText: '-'
-    }),
-    createDateColumn({
-      key: 'TrialRequest.request_date',
-      label: t('orders.date'),
-      getValue: (order) => order.trialRequest?.request_date,
-      emptyText: t('common.unknown'),
-      format: { day: '2-digit', month: '2-digit', year: 'numeric' }
-    }),
-    createDateColumn({
-      key: 'modified_at',
-      label: t('common.modifiedAt'),
-      getValue: (order) => order.modified_at,
-      emptyText: t('common.unknown')
-    })
-  ];
+    return [
+      createClickableNameColumn({
+        key: 'name',
+        label: t('orders.reference'),
+        onClick: handleOrderClick,
+        getValue: (order) => order.name,
+        getStatus: (order) => order.data_status,
+        noValueText: t('orders.noReference')
+      }),
+      createTextColumn({
+        key: 'TrialRequest.commercial',
+        label: t('orders.commercial'),
+        getValue: (order) => order.trialRequest?.commercial,
+        centered: true,
+        emptyText: '-'
+      }),
+      createDateColumn({
+        key: 'TrialRequest.request_date',
+        label: t('orders.date'),
+        getValue: (order) => order.trialRequest?.request_date,
+        emptyText: t('common.unknown'),
+        format: { day: '2-digit', month: '2-digit', year: 'numeric' }
+      }),
+      createDateColumn({
+        key: 'modified_at',
+        label: t('common.modifiedAt'),
+        getValue: (order) => order.modified_at,
+        emptyText: t('common.unknown')
+      })
+    ];
+  };
 
   return (
     <GenericEntityList

@@ -249,6 +249,7 @@ const GenericEntityList = ({
     openDetailModal,
     openEditModal,
     handleDelete,
+    updateItemStatus: useHierarchyMode ? hierarchyData.updateItemStatus : null,
     t,
     hasEditRights
   };

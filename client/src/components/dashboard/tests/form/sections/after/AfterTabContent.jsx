@@ -5,6 +5,7 @@ import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection
 import DatapaqSection from './sections/furnace_report/DatapaqSection';
 import PostTreatmentSection from './sections/furnace_report/PostTreatmentSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
+import ConclusionSection from './sections/conclusion/ConclusionSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 import trialService from '../../../../../../services/trialService';
 
@@ -224,7 +225,28 @@ const AfterTabContent = forwardRef(({
           processExcelData={excelImportHandlers.processExcelData}
           specifications={specifications}
         />
-      </CollapsibleSection>    </>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title={t('trials.after.conclusion.title')}
+        isExpandedByDefault={true}
+        sectionId="trial-conclusion"
+        rememberState={false}
+        level={0}
+      >
+        <ConclusionSection
+          formData={formData}
+          handleChange={formHandlers.handleChange}
+          handleSelectChange={formHandlers.handleSelectChange}
+          getSelectedOption={formHandlers.getSelectedOption}
+          statusOptions={formHandlers.statusOptions}
+          loading={loading}
+          selectStyles={formHandlers.selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
+        />
+      </CollapsibleSection>
+    </>
   );
 });
 

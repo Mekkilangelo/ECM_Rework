@@ -1137,12 +1137,19 @@
         },
         "curves": {
           "title": "Courbes de dureté",
-          "hardness": "Dureté", 
+          "hardness": "Dureté",
           "series": "Séries",
           "points": "Points",
           "noDataToDisplay": "Aucune donnée à afficher",
           "addDataToSeeChart": "Ajoutez des données dans le tableau pour voir le graphique"
         }
+      },
+      "conclusion": {
+        "title": "Conclusion",
+        "status": "Statut de l'essai",
+        "selectStatus": "Sélectionner un statut",
+        "conclusionText": "Conclusion",
+        "conclusionPlaceholder": "Saisir la conclusion de l'essai..."
       }
     }
   },

@@ -1133,11 +1133,18 @@
         "curves": {
           "title": "Hardness Curves",
           "hardness": "Hardness",
-          "series": "Series", 
+          "series": "Series",
           "points": "Points",
           "noDataToDisplay": "No data to display",
           "addDataToSeeChart": "Add data in the table to see the chart"
         }
+      },
+      "conclusion": {
+        "title": "Conclusion",
+        "status": "Trial Status",
+        "selectStatus": "Select a status",
+        "conclusionText": "Conclusion",
+        "conclusionPlaceholder": "Enter the trial conclusion..."
       }
     }
   },

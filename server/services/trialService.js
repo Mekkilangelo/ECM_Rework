@@ -684,7 +684,7 @@ const getAllTrials = async (options = {}) => {
       {
         model: trial,
         as: 'trial',
-        attributes: ['trial_code', 'load_number', 'trial_date', 'status', 'location', 'recipe_id'],
+        attributes: ['trial_code', 'load_number', 'trial_date', 'status', 'location', 'recipe_id', 'conclusion'],
         include: [
           {
             model: sequelize.models.recipe,
@@ -782,6 +782,7 @@ const getTrialById = async (trialId) => {
     trialData.mounting_type = trialValues.mounting_type;
     trialData.position_type = trialValues.position_type;
     trialData.process_type = trialValues.process_type;
+    trialData.conclusion = trialValues.conclusion;
     
     // Données de charge (load_data) - structure imbriquée
     trialData.load_data = {
@@ -1204,7 +1205,8 @@ const createTrial = async (trialData) => {
     mounting_type,
     position_type,
     process_type,
-    preox_media
+    preox_media,
+    conclusion
   } = trialData;
   
   // Vérifier si le parent existe
@@ -1278,7 +1280,8 @@ const createTrial = async (trialData) => {
       ...loadDataFlat,
       mounting_type,
       position_type,
-      process_type
+      process_type,
+      conclusion: conclusion || null
     }, { transaction });
 
     // Gérer recipe_data : créer la recette et lier recipe_id au trial
@@ -1439,8 +1442,8 @@ const updateTrial = async (trialId, trialData) => {
     
     // Gérer les champs simples du trial
     const simpleFields = [
-      'trial_code', 'load_number', 'trial_date', 'location', 'status', 
-      'mounting_type', 'position_type', 'process_type'
+      'trial_code', 'load_number', 'trial_date', 'location', 'status',
+      'mounting_type', 'position_type', 'process_type', 'conclusion'
     ];
     
     for (const field of simpleFields) {

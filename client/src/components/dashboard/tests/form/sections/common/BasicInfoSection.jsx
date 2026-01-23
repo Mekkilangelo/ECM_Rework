@@ -13,7 +13,6 @@ const BasicInfoSection = React.memo(({
   handleCreateOption,
   getSelectedOption,
   locationOptions,
-  statusOptions,
   loading,
   selectStyles,
   viewMode = false,
@@ -94,32 +93,6 @@ const BasicInfoSection = React.memo(({
               isDisabled={viewMode}
               isValidNewOption={isValidNewOption}
               filterOption={customFilterOption}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>{t('trials.basicInfo.status')}</Form.Label>            <Select
-              name="status"
-              value={getSelectedOption(statusOptions, formData.status)}
-              onChange={(option) => handleSelectChange(option, { name: 'status' })}
-              options={statusOptions}
-              isClearable
-              styles={viewMode ? {
-                ...selectStyles,
-                control: (provided) => ({
-                  ...provided,
-                  ...readOnlyFieldStyle,
-                  cursor: 'default'
-                }),
-                dropdownIndicator: () => ({ display: 'none' }),
-                indicatorSeparator: () => ({ display: 'none' })
-              } : selectStyles}
-              placeholder={t('trials.basicInfo.selectStatus')}
-              className="react-select-container"
-              classNamePrefix="react-select"
-              isLoading={loading}
-              isDisabled={viewMode}
             />
           </Form.Group>
         </Col>

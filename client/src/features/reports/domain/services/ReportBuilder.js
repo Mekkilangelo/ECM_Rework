@@ -189,7 +189,9 @@ export class ReportBuilder {
         quench_data: apiData.quenchData,
         furnace_data: apiData.furnaceData,
         results_data: apiData.resultsData,
-        load_data: apiData.loadData
+        load_data: apiData.loadData,
+        observation: apiData.trialData?.observation,
+        conclusion: apiData.trialData?.conclusion
       })
       .setPartData(normalizedPartData)
       .setClientData({

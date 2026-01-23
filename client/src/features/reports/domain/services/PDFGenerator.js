@@ -44,6 +44,7 @@ export class PDFOptions {
     includePageNumbers = true,
     includeHeader = true,
     includeFooter = true,
+    includeCoverPage = true,
     maxImageSize = 1920, // px
     imageQuality = 0.85,
     onProgress = null
@@ -58,6 +59,7 @@ export class PDFOptions {
     this.includePageNumbers = includePageNumbers;
     this.includeHeader = includeHeader;
     this.includeFooter = includeFooter;
+    this.includeCoverPage = includeCoverPage;
     this.maxImageSize = maxImageSize;
     this.imageQuality = imageQuality;
     this.onProgress = onProgress;

@@ -90,171 +90,259 @@ const styles = StyleSheet.create({
 /**
  * Page de garde moderne
  */
+/**
+ * Page de garde moderne - Redesign
+ */
 export const CoverPage = ({ report, options }) => {
-  const logoEcmUrl = '/images/logoECM.png';
-  const logoSynergyUrl = '/images/synergy_logo.png';
+  if (!report) return null;
+
+  const trialData = report.trialData || {};
+  const partData = report.partData || {};
+
+  console.log('🔍 CoverPage Data Check:', {
+    hasObservation: !!trialData.observation,
+    observationLen: trialData.observation?.length,
+    observationVal: trialData.observation,
+    hasConclusion: !!trialData.conclusion,
+    conclusionVal: trialData.conclusion,
+    status: trialData.status
+  });
+
+  // Styles spécifiques pour la page de garde
+  const coverStyles = StyleSheet.create({
+    sectionHeader: {
+      backgroundColor: COLORS.brand.dark,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      marginBottom: 10,
+      marginTop: 20,
+    },
+    sectionHeaderText: {
+      color: '#ffffff',
+      fontSize: 12,
+      fontFamily: 'Helvetica-Bold',
+      textTransform: 'uppercase',
+    },
+    row: {
+      flexDirection: 'row',
+      marginBottom: 5,
+    },
+    label: {
+      width: '30%',
+      fontSize: 9,
+      fontFamily: 'Helvetica-Bold',
+      color: COLORS.text.secondary,
+      textTransform: 'uppercase',
+    },
+    value: {
+      flex: 1,
+      fontSize: 9,
+      color: COLORS.text.primary,
+    },
+    techSpecRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 20,
+    },
+    techSpecItem: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 5,
+    },
+    techSpecLabel: {
+      fontSize: 9,
+      fontFamily: 'Helvetica-Bold',
+      color: COLORS.text.secondary,
+    },
+    techSpecValue: {
+      fontSize: 9,
+      fontFamily: 'Helvetica',
+      color: COLORS.text.primary,
+    },
+
+    // Treatment Cycle Table
+    cycleTable: {
+      flexDirection: 'row',
+      borderWidth: 1,
+      borderColor: COLORS.brand.primary,
+      marginTop: 5,
+    },
+    cycleColumn: {
+      flex: 1,
+      borderRightWidth: 1,
+      borderRightColor: COLORS.brand.primary,
+    },
+    cycleHeader: {
+      backgroundColor: '#2563eb', // Blue similar to image
+      padding: 5,
+      color: '#ffffff',
+      fontSize: 10,
+      fontFamily: 'Helvetica-Bold',
+    },
+    cycleContent: {
+      padding: 5,
+      fontSize: 9,
+      minHeight: 60,
+    },
+    noBorderRight: {
+      borderRightWidth: 0,
+    },
+
+    // Results/Observations
+    resultsBox: {
+      borderWidth: 1,
+      borderColor: COLORS.brand.dark,
+      // backgroundColor: '#dcfce7', // Removed green background
+      padding: 10,
+      minHeight: 40,
+      fontSize: 9,
+    },
+    resultsLabel: {
+      fontSize: 9,
+      fontFamily: 'Helvetica-Bold',
+      marginBottom: 2
+    }
+  });
 
   return (
-    <Page size="A4" style={{ position: 'relative' }}>
-      {/* Bandeau supérieur avec logos */}
-      <View style={{
-        backgroundColor: COLORS.brand.dark,
-        padding: 30,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <View style={{ flex: 1 }}>
-          <Text style={{
-            fontSize: 32,
-            fontFamily: 'Helvetica-Bold',
-            color: COLORS.text.white,
-            letterSpacing: 1.5
-          }}>
-            Trial Report
-          </Text>
-          <Text style={{
-            fontSize: 10,
-            color: COLORS.brand.primary,
-            marginTop: 8,
-            letterSpacing: 1
-          }}>
-            Quality Control & Heat Treatment
-          </Text>
+    <Page size="A4" style={styles.page}>
+
+      {/* 1. Common Header */}
+      <CommonReportHeader
+        clientName={report.clientName}
+        loadNumber={trialData.load_number}
+        trialDate={trialData.trial_date}
+        processType={trialData.processTypeRef?.name || trialData.process_type}
+        trialCode={report.testCode} // Ensure Test Code is shown if needed, usually Header handles title
+      />
+
+      {/* 2. Part Description */}
+      <View style={coverStyles.sectionHeader}>
+        <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
+      </View>
+      <View style={{ paddingHorizontal: 10 }}>
+        <View style={coverStyles.row}>
+          <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
+          <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
         </View>
-        {/* Logos ECM et Synergy */}
-        <View style={{ alignItems: 'center' }}>
-          {logoEcmUrl && (
-            <Image
-              src={logoEcmUrl}
-              style={{
-                width: 100,
-                height: 100,
-                objectFit: 'contain'
-              }}
-            />
-          )}
-          {logoSynergyUrl && (
-            <Image
-              src={logoSynergyUrl}
-              style={{
-                width: 120,
-                height: 40,
-                objectFit: 'contain',
-                marginTop: 8
-              }}
-            />
-          )}
+        <View style={coverStyles.row}>
+          <Text style={coverStyles.label}>STEEL GRADE:</Text>
+          <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
         </View>
       </View>
 
-      {/* Section client - Mise en avant */}
-      <View style={{
-        backgroundColor: COLORS.background.light,
-        padding: 25,
-        borderLeftWidth: 6,
-        borderLeftColor: COLORS.brand.primary,
-        marginTop: 40,
-        marginHorizontal: 40
-      }}>
-        <Text style={{
-          fontSize: 11,
-          color: COLORS.text.secondary,
-          marginBottom: 8,
-          letterSpacing: 0.5
-        }}>
-          CLIENT
-        </Text>
-        <Text style={{
-          fontSize: 20,
-          fontFamily: 'Helvetica-Bold',
-          color: COLORS.brand.dark,
-          marginBottom: 5
-        }}>
-          {report.clientName || 'Not specified'}
-        </Text>
-        {report.contact && (
-          <Text style={{ fontSize: 9, color: COLORS.text.secondary, marginTop: 4 }}>
-            Contact: {report.contact}
-          </Text>
+      {/* 3. Technical Specifications */}
+      <View style={coverStyles.sectionHeader}>
+        <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
+      </View>
+      <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
+        {/* Reuse logic from IdentificationSection for specs */}
+        {partData.specifications?.targetHardness && (
+          <View style={coverStyles.techSpecItem}>
+            <Text style={coverStyles.techSpecLabel}>Target Hardness:</Text>
+            <Text style={coverStyles.techSpecValue}>{partData.specifications.targetHardness} HV</Text>
+          </View>
+        )}
+        {partData.specifications?.minHardness && (
+          <View style={coverStyles.techSpecItem}>
+            <Text style={coverStyles.techSpecLabel}>Min Hardness:</Text>
+            <Text style={coverStyles.techSpecValue}>{partData.specifications.minHardness} HV</Text>
+          </View>
+        )}
+        {partData.specifications?.maxHardness && (
+          <View style={coverStyles.techSpecItem}>
+            <Text style={coverStyles.techSpecLabel}>Max Hardness:</Text>
+            <Text style={coverStyles.techSpecValue}>{partData.specifications.maxHardness} HV</Text>
+          </View>
+        )}
+        {partData.specifications?.ecdTarget && (
+          <View style={coverStyles.techSpecItem}>
+            <Text style={coverStyles.techSpecLabel}>Target ECD:</Text>
+            <Text style={coverStyles.techSpecValue}>{partData.specifications.ecdTarget} mm</Text>
+          </View>
+        )}
+        {(!partData.specifications || Object.keys(partData.specifications).length === 0) && (
+          <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
         )}
       </View>
 
-      {/* Informations essai - Grille moderne */}
-      <View style={{
-        marginTop: 30,
-        marginHorizontal: 40,
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 15
-      }}>
-        <InfoCard label="Test Code" value={report.testCode} />
-        <InfoCard label="Test Date" value={report.testDate ? new Date(report.testDate).toLocaleDateString('en-US') : '-'} />
-        <InfoCard label="Part" value={report.partName} />
-        <InfoCard label="Status" value={report.status} highlight={report.status === 'Complete' || report.status === 'Termine'} />
-        <InfoCard label="Location" value={report.location} />
-        <InfoCard label="Treatment" value={report.processType || report.trialData?.process_type || '-'} />
+      {/* 4. Treatment Cycle (Placeholder) */}
+      <View style={coverStyles.sectionHeader}>
+        <Text style={coverStyles.sectionHeaderText}>TREATMENT CYCLE</Text>
       </View>
-
-      {/* Section spécifications */}
-      {report.part?.specifications && (
-        <View style={{
-          marginTop: 30,
-          marginHorizontal: 40,
-          padding: 20,
-          backgroundColor: '#fff8f0',
-          borderRadius: 4,
-          borderWidth: 1,
-          borderColor: '#ffe4cc'
-        }}>
-          <Text style={{
-            fontSize: 10,
-            fontFamily: 'Helvetica-Bold',
-            color: COLORS.status.warning,
-            marginBottom: 10
-          }}>
-            Technical Specifications
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 15 }}>
-            {report.part.specifications.targetHardness && (
-              <SpecItem label="Target Hardness" value={`${report.part.specifications.targetHardness} HV`} />
-            )}
-            {report.part.specifications.minHardness && (
-              <SpecItem label="Min Hardness" value={`${report.part.specifications.minHardness} HV`} />
-            )}
-            {report.part.specifications.maxHardness && (
-              <SpecItem label="Max Hardness" value={`${report.part.specifications.maxHardness} HV`} />
-            )}
-            {report.part.specifications.ecdTarget && (
-              <SpecItem label="Target ECD" value={`${report.part.specifications.ecdTarget} mm`} />
-            )}
+      <View style={coverStyles.cycleTable}>
+        {/* Global */}
+        <View style={coverStyles.cycleColumn}>
+          <Text style={coverStyles.cycleHeader}>Global</Text>
+          <View style={coverStyles.cycleContent}>
+            <Text>Heating time : x mn</Text>
+            <Text>Treatment time : X mn</Text>
+            <Text>Total cycle time : x h</Text>
           </View>
         </View>
-      )}
-
-      {/* Pied de page */}
-      <View style={{
-        position: 'absolute',
-        bottom: 40,
-        left: 40,
-        right: 40,
-        paddingTop: 15,
-        borderTopWidth: 1,
-        borderTopColor: COLORS.border.light,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <View>
-          <Text style={{ fontSize: 8, color: COLORS.text.muted, marginBottom: 2 }}>Confidential Document</Text>
-          <Text style={{ fontSize: 7, color: COLORS.border.medium }}>
-            Generated on {new Date().toLocaleDateString('en-US')} at {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-          </Text>
+        {/* Heating */}
+        <View style={coverStyles.cycleColumn}>
+          <Text style={coverStyles.cycleHeader}>Heating</Text>
+          <View style={coverStyles.cycleContent}>
+            <Text>Gas 1 : flow x NL/s + time x s</Text>
+            <Text>Gas 2 : flow x (NL/s) + time x s</Text>
+            <Text>Pressure : x mb</Text>
+          </View>
         </View>
-        <Text style={{ fontSize: 8, color: COLORS.brand.primary, fontFamily: 'Helvetica-Bold' }}>
-          ECM - Excellence in Metallurgical Control
-        </Text>
+        {/* Cooling */}
+        <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
+          <Text style={coverStyles.cycleHeader}>Cooling</Text>
+          <View style={coverStyles.cycleContent}>
+            <Text>Pressure : x bar</Text>
+            <Text>Fan speed : x rpm</Text>
+          </View>
+        </View>
       </View>
+
+      {/* 5. Results */}
+      <View style={coverStyles.sectionHeader}>
+        <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
+      </View>
+      <View style={{ paddingHorizontal: 0 }}>
+        {/* Removed Flux */}
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
+          <View style={{ flex: 1, ...coverStyles.resultsBox }}>
+            <Text>{trialData.observation || ''}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 6. Conclusions */}
+      <View style={coverStyles.sectionHeader}>
+        <Text style={coverStyles.sectionHeaderText}>CONCLUSIONS</Text>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        {/* Status Mini Frame */}
+        <View style={{ width: 100 }}>
+          <Text style={coverStyles.resultsLabel}>Status:</Text>
+          <View style={{
+            borderWidth: 1,
+            borderColor: COLORS.brand.dark,
+            padding: 5,
+            alignItems: 'center',
+            marginBottom: 5
+          }}>
+            <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9 }}>{trialData.status || '-'}</Text>
+          </View>
+        </View>
+
+        {/* Conclusion Main Box */}
+        <View style={{ flex: 1 }}>
+          <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
+          <View style={{ ...coverStyles.resultsBox, minHeight: 80 }}>
+            <Text>{trialData.conclusion || ''}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Footer */}
+      <CommonReportFooter generatedDate={new Date().toLocaleDateString('fr-FR')} pagination="1 / X" />
     </Page>
   );
 };

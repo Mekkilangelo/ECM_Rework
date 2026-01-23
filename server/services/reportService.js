@@ -284,7 +284,12 @@ const buildBaseTestData = (trialNode) => {
     loadNumber: trialData?.load_number || null,
     status: trialData?.status || null,
     location: trialData?.location || null,
-    trialData: trialData // Ajouter les données complètes du trial
+    location: trialData?.location || null,
+    trialData: {
+      ...(trialData?.get ? trialData.get({ plain: true }) : trialData),
+      observation: trialData?.observation,
+      conclusion: trialData?.conclusion
+    } // Ajouter les données complètes du trial avec observation et conclusion explicites
   };
 };
 
@@ -694,6 +699,27 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
     // 3. Récupérer la hiérarchie (part → client)
     const { partNode, clientNode } = await getTestHierarchy(trialId);
 
+    // DEBUG: Force fetch simple trial to verify columns existence
+    try {
+      const debugTrial = await trial.findOne({ where: { node_id: trialId } });
+      logger.info('🔍 DEBUG FORCE FETCH TRIAL:', {
+        trialId,
+        found: !!debugTrial,
+        observation: debugTrial?.observation,
+        conclusion: debugTrial?.conclusion,
+        allKeys: debugTrial ? Object.keys(debugTrial.dataValues) : []
+      });
+
+      // If found and has data, FORCE inject it into trialNode.trial to be safe
+      if (debugTrial && trialNode.trial) {
+        trialNode.trial.observation = debugTrial.observation;
+        trialNode.trial.conclusion = debugTrial.conclusion;
+        logger.info('💉 INJECTED DEBUG DATA into trialNode.trial');
+      }
+    } catch (e) {
+      logger.error('❌ DEBUG FETCH FAILED:', e);
+    }
+
     // 4. Construire les données de base
     const reportData = buildBaseTestData(trialNode);
 
@@ -702,7 +728,9 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
       trialId,
       process_type: trialNode.trial?.process_type,
       processTypeRef: trialNode.trial?.processTypeRef?.name,
-      hasProcessTypeRef: !!trialNode.trial?.processTypeRef
+      hasProcessTypeRef: !!trialNode.trial?.processTypeRef,
+      observation: trialNode.trial?.observation,
+      conclusion: trialNode.trial?.conclusion
     });
 
     // 5. Ajouter les données de hiérarchie

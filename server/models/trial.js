@@ -170,6 +170,11 @@ module.exports = (sequelize) => {
       },
       comment: 'Type de processus - FK vers ref_process_type.name'
     },
+    observation: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'Observations de l\'essai'
+    },
     conclusion: {
       type: DataTypes.TEXT,
       allowNull: true,

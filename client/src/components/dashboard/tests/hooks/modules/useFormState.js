@@ -17,6 +17,7 @@ const useFormState = () => {
     location: '',
     status: '',
     description: '',
+    observation: '',
     conclusion: '',
 
     // Types de test

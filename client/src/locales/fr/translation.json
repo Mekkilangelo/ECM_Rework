@@ -710,6 +710,16 @@
             "descriptions": {
               "post_treatment": "Photos du post-traitement"
             }
+          },
+          "observations": {
+            "title": "Observations",
+            "description": "Photos d'observations",
+            "categories": {
+              "observations": "Photos d'observations"
+            },
+            "descriptions": {
+              "observations": "Photos d'observations"
+            }
           }
         }
       }
@@ -1144,6 +1154,16 @@
           "addDataToSeeChart": "Ajoutez des données dans le tableau pour voir le graphique"
         }
       },
+      "observations": {
+        "title": "Observations",
+        "observationText": "Observations",
+        "observationPlaceholder": "Saisir les observations de l'essai...",
+        "loadError": "Erreur lors du chargement des fichiers d'observations:",
+        "import": "Importer des photos d'observations",
+        "files": {
+          "title": "Photos d'observations"
+        }
+      },
       "conclusion": {
         "title": "Conclusion",
         "status": "Statut de l'essai",
@@ -1320,6 +1340,10 @@
       "postTreatment": {
         "label": "Post-traitement",
         "description": "Photos du post-traitement"
+      },
+      "observations": {
+        "label": "Observations",
+        "description": "Photos et observations"
       },
       "micrography": {
         "label": "Micrographie",

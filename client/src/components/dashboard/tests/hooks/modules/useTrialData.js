@@ -76,6 +76,7 @@ const useTrialData = (trial, setFormData, setMessage, setFetchingTest) => {
             location: data.location || '',
             status: data.status || '',
             description: data.description || '',
+            observation: data.observation || '',
             conclusion: data.conclusion || '',
 
             // Test types

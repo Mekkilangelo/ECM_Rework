@@ -708,6 +708,16 @@
             "descriptions": {
               "post_treatment": "Post-treatment photos"
             }
+          },
+          "observations": {
+            "title": "Observations",
+            "description": "Observation photos",
+            "categories": {
+              "observations": "Observation photos"
+            },
+            "descriptions": {
+              "observations": "Observation photos"
+            }
           }
         }
       }
@@ -1139,6 +1149,16 @@
           "addDataToSeeChart": "Add data in the table to see the chart"
         }
       },
+      "observations": {
+        "title": "Observations",
+        "observationText": "Observations",
+        "observationPlaceholder": "Enter trial observations...",
+        "loadError": "Error loading observation files:",
+        "import": "Import observation photos",
+        "files": {
+          "title": "Observation Photos"
+        }
+      },
       "conclusion": {
         "title": "Conclusion",
         "status": "Trial Status",
@@ -1312,6 +1332,10 @@
       "postTreatment": {
         "label": "Post-treatment",
         "description": "Post-treatment photos"
+      },
+      "observations": {
+        "label": "Observations",
+        "description": "Photos and observations"
       },
       "micrography": {
         "label": "Micrography",

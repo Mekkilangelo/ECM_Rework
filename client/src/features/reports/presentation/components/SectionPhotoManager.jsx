@@ -288,6 +288,19 @@ const SectionPhotoManager = ({
             description: tSafe('parts.photos.manager.sections.postTreatment.descriptions.post_treatment', 'Photos du post-traitement')
           }
         ]
+      },
+      observations: {
+        nodeId: trialNodeId,
+        title: tSafe('parts.photos.manager.sections.observations.title', 'Observations'),
+        description: tSafe('parts.photos.manager.sections.observations.description', 'Photos d\'observations'),
+        sources: [
+          {
+            category: 'observations',
+            subcategory: 'observations',
+            label: tSafe('parts.photos.manager.sections.observations.categories.observations', 'Photos d\'observations'),
+            description: tSafe('parts.photos.manager.sections.observations.descriptions.observations', 'Photos d\'observations')
+          }
+        ]
       }
     };
   };  // Générer dynamiquement les sources pour la section micrography

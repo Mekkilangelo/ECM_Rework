@@ -13,6 +13,7 @@ import {
   CurvesSectionPDF,
   DatapaqSectionPDF,
   PostTreatmentSectionPDF,
+  ObservationsSectionPDF,
   LoadSectionPDF,
   RecipeSectionPDF,
   ControlSectionPDF
@@ -648,8 +649,9 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
           )}
           {(() => {
             try {
-
+              // UNIQUEMENT utiliser les photos sélectionnées manuellement
               const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.load, 'load');
+              console.log('🔍 PDF Load - Photos normalisées:', normalizedPhotos.map(p => ({ id: p.id, url: p.url })));
               return (
                 <LoadSectionPDF
                   report={report}
@@ -782,6 +784,46 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
                 <Section title="POST-TRAITEMENT">
                   <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
                     Erreur lors du rendu de la section Post-traitement
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                    {error.message}
+                  </Text>
+                </Section>
+              );
+            }
+          })()}
+          {includeFooter && (
+            <CommonReportFooter generatedDate={generatedDate} />
+          )}
+        </Page>
+      )}
+
+      {/* Section Observations - Page séparée */}
+      {activeSections.some(s => s.type === 'observations') && report && (
+        <Page size="A4" style={styles.page}>
+          {includeHeader && (
+            <CommonReportHeader
+              clientName={report.clientName}
+              loadNumber={report.trialData?.load_number}
+              trialDate={report.trialData?.trial_date}
+              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+            />
+          )}
+          {(() => {
+            try {
+              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.observations, 'observations');
+              return (
+                <ObservationsSectionPDF
+                  report={report}
+                  photos={normalizedPhotos}
+                />
+              );
+            } catch (error) {
+              console.error('❌ Error rendering ObservationsSectionPDF:', error);
+              return (
+                <Section title="OBSERVATIONS">
+                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                    Erreur lors du rendu de la section Observations
                   </Text>
                   <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
                     {error.message}

@@ -684,7 +684,7 @@ const getAllTrials = async (options = {}) => {
       {
         model: trial,
         as: 'trial',
-        attributes: ['trial_code', 'load_number', 'trial_date', 'status', 'location', 'recipe_id', 'conclusion'],
+        attributes: ['trial_code', 'load_number', 'trial_date', 'status', 'location', 'recipe_id', 'observation', 'conclusion'],
         include: [
           {
             model: sequelize.models.recipe,
@@ -782,6 +782,7 @@ const getTrialById = async (trialId) => {
     trialData.mounting_type = trialValues.mounting_type;
     trialData.position_type = trialValues.position_type;
     trialData.process_type = trialValues.process_type;
+    trialData.observation = trialValues.observation;
     trialData.conclusion = trialValues.conclusion;
     
     // Données de charge (load_data) - structure imbriquée
@@ -1206,6 +1207,7 @@ const createTrial = async (trialData) => {
     position_type,
     process_type,
     preox_media,
+    observation,
     conclusion
   } = trialData;
   
@@ -1281,6 +1283,7 @@ const createTrial = async (trialData) => {
       mounting_type,
       position_type,
       process_type,
+      observation: observation || null,
       conclusion: conclusion || null
     }, { transaction });
 
@@ -1443,7 +1446,7 @@ const updateTrial = async (trialId, trialData) => {
     // Gérer les champs simples du trial
     const simpleFields = [
       'trial_code', 'load_number', 'trial_date', 'location', 'status',
-      'mounting_type', 'position_type', 'process_type', 'conclusion'
+      'mounting_type', 'position_type', 'process_type', 'observation', 'conclusion'
     ];
     
     for (const field of simpleFields) {

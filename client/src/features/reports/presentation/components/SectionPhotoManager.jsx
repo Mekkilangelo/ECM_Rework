@@ -14,13 +14,13 @@ const selectionReducer = (state, action) => {
     case 'TOGGLE_PHOTO': {
       const { photoId } = action.payload;
       const isCurrentlySelected = state.selectedPhotoIds.includes(photoId);
-      
-      const newSelectedIds = isCurrentlySelected 
+
+      const newSelectedIds = isCurrentlySelected
         ? state.selectedPhotoIds.filter(id => id !== photoId)
         : [...state.selectedPhotoIds, photoId];
-      
+
       let newOrder = { ...state.photoOrder };
-      
+
       if (isCurrentlySelected) {
         // Supprimer la photo et réorganiser les ordres
         const removedOrder = newOrder[photoId];
@@ -36,7 +36,7 @@ const selectionReducer = (state, action) => {
         const maxOrder = Math.max(0, ...Object.values(newOrder));
         newOrder[photoId] = maxOrder + 1;
       }
-      
+
       return {
         ...state,
         selectedPhotoIds: newSelectedIds,
@@ -44,12 +44,12 @@ const selectionReducer = (state, action) => {
         forceUpdate: state.forceUpdate + 1
       };
     }
-    
+
     case 'TOGGLE_GROUP': {
       const { photoIds, select } = action.payload;
       let newSelectedIds = [...state.selectedPhotoIds];
       let newOrder = { ...state.photoOrder };
-      
+
       if (select) {
         // Sélectionner toutes les photos non sélectionnées
         let currentMaxOrder = Math.max(0, ...Object.values(newOrder));
@@ -67,18 +67,18 @@ const selectionReducer = (state, action) => {
           newSelectedIds = newSelectedIds.filter(id => id !== photoId);
           delete newOrder[photoId];
         });
-        
+
         // Réorganiser les ordres après suppression
         const remainingPhotos = Object.entries(newOrder)
-          .sort(([,a], [,b]) => a - b)
+          .sort(([, a], [, b]) => a - b)
           .map(([id]) => id);
-        
+
         newOrder = {};
         remainingPhotos.forEach((id, index) => {
           newOrder[id] = index + 1;
         });
       }
-      
+
       return {
         ...state,
         selectedPhotoIds: newSelectedIds,
@@ -95,7 +95,7 @@ const selectionReducer = (state, action) => {
         forceUpdate: state.forceUpdate + 1
       };
     }
-    
+
     case 'RESET': {
       return {
         selectedPhotoIds: [],
@@ -103,7 +103,7 @@ const selectionReducer = (state, action) => {
         forceUpdate: 0
       };
     }
-    
+
     default:
       return state;
   }
@@ -119,23 +119,23 @@ const SectionPhotoManager = ({
 }) => {
   const { t } = useTranslation();
   const abortControllerRef = useRef(null);
-  
+
   // États
   const [availablePhotos, setAvailablePhotos] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
   const [pendingChange, setPendingChange] = useState(null);
-  
+
   // Utiliser useReducer pour les états de sélection
   const [selectionState, dispatchSelection] = useReducer(selectionReducer, {
     selectedPhotoIds: [],
     photoOrder: {},
     forceUpdate: 0
   });
-  
+
   const { selectedPhotoIds, photoOrder, forceUpdate } = selectionState;
-  
+
   // Cleanup lors du démontage
   useEffect(() => {
     return () => {
@@ -144,7 +144,7 @@ const SectionPhotoManager = ({
       }
     };
   }, []);
-  
+
   // Configuration des sections avec i18n
   const getSectionConfig = () => {
     // Fonction helper pour les traductions avec fallback
@@ -164,32 +164,32 @@ const SectionPhotoManager = ({
         title: tSafe('parts.photos.manager.sections.identification.title', 'Photos de la pièce'),
         description: tSafe('parts.photos.manager.sections.identification.description', 'Différentes vues de la pièce'),
         sources: [
-          { 
-            category: 'photos', 
+          {
+            category: 'photos',
             subcategory: 'front',
             label: tSafe('parts.photos.manager.sections.identification.categories.front', 'Vue de face'),
             description: tSafe('parts.photos.manager.sections.identification.descriptions.front', 'Photos prises de face')
           },
-          { 
-            category: 'photos', 
+          {
+            category: 'photos',
             subcategory: 'profile',
-            label: tSafe('parts.photos.manager.sections.identification.categories.profile', 'Vue de profil'), 
+            label: tSafe('parts.photos.manager.sections.identification.categories.profile', 'Vue de profil'),
             description: tSafe('parts.photos.manager.sections.identification.descriptions.profile', 'Photos prises de profil')
           },
-          { 
-            category: 'photos', 
+          {
+            category: 'photos',
             subcategory: 'quarter',
             label: tSafe('parts.photos.manager.sections.identification.categories.quarter', 'Vue en trois-quarts'),
             description: tSafe('parts.photos.manager.sections.identification.descriptions.quarter', 'Photos prises en trois-quarts')
           },
-          { 
-            category: 'photos', 
+          {
+            category: 'photos',
             subcategory: 'other',
             label: tSafe('parts.photos.manager.sections.identification.categories.other', 'Autres vues'),
             description: tSafe('parts.photos.manager.sections.identification.descriptions.other', 'Autres angles et vues')
           }
         ]
-      },      micrography: {
+      }, micrography: {
         nodeId: trialNodeId,
         title: tSafe('parts.photos.manager.sections.micrography.title', 'Micrographies'),
         description: tSafe('parts.photos.manager.sections.micrography.description', 'Images micrographiques par résultat et échantillon'),
@@ -217,8 +217,8 @@ const SectionPhotoManager = ({
         title: tSafe('parts.photos.manager.sections.load.title', 'Photos de charge'),
         description: tSafe('parts.photos.manager.sections.load.description', 'Disposition et configuration de la charge'),
         sources: [
-          { 
-            category: 'load_design', 
+          {
+            category: 'load_design',
             subcategory: 'load_design',
             label: tSafe('parts.photos.manager.sections.load.categories.load_design', 'Configuration de charge'),
             description: tSafe('parts.photos.manager.sections.load.descriptions.load_design', 'Photos de la disposition de la charge')
@@ -230,26 +230,26 @@ const SectionPhotoManager = ({
         title: tSafe('parts.photos.manager.sections.curves.title', 'Rapports de four'),
         description: tSafe('parts.photos.manager.sections.curves.description', 'Courbes et rapports de température'),
         sources: [
-          { 
-            category: 'furnace_report', 
+          {
+            category: 'furnace_report',
             subcategory: 'heating',
             label: tSafe('parts.photos.manager.sections.curves.categories.heating', 'Courbes de chauffe'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.heating', 'Graphiques de montée en température')
           },
-          { 
-            category: 'furnace_report', 
+          {
+            category: 'furnace_report',
             subcategory: 'cooling',
             label: tSafe('parts.photos.manager.sections.curves.categories.cooling', 'Courbes de refroidissement'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.cooling', 'Graphiques de refroidissement')
           },
-          { 
-            category: 'furnace_report', 
+          {
+            category: 'furnace_report',
             subcategory: 'tempering',
             label: tSafe('parts.photos.manager.sections.curves.categories.tempering', 'Courbes de revenu'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.tempering', 'Graphiques de traitement de revenu')
           },
-          { 
-            category: 'furnace_report', 
+          {
+            category: 'furnace_report',
             subcategory: 'alarms',
             label: tSafe('parts.photos.manager.sections.curves.categories.alarms', 'Alarmes'),
             description: tSafe('parts.photos.manager.sections.curves.descriptions.alarms', 'Rapports d\'alarmes et événements')
@@ -511,35 +511,35 @@ const SectionPhotoManager = ({
       console.error(`Configuration manquante pour la section ${sectionType} (configKey: ${configKey})`);
       return;
     }
-    
+
     let nodeId = config.nodeId;
     if (sectionType === 'identification' && partNodeId) {
       nodeId = partNodeId;
     }
-    
+
     if (!nodeId) {
       console.error(`NodeId manquant pour la section ${sectionType}`);
       setAvailablePhotos({});
       setError(t('parts.photos.manager.idMissing', { type: sectionType === 'identification' ? 'pièce' : 'test' }));
       return;
     }
-    
+
     loadPhotosForSection();
   }, [sectionType, trialNodeId, partNodeId, t]);
   // Initialiser les photos sélectionnées UNIQUEMENT au montage ou si initialSelectedPhotos change vraiment
   const initializationRef = useRef(false);
-  
+
   useEffect(() => {
     // Ne pas réinitialiser si on a déjà initialisé et que les props n'ont pas vraiment changé
     if (initializationRef.current) {
       return;
     }
-    
-    
+
+
     if (initialSelectedPhotos && initialSelectedPhotos[sectionType]) {
       let initSelected = [];
       const initialData = initialSelectedPhotos[sectionType];
-      
+
       // Si c'est déjà un tableau d'IDs
       if (Array.isArray(initialData)) {
         initSelected = initialData.filter(item => {
@@ -560,23 +560,23 @@ const SectionPhotoManager = ({
           }
         });
       }
-      
+
       const initOrder = {};
       initSelected.forEach((photoId, index) => {
         initOrder[photoId] = index + 1;
       });
-      
-      dispatchSelection({ 
-        type: 'SET_SELECTION', 
-        payload: { selectedIds: initSelected, order: initOrder } 
+
+      dispatchSelection({
+        type: 'SET_SELECTION',
+        payload: { selectedIds: initSelected, order: initOrder }
       });
     } else {
       dispatchSelection({ type: 'RESET' });
     }
-    
+
     initializationRef.current = true;
   }, [sectionType]); // Supprimer initialSelectedPhotos des dépendances
-  
+
   // Réinitialiser le flag d'initialisation si la section change
   useEffect(() => {
     initializationRef.current = false;
@@ -594,7 +594,7 @@ const SectionPhotoManager = ({
   const loadPhotosForSection = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const sectionConfig = getSectionConfig();
       // Plus besoin de mapper car 'control' existe maintenant directement dans la config
@@ -603,19 +603,19 @@ const SectionPhotoManager = ({
       if (sectionType === 'identification' && partNodeId) {
         nodeId = partNodeId;
       }
-      
+
       if (!config || !nodeId) {
         setAvailablePhotos({});
         setLoading(false);
         return;
       }
-      
+
       let sources = config.sources;
-        // Si c'est une section dynamique (comme micrography ou control), générer les sources
+      // Si c'est une section dynamique (comme micrography ou control), générer les sources
       if (config.isDynamic && sectionType === 'micrography') {
         sources = await generateMicrographySources(nodeId, config);
         if (process.env.NODE_ENV === 'development') {
-          
+
         }
       } else if (config.isDynamic && (sectionType === 'control' || sectionType === 'controlLocation')) {
         sources = await generateControlLocationSources(nodeId, config);
@@ -628,44 +628,54 @@ const SectionPhotoManager = ({
         setLoading(false);
         return;
       }
-      
+
       const organizedPhotos = {};
-      
+      const processedFileIds = new Set(); // Pour éviter les doublons (ex: Datapaq fetch all vs fetch specific)
+
       for (const source of sources) {
         try {
           const response = await fileService.getNodeFiles(
             nodeId,
             { category: source.category, subcategory: source.subcategory }
           );
-          
+
           if (response.data && response.data.success !== false) {
             const files = response.data.data?.files || response.data.files || [];
-            
+
             if (files.length > 0) {
               const groupKey = source.group || source.label;
               const subgroupKey = source.subgroup || source.subcategory;
-              
+
               if (!organizedPhotos[groupKey]) {
                 organizedPhotos[groupKey] = {};
               }
-              
+
               if (!organizedPhotos[groupKey][subgroupKey]) {
                 organizedPhotos[groupKey][subgroupKey] = [];
               }
-              
-              const enrichedFiles = files.map(file => {
+
+              const enrichedFiles = [];
+
+              files.forEach(file => {
+                // Éviter d'ajouter le même fichier plusieurs fois (ex: datapaq vs null)
+                // On privilégie la première occurrence (donc l'ordre des sources est important)
+                if (processedFileIds.has(file.id)) {
+                  return;
+                }
+                processedFileIds.add(file.id);
+
                 // Construire l'URL absolue pour l'affichage
                 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
                 let absoluteUrl = file.viewPath;
-                
+
                 // Si viewPath est relatif, le rendre absolu
                 if (absoluteUrl && absoluteUrl.startsWith('/api/')) {
                   absoluteUrl = API_BASE.replace('/api', '') + absoluteUrl;
                 } else if (!absoluteUrl) {
                   absoluteUrl = `${API_BASE}/files/${file.id}`;
                 }
-                
-                return {
+
+                enrichedFiles.push({
                   ...file,
                   sourceCategory: source.category,
                   sourceSubcategory: source.subcategory,
@@ -675,19 +685,21 @@ const SectionPhotoManager = ({
                   subgroupLabel: source.subgroup || source.subcategory,
                   viewPath: absoluteUrl,
                   url: absoluteUrl // Ajouter aussi 'url' pour compatibilité PDF
-                };
+                });
               });
-              
-              organizedPhotos[groupKey][subgroupKey].push(...enrichedFiles);
+
+              if (enrichedFiles.length > 0) {
+                organizedPhotos[groupKey][subgroupKey].push(...enrichedFiles);
+              }
             }
           }
         } catch (sourceError) {
           console.error(`Erreur lors du chargement de ${source.category}/${source.subcategory}:`, sourceError);
         }
       }
-      
+
       setAvailablePhotos(organizedPhotos);
-      
+
       // Initialiser la première section comme ouverte
       const firstGroup = Object.keys(organizedPhotos)[0];
       if (firstGroup) {
@@ -696,7 +708,7 @@ const SectionPhotoManager = ({
           [firstGroup]: true
         }));
       }
-      
+
     } catch (error) {
       console.error(`Erreur lors du chargement des photos pour ${sectionType}:`, error);
       setError(t('parts.photos.loadError') + ' ' + error.message);
@@ -719,28 +731,28 @@ const SectionPhotoManager = ({
   const organizeSelectedPhotosWithMetadata = useCallback((selectedIds, customPhotoOrder = null) => {
     const organized = {};
     const orderToUse = customPhotoOrder || photoOrder;
-    
+
     // Vérifier que les IDs sélectionnés sont cohérents
     if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
       return organized;
     }
-    
+
     // Créer un mapping des photos sélectionnées avec leur ordre
     const orderedSelectedIds = selectedIds
       .filter(id => id != null) // Filtrer les valeurs nulles/undefined
       .map(id => ({ id, order: orderToUse[id] || 999999 }))
       .sort((a, b) => a.order - b.order)
       .map(item => item.id);
-    
+
     // Parcourir toutes les photos disponibles et récupérer les métadonnées des photos sélectionnées
     Object.keys(availablePhotos).forEach(groupKey => {
       Object.keys(availablePhotos[groupKey]).forEach(subgroupKey => {
-        const photos = availablePhotos[groupKey][subgroupKey];        
+        const photos = availablePhotos[groupKey][subgroupKey];
         photos.forEach(photo => {
           if (selectedIds.includes(photo.id)) {
             // Numérotation basée sur l'ordre de sélection, pas sur la position dans la structure
             const photoSectionOrder = orderedSelectedIds.indexOf(photo.id) + 1;
-            
+
             // Créer un objet avec toutes les métadonnées et la numérotation
             const photoWithMetadata = {
               id: photo.id,
@@ -756,11 +768,11 @@ const SectionPhotoManager = ({
               // Ajouter d'autres métadonnées si nécessaires
               originalData: photo
             };
-            
+
             // Pour la section curves, organiser par sous-catégorie réelle
             if (sectionType === 'curves') {
               const realSubcategory = photo.sourceSubcategory || photo.subcategory || subgroupKey;
-              
+
               // Mapper vers nos catégories attendues
               let targetCategory = realSubcategory;
               if (!['heating', 'cooling', 'tempering', 'datapaq', 'alarms'].includes(realSubcategory)) {
@@ -782,7 +794,7 @@ const SectionPhotoManager = ({
                   targetCategory = 'heating';
                 }
               }
-              
+
               if (!organized[targetCategory]) {
                 organized[targetCategory] = [];
               }
@@ -799,7 +811,7 @@ const SectionPhotoManager = ({
         });
       });
     });
-    
+
     return organized;
   }, [availablePhotos, sectionType]);
 
@@ -821,18 +833,18 @@ const SectionPhotoManager = ({
 
   // Sélectionner/désélectionner un groupe
   const toggleGroupSelection = (group, subgroup = null, select = true) => {
-    const photosToToggle = subgroup 
+    const photosToToggle = subgroup
       ? availablePhotos[group][subgroup] || []
       : Object.keys(availablePhotos[group] || {}).reduce((acc, sg) => {
-          acc.push(...(availablePhotos[group][sg] || []));
-          return acc;
-        }, []);
-    
+        acc.push(...(availablePhotos[group][sg] || []));
+        return acc;
+      }, []);
+
     const photoIds = photosToToggle.map(photo => photo.id);
-    
-    dispatchSelection({ 
-      type: 'TOGGLE_GROUP', 
-      payload: { photoIds, select } 
+
+    dispatchSelection({
+      type: 'TOGGLE_GROUP',
+      payload: { photoIds, select }
     });
   };
 
@@ -840,10 +852,10 @@ const SectionPhotoManager = ({
   const toggleAllPhotos = (select) => {
     const allPhotos = getAllPhotosFlat();
     const allPhotoIds = allPhotos.map(photo => photo.id);
-    
-    dispatchSelection({ 
-      type: 'TOGGLE_GROUP', 
-      payload: { photoIds: allPhotoIds, select } 
+
+    dispatchSelection({
+      type: 'TOGGLE_GROUP',
+      payload: { photoIds: allPhotoIds, select }
     });
   };
 
@@ -881,7 +893,7 @@ const SectionPhotoManager = ({
             </h6>
             <p className="mb-1 mt-1">
               {t('parts.photos.manager.noPhotosMessage')}
-              {sectionType === 'identification' ? 
+              {sectionType === 'identification' ?
                 ` ${t('parts.photos.manager.verifyPhotosMessage')}` :
                 ` ${t('parts.photos.manager.verifyFilesMessage')}`
               }
@@ -889,8 +901,8 @@ const SectionPhotoManager = ({
             <div className="d-flex align-items-center gap-2">
               <span className="badge bg-secondary">Section: {config.title}</span>
               <span className="text-muted small">ID {nodeTypeText}: {nodeId}</span>
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="outline-primary"
                 onClick={loadPhotosForSection}
               >
@@ -921,7 +933,7 @@ const SectionPhotoManager = ({
   }
   // Calculer les statistiques de sélection pour la section entière
   const totalPhotosInSection = allPhotosFlat.length;
-  const selectedPhotosInSection = selectedPhotoIds.length;  return (
+  const selectedPhotosInSection = selectedPhotoIds.length; return (
     <CollapsibleSection
       title={`${config.title || t('parts.photos.manager.title')} (${selectedPhotosInSection}/${totalPhotosInSection})`}
       isExpandedByDefault={false}
@@ -932,17 +944,17 @@ const SectionPhotoManager = ({
     >      {/* En-tête avec contrôles globaux */}
       <div className="d-flex justify-content-end align-items-center mb-3">
         <div>
-          <Button 
-            size="sm" 
-            variant="outline-primary" 
-            className="me-1" 
+          <Button
+            size="sm"
+            variant="outline-primary"
+            className="me-1"
             onClick={() => toggleAllPhotos(true)}
           >
             {t('parts.photos.manager.selectAll')}
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline-secondary" 
+          <Button
+            size="sm"
+            variant="outline-secondary"
             onClick={() => toggleAllPhotos(false)}
           >
             {t('parts.photos.manager.deselectAll')}
@@ -965,7 +977,7 @@ const SectionPhotoManager = ({
       {/* Sections collapsibles pour chaque groupe/sous-groupe */}
       {Object.keys(availablePhotos).map((groupKey) => {
         const group = availablePhotos[groupKey];
-        
+
         return (
           <div key={groupKey} className="mb-3">
             {/* Si le groupe a plusieurs sous-groupes, les afficher séparément */}
@@ -983,9 +995,9 @@ const SectionPhotoManager = ({
                 {Object.keys(group).map((subgroupKey) => {
                   const subgroupPhotos = group[subgroupKey];
                   if (subgroupPhotos.length === 0) return null;
-                  
+
                   const subgroupSelectedCount = subgroupPhotos.filter(photo => selectedPhotoIds.includes(photo.id)).length;
-                    return (
+                  return (
                     <CollapsibleSection
                       key={`${groupKey}-${subgroupKey}`}
                       title={`${subgroupKey} (${subgroupSelectedCount}/${subgroupPhotos.length})`}
@@ -996,26 +1008,26 @@ const SectionPhotoManager = ({
                       rememberState={true}
                     >
                       <div className="mb-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline-success" 
+                        <Button
+                          size="sm"
+                          variant="outline-success"
                           className="me-2"
                           onClick={() => toggleGroupSelection(groupKey, subgroupKey, true)}
                         >
                           {t('parts.photos.manager.selectAll')}
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline-secondary"
                           onClick={() => toggleGroupSelection(groupKey, subgroupKey, false)}
                         >
                           {t('parts.photos.manager.deselectAll')}
                         </Button>
                       </div>
-                      
-                      <PhotoGrid 
+
+                      <PhotoGrid
                         key={`${groupKey}-${subgroupKey}-${forceUpdate}`}
-                        photos={subgroupPhotos} 
+                        photos={subgroupPhotos}
                         selectedPhotoIds={selectedPhotoIds}
                         photoOrder={photoOrder}
                         onToggleSelection={togglePhotoSelection}
@@ -1031,39 +1043,39 @@ const SectionPhotoManager = ({
                 const subgroupKey = Object.keys(group)[0];
                 const subgroupPhotos = group[subgroupKey];
                 if (subgroupPhotos.length === 0) return null;
-                
-                const subgroupSelectedCount = subgroupPhotos.filter(photo => selectedPhotoIds.includes(photo.id)).length;                  return (
-                    <CollapsibleSection
-                      key={groupKey}
-                      title={`${groupKey} (${subgroupSelectedCount}/${subgroupPhotos.length})`}
-                      isExpandedByDefault={false}
-                      onToggle={(isExpanded) => toggleSection(groupKey)}
-                      level={1}
-                      className="mb-2"
-                      sectionId={`simple-group-${sectionType}-${groupKey}`}
-                      rememberState={true}
-                    >
-                      <div className="mb-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline-success" 
-                          className="me-2"
-                          onClick={() => toggleGroupSelection(groupKey, subgroupKey, true)}
-                        >
-                          {t('parts.photos.manager.selectAll')}
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline-secondary"
-                          onClick={() => toggleGroupSelection(groupKey, subgroupKey, false)}
-                        >
-                          {t('parts.photos.manager.deselectAll')}
-                        </Button>
-                      </div>
-                    
-                    <PhotoGrid 
+
+                const subgroupSelectedCount = subgroupPhotos.filter(photo => selectedPhotoIds.includes(photo.id)).length; return (
+                  <CollapsibleSection
+                    key={groupKey}
+                    title={`${groupKey} (${subgroupSelectedCount}/${subgroupPhotos.length})`}
+                    isExpandedByDefault={false}
+                    onToggle={(isExpanded) => toggleSection(groupKey)}
+                    level={1}
+                    className="mb-2"
+                    sectionId={`simple-group-${sectionType}-${groupKey}`}
+                    rememberState={true}
+                  >
+                    <div className="mb-2">
+                      <Button
+                        size="sm"
+                        variant="outline-success"
+                        className="me-2"
+                        onClick={() => toggleGroupSelection(groupKey, subgroupKey, true)}
+                      >
+                        {t('parts.photos.manager.selectAll')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline-secondary"
+                        onClick={() => toggleGroupSelection(groupKey, subgroupKey, false)}
+                      >
+                        {t('parts.photos.manager.deselectAll')}
+                      </Button>
+                    </div>
+
+                    <PhotoGrid
                       key={`${groupKey}-${subgroupKey}-${forceUpdate}`}
-                      photos={subgroupPhotos} 
+                      photos={subgroupPhotos}
                       selectedPhotoIds={selectedPhotoIds}
                       photoOrder={photoOrder}
                       onToggleSelection={togglePhotoSelection}
@@ -1093,139 +1105,139 @@ const PhotoGrid = React.memo(({ photos, selectedPhotoIds, photoOrder, onToggleSe
           return a.name.localeCompare(b.name);
         })
         .map((photo) => (
-        <Col key={photo.id} xs={6} sm={4} md={3} lg={2}>
-          <Card 
-            className={`photo-card h-100 ${selectedPhotoIds.includes(photo.id) ? 'border-primary border-2 shadow' : 'border-light'}`}
-            onClick={() => {
-              onToggleSelection(photo.id);
-            }}
-            style={{ 
-              cursor: 'pointer',
-              opacity: selectedPhotoIds.includes(photo.id) ? 1 : 0.8,
-              transform: selectedPhotoIds.includes(photo.id) ? 'scale(1.02)' : 'scale(1)',
-              transition: 'all 0.2s ease',
-              position: 'relative',
-              borderRadius: '8px',
-              overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-              if (!selectedPhotoIds.includes(photo.id)) {
-                e.currentTarget.style.opacity = '0.95';
-                e.currentTarget.style.transform = 'scale(1.01)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!selectedPhotoIds.includes(photo.id)) {
-                e.currentTarget.style.opacity = '0.8';
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '';
-              }
-            }}
-          >
-            <div style={{ position: 'relative' }}>
-              {/* Overlay de sélection */}
-              {selectedPhotoIds.includes(photo.id) && (
+          <Col key={photo.id} xs={6} sm={4} md={3} lg={2}>
+            <Card
+              className={`photo-card h-100 ${selectedPhotoIds.includes(photo.id) ? 'border-primary border-2 shadow' : 'border-light'}`}
+              onClick={() => {
+                onToggleSelection(photo.id);
+              }}
+              style={{
+                cursor: 'pointer',
+                opacity: selectedPhotoIds.includes(photo.id) ? 1 : 0.8,
+                transform: selectedPhotoIds.includes(photo.id) ? 'scale(1.02)' : 'scale(1)',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+              onMouseEnter={(e) => {
+                if (!selectedPhotoIds.includes(photo.id)) {
+                  e.currentTarget.style.opacity = '0.95';
+                  e.currentTarget.style.transform = 'scale(1.01)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!selectedPhotoIds.includes(photo.id)) {
+                  e.currentTarget.style.opacity = '0.8';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '';
+                }
+              }}
+            >
+              <div style={{ position: 'relative' }}>
+                {/* Overlay de sélection */}
+                {selectedPhotoIds.includes(photo.id) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(13, 110, 253, 0.15) 0%, rgba(13, 110, 253, 0.08) 100%)',
+                    zIndex: 1,
+                    pointerEvents: 'none'
+                  }} />
+                )}
+
+                {/* Afficher miniature PDF ou image selon le type */}
+                {photo.mimeType && photo.mimeType.includes('pdf') ? (
+                  <PDFThumbnail
+                    fileUrl={photo.viewPath || fileService.getFilePreviewUrl(photo.id)}
+                    fileName={photo.name}
+                    width={200}
+                    height={140}
+                    className="w-100"
+                  />
+                ) : (
+                  <Card.Img
+                    variant="top"
+                    src={photo.viewPath || fileService.getFilePreviewUrl(photo.id)}
+                    style={{
+                      height: '140px',
+                      objectFit: 'cover',
+                      background: '#f8f9fa'
+                    }}
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM2Yzc1N2QiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBub24gZGlzcG9uaWJsZTwvdGV4dD48L3N2Zz4=';
+                    }}
+                  />
+                )}
+
+                {/* Indicateur de sélection */}
                 <div style={{
                   position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: 'linear-gradient(135deg, rgba(13, 110, 253, 0.15) 0%, rgba(13, 110, 253, 0.08) 100%)',
-                  zIndex: 1,
-                  pointerEvents: 'none'
-                }} />
-              )}
-              
-              {/* Afficher miniature PDF ou image selon le type */}
-              {photo.mimeType && photo.mimeType.includes('pdf') ? (
-                <PDFThumbnail
-                  fileUrl={photo.viewPath || fileService.getFilePreviewUrl(photo.id)}
-                  fileName={photo.name}
-                  width={200}
-                  height={140}
-                  className="w-100"
-                />
-              ) : (
-                <Card.Img 
-                  variant="top" 
-                  src={photo.viewPath || fileService.getFilePreviewUrl(photo.id)} 
-                  style={{ 
-                    height: '140px',
-                    objectFit: 'cover', 
-                    background: '#f8f9fa'
-                  }}
-                  onError={(e) => {
-                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM2Yzc1N2QiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBub24gZGlzcG9uaWJsZTwvdGV4dD48L3N2Zz4=';
-                  }}
-                />
-              )}
-              
-              {/* Indicateur de sélection */}
-              <div style={{ 
-                position: 'absolute', 
-                top: '8px', 
-                right: '8px',
-                background: selectedPhotoIds.includes(photo.id) ? '#0d6efd' : 'rgba(255,255,255,0.9)',
-                borderRadius: '50%',
-                width: '28px',
-                height: '28px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: selectedPhotoIds.includes(photo.id) ? '2px solid white' : '2px solid #dee2e6',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                zIndex: 2,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSelection(photo.id);
-              }}>                {selectedPhotoIds.includes(photo.id) ? (
-                  <span style={{ color: 'white' }}>
-                    {photoOrder[photo.id]}
-                  </span>                ) : (
-                  <span style={{ color: '#999', fontSize: '16px', fontWeight: 'bold' }}>+</span>
-                )}
-              </div>
-            </div>
-            
-            <Card.Body className="p-2">
-              <div className="d-flex justify-content-between align-items-start">
-                <div className="flex-grow-1">
-                  <Card.Text className="mb-0 small fw-medium text-truncate">
-                    {photo.description || photo.name}
-                  </Card.Text>
+                  top: '8px',
+                  right: '8px',
+                  background: selectedPhotoIds.includes(photo.id) ? '#0d6efd' : 'rgba(255,255,255,0.9)',
+                  borderRadius: '50%',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: selectedPhotoIds.includes(photo.id) ? '2px solid white' : '2px solid #dee2e6',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  zIndex: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSelection(photo.id);
+                  }}>                {selectedPhotoIds.includes(photo.id) ? (
+                    <span style={{ color: 'white' }}>
+                      {photoOrder[photo.id]}
+                    </span>) : (
+                    <span style={{ color: '#999', fontSize: '16px', fontWeight: 'bold' }}>+</span>
+                  )}
                 </div>
-                {selectedPhotoIds.includes(photo.id) && (
-                  <Badge 
-                    bg="primary" 
-                    className="ms-1" 
-                    style={{ fontSize: '9px' }}
-                  >
-                    #{photoOrder[photo.id]}
-                  </Badge>
-                )}
               </div>
-            </Card.Body>
-          </Card>
-        </Col>      ))}
+
+              <Card.Body className="p-2">
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="flex-grow-1">
+                    <Card.Text className="mb-0 small fw-medium text-truncate">
+                      {photo.description || photo.name}
+                    </Card.Text>
+                  </div>
+                  {selectedPhotoIds.includes(photo.id) && (
+                    <Badge
+                      bg="primary"
+                      className="ms-1"
+                      style={{ fontSize: '9px' }}
+                    >
+                      #{photoOrder[photo.id]}
+                    </Badge>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>))}
     </Row>
   );
 }, (prevProps, nextProps) => {
   // Comparer les props importantes pour éviter les re-renders inutiles
   const photosEqual = prevProps.photos.length === nextProps.photos.length &&
     prevProps.photos.every((photo, index) => photo.id === nextProps.photos[index].id);
-  
+
   const selectedEqual = prevProps.selectedPhotoIds.length === nextProps.selectedPhotoIds.length &&
     prevProps.selectedPhotoIds.every(id => nextProps.selectedPhotoIds.includes(id));
-  
+
   const orderEqual = Object.keys(prevProps.photoOrder).length === Object.keys(nextProps.photoOrder).length &&
     Object.keys(prevProps.photoOrder).every(id => prevProps.photoOrder[id] === nextProps.photoOrder[id]);
-  
-  const shouldSkipRender = photosEqual && selectedEqual && orderEqual && 
+
+  const shouldSkipRender = photosEqual && selectedEqual && orderEqual &&
     prevProps.onToggleSelection === nextProps.onToggleSelection;
   return shouldSkipRender;
 });

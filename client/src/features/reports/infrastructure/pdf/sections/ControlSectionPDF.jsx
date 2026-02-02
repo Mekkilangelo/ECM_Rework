@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.brand.secondary,
     borderLeftWidth: 4,
     borderLeftColor: getAccentColor(SECTION_TYPE),
-    marginBottom: 10, // Increased spacing
+    marginBottom: 15, // Increased spacing
   },
   resultTitle: {
     ...TYPOGRAPHY.subsectionTitle,
@@ -31,14 +31,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9', // Light neutral background
     borderLeftWidth: 4,
     borderLeftColor: getAccentColor(SECTION_TYPE),
-    paddingVertical: 5,
+    paddingVertical: 6,
     paddingHorizontal: 8,
-    marginBottom: 8,
+    marginBottom: 12, // Increased spacing
   },
   sampleTitle: {
-    fontSize: 9.5,
+    fontSize: 10, // Sligthly larger
     fontWeight: 'bold',
-    marginTop: 6,
+    marginTop: 8,
     marginBottom: 6,
     color: '#334155'
   },
@@ -58,21 +58,22 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 0.5,
-    borderBottomColor: '#e2e8f0'
+    borderBottomColor: '#e2e8f0',
+    minHeight: 14 // Minimal height for rows
   },
   tableHeader: {
     backgroundColor: '#f8fafc',
     fontWeight: 'bold'
   },
   tableCell: {
-    padding: 5,
+    padding: 4, // Reduced padding slightly
     fontSize: 8,
     borderRightWidth: 0.5,
     borderRightColor: '#e2e8f0',
     color: '#334155'
   },
   chartContainer: {
-    marginBottom: 10,
+    marginBottom: 15, // More space below chart
     padding: 8,
     backgroundColor: '#ffffff',
     borderWidth: 1,
@@ -82,10 +83,9 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 9,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
     color: '#1e293b'
   },
-  // ... (keep existing styles)
   chartLegend: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -166,14 +166,13 @@ const SERIES_COLORS = [
   '#ec4899'  // Pink
 ];
 
-// ... (CurveChart component remains mostly the same, update style refs if needed)
-const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, height = 200 }) => {
-  // ... (keep implementation)
+const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, height = 220 }) => {
   if (!curveData || !curveData.distances || !curveData.series || curveData.series.length === 0) {
     return null;
   }
 
-  const padding = { top: 15, right: 25, bottom: 40, left: 50 };
+  // Increased padding to prevent cropping of labels and axes
+  const padding = { top: 20, right: 30, bottom: 45, left: 55 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
@@ -200,9 +199,9 @@ const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, heigh
   const maxValue = Math.max(...allValues);
 
   const valueRange = maxValue - minValue;
-  // Add some padding to Y-axis
-  const yMin = Math.max(0, minValue - valueRange * 0.1);
-  const yMax = maxValue + valueRange * 0.1;
+  // Add some padding to Y-axis (15% padding top and bottom)
+  const yMin = Math.max(0, minValue - valueRange * 0.15);
+  const yMax = maxValue + valueRange * 0.15;
 
   const scaleX = (distance) => padding.left + (distance - minDistance) / (maxDistance - minDistance) * chartWidth;
   const scaleY = (value) => {
@@ -259,7 +258,6 @@ const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, heigh
       {specifications && specifications.ecdSpecs && specifications.ecdSpecs.length > 0 && (
         <>
           {specifications.ecdSpecs.map((spec, specIndex) => {
-            // ... (keep spec rendering logic)
             // Recuperer la valeur Y (hardness)
             const specValue = spec.hardness || spec.yValue;
 
@@ -371,20 +369,20 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
 
       {/* GRILLE: Tables de donnees + Photo de localisation */}
       {showTablesAndLocation && (
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
           {/* Colonne 1: Table Durete */}
           {hasHardness && (
-            <View style={{ flex: 1, minWidth: 140 }}>
+            <View style={{ flex: 1, minWidth: 200 }}>
               <Text style={styles.subsectionTitle}>Hardness ({unit})</Text>
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.tableCell, { width: '60%' }]}>Position</Text>
-                  <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>Value</Text>
+                  <Text style={[styles.tableCell, { width: '70%' }]}>Position</Text>
+                  <Text style={[styles.tableCell, { width: '30%', borderRightWidth: 0 }]}>Value</Text>
                 </View>
                 {sample.hardnessPoints.map((point, idx) => (
                   <View key={idx} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, { width: '60%' }]}>{point.location || point.position || '-'}</Text>
-                    <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>{point.value || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '70%' }]}>{point.location || point.position || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '30%', borderRightWidth: 0 }]}>{point.value || '-'}</Text>
                   </View>
                 ))}
               </View>
@@ -393,17 +391,17 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
 
           {/* Colonne 2: Table ECD */}
           {hasEcdPositions && (
-            <View style={{ flex: 1, minWidth: 140 }}>
+            <View style={{ flex: 1, minWidth: 200 }}>
               <Text style={styles.subsectionTitle}>ECD (mm)</Text>
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.tableCell, { width: '60%' }]}>Position</Text>
-                  <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>Dist.</Text>
+                  <Text style={[styles.tableCell, { width: '70%' }]}>Position</Text>
+                  <Text style={[styles.tableCell, { width: '30%', borderRightWidth: 0 }]}>Dist.</Text>
                 </View>
                 {sample.ecdPositions.map((pos, idx) => (
                   <View key={idx} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, { width: '60%' }]}>{pos.location || '-'}</Text>
-                    <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>{pos.distance || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '70%' }]}>{pos.location || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '30%', borderRightWidth: 0 }]}>{pos.distance || '-'}</Text>
                   </View>
                 ))}
               </View>
@@ -490,10 +488,7 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
   );
 };
 
-// ... (ControlSectionPDF component)
-
 export const ControlSectionPDF = ({ report, photos = [] }) => {
-  // ... (setup code)
   const resultsData = report?.resultsData;
   const specifications = report?.part?.specifications;
   const unit = resultsData?.results?.[0]?.samples?.[0]?.hardnessPoints?.[0]?.unit ||
@@ -510,7 +505,6 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
 
   // Organiser les photos par result-sample
   const photosByResultSample = {};
-  // ... (keeping existing logic for photos)
   if (Array.isArray(photos)) {
     photos.forEach(photo => {
       const match = photo.subcategory?.match(/result-(\d+)-sample-(\d+)/);

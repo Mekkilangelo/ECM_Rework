@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Card, Nav, Tab, Button, Badge, Form, ListGroup, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faEye, 
-  faFileDownload, 
+import {
+  faEye,
+  faFileDownload,
   faCheckSquare,
   faSquare,
   faImages,
@@ -15,13 +15,13 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useReport } from '../hooks/useReport';
-import ReportPreviewModal from './ReportPreviewModal';
+// Removed ReportPreviewModal import
 import SectionPhotoManager from './SectionPhotoManager';
 import './ReportConfiguration.css';
 
 const ReportConfiguration = React.memo(({ trialId, partId }) => {
   const { t } = useTranslation();
-  
+
   const {
     sections,
     selectedPhotos,
@@ -40,8 +40,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
   } = useReport(trialId, partId);
 
   const [activeTab, setActiveTab] = useState('sections');
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewData, setPreviewData] = useState(null);
+  // Removed showPreview and previewData state
   const [filterSection, setFilterSection] = useState('all');
 
   // Helper pour obtenir le label traduit d'une section
@@ -51,9 +50,9 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
 
   const handlePreview = useCallback(async () => {
     const result = await generatePreview();
-    if (result) {
-      setPreviewData(result);
-      setShowPreview(true);
+    if (result && result.url) {
+      // Open in new window directly
+      window.open(result.url, '_blank');
     }
   }, [generatePreview]);
 
@@ -62,11 +61,11 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
   }, [exportPDF]);
 
   const sizeEstimate = useMemo(() => estimateSize(), [estimateSize]);
-  
+
   const photoSections = useMemo(() => sections.filter(s => s.hasPhotos), [sections]);
-  
+
   const enabledSections = useMemo(() => sections.filter(s => s.isEnabled), [sections]);
-  
+
   // Helper pour extraire les photos d'une section (gère tableau ou objet hiérarchique)
   const getPhotosFromSection = useCallback((sectionType) => {
     const sectionPhotos = selectedPhotos[sectionType];
@@ -83,9 +82,9 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
   const getPhotoCount = useCallback((sectionType) => {
     return getPhotosFromSection(sectionType).length;
   }, [getPhotosFromSection]);
-  
+
   const allPhotos = useMemo(() => {
-    return photoSections.flatMap(section => 
+    return photoSections.flatMap(section =>
       getPhotosFromSection(section.type).map(photo => ({
         ...photo,
         sectionType: section.type,
@@ -93,7 +92,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
       }))
     );
   }, [photoSections, getPhotosFromSection, getSectionLabel]);
-  
+
   const filteredPhotos = useMemo(() => {
     if (filterSection === 'all') return allPhotos;
     return allPhotos.filter(p => p.sectionType === filterSection);
@@ -130,7 +129,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
             {error && (
               <Alert variant="danger" className="m-3 mb-0">{error}</Alert>
             )}
-            
+
             <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
               <Nav variant="tabs" className="border-bottom">
                 <Nav.Item>
@@ -148,7 +147,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                   </Nav.Link>
                 </Nav.Item>
               </Nav>
-              
+
               <Tab.Content className="p-3">
                 <Tab.Pane eventKey="sections">
                   <div className="mb-3">
@@ -164,7 +163,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                         </Button>
                       </div>
                     </div>
-                    
+
                     <ListGroup variant="flush">
                       {sections.sort((a, b) => a.order - b.order).map(section => (
                         <ListGroup.Item key={section.id} className="section-toggle-item">
@@ -180,14 +179,14 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                                 </Badge>
                               )}
                             </div>
-                            <FontAwesomeIcon 
+                            <FontAwesomeIcon
                               icon={section.isEnabled ? faToggleOn : faToggleOff}
                               size="2x"
                               className={`section-toggle ${section.isEnabled ? 'active' : ''}`}
                               onClick={() => toggleSection(section.type)}
                             />
                           </div>
-                          
+
                           {/* Sous-options pour la section Recipe */}
                           {section.type === 'recipe' && section.isEnabled && (
                             <div className="ms-4 mt-2 pt-2 border-top">
@@ -213,7 +212,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                               <small className="text-muted d-block ms-4 mb-2">
                                 {t('report.sections.recipe.options.showDetailsDescription', 'Display recipe number, preox, thermal/chemical cycles, and quench data')}
                               </small>
-                              
+
                               <Form.Check
                                 type="checkbox"
                                 id="showRecipeCurve"
@@ -248,9 +247,9 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <Form.Group className="mb-0">
                       <Form.Label className="small text-muted mb-1">{t('report.photos.filter')}</Form.Label>
-                      <Form.Select 
-                        size="sm" 
-                        value={filterSection} 
+                      <Form.Select
+                        size="sm"
+                        value={filterSection}
                         onChange={(e) => setFilterSection(e.target.value)}
                         style={{ width: '250px' }}
                       >
@@ -266,10 +265,10 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                       {filteredPhotos.length} / {allPhotos.length}
                     </Badge>
                   </div>
-                  
+
                   {photoSections.map(section => (
-                    <div 
-                      key={section.id} 
+                    <div
+                      key={section.id}
                       style={{ display: filterSection === 'all' || filterSection === section.type ? 'block' : 'none' }}
                     >
                       <SectionPhotoManager
@@ -288,7 +287,7 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
           </Card.Body>
         </Card>
       </div>
-      
+
       {/* Panel sticky à droite */}
       <div className="report-actions-panel">
         {loading && (
@@ -301,12 +300,12 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
             </div>
             {progress?.progress !== undefined && (
               <div className="progress" style={{ height: '4px' }}>
-                <div 
-                  className="progress-bar bg-danger" 
-                  role="progressbar" 
+                <div
+                  className="progress-bar bg-danger"
+                  role="progressbar"
                   style={{ width: `${progress.progress}%` }}
-                  aria-valuenow={progress.progress} 
-                  aria-valuemin="0" 
+                  aria-valuenow={progress.progress}
+                  aria-valuemin="0"
                   aria-valuemax="100"
                 />
               </div>
@@ -332,16 +331,6 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
           </div>
         )}
       </div>
-      
-      {showPreview && (
-        <ReportPreviewModal
-          show={showPreview}
-          handleClose={() => setShowPreview(false)}
-          previewData={previewData}
-          loading={loading}
-          progress={progress}
-        />
-      )}
     </div>
   );
 });

@@ -6,6 +6,8 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 import { getBaseUrl } from '../../../../../config/apiConfig';
+import { calculateFontSize } from '../helpers/textHelpers';
+
 
 /**
  * Styles pour l'en-tête commune - Design "Premium" Sombre
@@ -141,8 +143,10 @@ const styles = StyleSheet.create({
   },
 });
 
+
+
 /**
- * Composant d'en-tête commune pour le rapport PDF
+ * Composant d'entête commune pour le rapport PDF
  */
 export const CommonReportHeader = ({
   clientName = '',
@@ -162,6 +166,12 @@ export const CommonReportHeader = ({
   const fullLogoECMUrl = logoECMUrl.startsWith('http') ? logoECMUrl : `${baseURL}${logoECMUrl}`;
   // const fullLogoSynergyUrl = logoSynergyUrl.startsWith('http') ? logoSynergyUrl : `${baseURL}${logoSynergyUrl}`;
 
+  // Calcul des tailles de police dynamiques
+  // Calcul des tailles de police dynamiques
+  const clientNameFontSize = calculateFontSize(clientName, 9, 22, 20, 0.6); // Start reducing earlier (20 chars), faster (0.6), min 9
+  const loadNumberFontSize = calculateFontSize(loadNumber, 9, 14, 8, 0.8); // Aggressive reduction for Load
+  const processTypeFontSize = calculateFontSize(processType, 9, 14, 20, 0.5); // Reduce for Treatment
+
   return (
     <View style={styles.headerContainer} fixed>
       {/* Ligne du haut: Titre et Logo */}
@@ -180,7 +190,9 @@ export const CommonReportHeader = ({
       <View style={styles.bottomRow}>
         {/* Boite Client */}
         <View style={styles.clientBox}>
-          <Text style={styles.clientName}>{clientName || 'CLIENT'}</Text>
+          <Text style={[styles.clientName, { fontSize: clientNameFontSize }]}>
+            {clientName || 'CLIENT'}
+          </Text>
         </View>
 
         {/* Boite Infos */}
@@ -188,7 +200,9 @@ export const CommonReportHeader = ({
           <View style={styles.infoRowPrimary}>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Load</Text>
-              <Text style={styles.infoValue}>{loadNumber || '-'}</Text>
+              <Text style={[styles.infoValue, { fontSize: loadNumberFontSize }]}>
+                {loadNumber || '-'}
+              </Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Date</Text>
@@ -198,7 +212,9 @@ export const CommonReportHeader = ({
 
           <View style={styles.treatmentItem}>
             <Text style={styles.infoLabel}>Treatment</Text>
-            <Text style={styles.infoValue}>{processType || '-'}</Text>
+            <Text style={[styles.infoValue, { fontSize: processTypeFontSize }]}>
+              {processType || '-'}
+            </Text>
           </View>
         </View>
       </View>

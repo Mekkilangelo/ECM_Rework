@@ -11,7 +11,7 @@ export const PHOTO_SIZES = {
     width: 500,
     height: 300,
   },
-  
+
   // Photo large (pleine largeur, moins haute)
   fullWidth: {
     width: 480,
@@ -23,53 +23,63 @@ export const PHOTO_SIZES = {
     width: 480,
     height: 165,
   },
-  
+
   // Grande photo empilée (pour layout vertical)
   stackedLarge: {
     width: 500,
     height: 340,
   },
-  
+
   // Photo première page Load (1 grande + 2 petites)
   heroLoad: {
     width: 500,
     height: 280,
   },
-  
+
   // Demi-largeur (2 photos côte à côte)
   half: {
     width: 235,
     height: 176,
   },
-  
+
   // Demi-largeur pour row secondaire (Load)
   halfSecondary: {
     width: 244,
     height: 200,
   },
-  
+
   // Photos petites en grille (2 colonnes, nombreuses)
   small: {
     width: 235,
     height: 140,
   },
-  
+
   // Photos grille 2x2 (pour pages multiples)
   gridItem: {
     width: 244,
     height: 240,
   },
-  
+
   // Miniatures (pour contrôle)
   thumbnail: {
     width: 120,
     height: 90,
   },
-  
+
   // Pleine page (pour Load avec 1 seule photo)
   fullPage: {
     width: 500,
     height: 700,
+  },
+
+  // Optimized Layout Sizes
+  verticalItem: {
+    width: 500,
+    height: 180, // Tuned for Curves/Datapaq vertical stack
+  },
+  grid6Item: {
+    width: 220,
+    height: 125, // Tuned for Load/Datapaq 2x3 grid
   },
 };
 
@@ -84,42 +94,42 @@ export const PHOTO_LAYOUT_CONFIGS = {
     size: 'fullWidth',
     photosPerPage: 1,
   },
-  
+
   // 2 photos : côte à côte ou empilées selon contexte
   pair: {
     cols: 2,
     size: 'half',
     photosPerPage: 2,
   },
-  
+
   // 2 photos empilées verticalement
   stacked: {
     cols: 1,
     size: 'stackedLarge',
     photosPerPage: 2,
   },
-  
+
   // 3 photos : 1 grande + 2 petites (pattern Load)
   heroPair: {
     firstSize: 'heroLoad',
     restSize: 'halfSecondary',
     photosPerPage: 3,
   },
-  
+
   // Grille 2 colonnes standard
   grid2: {
     cols: 2,
     size: 'half',
     photosPerPage: 4,
   },
-  
+
   // Grille 2 colonnes petite (nombreuses photos)
   grid2Small: {
     cols: 2,
     size: 'small',
     photosPerPage: 6,
   },
-  
+
   // Grille pour pages multiples
   gridPaginated: {
     cols: 2,
@@ -143,7 +153,7 @@ export const SECTION_PHOTO_STRATEGIES = {
     prioritizeFirst: false,
     maxPhotosFirstPage: 6,
   },
-  
+
   load: {
     // Vue d'ensemble charge : première photo = hero
     layouts: {
@@ -157,7 +167,7 @@ export const SECTION_PHOTO_STRATEGIES = {
     subsequentLayout: 'gridPaginated',
     maxPhotosPerPage: 4,
   },
-  
+
   curves: {
     // Courbes : chacune importante, empilées
     layouts: {
@@ -169,7 +179,7 @@ export const SECTION_PHOTO_STRATEGIES = {
     maxPhotosFirstPage: 2,
     maxPhotosPerPage: 2,
   },
-  
+
   control: {
     // Photos de contrôle : petites, nombreuses
     layouts: {
@@ -180,7 +190,7 @@ export const SECTION_PHOTO_STRATEGIES = {
     prioritizeFirst: false,
     maxPhotosFirstPage: 6,
   },
-  
+
   micrography: {
     // Micrographies : groupées par zoom, layout adaptatif
     layouts: {

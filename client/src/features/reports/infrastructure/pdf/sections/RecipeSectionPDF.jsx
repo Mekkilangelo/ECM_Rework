@@ -1,512 +1,254 @@
 /**
  * INFRASTRUCTURE: Section Recette du rapport PDF
- * Affiche les données de recette (préox, cycles thermique/chimique, trempe)
- * 
- * Uses theme system for consistent styling
+ * Reworked: Header with Recipe Number, 3-Column Details Grid (Distinct Colors)
+ * Refined: SVG Arrows, Correct Tables (Speed+Pressure), Adjusted Widths.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
-import { COLORS, TYPOGRAPHY, SPACING, getAccentColor, getSubsectionBackground, getSubsectionTextColor } from '../theme';
+import { COLORS, TYPOGRAPHY, SPACING, getAccentColor } from '../theme';
 import RecipeCurveChartPDF from '../components/RecipeCurveChartPDF';
 
-// Section type for accent colors
-const SECTION_TYPE = 'recipe';
+const BRAND_DARK = '#1e293b';
+
+// Distinct Colors for Columns
+const THEME = {
+  thermal: {
+    headerBg: '#fff1f2', // Rose 50
+    headerBorder: '#e11d48', // Rose 600
+    title: '#9f1239', // Rose 800
+    arrowUp: '#e11d48',
+    arrowDown: '#3b82f6',
+  },
+  chemical: {
+    headerBg: '#f0fdf4', // Green 50
+    headerBorder: '#16a34a', // Green 600
+    title: '#14532d', // Green 800
+  },
+  cooling: {
+    headerBg: '#eff6ff', // Blue 50
+    headerBorder: '#2563eb', // Blue 600
+    title: '#1e3a8a', // Blue 800
+  }
+};
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: SPACING.section.marginBottom
+  sectionContainer: {
+    marginBottom: 20,
+    fontFamily: 'Helvetica',
+  },
+  // Header
+  sectionHeader: {
+    backgroundColor: BRAND_DARK,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 4,
+    marginBottom: 10,
   },
   sectionTitle: {
-    ...TYPOGRAPHY.sectionTitle,
-    color: COLORS.text.white,
-    backgroundColor: COLORS.brand.secondary,
-    borderLeftWidth: 4,
-    borderLeftColor: getAccentColor(SECTION_TYPE),
+    color: '#ffffff',
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
-  subsectionTitle: {
-    ...TYPOGRAPHY.subsectionTitle,
-    color: getSubsectionTextColor(SECTION_TYPE),
-    backgroundColor: getSubsectionBackground(SECTION_TYPE),
-    borderLeftWidth: 3,
-    borderLeftColor: getAccentColor(SECTION_TYPE),
+  sectionPagination: {
+    color: '#cbd5e1',
+    fontSize: 10,
+    fontFamily: 'Helvetica',
   },
+
+  // Main Layout
+  mainContent: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+
+  // 3-Column Grid
+  detailsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+
+  // Specific Column Widths (Adjusted)
+  colThermal: { width: '24%', flexDirection: 'column' },
+  colChemical: { width: '51%', flexDirection: 'column' },
+  colCooling: { width: '25%', flexDirection: 'column' },
+
+  // Data Rows
   row: {
     flexDirection: 'row',
-    marginBottom: 4,
-    paddingVertical: 2
+    marginBottom: 3,
+    flexWrap: 'wrap',
   },
   label: {
-    width: '30%',
-    fontSize: 10,
-    color: '#666666',
-    fontWeight: 'bold',
-    lineHeight: 1.3
-  },
-  value: {
-    width: '70%',
-    fontSize: 10,
-    color: '#333333',
-    lineHeight: 1.3
-  },
-  table: {
-    width: '100%',
-    marginTop: 6,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#DDDDDD'
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#F8F9FA',
-    borderBottomWidth: 2,
-    borderBottomColor: '#DC3545',
-    fontWeight: 'bold'
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-    wrap: false
-  },
-  tableCell: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    fontSize: 9,
-    borderRightWidth: 1,
-    borderRightColor: '#EEEEEE',
-    lineHeight: 1.3
-  },
-  tableCellHeader: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    fontSize: 10,
-    fontWeight: 'bold',
-    borderRightWidth: 1,
-    borderRightColor: '#DDDDDD',
-    lineHeight: 1.3
-  },
-  // Colonnes spécifiques pour cycle thermique
-  colStep: { width: '10%' },
-  colRamp: { width: '20%', alignItems: 'center', justifyContent: 'center' },
-  colSetpoint: { width: '35%' },
-  colDuration: { width: '35%' },
-  
-  // Style pour la cellule ramp avec icône
-  rampCell: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRightWidth: 1,
-    borderRightColor: '#EEEEEE',
-    width: '20%',
-  },
-  rampIcon: {
+    fontSize: 7,
+    color: '#64748b',
+    fontFamily: 'Helvetica-Bold',
     marginRight: 4,
   },
-  rampText: {
-    fontSize: 8,
-    fontWeight: 'bold',
+  value: {
+    fontSize: 7,
+    color: '#0f172a',
+    fontFamily: 'Helvetica',
   },
-  
-  // Colonnes pour cycle chimique
-  colChemStep: { width: '8%' },
-  colTime: { width: '15%' },
-  colGas: { width: '15%' },
-  colPressure: { width: '15%' },
-  colTurbine: { width: '12%' },
-  
-  // Colonnes pour trempe
-  colQuenchStep: { width: '12%' },
-  colQuenchDuration: { width: '22%' },
-  colQuenchSpeed: { width: '22%' },
-  colQuenchPressure: { width: '22%' },
-  
-  noData: {
-    fontSize: 9,
-    color: '#999999',
-    fontStyle: 'italic',
+
+  // Mini Table
+  miniTable: {
+    width: '100%',
+    borderTopWidth: 0.5,
+    borderTopColor: '#cbd5e1',
+    borderLeftWidth: 0.5,
+    borderLeftColor: '#cbd5e1',
     marginTop: 5,
-    marginBottom: 10
+    marginBottom: 10,
+  },
+  miniRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#cbd5e1',
+    minHeight: 12,
+    alignItems: 'center',
+  },
+  miniHeaderRow: {
+    backgroundColor: '#f8fafc',
+    flexDirection: 'row',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#94a3b8',
+    minHeight: 15,
+    alignItems: 'center',
+  },
+  miniCell: {
+    padding: 2,
+    borderRightWidth: 0.5,
+    borderRightColor: '#cbd5e1',
+    fontSize: 7,
+    justifyContent: 'center',
+    textAlign: 'center',
+  },
+  miniCellHeader: {
+    padding: 2,
+    borderRightWidth: 0.5,
+    borderRightColor: '#cbd5e1',
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: '#334155',
+    textAlign: 'center',
+  },
+
+  // Helper for column headers
+  columnHeaderBase: {
+    borderLeftWidth: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    marginBottom: 5,
+  },
+  columnTitleBase: {
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 10,
+    textTransform: 'uppercase',
+  },
+
+  // Photos
+  photoContainer: {
+    marginTop: 10,
+    alignItems: 'center',
   },
   photo: {
-    marginTop: 10,
-    marginBottom: 10,
     maxWidth: '100%',
-    maxHeight: 200
+    maxHeight: 200,
+    marginBottom: 5,
   },
   photoCaption: {
     fontSize: 8,
-    color: '#666666',
-    textAlign: 'center',
-    marginTop: 3,
-    marginBottom: 10
+    color: '#64748b',
+    fontStyle: 'italic',
   }
 });
 
-/**
- * Composant flèche SVG pour les ramps
- */
+// --- HELPER COMPONENTS ---
+
 const RampArrow = ({ type }) => {
-  const size = 14;
-  
-  // Flèche vers le haut (montée en température)
-  if (type === 'up') {
+  // Use SVG for perfect rendering
+  const size = 8;
+  const t = type?.toLowerCase();
+
+  if (t === 'up') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24">
-        <Path 
-          d="M12 4 L4 14 L9 14 L9 20 L15 20 L15 14 L20 14 Z" 
-          fill="#e74c3c"
-          stroke="#c0392b"
-          strokeWidth="1"
-        />
+        <Path d="M12 4L4 14h16L12 4z" fill={THEME.thermal.arrowUp} />
       </Svg>
     );
   }
-  
-  // Flèche vers le bas (descente en température)
-  if (type === 'down') {
+  if (t === 'down') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24">
-        <Path 
-          d="M12 20 L4 10 L9 10 L9 4 L15 4 L15 10 L20 10 Z" 
-          fill="#3498db"
-          stroke="#2980b9"
-          strokeWidth="1"
-        />
+        <Path d="M12 20l8-10H4l8 10z" fill={THEME.thermal.arrowDown} />
       </Svg>
     );
   }
-  
-  // Flèche horizontale (maintien) - pointe vers la droite
-  if (type === 'continue' || type === 'hold') {
+  if (t === 'continue' || t === 'hold') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24">
-        <Path 
-          d="M20 12 L10 6 L10 10 L4 10 L4 14 L10 14 L10 18 Z" 
-          fill="#27ae60"
-          stroke="#1e8449"
-          strokeWidth="1"
-        />
+        <Path d="M20 12l-10-6v12l10-6z" fill="#16a34a" />
       </Svg>
     );
   }
-  
-  return null;
+  return <Text style={{ fontSize: 7, color: '#94a3b8' }}>-</Text>;
 };
 
-/**
- * Composant cellule Ramp avec icône
- */
-const RampCell = ({ ramp }) => {
-  const rampLabels = {
-    'up': 'Up',
-    'down': 'Down',
-    'continue': 'Hold',
-    'hold': 'Hold'
-  };
-  
-  const rampColors = {
-    'up': '#e74c3c',
-    'down': '#3498db',
-    'continue': '#27ae60',
-    'hold': '#27ae60'
-  };
-  
-  const label = rampLabels[ramp] || ramp || '-';
-  const color = rampColors[ramp] || '#666666';
-  
+const InfoRow = ({ label, value, unit }) => {
+  if (!value && value !== 0) return null;
   return (
-    <View style={styles.rampCell}>
-      <View style={styles.rampIcon}>
-        <RampArrow type={ramp} />
-      </View>
-      <Text style={[styles.rampText, { color }]}>{label}</Text>
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}:</Text>
+      <Text style={styles.value}>{value} {unit}</Text>
     </View>
   );
 };
 
-/**
- * Vérifier si une section de trempe contient des données significatives
- */
-const hasQuenchData = (quenchData) => {
-  if (!quenchData) return false;
-  
-  const gasQuench = quenchData.gas_quench;
-  const oilQuench = quenchData.oil_quench;
-  
-  // Vérifier trempe gaz
-  const hasGasData = gasQuench && (
-    (gasQuench.speed_parameters && gasQuench.speed_parameters.length > 0) ||
-    (gasQuench.pressure_parameters && gasQuench.pressure_parameters.length > 0) ||
-    (gasQuench.inerting_delay?.value && gasQuench.inerting_delay.value !== 0) ||
-    (gasQuench.inerting_pressure?.value && gasQuench.inerting_pressure.value !== 0)
-  );
-  
-  // Vérifier trempe huile
-  const hasOilData = oilQuench && (
-    (oilQuench.speed_parameters && oilQuench.speed_parameters.length > 0) ||
-    (oilQuench.temperature?.value && oilQuench.temperature.value !== 0) ||
-    (oilQuench.inerting_delay?.value && oilQuench.inerting_delay.value !== 0) ||
-    (oilQuench.dripping_time?.value && oilQuench.dripping_time.value !== 0) ||
-    (oilQuench.pressure && oilQuench.pressure !== 0)
-  );
-  
-  return hasGasData || hasOilData;
-};
+// --- SUB-SECTIONS ---
 
-/**
- * Section Preoxydation
- */
-const PreoxSection = ({ recipeData }) => {
-  if (!recipeData?.preox || 
-      (!recipeData.preox.temperature?.value && 
-       !recipeData.preox.duration?.value && 
-       !recipeData.preox.media)) {
-    return null;
-  }
-
-  const preox = recipeData.preox;
+const ThermalColumn = ({ recipeData }) => {
+  const preox = recipeData?.preox;
+  const thermal = recipeData?.thermal_cycle || [];
+  const color = THEME.thermal;
 
   return (
-    <>
-      <Text style={styles.subsectionTitle}>Preoxidation</Text>
-      
-      {preox.temperature?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Temperature:</Text>
-          <Text style={styles.value}>
-            {preox.temperature.value} {preox.temperature.unit || '°C'}
-          </Text>
-        </View>
-      )}
-      
-      {preox.duration?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Duration:</Text>
-          <Text style={styles.value}>
-            {preox.duration.value} {preox.duration.unit || 'min'}
-          </Text>
-        </View>
-      )}
-      
-      {preox.media && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Media:</Text>
-          <Text style={styles.value}>{preox.media}</Text>
-        </View>
-      )}
-    </>
-  );
-};
-
-/**
- * Section Cycle Thermique
- */
-const ThermalCycleSection = ({ recipeData }) => {
-  if (!recipeData?.thermal_cycle || recipeData.thermal_cycle.length === 0) {
-    return null;
-  }
-
-  // Si le tableau a peu d'elements (< 20), on le garde ensemble sur une page
-  const shouldKeepTogether = recipeData.thermal_cycle.length < 20;
-
-  return (
-    <View wrap={!shouldKeepTogether}>
-      <Text style={styles.subsectionTitle}>Thermal Cycle</Text>
-      
-      <View style={styles.table} wrap={!shouldKeepTogether}>
-        {/* En-tete */}
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableCellHeader, styles.colStep]}>Step</Text>
-          <Text style={[styles.tableCellHeader, styles.colRamp]}>Ramp</Text>
-          <Text style={[styles.tableCellHeader, styles.colSetpoint]}>Setpoint (°C)</Text>
-          <Text style={[styles.tableCellHeader, styles.colDuration]}>Duration (min)</Text>
-        </View>
-        
-        {/* Lignes */}
-        {recipeData.thermal_cycle.map((step, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.colStep]}>{step.step || index + 1}</Text>
-            <RampCell ramp={step.ramp} />
-            <Text style={[styles.tableCell, styles.colSetpoint]}>{step.setpoint || '-'}</Text>
-            <Text style={[styles.tableCell, styles.colDuration]}>{step.duration || '-'}</Text>
-          </View>
-        ))}
+    <View style={styles.colThermal}>
+      <View style={[styles.columnHeaderBase, { backgroundColor: color.headerBg, borderLeftColor: color.headerBorder }]}>
+        <Text style={[styles.columnTitleBase, { color: color.title }]}>THERMAL</Text>
       </View>
-    </View>
-  );
-};
 
-/**
- * Section Cycle Chimique
- */
-const ChemicalCycleSection = ({ recipeData }) => {
-  if (!recipeData?.chemical_cycle || recipeData.chemical_cycle.length === 0) {
-    return null;
-  }
-
-  // Detecter quels gaz sont utilises
-  const hasGas1 = recipeData.selected_gas1;
-  const hasGas2 = recipeData.selected_gas2;
-  const hasGas3 = recipeData.selected_gas3;
-
-  // Si le tableau a peu d'elements (< 15), on le garde ensemble
-  const shouldKeepTogether = recipeData.chemical_cycle.length < 15;
-
-  return (
-    <View wrap={!shouldKeepTogether}>
-      <Text style={styles.subsectionTitle}>Chemical Cycle</Text>
-      
-      {/* Gaz selectionnes */}
-      <View style={styles.row}>
-        <Text style={styles.label}>Configured Gases:</Text>
-        <Text style={styles.value}>
-          {[hasGas1, hasGas2, hasGas3].filter(Boolean).join(', ') || 'None'}
-        </Text>
-      </View>
-      
-      {/* Parametres d'attente */}
-      {recipeData.wait_time?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Wait Time:</Text>
-          <Text style={styles.value}>
-            {recipeData.wait_time.value} {recipeData.wait_time.unit || 'min'}
-          </Text>
+      {/* Preox */}
+      {preox && (preox.temperature?.value || preox.duration?.value) && (
+        <View style={{ marginBottom: 5, paddingHorizontal: 2 }}>
+          <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', marginBottom: 2, textDecoration: 'underline', color: color.title }}>Preoxidation</Text>
+          <InfoRow label="Temp" value={preox.temperature?.value} unit={preox.temperature?.unit} />
+          <InfoRow label="Duration" value={preox.duration?.value} unit={preox.duration?.unit} />
+          <InfoRow label="Media" value={preox.media} />
         </View>
       )}
-      
-      {recipeData.cell_temp?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Cell Temperature:</Text>
-          <Text style={styles.value}>
-            {recipeData.cell_temp.value} {recipeData.cell_temp.unit || '°C'}
-          </Text>
-        </View>
-      )}
-      
-      {recipeData.wait_pressure?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Wait Pressure:</Text>
-          <Text style={styles.value}>
-            {recipeData.wait_pressure.value} {recipeData.wait_pressure.unit || 'mb'}
-          </Text>
-        </View>
-      )}
-      
-      {/* Tableau du cycle */}
-      <View style={styles.table} wrap={!shouldKeepTogether}>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableCellHeader, styles.colChemStep]}>Step</Text>
-          <Text style={[styles.tableCellHeader, styles.colTime]}>Time (s)</Text>
-          {hasGas1 && <Text style={[styles.tableCellHeader, styles.colGas]}>{hasGas1} (Nl/h)</Text>}
-          {hasGas2 && <Text style={[styles.tableCellHeader, styles.colGas]}>{hasGas2} (Nl/h)</Text>}
-          {hasGas3 && <Text style={[styles.tableCellHeader, styles.colGas]}>{hasGas3} (Nl/h)</Text>}
-          <Text style={[styles.tableCellHeader, styles.colPressure]}>Pressure (mb)</Text>
-          <Text style={[styles.tableCellHeader, styles.colTurbine]}>Turbine</Text>
-        </View>
-        
-        {recipeData.chemical_cycle.map((step, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.colChemStep]}>{step.step || index + 1}</Text>
-            <Text style={[styles.tableCell, styles.colTime]}>{step.time || '-'}</Text>
-            {hasGas1 && <Text style={[styles.tableCell, styles.colGas]}>{step.gases?.find(g => g.gas === hasGas1)?.debit || '-'}</Text>}
-            {hasGas2 && <Text style={[styles.tableCell, styles.colGas]}>{step.gases?.find(g => g.gas === hasGas2)?.debit || '-'}</Text>}
-            {hasGas3 && <Text style={[styles.tableCell, styles.colGas]}>{step.gases?.find(g => g.gas === hasGas3)?.debit || '-'}</Text>}
-            <Text style={[styles.tableCell, styles.colPressure]}>{step.pressure || '-'}</Text>
-            <Text style={[styles.tableCell, styles.colTurbine]}>{step.turbine ? 'Yes' : 'No'}</Text>
+
+      {/* Thermal Table */}
+      {thermal.length > 0 && (
+        <View style={styles.miniTable}>
+          <View style={styles.miniHeaderRow}>
+            <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
+            <Text style={[styles.miniCellHeader, { width: 14 }]}>R</Text>
+            <Text style={[styles.miniCellHeader, { flex: 1 }]}>Set (°C)</Text>
+            <Text style={[styles.miniCellHeader, { width: 25 }]}>Time{"\n"}(min)</Text>
           </View>
-        ))}
-      </View>
-    </View>
-  );
-};
-
-/**
- * Section Trempe Gaz
- */
-const GasQuenchSection = ({ quenchData }) => {
-  const gasQuench = quenchData?.gas_quench;
-  
-  if (!gasQuench) return null;
-
-  const hasSpeedParams = gasQuench.speed_parameters && gasQuench.speed_parameters.length > 0;
-  const hasPressureParams = gasQuench.pressure_parameters && gasQuench.pressure_parameters.length > 0;
-
-  // Vérifier si au moins une donnée significative existe
-  const hasAnyData = hasSpeedParams || 
-                     hasPressureParams || 
-                     (gasQuench.inerting_delay?.value && gasQuench.inerting_delay.value !== 0) ||
-                     (gasQuench.inerting_pressure?.value && gasQuench.inerting_pressure.value !== 0);
-
-  if (!hasAnyData) return null;
-
-  // Petits tableaux de trempe : toujours garder ensemble (généralement < 10 éléments)
-  const shouldKeepTogether = true;
-
-  return (
-    <View wrap={!shouldKeepTogether}>
-      <Text style={styles.subsectionTitle}>Gas Quench</Text>
-      
-      {gasQuench.inerting_delay?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Inerting Delay:</Text>
-          <Text style={styles.value}>
-            {gasQuench.inerting_delay.value} {gasQuench.inerting_delay.unit || 's'}
-          </Text>
-        </View>
-      )}
-      
-      {gasQuench.inerting_pressure?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Inerting Pressure:</Text>
-          <Text style={styles.value}>
-            {gasQuench.inerting_pressure.value} {gasQuench.inerting_pressure.unit || 'mb'}
-          </Text>
-        </View>
-      )}
-      
-      {/* Parametres de vitesse */}
-      {hasSpeedParams && (
-        <View style={styles.table}>
-          <Text style={{ fontSize: 10, fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>
-            Speed Parameters
-          </Text>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Step</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Duration (s)</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchSpeed]}>Speed (rpm)</Text>
-          </View>
-          
-          {gasQuench.speed_parameters.map((param, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.colQuenchStep]}>{param.step || index + 1}</Text>
-              <Text style={[styles.tableCell, styles.colQuenchDuration]}>{param.duration || '-'}</Text>
-              <Text style={[styles.tableCell, styles.colQuenchSpeed]}>{param.speed || '-'}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-      
-      {/* Parametres de pression */}
-      {hasPressureParams && (
-        <View style={styles.table}>
-          <Text style={{ fontSize: 10, fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>
-            Pressure Parameters
-          </Text>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Step</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Duration (s)</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchPressure]}>Pressure (mb)</Text>
-          </View>
-          
-          {gasQuench.pressure_parameters.map((param, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.colQuenchStep]}>{param.step || index + 1}</Text>
-              <Text style={[styles.tableCell, styles.colQuenchDuration]}>{param.duration || '-'}</Text>
-              <Text style={[styles.tableCell, styles.colQuenchPressure]}>{param.pressure || '-'}</Text>
+          {thermal.map((step, i) => (
+            <View key={i} style={styles.miniRow}>
+              <Text style={[styles.miniCell, { width: 14 }]}>{step.step || i + 1}</Text>
+              <View style={[styles.miniCell, { width: 14, alignItems: 'center' }]}>
+                <RampArrow type={step.ramp} />
+              </View>
+              <Text style={[styles.miniCell, { flex: 1 }]}>{step.setpoint}</Text>
+              <Text style={[styles.miniCell, { width: 25 }]}>{step.duration}</Text>
             </View>
           ))}
         </View>
@@ -515,184 +257,237 @@ const GasQuenchSection = ({ quenchData }) => {
   );
 };
 
-/**
- * Section Trempe Huile
- */
-const OilQuenchSection = ({ quenchData }) => {
-  const oilQuench = quenchData?.oil_quench;
-  
-  if (!oilQuench) return null;
-
-  const hasSpeedParams = oilQuench.speed_parameters && oilQuench.speed_parameters.length > 0;
-  
-  // Vérifier si au moins une donnée significative existe
-  const hasAnyData = hasSpeedParams ||
-                     (oilQuench.temperature?.value && oilQuench.temperature.value !== 0) ||
-                     (oilQuench.inerting_delay?.value && oilQuench.inerting_delay.value !== 0) ||
-                     (oilQuench.dripping_time?.value && oilQuench.dripping_time.value !== 0) ||
-                     (oilQuench.pressure && oilQuench.pressure !== 0);
-
-  if (!hasAnyData) return null;
+const ChemicalColumn = ({ recipeData }) => {
+  const chem = recipeData?.chemical_cycle || [];
+  const gases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
+  const color = THEME.chemical;
 
   return (
-    <View wrap={false}>
-      <Text style={styles.subsectionTitle}>Oil Quench</Text>
-      
-      {oilQuench.temperature?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Oil Temperature:</Text>
-          <Text style={styles.value}>
-            {oilQuench.temperature.value} {oilQuench.temperature.unit || '°C'}
-          </Text>
+    <View style={styles.colChemical}>
+      <View style={[styles.columnHeaderBase, { backgroundColor: color.headerBg, borderLeftColor: color.headerBorder }]}>
+        <Text style={[styles.columnTitleBase, { color: color.title }]}>CHEMICAL</Text>
+      </View>
+
+      {/* Info */}
+      <View style={{ marginBottom: 5, paddingHorizontal: 2 }}>
+        <InfoRow label="Gases" value={gases.join(', ')} />
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
+          <InfoRow label="Wait Press" value={recipeData?.wait_pressure?.value} unit={recipeData?.wait_pressure?.unit} />
         </View>
-      )}
-      
-      {oilQuench.inerting_delay?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Inerting Delay:</Text>
-          <Text style={styles.value}>
-            {oilQuench.inerting_delay.value} {oilQuench.inerting_delay.unit || 's'}
-          </Text>
-        </View>
-      )}
-      
-      {oilQuench.dripping_time?.value && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Dripping Time:</Text>
-          <Text style={styles.value}>
-            {oilQuench.dripping_time.value} {oilQuench.dripping_time.unit || 's'}
-          </Text>
-        </View>
-      )}
-      
-      {hasSpeedParams && (
-        <View style={styles.table}>
-          <Text style={{ fontSize: 10, fontWeight: 'bold', marginTop: 6, marginBottom: 3 }}>
-            Speed Parameters
-          </Text>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableCellHeader, styles.colQuenchStep]}>Step</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchDuration]}>Duration (s)</Text>
-            <Text style={[styles.tableCellHeader, styles.colQuenchSpeed]}>Speed (rpm)</Text>
+        <InfoRow label="Cell Temp" value={recipeData?.cell_temp?.value} unit={recipeData?.cell_temp?.unit} />
+      </View>
+
+      {/* Chemical Table */}
+      {chem.length > 0 && (
+        <View style={styles.miniTable}>
+          <View style={styles.miniHeaderRow}>
+            <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
+            <Text style={[styles.miniCellHeader, { width: 22 }]}>Time{"\n"}(s)</Text>
+
+            {/* Dynamic Gas Columns */}
+            {recipeData?.selected_gas1 && <Text style={[styles.miniCellHeader, { flex: 1 }]}>{recipeData.selected_gas1}{"\n"}(l/h)</Text>}
+            {recipeData?.selected_gas2 && <Text style={[styles.miniCellHeader, { flex: 1 }]}>{recipeData.selected_gas2}{"\n"}(l/h)</Text>}
+            {recipeData?.selected_gas3 && <Text style={[styles.miniCellHeader, { flex: 1 }]}>{recipeData.selected_gas3}{"\n"}(l/h)</Text>}
+
+            <Text style={[styles.miniCellHeader, { width: 22 }]}>Press{"\n"}(mb)</Text>
+            <Text style={[styles.miniCellHeader, { width: 14 }]}>Trb</Text>
           </View>
-          
-          {oilQuench.speed_parameters.map((param, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.colQuenchStep]}>{param.step || index + 1}</Text>
-              <Text style={[styles.tableCell, styles.colQuenchDuration]}>{param.duration || '-'}</Text>
-              <Text style={[styles.tableCell, styles.colQuenchSpeed]}>{param.speed || '-'}</Text>
-            </View>
-          ))}
+          {chem.map((step, i) => {
+            const getDebit = (gasName) => {
+              const g = step.gases?.find(gf => gf.gas === gasName);
+              return g ? g.debit : '-';
+            };
+
+            return (
+              <View key={i} style={styles.miniRow}>
+                <Text style={[styles.miniCell, { width: 14 }]}>{step.step || i + 1}</Text>
+                <Text style={[styles.miniCell, { width: 22 }]}>{step.time}</Text>
+
+                {recipeData?.selected_gas1 && <Text style={[styles.miniCell, { flex: 1 }]}>{getDebit(recipeData.selected_gas1)}</Text>}
+                {recipeData?.selected_gas2 && <Text style={[styles.miniCell, { flex: 1 }]}>{getDebit(recipeData.selected_gas2)}</Text>}
+                {recipeData?.selected_gas3 && <Text style={[styles.miniCell, { flex: 1 }]}>{getDebit(recipeData.selected_gas3)}</Text>}
+
+                <Text style={[styles.miniCell, { width: 22 }]}>{step.pressure}</Text>
+                <Text style={[styles.miniCell, { width: 14 }]}>{step.turbine ? '✓' : ''}</Text>
+              </View>
+            );
+          })}
         </View>
       )}
     </View>
   );
 };
 
-/**
- * Section Photos Recette
- */
-const RecipePhotosSection = ({ photos = [] }) => {
-  if (!photos || photos.length === 0) return null;
+const QuenchColumn = ({ quenchData }) => {
+  const gas = quenchData?.gas_quench;
+  const oil = quenchData?.oil_quench;
+  const color = THEME.cooling;
+
+  const hasGas = gas && (
+    gas.inerting_delay?.value ||
+    gas.inerting_pressure?.value ||
+    (gas.speed_parameters && gas.speed_parameters.length > 0) ||
+    (gas.pressure_parameters && gas.pressure_parameters.length > 0)
+  );
+
+  const hasOil = oil && (
+    oil.temperature?.value ||
+    oil.inerting_delay?.value ||
+    (oil.speed_parameters && oil.speed_parameters.length > 0)
+  );
 
   return (
-    <>
-      <Text style={styles.subsectionTitle}>Photos</Text>
-      {photos.map((photo, index) => (
-        <View key={index}>
-          <Image
-            style={styles.photo}
-            src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/files/${photo.node_id}`}
-          />
-          <Text style={styles.photoCaption}>
-            {photo.original_name || `Photo ${index + 1}`}
-          </Text>
+    <View style={styles.colCooling}>
+      <View style={[styles.columnHeaderBase, { backgroundColor: color.headerBg, borderLeftColor: color.headerBorder }]}>
+        <Text style={[styles.columnTitleBase, { color: color.title }]}>COOLING</Text>
+      </View>
+
+      {/* GAS QUENCH */}
+      {hasGas && (
+        <View style={{ marginBottom: 10 }}>
+          <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', marginBottom: 2, textDecoration: 'underline', color: color.title }}>Gas Quench</Text>
+          <InfoRow label="Delay" value={gas.inerting_delay?.value} unit={gas.inerting_delay?.unit} />
+          <InfoRow label="Pressure" value={gas.inerting_pressure?.value} unit={gas.inerting_pressure?.unit} />
+
+          {/* Speed Params */}
+          {gas.speed_parameters?.length > 0 && (
+            <View style={styles.miniTable}>
+              <View style={[styles.miniHeaderRow, { backgroundColor: '#f8fafc' }]}>
+                <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Time (s)</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Speed</Text>
+              </View>
+              {gas.speed_parameters.map((p, i) => (
+                <View key={i} style={styles.miniRow}>
+                  <Text style={[styles.miniCell, { width: 14 }]}>{p.step || i + 1}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.duration || '-'}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.speed}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Pressure Params */}
+          {gas.pressure_parameters?.length > 0 && (
+            <View style={styles.miniTable}>
+              <View style={[styles.miniHeaderRow, { backgroundColor: '#f8fafc' }]}>
+                <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Time (s)</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Press (mb)</Text>
+              </View>
+              {gas.pressure_parameters.map((p, i) => (
+                <View key={i} style={styles.miniRow}>
+                  <Text style={[styles.miniCell, { width: 14 }]}>{p.step || i + 1}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.duration || '-'}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.pressure}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-      ))}
-    </>
+      )}
+
+      {/* OIL QUENCH */}
+      {hasOil && (
+        <View>
+          <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', marginBottom: 2, textDecoration: 'underline', color: color.title }}>Oil Quench</Text>
+          <InfoRow label="Temp" value={oil.temperature?.value} unit={oil.temperature?.unit} />
+          <InfoRow label="Delay" value={oil.inerting_delay?.value} unit={oil.inerting_delay?.unit} />
+          <InfoRow label="Drip" value={oil.dripping_time?.value} unit={oil.dripping_time?.unit} />
+
+          {/* Speed Params */}
+          {oil.speed_parameters?.length > 0 && (
+            <View style={styles.miniTable}>
+              <View style={styles.miniHeaderRow}>
+                <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Time (s)</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Speed</Text>
+              </View>
+              {oil.speed_parameters.map((p, i) => (
+                <View key={i} style={styles.miniRow}>
+                  <Text style={[styles.miniCell, { width: 14 }]}>{p.step || i + 1}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.duration || '-'}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.speed}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
   );
 };
+
 
 /**
  * Composant principal: Section Recette complete
- * @param {Object} report - Les données du rapport
- * @param {boolean} showRecipeCurve - Afficher ou non le graphique des cycles (défaut: true)
  */
 export const RecipeSectionPDF = ({ report, showRecipeDetails = true, showRecipeCurve = true }) => {
-  
   const recipeData = report.recipeData;
   const quenchData = report.quenchData;
   const photos = report.sectionFiles?.recipe || [];
 
-  // Si aucune donnee de recette
-  if (!recipeData && !quenchData) {
-    return (
-      <View style={styles.section} break>
-        <Text style={styles.sectionTitle}>RECIPE</Text>
-        <Text style={styles.noData}>No recipe data available</Text>
-      </View>
-    );
-  }
+  if (!recipeData && !quenchData) return null;
+  if (!showRecipeDetails && !showRecipeCurve) return null;
 
-  // Si aucune option n'est activée, ne rien afficher
-  if (!showRecipeDetails && !showRecipeCurve) {
-    return null;
-  }
+  const hasPhotos = photos.length > 0;
+  const totalPagesSection = hasPhotos ? 2 : 1;
 
   return (
-    <>
-      {/* Titre de section - toujours affiché si la section est active */}
-      <View style={styles.section} wrap={false}>
-        <Text style={styles.sectionTitle}>RECIPE</Text>
-        
-        {/* Recipe Details - afficher uniquement si showRecipeDetails est true */}
+    <View style={styles.sectionContainer} break>
+
+      {/* HEADER P1 */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>RECIPE : {recipeData?.number || 'Unknown'}</Text>
+        <Text style={styles.sectionPagination}>1 / {totalPagesSection}</Text>
+      </View>
+
+      {/* CONTENT P1 */}
+      <View style={styles.mainContent}>
+
+        {/* 1. Chart (Top) */}
+        {showRecipeCurve && (
+          <RecipeCurveChartPDF
+            recipeData={recipeData}
+            width={500}
+            height={200}
+          />
+        )}
+
+        {/* 2. Details Grid (3 Cols) */}
         {showRecipeDetails && (
-          <>
-            {recipeData?.number && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Recipe Number:</Text>
-                <Text style={styles.value}>{recipeData.number}</Text>
-              </View>
-            )}
-            
-            <PreoxSection recipeData={recipeData} />
-          </>
+          <View style={styles.detailsGrid}>
+            <ThermalColumn recipeData={recipeData} />
+            <ChemicalColumn recipeData={recipeData} />
+            <QuenchColumn quenchData={quenchData} />
+          </View>
         )}
       </View>
-        
-      {/* Cycle Thermique - wrap intelligent selon taille */}
-      {showRecipeDetails && <ThermalCycleSection recipeData={recipeData} />}
 
-      {/* Cycle chimique - wrap intelligent selon taille */}
-      {showRecipeDetails && recipeData?.chemical_cycle && recipeData.chemical_cycle.length > 0 && (
-        <ChemicalCycleSection recipeData={recipeData} />
-      )}
-
-      {/* Trempe - afficher uniquement si données significatives */}
-      {showRecipeDetails && hasQuenchData(quenchData) && (
-        <>
-          <GasQuenchSection quenchData={quenchData} />
-          <OilQuenchSection quenchData={quenchData} />
-        </>
-      )}
-
-      {/* Graphique des cycles - affiché sous la trempe si activé */}
-      {showRecipeCurve && recipeData && (recipeData.thermal_cycle?.length > 0 || recipeData.chemical_cycle?.length > 0) && (
-        <View wrap={false}>
-          <RecipeCurveChartPDF 
-            recipeData={recipeData} 
-            width={500} 
-            height={160}
-          />
-        </View>
-      )}
-
-      {/* Photos - nouvelle page - afficher si showRecipeDetails est true */}
-      {showRecipeDetails && photos.length > 0 && (
+      {/* PHOTOS (P2+) */}
+      {hasPhotos && (
         <View break>
-          <RecipePhotosSection photos={photos} />
+          {/* HEADER P2 */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>RECIPE : {recipeData?.number || 'Unknown'}</Text>
+            <Text style={styles.sectionPagination}>2 / {totalPagesSection}</Text>
+          </View>
+
+          {/* Photos Grid */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            {photos.map((photo, i) => (
+              <View key={i} style={{ width: '48%', marginBottom: 10 }}>
+                <Image
+                  style={styles.photo}
+                  src={photo.url || photo.viewPath}
+                />
+                <Text style={styles.photoCaption}>{photo.original_name}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       )}
-    </>
+    </View>
   );
 };

@@ -640,6 +640,11 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
                 required: false,
                 include: [
                   {
+                    model: db.results_hardness_point,
+                    as: 'hardnessPoints',
+                    required: false
+                  },
+                  {
                     model: db.results_ecd_position,
                     as: 'ecdPositions',
                     required: false

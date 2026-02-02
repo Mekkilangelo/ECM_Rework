@@ -165,7 +165,8 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
       const generator = createPDFGenerator();
       
       await generator.generate(report, {
-        quality: 'high'
+        quality: 'high',
+        includeCoverPage: false  // Désactiver la CoverPage pour l'identification de pièce
       });
       
     } catch (err) {
@@ -185,7 +186,9 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
       const report = buildReport();
       const generator = createPDFGenerator();
       
-      const result = await generator.preview(report, {});
+      const result = await generator.preview(report, {
+        includeCoverPage: false  // Désactiver la CoverPage pour l'identification de pièce
+      });
       
       if (result?.url) {
         window.open(result.url, '_blank');

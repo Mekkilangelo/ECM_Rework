@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
+import { getBaseUrl } from '../../../../../config/apiConfig';
 
 const styles = StyleSheet.create({
     footerContainer: {
@@ -50,8 +51,8 @@ export const CommonReportFooter = ({
     generatedDate,
     logoSynergyUrl = '/images/synergy_logo.png'
 }) => {
-    // Fix URL if needed
-    const baseURL = 'http://localhost:5001';
+    // Fix URL if needed - Utiliser la configuration centralisée
+    const baseURL = getBaseUrl();
     const fullLogoUrl = logoSynergyUrl.startsWith('http') ? logoSynergyUrl : `${baseURL}${logoSynergyUrl}`;
 
     return (

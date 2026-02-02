@@ -5,6 +5,8 @@ import FurnaceReportSection from './sections/furnace_report/FurnaceReportSection
 import DatapaqSection from './sections/furnace_report/DatapaqSection';
 import PostTreatmentSection from './sections/furnace_report/PostTreatmentSection';
 import SpecificationsSection from './sections/specifications/SpecificationsSection';
+import ObservationsSection from './sections/observations/ObservationsSection';
+import ConclusionSection from './sections/conclusion/ConclusionSection';
 import CollapsibleSection from '../../../../../common/CollapsibleSection/CollapsibleSection';
 import trialService from '../../../../../../services/trialService';
 
@@ -28,6 +30,7 @@ const AfterTabContent = forwardRef(({
   const datapaqFileAssociationRef = useRef(null);
   const postTreatmentFileAssociationRef = useRef(null);
   const resultsFileAssociationRef = useRef(null);
+  const observationsFileAssociationRef = useRef(null);
 
   const handleFileAssociationNeededRef = useRef(handleFileAssociationNeeded);
 
@@ -53,6 +56,10 @@ const AfterTabContent = forwardRef(({
     resultsFileAssociationRef.current = associateFunc;
   }, []);
 
+  const handleObservationsFileAssociationNeeded = React.useCallback((associateFunc) => {
+    observationsFileAssociationRef.current = associateFunc;
+  }, []);
+
   // Créer une fonction d'association qui appellera toutes les fonctions d'association
   const combineFileAssociations = React.useCallback(async (nodeId) => {
     const promises = [];
@@ -72,6 +79,10 @@ const AfterTabContent = forwardRef(({
 
     if (resultsFileAssociationRef.current) {
       promises.push(resultsFileAssociationRef.current(nodeId));
+    }
+
+    if (observationsFileAssociationRef.current) {
+      promises.push(observationsFileAssociationRef.current(nodeId));
     }
 
     if (promises.length > 0) {
@@ -224,7 +235,45 @@ const AfterTabContent = forwardRef(({
           processExcelData={excelImportHandlers.processExcelData}
           specifications={specifications}
         />
-      </CollapsibleSection>    </>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title={t('trials.after.observations.title')}
+        isExpandedByDefault={true}
+        sectionId="trial-observations"
+        rememberState={false}
+        level={0}
+      >
+        <ObservationsSection
+          formData={formData}
+          handleChange={formHandlers.handleChange}
+          trialNodeId={trial?.id}
+          onFileAssociationNeeded={handleObservationsFileAssociationNeeded}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title={t('trials.after.conclusion.title')}
+        isExpandedByDefault={true}
+        sectionId="trial-conclusion"
+        rememberState={false}
+        level={0}
+      >
+        <ConclusionSection
+          formData={formData}
+          handleChange={formHandlers.handleChange}
+          handleSelectChange={formHandlers.handleSelectChange}
+          getSelectedOption={formHandlers.getSelectedOption}
+          statusOptions={formHandlers.statusOptions}
+          loading={loading}
+          selectStyles={formHandlers.selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
+        />
+      </CollapsibleSection>
+    </>
   );
 });
 

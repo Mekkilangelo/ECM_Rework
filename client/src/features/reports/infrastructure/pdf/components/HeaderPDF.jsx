@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
+import { getBaseUrl } from '../../../../../config/apiConfig';
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -98,8 +99,8 @@ export const HeaderPDF = ({
       })
     : '-';
 
-  // URLs des logos
-  const baseURL = 'http://localhost:5001';
+  // URLs des logos - Utiliser la configuration centralisée
+  const baseURL = getBaseUrl();
   const logoECMUrl = `${baseURL}/images/logoECM.png`;
 
   return (

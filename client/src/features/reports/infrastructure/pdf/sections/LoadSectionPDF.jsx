@@ -1,225 +1,243 @@
 /**
  * INFRASTRUCTURE: Load Configuration Section for PDF
- * Displays load configuration photos with intelligent layout
- *
- * Layout Strategy:
- * - 1 photo: full page
- * - 2 photos: stacked vertically
- * - 3 photos: hero + pair (1 large + 2 smaller below)
- * - 4+ photos: first page = hero + pair, then grid 2x3 (6 par page)
+ * Displays load photos and weight information
+ * 
+ * Design:
+ * - Section Header with Weight Info & Pagination
+ * - Page 1: Hero Photo (Large) + 2 Small photos (if space allows)
+ * - Page 2+: Grid 2x3
  */
 
 import React from 'react';
-import { View, StyleSheet } from '@react-pdf/renderer';
-import { SPACING, PHOTO_SIZES } from '../theme';
-import { 
-  SectionTitle, 
-  PhotoContainer,
-  PhotoHero,
-  PhotoHeroPair,
-  PhotoRow,
-  PhotoGrid2,
-  EmptyState 
-} from '../primitives';
+import { View, Text, StyleSheet } from '@react-pdf/renderer';
+import { PhotoContainer } from '../primitives';
 import { validatePhotos } from '../helpers/photoHelpers';
 
-// Section-specific accent color
-const SECTION_TYPE = 'load';
+// Brand Colors
+const BRAND_DARK = '#1e293b';
+const BRAND_RED = '#ef4444';
+const TEXT_DARK = '#1a1a1a';
+const TEXT_GRAY = '#64748b';
 
-// Styles spécifiques à cette section
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: SPACING.section.marginBottom,
+  sectionContainer: {
+    marginBottom: 20,
+    fontFamily: 'Helvetica',
   },
-  photoStack: {
+
+  // Section Header (Dark Blue Bar)
+  sectionHeader: {
+    backgroundColor: BRAND_DARK,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    marginBottom: 15,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 14,
+    textTransform: 'uppercase',
+  },
+  loadInfo: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 5,
+  },
+  loadLabel: {
+    color: '#cbd5e1',
+    fontSize: 10,
+    fontFamily: 'Helvetica',
+  },
+  loadValue: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+  },
+  sectionPagination: {
+    color: '#cbd5e1',
+    fontSize: 10,
+    fontFamily: 'Helvetica',
+  },
+
+  // Photos Section
+  photosTitle: {
+    backgroundColor: BRAND_DARK,
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    paddingVertical: 4,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+
+  // Photo Layouts
+  heroLayout: {
     flexDirection: 'column',
+    alignItems: 'center',
+    gap: 15, // Increased gap for Hero page
   },
-  photoGrid: {
+  heroRowSmall: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 10,
+  },
+
+  gridLayout: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: SPACING.photo.gap,
-  },
+    rowGap: 15,
+  }
 });
 
-// Photo sizes specific to Load section
-const LOAD_PHOTO_SIZES = {
-  fullPage: { width: 500, height: 700 },
-  halfPage: { width: 500, height: 340 },
-  heroLarge: { width: 500, height: 280 },
-  pairSmall: { width: 244, height: 200 },
-  // Grille 2x3 (6 par page) pour pages suivantes
-  gridItem: { width: 244, height: 155 },
+// Photo Sizes - Optimized for Load Section (No Data Grid)
+const SIZES = {
+  // Hero can be larger as there is no data grid above it
+  heroLarge: { width: 450, height: 280 },
+  heroSmall: { width: 220, height: 140 }, // Match grid item size for consistency
+  gridItem: { width: 220, height: 140 }, // Standard Grid Size (6 per page)
 };
 
 /**
- * Calculate intelligent layout based on photo count
- * - 1 photo: full page
- * - 2 photos: stacked vertically
- * - 3 photos: hero + pair (1 large + 2 small)
- * - 4+ photos: first page = hero + pair, then grid 2x3 (6 par page)
- */
-const calculateLayout = (photoCount) => {
-  if (photoCount === 1) {
-    return { type: 'single', pages: [[0]] };
-  } else if (photoCount === 2) {
-    return { type: 'double', pages: [[0, 1]] };
-  } else if (photoCount === 3) {
-    return { type: 'triple', pages: [[0, 1, 2]] };
-  } else {
-    // 4+ photos: first page = 3 (hero + pair), then grid 2x3
-    const pages = [];
-    let currentIndex = 0;
-
-    // First page with special layout
-    pages.push([0, 1, 2]);
-    currentIndex = 3;
-
-    // Following pages with grid (6 photos max per page)
-    while (currentIndex < photoCount) {
-      const remaining = photoCount - currentIndex;
-      const photosThisPage = Math.min(remaining, 6);
-      const pageIndices = [];
-      for (let i = 0; i < photosThisPage; i++) {
-        pageIndices.push(currentIndex + i);
-      }
-      pages.push(pageIndices);
-      currentIndex += photosThisPage;
-    }
-
-    return { type: 'multiple', pages };
-  }
-};
-
-/**
- * Single Photo Layout - Full page
- */
-const SinglePhotoLayout = ({ photo }) => (
-  <PhotoContainer 
-    photo={photo} 
-    customSize={LOAD_PHOTO_SIZES.fullPage}
-  />
-);
-
-/**
- * Double Photo Layout - Stacked vertically
- */
-const DoublePhotoLayout = ({ photos }) => (
-  <View style={styles.photoStack}>
-    {photos.map((photo, idx) => (
-      <PhotoContainer 
-        key={photo.id || idx}
-        photo={photo} 
-        customSize={LOAD_PHOTO_SIZES.halfPage}
-      />
-    ))}
-  </View>
-);
-
-/**
- * Triple Photo Layout - Hero + Pair pattern
- * 1 large photo on top, 2 smaller photos below side by side
- */
-const TriplePhotoLayout = ({ photos }) => {
-  const [heroPhoto, ...pairPhotos] = photos;
-  
-  return (
-    <View style={styles.photoStack}>
-      {/* Hero photo */}
-      <PhotoContainer 
-        photo={heroPhoto} 
-        customSize={LOAD_PHOTO_SIZES.heroLarge}
-      />
-      
-      {/* Pair row */}
-      <View style={styles.photoGrid}>
-        {pairPhotos.map((photo, idx) => (
-          <PhotoContainer 
-            key={photo.id || idx}
-            photo={photo} 
-            customSize={LOAD_PHOTO_SIZES.pairSmall}
-          />
-        ))}
-      </View>
-    </View>
-  );
-};
-
-/**
- * Grid Photo Layout - 2x2 grid for subsequent pages
- */
-const GridPhotoLayout = ({ photos }) => (
-  <View style={styles.photoGrid}>
-    {photos.map((photo, idx) => (
-      <PhotoContainer 
-        key={photo.id || idx}
-        photo={photo} 
-        customSize={LOAD_PHOTO_SIZES.gridItem}
-      />
-    ))}
-  </View>
-);
-
-/**
- * Load Configuration Section for PDF
+ * Component: Load Configuration Section for PDF
  */
 export const LoadSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
-  // Validate and process photos
   const validPhotos = validatePhotos(photos || []);
-  
-  // Si aucune photo, ne pas rendre la section du tout
-  if (validPhotos.length === 0) {
-    return null;
+  const trialData = report.trialData || {};
+
+  // Extract Load Weight Info
+  const loadWeight = trialData.load_weight_value;
+  const loadWeightUnit = trialData.weightUnit?.name || trialData.load_weight_unit || 'kg';
+
+  // --- Layout Logic ---
+  // Page 1: Hero (Large) + 2 Small (if available) -> No Data Grid, so we have plenty of space.
+  // Page 2+: Grid 2x3
+
+  const layoutPages = [];
+
+  if (validPhotos.length > 0) {
+    // Page 1 Photos
+    const page1Photos = [];
+    let remainingStartIndex = 0;
+
+    // Add first photo (Hero)
+    page1Photos.push({ ...validPhotos[0], size: SIZES.heroLarge });
+    remainingStartIndex = 1;
+
+    // We can definitely fit 2 more small photos below the large Hero on Page 1
+    if (validPhotos.length >= 3) {
+      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
+      page1Photos.push({ ...validPhotos[2], size: SIZES.heroSmall });
+      remainingStartIndex = 3;
+    } else if (validPhotos.length === 2) {
+      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
+      remainingStartIndex = 2;
+    }
+
+    layoutPages.push({ type: 'initial', photos: page1Photos });
+
+    // Subsequent Pages (Grid 2x3 = 6 photos max)
+    const GRID_SIZE = 6;
+    while (remainingStartIndex < validPhotos.length) {
+      const chunk = validPhotos.slice(remainingStartIndex, remainingStartIndex + GRID_SIZE);
+      layoutPages.push({ type: 'grid', photos: chunk });
+      remainingStartIndex += GRID_SIZE;
+    }
+  } else {
+    // Even if no photos, show header with weight? Or skip?
+    // Typically we show the section if it is active. 
+    // User said "Etant donné qu'a par le poids... elle ne contient que des photos".
+    // If no photos, maybe just 1 page with header.
+    layoutPages.push({ type: 'initial_no_photos', photos: [] });
   }
 
-  const layout = calculateLayout(validPhotos.length);
+  const totalPages = layoutPages.length;
 
   return (
     <>
-      {layout.pages.map((photoIndices, pageIndex) => {
-        const isFirstPage = pageIndex === 0;
-        const pagePhotos = photoIndices.map(idx => validPhotos[idx]);
-        
-        // Determine layout type for this page
-        let pageLayout = layout.type;
-        if (layout.type === 'multiple' && !isFirstPage) {
-          pageLayout = 'grid';
-        }
-        
+      {layoutPages.map((page, index) => {
+        const isFirstPage = index === 0;
+        const pageNum = index + 1;
+
         return (
-          <View 
-            key={`load-page-${pageIndex}`} 
-            style={styles.section}
-            break={pageIndex > 0}
-          >
-            <SectionTitle 
-              sectionType={SECTION_TYPE} 
-              continuation={pageIndex > 0}
-            >
-              LOAD CONFIGURATION
-            </SectionTitle>
-            
-            {/* Single photo - full page */}
-            {pageLayout === 'single' && (
-              <SinglePhotoLayout photo={pagePhotos[0]} />
+          <View key={index} style={styles.sectionContainer} break={!isFirstPage}>
+
+            {/* Wrap Header and Content to prevent detachment */}
+
+            {/* --- Section Header --- */}
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>LOAD CONFIGURATION</Text>
+                {/* Load Weight Info in Header */}
+                {(loadWeight) && (
+                  <View style={styles.loadInfo}>
+                    <Text style={styles.loadLabel}>WEIGHT:</Text>
+                    <Text style={styles.loadValue}>{loadWeight} {loadWeightUnit}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.sectionPagination}>{pageNum} / {totalPages}</Text>
+            </View>
+
+            {/* --- Photos --- */}
+            {page.photos.length > 0 && (
+              <View>
+                {/** Header Description? User said "le titre qui doit rester sur la meme page (description)" 
+                      Maybe he means the photo description? 
+                      PhotoContainer handles description. 
+                 **/}
+
+                {/* Layout: Initial (Hero + optional Small) */}
+                {page.type === 'initial' && (
+                  <View style={styles.heroLayout}>
+                    {/* Hero Photo */}
+                    {page.photos[0] && (
+                      <View wrap={false}>
+                        <PhotoContainer photo={page.photos[0]} customSize={page.photos[0].size} />
+                      </View>
+                    )}
+
+                    {/* Small Photos Row (if any) */}
+                    {page.photos.length > 1 && (
+                      <View style={{ ...styles.heroRowSmall, width: SIZES.heroLarge.width }} wrap={false}>
+                        {page.photos.slice(1).map((p, i) => (
+                          <PhotoContainer key={i} photo={p} customSize={p.size} />
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Layout: Grid */}
+                {page.type === 'grid' && (
+                  <View style={styles.gridLayout}>
+                    {page.photos.map((p, i) => (
+                      <View key={i} wrap={false}>
+                        <PhotoContainer photo={p} customSize={SIZES.gridItem} />
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
             )}
 
-            {/* Double photos - stacked vertically */}
-            {pageLayout === 'double' && (
-              <DoublePhotoLayout photos={pagePhotos} />
+            {page.photos.length === 0 && (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={{ color: TEXT_GRAY, fontSize: 10 }}>No photos available.</Text>
+              </View>
             )}
 
-            {/* Triple or Multiple first page - hero + pair */}
-            {(pageLayout === 'triple' || (pageLayout === 'multiple' && isFirstPage)) && (
-              <TriplePhotoLayout photos={pagePhotos} />
-            )}
-
-            {/* Grid layout for subsequent pages */}
-            {pageLayout === 'grid' && (
-              <GridPhotoLayout photos={pagePhotos} />
-            )}
           </View>
         );
       })}

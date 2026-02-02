@@ -15,7 +15,8 @@ import './styles/sidebar.css';
 import { useTranslation } from 'react-i18next'; 
 
 // Utilitaires
-import initDisableNumberInputWheel from './utils/disableNumberInputWheel'; // Import pour désactiver la molette sur les inputs number 
+import initDisableNumberInputWheel from './utils/disableNumberInputWheel'; // Import pour désactiver la molette sur les inputs number
+import './config/pdfWorker'; // Configure PDF.js worker early to prevent race conditions 
 
 // Pages/Composants
 import Login from './pages/Login';

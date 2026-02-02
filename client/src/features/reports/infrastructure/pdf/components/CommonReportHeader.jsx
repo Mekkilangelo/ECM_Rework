@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { View, Text, Image, StyleSheet } from '@react-pdf/renderer';
+import { getBaseUrl } from '../../../../../config/apiConfig';
 
 /**
  * Styles pour l'en-tête commune - Design "Premium" Sombre
@@ -156,8 +157,8 @@ export const CommonReportHeader = ({
     ? new Date(trialDate).toISOString().split('T')[0] // YYYY-MM-DD
     : '-';
 
-  // URLs complètes
-  const baseURL = 'http://localhost:5001';
+  // URLs complètes - Utiliser la configuration centralisée
+  const baseURL = getBaseUrl();
   const fullLogoECMUrl = logoECMUrl.startsWith('http') ? logoECMUrl : `${baseURL}${logoECMUrl}`;
   // const fullLogoSynergyUrl = logoSynergyUrl.startsWith('http') ? logoSynergyUrl : `${baseURL}${logoSynergyUrl}`;
 

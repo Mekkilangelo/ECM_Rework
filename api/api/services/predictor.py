@@ -31,9 +31,9 @@ class PredictorService:
             "weight": req.weight,
             "is_weight_unknown": req.is_weight_unknown,
             "recipe_temperature": req.recipe_temperature,
+            "carbon_percentage": req.carbon_percentage,
             "recipe_carbon_max": req.recipe_carbon_max,
             "recipe_carbon_flow": req.recipe_carbon_flow,
-            "carbon_percentage": req.carbon_percentage,
         }
 
         # === Step 2: Build parameters for CBPWin ===
@@ -86,7 +86,7 @@ class PredictorService:
 
         output_names = [
             'res_first_carb', 'res_first_diff', 'res_second_carb', 'res_second_diff',
-            'res_last_carb', 'res_last_diff', 'res_final_time', 'res_num_cycles'
+            'res_last_carb', 'res_last_diff', 'res_final_time', 'res_num_cycles', 'total_carb_time', 'total_diff_time'
         ]
 
         predicted_features = {

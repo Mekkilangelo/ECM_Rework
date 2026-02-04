@@ -745,16 +745,6 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
       // Sérialiser les données part pour inclure tous les champs et relations
       if (partNode.part) {
-        // Log pour vérifier si les specs sont chargées
-        logger.info('📊 partNode.part specs check:', {
-          hasHardnessSpecs: !!partNode.part.hardnessSpecs,
-          hardnessSpecsLength: partNode.part.hardnessSpecs?.length,
-          hardnessSpecsData: partNode.part.hardnessSpecs,
-          hasEcdSpecs: !!partNode.part.ecdSpecs,
-          ecdSpecsLength: partNode.part.ecdSpecs?.length,
-          ecdSpecsData: partNode.part.ecdSpecs
-        });
-
         // Accès direct aux valeurs FK string depuis l'instance Sequelize
         const dimWeightUnit = partNode.part.dim_weight_unit;
         const dimRectUnit = partNode.part.dim_rect_unit;
@@ -773,18 +763,6 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
 
-        // Log plainPartData units
-        logger.info('📏 plainPartData après get({plain:true}):', {
-          dim_weight_unit: plainPartData.dim_weight_unit,
-          dim_rect_unit: plainPartData.dim_rect_unit,
-          dim_circ_unit: plainPartData.dim_circ_unit,
-          weightUnit: plainPartData.weightUnit,
-          hasHardnessSpecs: !!plainPartData.hardnessSpecs,
-          hardnessSpecsLength: plainPartData.hardnessSpecs?.length,
-          hasEcdSpecs: !!plainPartData.ecdSpecs,
-          ecdSpecsLength: plainPartData.ecdSpecs?.length
-        });
-
         // IMPORTANT: Forcer les valeurs FK string dans l'objet final
         // Même logique que PartForm qui passe directement les strings
         reportData.partData = {
@@ -793,17 +771,6 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
           dim_rect_unit: dimRectUnit,
           dim_circ_unit: dimCircUnit
         };
-
-        // Log final partData
-        logger.info('📏 Final reportData.partData units:', {
-          dim_weight_unit: reportData.partData.dim_weight_unit,
-          dim_rect_unit: reportData.partData.dim_rect_unit,
-          dim_circ_unit: reportData.partData.dim_circ_unit,
-          hasHardnessSpecs: !!reportData.partData.hardnessSpecs,
-          hardnessSpecsLength: reportData.partData.hardnessSpecs?.length,
-          hasEcdSpecs: !!reportData.partData.ecdSpecs,
-          ecdSpecsLength: reportData.partData.ecdSpecs?.length
-        });
       } else {
         reportData.partData = null;
         logger.debug('Pièce sans données part', { partId: partNode.id });

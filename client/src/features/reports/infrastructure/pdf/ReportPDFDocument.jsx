@@ -616,12 +616,17 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       case 'curves':
       case 'datapaq':
       case 'micrography':
+      case 'postTreatment':
         // Ces sections nécessitent des photos
         return hasPhotos;
       case 'control':
         // Contrôle a du contenu si on a des résultats OU des photos
         const hasResults = !!(report.resultsData || report.trialData?.results_data);
         return hasResults || hasPhotos;
+      case 'observations':
+        // Observations a du contenu si on a du texte OU des photos
+        const hasObservationText = !!(report.trial?.observation || report.trialData?.observation);
+        return hasObservationText || hasPhotos;
       default:
         return hasPhotos;
     }
@@ -891,44 +896,53 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       )}
 
       {/* Section Observations - Page séparée */}
-      {activeSections.some(s => s.type === 'observations') && report && (
-        <Page size="A4" style={styles.page}>
-          {includeHeader && (
-            <CommonReportHeader
-              clientName={report.clientName}
-              loadNumber={report.trialData?.load_number}
-              trialDate={report.trialData?.trial_date}
-              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
-            />
-          )}
-          {(() => {
-            try {
-              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.observations, 'observations');
-              return (
-                <ObservationsSectionPDF
-                  report={report}
-                  photos={normalizedPhotos}
-                />
-              );
-            } catch (error) {
-              console.error('❌ Error rendering ObservationsSectionPDF:', error);
-              return (
-                <Section title="OBSERVATIONS">
-                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
-                    Erreur lors du rendu de la section Observations
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
-                    {error.message}
-                  </Text>
-                </Section>
-              );
-            }
-          })()}
-          {includeFooter && (
-            <CommonReportFooter generatedDate={generatedDate} />
-          )}
-        </Page>
-      )}
+      {(() => {
+        // Vérifier si la section observations est activée
+        if (!activeSections.some(s => s.type === 'observations') || !report) return null;
+
+        // Vérifier si on a du contenu (observation text ou photos)
+        const observationText = report.trial?.observation || report.trialData?.observation || '';
+        const observationPhotos = normalizePhotosForSection(selectedPhotos?.observations, 'observations');
+        if (!observationText && (!observationPhotos || observationPhotos.length === 0)) return null;
+
+        return (
+          <Page size="A4" style={styles.page}>
+            {includeHeader && (
+              <CommonReportHeader
+                clientName={report.clientName}
+                loadNumber={report.trialData?.load_number}
+                trialDate={report.trialData?.trial_date}
+                processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+              />
+            )}
+            {(() => {
+              try {
+                return (
+                  <ObservationsSectionPDF
+                    report={report}
+                    photos={observationPhotos}
+                  />
+                );
+              } catch (error) {
+                console.error('❌ Error rendering ObservationsSectionPDF:', error);
+                return (
+                  <Section title="OBSERVATIONS">
+                    <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                      Erreur lors du rendu de la section Observations
+                    </Text>
+                    <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                      {error.message}
+                    </Text>
+                  </Section>
+                );
+              }
+            })()}
+            {includeFooter && (
+              <CommonReportFooter generatedDate={generatedDate} />
+            )}
+          </Page>
+        );
+      })()}
 
       {/* Section Recette - Page séparée */}
       {(() => {

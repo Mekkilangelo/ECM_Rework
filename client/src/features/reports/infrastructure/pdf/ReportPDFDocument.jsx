@@ -640,11 +640,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
     activeSections = [];
   }
 
-  // Si aucune section active, afficher au moins la page de garde
-  const hasActiveSections = activeSections.length > 0;
-
   // Vérifier si la page de garde est activée
   const shouldShowCoverPage = activeSections.some(s => s.type === 'coverPage');
+
+  // Compter uniquement les sections de contenu (hors coverPage) pour vérifier si le rapport a du contenu
+  const contentSections = activeSections.filter(s => s.type !== 'coverPage');
+  const hasActiveSections = contentSections.length > 0;
 
   return (
     <Document
@@ -659,8 +660,8 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         <CoverPage report={report} options={options} />
       )}
 
-      {/* Page d'information si aucune section */}
-      {!hasActiveSections && (
+      {/* Page d'information si aucune section de contenu ET pas de cover page */}
+      {!hasActiveSections && !shouldShowCoverPage && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
             <CommonReportHeader

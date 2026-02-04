@@ -435,7 +435,7 @@ export const RecipeSectionPDF = ({ report, showRecipeDetails = true, showRecipeC
   const totalPagesSection = hasPhotos ? 2 : 1;
 
   return (
-    <View style={styles.sectionContainer} break>
+    <View style={styles.sectionContainer}>
 
       {/* HEADER P1 */}
       <View style={styles.sectionHeader}>

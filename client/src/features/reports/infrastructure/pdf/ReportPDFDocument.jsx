@@ -236,32 +236,33 @@ export const CoverPage = ({ report, options }) => {
         <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
       </View>
       <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
-        {/* Reuse logic from IdentificationSection for specs */}
-        {partData.specifications?.targetHardness && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Target Hardness:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.targetHardness} HV</Text>
-          </View>
-        )}
-        {partData.specifications?.minHardness && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Min Hardness:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.minHardness} HV</Text>
-          </View>
-        )}
-        {partData.specifications?.maxHardness && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Max Hardness:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.maxHardness} HV</Text>
-          </View>
-        )}
-        {partData.specifications?.ecdTarget && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Target ECD:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.ecdTarget} mm</Text>
-          </View>
-        )}
-        {(!partData.specifications || Object.keys(partData.specifications).length === 0) && (
+        {/* Display Hardness Specs */}
+        {partData.hardnessSpecs && partData.hardnessSpecs.length > 0 && partData.hardnessSpecs.map((spec, index) => (
+          <React.Fragment key={`hardness-${index}`}>
+            {spec.min && spec.max && (
+              <View style={coverStyles.techSpecItem}>
+                <Text style={coverStyles.techSpecLabel}>{spec.name || 'Hardness'}:</Text>
+                <Text style={coverStyles.techSpecValue}>{spec.min}-{spec.max} {spec.unit || 'HV'}</Text>
+              </View>
+            )}
+          </React.Fragment>
+        ))}
+
+        {/* Display ECD Specs */}
+        {partData.ecdSpecs && partData.ecdSpecs.length > 0 && partData.ecdSpecs.map((spec, index) => (
+          <React.Fragment key={`ecd-${index}`}>
+            {spec.depthMin != null && spec.depthMax != null && (
+              <View style={coverStyles.techSpecItem}>
+                <Text style={coverStyles.techSpecLabel}>{spec.name || 'ECD'}:</Text>
+                <Text style={coverStyles.techSpecValue}>{spec.depthMin}-{spec.depthMax} {spec.depthUnit || 'mm'}</Text>
+              </View>
+            )}
+          </React.Fragment>
+        ))}
+
+        {/* No specs message */}
+        {(!partData.hardnessSpecs || partData.hardnessSpecs.length === 0) &&
+         (!partData.ecdSpecs || partData.ecdSpecs.length === 0) && (
           <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
         )}
       </View>

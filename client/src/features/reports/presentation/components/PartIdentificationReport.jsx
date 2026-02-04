@@ -50,7 +50,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   }, []);
 
   // Nombre total de photos sélectionnées
-  const totalSelected = useMemo(() => 
+  const totalSelected = useMemo(() =>
     Object.values(selectedPhotos).reduce((sum, photos) => sum + (photos?.length || 0), 0),
     [selectedPhotos]
   );
@@ -74,7 +74,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
 
     // Désactiver toutes les autres sections
     const allSections = SectionFactory.createAllSections(false);
-    const sectionsWithIdentification = allSections.map(section => 
+    const sectionsWithIdentification = allSections.map(section =>
       section.type === 'identification' ? identificationSection : section
     );
 
@@ -88,6 +88,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
       partData: {
         ...partData,
         designation: partData?.designation,
+        client_designation: partData?.client_designation, // Transmettre la désignation client
         part_number: partData?.partNumber || partData?.part_number,
         drawing_number: partData?.drawingNumber || partData?.drawing_number,
         steel: partData?.steel,
@@ -159,16 +160,16 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   const handleExport = useCallback(async () => {
     setGenerating(true);
     setError(null);
-    
+
     try {
       const report = buildReport();
       const generator = createPDFGenerator();
-      
+
       await generator.generate(report, {
         quality: 'high',
         includeCoverPage: false  // Désactiver la CoverPage pour l'identification de pièce
       });
-      
+
     } catch (err) {
       console.error('Error generating PDF:', err);
       setError(t('report.partIdentification.generateError'));
@@ -181,19 +182,19 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
   const handlePreview = useCallback(async () => {
     setGenerating(true);
     setError(null);
-    
+
     try {
       const report = buildReport();
       const generator = createPDFGenerator();
-      
+
       const result = await generator.preview(report, {
         includeCoverPage: false  // Désactiver la CoverPage pour l'identification de pièce
       });
-      
+
       if (result?.url) {
         window.open(result.url, '_blank');
       }
-      
+
     } catch (err) {
       console.error('Error generating preview:', err);
       setError(t('report.partIdentification.generateError'));
@@ -222,32 +223,32 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
           {totalSelected} {t('report.partIdentification.selected', 'sélectionné(s)')}
         </Badge>
       </Card.Header>
-      
+
       <Card.Body>
         {error && (
           <Alert variant="danger" dismissible onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
-        
+
         {conversionError && (
           <Alert variant="warning">
             <FontAwesomeIcon icon={faFilePdf} className="me-2" />
             {t('report.partIdentification.pdfConversionWarning', 'Attention: Certains PDFs n\'ont pas pu être convertis')}
           </Alert>
         )}
-        
+
         {isConverting && (
           <Alert variant="info">
             <Spinner animation="border" size="sm" className="me-2" />
             {t('report.partIdentification.convertingPDFs', 'Conversion des PDFs en images...')}
           </Alert>
         )}
-        
+
         <p className="text-muted small mb-3">
           {t('report.partIdentification.selectPhotos')}
         </p>
-        
+
         {/* Utiliser le SectionPhotoManager existant pour la section identification */}
         <SectionPhotoManager
           trialNodeId={null}
@@ -258,7 +259,7 @@ const PartIdentificationReport = ({ partNodeId, partData, clientData }) => {
           show={true}
         />
       </Card.Body>
-      
+
       <Card.Footer className="d-flex justify-content-end gap-2">
         <Button
           variant="outline-secondary"

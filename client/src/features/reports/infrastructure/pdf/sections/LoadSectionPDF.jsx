@@ -117,8 +117,48 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
   const trialData = report.trialData || {};
 
   // Extract Load Weight Info
-  const loadWeight = trialData.load_weight_value;
-  const loadWeightUnit = trialData.weightUnit?.name || trialData.load_weight_unit || 'kg';
+  let loadDataRaw = report.loadData || report.trialData?.load_data || {};
+
+  // Safe parsing if string
+  let loadData = loadDataRaw;
+  if (typeof loadDataRaw === 'string') {
+    try {
+      loadData = JSON.parse(loadDataRaw);
+    } catch (e) {
+      console.error('Error parsing loadData in LoadSectionPDF:', e);
+      loadData = {};
+    }
+  }
+
+  console.log('🔍 LoadSectionPDF Debug:', {
+    raw: loadDataRaw,
+    parsed: loadData,
+    trialProps: report.trialData
+  });
+
+  // Extract Weight Value - Handle nested structure from trialService (weight.value)
+  let loadWeight = null;
+  if (loadData.weight && typeof loadData.weight === 'object') {
+    loadWeight = loadData.weight.value;
+  } else {
+    loadWeight = loadData.weight || trialData.load_weight_value || trialData.load_weight;
+  }
+
+  // Extract Unit - Check nested objects or direct properties
+  let loadWeightUnit = 'kg'; // Default
+
+  if (loadData.weight && typeof loadData.weight === 'object' && loadData.weight.unit) {
+    loadWeightUnit = loadData.weight.unit;
+  } else if (loadData.weightUnit) {
+    loadWeightUnit = typeof loadData.weightUnit === 'object' ? loadData.weightUnit.name : loadData.weightUnit;
+  } else if (trialData.weightUnit) {
+    loadWeightUnit = typeof trialData.weightUnit === 'object' ? trialData.weightUnit.name : trialData.weightUnit;
+  } else if (trialData.load_weight_unit) {
+    loadWeightUnit = trialData.load_weight_unit;
+  }
+
+  // Debug final values
+  console.log('⚖️ Load Weight Final:', { loadWeight, loadWeightUnit });
 
   // --- Layout Logic ---
   // Page 1: Hero (Large) + 2 Small (if available) -> No Data Grid, so we have plenty of space.

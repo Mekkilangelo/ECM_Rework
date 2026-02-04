@@ -230,10 +230,10 @@ export const CoverPage = ({ report, options }) => {
         {/* Display Hardness Specs */}
         {partData.hardnessSpecs && partData.hardnessSpecs.length > 0 && partData.hardnessSpecs.map((spec, index) => (
           <React.Fragment key={`hardness-${index}`}>
-            {spec.min && spec.max && (
+            {(spec.min || spec.max) && (
               <View style={coverStyles.techSpecItem}>
                 <Text style={coverStyles.techSpecLabel}>{spec.name || 'Hardness'}:</Text>
-                <Text style={coverStyles.techSpecValue}>{spec.min}-{spec.max} {spec.unit || 'HV'}</Text>
+                <Text style={coverStyles.techSpecValue}>{spec.min || ''}-{spec.max || ''} {spec.unit || 'HV'}</Text>
               </View>
             )}
           </React.Fragment>
@@ -242,10 +242,10 @@ export const CoverPage = ({ report, options }) => {
         {/* Display ECD Specs */}
         {partData.ecdSpecs && partData.ecdSpecs.length > 0 && partData.ecdSpecs.map((spec, index) => (
           <React.Fragment key={`ecd-${index}`}>
-            {spec.depthMin != null && spec.depthMax != null && (
+            {(spec.depthMin != null || spec.depthMax != null) && (
               <View style={coverStyles.techSpecItem}>
                 <Text style={coverStyles.techSpecLabel}>{spec.name || 'ECD'}:</Text>
-                <Text style={coverStyles.techSpecValue}>{spec.depthMin}-{spec.depthMax} {spec.depthUnit || 'mm'}</Text>
+                <Text style={coverStyles.techSpecValue}>{spec.depthMin || ''}-{spec.depthMax || ''} {spec.depthUnit || 'mm'}</Text>
               </View>
             )}
           </React.Fragment>
@@ -253,9 +253,9 @@ export const CoverPage = ({ report, options }) => {
 
         {/* No specs message */}
         {(!partData.hardnessSpecs || partData.hardnessSpecs.length === 0) &&
-         (!partData.ecdSpecs || partData.ecdSpecs.length === 0) && (
-          <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
-        )}
+          (!partData.ecdSpecs || partData.ecdSpecs.length === 0) && (
+            <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
+          )}
       </View>
 
       {/* 4. Treatment Cycle (Placeholder) */}

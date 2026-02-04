@@ -21,16 +21,16 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
   const handleFileAssociationNeeded = useCallback((associateFilesFunc) => {
     setFileAssociationCallback(() => associateFilesFunc);
   }, []);
-  
+
   // État du formulaire et initialisation (sans les options de select)
-  const { 
-    formData, 
-    setFormData, 
-    errors, 
-    setErrors, 
-    loading, 
-    setLoading, 
-    message, 
+  const {
+    formData,
+    setFormData,
+    errors,
+    setErrors,
+    loading,
+    setLoading,
+    message,
     setMessage,
     fetchingPart,
     setFetchingPart,
@@ -59,11 +59,11 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     temperatureUnitOptions,
     pressureUnitOptions,
     hardnessUnitOptions,
-    
+
     // Fonctions utilitaires générales
     selectStyles,
     getSelectedOption,
-    
+
     // Fonctions de rafraîchissement
     refreshSteelOptions,
     refreshDesignationOptions,
@@ -85,9 +85,9 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     refreshUnitOptions,
     refreshAllOptions
   };
-    // Handlers pour le formulaire - en mode lecture seule, ces handlers ne modifient pas les données
-  const { 
-    handleChange, 
+  // Handlers pour le formulaire - en mode lecture seule, ces handlers ne modifient pas les données
+  const {
+    handleChange,
     handleSelectChange,
     handleCreateOption,
     // Handlers spécifiques aux spécifications
@@ -98,54 +98,58 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     removeEcdSpec,
     updateEcdSpec
   } = usePartHandlers(
-    formData, 
-    setFormData, 
-    errors, 
+    formData,
+    setFormData,
+    errors,
     setErrors,
     refreshFunctions,
     viewMode // Transmettre le mode lecture seule
   );
-  
+
+  // État pour stocker les données complètes de la pièce fetchée
+  const [fetchedPart, setFetchedPart] = useState(null);
+
   // Chargement des données de la pièce en mode édition
   usePartData(
-    part, 
-    setFormData, 
-    setMessage, 
+    part,
+    setFormData,
+    setMessage,
     setFetchingPart,
-    setParentId
+    setParentId,
+    setFetchedPart
   );
-  
+
   // Validation du formulaire
   const { validate } = useFormValidation(formData, parentId, setErrors);
-  
+
   // Soumission du formulaire au serveur - désactivée en mode lecture seule
   const { handleSubmit } = usePartSubmission(
-    formData, 
+    formData,
     parentId,
-    setFormData, 
+    setFormData,
     validate,
     part,
-    setLoading, 
-    setMessage, 
-    onPartCreated, 
-    onPartUpdated, 
+    setLoading,
+    setMessage,
+    onPartCreated,
+    onPartUpdated,
     onClose,
     fileAssociationCallback,
     viewMode // Transmettre le mode lecture seule
   );
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
   // En mode lecture seule, la confirmation n'est pas nécessaire
-  const { 
-    showConfirmModal, 
+  const {
+    showConfirmModal,
     setShowConfirmModal, // Ajout pour les tests de debug
-    pendingClose, 
+    pendingClose,
     isModified,
     setModified,
     resetInitialState,
-    handleCloseRequest, 
-    confirmClose, 
-    cancelClose, 
-    saveAndClose 
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
+    saveAndClose
   } = useCloseConfirmation(
     formData,
     loading,
@@ -167,7 +171,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
       description: data.description || '',
       steelId: data.steelId || null,
       steel: data.steel || '',
-      
+
       // Dimensions
       length: data.length || '',
       lengthUnit: data.lengthUnit || 'mm',
@@ -182,7 +186,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
       diameterUnit: data.diameterUnit || '',
       weight: data.weight || '',
       weightUnit: data.weightUnit || 'kg',
-      
+
       // Spécifications de dureté - anciennes propriétés
       coreHardnessMin: data.coreHardnessMin || '',
       coreHardnessMax: data.coreHardnessMax || '',
@@ -193,17 +197,17 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
       toothHardnessMin: data.toothHardnessMin || '',
       toothHardnessMax: data.toothHardnessMax || '',
       toothHardnessUnit: data.toothHardnessUnit || '',
-      
+
       // Spécifications ECD - anciennes propriétés
       ecdDepthMin: data.ecdDepthMin || '',
       ecdDepthMax: data.ecdDepthMax || '',
       ecdHardness: data.ecdHardness || '',
       ecdHardnessUnit: data.ecdHardnessUnit || '',
-      
+
       // Spécifications nouvelles (tableaux)
       hardnessSpecs: data.hardnessSpecs || [],
       ecdSpecs: data.ecdSpecs || [],
-      
+
       // Notes
       notes: data.notes || ''
     };
@@ -221,7 +225,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
       description: data.description || '',
       steelId: data.steelId || null,
       steel: data.steel || '',
-      
+
       // Dimensions
       length: data.length || '',
       lengthUnit: data.lengthUnit || 'mm',
@@ -236,7 +240,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
       diameterUnit: data.diameterUnit || '',
       weight: data.weight || '',
       weightUnit: data.weightUnit || 'kg',
-      
+
       // Spécifications de dureté - anciennes propriétés
       coreHardnessMin: data.coreHardnessMin || '',
       coreHardnessMax: data.coreHardnessMax || '',
@@ -247,17 +251,17 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
       toothHardnessMin: data.toothHardnessMin || '',
       toothHardnessMax: data.toothHardnessMax || '',
       toothHardnessUnit: data.toothHardnessUnit || '',
-      
+
       // Spécifications ECD - anciennes propriétés
       ecdDepthMin: data.ecdDepthMin || '',
       ecdDepthMax: data.ecdDepthMax || '',
       ecdHardness: data.ecdHardness || '',
       ecdHardnessUnit: data.ecdHardnessUnit || '',
-      
+
       // Spécifications nouvelles (tableaux)
       hardnessSpecs: data.hardnessSpecs || [],
       ecdSpecs: data.ecdSpecs || [],
-      
+
       // Notes
       notes: data.notes || ''
     };
@@ -294,7 +298,7 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     timeUnitOptions,
     temperatureUnitOptions,
     pressureUnitOptions,
-    hardnessUnitOptions,    handleChange,
+    hardnessUnitOptions, handleChange,
     handleSelectChange,
     handleCreateOption,
     handleSubmit,
@@ -321,7 +325,9 @@ const usePartForm = (part, onClose, onPartCreated, onPartUpdated, viewMode = fal
     saveAndClose,
     // Copy/Paste functionality
     handleCopy,
-    handlePaste
+    handlePaste,
+    fetchedPart, // Exposer les données complètes fetchées (pour le rapport PDF notamment)
+    hierarchyState // Exposer l'état de navigation pour accéder au contexte (nom du client, etc.)
   };
 };
 

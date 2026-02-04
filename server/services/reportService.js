@@ -460,10 +460,47 @@ const buildQuenchData = (testData) => {
 };
 
 /**
- * Construit les données de résultats depuis les tables normalisées
- * @param {Object} testData - Données du test avec includes
- * @returns {Object}
+ * Construit les données de charge (load_data)
+ * @param {Object} trialData - Données du trial avec relations
+ * @returns {Object} Données de charge formatées
  */
+const buildLoadData = (trialData) => {
+  if (!trialData) return { loadData: null };
+
+  const loadData = {
+    weight: {
+      value: trialData.load_weight_value,
+      unit: trialData.load_weight_unit || trialData.weightUnit?.name || 'kg'
+    },
+    // Dimensions
+    size: {
+      width: {
+        value: trialData.load_size_width_value,
+        unit: trialData.load_size_width_unit
+      },
+      height: {
+        value: trialData.load_size_height_value,
+        unit: trialData.load_size_height_unit
+      },
+      length: {
+        value: trialData.load_size_length_value,
+        unit: trialData.load_size_length_unit
+      }
+    },
+    // Quantités
+    counts: {
+      parts: trialData.load_part_count,
+      floors: trialData.load_floor_count
+    },
+    // Métadonnées
+    mounting: trialData.mounting_type,
+    position: trialData.position_type,
+    comments: trialData.load_comments
+  };
+
+  return { loadData };
+};
+
 const buildResultsData = (testData) => {
   console.log('🔍 buildResultsData - testData.resultSteps:', testData?.resultSteps?.length || 0);
 
@@ -807,6 +844,12 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
     if (sections.includes('results') || sections.includes('hardness') || sections.includes('ecd') || sections.includes('control')) {
       Object.assign(reportData, buildResultsData(trialNode.trial));
+    }
+
+    // 7. Ajouter les données de charge
+    if (sections.includes('load')) {
+      const loadData = buildLoadData(trialNode.trial);
+      Object.assign(reportData, loadData);
     }
 
     // 7. Récupérer les fichiers des sections sélectionnées

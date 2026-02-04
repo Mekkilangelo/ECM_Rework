@@ -17,7 +17,7 @@ const TrialList = ({ partId }) => {
   const { hierarchyState } = useNavigation();
   const { user } = useContext(AuthContext);
   const hasEditRights = user && (user.role === 'admin' || user.role === 'superuser');
-  
+
   // Ref pour éviter les appels multiples
   const trialLoadedRef = useRef(false);
   const modalHandlersRef = useRef(null);
@@ -26,18 +26,18 @@ const TrialList = ({ partId }) => {
   useEffect(() => {
     // Si déjà chargé, ne rien faire
     if (trialLoadedRef.current) return;
-    
+
     const openTrialId = sessionStorage.getItem('openTrialId');
     console.log('[TrialList] useEffect - openTrialId:', openTrialId);
-    
+
     if (openTrialId && modalHandlersRef.current) {
       // Marquer comme en cours de chargement
       trialLoadedRef.current = true;
-      
+
       // Nettoyer immédiatement du sessionStorage pour éviter les multiples tentatives
       sessionStorage.removeItem('openTrialId');
       console.log('[TrialList] Chargement du trial', openTrialId);
-      
+
       // Charger le trial directement depuis l'API
       const loadTrial = async () => {
         try {
@@ -51,7 +51,7 @@ const TrialList = ({ partId }) => {
             } else {
               modalHandlersRef.current.openDetailModal(trial);
             }
-            
+
             // Marquer comme vu si nouveau
             if (trial.data_status === 'new' && modalHandlersRef.current.updateItemStatus) {
               await modalHandlersRef.current.updateItemStatus(trial.id);
@@ -61,7 +61,7 @@ const TrialList = ({ partId }) => {
           console.error('[TrialList] Erreur lors du chargement du trial:', error);
         }
       };
-      
+
       loadTrial();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,20 +70,20 @@ const TrialList = ({ partId }) => {
   const columns = (handlers) => {
     // Stocker les handlers pour l'auto-open
     modalHandlersRef.current = handlers;
-    
+
     const handleTrialClick = async (trial, { openEditModal, openDetailModal }) => {
       // Marquer comme vu si nouveau
       if (trial.data_status === 'new' && handlers.updateItemStatus) {
         await handlers.updateItemStatus(trial.id);
       }
-      
+
       if (hasEditRights) {
         openEditModal(trial);
       } else {
         openDetailModal(trial);
       }
     };
-    
+
     return [
       createClickableNameColumn({
         key: 'name',
@@ -94,28 +94,28 @@ const TrialList = ({ partId }) => {
         noValueText: t('trials.noName')
       }),
       createTextColumn({
-        key: 'Trial.recipe_number',
+        key: 'trial.recipe_number',
         label: t('trials.recipeNumber'),
         getValue: (trial) => trial.trial?.recipe?.recipe_number,
         centered: true,
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'Trial.load_number',
+        key: 'trial.load_number',
         label: t('trials.loadNumber'),
         getValue: (trial) => trial.trial?.load_number,
         centered: true,
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'Trial.test_date',
+        key: 'trial.test_date',
         label: t('trials.date'),
         getValue: (trial) => trial.trial?.trial_date || null,
         centered: true,
         emptyText: t('trials.notDoneYet')
       }),
       createTextColumn({
-        key: 'Trial.location',
+        key: 'trial.location',
         label: t('trials.location'),
         getValue: (trial) => trial.trial?.location,
         centered: true,

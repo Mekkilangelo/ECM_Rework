@@ -34,25 +34,25 @@ const PartList = ({ orderId }) => {
         noValueText: t('common.unknown')
       }),
       createTextColumn({
-        key: 'Part.client_designation',
+        key: 'part.client_designation',
         label: t('parts.clientDesignation'),
         getValue: (part) => part.part?.client_designation,
         centered: true,
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'Part.reference',
+        key: 'part.reference',
         label: t('parts.reference'),
         getValue: (part) => part.part?.reference,
         centered: true,
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'Part.steel',
+        key: 'part.steel',
         label: t('parts.steel.title'),
         getValue: (part) => {
           if (part.steel && part.steel.grade) {
-            return part.steel.standard 
+            return part.steel.standard
               ? `${part.steel.grade} (${part.steel.standard})`
               : part.steel.grade;
           }
@@ -62,7 +62,7 @@ const PartList = ({ orderId }) => {
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'Part.quantity',
+        key: 'part.quantity',
         label: t('parts.quantity'),
         getValue: (part) => part.part?.quantity,
         centered: true,

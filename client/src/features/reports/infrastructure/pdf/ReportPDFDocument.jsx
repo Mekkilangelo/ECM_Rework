@@ -931,42 +931,53 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       )}
 
       {/* Section Recette - Page séparée */}
-      {activeSections.some(s => s.type === 'recipe') && report && (
-        <Page size="A4" style={styles.page}>
-          {includeHeader && (
-            <CommonReportHeader
-              clientName={report.clientName}
-              loadNumber={report.trialData?.load_number}
-              trialDate={report.trialData?.trial_date}
-              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
-            />
-          )}
-          {(() => {
-            try {
-              // Récupérer les options showRecipeDetails et showRecipeCurve depuis la section
-              const recipeSection = activeSections.find(s => s.type === 'recipe');
-              const showRecipeDetails = recipeSection?.options?.showRecipeDetails !== false;
-              const showRecipeCurve = recipeSection?.options?.showRecipeCurve !== false;
-              return <RecipeSectionPDF report={report} showRecipeDetails={showRecipeDetails} showRecipeCurve={showRecipeCurve} />;
-            } catch (error) {
-              console.error('❌ Error rendering RecipeSectionPDF:', error);
-              return (
-                <Section title="RECETTE">
-                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
-                    Erreur lors du rendu de la section recette
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
-                    {error.message}
-                  </Text>
-                </Section>
-              );
-            }
-          })()}
-          {includeFooter && (
-            <CommonReportFooter generatedDate={generatedDate} />
-          )}
-        </Page>
-      )}
+      {(() => {
+        // Vérifier si la section recipe est activée
+        if (!activeSections.some(s => s.type === 'recipe') || !report) return null;
+
+        // Vérifier si on a des données de recette
+        const hasRecipeData = !!(report.recipeData || report.quenchData || report.trialData?.recipe_data);
+        if (!hasRecipeData) return null;
+
+        // Vérifier si au moins une option est activée
+        const recipeSection = activeSections.find(s => s.type === 'recipe');
+        const showRecipeDetails = recipeSection?.options?.showRecipeDetails !== false;
+        const showRecipeCurve = recipeSection?.options?.showRecipeCurve !== false;
+        if (!showRecipeDetails && !showRecipeCurve) return null;
+
+        return (
+          <Page size="A4" style={styles.page}>
+            {includeHeader && (
+              <CommonReportHeader
+                clientName={report.clientName}
+                loadNumber={report.trialData?.load_number}
+                trialDate={report.trialData?.trial_date}
+                processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+              />
+            )}
+            {(() => {
+              try {
+                return <RecipeSectionPDF report={report} showRecipeDetails={showRecipeDetails} showRecipeCurve={showRecipeCurve} />;
+              } catch (error) {
+                console.error('❌ Error rendering RecipeSectionPDF:', error);
+                return (
+                  <Section title="RECETTE">
+                    <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                      Erreur lors du rendu de la section recette
+                    </Text>
+                    <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                      {error.message}
+                    </Text>
+                  </Section>
+                );
+              }
+            })()}
+            {includeFooter && (
+              <CommonReportFooter generatedDate={generatedDate} />
+            )}
+          </Page>
+        );
+      })()}
 
       {/* Section Contrôle/Résultats - Page séparée */}
       {activeSections.some(s => s.type === 'control') && report && (

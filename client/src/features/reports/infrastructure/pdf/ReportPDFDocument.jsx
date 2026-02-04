@@ -579,12 +579,11 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
   // Appliquer les valeurs par défaut pour les options
   const {
     includeHeader = true,
-    includeFooter = true,
-    includeCoverPage = true
+    includeFooter = true
   } = options;
 
   // Log pour déboguer les options
-  console.log('🔍 ReportPDFDocument options:', { includeHeader, includeFooter, includeCoverPage });
+  console.log('🔍 ReportPDFDocument options:', { includeHeader, includeFooter });
 
   if (process.env.NODE_ENV === 'development') {
 
@@ -606,6 +605,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
 
     // Vérifier les données selon le type de section
     switch (sectionType) {
+      case 'coverPage':
       case 'identification':
       case 'load':
         // Ces sections ont toujours du contenu si elles sont liées à un trial
@@ -643,6 +643,9 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
   // Si aucune section active, afficher au moins la page de garde
   const hasActiveSections = activeSections.length > 0;
 
+  // Vérifier si la page de garde est activée
+  const shouldShowCoverPage = activeSections.some(s => s.type === 'coverPage');
+
   return (
     <Document
       title={report.getTitle?.() || `Rapport d'essai ${report.testCode || 'Sans code'}`}
@@ -652,7 +655,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       producer="ECM Synergia"
     >
       {/* Page de garde */}
-      {includeCoverPage !== false && (
+      {shouldShowCoverPage && (
         <CoverPage report={report} options={options} />
       )}
 

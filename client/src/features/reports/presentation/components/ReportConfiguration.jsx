@@ -192,29 +192,6 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                             <div className="ms-4 mt-2 pt-2 border-top">
                               <Form.Check
                                 type="checkbox"
-                                id="showRecipeDetails"
-                                label={
-                                  <span className="small">
-                                    <FontAwesomeIcon icon={faLayerGroup} className="me-2 text-muted" />
-                                    {t('report.sections.recipe.options.showDetails', 'Show recipe details')}
-                                  </span>
-                                }
-                                checked={section.options?.showRecipeDetails !== false}
-                                onChange={(e) => {
-                                  setSectionOption('recipe', 'showRecipeDetails', e.target.checked);
-                                  // Si les deux options sont décochées, désactiver la section
-                                  if (!e.target.checked && section.options?.showRecipeCurve === false) {
-                                    toggleSection('recipe');
-                                  }
-                                }}
-                                className="mb-1"
-                              />
-                              <small className="text-muted d-block ms-4 mb-2">
-                                {t('report.sections.recipe.options.showDetailsDescription', 'Display recipe number, preox, thermal/chemical cycles, and quench data')}
-                              </small>
-
-                              <Form.Check
-                                type="checkbox"
                                 id="showRecipeCurve"
                                 label={
                                   <span className="small">
@@ -230,10 +207,33 @@ const ReportConfiguration = React.memo(({ trialId, partId }) => {
                                     toggleSection('recipe');
                                   }
                                 }}
+                                className="mb-1"
+                              />
+                              <small className="text-muted d-block ms-4 mb-2">
+                                {t('report.sections.recipe.options.showCurveDescription', 'Display thermal and chemical cycle graph')}
+                              </small>
+
+                              <Form.Check
+                                type="checkbox"
+                                id="showRecipeDetails"
+                                label={
+                                  <span className="small">
+                                    <FontAwesomeIcon icon={faLayerGroup} className="me-2 text-muted" />
+                                    {t('report.sections.recipe.options.showDetails', 'Show recipe details')}
+                                  </span>
+                                }
+                                checked={section.options?.showRecipeDetails !== false}
+                                onChange={(e) => {
+                                  setSectionOption('recipe', 'showRecipeDetails', e.target.checked);
+                                  // Si les deux options sont décochées, désactiver la section
+                                  if (!e.target.checked && section.options?.showRecipeCurve === false) {
+                                    toggleSection('recipe');
+                                  }
+                                }}
                                 className="mb-0"
                               />
                               <small className="text-muted d-block ms-4">
-                                {t('report.sections.recipe.options.showCurveDescription', 'Display thermal and chemical cycle graph')}
+                                {t('report.sections.recipe.options.showDetailsDescription', 'Display recipe number, preox, thermal/chemical cycles, and quench data')}
                               </small>
                             </div>
                           )}

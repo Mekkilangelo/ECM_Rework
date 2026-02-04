@@ -130,6 +130,7 @@ export class Section {
 
     // Pour certaines sections, vérifier des critères spécifiques
     switch(this.type) {
+      case 'coverPage':
       case 'identification':
       case 'load':
         // Ces sections ont toujours du contenu si elles sont liées à un trial
@@ -177,18 +178,28 @@ export class Section {
  */
 export class SectionFactory {
   static SECTION_TYPES = {
+    COVER_PAGE: 'coverPage',
     IDENTIFICATION: 'identification',
-    RECIPE: 'recipe',
     LOAD: 'load',
+    RECIPE: 'recipe',
     CURVES: 'curves',
     DATAPAQ: 'datapaq',
     POST_TREATMENT: 'postTreatment',
-    MICROGRAPHY: 'micrography',
-    CONTROL: 'control'
+    CONTROL: 'control',
+    MICROGRAPHY: 'micrography'
   };
 
   static createSection(type, overrides = {}) {
     const configs = {
+      [this.SECTION_TYPES.COVER_PAGE]: {
+        id: 'coverPage',
+        type: 'coverPage',
+        label: 'Cover Page',
+        icon: 'faFileAlt',
+        description: 'Page de garde du rapport',
+        hasPhotos: false,
+        order: 0
+      },
       [this.SECTION_TYPES.IDENTIFICATION]: {
         id: 'identification',
         type: 'identification',
@@ -207,14 +218,27 @@ export class SectionFactory {
         hasPhotos: true,
         order: 2
       },
+      [this.SECTION_TYPES.RECIPE]: {
+        id: 'recipe',
+        type: 'recipe',
+        label: 'Recette',
+        icon: 'faList',
+        description: 'Paramètres de la recette utilisée',
+        hasPhotos: false,
+        order: 3,
+        options: {
+          showRecipeCurve: true, // Afficher le graphique des cycles par défaut
+          showRecipeDetails: true // Afficher les détails (tableaux, données) par défaut
+        }
+      },
       [this.SECTION_TYPES.CURVES]: {
         id: 'curves',
         type: 'curves',
-        label: 'Courbes',
+        label: 'Furnace Process Curves',
         icon: 'faChartLine',
         description: 'Graphiques et courbes de température/puissance',
         hasPhotos: true,
-        order: 3
+        order: 4
       },
       [this.SECTION_TYPES.DATAPAQ]: {
         id: 'datapaq',
@@ -223,7 +247,7 @@ export class SectionFactory {
         icon: 'faChartArea',
         description: 'Relevés et rapports des capteurs Datapaq',
         hasPhotos: true,
-        order: 4
+        order: 5
       },
       [this.SECTION_TYPES.POST_TREATMENT]: {
         id: 'postTreatment',
@@ -232,20 +256,7 @@ export class SectionFactory {
         icon: 'faImage',
         description: 'Photos du post-traitement',
         hasPhotos: true,
-        order: 5
-      },
-      [this.SECTION_TYPES.RECIPE]: {
-        id: 'recipe',
-        type: 'recipe',
-        label: 'Recette',
-        icon: 'faList',
-        description: 'Paramètres de la recette utilisée',
-        hasPhotos: false,
-        order: 6,
-        options: {
-          showRecipeDetails: true, // Afficher les détails (tableaux, données) par défaut
-          showRecipeCurve: true // Afficher le graphique des cycles par défaut
-        }
+        order: 6
       },
       [this.SECTION_TYPES.CONTROL]: {
         id: 'control',

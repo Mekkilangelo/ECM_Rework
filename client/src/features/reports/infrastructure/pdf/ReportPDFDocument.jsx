@@ -97,7 +97,7 @@ export const CoverPage = ({ report, options }) => {
   if (!report) return null;
 
   const trialData = report.trialData || {};
-  const partData = report.partData || {};
+  const partData = report.partData || report.part || {};
 
   console.log('🔍 CoverPage Data Check:', {
     hasObservation: !!trialData.observation,
@@ -106,6 +106,16 @@ export const CoverPage = ({ report, options }) => {
     hasConclusion: !!trialData.conclusion,
     conclusionVal: trialData.conclusion,
     status: trialData.status
+  });
+
+  console.log('🔍 CoverPage Specs Check:', {
+    hasPartData: !!report.partData,
+    hasPart: !!report.part,
+    partDataKeys: report.partData ? Object.keys(report.partData) : [],
+    hardnessSpecs: partData.hardnessSpecs,
+    ecdSpecs: partData.ecdSpecs,
+    hardnessSpecsLength: partData.hardnessSpecs?.length,
+    ecdSpecsLength: partData.ecdSpecs?.length
   });
 
   // Styles spécifiques pour la page de garde

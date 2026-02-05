@@ -373,16 +373,18 @@ const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocation
           {/* Colonne 1: Table Durete */}
           {hasHardness && (
             <View style={{ flex: 1, minWidth: 200 }}>
-              <Text style={styles.subsectionTitle}>Hardness ({unit})</Text>
+              <Text style={styles.subsectionTitle}>Hardness</Text>
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.tableCell, { width: '70%' }]}>Position</Text>
-                  <Text style={[styles.tableCell, { width: '30%', borderRightWidth: 0 }]}>Value</Text>
+                  <Text style={[styles.tableCell, { width: '50%' }]}>Position</Text>
+                  <Text style={[styles.tableCell, { width: '25%' }]}>Value</Text>
+                  <Text style={[styles.tableCell, { width: '25%', borderRightWidth: 0 }]}>Unit</Text>
                 </View>
                 {sample.hardnessPoints.map((point, idx) => (
                   <View key={idx} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, { width: '70%' }]}>{point.location || point.position || '-'}</Text>
-                    <Text style={[styles.tableCell, { width: '30%', borderRightWidth: 0 }]}>{point.value || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '50%' }]}>{point.location || point.position || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '25%' }]}>{point.value || '-'}</Text>
+                    <Text style={[styles.tableCell, { width: '25%', borderRightWidth: 0 }]}>{point.unit || '-'}</Text>
                   </View>
                 ))}
               </View>

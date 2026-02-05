@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND_DARK,
     paddingVertical: 4,
     paddingHorizontal: 15,
-    marginBottom: 10,
-    marginTop: 15, // Increased to prevent cropping
+    marginBottom: 30, // Increased to 30 for better vertical centering
+    marginTop: 15,
   },
   photosTitle: {
     color: '#ffffff',

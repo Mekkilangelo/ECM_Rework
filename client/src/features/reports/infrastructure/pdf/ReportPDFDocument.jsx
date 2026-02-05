@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
   page: {
     ...COMMON_STYLES.page,
     paddingBottom: 60, // Espace pour le footer
+    paddingTop: 20,
   },
   // pageFooter removed - replaced by component
   section: {
@@ -105,8 +106,8 @@ export const CoverPage = ({ report, options }) => {
       backgroundColor: COLORS.brand.dark,
       paddingVertical: 4,
       paddingHorizontal: 10,
-      marginBottom: 10,
-      marginTop: 20,
+      marginBottom: 8,
+      marginTop: 4,
     },
     sectionHeaderText: {
       color: '#ffffff',
@@ -132,8 +133,7 @@ export const CoverPage = ({ report, options }) => {
     },
     techSpecRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 20,
+      justifyContent: 'space-between',
     },
     techSpecItem: {
       flexDirection: 'row',
@@ -207,128 +207,169 @@ export const CoverPage = ({ report, options }) => {
         trialCode={report.testCode} // Ensure Test Code is shown if needed, usually Header handles title
       />
 
-      {/* 2. Part Description */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
-      </View>
-      <View style={{ paddingHorizontal: 10 }}>
-        <View style={coverStyles.row}>
-          <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
-          <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
-        </View>
-        <View style={coverStyles.row}>
-          <Text style={coverStyles.label}>STEEL GRADE:</Text>
-          <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
-        </View>
-      </View>
+      {/* Main Content Container - Flex 1 to allow conclusion to grow */}
+      <View style={{ flex: 1, flexDirection: 'column' }}>
 
-      {/* 3. Technical Specifications */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
-      </View>
-      <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
-        {/* Display Hardness Specs */}
-        {partData.hardnessSpecs && partData.hardnessSpecs.length > 0 && partData.hardnessSpecs.map((spec, index) => (
-          <React.Fragment key={`hardness-${index}`}>
-            {(spec.min || spec.max) && (
-              <View style={coverStyles.techSpecItem}>
-                <Text style={coverStyles.techSpecLabel}>{spec.name || 'Hardness'}:</Text>
-                <Text style={coverStyles.techSpecValue}>{spec.min || ''}-{spec.max || ''} {spec.unit || 'HV'}</Text>
-              </View>
+        {/* 2. Part Description */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
+        </View>
+        <View style={{ paddingHorizontal: 10 }}>
+          <View style={coverStyles.row}>
+            <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
+            <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
+          </View>
+          <View style={coverStyles.row}>
+            <Text style={coverStyles.label}>STEEL GRADE:</Text>
+            <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
+          </View>
+        </View>
+
+
+
+
+        {/* 3. Technical Specifications */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
+        </View>
+        <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
+          {/* Helper function defined inside render or use logic inline */}
+          {(() => {
+            const formatSpecValue = (min, max, unit) => {
+              const isValid = (val) => val !== null && val !== undefined && val !== '';
+
+              if (isValid(min) && isValid(max)) return `${min}-${max} ${unit}`;
+              if (isValid(min)) return `>= ${min} ${unit}`;
+              if (isValid(max)) return `<= ${max} ${unit}`;
+              return `- ${unit}`;
+            };
+
+            return (
+              <>
+                {/* Hardness Column */}
+                {partData.hardnessSpecs && partData.hardnessSpecs.length > 0 && (
+                  <View style={{ width: '48%' }}>
+                    <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 10, marginBottom: 2, color: COLORS.text.secondary }}>Hardness:</Text>
+                    {partData.hardnessSpecs.map((spec, index) => (
+                      <React.Fragment key={`hardness-${index}`}>
+                        {(spec.min || spec.max) && (
+                          <View style={coverStyles.techSpecItem}>
+                            <Text style={coverStyles.techSpecLabel}>{spec.name || 'Hardness'}:</Text>
+                            <Text style={coverStyles.techSpecValue}>{formatSpecValue(spec.min, spec.max, spec.unit || 'HV')}</Text>
+                          </View>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                )}
+
+                {/* ECD Column */}
+                {partData.ecdSpecs && partData.ecdSpecs.length > 0 && (
+                  <View style={{ width: '48%' }}>
+                    <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 10, marginBottom: 2, color: COLORS.text.secondary }}>ECD:</Text>
+                    {partData.ecdSpecs.map((spec, index) => (
+                      <React.Fragment key={`ecd-${index}`}>
+                        {(spec.depthMin != null || spec.depthMax != null) && (
+                          <View style={coverStyles.techSpecItem}>
+                            <Text style={coverStyles.techSpecLabel}>{spec.name || 'ECD'}:</Text>
+                            <Text style={coverStyles.techSpecValue}>{formatSpecValue(spec.depthMin, spec.depthMax, spec.depthUnit || 'mm')}</Text>
+                          </View>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                )}
+              </>
+            );
+          })()}
+
+          {/* No specs message */}
+          {(!partData.hardnessSpecs || partData.hardnessSpecs.length === 0) &&
+            (!partData.ecdSpecs || partData.ecdSpecs.length === 0) && (
+              <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
             )}
-          </React.Fragment>
-        ))}
+        </View>
 
-        {/* Display ECD Specs */}
-        {partData.ecdSpecs && partData.ecdSpecs.length > 0 && partData.ecdSpecs.map((spec, index) => (
-          <React.Fragment key={`ecd-${index}`}>
-            {(spec.depthMin != null || spec.depthMax != null) && (
-              <View style={coverStyles.techSpecItem}>
-                <Text style={coverStyles.techSpecLabel}>{spec.name || 'ECD'}:</Text>
-                <Text style={coverStyles.techSpecValue}>{spec.depthMin || ''}-{spec.depthMax || ''} {spec.depthUnit || 'mm'}</Text>
+        {/* 4. Treatment Cycle (Placeholder) */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>TREATMENT CYCLE</Text>
+        </View>
+        <View style={coverStyles.cycleTable}>
+          {/* Global */}
+          <View style={coverStyles.cycleColumn}>
+            <Text style={coverStyles.cycleHeader}>Global</Text>
+            <View style={coverStyles.cycleContent}>
+              <Text>Heating time : x mn</Text>
+              <Text>Treatment time : X mn</Text>
+              <Text>Total cycle time : x h</Text>
+            </View>
+          </View>
+          {/* Heating */}
+          <View style={coverStyles.cycleColumn}>
+            <Text style={coverStyles.cycleHeader}>Heating</Text>
+            <View style={coverStyles.cycleContent}>
+              <Text>Gas 1 : flow x NL/s + time x s</Text>
+              <Text>Gas 2 : flow x (NL/s) + time x s</Text>
+              <Text>Pressure : x mb</Text>
+            </View>
+          </View>
+          {/* Cooling */}
+          <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
+            <Text style={coverStyles.cycleHeader}>Cooling</Text>
+            <View style={coverStyles.cycleContent}>
+              <Text>Pressure : x bar</Text>
+              <Text>Fan speed : x rpm</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 5. Results */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
+        </View>
+        <View style={{ paddingHorizontal: 0 }}>
+          {/* Removed Flux */}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
+            <View style={{ flex: 1, ...coverStyles.resultsBox }}>
+              <Text>{trialData.observation || ''}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 6. Conclusions */}
+        {/* Container principal flex pour que la conclusion prenne tout l'espace restant */}
+        <View style={{ flex: 1, flexDirection: 'column' }}>
+          <View style={{ ...coverStyles.sectionHeader, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={coverStyles.sectionHeaderText}>CONCLUSIONS</Text>
+            {/* Status moved to Header */}
+            <Text style={{ color: '#ffffff', fontSize: 10, fontFamily: 'Helvetica-Bold' }}>
+              Status: {trialData.status || '-'}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
+            {/* Conclusion Main Box - Flex 1 to fill remaining space */}
+            <View style={{ flex: 1, flexDirection: 'column' }}>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 2 }}>
+                <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
               </View>
-            )}
-          </React.Fragment>
-        ))}
+              <View style={{ ...coverStyles.resultsBox, flex: 1, minHeight: 0 }}>
+                {(() => {
+                  const text = trialData.conclusion || '';
+                  const MAX_CHARS = 1500; // Approx max chars for a full page box
 
-        {/* No specs message */}
-        {(!partData.hardnessSpecs || partData.hardnessSpecs.length === 0) &&
-          (!partData.ecdSpecs || partData.ecdSpecs.length === 0) && (
-            <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
-          )}
-      </View>
+                  // Dynamic Font Size Calculation
+                  let fontSize = 9;
+                  if (text.length > 800) fontSize = 7;
+                  else if (text.length > 500) fontSize = 8;
 
-      {/* 4. Treatment Cycle (Placeholder) */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>TREATMENT CYCLE</Text>
-      </View>
-      <View style={coverStyles.cycleTable}>
-        {/* Global */}
-        <View style={coverStyles.cycleColumn}>
-          <Text style={coverStyles.cycleHeader}>Global</Text>
-          <View style={coverStyles.cycleContent}>
-            <Text>Heating time : x mn</Text>
-            <Text>Treatment time : X mn</Text>
-            <Text>Total cycle time : x h</Text>
-          </View>
-        </View>
-        {/* Heating */}
-        <View style={coverStyles.cycleColumn}>
-          <Text style={coverStyles.cycleHeader}>Heating</Text>
-          <View style={coverStyles.cycleContent}>
-            <Text>Gas 1 : flow x NL/s + time x s</Text>
-            <Text>Gas 2 : flow x (NL/s) + time x s</Text>
-            <Text>Pressure : x mb</Text>
-          </View>
-        </View>
-        {/* Cooling */}
-        <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
-          <Text style={coverStyles.cycleHeader}>Cooling</Text>
-          <View style={coverStyles.cycleContent}>
-            <Text>Pressure : x bar</Text>
-            <Text>Fan speed : x rpm</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 5. Results */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
-      </View>
-      <View style={{ paddingHorizontal: 0 }}>
-        {/* Removed Flux */}
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
-          <View style={{ flex: 1, ...coverStyles.resultsBox }}>
-            <Text>{trialData.observation || ''}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 6. Conclusions */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>CONCLUSIONS</Text>
-      </View>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        {/* Status Mini Frame */}
-        <View style={{ width: 100 }}>
-          <Text style={coverStyles.resultsLabel}>Status:</Text>
-          <View style={{
-            borderWidth: 1,
-            borderColor: COLORS.brand.dark,
-            padding: 5,
-            alignItems: 'center',
-            marginBottom: 5
-          }}>
-            <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9 }}>{trialData.status || '-'}</Text>
-          </View>
-        </View>
-
-        {/* Conclusion Main Box */}
-        <View style={{ flex: 1 }}>
-          <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
-          <View style={{ ...coverStyles.resultsBox, minHeight: 80 }}>
-            <Text>{trialData.conclusion || ''}</Text>
+                  return (
+                    <Text style={{ fontSize: fontSize }}>{text}</Text>
+                  );
+                })()}
+              </View>
+            </View>
           </View>
         </View>
       </View>

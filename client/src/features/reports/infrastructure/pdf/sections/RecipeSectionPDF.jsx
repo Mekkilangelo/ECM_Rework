@@ -356,7 +356,7 @@ const QuenchColumn = ({ quenchData }) => {
               <View style={[styles.miniHeaderRow, { backgroundColor: '#f8fafc' }]}>
                 <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
                 <Text style={[styles.miniCellHeader, { flex: 1 }]}>Time (s)</Text>
-                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Speed</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Speed (rpm)</Text>
               </View>
               {gas.speed_parameters.map((p, i) => (
                 <View key={i} style={styles.miniRow}>

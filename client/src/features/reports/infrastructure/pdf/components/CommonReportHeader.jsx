@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#1e293b', // Dark Slate Blue / Midnight
     padding: 15, // Reduced from 20 to widen content
-    marginBottom: 20,
+    marginBottom: 5,
     flexDirection: 'column',
   },
 

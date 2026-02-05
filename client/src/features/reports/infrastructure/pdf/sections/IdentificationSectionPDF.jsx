@@ -26,6 +26,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontFamily: 'Helvetica',
   },
+  gridPage: {
+    minHeight: 500, // Ensure height for flex content on grid pages
+  },
 
   // Section Header (Dark Blue Bar)
   sectionHeader: {
@@ -52,10 +55,10 @@ const styles = StyleSheet.create({
   // 3-Column Data Layout
   dataGrid: {
     flexDirection: 'row',
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: BRAND_DARK,
-    paddingBottom: 8,
+    marginBottom: 4,
+    // borderBottomWidth: 1, // Removed
+    // borderBottomColor: BRAND_DARK, // Removed
+    paddingBottom: 4,
   },
 
   // Columns
@@ -139,13 +142,13 @@ const styles = StyleSheet.create({
   // Technical Specs Block
   specsContainer: {
     marginTop: 5,
-    marginBottom: 15,
+    marginBottom: 2,
   },
   specsTitle: {
     backgroundColor: BRAND_DARK,
     color: '#ffffff',
     fontSize: 12,
-    marginTop: 20,
+
     fontFamily: 'Helvetica-Bold',
     paddingVertical: 4,
     paddingHorizontal: 15,
@@ -163,14 +166,19 @@ const styles = StyleSheet.create({
   },
 
   // Photos Section
-  photosTitle: {
+  // Photos Section
+  photosHeader: {
     backgroundColor: BRAND_DARK,
-    color: '#ffffff',
-    fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
     paddingVertical: 4,
     paddingHorizontal: 15,
     marginBottom: 10,
+    marginTop: 15, // Increased to prevent cropping
+  },
+  photosTitle: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: 'Helvetica-Bold',
+    textTransform: 'uppercase',
   },
 
   // Photo Layouts
@@ -211,24 +219,7 @@ const resolveUnit = (directUnit, relationUnit) => {
   return '';
 };
 
-/**
- * Format specs string (Hardness / ECD)
- */
-const formatSpecs = (hardnessSpecs = [], ecdSpecs = []) => {
-  const specs = [];
 
-  if (hardnessSpecs.length > 0) {
-    const hText = hardnessSpecs.map(h => `${h.name || 'Hardness'}: ${h.min}-${h.max} ${h.unit || ''}`).join('; ');
-    specs.push({ label: 'Hardness', text: hText });
-  }
-
-  if (ecdSpecs.length > 0) {
-    const eText = ecdSpecs.map(e => `${e.name || 'ECD'}: ${e.depthMin}-${e.depthMax} ${e.depthUnit || 'mm'}`).join('; ');
-    specs.push({ label: 'ECD', text: eText });
-  }
-
-  return specs;
-};
 
 /**
  * Component: Part Identification Section for PDF
@@ -255,7 +246,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   const unitWeight = resolveUnit(partData.dim_weight_unit, partData.weightUnit);
 
   // Specs
-  const activeSpecs = formatSpecs(partData.hardnessSpecs, partData.ecdSpecs);
+  // const activeSpecs = formatSpecs(partData.hardnessSpecs, partData.ecdSpecs);
 
   // --- Layout Logic ---
   // Page 1 available space logic:
@@ -295,7 +286,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
     layoutPages.push({ type: 'initial', photos: page1Photos });
 
     // Subsequent Pages (Grid 2x3 = 6 photos max)
-    const GRID_SIZE = 6;
+    const GRID_SIZE = 4;
     while (remainingStartIndex < validPhotos.length) {
       const chunk = validPhotos.slice(remainingStartIndex, remainingStartIndex + GRID_SIZE);
       layoutPages.push({ type: 'grid', photos: chunk });
@@ -321,7 +312,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
           // Better strategy: The Header is small. If we keep 'break' logic, content follows.
           // Is the Grid getting pushed?? 
           // Let's remove 'wrap={false}' from gridLayout strictly.
-          <View key={index} style={styles.sectionContainer} break={!isFirstPage}>
+          <View key={index} style={[styles.sectionContainer, page.type === 'grid' && styles.gridPage]} break={!isFirstPage}>
 
             {/* Wrap Header and Content in a View that *allows* breaking internally but tries to keep header with start of content */}
 
@@ -374,16 +365,50 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                   </View>
                 </View>
 
-                {activeSpecs.length > 0 && (
+                {(partData.hardnessSpecs?.length > 0 || partData.ecdSpecs?.length > 0) && (
                   <View style={styles.specsContainer}>
                     <Text style={styles.specsTitle}>TECHNICAL SPECIFICATIONS</Text>
                     <View style={styles.specsContent}>
-                      {activeSpecs.map((spec, i) => (
-                        <View key={i} style={styles.specItem}>
-                          <Text style={{ fontFamily: 'Helvetica-Bold' }}>{spec.label}: </Text>
-                          <Text>{spec.text}</Text>
-                        </View>
-                      ))}
+                      {(() => {
+                        const formatSpecValue = (min, max, unit) => {
+                          const isValid = (val) => val !== null && val !== undefined && val !== '';
+
+                          if (isValid(min) && isValid(max)) return `${min}-${max} ${unit}`;
+                          if (isValid(min)) return `>= ${min} ${unit}`;
+                          if (isValid(max)) return `<= ${max} ${unit}`;
+                          return `- ${unit}`;
+                        };
+
+                        return (
+                          <>
+                            {/* Hardness Column */}
+                            {partData.hardnessSpecs?.length > 0 && (
+                              <View style={{ width: '48%' }}>
+                                <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 10, marginBottom: 2, color: TEXT_DARK }}>Hardness:</Text>
+                                {partData.hardnessSpecs.map((h, i) => (
+                                  <View key={`h-${i}`} style={styles.row}>
+                                    <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9, color: TEXT_GRAY, marginRight: 4 }}>{h.name || 'Hardness'}:</Text>
+                                    <Text style={{ fontSize: 9, color: TEXT_DARK }}>{formatSpecValue(h.min, h.max, h.unit || '')}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                            )}
+
+                            {/* ECD Column */}
+                            {partData.ecdSpecs?.length > 0 && (
+                              <View style={{ width: '48%' }}>
+                                <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 10, marginBottom: 2, color: TEXT_DARK }}>ECD:</Text>
+                                {partData.ecdSpecs.map((e, i) => (
+                                  <View key={`e-${i}`} style={styles.row}>
+                                    <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9, color: TEXT_GRAY, marginRight: 4 }}>{e.name || 'ECD'}:</Text>
+                                    <Text style={{ fontSize: 9, color: TEXT_DARK }}>{formatSpecValue(e.depthMin, e.depthMax, e.depthUnit || 'mm')}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                            )}
+                          </>
+                        )
+                      })()}
                     </View>
                   </View>
                 )}
@@ -391,39 +416,67 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
             )}
 
             {/* --- Photos --- */}
+            {/* --- Photos --- */}
             {page.photos.length > 0 && (
-              <View>
-                {isFirstPage && <Text style={styles.photosTitle}>PICTURES</Text>}
-
-                {/* Layout: Initial */}
-                {page.type === 'initial' && (
-                  <View style={styles.heroLayout}>
-                    {page.photos[0] && (
-                      <View wrap={false}>
-                        <PhotoContainer photo={page.photos[0]} customSize={page.photos[0].size} />
-                      </View>
-                    )}
-                    {page.photos.length > 1 && (
-                      <View style={{ ...styles.heroRowSmall, width: SIZES.heroLarge.width }} wrap={false}>
-                        {page.photos.slice(1).map((p, i) => (
-                          <PhotoContainer key={i} photo={p} customSize={p.size} />
-                        ))}
-                      </View>
-                    )}
+              <>
+                {isFirstPage && (
+                  <View style={styles.photosHeader}>
+                    <Text style={styles.photosTitle}>PICTURES</Text>
                   </View>
                 )}
 
-                {/* Layout: Grid */}
-                {page.type === 'grid' && (
-                  <View style={styles.gridLayout}> {/* Removed wrap={false} */}
-                    {page.photos.map((p, i) => (
-                      <View key={i} wrap={false}>
-                        <PhotoContainer photo={p} customSize={SIZES.gridItem} />
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
+                <View style={{ flex: 1 }}> {/* Flex 1 to fill remaining space */}
+
+                  {/* Layout: Initial (Adaptive Flex) */}
+                  {page.type === 'initial' && (
+                    <View style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
+                      {/* Hero Photo - Takes more space */}
+                      {page.photos[0] && (
+                        <View style={{ flex: 6, minHeight: 180 }}> {/* Flex 6 (~55%) */}
+                          <PhotoContainer
+                            photo={page.photos[0]}
+                            style={{ width: '100%', height: '100%' }}
+                            customSize={{ width: '100%', height: '92%' }}
+                            fit="contain"
+                          />
+                        </View>
+                      )}
+
+                      {/* Secondary Row - Takes less space */}
+                      {page.photos.length > 1 && (
+                        <View style={{ flex: 5, flexDirection: 'row', gap: 10, minHeight: 150 }}> {/* Flex 5 (~45%) */}
+                          {page.photos.slice(1).map((p, i) => (
+                            <View key={i} style={{ flex: 1 }}>
+                              <PhotoContainer
+                                photo={p}
+                                style={{ width: '100%', height: '100%' }}
+                                customSize={{ width: '100%', height: '85%' }}
+                                fit="contain"
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Layout: Grid (Optimized 4 items Max) */}
+                  {page.type === 'grid' && (
+                    <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
+                      {page.photos.map((p, i) => (
+                        <View key={i} style={{ width: '49%', height: '49%', marginBottom: '1%' }}>
+                          <PhotoContainer
+                            photo={p}
+                            style={{ width: '100%', height: '100%' }}
+                            customSize={{ width: '100%', height: '94%' }} // Maximize photo area
+                            fit="contain" // Keep contain to avoid crop, but space is maximized
+                          />
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </>
             )}
           </View>
         );

@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
  */
 const organizePhotosByStructure = (photos) => {
   const organized = {};
-  
+
   if (!Array.isArray(photos) || photos.length === 0) {
     return organized;
   }
@@ -51,23 +51,23 @@ const organizePhotosByStructure = (photos) => {
   photos.forEach(photo => {
     const subcategory = photo.subcategory || '';
     const name = photo.name || photo.original_name || '';
-    
+
     let resultIndex = 0;
     let sampleIndex = 0;
     let zoom = 'other';
-    
+
     // Format attendu: "result-1-sample-1-x50" ou similaire
     const resultMatch = subcategory.match(/result-(\d+)/i) || name.match(/result[_-]?(\d+)/i);
     const sampleMatch = subcategory.match(/sample-(\d+)/i) || name.match(/sample[_-]?(\d+)/i);
     const zoomMatch = subcategory.match(/(x\d+|other)$/i) || name.match(/(x\d+)/i);
-    
+
     if (resultMatch) resultIndex = parseInt(resultMatch[1]);
     if (sampleMatch) sampleIndex = parseInt(sampleMatch[1]);
     if (zoomMatch) zoom = zoomMatch[1].toLowerCase();
-    
+
     const resultKey = `result_${resultIndex}`;
     const sampleKey = `sample_${sampleIndex}`;
-    
+
     // Créer la structure si nécessaire
     if (!organized[resultKey]) {
       organized[resultKey] = {
@@ -75,21 +75,21 @@ const organizePhotosByStructure = (photos) => {
         samples: {}
       };
     }
-    
+
     if (!organized[resultKey].samples[sampleKey]) {
       organized[resultKey].samples[sampleKey] = {
         index: sampleIndex,
         zooms: {}
       };
     }
-    
+
     if (!organized[resultKey].samples[sampleKey].zooms[zoom]) {
       organized[resultKey].samples[sampleKey].zooms[zoom] = [];
     }
-    
+
     organized[resultKey].samples[sampleKey].zooms[zoom].push(photo);
   });
-  
+
   return organized;
 };
 
@@ -110,8 +110,8 @@ const formatZoomName = (zoom) => {
  * Get photo caption
  */
 const getPhotoCaption = (photo) => {
-  return photo.description && photo.description.trim() !== '' 
-    ? photo.description 
+  return photo.description && photo.description.trim() !== ''
+    ? photo.description
     : (photo.original_name || photo.name || 'Image');
 };
 
@@ -121,15 +121,15 @@ const getPhotoCaption = (photo) => {
  */
 const formatMicrographTitle = (resultIndex, sampleIndex, resultDescription, sampleDescription) => {
   // Construire le titre du résultat
-  let resultPart = resultDescription 
-    ? resultDescription 
+  let resultPart = resultDescription
+    ? resultDescription
     : `Result ${resultIndex}`;
-  
+
   // Construire le titre de l'échantillon
-  let samplePart = sampleDescription 
-    ? sampleDescription 
+  let samplePart = sampleDescription
+    ? sampleDescription
     : `Sample ${sampleIndex}`;
-  
+
   return `MICROGRAPHS - ${resultPart} - ${samplePart}`;
 };
 
@@ -138,39 +138,37 @@ const formatMicrographTitle = (resultIndex, sampleIndex, resultDescription, samp
  * Grille unifiée : control location (si existe) + toutes les micros
  * 4 photos par page maximum, puis saut de page
  */
+// --- SPLIT COMPONENT: MICROGRAPH PAGE ---
 const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDescription, sampleDescription, controlLocationPhotos }) => {
-  // Générer le titre formaté
   const title = formatMicrographTitle(resultIndex, sampleIndex, resultDescription, sampleDescription);
 
   if (!sampleData || !sampleData.zooms || Object.keys(sampleData.zooms).length === 0) {
     return (
       <View style={styles.section} wrap={false}>
-        <SectionTitle sectionType={SECTION_TYPE}>
-          {title}
-        </SectionTitle>
+        <SectionTitle sectionType={SECTION_TYPE}>{title}</SectionTitle>
         <EmptyState message="No micrograph available for this sample" />
       </View>
     );
   }
 
-  // Ordre de priorité pour les zooms
-  const zoomOrder = ['x50', 'x500', 'x1000', 'other'];
-  const availableZooms = Object.keys(sampleData.zooms)
-    .sort((a, b) => {
-      const indexA = zoomOrder.indexOf(a);
-      const indexB = zoomOrder.indexOf(b);
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-      return indexA - indexB;
-    });
+  // UPDATED ZOOM ORDER (Added x100, x200)
+  const zoomOrder = ['x50', 'x100', 'x200', 'x500', 'x1000', 'other'];
+  const availableZooms = Object.keys(sampleData.zooms).sort((a, b) => {
+    const indexA = zoomOrder.indexOf(a);
+    const indexB = zoomOrder.indexOf(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
 
-  // Collecter TOUTES les photos dans un seul tableau
-  // 1. D'abord la control location (si existe)
-  // 2. Puis toutes les micros dans l'ordre des zooms
+  // LOGIC: Hide Control Location if 'other' zoom exists
+  const hasOtherZooms = sampleData.zooms['other'] && sampleData.zooms['other'].length > 0;
+  const showControlLocation = !hasOtherZooms && controlLocationPhotos && controlLocationPhotos.length > 0;
+
   const allPhotos = [];
 
-  // Ajouter la control location en PREMIER (prend 1 place dans la grille)
-  if (controlLocationPhotos && controlLocationPhotos.length > 0) {
+  // 1. Control Location (First slot if shown)
+  if (showControlLocation) {
     allPhotos.push({
       ...controlLocationPhotos[0],
       isControlLocation: true,
@@ -178,19 +176,37 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDes
     });
   }
 
-  // Ajouter toutes les micrographies par ordre de zoom
-  availableZooms.forEach(zoom => {
+  // 2. Micrographs
+  // LOGIC: x50 Placeholder. 
+  // If we are processing 'x50' slot, but it's empty, AND we have higher standard zooms, insert placeholder.
+  const standardZoomsToCheck = ['x100', 'x200', 'x500', 'x1000'];
+  const hasHigherStandardZooms = standardZoomsToCheck.some(z => sampleData.zooms[z]?.length > 0);
+  const hasX50 = sampleData.zooms['x50']?.length > 0;
+
+  zoomOrder.forEach(zoom => {
+    // Special Check for x50 Placeholder
+    // Only insert if:
+    // 1. We are at x50 step (conceptually) - actually we are iterating zoomOrder
+    // 2. We DO NOT have x50 photos
+    // 3. We DO have higher standard zooms (so we want x100 to start on next row)
+    // 4. We are showing Control Location (so x50 would have been the 2nd slot)
+    if (zoom === 'x50' && !hasX50 && hasHigherStandardZooms && showControlLocation) {
+      allPhotos.push({ isPlaceholder: true });
+    }
+
     const photos = sampleData.zooms[zoom];
-    photos.forEach(photo => {
-      allPhotos.push({
-        ...photo,
-        zoomLabel: formatZoomName(zoom),
-        caption: getPhotoCaption(photo)
+    if (photos) {
+      photos.forEach(photo => {
+        allPhotos.push({
+          ...photo,
+          zoomLabel: formatZoomName(zoom),
+          caption: getPhotoCaption(photo)
+        });
       });
-    });
+    }
   });
 
-  // Paginer : 4 photos par page (grille 2x2)
+  // Paginator: 4 photos per page
   const photosPerPage = 4;
   const pages = [];
   for (let i = 0; i < allPhotos.length; i += photosPerPage) {
@@ -201,34 +217,27 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDes
     <>
       {pages.map((pagePhotos, pageIndex) => (
         <View key={pageIndex} wrap={false} style={{ marginBottom: 8 }}>
-          {/* Titre seulement sur la première page */}
-          {pageIndex === 0 && (
-            <SectionTitle sectionType={SECTION_TYPE}>
-              {title}
-            </SectionTitle>
-          )}
+          {pageIndex === 0 && <SectionTitle sectionType={SECTION_TYPE}>{title}</SectionTitle>}
+          {pageIndex > 0 && <SectionTitle sectionType={SECTION_TYPE} continuation>{title} (continued)</SectionTitle>}
 
-          {/* Titre de continuation sur les pages suivantes */}
-          {pageIndex > 0 && (
-            <SectionTitle sectionType={SECTION_TYPE} continuation>
-              {title} (continued)
-            </SectionTitle>
-          )}
-
-          {/* Grille 2x2 */}
           <View style={styles.photoGrid}>
-            {pagePhotos.map((photo, idx) => (
-              <View key={idx} style={styles.photoContainerHalf}>
-                <PhotoContainer
-                  photo={photo}
-                  size="half"
-                  captionText={photo.isControlLocation
-                    ? 'Control Location'
-                    : `${photo.zoomLabel} - ${photo.caption}`
-                  }
-                />
-              </View>
-            ))}
+            {pagePhotos.map((photo, idx) => {
+              if (photo.isPlaceholder) {
+                return <View key={idx} style={styles.photoContainerHalf} />;
+              }
+              return (
+                <View key={idx} style={styles.photoContainerHalf}>
+                  <PhotoContainer
+                    photo={photo}
+                    size="half"
+                    captionText={photo.isControlLocation
+                      ? 'Control Location'
+                      : `${photo.zoomLabel} - ${photo.caption}`
+                    }
+                  />
+                </View>
+              );
+            })}
           </View>
         </View>
       ))}
@@ -244,10 +253,10 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
 
   // Extraire les données de résultats pour les descriptions
   const resultsData = report?.resultsData || report?.trialData?.results_data;
-  
+
   // Organiser les photos de micrographies
   const organizedPhotos = organizePhotosByStructure(photos);
-  
+
   // Organiser les photos de control location par result-sample
   const controlPhotosByResultSample = {};
   if (Array.isArray(controlLocationPhotos)) {
@@ -258,7 +267,7 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
         const resultNum = match[1];
         const sampleNum = match[2];
         const key = `result-${resultNum}-sample-${sampleNum}`;
-        
+
         if (!controlPhotosByResultSample[key]) {
           controlPhotosByResultSample[key] = [];
         }
@@ -266,7 +275,7 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
       }
     });
   }
-  
+
   // Compter le total de photos
   const totalPhotos = Object.values(organizedPhotos).reduce((total, result) => {
     return total + Object.values(result.samples).reduce((sampleTotal, sample) => {
@@ -287,13 +296,13 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
   const getResultSampleData = (resultIndex, sampleIndex) => {
     let resultDescription = null;
     let sampleDescription = null;
-    
+
     if (resultsData?.results && Array.isArray(resultsData.results)) {
       // Convertir de base-1 à base-0 pour l'accès au tableau
       const resultData = resultsData.results[resultIndex - 1];
       if (resultData) {
         resultDescription = resultData.description;
-        
+
         if (resultData.samples && Array.isArray(resultData.samples)) {
           // Convertir de base-1 à base-0 pour l'accès au tableau
           const sampleData = resultData.samples[sampleIndex - 1];
@@ -303,7 +312,7 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
         }
       }
     }
-    
+
     return { resultDescription, sampleDescription };
   };
 
@@ -322,12 +331,12 @@ export const MicrographySectionPDF = ({ report, photos = [], controlLocationPhot
         return sampleKeys.map(sampleKey => {
           const sample = result.samples[sampleKey];
           const { resultDescription, sampleDescription } = getResultSampleData(result.index, sample.index);
-          
+
           // Récupérer les photos de control location pour ce result-sample
           // IMPORTANT: Les fichiers utilisent des indices base-1
           const photoKey = `result-${result.index}-sample-${sample.index}`;
           const sampleControlPhotos = controlPhotosByResultSample[photoKey] || [];
-          
+
           return (
             <SampleMicrographsPage
               key={`${resultKey}-${sampleKey}`}

@@ -22,6 +22,10 @@ const authService = {
   // Instances des intervalles
   tokenChecker: null,
   heartbeat: null,
+
+  // Compteur d'échecs consécutifs pour éviter les boucles infinies
+  consecutiveRefreshFailures: 0,
+  maxConsecutiveFailures: 3,
   
   // Durée avant expiration pour déclencher un rafraîchissement préventif (ms)
   refreshThreshold: authConfig.refreshThreshold,
@@ -93,6 +97,7 @@ const authService = {
    */
   startSessionManager: () => {
     authService.stopSessionManager(); // Nettoyer les intervalles existants
+    authService.consecutiveRefreshFailures = 0; // Réinitialiser le compteur d'échecs
       // 1. Vérification périodique du token et de son expiration
     authService.tokenChecker = setInterval(() => {
       const token = authService.getToken();
@@ -143,6 +148,12 @@ const authService = {
       // 2. Heartbeat pour maintenir la session active uniquement si l'utilisateur est actif
     authService.heartbeat = setInterval(async () => {
       try {
+        // Ne pas envoyer de heartbeat si on a déjà trop d'échecs de refresh
+        if (authService.consecutiveRefreshFailures >= authService.maxConsecutiveFailures) {
+          authService.handleSessionExpired();
+          return;
+        }
+
         if (authService.isLoggedIn()) {
           // Calculer le temps d'inactivité
           const inactiveTime = Date.now() - authService.lastUserActivity;
@@ -154,16 +165,23 @@ const authService = {
           if (inactiveTime < inactivityThreshold) {
             // Utilisateur actif - envoyer un heartbeat pour maintenir la session
             await api.get('/auth/me');
+            // Heartbeat réussi, réinitialiser le compteur
+            authService.consecutiveRefreshFailures = 0;
           }
         }
       } catch (error) {
-        logger.warn('auth', 'Heartbeat error', { message: error.message });        // En cas d'erreur 401, la session est expirée
+        logger.warn('auth', 'Heartbeat error', { message: error.message });
+        // En cas d'erreur 401, la session est expirée
         if (error.response && error.response.status === 401) {
-          // Nettoyer les écouteurs d'événements avant la redirection
-          authService.activityEvents.forEach(event => {
-            window.removeEventListener(event, authService.updateUserActivity);
-          });
-          authService.handleSessionExpired();
+          authService.consecutiveRefreshFailures++;
+          // Si on a trop d'échecs, arrêter immédiatement
+          if (authService.consecutiveRefreshFailures >= authService.maxConsecutiveFailures) {
+            // Nettoyer les écouteurs d'événements avant la redirection
+            authService.activityEvents.forEach(event => {
+              window.removeEventListener(event, authService.updateUserActivity);
+            });
+            authService.handleSessionExpired();
+          }
         }
       }
     }, authService.heartbeatInterval);
@@ -216,45 +234,64 @@ const authService = {
    */
   refreshToken: async () => {
     try {
+      // Vérifier si on a atteint le max d'échecs consécutifs
+      if (authService.consecutiveRefreshFailures >= authService.maxConsecutiveFailures) {
+        logger.warn('auth', 'Too many consecutive refresh failures, stopping attempts');
+        authService.handleSessionExpired();
+        return null;
+      }
+
       const token = authService.getToken();
-      if (!token) throw new Error('Aucun token à rafraîchir');      // Vérifier si l'utilisateur a été actif récemment
+      if (!token) throw new Error('Aucun token à rafraîchir');
+
+      // Vérifier si l'utilisateur a été actif récemment
       const inactiveTime = Date.now() - authService.lastUserActivity;
       // Utiliser le seuil d'inactivité configuré pour les refresh
       const maxInactivityForRefresh = authService.inactivityTimeout * authService.refreshInactivityThreshold;
-      
+
       if (inactiveTime > maxInactivityForRefresh) {
         // Si l'utilisateur est inactif depuis trop longtemps, ne pas rafraîchir le token
         // pour permettre l'expiration normale de la session
         return null;
       }
-        const response = await api.post('/auth/refresh-token', {}, {
+
+      const response = await api.post('/auth/refresh-token', {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       // Amélioration de la vérification de la réponse
       if (response.data && response.data.success !== false) {
         // Support de différentes structures de réponse
         const newToken = response.data.token || (response.data.data && response.data.data.token);
         const userData = response.data.user || (response.data.data && response.data.data.user);
-        
+
         if (newToken) {
           localStorage.setItem('token', newToken);
           if (userData) {
             localStorage.setItem('user', JSON.stringify(userData));
           }
+          // Réinitialiser le compteur d'échecs en cas de succès
+          authService.consecutiveRefreshFailures = 0;
           return { token: newToken, user: userData };
         }
       }
-      
+
+      // Incrémenter le compteur d'échecs
+      authService.consecutiveRefreshFailures++;
       logger.warn('auth', 'Invalid response format during token refresh', response.data);
       return null;
     } catch (error) {
+      // Incrémenter le compteur d'échecs
+      authService.consecutiveRefreshFailures++;
       logger.auth.error('token refresh', error);
+
       if (error.response?.status === 401) {
-        // Si le token est définitivement expiré, on ne considère pas cela comme une erreur critique
-        // mais on laisse le système gérer naturellement cette expiration
+        // Si le token est définitivement expiré, arrêter les tentatives
+        if (authService.consecutiveRefreshFailures >= authService.maxConsecutiveFailures) {
+          authService.handleSessionExpired();
+        }
         return null;
       }
       throw error;

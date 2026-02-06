@@ -151,29 +151,52 @@ export const CoverPage = ({ report, options }) => {
       color: COLORS.text.primary,
     },
 
-    // Treatment Cycle Table
+    // Treatment Cycle Table - Refined Aesthetics
     cycleTable: {
       flexDirection: 'row',
-      borderWidth: 1,
-      borderColor: COLORS.brand.primary,
       marginTop: 5,
+      borderWidth: 1,
+      borderColor: '#e2e8f0', // Slate 200
+      borderRadius: 2, // Subtle rounded corners
+      overflow: 'hidden',
     },
     cycleColumn: {
       flex: 1,
       borderRightWidth: 1,
-      borderRightColor: COLORS.brand.primary,
+      borderRightColor: '#e2e8f0',
     },
     cycleHeader: {
-      backgroundColor: '#2563eb', // Blue similar to image
-      padding: 5,
-      color: '#ffffff',
-      fontSize: 10,
+      backgroundColor: '#f8fafc', // Slate 50 (Very light gray instead of dark)
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e2e8f0',
+    },
+    cycleHeaderText: {
+      color: '#1e293b', // Slate 800 (Dark text)
+      fontSize: 9,
       fontFamily: 'Helvetica-Bold',
+      textTransform: 'uppercase',
+      textAlign: 'center',
     },
     cycleContent: {
-      padding: 5,
-      fontSize: 9,
-      minHeight: 60,
+      padding: 8,
+      backgroundColor: '#ffffff',
+    },
+    cycleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 3,
+    },
+    cycleLabel: {
+      fontSize: 8,
+      color: '#64748b', // Slate 500
+      fontFamily: 'Helvetica',
+    },
+    cycleValue: {
+      fontSize: 8,
+      color: '#0f172a', // Slate 900
+      fontFamily: 'Helvetica-Bold',
     },
     noBorderRight: {
       borderRightWidth: 0,
@@ -290,38 +313,129 @@ export const CoverPage = ({ report, options }) => {
             )}
         </View>
 
-        {/* 4. Treatment Cycle (Placeholder) */}
+        {/* 4. Treatment Cycle */}
         <View style={coverStyles.sectionHeader}>
           <Text style={coverStyles.sectionHeaderText}>TREATMENT CYCLE</Text>
         </View>
-        <View style={coverStyles.cycleTable}>
-          {/* Global */}
-          <View style={coverStyles.cycleColumn}>
-            <Text style={coverStyles.cycleHeader}>Global</Text>
-            <View style={coverStyles.cycleContent}>
-              <Text>Heating time : x mn</Text>
-              <Text>Treatment time : X mn</Text>
-              <Text>Total cycle time : x h</Text>
+
+        {/* Helper Calculations for Cover Page */}
+        {(() => {
+          const recipeData = report.recipeData || {};
+          const quenchData = report.quenchData || {};
+
+          // --- CALCS ---
+          const waitTime = parseFloat(recipeData.wait_time?.value) || 0; // min
+          const waitPressure = recipeData.wait_pressure?.value || '-'; // usually mb
+
+          // Chemical (Heating) Details
+          const chemCycle = recipeData.chemical_cycle || [];
+          const chemTotalSeconds = chemCycle.reduce((acc, step) => acc + (parseFloat(step.time) || 0), 0);
+          const chemTotalMinutes = chemTotalSeconds / 60;
+
+          // Treatment Time (Wait + Chem)
+          const treatmentTime = waitTime + chemTotalMinutes;
+
+          // Quench Details
+          let quenchTotalSeconds = 0;
+          let quenchPressure = '-';
+          let quenchSpeed = '-';
+
+          if (quenchData.gas_quench) {
+            const gas = quenchData.gas_quench;
+            const speedParams = gas.speed_parameters || [];
+            // Total Quench Time
+            quenchTotalSeconds += speedParams.reduce((acc, p) => acc + (parseFloat(p.duration) || 0), 0);
+
+            // First step values for display
+            if (gas.pressure_parameters?.[0]) quenchPressure = gas.pressure_parameters[0].pressure;
+            if (gas.speed_parameters?.[0]) quenchSpeed = gas.speed_parameters[0].speed;
+          }
+
+          const quenchTotalMinutes = quenchTotalSeconds / 60;
+          const totalCycleMinutes = treatmentTime + quenchTotalMinutes;
+          const totalCycleHours = totalCycleMinutes / 60;
+
+          // Gas Totals
+          const selectedGases = [recipeData.selected_gas1, recipeData.selected_gas2, recipeData.selected_gas3].filter(Boolean);
+          const gasTotals = {};
+          selectedGases.forEach(g => gasTotals[g] = 0.0);
+
+          chemCycle.forEach(step => {
+            const stepDuration = (parseFloat(step.time) || 0) / 60;
+            if (step.gases && Array.isArray(step.gases)) {
+              step.gases.forEach(g => {
+                if (selectedGases.includes(g.gas)) {
+                  gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
+                }
+              });
+            }
+          });
+
+          return (
+            <View style={coverStyles.cycleTable}>
+              {/* Global */}
+              <View style={coverStyles.cycleColumn}>
+                <View style={coverStyles.cycleHeader}>
+                  <Text style={coverStyles.cycleHeaderText}>GLOBAL</Text>
+                </View>
+                <View style={coverStyles.cycleContent}>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Heating time:</Text>
+                    <Text style={coverStyles.cycleValue}>{waitTime} mn</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Treatment time:</Text>
+                    <Text style={coverStyles.cycleValue}>{treatmentTime.toFixed(0)} mn</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Total cycle time:</Text>
+                    <Text style={coverStyles.cycleValue}>{totalCycleHours.toFixed(1)} h</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Heating */}
+              <View style={coverStyles.cycleColumn}>
+                <View style={coverStyles.cycleHeader}>
+                  <Text style={coverStyles.cycleHeaderText}>HEATING</Text>
+                </View>
+                <View style={coverStyles.cycleContent}>
+                  {selectedGases.length > 0 ? (
+                    selectedGases.map(gas => (
+                      <View key={gas} style={coverStyles.cycleRow}>
+                        <Text style={coverStyles.cycleLabel}>{gas} time:</Text>
+                        <Text style={coverStyles.cycleValue}>{gasTotals[gas]?.toFixed(0)} mn</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={{ fontSize: 8, color: '#999' }}>-</Text>
+                  )}
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Pressure:</Text>
+                    <Text style={coverStyles.cycleValue}>{waitPressure} mb</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Cooling */}
+              <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
+                <View style={coverStyles.cycleHeader}>
+                  <Text style={coverStyles.cycleHeaderText}>COOLING</Text>
+                </View>
+                <View style={coverStyles.cycleContent}>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Pressure:</Text>
+                    <Text style={coverStyles.cycleValue}>{quenchPressure} mb</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Fan speed:</Text>
+                    <Text style={coverStyles.cycleValue}>{quenchSpeed} rpm</Text>
+                  </View>
+                </View>
+              </View>
             </View>
-          </View>
-          {/* Heating */}
-          <View style={coverStyles.cycleColumn}>
-            <Text style={coverStyles.cycleHeader}>Heating</Text>
-            <View style={coverStyles.cycleContent}>
-              <Text>Gas 1 : flow x NL/s + time x s</Text>
-              <Text>Gas 2 : flow x (NL/s) + time x s</Text>
-              <Text>Pressure : x mb</Text>
-            </View>
-          </View>
-          {/* Cooling */}
-          <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
-            <Text style={coverStyles.cycleHeader}>Cooling</Text>
-            <View style={coverStyles.cycleContent}>
-              <Text>Pressure : x bar</Text>
-              <Text>Fan speed : x rpm</Text>
-            </View>
-          </View>
-        </View>
+          );
+        })()}
 
         {/* 5. Results */}
         <View style={coverStyles.sectionHeader}>

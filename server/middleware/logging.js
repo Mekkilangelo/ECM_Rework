@@ -312,9 +312,10 @@ const logCrudSuccess = async (req, res, next) => {
 const logAuthError = async (req, res, next) => {
   const originalSend = res.send;
   res.send = function(body) {
-    // Ignorer le refresh-token pour éviter le spam de logs
-    // C'est un comportement normal qu'un token expire
-    if (req.originalUrl.includes('/auth/refresh-token')) {
+    // Ignorer les routes d'authentification automatiques pour éviter le spam de logs
+    // C'est un comportement normal qu'un token expire et que les heartbeats échouent
+    const silentAuthRoutes = ['/auth/refresh-token', '/auth/me'];
+    if (silentAuthRoutes.some(route => req.originalUrl.includes(route))) {
       return originalSend.call(this, body);
     }
 

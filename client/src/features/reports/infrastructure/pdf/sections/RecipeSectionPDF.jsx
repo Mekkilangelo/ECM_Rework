@@ -209,6 +209,102 @@ const InfoRow = ({ label, value, unit }) => {
   );
 };
 
+// --- HELPER CALCULATIONS ---
+
+const calculateRecipeStats = (recipeData, quenchData) => {
+  const waitTime = parseFloat(recipeData?.wait_time?.value) || 0; // min
+  const chemCycle = recipeData?.chemical_cycle || [];
+
+  // 1. Total Chemical Cycle Time (in minutes)
+  const chemTotalSeconds = chemCycle.reduce((acc, step) => acc + (parseFloat(step.time) || 0), 0);
+  const chemTotalMinutes = chemTotalSeconds / 60;
+
+  // 2. Total Cycle Time (Wait + Chem)
+  const totalCycleTime = waitTime + chemTotalMinutes;
+
+  // 3. Quench Total Time
+  let quenchTotalSeconds = 0;
+  if (quenchData?.gas_quench) {
+    // Gas Quench Total
+    const speedParams = quenchData.gas_quench.speed_parameters || [];
+    const speedTotal = speedParams.reduce((acc, p) => acc + (parseFloat(p.duration) || 0), 0);
+    quenchTotalSeconds += speedTotal;
+  }
+  if (quenchData?.oil_quench) {
+    // Oil Quench Total
+    const drip = parseFloat(quenchData.oil_quench.dripping_time?.value) || 0; // min
+    const speedParams = quenchData.oil_quench.speed_parameters || [];
+    const speedTotal = speedParams.reduce((acc, p) => acc + (parseFloat(p.duration) || 0), 0);
+    quenchTotalSeconds += speedTotal + (drip * 60);
+  }
+  const quenchTotalMinutes = quenchTotalSeconds / 60;
+
+  // 4. Total Duration (Cycle + Quench)
+  const totalDuration = totalCycleTime + quenchTotalMinutes;
+
+  // 5. Gas Totals (Modified to include gases even if flow is 0, if they are selected)
+  const gasTotals = {};
+  const selectedGases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
+
+  // Initialize selected gases to 0
+  selectedGases.forEach(g => gasTotals[g] = 0.0);
+
+  chemCycle.forEach(step => {
+    const stepDuration = (parseFloat(step.time) || 0) / 60; // min
+    if (step.gases && Array.isArray(step.gases)) {
+      step.gases.forEach(g => {
+        // If the gas is in the selected list, add time (regardless of flow value)
+        if (selectedGases.includes(g.gas)) {
+          gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
+        }
+      });
+    }
+  });
+
+  return {
+    waitTime,
+    chemTotalMinutes,
+    totalCycleTime,
+    quenchTotalMinutes,
+    totalDuration,
+    gasTotals
+  };
+};
+
+const StatsColumn = ({ recipeData, stats }) => {
+  const gases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
+
+  return (
+    <View style={{ width: '33%', paddingLeft: 10, paddingTop: 15 }}>
+      {/* General Info (Moved from Chemical) */}
+      <View style={{ marginBottom: 10 }}>
+        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PARAMETERS</Text>
+        <InfoRow label="Gases" value={gases.join(', ')} />
+        <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
+        <InfoRow label="Wait Press" value={recipeData?.wait_pressure?.value} unit={recipeData?.wait_pressure?.unit} />
+        <InfoRow label="Cell Temp" value={recipeData?.cell_temp?.value} unit={recipeData?.cell_temp?.unit} />
+      </View>
+
+      {/* Calculated Stats */}
+      <View style={{ marginBottom: 10 }}>
+        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>STATISTICS</Text>
+        <InfoRow label="Cycle Time" value={stats.totalCycleTime.toFixed(1)} unit="min" />
+        <InfoRow label="Quench Time" value={stats.quenchTotalMinutes.toFixed(1)} unit="min" />
+        <InfoRow label="Total Duration" value={stats.totalDuration.toFixed(1)} unit="min" />
+      </View>
+
+      {/* Gas Totals */}
+      <View>
+        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>GAS USAGE</Text>
+        {Object.entries(stats.gasTotals).map(([gas, duration]) => (
+          <InfoRow key={gas} label={`${gas} Time`} value={duration.toFixed(1)} unit="min" />
+        ))}
+      </View>
+    </View>
+  );
+};
+
+
 // --- SUB-SECTIONS ---
 
 const ThermalColumn = ({ recipeData }) => {
@@ -259,7 +355,7 @@ const ThermalColumn = ({ recipeData }) => {
 
 const ChemicalColumn = ({ recipeData }) => {
   const chem = recipeData?.chemical_cycle || [];
-  const gases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
+  // Removed header info (moved to StatsColumn)
   const color = THEME.chemical;
 
   return (
@@ -268,17 +364,7 @@ const ChemicalColumn = ({ recipeData }) => {
         <Text style={[styles.columnTitleBase, { color: color.title }]}>CHEMICAL</Text>
       </View>
 
-      {/* Info */}
-      <View style={{ marginBottom: 5, paddingHorizontal: 2 }}>
-        <InfoRow label="Gases" value={gases.join(', ')} />
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
-          <InfoRow label="Wait Press" value={recipeData?.wait_pressure?.value} unit={recipeData?.wait_pressure?.unit} />
-        </View>
-        <InfoRow label="Cell Temp" value={recipeData?.cell_temp?.value} unit={recipeData?.cell_temp?.unit} />
-      </View>
-
-      {/* Chemical Table */}
+      {/* Chemical Table Only */}
       {chem.length > 0 && (
         <View style={styles.miniTable}>
           <View style={styles.miniHeaderRow}>
@@ -350,24 +436,6 @@ const QuenchColumn = ({ quenchData }) => {
           <InfoRow label="Delay" value={gas.inerting_delay?.value} unit={gas.inerting_delay?.unit} />
           <InfoRow label="Pressure" value={gas.inerting_pressure?.value} unit={gas.inerting_pressure?.unit} />
 
-          {/* Speed Params */}
-          {gas.speed_parameters?.length > 0 && (
-            <View style={styles.miniTable}>
-              <View style={[styles.miniHeaderRow, { backgroundColor: '#f8fafc' }]}>
-                <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
-                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Time (s)</Text>
-                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Speed (rpm)</Text>
-              </View>
-              {gas.speed_parameters.map((p, i) => (
-                <View key={i} style={styles.miniRow}>
-                  <Text style={[styles.miniCell, { width: 14 }]}>{p.step || i + 1}</Text>
-                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.duration || '-'}</Text>
-                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.speed}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
           {/* Pressure Params */}
           {gas.pressure_parameters?.length > 0 && (
             <View style={styles.miniTable}>
@@ -381,6 +449,24 @@ const QuenchColumn = ({ quenchData }) => {
                   <Text style={[styles.miniCell, { width: 14 }]}>{p.step || i + 1}</Text>
                   <Text style={[styles.miniCell, { flex: 1 }]}>{p.duration || '-'}</Text>
                   <Text style={[styles.miniCell, { flex: 1 }]}>{p.pressure}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Speed Params */}
+          {gas.speed_parameters?.length > 0 && (
+            <View style={styles.miniTable}>
+              <View style={[styles.miniHeaderRow, { backgroundColor: '#f8fafc' }]}>
+                <Text style={[styles.miniCellHeader, { width: 14 }]}>#</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Time (s)</Text>
+                <Text style={[styles.miniCellHeader, { flex: 1 }]}>Speed (rpm)</Text>
+              </View>
+              {gas.speed_parameters.map((p, i) => (
+                <View key={i} style={styles.miniRow}>
+                  <Text style={[styles.miniCell, { width: 14 }]}>{p.step || i + 1}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.duration || '-'}</Text>
+                  <Text style={[styles.miniCell, { flex: 1 }]}>{p.speed}</Text>
                 </View>
               ))}
             </View>
@@ -444,18 +530,27 @@ export const RecipeSectionPDF = ({ report, showRecipeDetails = true, showRecipeC
       </View>
 
       {/* CONTENT P1 */}
+  /* CONTENT P1 */
       <View style={styles.mainContent}>
 
-        {/* 1. Chart (Top) */}
-        {showRecipeCurve && (
-          <RecipeCurveChartPDF
-            recipeData={recipeData}
-            width={500}
-            height={200}
-          />
-        )}
+        {/* TOP SECTION: Chart (2/3) + Stats (1/3) */}
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', minHeight: 180, marginBottom: 15 }}>
+          {/* 1. Chart (Left 66%) */}
+          {showRecipeCurve && (
+            <View style={{ width: '66%' }}>
+              <RecipeCurveChartPDF
+                recipeData={recipeData}
+                width={350}
+                height={180}
+              />
+            </View>
+          )}
 
-        {/* 2. Details Grid (3 Cols) */}
+          {/* 2. Stats Column (Right 33%) */}
+          <StatsColumn recipeData={recipeData} stats={calculateRecipeStats(recipeData, quenchData)} />
+        </View>
+
+        {/* 3. Details Grid (3 Cols) - Bottom */}
         {showRecipeDetails && (
           <View style={styles.detailsGrid}>
             <ThermalColumn recipeData={recipeData} />

@@ -518,31 +518,188 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
     });
   }
 
+  const partData = report.partData || report.part || {};
+
+  // -- Helper for Spec Formatting --
+  const formatSpecValue = (min, max, unit) => {
+    const isValid = (val) => val !== null && val !== undefined && val !== '';
+    if (isValid(min) && isValid(max)) return `${min}-${max} ${unit}`;
+    if (isValid(min)) return `>= ${min} ${unit}`;
+    if (isValid(max)) return `<= ${max} ${unit}`;
+    return `- ${unit}`;
+  };
+
+  // -- Smart Pagination Strategy --
+  // We estimate content height to group results into pages that FIT.
+  // This ensures Logical Page X == Physical Page X, preventing header desync.
+
+  const estimateResultHeight = (result, originalIndex) => {
+    let height = 40; // Result Title + spacing
+
+    if (result.samples) {
+      result.samples.forEach((sample, sIdx) => {
+        height += 30; // Sample Title + spacing
+
+        const photoKey = `result-${originalIndex + 1}-sample-${sIdx + 1}`;
+        const hasPhotos = photosByResultSample[photoKey] && photosByResultSample[photoKey].length > 0;
+
+        const hasHardness = sample.hardnessPoints && sample.hardnessPoints.length > 0;
+        const hasEcd = sample.ecdPositions && sample.ecdPositions.length > 0;
+        const hasCurve = sample.curveData && sample.curveData.series && sample.curveData.series.length > 0;
+
+        // Grid Row (Tables + Photos)
+        let gridHeight = 0;
+        if (hasHardness || hasEcd || hasPhotos) {
+          let hardHeight = hasHardness ? (20 + (sample.hardnessPoints.length * 15)) : 0;
+          let ecdHeight = hasEcd ? (20 + (sample.ecdPositions.length * 15) + (sample.ecdHardnessValue ? 20 : 0)) : 0;
+          let photoHeight = hasPhotos ? 120 : 0;
+
+          gridHeight = Math.max(hardHeight, ecdHeight, photoHeight);
+        }
+
+        // Add Grid Height
+        height += gridHeight > 0 ? gridHeight + 10 : 0;
+
+        // Add Curve Height
+        if (hasCurve) {
+          height += 250; // Curve container + legend
+        }
+
+        height += 15; // Bottom margin
+      });
+    }
+    return height;
+  };
+
+  const MAX_PAGE_HEIGHT = 650; // Safe usable height (A4=842 - Header~120 - Margins~40 - Footer~30)
+
+  const groupResultsIntoPages = () => {
+    const pages = [];
+    let currentPage = [];
+    let currentHeight = 0;
+
+    resultsData.results.forEach((result, i) => {
+      const estimatedH = estimateResultHeight(result, i);
+
+      // Smart Break logic:
+      // If adding this result pushes us over limit, break page.
+      if (currentHeight + estimatedH > MAX_PAGE_HEIGHT && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [result];
+        currentHeight = estimatedH;
+      } else {
+        currentPage.push(result);
+        currentHeight += estimatedH;
+      }
+    });
+
+    if (currentPage.length > 0) pages.push(currentPage);
+    return pages;
+  };
+
+  const pages = groupResultsIntoPages();
+  const totalPagesSection = pages.length;
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>CONTROL</Text>
+      {pages.map((chunk, pageIndex) => (
+        <View key={pageIndex} break={pageIndex > 0} style={{ marginBottom: 0 }}>
 
-      {resultsData.results.map((result, resultIndex) => (
-        // Wrap Result Block
-        <View key={resultIndex} style={{ marginBottom: 20 }} wrap={false}>
-          <Text style={styles.resultTitle}>
-            Result {result.step || resultIndex + 1}
-            {result.description && ` - ${result.description}`}
-          </Text>
+          {/* HEADER (Manual render per page) */}
+          <View style={{ marginBottom: 15, borderBottomWidth: 1, borderBottomColor: '#ccc', paddingBottom: 5 }}>
 
-          {result.samples && result.samples.map((sample, sampleIndex) => {
-            const photoKey = `result-${resultIndex + 1}-sample-${sampleIndex + 1}`;
-            const samplePhotos = photosByResultSample[photoKey] || [];
+            {/* Banner with SECTION Pagination */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: COLORS.brand.dark,
+              paddingVertical: 4,
+              paddingHorizontal: 10,
+              marginBottom: 8
+            }}>
+              <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'Helvetica-Bold' }}>CONTROL</Text>
+              <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'Helvetica' }}>
+                {pageIndex + 1} / {totalPagesSection}
+              </Text>
+            </View>
+
+            {/* Technical Specs Header */}
+            <View style={{ flexDirection: 'row', paddingHorizontal: 5, alignItems: 'flex-start' }}>
+              <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', width: 40, color: COLORS.text.secondary, marginTop: 2 }}>Specs:</Text>
+
+              <View style={{ flex: 1, flexDirection: 'row', gap: 20 }}>
+                {/* Hardness */}
+                {(partData.hardnessSpecs?.length > 0) && (
+                  <View style={{ flexDirection: 'column', gap: 2 }}>
+                    <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: COLORS.text.secondary, textDecoration: 'underline', marginBottom: 1 }}>Hardness</Text>
+                    {partData.hardnessSpecs.map((spec, i) => (
+                      (spec.min || spec.max) && (
+                        <View key={`h-${i}`} style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                          <Text style={{ fontSize: 8, color: COLORS.text.secondary, marginRight: 2 }}>{spec.name || 'H'}:</Text>
+                          <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: COLORS.text.primary }}>
+                            {formatSpecValue(spec.min, spec.max, spec.unit || 'HV')}
+                          </Text>
+                        </View>
+                      )
+                    ))}
+                  </View>
+                )}
+
+                {/* ECD */}
+                {(partData.ecdSpecs?.length > 0) && (
+                  <View style={{ flexDirection: 'column', gap: 2 }}>
+                    <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: COLORS.text.secondary, textDecoration: 'underline', marginBottom: 1 }}>ECD</Text>
+                    {partData.ecdSpecs.map((spec, i) => (
+                      (spec.depthMin != null || spec.depthMax != null) && (
+                        <View key={`e-${i}`} style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                          <Text style={{ fontSize: 8, color: COLORS.text.secondary, marginRight: 2 }}>{spec.name || 'D'}:</Text>
+                          <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: COLORS.text.primary }}>
+                            {formatSpecValue(spec.depthMin, spec.depthMax, spec.depthUnit || 'mm')}
+                          </Text>
+                        </View>
+                      )
+                    ))}
+                  </View>
+                )}
+
+                {(!partData.hardnessSpecs?.length && !partData.ecdSpecs?.length) && (
+                  <Text style={{ fontSize: 8, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Content for this Page Chunk */}
+          {chunk.map((result, i) => {
+            // Fix: We can find the index in original resultsData.
+            const originalIndex = resultsData.results.indexOf(result);
+
+            const samples = result.samples || [];
 
             return (
-              <SampleData
-                key={sampleIndex}
-                sample={sample}
-                sampleIndex={sampleIndex}
-                specifications={specifications}
-                unit={unit}
-                controlLocationPhotos={samplePhotos}
-              />
+              <View key={originalIndex} style={{ marginBottom: 20 }} wrap={false}>
+                <Text style={styles.resultTitle}>
+                  Result {result.step || originalIndex + 1}
+                  {result.description && ` - ${result.description}`}
+                </Text>
+
+                {samples.map((sample, sampleIndex) => {
+                  const photoKey = `result-${originalIndex + 1}-sample-${sampleIndex + 1}`;
+                  const samplePhotos = photosByResultSample[photoKey] || [];
+
+                  return (
+                    <SampleData
+                      key={sampleIndex}
+                      sample={sample}
+                      sampleIndex={sampleIndex}
+                      specifications={specifications}
+                      unit={unit}
+                      controlLocationPhotos={samplePhotos}
+                    />
+                  );
+                })}
+              </View>
             );
           })}
         </View>
@@ -550,5 +707,7 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
     </View>
   );
 };
+
+
 
 export default ControlSectionPDF;

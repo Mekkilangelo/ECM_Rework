@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
   page: {
     ...COMMON_STYLES.page,
     paddingBottom: 60, // Espace pour le footer
+    paddingTop: 20,
   },
   // pageFooter removed - replaced by component
   section: {
@@ -97,16 +98,7 @@ export const CoverPage = ({ report, options }) => {
   if (!report) return null;
 
   const trialData = report.trialData || {};
-  const partData = report.partData || {};
-
-  console.log('🔍 CoverPage Data Check:', {
-    hasObservation: !!trialData.observation,
-    observationLen: trialData.observation?.length,
-    observationVal: trialData.observation,
-    hasConclusion: !!trialData.conclusion,
-    conclusionVal: trialData.conclusion,
-    status: trialData.status
-  });
+  const partData = report.partData || report.part || {};
 
   // Styles spécifiques pour la page de garde
   const coverStyles = StyleSheet.create({
@@ -114,8 +106,8 @@ export const CoverPage = ({ report, options }) => {
       backgroundColor: COLORS.brand.dark,
       paddingVertical: 4,
       paddingHorizontal: 10,
-      marginBottom: 10,
-      marginTop: 20,
+      marginBottom: 8,
+      marginTop: 4,
     },
     sectionHeaderText: {
       color: '#ffffff',
@@ -141,8 +133,7 @@ export const CoverPage = ({ report, options }) => {
     },
     techSpecRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 20,
+      justifyContent: 'space-between',
     },
     techSpecItem: {
       flexDirection: 'row',
@@ -160,29 +151,52 @@ export const CoverPage = ({ report, options }) => {
       color: COLORS.text.primary,
     },
 
-    // Treatment Cycle Table
+    // Treatment Cycle Table - Refined Aesthetics
     cycleTable: {
       flexDirection: 'row',
-      borderWidth: 1,
-      borderColor: COLORS.brand.primary,
       marginTop: 5,
+      borderWidth: 1,
+      borderColor: '#e2e8f0', // Slate 200
+      borderRadius: 2, // Subtle rounded corners
+      overflow: 'hidden',
     },
     cycleColumn: {
       flex: 1,
       borderRightWidth: 1,
-      borderRightColor: COLORS.brand.primary,
+      borderRightColor: '#e2e8f0',
     },
     cycleHeader: {
-      backgroundColor: '#2563eb', // Blue similar to image
-      padding: 5,
-      color: '#ffffff',
-      fontSize: 10,
+      backgroundColor: '#f8fafc', // Slate 50 (Very light gray instead of dark)
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e2e8f0',
+    },
+    cycleHeaderText: {
+      color: '#1e293b', // Slate 800 (Dark text)
+      fontSize: 9,
       fontFamily: 'Helvetica-Bold',
+      textTransform: 'uppercase',
+      textAlign: 'center',
     },
     cycleContent: {
-      padding: 5,
-      fontSize: 9,
-      minHeight: 60,
+      padding: 8,
+      backgroundColor: '#ffffff',
+    },
+    cycleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 3,
+    },
+    cycleLabel: {
+      fontSize: 8,
+      color: '#64748b', // Slate 500
+      fontFamily: 'Helvetica',
+    },
+    cycleValue: {
+      fontSize: 8,
+      color: '#0f172a', // Slate 900
+      fontFamily: 'Helvetica-Bold',
     },
     noBorderRight: {
       borderRightWidth: 0,
@@ -216,127 +230,260 @@ export const CoverPage = ({ report, options }) => {
         trialCode={report.testCode} // Ensure Test Code is shown if needed, usually Header handles title
       />
 
-      {/* 2. Part Description */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
-      </View>
-      <View style={{ paddingHorizontal: 10 }}>
-        <View style={coverStyles.row}>
-          <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
-          <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
-        </View>
-        <View style={coverStyles.row}>
-          <Text style={coverStyles.label}>STEEL GRADE:</Text>
-          <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
-        </View>
-      </View>
+      {/* Main Content Container - Flex 1 to allow conclusion to grow */}
+      <View style={{ flex: 1, flexDirection: 'column' }}>
 
-      {/* 3. Technical Specifications */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
-      </View>
-      <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
-        {/* Reuse logic from IdentificationSection for specs */}
-        {partData.specifications?.targetHardness && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Target Hardness:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.targetHardness} HV</Text>
-          </View>
-        )}
-        {partData.specifications?.minHardness && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Min Hardness:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.minHardness} HV</Text>
-          </View>
-        )}
-        {partData.specifications?.maxHardness && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Max Hardness:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.maxHardness} HV</Text>
-          </View>
-        )}
-        {partData.specifications?.ecdTarget && (
-          <View style={coverStyles.techSpecItem}>
-            <Text style={coverStyles.techSpecLabel}>Target ECD:</Text>
-            <Text style={coverStyles.techSpecValue}>{partData.specifications.ecdTarget} mm</Text>
-          </View>
-        )}
-        {(!partData.specifications || Object.keys(partData.specifications).length === 0) && (
-          <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
-        )}
-      </View>
-
-      {/* 4. Treatment Cycle (Placeholder) */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>TREATMENT CYCLE</Text>
-      </View>
-      <View style={coverStyles.cycleTable}>
-        {/* Global */}
-        <View style={coverStyles.cycleColumn}>
-          <Text style={coverStyles.cycleHeader}>Global</Text>
-          <View style={coverStyles.cycleContent}>
-            <Text>Heating time : x mn</Text>
-            <Text>Treatment time : X mn</Text>
-            <Text>Total cycle time : x h</Text>
-          </View>
+        {/* 2. Part Description */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
         </View>
-        {/* Heating */}
-        <View style={coverStyles.cycleColumn}>
-          <Text style={coverStyles.cycleHeader}>Heating</Text>
-          <View style={coverStyles.cycleContent}>
-            <Text>Gas 1 : flow x NL/s + time x s</Text>
-            <Text>Gas 2 : flow x (NL/s) + time x s</Text>
-            <Text>Pressure : x mb</Text>
+        <View style={{ paddingHorizontal: 10 }}>
+          <View style={coverStyles.row}>
+            <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
+            <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
           </View>
-        </View>
-        {/* Cooling */}
-        <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
-          <Text style={coverStyles.cycleHeader}>Cooling</Text>
-          <View style={coverStyles.cycleContent}>
-            <Text>Pressure : x bar</Text>
-            <Text>Fan speed : x rpm</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 5. Results */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
-      </View>
-      <View style={{ paddingHorizontal: 0 }}>
-        {/* Removed Flux */}
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
-          <View style={{ flex: 1, ...coverStyles.resultsBox }}>
-            <Text>{trialData.observation || ''}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 6. Conclusions */}
-      <View style={coverStyles.sectionHeader}>
-        <Text style={coverStyles.sectionHeaderText}>CONCLUSIONS</Text>
-      </View>
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        {/* Status Mini Frame */}
-        <View style={{ width: 100 }}>
-          <Text style={coverStyles.resultsLabel}>Status:</Text>
-          <View style={{
-            borderWidth: 1,
-            borderColor: COLORS.brand.dark,
-            padding: 5,
-            alignItems: 'center',
-            marginBottom: 5
-          }}>
-            <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9 }}>{trialData.status || '-'}</Text>
+          <View style={coverStyles.row}>
+            <Text style={coverStyles.label}>STEEL GRADE:</Text>
+            <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
           </View>
         </View>
 
-        {/* Conclusion Main Box */}
-        <View style={{ flex: 1 }}>
-          <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
-          <View style={{ ...coverStyles.resultsBox, minHeight: 80 }}>
-            <Text>{trialData.conclusion || ''}</Text>
+
+
+
+        {/* 3. Technical Specifications */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
+        </View>
+        <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
+          {/* Helper function defined inside render or use logic inline */}
+          {(() => {
+            const formatSpecValue = (min, max, unit) => {
+              const isValid = (val) => val !== null && val !== undefined && val !== '';
+
+              if (isValid(min) && isValid(max)) return `${min}-${max} ${unit}`;
+              if (isValid(min)) return `>= ${min} ${unit}`;
+              if (isValid(max)) return `<= ${max} ${unit}`;
+              return `- ${unit}`;
+            };
+
+            return (
+              <>
+                {/* Hardness Column */}
+                {partData.hardnessSpecs && partData.hardnessSpecs.length > 0 && (
+                  <View style={{ width: '48%' }}>
+                    <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 10, marginBottom: 2, color: COLORS.text.secondary }}>Hardness:</Text>
+                    {partData.hardnessSpecs.map((spec, index) => (
+                      <React.Fragment key={`hardness-${index}`}>
+                        {(spec.min || spec.max) && (
+                          <View style={coverStyles.techSpecItem}>
+                            <Text style={coverStyles.techSpecLabel}>{spec.name || 'Hardness'}:</Text>
+                            <Text style={coverStyles.techSpecValue}>{formatSpecValue(spec.min, spec.max, spec.unit || 'HV')}</Text>
+                          </View>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                )}
+
+                {/* ECD Column */}
+                {partData.ecdSpecs && partData.ecdSpecs.length > 0 && (
+                  <View style={{ width: '48%' }}>
+                    <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 10, marginBottom: 2, color: COLORS.text.secondary }}>ECD:</Text>
+                    {partData.ecdSpecs.map((spec, index) => (
+                      <React.Fragment key={`ecd-${index}`}>
+                        {(spec.depthMin != null || spec.depthMax != null) && (
+                          <View style={coverStyles.techSpecItem}>
+                            <Text style={coverStyles.techSpecLabel}>{spec.name || 'ECD'}:</Text>
+                            <Text style={coverStyles.techSpecValue}>{formatSpecValue(spec.depthMin, spec.depthMax, spec.depthUnit || 'mm')}</Text>
+                          </View>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                )}
+              </>
+            );
+          })()}
+
+          {/* No specs message */}
+          {(!partData.hardnessSpecs || partData.hardnessSpecs.length === 0) &&
+            (!partData.ecdSpecs || partData.ecdSpecs.length === 0) && (
+              <Text style={{ fontSize: 9, color: '#999', fontStyle: 'italic' }}>No specifications defined.</Text>
+            )}
+        </View>
+
+        {/* 4. Treatment Cycle */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>TREATMENT CYCLE</Text>
+        </View>
+
+        {/* Helper Calculations for Cover Page */}
+        {(() => {
+          const recipeData = report.recipeData || {};
+          const quenchData = report.quenchData || {};
+
+          // --- CALCS ---
+          const waitTime = parseFloat(recipeData.wait_time?.value) || 0; // min
+          const waitPressure = recipeData.wait_pressure?.value || '-'; // usually mb
+
+          // Chemical (Heating) Details
+          const chemCycle = recipeData.chemical_cycle || [];
+          const chemTotalSeconds = chemCycle.reduce((acc, step) => acc + (parseFloat(step.time) || 0), 0);
+          const chemTotalMinutes = chemTotalSeconds / 60;
+
+          // Treatment Time (Wait + Chem)
+          const treatmentTime = waitTime + chemTotalMinutes;
+
+          // Quench Details
+          let quenchTotalSeconds = 0;
+          let quenchPressure = '-';
+          let quenchSpeed = '-';
+
+          if (quenchData.gas_quench) {
+            const gas = quenchData.gas_quench;
+            const speedParams = gas.speed_parameters || [];
+            // Total Quench Time
+            quenchTotalSeconds += speedParams.reduce((acc, p) => acc + (parseFloat(p.duration) || 0), 0);
+
+            // First step values for display
+            if (gas.pressure_parameters?.[0]) quenchPressure = gas.pressure_parameters[0].pressure;
+            if (gas.speed_parameters?.[0]) quenchSpeed = gas.speed_parameters[0].speed;
+          }
+
+          const quenchTotalMinutes = quenchTotalSeconds / 60;
+          const totalCycleMinutes = treatmentTime + quenchTotalMinutes;
+          const totalCycleHours = totalCycleMinutes / 60;
+
+          // Gas Totals
+          const selectedGases = [recipeData.selected_gas1, recipeData.selected_gas2, recipeData.selected_gas3].filter(Boolean);
+          const gasTotals = {};
+          selectedGases.forEach(g => gasTotals[g] = 0.0);
+
+          chemCycle.forEach(step => {
+            const stepDuration = (parseFloat(step.time) || 0) / 60;
+            if (step.gases && Array.isArray(step.gases)) {
+              step.gases.forEach(g => {
+                if (selectedGases.includes(g.gas)) {
+                  gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
+                }
+              });
+            }
+          });
+
+          return (
+            <View style={coverStyles.cycleTable}>
+              {/* Global */}
+              <View style={coverStyles.cycleColumn}>
+                <View style={coverStyles.cycleHeader}>
+                  <Text style={coverStyles.cycleHeaderText}>GLOBAL</Text>
+                </View>
+                <View style={coverStyles.cycleContent}>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Heating time:</Text>
+                    <Text style={coverStyles.cycleValue}>{waitTime} mn</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Treatment time:</Text>
+                    <Text style={coverStyles.cycleValue}>{treatmentTime.toFixed(0)} mn</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Total cycle time:</Text>
+                    <Text style={coverStyles.cycleValue}>{totalCycleHours.toFixed(1)} h</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Heating */}
+              <View style={coverStyles.cycleColumn}>
+                <View style={coverStyles.cycleHeader}>
+                  <Text style={coverStyles.cycleHeaderText}>HEATING</Text>
+                </View>
+                <View style={coverStyles.cycleContent}>
+                  {selectedGases.length > 0 ? (
+                    selectedGases.map(gas => (
+                      <View key={gas} style={coverStyles.cycleRow}>
+                        <Text style={coverStyles.cycleLabel}>{gas} time:</Text>
+                        <Text style={coverStyles.cycleValue}>{gasTotals[gas]?.toFixed(0)} mn</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={{ fontSize: 8, color: '#999' }}>-</Text>
+                  )}
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Pressure:</Text>
+                    <Text style={coverStyles.cycleValue}>{waitPressure} mb</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Cooling */}
+              <View style={[coverStyles.cycleColumn, coverStyles.noBorderRight]}>
+                <View style={coverStyles.cycleHeader}>
+                  <Text style={coverStyles.cycleHeaderText}>COOLING</Text>
+                </View>
+                <View style={coverStyles.cycleContent}>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Pressure:</Text>
+                    <Text style={coverStyles.cycleValue}>{quenchPressure} mb</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Fan speed:</Text>
+                    <Text style={coverStyles.cycleValue}>{quenchSpeed} rpm</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          );
+        })()}
+
+        {/* 5. Results */}
+        <View style={coverStyles.sectionHeader}>
+          <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
+        </View>
+        <View style={{ paddingHorizontal: 0 }}>
+          {/* Removed Flux */}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
+            <View style={{ flex: 1, ...coverStyles.resultsBox }}>
+              <Text>{trialData.observation || ''}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 6. Conclusions */}
+        {/* Container principal flex pour que la conclusion prenne tout l'espace restant */}
+        <View style={{ flex: 1, flexDirection: 'column' }}>
+          <View style={{ ...coverStyles.sectionHeader, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={coverStyles.sectionHeaderText}>CONCLUSIONS</Text>
+            {/* Status moved to Header */}
+            <Text style={{ color: '#ffffff', fontSize: 10, fontFamily: 'Helvetica-Bold' }}>
+              Status: {trialData.status || '-'}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
+            {/* Conclusion Main Box - Flex 1 to fill remaining space */}
+            <View style={{ flex: 1, flexDirection: 'column' }}>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 2 }}>
+                <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
+              </View>
+              <View style={{ ...coverStyles.resultsBox, flex: 1, minHeight: 0 }}>
+                {(() => {
+                  const text = trialData.conclusion || '';
+                  const MAX_CHARS = 1500; // Approx max chars for a full page box
+
+                  // Dynamic Font Size Calculation
+                  let fontSize = 9;
+                  if (text.length > 800) fontSize = 7;
+                  else if (text.length > 500) fontSize = 8;
+
+                  return (
+                    <Text style={{ fontSize: fontSize }}>{text}</Text>
+                  );
+                })()}
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -579,12 +726,11 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
   // Appliquer les valeurs par défaut pour les options
   const {
     includeHeader = true,
-    includeFooter = true,
-    includeCoverPage = true
+    includeFooter = true
   } = options;
 
   // Log pour déboguer les options
-  console.log('🔍 ReportPDFDocument options:', { includeHeader, includeFooter, includeCoverPage });
+  console.log('🔍 ReportPDFDocument options:', { includeHeader, includeFooter });
 
   if (process.env.NODE_ENV === 'development') {
 
@@ -606,6 +752,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
 
     // Vérifier les données selon le type de section
     switch (sectionType) {
+      case 'coverPage':
       case 'identification':
       case 'load':
         // Ces sections ont toujours du contenu si elles sont liées à un trial
@@ -616,12 +763,17 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       case 'curves':
       case 'datapaq':
       case 'micrography':
+      case 'postTreatment':
         // Ces sections nécessitent des photos
         return hasPhotos;
       case 'control':
         // Contrôle a du contenu si on a des résultats OU des photos
         const hasResults = !!(report.resultsData || report.trialData?.results_data);
         return hasResults || hasPhotos;
+      case 'observations':
+        // Observations a du contenu si on a du texte OU des photos
+        const hasObservationText = !!(report.trial?.observation || report.trialData?.observation);
+        return hasObservationText || hasPhotos;
       default:
         return hasPhotos;
     }
@@ -640,8 +792,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
     activeSections = [];
   }
 
-  // Si aucune section active, afficher au moins la page de garde
-  const hasActiveSections = activeSections.length > 0;
+  // Vérifier si la page de garde est activée
+  const shouldShowCoverPage = activeSections.some(s => s.type === 'coverPage');
+
+  // Compter uniquement les sections de contenu (hors coverPage) pour vérifier si le rapport a du contenu
+  const contentSections = activeSections.filter(s => s.type !== 'coverPage');
+  const hasActiveSections = contentSections.length > 0;
 
   return (
     <Document
@@ -652,12 +808,12 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       producer="ECM Synergia"
     >
       {/* Page de garde */}
-      {includeCoverPage !== false && (
+      {shouldShowCoverPage && (
         <CoverPage report={report} options={options} />
       )}
 
-      {/* Page d'information si aucune section */}
-      {!hasActiveSections && (
+      {/* Page d'information si aucune section de contenu ET pas de cover page */}
+      {!hasActiveSections && !shouldShowCoverPage && (
         <Page size="A4" style={styles.page}>
           {includeHeader && (
             <CommonReportHeader
@@ -887,82 +1043,102 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
       )}
 
       {/* Section Observations - Page séparée */}
-      {activeSections.some(s => s.type === 'observations') && report && (
-        <Page size="A4" style={styles.page}>
-          {includeHeader && (
-            <CommonReportHeader
-              clientName={report.clientName}
-              loadNumber={report.trialData?.load_number}
-              trialDate={report.trialData?.trial_date}
-              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
-            />
-          )}
-          {(() => {
-            try {
-              const normalizedPhotos = normalizePhotosForSection(selectedPhotos?.observations, 'observations');
-              return (
-                <ObservationsSectionPDF
-                  report={report}
-                  photos={normalizedPhotos}
-                />
-              );
-            } catch (error) {
-              console.error('❌ Error rendering ObservationsSectionPDF:', error);
-              return (
-                <Section title="OBSERVATIONS">
-                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
-                    Erreur lors du rendu de la section Observations
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
-                    {error.message}
-                  </Text>
-                </Section>
-              );
-            }
-          })()}
-          {includeFooter && (
-            <CommonReportFooter generatedDate={generatedDate} />
-          )}
-        </Page>
-      )}
+      {(() => {
+        // Vérifier si la section observations est activée
+        if (!activeSections.some(s => s.type === 'observations') || !report) return null;
+
+        // Vérifier si on a du contenu (observation text ou photos)
+        const observationText = report.trial?.observation || report.trialData?.observation || '';
+        const observationPhotos = normalizePhotosForSection(selectedPhotos?.observations, 'observations');
+        if (!observationText && (!observationPhotos || observationPhotos.length === 0)) return null;
+
+        return (
+          <Page size="A4" style={styles.page}>
+            {includeHeader && (
+              <CommonReportHeader
+                clientName={report.clientName}
+                loadNumber={report.trialData?.load_number}
+                trialDate={report.trialData?.trial_date}
+                processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+              />
+            )}
+            {(() => {
+              try {
+                return (
+                  <ObservationsSectionPDF
+                    report={report}
+                    photos={observationPhotos}
+                  />
+                );
+              } catch (error) {
+                console.error('❌ Error rendering ObservationsSectionPDF:', error);
+                return (
+                  <Section title="OBSERVATIONS">
+                    <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                      Erreur lors du rendu de la section Observations
+                    </Text>
+                    <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                      {error.message}
+                    </Text>
+                  </Section>
+                );
+              }
+            })()}
+            {includeFooter && (
+              <CommonReportFooter generatedDate={generatedDate} />
+            )}
+          </Page>
+        );
+      })()}
 
       {/* Section Recette - Page séparée */}
-      {activeSections.some(s => s.type === 'recipe') && report && (
-        <Page size="A4" style={styles.page}>
-          {includeHeader && (
-            <CommonReportHeader
-              clientName={report.clientName}
-              loadNumber={report.trialData?.load_number}
-              trialDate={report.trialData?.trial_date}
-              processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
-            />
-          )}
-          {(() => {
-            try {
-              // Récupérer les options showRecipeDetails et showRecipeCurve depuis la section
-              const recipeSection = activeSections.find(s => s.type === 'recipe');
-              const showRecipeDetails = recipeSection?.options?.showRecipeDetails !== false;
-              const showRecipeCurve = recipeSection?.options?.showRecipeCurve !== false;
-              return <RecipeSectionPDF report={report} showRecipeDetails={showRecipeDetails} showRecipeCurve={showRecipeCurve} />;
-            } catch (error) {
-              console.error('❌ Error rendering RecipeSectionPDF:', error);
-              return (
-                <Section title="RECETTE">
-                  <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
-                    Erreur lors du rendu de la section recette
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
-                    {error.message}
-                  </Text>
-                </Section>
-              );
-            }
-          })()}
-          {includeFooter && (
-            <CommonReportFooter generatedDate={generatedDate} />
-          )}
-        </Page>
-      )}
+      {(() => {
+        // Vérifier si la section recipe est activée
+        if (!activeSections.some(s => s.type === 'recipe') || !report) return null;
+
+        // Vérifier si on a des données de recette
+        const hasRecipeData = !!(report.recipeData || report.quenchData || report.trialData?.recipe_data);
+        if (!hasRecipeData) return null;
+
+        // Vérifier si au moins une option est activée
+        const recipeSection = activeSections.find(s => s.type === 'recipe');
+        const showRecipeDetails = recipeSection?.options?.showRecipeDetails !== false;
+        const showRecipeCurve = recipeSection?.options?.showRecipeCurve !== false;
+        if (!showRecipeDetails && !showRecipeCurve) return null;
+
+        return (
+          <Page size="A4" style={styles.page}>
+            {includeHeader && (
+              <CommonReportHeader
+                clientName={report.clientName}
+                loadNumber={report.trialData?.load_number}
+                trialDate={report.trialData?.trial_date}
+                processType={report.trialData?.processTypeRef?.name || report.trialData?.process_type}
+              />
+            )}
+            {(() => {
+              try {
+                return <RecipeSectionPDF report={report} showRecipeDetails={showRecipeDetails} showRecipeCurve={showRecipeCurve} />;
+              } catch (error) {
+                console.error('❌ Error rendering RecipeSectionPDF:', error);
+                return (
+                  <Section title="RECETTE">
+                    <Text style={{ fontSize: 12, color: 'red', textAlign: 'center', marginTop: 50 }}>
+                      Erreur lors du rendu de la section recette
+                    </Text>
+                    <Text style={{ fontSize: 10, color: '#666', textAlign: 'center', marginTop: 10 }}>
+                      {error.message}
+                    </Text>
+                  </Section>
+                );
+              }
+            })()}
+            {includeFooter && (
+              <CommonReportFooter generatedDate={generatedDate} />
+            )}
+          </Page>
+        );
+      })()}
 
       {/* Section Contrôle/Résultats - Page séparée */}
       {activeSections.some(s => s.type === 'control') && report && (

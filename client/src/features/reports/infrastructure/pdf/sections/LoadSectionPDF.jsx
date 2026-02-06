@@ -26,30 +26,35 @@ const styles = StyleSheet.create({
   },
 
   // Section Header (Dark Blue Bar)
+  // Section Header (Dark Blue Bar)
   sectionHeader: {
     backgroundColor: BRAND_DARK,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 5,
-    marginBottom: 15,
+    paddingVertical: 12, // Increased to prevent cropping
+    marginBottom: 30, // Increased spacing between header and photos
+    minHeight: 40,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
+    gap: 15,
+    flex: 1, // Allow taking available space
   },
   sectionTitle: {
     color: '#ffffff',
     fontFamily: 'Helvetica-Bold',
-    fontSize: 14,
+    fontSize: 12, // Slightly reduced to fit
     textTransform: 'uppercase',
   },
   loadInfo: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 5,
+    marginLeft: 10,
+    flexShrink: 0, // Prevent shrinking
   },
   loadLabel: {
     color: '#cbd5e1',
@@ -117,8 +122,48 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
   const trialData = report.trialData || {};
 
   // Extract Load Weight Info
-  const loadWeight = trialData.load_weight_value;
-  const loadWeightUnit = trialData.weightUnit?.name || trialData.load_weight_unit || 'kg';
+  let loadDataRaw = report.loadData || report.trialData?.load_data || {};
+
+  // Safe parsing if string
+  let loadData = loadDataRaw;
+  if (typeof loadDataRaw === 'string') {
+    try {
+      loadData = JSON.parse(loadDataRaw);
+    } catch (e) {
+      console.error('Error parsing loadData in LoadSectionPDF:', e);
+      loadData = {};
+    }
+  }
+
+  console.log('🔍 LoadSectionPDF Debug:', {
+    raw: loadDataRaw,
+    parsed: loadData,
+    trialProps: report.trialData
+  });
+
+  // Extract Weight Value - Handle nested structure from trialService (weight.value)
+  let loadWeight = null;
+  if (loadData.weight && typeof loadData.weight === 'object') {
+    loadWeight = loadData.weight.value;
+  } else {
+    loadWeight = loadData.weight || trialData.load_weight_value || trialData.load_weight;
+  }
+
+  // Extract Unit - Check nested objects or direct properties
+  let loadWeightUnit = 'kg'; // Default
+
+  if (loadData.weight && typeof loadData.weight === 'object' && loadData.weight.unit) {
+    loadWeightUnit = loadData.weight.unit;
+  } else if (loadData.weightUnit) {
+    loadWeightUnit = typeof loadData.weightUnit === 'object' ? loadData.weightUnit.name : loadData.weightUnit;
+  } else if (trialData.weightUnit) {
+    loadWeightUnit = typeof trialData.weightUnit === 'object' ? trialData.weightUnit.name : trialData.weightUnit;
+  } else if (trialData.load_weight_unit) {
+    loadWeightUnit = trialData.load_weight_unit;
+  }
+
+  // Debug final values
+  console.log('⚖️ Load Weight Final:', { loadWeight, loadWeightUnit });
 
   // --- Layout Logic ---
   // Page 1: Hero (Large) + 2 Small (if available) -> No Data Grid, so we have plenty of space.
@@ -147,18 +192,15 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
 
     layoutPages.push({ type: 'initial', photos: page1Photos });
 
-    // Subsequent Pages (Grid 2x3 = 6 photos max)
-    const GRID_SIZE = 6;
+    // Subsequent Pages (Grid 2x2 = 4 photos max)
+    const GRID_SIZE = 4;
     while (remainingStartIndex < validPhotos.length) {
       const chunk = validPhotos.slice(remainingStartIndex, remainingStartIndex + GRID_SIZE);
       layoutPages.push({ type: 'grid', photos: chunk });
       remainingStartIndex += GRID_SIZE;
     }
   } else {
-    // Even if no photos, show header with weight? Or skip?
-    // Typically we show the section if it is active. 
-    // User said "Etant donné qu'a par le poids... elle ne contient que des photos".
-    // If no photos, maybe just 1 page with header.
+    // No photos, still need 1 page for data
     layoutPages.push({ type: 'initial_no_photos', photos: [] });
   }
 
@@ -192,39 +234,52 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
 
             {/* --- Photos --- */}
             {page.photos.length > 0 && (
-              <View>
-                {/** Header Description? User said "le titre qui doit rester sur la meme page (description)" 
-                      Maybe he means the photo description? 
-                      PhotoContainer handles description. 
-                 **/}
+              <View style={{ flex: 1, minHeight: 400 }}> {/* Flex 1 to fill space */}
 
                 {/* Layout: Initial (Hero + optional Small) */}
                 {page.type === 'initial' && (
-                  <View style={styles.heroLayout}>
+                  <View style={{ flex: 1, gap: 10 }}>
                     {/* Hero Photo */}
                     {page.photos[0] && (
-                      <View wrap={false}>
-                        <PhotoContainer photo={page.photos[0]} customSize={page.photos[0].size} />
+                      <View style={{ flex: 3 }}>
+                        <PhotoContainer
+                          photo={page.photos[0]}
+                          style={{ width: '100%', height: '100%' }}
+                          customSize={{ width: '100%', height: '92%' }}
+                          fit="contain"
+                        />
                       </View>
                     )}
 
                     {/* Small Photos Row (if any) */}
                     {page.photos.length > 1 && (
-                      <View style={{ ...styles.heroRowSmall, width: SIZES.heroLarge.width }} wrap={false}>
+                      <View style={{ flex: 2, flexDirection: 'row', gap: 10 }}>
                         {page.photos.slice(1).map((p, i) => (
-                          <PhotoContainer key={i} photo={p} customSize={p.size} />
+                          <View key={i} style={{ flex: 1 }}>
+                            <PhotoContainer
+                              photo={p}
+                              style={{ width: '100%', height: '100%' }}
+                              customSize={{ width: '100%', height: '90%' }} // Slightly smaller than hero
+                              fit="contain"
+                            />
+                          </View>
                         ))}
                       </View>
                     )}
                   </View>
                 )}
 
-                {/* Layout: Grid */}
+                {/* Layout: Grid (Optimized 4 items Max - 49% Width/Height) */}
                 {page.type === 'grid' && (
-                  <View style={styles.gridLayout}>
+                  <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
                     {page.photos.map((p, i) => (
-                      <View key={i} wrap={false}>
-                        <PhotoContainer photo={p} customSize={SIZES.gridItem} />
+                      <View key={i} style={{ width: '49%', height: '49%', marginBottom: '1%' }}>
+                        <PhotoContainer
+                          photo={p}
+                          style={{ width: '100%', height: '100%' }}
+                          customSize={{ width: '100%', height: '94%' }} // Maximize photo area
+                          fit="contain"
+                        />
                       </View>
                     ))}
                   </View>

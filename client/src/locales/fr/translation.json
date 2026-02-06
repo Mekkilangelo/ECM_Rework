@@ -1311,9 +1311,17 @@
     },
     "sections": {
       "title": "Sections du rapport",
+      "coverPage": {
+        "label": "Page de garde",
+        "description": "Page de garde du rapport"
+      },
       "identification": {
         "label": "Identification",
         "description": "Informations d'identification du trial et de la pièce"
+      },
+      "load": {
+        "label": "Charge",
+        "description": "Information sur la charge et le positionnement"
       },
       "recipe": {
         "label": "Recette",
@@ -1325,13 +1333,9 @@
           "showDetailsDescription": "Affiche le numéro de recette, préox, cycles thermique/chimique et trempe"
         }
       },
-      "load": {
-        "label": "Charge",
-        "description": "Information sur la charge et le positionnement"
-      },
       "curves": {
-        "label": "Courbes",
-        "description": "Graphiques et courbes de température/puissance"
+        "label": "Courbes de four",
+        "description": "Graphiques et courbes de température/puissance du four"
       },
       "datapaq": {
         "label": "Datapaq",

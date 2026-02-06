@@ -98,7 +98,7 @@ const SteelList = () => {
   // Column configuration
   const columns = [
     createClickableNameColumn({
-      key: 'Steel.grade',
+      key: 'steel.grade',
       label: t('steels.grade'),
       onClick: null, // View handled by GenericEntityList
       getValue: (steel) => {
@@ -108,7 +108,7 @@ const SteelList = () => {
       noValueText: t('steels.noGrade')
     }),
     createTextColumn({
-      key: 'Steel.family',
+      key: 'steel.family',
       label: t('steels.family'),
       getValue: (steel) => {
         const steelData = steel.Steel || steel;
@@ -118,7 +118,7 @@ const SteelList = () => {
       emptyText: '-'
     }),
     createTextColumn({
-      key: 'Steel.standard',
+      key: 'steel.standard',
       label: t('steels.standard'),
       getValue: (steel) => {
         const steelData = steel.Steel || steel;

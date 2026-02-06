@@ -9,18 +9,18 @@ if (!API_URL) {
 }
 
 const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') => {
-  const { 
-    currentLevel, 
-    hierarchyState, 
-    currentPage, 
-    itemsPerPage 
+  const {
+    currentLevel,
+    hierarchyState,
+    currentPage,
+    itemsPerPage
   } = useNavigation();
-  
+
   // Extraire les IDs primitifs pour éviter les re-renders sur changement de référence d'objet
   const clientId = hierarchyState?.clientId;
   const orderId = hierarchyState?.orderId;
   const partId = hierarchyState?.partId;
-  
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -49,23 +49,24 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       }
     };
   }, [searchQuery]);
-  
+
   const fetchData = async () => {
     // Empêcher les appels simultanés
     if (isFetchingRef.current) return;
-    
+
     isFetchingRef.current = true;
     setLoading(true);
     setError(null);
-    
-    try {      let url, params;
-        switch(currentLevel) {
+
+    try {
+      let url, params;
+      switch (currentLevel) {
         case 'client':
           url = `${API_URL}/clients`;
           // Convertir page en offset pour l'API
-          params = { 
-            offset: (currentPage - 1) * itemsPerPage, 
-            limit: itemsPerPage,            sortBy: sortBy,
+          params = {
+            offset: (currentPage - 1) * itemsPerPage,
+            limit: itemsPerPage, sortBy: sortBy,
             sortOrder: sortOrder
           };
           // Ajouter la recherche si présente
@@ -76,9 +77,9 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         case 'trial_request':
         case 'order':  // Support ancien nom
           url = `${API_URL}/trial-requests`;
-          params = { 
-            parent_id: clientId, 
-            offset: (currentPage - 1) * itemsPerPage, 
+          params = {
+            parent_id: clientId,
+            offset: (currentPage - 1) * itemsPerPage,
             limit: itemsPerPage,
             sortBy: sortBy,
             sortOrder: sortOrder
@@ -90,9 +91,9 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
           break;
         case 'part':
           url = `${API_URL}/parts`;
-          params = { 
-            parent_id: orderId, 
-            offset: (currentPage - 1) * itemsPerPage, 
+          params = {
+            parent_id: orderId,
+            offset: (currentPage - 1) * itemsPerPage,
             limit: itemsPerPage,
             sortBy: sortBy,
             sortOrder: sortOrder
@@ -105,9 +106,9 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
         case 'trial':
         case 'test':  // Support ancien nom
           url = `${API_URL}/trials`;
-          params = { 
-            parent_id: partId, 
-            offset: (currentPage - 1) * itemsPerPage, 
+          params = {
+            parent_id: partId,
+            offset: (currentPage - 1) * itemsPerPage,
             limit: itemsPerPage,
             sortBy: sortBy,
             sortOrder: sortOrder
@@ -119,8 +120,8 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
           break;
         default:
           url = `${API_URL}/clients`;
-          params = { 
-            offset: (currentPage - 1) * itemsPerPage, 
+          params = {
+            offset: (currentPage - 1) * itemsPerPage,
             limit: itemsPerPage,
             sortBy: sortBy,
             sortOrder: sortOrder
@@ -130,9 +131,9 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
             params.search = debouncedSearchQuery.trim();
           }
       }
-      
+
       const response = await axios.get(url, { params });
-        // Adapter la structure de données selon la nouvelle API qui utilise data au lieu de clients/trialRequests/etc.
+      // Adapter la structure de données selon la nouvelle API qui utilise data au lieu de clients/trialRequests/etc.
       if (response.data && response.data.data) {
         // La nouvelle structure a les données dans response.data.data
         setData(response.data.data || []);
@@ -165,7 +166,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
   useEffect(() => {
     fetchData();
   }, [currentLevel, clientId, orderId, partId, currentPage, itemsPerPage, sortBy, sortOrder, debouncedSearchQuery]);
-  
+
   // Fonction pour gérer la recherche
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -183,7 +184,7 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       // Clients
       'name': 'name',
       'client.client_group': 'client_group',
-      'client.country': 'country', 
+      'client.country': 'country',
       'client.city': 'city',
       // Trial Requests
       'trialRequest.commercial': 'commercial',
@@ -195,42 +196,43 @@ const useHierarchy = (initialSortBy = 'modified_at', initialSortOrder = 'desc') 
       'part.quantity': 'quantity',
       // Trials
       'trial.load_number': 'load_number',
+      'trial.recipe_number': 'recipe_number',
       'trial.test_date': 'test_date',
       'trial.location': 'location',
       // Commun
       'modified_at': 'modified_at',
       'created_at': 'created_at'
     };
-    
+
     const dbField = sortMapping[columnKey] || columnKey;
     setSortBy(dbField);
     setSortOrder(direction);
   };
-  
+
   // Mettre à jour le statut d'un élément (nouveau -> lu)
   const updateItemStatus = async (nodeId) => {
     try {
       const response = await axios.put(`${API_URL}/nodes/${nodeId}/status`, {
         status: 'opened'
       });
-      
+
       // Mettre à jour l'état local immédiatement pour un feedback instantané
-      setData(prevData => 
-        prevData.map(item => 
+      setData(prevData =>
+        prevData.map(item =>
           item.id === nodeId ? { ...item, data_status: 'opened' } : item
         )
       );
-      
+
       // Forcer un refresh pour s'assurer que toutes les instances sont synchronisées
       // Utiliser un délai court pour permettre au serveur de traiter la requête
       setTimeout(() => {
         fetchData();
       }, 100);
-      
+
     } catch (err) {
       logger.hook.error('useHierarchy updateItemStatus', err, { nodeId, currentLevel });
     }
-  };    return {
+  }; return {
     data,
     loading,
     error,

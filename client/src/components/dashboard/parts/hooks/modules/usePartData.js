@@ -9,39 +9,39 @@ import partService from '../../../../../services/partService';
  * @param {Function} setFetchingPart - Fonction pour indiquer l'état de chargement
  * @param {Function} setParentId - Fonction pour définir l'ID de la commande parente
  */
-const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId) => {  
+const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId, setFetchedPart) => {
   useEffect(() => {
     if (part && part.id) {
       const fetchPartDetails = async () => {
-        setFetchingPart(true);        try {
+        setFetchingPart(true); try {
           // Utilisation du service refactorisé
           const partData = await partService.getPart(part.id);
-          
+
           // Vérifier si les données sont dans la propriété Part ou directement dans partData
           const data = partData.part || partData;
-          
+
           // S'assurer que dimensions et specifications sont des objets et non des chaînes
           let dimensions = {};
           try {
-            dimensions = typeof partData.dimensions === 'string' 
-              ? JSON.parse(partData.dimensions) 
+            dimensions = typeof partData.dimensions === 'string'
+              ? JSON.parse(partData.dimensions)
               : (partData.dimensions || {});
           } catch (err) {
             console.error('Error parsing dimensions:', err);
             dimensions = {};
           }
-            
+
           let specifications = {};
           try {
             // Les specifications sont au niveau racine de partData, pas dans partData.part
-            specifications = typeof partData.specifications === 'string' 
-              ? JSON.parse(partData.specifications) 
+            specifications = typeof partData.specifications === 'string'
+              ? JSON.parse(partData.specifications)
               : (partData.specifications || {});
           } catch (err) {
             console.error('Error parsing specifications:', err);
             specifications = {};
           }
-          
+
           // Parser les spécifications de dureté dynamiques
           let hardnessSpecs = [];
           if (specifications.hardness && Array.isArray(specifications.hardness)) {
@@ -134,7 +134,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             description: partData.description || data.description || '',
             steel: partData.steel?.grade || '',  // L'acier est au niveau racine de partData
             steelId: data.steel_node_id || partData.steel_node_id || null,  // Stocker aussi le steel_node_id
-            
+
             // Dimensions avec gestion de valeurs potentiellement undefined
             length: dimensions?.rectangular?.length || '',
             width: dimensions?.rectangular?.width || '',
@@ -145,17 +145,22 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
             diameterUnit: dimensions?.circular?.unit || '',
             weight: dimensions?.weight?.value || '',
             weightUnit: dimensions?.weight?.unit || '',
-            
+
             // Nouvelles spécifications dynamiques
             hardnessSpecs: hardnessSpecs,
             ecdSpecs: ecdSpecs,
           };
-          
+
           // Mettre à jour l'état du formulaire
           setFormData(formValues);
-            // Conserver parentId pour permettre l'édition
+          // Conserver parentId pour permettre l'édition
           if (data.parent_id || partData.parent_id) {
             setParentId(data.parent_id || partData.parent_id);
+          }
+
+          // Exposer les données complètes de la pièce (incluant client, documents, etc.)
+          if (setFetchedPart) {
+            setFetchedPart(partData);
           }
         } catch (error) {
           console.error('Erreur lors de la récupération des détails de la pièce:', error);
@@ -168,7 +173,7 @@ const usePartData = (part, setFormData, setMessage, setFetchingPart, setParentId
           setFetchingPart(false);
         }
       };
-      
+
       fetchPartDetails();
     }
   }, [part, setFormData, setMessage, setFetchingPart, setParentId]);

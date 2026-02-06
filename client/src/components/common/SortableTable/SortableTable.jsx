@@ -53,7 +53,7 @@ const SortableTable = ({
 
     return [...data].sort((a, b) => {
       const column = columns.find(col => col.key === sortConfig.key);
-      
+
       let aValue = column.sortValue ? column.sortValue(a) : getNestedValue(a, sortConfig.key);
       let bValue = column.sortValue ? column.sortValue(b) : getNestedValue(b, sortConfig.key);
 
@@ -87,10 +87,10 @@ const SortableTable = ({
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
     }
-    
+
     const newSortConfig = { key, direction };
     setSortConfig(newSortConfig);
-    
+
     // Si tri côté serveur, appeler la fonction de callback
     if (serverSide && onSort) {
       onSort(key, direction);
@@ -100,11 +100,11 @@ const SortableTable = ({
   const getSortIcon = (columnKey) => {
     const currentKey = serverSide ? currentSortBy : sortConfig.key;
     const currentDirection = serverSide ? currentSortOrder : sortConfig.direction;
-    
+
     // En mode serverSide, nous devons vérifier si la colonne correspond au tri actuel
     // en tenant compte des mappings possibles
     let isCurrentColumn = false;
-    
+
     if (serverSide) {
       // Rechercher si cette colonne correspond au tri actuel
       // Soit directement, soit après mapping
@@ -114,27 +114,28 @@ const SortableTable = ({
         // Vérifier les mappings courants pour les colonnes composées
         const commonMappings = {
           // Clients
-          'Client.client_group': 'client_group',
-          'Client.country': 'country',
-          'Client.city': 'city',
+          'client.client_group': 'client_group',
+          'client.country': 'country',
+          'client.city': 'city',
           // Trial Requests
-          'TrialRequest.commercial': 'commercial',
-          'TrialRequest.request_date': 'request_date',
+          'trialRequest.commercial': 'commercial',
+          'trialRequest.request_date': 'request_date',
           // Parts
-          'Part.client_designation': 'client_designation',
-          'Part.reference': 'reference',
-          'Part.steel': 'steel',
-          'Part.quantity': 'quantity',
-          // Tests
-          'Test.load_number': 'load_number',
-          'Test.test_date': 'test_date',
-          'Test.location': 'location',
+          'part.client_designation': 'client_designation',
+          'part.reference': 'reference',
+          'part.steel': 'steel',
+          'part.quantity': 'quantity',
+          // Items/Trials
+          'trial.load_number': 'load_number',
+          'trial.recipe_number': 'recipe_number',
+          'trial.test_date': 'test_date',
+          'trial.location': 'location',
           // Steels
-          'Steel.grade': 'grade',
-          'Steel.family': 'family',
-          'Steel.standard': 'standard'
+          'steel.grade': 'grade',
+          'steel.family': 'family',
+          'steel.standard': 'standard'
         };
-        
+
         if (commonMappings[columnKey] === currentKey) {
           isCurrentColumn = true;
         }
@@ -142,17 +143,17 @@ const SortableTable = ({
     } else {
       isCurrentColumn = currentKey === columnKey;
     }
-    
+
     if (!isCurrentColumn) {
       return <FontAwesomeIcon icon={faSort} className="sort-icon inactive" />;
     }
-    return currentDirection === 'asc' 
+    return currentDirection === 'asc'
       ? <FontAwesomeIcon icon={faSortUp} className="sort-icon active" />
       : <FontAwesomeIcon icon={faSortDown} className="sort-icon active" />;
   };
 
   return (
-    <Table 
+    <Table
       hover={hover}
       responsive={responsive}
       bordered={bordered}

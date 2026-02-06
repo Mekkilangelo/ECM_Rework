@@ -1303,9 +1303,17 @@
     "sections": {
       "title": "Report Sections",
       "description": "Select sections to include in the final report",
+      "coverPage": {
+        "label": "Cover Page",
+        "description": "Report cover page"
+      },
       "identification": {
         "label": "Identification",
         "description": "Trial and part identification information"
+      },
+      "load": {
+        "label": "Load",
+        "description": "Load and positioning information"
       },
       "recipe": {
         "label": "Recipe",
@@ -1317,13 +1325,9 @@
           "showDetailsDescription": "Display recipe number, preox, thermal/chemical cycles, and quench data"
         }
       },
-      "load": {
-        "label": "Load",
-        "description": "Load and positioning information"
-      },
       "curves": {
-        "label": "Curves",
-        "description": "Temperature/power charts and curves"
+        "label": "Furnace Process Curves",
+        "description": "Furnace temperature/power charts and curves"
       },
       "datapaq": {
         "label": "Datapaq",

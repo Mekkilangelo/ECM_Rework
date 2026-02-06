@@ -129,17 +129,6 @@ export class ReportBuilder {
     const builder = new ReportBuilder();
 
     const partData = apiData.partData || {};
-    
-    console.log('🔍 [ReportBuilder] fromApiData - apiData.partData reçu:', {
-      hasPartData: !!apiData.partData,
-      dim_rect_unit: partData.dim_rect_unit,
-      dim_circ_unit: partData.dim_circ_unit,
-      dim_weight_unit: partData.dim_weight_unit,
-      rectUnit: partData.rectUnit,
-      circUnit: partData.circUnit,
-      weightUnit: partData.weightUnit,
-      allKeys: Object.keys(partData)
-    });
 
     // Normaliser partData pour s'assurer que les unités sont dans le bon format
     // Même logique que PartIdentificationReport pour cohérence
@@ -157,23 +146,21 @@ export class ReportBuilder {
       dim_weight_value: partData.dimWeightValue || partData.dim_weight_value,
       // S'assurer que les unités sont des strings (pas des objets)
       // Priorité: valeur snake_case directe > camelCase > objet.name
-      dim_rect_unit: partData.dim_rect_unit || partData.dimRectUnit || 
+      dim_rect_unit: partData.dim_rect_unit || partData.dimRectUnit ||
                      (partData.rectUnit?.name) || (typeof partData.rectUnit === 'string' ? partData.rectUnit : null),
-      dim_circ_unit: partData.dim_circ_unit || partData.dimCircUnit || 
+      dim_circ_unit: partData.dim_circ_unit || partData.dimCircUnit ||
                      (partData.circUnit?.name) || (typeof partData.circUnit === 'string' ? partData.circUnit : null),
-      dim_weight_unit: partData.dim_weight_unit || partData.dimWeightUnit || 
+      dim_weight_unit: partData.dim_weight_unit || partData.dimWeightUnit ||
                        (partData.weightUnit?.name) || (typeof partData.weightUnit === 'string' ? partData.weightUnit : null),
       // Garder aussi les objets relation pour compatibilité
       rectUnit: partData.rectUnit,
       circUnit: partData.circUnit,
-      weightUnit: partData.weightUnit
+      weightUnit: partData.weightUnit,
+      // IMPORTANT: Garder les spécifications
+      hardnessSpecs: partData.hardnessSpecs || [],
+      ecdSpecs: partData.ecdSpecs || [],
+      steel: partData.steel
     };
-
-    console.log('🔍 [ReportBuilder] Normalized partData units:', {
-      dim_rect_unit: normalizedPartData.dim_rect_unit,
-      dim_circ_unit: normalizedPartData.dim_circ_unit,
-      dim_weight_unit: normalizedPartData.dim_weight_unit
-    });
 
     builder
       .setTrialId(apiData.trialId || apiData.testId)

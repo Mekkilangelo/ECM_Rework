@@ -34,14 +34,14 @@ const TrialRequestList = () => {
         noValueText: t('orders.noReference')
       }),
       createTextColumn({
-        key: 'TrialRequest.commercial',
+        key: 'trialRequest.commercial',
         label: t('orders.commercial'),
         getValue: (order) => order.trialRequest?.commercial,
         centered: true,
         emptyText: '-'
       }),
       createDateColumn({
-        key: 'TrialRequest.request_date',
+        key: 'trialRequest.request_date',
         label: t('orders.date'),
         getValue: (order) => order.trialRequest?.request_date,
         emptyText: t('common.unknown'),

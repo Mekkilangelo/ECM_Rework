@@ -51,7 +51,9 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
     showConfirmModal,
     // Copy/Paste functionality
     handleCopy,
-    handlePaste
+    handlePaste,
+    fetchedPart, // Récupérer les données fetchées exposées par le hook
+    hierarchyState // Récupérer l'état de navigation pour le contexte client explicite
   } = usePartForm(part, onClose, onPartCreated, onPartUpdated, viewMode);
 
   // Exposer handleCloseRequest et copy/paste à travers la référence
@@ -121,14 +123,14 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
             {errors.parent}
           </div>
         )}
-        
+
         {/* Légende pour les champs obligatoires - masquée en mode lecture seule */}
         {!viewMode && (
           <div className="text-muted small mb-3">
             <span className="text-danger fw-bold">*</span> {t('form.requiredFields')}
           </div>
         )}
-        
+
         <Form onSubmit={handleSubmit} autoComplete="off">
           <CollapsibleSection
             title={t('parts.sections.basicInfo')}
@@ -150,7 +152,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
-          
+
           <CollapsibleSection
             title={t('parts.sections.documents')}
             isExpandedByDefault={false}
@@ -163,7 +165,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               viewMode={viewMode}
             />
           </CollapsibleSection>
-          
+
           <CollapsibleSection
             title={t('parts.sections.dimensions')}
             isExpandedByDefault={false}
@@ -184,7 +186,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
-          
+
           <CollapsibleSection
             title={t('parts.sections.steel')}
             isExpandedByDefault={false}
@@ -203,7 +205,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               readOnlyFieldStyle={readOnlyFieldStyle}
             />
           </CollapsibleSection>
-          
+
           <CollapsibleSection
             title={t('parts.sections.specifications')}
             isExpandedByDefault={false}
@@ -230,7 +232,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               updateEcdSpec={updateEcdSpec}
             />
           </CollapsibleSection>
-          
+
           <CollapsibleSection
             title={t('parts.sections.photos')}
             isExpandedByDefault={false}
@@ -243,7 +245,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
               viewMode={viewMode}
             />
           </CollapsibleSection>
-          
+
           {/* Section Fiche d'identification - uniquement si la pièce est enregistrée */}
           {part && part.id && (
             <CollapsibleSection
@@ -258,6 +260,8 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
                   ...formData,
                   designation: formData.designation,
                   part_number: formData.reference,
+                  part_number: formData.reference,
+                  client_designation: formData.clientDesignation,
                   drawing_number: formData.clientDesignation,
                   steel: formData.steel,
                   hardnessSpecs: formData.hardnessSpecs,
@@ -272,39 +276,46 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
                   dim_weight_value: formData.weight,
                   dim_weight_unit: formData.weightUnit
                 }}
-                clientData={part.client || null}
+                // Utiliser en priorité fetchedPart, sinon hierarchyState, sinon part.client
+                clientData={
+                  (fetchedPart && fetchedPart.client)
+                    ? fetchedPart.client
+                    : (hierarchyState && hierarchyState.clientName)
+                      ? { name: hierarchyState.clientName, id: hierarchyState.clientId }
+                      : (part ? part.client : null)
+                }
               />
             </CollapsibleSection>
           )}
-          
+
           <div className="d-flex justify-content-end mt-4">
             {viewMode ? (
               <Button variant="secondary" onClick={onClose}>
                 {t('common.close')}
               </Button>
-            ) : (              <>
-                <Button variant="secondary" onClick={() => {
-                  
-                  handleCloseRequest();
-                }} className="mr-2">
-                  {t('common.cancel')}
-                </Button>
-                <Button
-                  variant="warning"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading
-                    ? (part ? t('common.modifying') : t('common.creating'))
-                    : (part ? t('common.edit') : t('common.create'))
-                  }
-                </Button>
-              </>
+            ) : (<>
+              <Button variant="secondary" onClick={() => {
+
+                handleCloseRequest();
+              }} className="mr-2">
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant="warning"
+                type="submit"
+                disabled={loading}
+              >
+                {loading
+                  ? (part ? t('common.modifying') : t('common.creating'))
+                  : (part ? t('common.edit') : t('common.create'))
+                }
+              </Button>
+            </>
             )}
           </div>
         </Form>
       </div>
-      
+
       {/* Modal de confirmation pour la fermeture - non affiché en mode lecture seule */}
       {!viewMode && (
         <CloseConfirmationModal
@@ -317,7 +328,7 @@ const PartForm = forwardRef(({ part, onClose, onPartCreated, onPartUpdated, view
           message={t('closeModal.unsavedChanges')}
         />
       )}
-      
+
       {/* Modal de création d'acier - non affichée en mode lecture seule */}
       {!viewMode && (
         <Modal

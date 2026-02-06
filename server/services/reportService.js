@@ -460,10 +460,47 @@ const buildQuenchData = (testData) => {
 };
 
 /**
- * Construit les données de résultats depuis les tables normalisées
- * @param {Object} testData - Données du test avec includes
- * @returns {Object}
+ * Construit les données de charge (load_data)
+ * @param {Object} trialData - Données du trial avec relations
+ * @returns {Object} Données de charge formatées
  */
+const buildLoadData = (trialData) => {
+  if (!trialData) return { loadData: null };
+
+  const loadData = {
+    weight: {
+      value: trialData.load_weight_value,
+      unit: trialData.load_weight_unit || trialData.weightUnit?.name || 'kg'
+    },
+    // Dimensions
+    size: {
+      width: {
+        value: trialData.load_size_width_value,
+        unit: trialData.load_size_width_unit
+      },
+      height: {
+        value: trialData.load_size_height_value,
+        unit: trialData.load_size_height_unit
+      },
+      length: {
+        value: trialData.load_size_length_value,
+        unit: trialData.load_size_length_unit
+      }
+    },
+    // Quantités
+    counts: {
+      parts: trialData.load_part_count,
+      floors: trialData.load_floor_count
+    },
+    // Métadonnées
+    mounting: trialData.mounting_type,
+    position: trialData.position_type,
+    comments: trialData.load_comments
+  };
+
+  return { loadData };
+};
+
 const buildResultsData = (testData) => {
   console.log('🔍 buildResultsData - testData.resultSteps:', testData?.resultSteps?.length || 0);
 
@@ -522,10 +559,22 @@ const buildResultsData = (testData) => {
           unit: point.unit
         })),
 
-        ecdPositions: (sample.ecdPositions || []).map(position => ({
-          distance: position.distance,
-          location: position.location
-        })),
+        ecdPositions: (sample.ecdPositions || []).map(position => {
+          // DEBUG: Log pour vérifier les données ECD
+          console.log('🔍 ECD Position data:', {
+            distance: position.distance,
+            location: position.location,
+            hardness: position.hardness,
+            hardness_unit: position.hardness_unit,
+            allKeys: Object.keys(position.dataValues || position)
+          });
+          return {
+            distance: position.distance,
+            location: position.location,
+            hardness: position.hardness,
+            hardnessUnit: position.hardness_unit
+          };
+        }),
 
         // Nouveau format curveData au lieu de curveSeries
         curveData: curveData
@@ -763,14 +812,6 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
 
-        // Log plainPartData units
-        logger.info('📏 plainPartData après get({plain:true}):', {
-          dim_weight_unit: plainPartData.dim_weight_unit,
-          dim_rect_unit: plainPartData.dim_rect_unit,
-          dim_circ_unit: plainPartData.dim_circ_unit,
-          weightUnit: plainPartData.weightUnit
-        });
-
         // IMPORTANT: Forcer les valeurs FK string dans l'objet final
         // Même logique que PartForm qui passe directement les strings
         reportData.partData = {
@@ -779,13 +820,6 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
           dim_rect_unit: dimRectUnit,
           dim_circ_unit: dimCircUnit
         };
-
-        // Log final partData
-        logger.info('📏 Final reportData.partData units:', {
-          dim_weight_unit: reportData.partData.dim_weight_unit,
-          dim_rect_unit: reportData.partData.dim_rect_unit,
-          dim_circ_unit: reportData.partData.dim_circ_unit
-        });
       } else {
         reportData.partData = null;
         logger.debug('Pièce sans données part', { partId: partNode.id });
@@ -822,6 +856,12 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
 
     if (sections.includes('results') || sections.includes('hardness') || sections.includes('ecd') || sections.includes('control')) {
       Object.assign(reportData, buildResultsData(trialNode.trial));
+    }
+
+    // 7. Ajouter les données de charge
+    if (sections.includes('load')) {
+      const loadData = buildLoadData(trialNode.trial);
+      Object.assign(reportData, loadData);
     }
 
     // 7. Récupérer les fichiers des sections sélectionnées

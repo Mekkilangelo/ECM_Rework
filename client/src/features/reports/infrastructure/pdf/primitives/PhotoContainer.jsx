@@ -57,6 +57,7 @@ export const PhotoContainer = ({
   showCaption = true,
   captionText = null,
   fit = 'contain',
+  style, // New prop
 }) => {
   if (!photo) return null;
 
@@ -68,7 +69,7 @@ export const PhotoContainer = ({
   const imageStyle = fit === 'cover' ? styles.imageCover : styles.image;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View style={[styles.imageWrapper, dimensions]}>
         <Image
           src={photoUrl}

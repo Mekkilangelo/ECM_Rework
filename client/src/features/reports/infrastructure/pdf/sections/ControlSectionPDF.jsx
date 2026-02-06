@@ -1,8 +1,7 @@
 /**
  * INFRASTRUCTURE: Section Contrôle complète pour le PDF
  * Affiche les résultats de contrôle : dureté, ECD, courbes avec specs
- * 
- * Uses theme system for consistent styling
+ * IMPLEMENTATION: Granular Splitting + Adaptive Chart Sizing + Reduced Padding + Pagination Fixes
  */
 
 import React from 'react';
@@ -23,57 +22,56 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.brand.secondary,
     borderLeftWidth: 4,
     borderLeftColor: getAccentColor(SECTION_TYPE),
-    marginBottom: 10, // Increased spacing
+    marginBottom: 10,
   },
   resultTitle: {
     ...TYPOGRAPHY.subsectionTitle,
-    color: '#1e293b', // Darker text
-    backgroundColor: '#f1f5f9', // Light neutral background
+    color: '#1e293b',
+    backgroundColor: '#f1f5f9',
     borderLeftWidth: 4,
     borderLeftColor: getAccentColor(SECTION_TYPE),
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   sampleTitle: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: 'bold',
     marginTop: 6,
-    marginBottom: 6,
+    marginBottom: 4,
     color: '#334155'
   },
   subsectionTitle: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
-    marginTop: 4,
-    marginBottom: 4,
-    color: '#475569'
+    marginBottom: 3,
+    color: '#64748b',
+    textTransform: 'uppercase'
   },
   table: {
     marginBottom: 6,
-    borderWidth: 0.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 2
+    borderTopWidth: 0.5,
+    borderTopColor: '#e2e8f0', // Only horizontal lines
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 0.5,
-    borderBottomColor: '#e2e8f0'
+    borderBottomColor: '#e2e8f0',
+    minHeight: 14
   },
   tableHeader: {
     backgroundColor: '#f8fafc',
     fontWeight: 'bold'
   },
   tableCell: {
-    padding: 5,
+    padding: 3,
     fontSize: 8,
-    borderRightWidth: 0.5,
-    borderRightColor: '#e2e8f0',
+    // No vertical borders for cleaner look
     color: '#334155'
   },
   chartContainer: {
     marginBottom: 10,
-    padding: 8,
+    padding: 6,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -82,15 +80,14 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 9,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
     color: '#1e293b'
   },
-  // ... (keep existing styles)
   chartLegend: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0'
   },
@@ -114,26 +111,27 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: '#64748b'
   },
-  photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 4,
-    justifyContent: 'flex-start',
-    gap: 6,
-  },
+  // Photo "Polaroid" Style
   photoContainer: {
     marginBottom: 6,
     alignItems: 'center',
+    padding: 3,
+    backgroundColor: '#ffffff',
+    borderWidth: 0.5,
+    borderColor: '#cbd5e1',
+    borderRadius: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   photoWrapper: {
-    width: 120,
+    width: 100, // Fixed size
     height: 90,
-    backgroundColor: '#f1f5f9',
-    border: '0.5pt solid #cbd5e1',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    borderRadius: 2
+    marginBottom: 2,
+    backgroundColor: '#f8fafc'
   },
   photo: {
     width: '100%',
@@ -141,11 +139,11 @@ const styles = StyleSheet.create({
     objectFit: 'contain',
   },
   photoLabel: {
-    fontSize: 6.5,
+    fontSize: 6,
     textAlign: 'center',
-    marginTop: 2,
     color: '#64748b',
     fontStyle: 'italic',
+    maxWidth: 95
   },
   noData: {
     fontSize: 9,
@@ -157,52 +155,42 @@ const styles = StyleSheet.create({
   }
 });
 
+const CHART_HEIGHT_STD = 200;
+const CHART_HEIGHT_MIN = 100;
+
 const SERIES_COLORS = [
-  '#3b82f6', // Blue
-  '#ef4444', // Red
-  '#10b981', // Emerald
-  '#f59e0b', // Amber
-  '#8b5cf6', // Violet
-  '#ec4899'  // Pink
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
 ];
 
-// ... (CurveChart component remains mostly the same, update style refs if needed)
-const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, height = 200 }) => {
-  // ... (keep implementation)
-  if (!curveData || !curveData.distances || !curveData.series || curveData.series.length === 0) {
-    return null;
-  }
+// --- COMPONENTS ---
 
-  const padding = { top: 15, right: 25, bottom: 40, left: 50 };
+const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, height = CHART_HEIGHT_STD }) => {
+  if (!curveData || !curveData.distances || !curveData.series || curveData.series.length === 0) return null;
+
+  // Reduced padding for Svg to maximize usable drawing area
+  const padding = { top: 15, right: 25, bottom: 35, left: 50 };
   const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
+  const chartHeight = Math.max(0, height - padding.top - padding.bottom);
 
-  // Collecter toutes les valeurs valides
   const distances = curveData.distances.filter(d => d != null && d !== '').map(d => Number(d));
   let allValues = [];
-
   curveData.series.forEach(series => {
     series.values.forEach((val, idx) => {
-      // Check for valid numbers
       if (val != null && val !== '' && !isNaN(Number(val)) && Number(val) > 0 && distances[idx] != null) {
         allValues.push(Number(val));
       }
     });
   });
 
-  if (allValues.length === 0 || distances.length === 0) {
-    return null;
-  }
+  if (allValues.length === 0 || distances.length === 0 || chartHeight <= 0) return null;
 
-  const minDistance = Math.min(...distances);
+  const minDistance = 0;
   const maxDistance = Math.max(...distances);
   const minValue = Math.min(...allValues);
   const maxValue = Math.max(...allValues);
-
   const valueRange = maxValue - minValue;
-  // Add some padding to Y-axis
-  const yMin = Math.max(0, minValue - valueRange * 0.1);
-  const yMax = maxValue + valueRange * 0.1;
+  const yMin = Math.max(0, minValue - valueRange * 0.15);
+  const yMax = maxValue + valueRange * 0.15;
 
   const scaleX = (distance) => padding.left + (distance - minDistance) / (maxDistance - minDistance) * chartWidth;
   const scaleY = (value) => {
@@ -210,118 +198,69 @@ const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, heigh
     return padding.top + chartHeight - ((value - yMin) / (yMax - yMin)) * chartHeight;
   };
 
-  // Graduations
   const xTicks = [];
-  const xTickCount = 5;
-  for (let i = 0; i <= xTickCount; i++) {
-    const distance = minDistance + (maxDistance - minDistance) * (i / xTickCount);
+  for (let i = 0; i <= 5; i++) {
+    const distance = minDistance + (maxDistance - minDistance) * (i / 5);
     xTicks.push({ x: scaleX(distance), label: distance.toFixed(1) });
   }
 
   const yTicks = [];
-  const yTickCount = 5;
-  for (let i = 0; i <= yTickCount; i++) {
-    const value = yMin + (yMax - yMin) * (i / yTickCount);
+  for (let i = 0; i <= 5; i++) {
+    const value = yMin + (yMax - yMin) * (i / 5);
     yTicks.push({ y: scaleY(value), label: Math.round(value) });
   }
 
+  const arrowSize = 4;
+
   return (
     <Svg width={width} height={height}>
-      {/* Grille */}
-      {yTicks.map((tick, i) => (
-        <SvgLine key={`grid-h-${i}`} x1={padding.left} y1={tick.y} x2={padding.left + chartWidth} y2={tick.y} stroke="#f1f5f9" strokeWidth={1} />
-      ))}
-      {xTicks.map((tick, i) => (
-        <SvgLine key={`grid-v-${i}`} x1={tick.x} y1={padding.top} x2={tick.x} y2={padding.top + chartHeight} stroke="#f1f5f9" strokeWidth={1} />
-      ))}
+      {yTicks.map((tick, i) => <SvgLine key={`gh-${i}`} x1={padding.left} y1={tick.y} x2={padding.left + chartWidth} y2={tick.y} stroke="#f1f5f9" strokeWidth={1} />)}
+      {xTicks.map((tick, i) => <SvgLine key={`gv-${i}`} x1={tick.x} y1={padding.top} x2={tick.x} y2={padding.top + chartHeight} stroke="#f1f5f9" strokeWidth={1} />)}
 
-      {/* Axes */}
       <SvgLine x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + chartHeight} stroke="#94a3b8" strokeWidth={1.5} />
       <SvgLine x1={padding.left} y1={padding.top + chartHeight} x2={padding.left + chartWidth} y2={padding.top + chartHeight} stroke="#94a3b8" strokeWidth={1.5} />
 
-      {/* Labels axes */}
-      {xTicks.map((tick, i) => (
-        <Text key={`x-label-${i}`} x={tick.x} y={padding.top + chartHeight + 15} style={styles.axisLabel} textAnchor="middle">{tick.label}</Text>
-      ))}
-      {yTicks.map((tick, i) => (
-        <Text key={`y-label-${i}`} x={padding.left - 10} y={tick.y + 3} style={styles.axisLabel} textAnchor="end">{tick.label}</Text>
-      ))}
+      <Path d={`M ${padding.left} ${padding.top - arrowSize} L ${padding.left - arrowSize} ${padding.top + arrowSize} L ${padding.left + arrowSize} ${padding.top + arrowSize} Z`} fill="#94a3b8" />
+      <Path d={`M ${padding.left + chartWidth + arrowSize} ${padding.top + chartHeight} L ${padding.left + chartWidth - arrowSize} ${padding.top + chartHeight - arrowSize} L ${padding.left + chartWidth - arrowSize} ${padding.top + chartHeight + arrowSize} Z`} fill="#94a3b8" />
 
-      {/* Titres axes */}
-      <Text x={padding.left + chartWidth / 2} y={padding.top + chartHeight + 35} style={[styles.axisLabel, { fontSize: 8, fontFamily: 'Helvetica-Bold' }]} textAnchor="middle">
-        Distance (mm)
-      </Text>
-      <Text x={15} y={padding.top + chartHeight / 2} style={[styles.axisLabel, { fontSize: 8, fontFamily: 'Helvetica-Bold' }]} textAnchor="middle" transform={`rotate(-90 15 ${padding.top + chartHeight / 2})`}>
-        Hardness ({unit})
-      </Text>
+      {xTicks.map((tick, i) => <Text key={`xl-${i}`} x={tick.x} y={padding.top + chartHeight + 12} style={styles.axisLabel} textAnchor="middle">{tick.label}</Text>)}
+      {yTicks.map((tick, i) => <Text key={`yl-${i}`} x={padding.left - 6} y={tick.y + 3} style={styles.axisLabel} textAnchor="end">{tick.label}</Text>)}
 
-      {/* Ligne de spec */}
-      {specifications && specifications.ecdSpecs && specifications.ecdSpecs.length > 0 && (
-        <>
-          {specifications.ecdSpecs.map((spec, specIndex) => {
-            // ... (keep spec rendering logic)
-            // Recuperer la valeur Y (hardness)
-            const specValue = spec.hardness || spec.yValue;
+      <Text x={padding.left + chartWidth / 2} y={padding.top + chartHeight + 28} style={[styles.axisLabel, { fontSize: 8, fontFamily: 'Helvetica-Bold' }]} textAnchor="middle">Distance (mm)</Text>
+      <Text x={padding.left - 5} y={padding.top - 8} style={[styles.axisLabel, { fontSize: 8, fontFamily: 'Helvetica-Bold' }]} textAnchor="start">Hardness ({unit})</Text>
 
-            if (!specValue) return null;
+      {specifications?.ecdSpecs?.map((spec, i) => {
+        const specValue = spec.hardness || spec.yValue;
+        if (!specValue) return null;
+        let dMin = spec.depthMin, dMax = spec.depthMax;
+        if ((dMin == null) && spec.range) {
+          const m = spec.range.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+          if (m) { dMin = parseFloat(m[1]); dMax = parseFloat(m[2]); }
+        }
+        if (dMin == null || dMax == null) return null;
+        const y = scaleY(specValue);
+        return y !== null ? (
+          <React.Fragment key={`s-${i}`}>
+            <SvgLine x1={scaleX(dMin)} y1={y} x2={scaleX(dMax)} y2={y} stroke="#1e293b" strokeWidth={2} strokeDasharray="4 2" />
+            <Text x={scaleX(dMax) + 5} y={y + 3} style={[styles.axisLabel, { fontSize: 6.5, fill: '#1e293b' }]} textAnchor="start">ECD: {dMin}-{dMax}mm @ {specValue}</Text>
+          </React.Fragment>
+        ) : null;
+      })}
 
-            // Recuperer les limites X (depth range)
-            let depthMin = spec.depthMin;
-            let depthMax = spec.depthMax;
-
-            // Si range est au format "0.6-0.9mm", l'extraire
-            if ((depthMin === null || depthMin === undefined) && spec.range) {
-              const rangeMatch = spec.range.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
-              if (rangeMatch) {
-                depthMin = parseFloat(rangeMatch[1]);
-                depthMax = parseFloat(rangeMatch[2]);
-              }
-            }
-
-            if (depthMin === null || depthMin === undefined || depthMax === null || depthMax === undefined) return null;
-
-            const y = scaleY(specValue);
-            if (y === null) return null;
-
-            // Calculer X start et X end pour la ligne spec (entre depthMin et depthMax)
-            const xStart = scaleX(depthMin);
-            const xEnd = scaleX(depthMax);
-
-            return (
-              <React.Fragment key={`spec-${specIndex}`}>
-                <SvgLine x1={xStart} y1={y} x2={xEnd} y2={y} stroke="#1e293b" strokeWidth={2} strokeDasharray="4 2" />
-                <Text x={xEnd + 5} y={y + 3} style={[styles.axisLabel, { fontSize: 6.5, fill: '#1e293b' }]} textAnchor="start">
-                  ECD: {depthMin}-{depthMax}mm at {specValue}
-                </Text>
-              </React.Fragment>
-            );
-          })}
-        </>
-      )}
-
-      {/* Courbes */}
-      {curveData.series.map((series, seriesIndex) => {
-        const color = SERIES_COLORS[seriesIndex % SERIES_COLORS.length];
+      {curveData.series.map((series, i) => {
+        const color = SERIES_COLORS[i % SERIES_COLORS.length];
         const points = [];
-
         series.values.forEach((val, idx) => {
-          if (val != null && val !== '' && !isNaN(Number(val)) && Number(val) > 0 && distances[idx] != null) {
-            const x = scaleX(distances[idx]);
-            const y = scaleY(Number(val));
-            if (y !== null) points.push({ x, y, distance: distances[idx], value: val });
+          if (val && !isNaN(Number(val)) && Number(val) > 0 && distances[idx] != null) {
+            points.push({ x: scaleX(distances[idx]), y: scaleY(Number(val)) });
           }
         });
-
         if (points.length === 0) return null;
-
-        const pathData = points.map((p, i) => i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`).join(' ');
-
+        const path = points.map((p, k) => k === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`).join(' ');
         return (
-          <React.Fragment key={`series-${seriesIndex}`}>
-            <Path d={pathData} stroke={color} strokeWidth={2} fill="none" />
-            {points.map((p, i) => (
-              <Circle key={`point-${seriesIndex}-${i}`} cx={p.x} cy={p.y} r={3} fill={color} />
-            ))}
+          <React.Fragment key={`ser-${i}`}>
+            <Path d={path} stroke={color} strokeWidth={2} fill="none" />
+            {points.map((p, k) => <Circle key={`p-${i}-${k}`} cx={p.x} cy={p.y} r={3} fill={color} />)}
           </React.Fragment>
         );
       })}
@@ -329,225 +268,374 @@ const CurveChart = ({ curveData, specifications, unit = 'HV', width = 500, heigh
   );
 };
 
-/**
- * Affichage des données d'un échantillon avec mise en page intelligente
- * Layout: Grille (2 colonnes tables + 1 colonne photo) puis courbe pleine largeur
- */
-const SampleData = ({ sample, sampleIndex, specifications, unit, controlLocationPhotos }) => {
-  // Check for ACTUAL values, not just non-empty arrays with empty placeholders
-  const hasHardness = sample.hardnessPoints &&
-    sample.hardnessPoints.length > 0 &&
-    sample.hardnessPoints.some(p => (p.value !== null && p.value !== '' && p.value !== '-'));
+// --- SPLIT COMPONENT: INFO (Polished Layout) ---
+const SampleInfo = ({ sample, sampleIndex, unit: globalUnit, controlLocationPhotos, isCompact = false }) => {
+  const hasHardness = sample.hardnessPoints?.some(p => p.value);
+  const hasEcd = sample.ecdPositions?.some(p => p.distance);
 
-  const hasEcdPositions = sample.ecdPositions &&
-    sample.ecdPositions.length > 0 &&
-    sample.ecdPositions.some(p => (p.distance !== null && p.distance !== '' && p.distance !== '-'));
+  // FIX: Detect unit from sample data if available, else fallback
+  const sampleUnit = sample.hardnessPoints?.find(p => p.unit)?.unit || globalUnit;
 
-  const hasCurve = sample.curveData &&
-    sample.curveData.distances &&
-    sample.curveData.series &&
-    sample.curveData.series.some(s => s.values && s.values.some(v => v > 0));
+  if (!hasHardness && !hasEcd && (!controlLocationPhotos || controlLocationPhotos.length === 0)) return null;
 
-  const hasPhotos = controlLocationPhotos && controlLocationPhotos.length > 0;
+  const sampleTitle = sample.description ? `Sample ${sampleIndex + 1} - ${sample.description}` : `Sample ${sampleIndex + 1}`;
 
-  // Si on n'a ni dureté ni ECD, on n'affiche PAS la localisation non plus (sauf si explicitement demandé)
-  // L'utilisateur a dit: "si on n'a ni dureté ni ecd, n'affiche pas la control location, ca ne sert a rien"
-  // Donc: hasContent = (hasHardness || hasEcdPositions) || hasCurve
-  // Mais conservons les photos si elles sont là, au cas où. 
-  // Modifié selon demande: si pas de resultats tabulaires, pas de control location.
-  const showTablesAndLocation = hasHardness || hasEcdPositions;
-
-  if (!hasHardness && !hasEcdPositions && !hasCurve) return null;
-
-  // Construire le titre de l'échantillon avec description
-  let sampleTitle = `Sample ${sampleIndex + 1}`;
-  if (sample.description) {
-    sampleTitle += ` - ${sample.description}`;
-  }
+  const pad = isCompact ? 2 : 3;
+  const fz = isCompact ? 7 : 8;
+  const rh = isCompact ? 12 : 14;
+  const dCell = { padding: pad, fontSize: fz };
+  const dRow = { minHeight: rh };
 
   return (
-    <View style={{ marginBottom: 15 }} wrap={false}>
+    <View style={{ marginBottom: 8 }} wrap={false}>
       <Text style={styles.sampleTitle}>{sampleTitle}</Text>
-
-      {/* GRILLE: Tables de donnees + Photo de localisation */}
-      {showTablesAndLocation && (
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
-          {/* Colonne 1: Table Durete */}
-          {hasHardness && (
-            <View style={{ flex: 1, minWidth: 140 }}>
-              <Text style={styles.subsectionTitle}>Hardness ({unit})</Text>
-              <View style={styles.table}>
-                <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.tableCell, { width: '60%' }]}>Position</Text>
-                  <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>Value</Text>
-                </View>
-                {sample.hardnessPoints.map((point, idx) => (
-                  <View key={idx} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, { width: '60%' }]}>{point.location || point.position || '-'}</Text>
-                    <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>{point.value || '-'}</Text>
-                  </View>
-                ))}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 15 }}>
+        {/* Hardness Table: Width 170 to fit 3 cols */}
+        {hasHardness && (
+          <View style={{ flex: 1, minWidth: 170, maxWidth: 220 }}>
+            <Text style={styles.subsectionTitle}>Hardness</Text>
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader, dRow]}>
+                <Text style={[styles.tableCell, { width: '45%' }, dCell]}>Pos.</Text>
+                <Text style={[styles.tableCell, { width: '25%', textAlign: 'right' }, dCell]}>Value</Text>
+                <Text style={[styles.tableCell, { width: '30%', textAlign: 'center' }, dCell]}>Unit</Text>
               </View>
-            </View>
-          )}
-
-          {/* Colonne 2: Table ECD */}
-          {hasEcdPositions && (
-            <View style={{ flex: 1, minWidth: 140 }}>
-              <Text style={styles.subsectionTitle}>ECD (mm)</Text>
-              <View style={styles.table}>
-                <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.tableCell, { width: '60%' }]}>Position</Text>
-                  <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>Dist.</Text>
-                </View>
-                {sample.ecdPositions.map((pos, idx) => (
-                  <View key={idx} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, { width: '60%' }]}>{pos.location || '-'}</Text>
-                    <Text style={[styles.tableCell, { width: '40%', borderRightWidth: 0 }]}>{pos.distance || '-'}</Text>
-                  </View>
-                ))}
-              </View>
-              {sample.ecdHardnessValue && (
-                <View style={{ marginTop: 2, padding: 4, backgroundColor: '#f1f5f9', borderRadius: 2 }}>
-                  <Text style={{ fontSize: 7, color: '#475569' }}>
-                    Ref. Hardness: <Text style={{ fontWeight: 'bold' }}>{sample.ecdHardnessValue} {sample.ecdHardnessUnit || unit}</Text>
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* Colonne 3: Photo localisation (petite) - Uniquement si tables affichées */}
-          {hasPhotos && (
-            <View style={{ width: 130, alignItems: 'center' }}>
-              <Text style={styles.subsectionTitle}>Location</Text>
-              {controlLocationPhotos.slice(0, 1).map((photo, idx) => (
-                <View key={idx} style={styles.photoContainer}>
-                  <View style={styles.photoWrapper}>
-                    <Image src={getPhotoUrl(photo)} style={styles.photo} />
-                  </View>
-                  {(photo.description || photo.original_name || photo.name) && (
-                    <Text style={styles.photoLabel}>
-                      {photo.description || photo.original_name || photo.name}
-                    </Text>
-                  )}
+              {sample.hardnessPoints.map((p, i) => (
+                <View key={i} style={[styles.tableRow, dRow]}>
+                  <Text style={[styles.tableCell, { width: '45%' }, dCell]}>{p.location || p.position || '-'}</Text>
+                  <Text style={[styles.tableCell, { width: '25%', textAlign: 'right', fontWeight: 'bold' }, dCell]}>{p.value || '-'}</Text>
+                  <Text style={[styles.tableCell, { width: '30%', textAlign: 'center' }, dCell]}>{p.unit || sampleUnit || '-'}</Text>
                 </View>
               ))}
             </View>
-          )}
-        </View>
-      )}
-
-      {/* COURBE: Pleine largeur */}
-      {hasCurve && (
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Full Hardness Curves</Text>
-          <CurveChart curveData={sample.curveData} specifications={specifications} unit={unit} />
-          <View style={styles.chartLegend}>
-            {/* Legende des series de donnees */}
-            {sample.curveData.series.map((series, index) => {
-              const color = SERIES_COLORS[index % SERIES_COLORS.length];
-              const validCount = series.values.filter(v => v != null && v !== '' && !isNaN(Number(v)) && Number(v) > 0).length;
-              if (validCount === 0) return null;
-
-              return (
-                <View key={index} style={styles.legendItem}>
-                  <View style={[styles.legendColor, { backgroundColor: color }]} />
-                  <Text style={styles.legendText}>{series.name || `Series ${index + 1}`} ({validCount} pts)</Text>
-                </View>
-              );
-            })}
-
-            {/* Legende des lignes de spec ECD */}
-            {specifications?.ecdSpecs?.map((spec, specIndex) => {
-              const specValue = spec.hardness || spec.yValue;
-              let depthMin = spec.depthMin;
-              let depthMax = spec.depthMax;
-
-              if ((depthMin === null || depthMin === undefined) && spec.range) {
-                const rangeMatch = spec.range.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
-                if (rangeMatch) {
-                  depthMin = parseFloat(rangeMatch[1]);
-                  depthMax = parseFloat(rangeMatch[2]);
-                }
-              }
-
-              if (!specValue || depthMin === null || depthMin === undefined || depthMax === null || depthMax === undefined) {
-                return null;
-              }
-
-              return (
-                <View key={`spec-legend-${specIndex}`} style={styles.legendItem}>
-                  <View style={[styles.legendColor, { backgroundColor: '#1e293b', height: 1.5, width: 12, borderStyle: 'dashed' }]} />
-                  <Text style={styles.legendText}>ECD: {depthMin}-{depthMax}mm @ {specValue} {unit}</Text>
-                </View>
-              );
-            })}
           </View>
-        </View>
-      )}
+        )}
+
+        {/* ECD Table: Width 190 */}
+        {hasEcd && (
+          <View style={{ flex: 1, minWidth: 190 }}>
+            <Text style={styles.subsectionTitle}>ECD (mm)</Text>
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader, dRow]}>
+                <Text style={[styles.tableCell, { width: '40%' }, dCell]}>Pos.</Text>
+                <Text style={[styles.tableCell, { width: '25%', textAlign: 'right' }, dCell]}>Dist.</Text>
+                <Text style={[styles.tableCell, { width: '35%', textAlign: 'right' }, dCell]}>Hard.</Text>
+              </View>
+              {sample.ecdPositions.map((p, i) => (
+                <View key={i} style={[styles.tableRow, dRow]}>
+                  <Text style={[styles.tableCell, { width: '40%' }, dCell]}>{p.location || '-'}</Text>
+                  <Text style={[styles.tableCell, { width: '25%', textAlign: 'right' }, dCell]}>{p.distance || '-'}</Text>
+                  <Text style={[styles.tableCell, { width: '35%', textAlign: 'right', fontSize: 7 }, dCell]}>
+                    {p.hardness ? `${p.hardness} ${p.hardnessUnit || sampleUnit || ''}` : '-'}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            {sample.ecdHardnessValue && (
+              <View style={{ marginTop: 2 }}>
+                <Text style={{ fontSize: 7, color: '#64748b' }}>Ref: {sample.ecdHardnessValue} {sample.ecdHardnessUnit || sampleUnit}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Photos: Fixed Width 110 */}
+        {controlLocationPhotos && controlLocationPhotos.length > 0 && (
+          <View style={{ width: 110, alignItems: 'center' }}>
+            <Text style={styles.subsectionTitle}>Location</Text>
+            {controlLocationPhotos.slice(0, 1).map((photo, i) => (
+              <View key={i} style={styles.photoContainer}>
+                <View style={styles.photoWrapper}><Image src={getPhotoUrl(photo)} style={styles.photo} /></View>
+                {(photo.description || photo.name) && <Text style={styles.photoLabel}>{photo.description || photo.name}</Text>}
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
     </View>
   );
 };
 
-// ... (ControlSectionPDF component)
+// --- SPLIT COMPONENT: CHART ---
+const SampleChart = ({ sample, specifications, unit, specifiedHeight }) => {
+  const hasCurve = sample.curveData?.series?.some(s => s.values?.some(v => v > 0));
+  if (!hasCurve) return null;
 
-export const ControlSectionPDF = ({ report, photos = [] }) => {
-  // ... (setup code)
-  const resultsData = report?.resultsData;
-  const specifications = report?.part?.specifications;
-  const unit = resultsData?.results?.[0]?.samples?.[0]?.hardnessPoints?.[0]?.unit ||
-    resultsData?.results?.[0]?.samples?.[0]?.ecd?.hardnessUnit || 'HV';
+  // Use specifiedHeight if available (Adaptive), else fall back to STD
+  const chartHeight = specifiedHeight || CHART_HEIGHT_STD;
 
-  if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>CONTROL</Text>
-        <Text style={styles.noData}>No control data available.</Text>
+  return (
+    <View style={styles.chartContainer} wrap={false}>
+      <Text style={styles.chartTitle}>Full Hardness Curves</Text>
+      <CurveChart curveData={sample.curveData} specifications={specifications} unit={unit} height={chartHeight} />
+      <View style={styles.chartLegend}>
+        {sample.curveData.series.map((s, i) => {
+          const count = s.values.filter(v => v > 0).length;
+          if (count === 0) return null;
+          return (
+            <View key={i} style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: SERIES_COLORS[i % 6] }]} />
+              <Text style={styles.legendText}>{s.name} ({count} pts)</Text>
+            </View>
+          );
+        })}
+        {specifications?.ecdSpecs?.map((spec, i) => {
+          if (!spec.hardness && !spec.yValue) return null;
+          return (
+            <View key={`sl-${i}`} style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: '#1e293b', height: 1.5, width: 12, borderStyle: 'dashed' }]} />
+              <Text style={styles.legendText}>ECD Spec</Text>
+            </View>
+          );
+        })}
       </View>
-    );
+    </View>
+  );
+};
+
+
+// --- MAIN EXPORT ---
+export const ControlSectionPDF = ({ report, photos = [] }) => {
+  const resultsData = report?.resultsData;
+  const specifications = report.part?.specifications || report.partData?.specifications;
+  const partData = report.partData || report.part || {};
+  const globalUnit = resultsData?.results?.[0]?.samples?.[0]?.hardnessPoints?.[0]?.unit || 'HV';
+
+  if (!resultsData || !resultsData.results) {
+    return <View style={styles.section}><Text style={styles.sectionTitle}>CONTROL</Text><Text style={styles.noData}>No data</Text></View>;
   }
 
-  // Organiser les photos par result-sample
-  const photosByResultSample = {};
-  // ... (keeping existing logic for photos)
+  // 1. Calculate Dynamic Header Height
+  const calculateHeaderHeight = () => {
+    let h = 30; // Banner + padding (Base)
+    const hSpecs = partData.hardnessSpecs || [];
+    const eSpecs = partData.ecdSpecs || [];
+
+    if (hSpecs.length > 0 || eSpecs.length > 0) {
+      const hHeight = hSpecs.length > 0 ? 12 + (hSpecs.length * 10) : 0;
+      const eHeight = eSpecs.length > 0 ? 12 + (eSpecs.length * 10) : 0;
+      h += Math.max(hHeight, eHeight);
+    } else {
+      h += 15; // "No specs" msg
+    }
+    return h + 5; // Reduced margin (was 10)
+  };
+
+  const HEADER_HEIGHT_DYN = calculateHeaderHeight();
+
+  // REDUCED SAFETY LIMIT: 680 ensures manual break happens BEFORE react-pdf auto-break
+  // This guarantees headers are always rendered manually.
+  const MAX_PAGE_HEIGHT = 680;
+
+  // 2. Prepare Blocks (Granular Split)
+  const renderBlocks = [];
+  const photosBySample = {};
   if (Array.isArray(photos)) {
-    photos.forEach(photo => {
-      const match = photo.subcategory?.match(/result-(\d+)-sample-(\d+)/);
-      if (match) {
-        const key = `result-${match[1]}-sample-${match[2]}`;
-        if (!photosByResultSample[key]) photosByResultSample[key] = [];
-        photosByResultSample[key].push(photo);
+    photos.forEach(p => {
+      const m = p.subcategory?.match(/result-(\d+)-sample-(\d+)/);
+      if (m) {
+        const k = `r${m[1]}-s${m[2]}`;
+        if (!photosBySample[k]) photosBySample[k] = [];
+        photosBySample[k].push(p);
       }
     });
   }
 
+  resultsData.results.forEach((res, rIdx) => {
+    renderBlocks.push({ type: 'TITLE', data: res, resultIndex: rIdx });
+
+    res.samples?.forEach((sample, sIdx) => {
+      const pKey = `r${rIdx + 1}-s${sIdx + 1}`;
+      const sPhotos = photosBySample[pKey] || [];
+      const hasH = sample.hardnessPoints?.some(v => v.value);
+      const hasE = sample.ecdPositions?.some(v => v.distance);
+      const hasC = sample.curveData?.series?.some(s => s.values?.length);
+
+      if (hasH || hasE) {
+        renderBlocks.push({
+          type: 'SAMPLE_INFO',
+          data: sample,
+          photos: sPhotos,
+          sampleIndex: sIdx,
+          resultIndex: rIdx,
+          useCompact: false // Start false
+        });
+      }
+      if (hasC) {
+        renderBlocks.push({
+          type: 'SAMPLE_CHART',
+          data: sample,
+          sampleIndex: sIdx,
+          resultIndex: rIdx,
+          specifiedHeight: null // Set dynamically
+        });
+      }
+    });
+  });
+
+  // 3. Estimator
+  const estimateHeight = (block, compact, customChartHeight = null) => {
+    if (block.type === 'TITLE') return 36;
+
+    if (block.type === 'SAMPLE_INFO') {
+      let h = 28; // Title reduced
+      const rh = compact ? 12 : 14;
+
+      // FIX: More accurate overheads
+      // Hardness: Title(14) + TableMargin(6) + Header(rh) = ~34 + rows
+      let hH = 0, eH = 0, pH = 0;
+      if (block.data.hardnessPoints?.length) hH = 35 + block.data.hardnessPoints.length * rh;
+      if (block.data.ecdPositions?.length) eH = 35 + block.data.ecdPositions.length * rh;
+      // Photos: Title(14) + Container(108) + Margin(6) = ~128. Use 135 safe.
+      if (block.photos?.length) pH = 135;
+
+      h += Math.max(hH, eH, pH);
+      return h + 8; // Block margin
+    }
+
+    if (block.type === 'SAMPLE_CHART') {
+      const chartSvg = customChartHeight || CHART_HEIGHT_STD;
+      // Overhead = ContainerPad(12) + Title(17) + Legend(variable 20-40?) + Margin(10) ~ 80
+      // Use 100 safe.
+      return chartSvg + 100;
+    }
+    return 0;
+  };
+
+  // 4. Pagination
+  const pages = [];
+  let currentPage = [];
+  let currentH = HEADER_HEIGHT_DYN;
+
+  for (let i = 0; i < renderBlocks.length; i++) {
+    const block = renderBlocks[i];
+
+    // LOOKAHEAD LOGIC for ORPHAN TITLES
+    // If it's a TITLE, check if the NEXT block fits. 
+    // If next doesn't fit, break NOW so title goes to next page too.
+    if (block.type === 'TITLE') {
+      const nextBlock = renderBlocks[i + 1];
+      if (nextBlock) { // Only matters if there IS a next block
+        const titleH = estimateHeight(block, false);
+        const nextH = estimateHeight(nextBlock, false);
+
+        // Case: Both Title + Next won't fit?
+        if (currentH + titleH + nextH > MAX_PAGE_HEIGHT) {
+          // Force break immediately, push Title to next page
+          pages.push(currentPage);
+          currentPage = [];
+          currentH = HEADER_HEIGHT_DYN;
+        }
+      }
+    }
+
+    // Standard estimation
+    const stdH = estimateHeight(block, false);
+
+    if (currentH + stdH <= MAX_PAGE_HEIGHT) {
+      block.useCompact = false;
+      block.specifiedHeight = null; // Use standard
+      currentPage.push(block);
+      currentH += stdH;
+    } else {
+      // ADAPTIVE CHART SIZING LOGIC
+      let placed = false;
+      if (block.type === 'SAMPLE_CHART') {
+        const overhead = 100; // Match estimator safe overhead
+        const remainingSpace = MAX_PAGE_HEIGHT - currentH;
+        const availableChartH = remainingSpace - overhead;
+
+        if (availableChartH >= CHART_HEIGHT_MIN) {
+          // FIT IT!
+          block.specifiedHeight = availableChartH;
+          currentPage.push(block);
+          currentH += (availableChartH + overhead);
+          placed = true;
+        }
+      }
+
+      if (!placed) {
+        // Try Compact for Info
+        const cptH = estimateHeight(block, true);
+        if (block.type === 'SAMPLE_INFO' && currentH + cptH <= MAX_PAGE_HEIGHT) {
+          block.useCompact = true;
+          currentPage.push(block);
+          currentH += cptH;
+        } else {
+          // Break Page
+          pages.push(currentPage);
+          currentPage = [];
+          currentH = HEADER_HEIGHT_DYN;
+
+          // Retry on new page
+          block.useCompact = false;
+          block.specifiedHeight = null;
+          // Even on new page, check if huge
+          const newPageH = estimateHeight(block, false);
+          currentH += newPageH;
+          currentPage.push(block);
+        }
+      }
+    }
+  }
+
+  if (currentPage.length) pages.push(currentPage);
+
+  // 5. Render
+  const formatSpec = (min, max, u) => {
+    if (min != null && max != null) return `${min}-${max} ${u}`;
+    if (min != null) return `>= ${min} ${u}`;
+    if (max != null) return `<= ${max} ${u}`;
+    return `- ${u}`;
+  };
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>CONTROL</Text>
+      {pages.map((pBlocks, pId) => (
+        <View key={pId} break={pId > 0}>
+          {/* HEADER REPEATED ALWAYS */}
+          <View style={{ marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#ccc', paddingBottom: 2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.brand.dark, padding: 4, marginBottom: 4 }}>
+              <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>CONTROL</Text>
+              <Text style={{ color: '#fff', fontSize: 10 }}>{pId + 1} / {pages.length}</Text>
+            </View>
+            {/* SPECS */}
+            <View style={{ flexDirection: 'row', paddingHorizontal: 5 }}>
+              <Text style={{ fontSize: 8, fontWeight: 'bold', width: 40, color: COLORS.text.secondary }}>Specs:</Text>
+              <View style={{ flex: 1, flexDirection: 'row', gap: 20 }}>
+                {partData.hardnessSpecs?.length > 0 && (
+                  <View>
+                    <Text style={{ fontSize: 7, fontWeight: 'bold', textDecoration: 'underline', marginBottom: 1 }}>Hardness</Text>
+                    {partData.hardnessSpecs.map((s, i) => (s.min || s.max) && (
+                      <Text key={i} style={{ fontSize: 8 }}>{s.name || 'H'}: {formatSpec(s.min, s.max, s.unit || 'HV')}</Text>
+                    ))}
+                  </View>
+                )}
+                {partData.ecdSpecs?.length > 0 && (
+                  <View>
+                    <Text style={{ fontSize: 7, fontWeight: 'bold', textDecoration: 'underline', marginBottom: 1 }}>ECD</Text>
+                    {partData.ecdSpecs.map((s, i) => (s.depthMin || s.depthMax) && (
+                      <Text key={i} style={{ fontSize: 8 }}>{s.name || 'D'}: {formatSpec(s.depthMin, s.depthMax, s.depthUnit || 'mm')}</Text>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
 
-      {resultsData.results.map((result, resultIndex) => (
-        // Wrap Result Block
-        <View key={resultIndex} style={{ marginBottom: 20 }} wrap={false}>
-          <Text style={styles.resultTitle}>
-            Result {result.step || resultIndex + 1}
-            {result.description && ` - ${result.description}`}
-          </Text>
-
-          {result.samples && result.samples.map((sample, sampleIndex) => {
-            const photoKey = `result-${resultIndex + 1}-sample-${sampleIndex + 1}`;
-            const samplePhotos = photosByResultSample[photoKey] || [];
-
-            return (
-              <SampleData
-                key={sampleIndex}
-                sample={sample}
-                sampleIndex={sampleIndex}
-                specifications={specifications}
-                unit={unit}
-                controlLocationPhotos={samplePhotos}
-              />
+          {pBlocks.map((b, i) => {
+            if (b.type === 'TITLE') return (
+              <View key={i} style={{ marginBottom: 4 }} wrap={false}>
+                <Text style={styles.resultTitle}>Result {b.data.step || b.resultIndex + 1} {b.data.description}</Text>
+              </View>
             );
+            if (b.type === 'SAMPLE_INFO') return (
+              <SampleInfo key={i} sample={b.data} sampleIndex={b.sampleIndex} unit={globalUnit} controlLocationPhotos={b.photos} isCompact={b.useCompact} />
+            );
+            if (b.type === 'SAMPLE_CHART') return (
+              <SampleChart key={i} sample={b.data} specifications={specifications} unit={globalUnit} specifiedHeight={b.specifiedHeight} />
+            );
+            return null;
           })}
         </View>
       ))}

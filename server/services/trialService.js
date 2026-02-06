@@ -218,14 +218,16 @@ const createResultsFromData = async (trialNodeId, resultsData, transaction) => {
         }
       }
 
-      // ECD positions - supporter à la fois 'positions' et 'ecd_points'
-      const ecdPoints = sample.ecd?.positions || sample.ecd?.ecd_points;
+      // ECD positions - supporter 'positions', 'ecd_points' et 'ecdPoints' (camelCase du frontend)
+      const ecdPoints = sample.ecd?.positions || sample.ecd?.ecd_points || sample.ecd?.ecdPoints;
       if (ecdPoints && Array.isArray(ecdPoints) && ecdPoints.length > 0) {
         for (const ecd of ecdPoints) {
           await EcdPositionModel.create({
             sample_id: sampleRec.sample_id,
             distance: ecd.distance || null,
-            location: ecd.position || null
+            location: ecd.position || ecd.location || null,
+            hardness: ecd.hardness || null,
+            hardness_unit: ecd.hardness_unit || null
           }, { transaction });
         }
       }
@@ -1039,7 +1041,9 @@ const getTrialById = async (trialId) => {
               hardness_unit: sample.ecd_hardness_unit,
               positions: sample.ecdPositions ? sample.ecdPositions.map(ecd => ({
                 position: ecd.location,
-                distance: ecd.distance
+                distance: ecd.distance,
+                hardness: ecd.hardness,
+                hardness_unit: ecd.hardness_unit
               })) : []
             },
             curve_data: sample.curveSeries && sample.curveSeries.length > 0 ? {

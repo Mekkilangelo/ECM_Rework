@@ -204,11 +204,14 @@ const ResultsDataSection = forwardRef(({
     const ecdPoints = updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints || [];
     
     // Ajouter une nouvelle position vide
+    // hardness_unit sera sélectionné via le CreatableSelect lié à ref_units
     const newPosition = {
       position: '',
-      distance: ''
+      distance: '',
+      hardness: '',
+      hardness_unit: ''
     };
-    
+
     ecdPoints.push(newPosition);
     updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = ecdPoints;
     
@@ -256,11 +259,14 @@ const ResultsDataSection = forwardRef(({
       };
     }
     
-    if (!updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints || 
+    if (!updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints ||
         updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints.length === 0) {
+      // hardness_unit sera sélectionné via le CreatableSelect lié à ref_units
       updatedResults[resultIndex].samples[sampleIndex].ecd.ecdPoints = [{
         position: '',
-        distance: ''
+        distance: '',
+        hardness: '',
+        hardness_unit: ''
       }];
       
       handleChange({
@@ -600,10 +606,10 @@ const ResultsDataSection = forwardRef(({
                   <Card.Body>
                     {(() => {
                       // S'assurer qu'il y a toujours au moins une position
-                      const ecdPoints = sample.ecd?.ecdPoints?.length > 0 
-                        ? sample.ecd.ecdPoints 
-                        : [{ position: '', distance: '' }];
-                      
+                      const ecdPoints = sample.ecd?.ecdPoints?.length > 0
+                        ? sample.ecd.ecdPoints
+                        : [{ position: '', distance: '', hardness: '', hardness_unit: '' }];
+
                       // Si le sample n'a pas de positions, les initialiser
                       if (!sample.ecd?.ecdPoints || sample.ecd.ecdPoints.length === 0) {
                         ensureMinimumEcdPoints(resultIndex, sampleIndex);
@@ -613,13 +619,19 @@ const ResultsDataSection = forwardRef(({
                         <Table responsive bordered hover className="mb-0">
                           <thead className="table-secondary">
                             <tr>
-                              <th style={{ width: '60%' }}>
+                              <th style={{ width: '30%' }}>
                                 {t('trials.after.results.position')}
                               </th>
-                              <th style={{ width: '25%' }}>
+                              <th style={{ width: '20%' }}>
                                 {t('trials.after.results.distance', 'Distance')} (mm)
                               </th>
-                              <th style={{ width: '15%' }} className="text-center">
+                              <th style={{ width: '20%' }}>
+                                {t('trials.after.results.hardnessValue', 'Dureté')}
+                              </th>
+                              <th style={{ width: '18%' }}>
+                                {t('common.unit')}
+                              </th>
+                              <th style={{ width: '12%' }} className="text-center">
                                 {t('common.actions')}
                               </th>
                             </tr>
@@ -642,13 +654,71 @@ const ResultsDataSection = forwardRef(({
                                 <td>
                                   <Form.Control
                                     type="number"
+                                    step="0.01"
                                     value={position.distance || ''}
                                     onChange={(e) => handleEcdPositionChange(resultIndex, sampleIndex, ecdIndex, 'distance', e.target.value)}
-                                    placeholder={t('trials.after.results.enterDistance', 'Entrer distance')}
+                                    placeholder={t('trials.after.results.enterDistance', 'mm')}
                                     disabled={loading || viewMode}
                                     readOnly={viewMode}
                                     style={viewMode ? readOnlyFieldStyle : {}}
                                     size="sm"
+                                  />
+                                </td>
+                                <td>
+                                  <Form.Control
+                                    type="number"
+                                    value={position.hardness || ''}
+                                    onChange={(e) => handleEcdPositionChange(resultIndex, sampleIndex, ecdIndex, 'hardness', e.target.value)}
+                                    placeholder={t('trials.after.results.enterValue')}
+                                    disabled={loading || viewMode}
+                                    readOnly={viewMode}
+                                    style={viewMode ? readOnlyFieldStyle : {}}
+                                    size="sm"
+                                  />
+                                </td>
+                                <td>
+                                  <CreatableSelect
+                                    value={position.hardness_unit ? getSelectedOption(hardnessUnitOptions, position.hardness_unit) : null}
+                                    onChange={(option) => handleEcdPositionChange(resultIndex, sampleIndex, ecdIndex, 'hardness_unit', option?.value || '')}
+                                    onCreateOption={handleCreateHardnessUnit}
+                                    options={hardnessUnitOptions}
+                                    placeholder={t('common.selectUnit')}
+                                    isDisabled={loading || viewMode}
+                                    menuPortalTarget={document.body}
+                                    isValidNewOption={isValidNewOption}
+                                    filterOption={customFilterOption}
+                                    styles={{
+                                      ...selectStyles,
+                                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                      control: (provided, state) => ({
+                                        ...(selectStyles.control ? selectStyles.control(provided, state) : provided),
+                                        minHeight: '31px',
+                                        height: '31px',
+                                        fontSize: '0.875rem',
+                                        ...(viewMode ? {
+                                          ...readOnlyFieldStyle,
+                                          cursor: 'default'
+                                        } : {})
+                                      }),
+                                      valueContainer: (provided, state) => ({
+                                        ...(selectStyles.valueContainer ? selectStyles.valueContainer(provided, state) : provided),
+                                        height: '31px',
+                                        padding: '0 8px'
+                                      }),
+                                      input: (provided, state) => ({
+                                        ...(selectStyles.input ? selectStyles.input(provided, state) : provided),
+                                        margin: '0px'
+                                      }),
+                                      indicatorsContainer: (provided, state) => ({
+                                        ...(selectStyles.indicatorsContainer ? selectStyles.indicatorsContainer(provided, state) : provided),
+                                        height: '31px'
+                                      }),
+                                      ...(viewMode ? {
+                                        dropdownIndicator: () => ({ display: 'none' }),
+                                        indicatorSeparator: () => ({ display: 'none' })
+                                      } : {})
+                                    }}
+                                    isClearable={!viewMode}
                                   />
                                 </td>
                                 <td className="text-center">

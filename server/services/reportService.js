@@ -559,10 +559,22 @@ const buildResultsData = (testData) => {
           unit: point.unit
         })),
 
-        ecdPositions: (sample.ecdPositions || []).map(position => ({
-          distance: position.distance,
-          location: position.location
-        })),
+        ecdPositions: (sample.ecdPositions || []).map(position => {
+          // DEBUG: Log pour vérifier les données ECD
+          console.log('🔍 ECD Position data:', {
+            distance: position.distance,
+            location: position.location,
+            hardness: position.hardness,
+            hardness_unit: position.hardness_unit,
+            allKeys: Object.keys(position.dataValues || position)
+          });
+          return {
+            distance: position.distance,
+            location: position.location,
+            hardness: position.hardness,
+            hardnessUnit: position.hardness_unit
+          };
+        }),
 
         // Nouveau format curveData au lieu de curveSeries
         curveData: curveData

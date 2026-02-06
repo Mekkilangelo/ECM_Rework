@@ -103,10 +103,10 @@ const useTrialSubmission = (
               step: 1,
               description: '',
               hardnessPoints: [{ location: '', value: '', unit: ''}],
-              ecd: { 
-                hardnessValue: '', 
-                hardnessUnit: '', 
-                ecdPoints: [{ position: '', distance: '' }]
+              ecd: {
+                hardnessValue: '',
+                hardnessUnit: '',
+                ecdPoints: [{ position: '', distance: '', hardness: '', hardness_unit: '' }]
               },
               hardnessUnit: 'HV',
               curveData: { points: [] }
@@ -324,10 +324,12 @@ const useTrialSubmission = (
             const ecdData = sample.ecd ? {
               hardness_value: sample.ecd.hardnessValue || null,
               hardness_unit: sample.ecd.hardnessUnit || null,
-              positions: Array.isArray(sample.ecd.ecdPoints) && sample.ecd.ecdPoints.length > 0 ? 
+              positions: Array.isArray(sample.ecd.ecdPoints) && sample.ecd.ecdPoints.length > 0 ?
                 sample.ecd.ecdPoints.map(point => ({
                   position: point.position || null,
-                  distance: point.distance || null
+                  distance: point.distance || null,
+                  hardness: point.hardness || null,
+                  hardness_unit: point.hardness_unit || null
                 })) : null
             } : null;
             

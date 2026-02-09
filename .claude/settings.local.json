@@ -19,7 +19,8 @@
       "Bash(tree:*)",
       "Bash(git push:*)",
       "Bash(git branch:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(node scripts/audit-indexes.js:*)"
     ]
   }
 }

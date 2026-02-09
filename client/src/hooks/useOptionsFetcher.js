@@ -539,31 +539,35 @@ const useOptionsFetcher = (setLoading, options = {}) => {
   
   const refreshTrialOptions = useCallback(async () => {
     try {
-      await fetchLocationOptions();
-      await fetchStatusOptions();
-      await fetchMountingTypeOptions();
-      await fetchPositionTypeOptions();
-      await fetchProcessTypeOptions();
-      await fetchPreoxMediaOptions();
+      await Promise.all([
+        fetchLocationOptions(),
+        fetchStatusOptions(),
+        fetchMountingTypeOptions(),
+        fetchPositionTypeOptions(),
+        fetchProcessTypeOptions(),
+        fetchPreoxMediaOptions()
+      ]);
     } catch (error) {
       console.error('Erreur lors du rafraîchissement des options de trial:', error);
     }
   }, [
-    fetchLocationOptions, 
-    fetchStatusOptions, 
-    fetchMountingTypeOptions, 
+    fetchLocationOptions,
+    fetchStatusOptions,
+    fetchMountingTypeOptions,
     fetchPositionTypeOptions,
     fetchProcessTypeOptions,
     fetchPreoxMediaOptions
   ]);
-  
+
   const refreshFurnaceOptions = useCallback(async () => {
     try {
-      await fetchFurnaceTypeOptions();
-      await fetchHeatingCellOptions();
-      await fetchCoolingMediaOptions();
-      await fetchFurnaceSizeOptions();
-      await fetchQuenchCellOptions();
+      await Promise.all([
+        fetchFurnaceTypeOptions(),
+        fetchHeatingCellOptions(),
+        fetchCoolingMediaOptions(),
+        fetchFurnaceSizeOptions(),
+        fetchQuenchCellOptions()
+      ]);
     } catch (error) {
       console.error('Erreur lors du rafraîchissement des options de four:', error);
     }

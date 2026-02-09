@@ -24,7 +24,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'results_curve_series',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['sample_id'], name: 'idx_curve_series_sample' }
+    ]
   });
 
   ResultsCurveSeries.associate = (models) => {

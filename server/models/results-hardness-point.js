@@ -32,7 +32,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'results_hardness_points',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['sample_id'], name: 'idx_hardness_sample' }
+    ]
   });
 
   ResultsHardnessPoint.associate = (models) => {

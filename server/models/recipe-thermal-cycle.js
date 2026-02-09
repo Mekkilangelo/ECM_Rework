@@ -36,7 +36,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'recipe_thermal_cycle',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['recipe_id'], name: 'idx_thermal_cycle_recipe' }
+    ]
   });
 
   RecipeThermalCycle.associate = (models) => {

@@ -217,44 +217,38 @@ const FILE_SOURCES_CONFIG = {
  * @returns {Promise<Object>} Fichiers par section
  */
 const getAllSectionFiles = async (testId, partId, selectedSections) => {
-  const sectionFiles = {};
-
-  for (const sectionName of selectedSections) {
-    if (!FILE_SOURCES_CONFIG[sectionName]) continue;
-
-    const sources = FILE_SOURCES_CONFIG[sectionName](
-      sectionName === 'identification' ? partId : testId
-    );
-
-    const nodeId = sectionName === 'identification' ? partId : testId;
-    const allFiles = [];
-
-    for (const source of sources) {
-      const files = await getSectionFiles(
-        nodeId,
-        source.category,
-        source.subcategory
+  // Préparer toutes les requêtes de fichiers en parallèle
+  const sectionPromises = selectedSections
+    .filter(sectionName => FILE_SOURCES_CONFIG[sectionName])
+    .map(async (sectionName) => {
+      const sources = FILE_SOURCES_CONFIG[sectionName](
+        sectionName === 'identification' ? partId : testId
       );
+      const nodeId = sectionName === 'identification' ? partId : testId;
+
+      // Toutes les sources d'une section en parallèle
+      const filesArrays = await Promise.all(
+        sources.map(source => getSectionFiles(nodeId, source.category, source.subcategory))
+      );
+
+      let allFiles = filesArrays.flat();
 
       // Pour l'identification, on ne veut que les images
       if (sectionName === 'identification') {
-        const images = files.filter(f => f.mimeType && f.mimeType.startsWith('image/'));
-        allFiles.push(...images);
-      } else {
-        allFiles.push(...files);
+        allFiles = allFiles.filter(f => f.mimeType && f.mimeType.startsWith('image/'));
       }
-    }
 
-    // Déduplication par ID (au cas où plusieurs sources se chevauchent)
-    const uniqueFiles = Array.from(new Map(allFiles.map(item => [item.id, item])).values());
+      // Déduplication par ID
+      const uniqueFiles = Array.from(new Map(allFiles.map(item => [item.id, item])).values());
 
-    logger.info(`📁 Section ${sectionName}: ${uniqueFiles.length} fichiers trouvés`, {
-      section: sectionName,
-      nodeId,
-      fileIds: uniqueFiles.map(f => f.id),
-      samplePaths: uniqueFiles.slice(0, 3).map(f => f.viewPath)
+      return { sectionName, uniqueFiles };
     });
 
+  // Toutes les sections en parallèle
+  const results = await Promise.all(sectionPromises);
+
+  const sectionFiles = {};
+  for (const { sectionName, uniqueFiles } of results) {
     sectionFiles[sectionName] = uniqueFiles;
   }
 
@@ -502,10 +496,7 @@ const buildLoadData = (trialData) => {
 };
 
 const buildResultsData = (testData) => {
-  console.log('🔍 buildResultsData - testData.resultSteps:', testData?.resultSteps?.length || 0);
-
   if (!testData?.resultSteps || !Array.isArray(testData.resultSteps)) {
-    console.log('⚠️ buildResultsData - Pas de resultSteps trouvés');
     return { resultsData: { results: [] } };
   }
 
@@ -559,22 +550,12 @@ const buildResultsData = (testData) => {
           unit: point.unit
         })),
 
-        ecdPositions: (sample.ecdPositions || []).map(position => {
-          // DEBUG: Log pour vérifier les données ECD
-          console.log('🔍 ECD Position data:', {
-            distance: position.distance,
-            location: position.location,
-            hardness: position.hardness,
-            hardness_unit: position.hardness_unit,
-            allKeys: Object.keys(position.dataValues || position)
-          });
-          return {
-            distance: position.distance,
-            location: position.location,
-            hardness: position.hardness,
-            hardnessUnit: position.hardness_unit
-          };
-        }),
+        ecdPositions: (sample.ecdPositions || []).map(position => ({
+          distance: position.distance,
+          location: position.location,
+          hardness: position.hardness,
+          hardnessUnit: position.hardness_unit
+        })),
 
         // Nouveau format curveData au lieu de curveSeries
         curveData: curveData
@@ -582,7 +563,6 @@ const buildResultsData = (testData) => {
     })
   }));
 
-  console.log('✅ buildResultsData - results:', JSON.stringify(results, null, 2));
   return { resultsData: { results } };
 };
 
@@ -594,9 +574,17 @@ const buildResultsData = (testData) => {
  */
 const getTrialReportData = async (trialId, selectedSections = []) => {
   try {
-    logger.info('🔍 getTrialReportData appelé', { trialId, selectedSections });
+    logger.info('🔍 getTrialReportData appelé (Optimized)', { trialId, selectedSections });
 
-    // 1. Récupérer le trial avec recipe et furnace
+    // 1. Normaliser les sections sélectionnées
+    let sections = [];
+    if (Array.isArray(selectedSections)) {
+      sections = selectedSections;
+    } else if (typeof selectedSections === 'object' && selectedSections !== null) {
+      sections = Object.keys(selectedSections).filter(key => selectedSections[key] === true);
+    }
+
+    // 2. Récupérer le trial de base (sans les grosses relations)
     const trialNode = await node.findOne({
       where: { id: trialId, type: 'trial' },
       include: [{
@@ -607,112 +595,6 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
             model: db.ref_process_type,
             as: 'processTypeRef',
             required: false
-          },
-          {
-            model: db.recipe,
-            as: 'recipe',
-            required: false,
-            include: [
-              {
-                model: db.recipe_preox_cycle,
-                as: 'preoxCycle',
-                required: false
-              },
-              {
-                model: db.recipe_thermal_cycle,
-                as: 'thermalCycle',
-                required: false
-              },
-              {
-                model: db.recipe_chemical_cycle,
-                as: 'chemicalCycle',
-                required: false,
-                include: [
-                  {
-                    model: db.recipe_chemical_step,
-                    as: 'steps',
-                    required: false,
-                    include: [
-                      {
-                        model: db.recipe_chemical_gas,
-                        as: 'gases',
-                        required: false
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                model: db.recipe_gas_quench,
-                as: 'gasQuench',
-                required: false,
-                include: [
-                  {
-                    model: db.recipe_gas_quench_speed,
-                    as: 'speedSteps',
-                    required: false
-                  },
-                  {
-                    model: db.recipe_gas_quench_pressure,
-                    as: 'pressureSteps',
-                    required: false
-                  }
-                ]
-              },
-              {
-                model: db.recipe_oil_quench,
-                as: 'oilQuench',
-                required: false,
-                include: [
-                  {
-                    model: db.recipe_oil_quench_speed,
-                    as: 'speedSteps',
-                    required: false
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            model: db.furnace,
-            as: 'furnace',
-            required: false
-          },
-          {
-            model: db.results_step,
-            as: 'resultSteps',
-            required: false,
-            include: [
-              {
-                model: db.results_sample,
-                as: 'samples',
-                required: false,
-                include: [
-                  {
-                    model: db.results_hardness_point,
-                    as: 'hardnessPoints',
-                    required: false
-                  },
-                  {
-                    model: db.results_ecd_position,
-                    as: 'ecdPositions',
-                    required: false
-                  },
-                  {
-                    model: db.results_curve_series,
-                    as: 'curveSeries',
-                    required: false,
-                    include: [
-                      {
-                        model: db.results_curve_point,
-                        as: 'points',
-                        required: false
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
           },
           {
             model: db.ref_units,
@@ -741,130 +623,162 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
       );
     }
 
-    // 2. Normaliser les sections sélectionnées
-    let sections = [];
-    if (Array.isArray(selectedSections)) {
-      sections = selectedSections;
-    } else if (typeof selectedSections === 'object' && selectedSections !== null) {
-      // Convertir objet { identification: true, recipe: false } en tableau
-      sections = Object.keys(selectedSections).filter(key => selectedSections[key] === true);
-    }
+    const trialData = trialNode.trial;
 
-    // 3. Récupérer la hiérarchie (part → client)
-    const { partNode, clientNode } = await getTestHierarchy(trialId);
+    // 3. Préparer les requêtes parallèles pour les données lourdes (Recipe, Results, Furnace)
+    const promises = {
+      // Hiérarchie (toujours nécessaire pour le header)
+      hierarchy: getTestHierarchy(trialId)
+    };
 
-    // DEBUG: Force fetch simple trial to verify columns existence
-    try {
-      const debugTrial = await trial.findOne({ where: { node_id: trialId } });
-      logger.info('🔍 DEBUG FORCE FETCH TRIAL:', {
-        trialId,
-        found: !!debugTrial,
-        observation: debugTrial?.observation,
-        conclusion: debugTrial?.conclusion,
-        allKeys: debugTrial ? Object.keys(debugTrial.dataValues) : []
-      });
-
-      // If found and has data, FORCE inject it into trialNode.trial to be safe
-      if (debugTrial && trialNode.trial) {
-        trialNode.trial.observation = debugTrial.observation;
-        trialNode.trial.conclusion = debugTrial.conclusion;
-        logger.info('💉 INJECTED DEBUG DATA into trialNode.trial');
+    // Recipe & Furnace (si section recipe demandée)
+    if (sections.includes('recipe')) {
+      if (trialData.recipe_id) {
+        promises.recipe = db.recipe.findByPk(trialData.recipe_id, {
+          include: [
+            { model: db.recipe_preox_cycle, as: 'preoxCycle', required: false },
+            { model: db.recipe_thermal_cycle, as: 'thermalCycle', required: false },
+            {
+              model: db.recipe_chemical_cycle,
+              as: 'chemicalCycle',
+              required: false,
+              include: [{
+                model: db.recipe_chemical_step,
+                as: 'steps',
+                required: false,
+                include: [{ model: db.recipe_chemical_gas, as: 'gases', required: false }]
+              }]
+            },
+            {
+              model: db.recipe_gas_quench,
+              as: 'gasQuench',
+              required: false,
+              include: [
+                { model: db.recipe_gas_quench_speed, as: 'speedSteps', required: false },
+                { model: db.recipe_gas_quench_pressure, as: 'pressureSteps', required: false }
+              ]
+            },
+            {
+              model: db.recipe_oil_quench,
+              as: 'oilQuench',
+              required: false,
+              include: [{ model: db.recipe_oil_quench_speed, as: 'speedSteps', required: false }]
+            }
+          ]
+        });
+      } else {
+        promises.recipe = Promise.resolve(null);
       }
-    } catch (e) {
-      logger.error('❌ DEBUG FETCH FAILED:', e);
+
+      if (trialData.furnace_id) {
+        promises.furnace = db.furnace.findByPk(trialData.furnace_id);
+      } else {
+        promises.furnace = Promise.resolve(null);
+      }
     }
 
-    // 4. Construire les données de base
-    const reportData = buildBaseTestData(trialNode);
+    // Results (si sections liées aux résultats demandées)
+    if (sections.includes('results') || sections.includes('hardness') || sections.includes('ecd') || sections.includes('control')) {
+      promises.resultsCallback = db.results_step.findAll({
+        where: { trial_node_id: trialId },
+        include: [{
+          model: db.results_sample,
+          as: 'samples',
+          required: false,
+          include: [
+            { model: db.results_hardness_point, as: 'hardnessPoints', required: false },
+            { model: db.results_ecd_position, as: 'ecdPositions', required: false },
+            {
+              model: db.results_curve_series,
+              as: 'curveSeries',
+              required: false,
+              include: [{ model: db.results_curve_point, as: 'points', required: false }]
+            }
+          ]
+        }],
+        order: [
+          ['step_number', 'ASC'],
+          [{ model: db.results_sample, as: 'samples' }, 'sample_number', 'ASC'],
+          [{ model: db.results_sample, as: 'samples' }, { model: db.results_hardness_point, as: 'hardnessPoints' }, 'hardness_point_id', 'ASC'],
+          [{ model: db.results_sample, as: 'samples' }, { model: db.results_ecd_position, as: 'ecdPositions' }, 'ecd_position_id', 'ASC']
+        ]
+      });
+    }
 
-    // Log pour déboguer le process_type
-    logger.info('📋 Trial data pour process_type:', {
-      trialId,
-      process_type: trialNode.trial?.process_type,
-      processTypeRef: trialNode.trial?.processTypeRef?.name,
-      hasProcessTypeRef: !!trialNode.trial?.processTypeRef,
-      observation: trialNode.trial?.observation,
-      conclusion: trialNode.trial?.conclusion
+    // 4. Exécuter les requêtes en parallèle
+    logger.info('🚀 Lancement des requêtes parallèles...', { keys: Object.keys(promises) });
+
+    // Attendre que tout soit résolu
+    const resolvedData = {};
+    const keys = Object.keys(promises);
+    const results = await Promise.all(Object.values(promises));
+
+    keys.forEach((key, index) => {
+      resolvedData[key] = results[index];
     });
 
-    // 5. Ajouter les données de hiérarchie
+    logger.info('✅ Requêtes parallèles terminées');
+
+    // 5. Construire le rapport final
+
+    // a. Données de base
+    const reportData = buildBaseTestData(trialNode);
+
+    // b. Hiérarchie
+    const { partNode, clientNode } = resolvedData.hierarchy;
     if (partNode) {
       reportData.partId = partNode.id;
       reportData.partName = partNode.name;
-
-      // Sérialiser les données part pour inclure tous les champs et relations
       if (partNode.part) {
-        // Accès direct aux valeurs FK string depuis l'instance Sequelize
-        const dimWeightUnit = partNode.part.dim_weight_unit;
-        const dimRectUnit = partNode.part.dim_rect_unit;
-        const dimCircUnit = partNode.part.dim_circ_unit;
-
-        // Log pour debug
-        logger.info('📏 Units extraites de part:', {
-          dim_weight_unit: dimWeightUnit,
-          dim_rect_unit: dimRectUnit,
-          dim_circ_unit: dimCircUnit,
-          dim_weight_value: partNode.part.dim_weight_value,
-          dim_rect_height: partNode.part.dim_rect_height,
-          hasWeightUnitRelation: !!partNode.part.weightUnit,
-          weightUnitRelationName: partNode.part.weightUnit?.name
-        });
-
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
-
-        // IMPORTANT: Forcer les valeurs FK string dans l'objet final
-        // Même logique que PartForm qui passe directement les strings
         reportData.partData = {
           ...plainPartData,
-          dim_weight_unit: dimWeightUnit,
-          dim_rect_unit: dimRectUnit,
-          dim_circ_unit: dimCircUnit
+          dim_weight_unit: partNode.part.dim_weight_unit,
+          dim_rect_unit: partNode.part.dim_rect_unit,
+          dim_circ_unit: partNode.part.dim_circ_unit
         };
       } else {
         reportData.partData = null;
-        logger.debug('Pièce sans données part', { partId: partNode.id });
       }
-    } else {
-      logger.warn('Aucune pièce trouvée pour le trial', { trialId });
     }
 
     if (clientNode) {
       reportData.clientId = clientNode.id;
       reportData.clientName = clientNode.name;
       reportData.clientData = clientNode.client;
-
-      logger.debug('Données client ajoutées', {
-        clientId: clientNode.id,
-        clientName: clientNode.name,
-        hasClientData: !!clientNode.client
-      });
-    } else {
-      logger.warn('Aucun client trouvé pour le trial', { trialId });
     }
 
-    // 6. Ajouter les données selon les sections sélectionnées
+    // c. Recipe & Furnace
     if (sections.includes('recipe')) {
-      const recipeAndQuenchData = buildRecipeData(trialNode.trial);
+      // Reconstituer un objet trialData "virtuel" avec recipe et furnace pour utiliser buildRecipeData existant
+      const virtualTrialData = {
+        ...trialData.get({ plain: true }),
+        recipe: resolvedData.recipe,
+        furnace: resolvedData.furnace
+      };
+
+      const recipeAndQuenchData = buildRecipeData(virtualTrialData);
       Object.assign(reportData, recipeAndQuenchData);
-
-      logger.debug('Données recette assignées au rapport', {
-        hasRecipeData: !!recipeAndQuenchData.recipeData,
-        hasQuenchData: !!recipeAndQuenchData.quenchData,
-        hasFurnaceData: !!recipeAndQuenchData.furnaceData
-      });
     }
 
+    // d. Results
     if (sections.includes('results') || sections.includes('hardness') || sections.includes('ecd') || sections.includes('control')) {
-      Object.assign(reportData, buildResultsData(trialNode.trial));
+      // Reconstituer un objet trialData "virtuel" avec resultSteps pour utiliser buildResultsData existant
+      const virtualTrialData = {
+        ...trialData.get({ plain: true }),
+        resultSteps: resolvedData.resultsCallback || []
+      };
+
+      Object.assign(reportData, buildResultsData(virtualTrialData));
     }
 
-    // 7. Ajouter les données de charge
+    // e. Load data
     if (sections.includes('load')) {
-      const loadData = buildLoadData(trialNode.trial);
+      const loadData = buildLoadData(trialData);
       Object.assign(reportData, loadData);
     }
 
-    // 7. Récupérer les fichiers des sections sélectionnées
+    // f. Fichiers
     if (sections.length > 0 && partNode) {
       reportData.sectionFiles = await getAllSectionFiles(
         trialId,
@@ -873,7 +787,7 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
       );
     }
 
-    logger.info('Données rapport générées', {
+    logger.info('Données rapport générées (Optimized)', {
       trialId,
       sectionsCount: sections.length,
       hasPartData: !!reportData.partData,
@@ -885,9 +799,10 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
     return reportData;
 
   } catch (error) {
-    logger.warn('Erreur récupération hiérarchie trial', {
+    logger.warn('Erreur génération rapport (Optimized)', {
       trialId,
-      error: error.message
+      error: error.message,
+      stack: error.stack
     });
     throw error;
   }

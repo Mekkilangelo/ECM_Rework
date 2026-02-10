@@ -31,6 +31,11 @@ const styles = StyleSheet.create({
     paddingBottom: 60, // Espace pour le footer
     paddingTop: 20,
   },
+  pageIdentification: {
+    ...COMMON_STYLES.page,
+    paddingBottom: 60,
+    paddingTop: 10, // Reduced padding for Identification Sheet
+  },
   // pageFooter removed - replaced by component
   section: {
     marginBottom: SPACING.section.marginBottom
@@ -792,6 +797,11 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
     activeSections = [];
   }
 
+  // Determine report title
+  const reportTitle = report.metadata?.type === 'part-identification'
+    ? 'Identification Sheet'
+    : 'Trial Report';
+
   // Vérifier si la page de garde est activée
   const shouldShowCoverPage = activeSections.some(s => s.type === 'coverPage');
 
@@ -817,6 +827,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         <Page size="A4" style={styles.page}>
           {includeHeader && (
             <CommonReportHeader
+              title={reportTitle}
               clientName={report.clientName}
               trialCode={report.testCode}
             />
@@ -840,9 +851,10 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
 
       {/* Section Identification - Page séparée */}
       {activeSections.some(s => s.type === 'identification') && report && (
-        <Page size="A4" style={styles.page}>
+        <Page size="A4" style={report.metadata?.type === 'part-identification' ? styles.pageIdentification : styles.page}>
           {includeHeader && (
             <CommonReportHeader
+              title={reportTitle}
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}

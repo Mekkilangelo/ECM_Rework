@@ -36,7 +36,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'recipe_chemical_steps',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['chemical_cycle_id'], name: 'idx_chem_step_cycle' }
+    ]
   });
 
   RecipeChemicalStep.associate = (models) => {

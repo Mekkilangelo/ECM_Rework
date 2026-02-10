@@ -44,6 +44,7 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'results_ecd_positions',
     timestamps: false,
     indexes: [
+      { fields: ['sample_id'], name: 'idx_ecd_pos_sample' },
       {
         fields: ['hardness_unit'],
         name: 'fk_ecd_pos_hardness_unit'

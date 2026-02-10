@@ -95,21 +95,65 @@ class PredictionService {
     const steel = partData.steel;
     let carbonPercentageValue = null;
 
+    // DEBUG: Log steel object to analyze structure
+    console.log('PredictionService: Analyzing steel:', steel);
+    if (steel && steel.chemistery) {
+      console.log('PredictionService: Steel chemistry:', steel.chemistery);
+    }
     if (steel && steel.chemistery && Array.isArray(steel.chemistery)) {
       // Chercher l'élément Carbon dans le tableau chemistery
-      // L'élément peut être "Carbon" ou "C - Carbon" ou toute variante contenant "Carbon" ou "C"
+      // L'élément peut être "Carbon", "Carbone", "C", "C - Carbon", "C - Carbone"
       const carbonElement = steel.chemistery.find(chem => {
-        const element = chem.element || '';
-        // Chercher "Carbon" dans le nom OU le symbole "C" au début (ex: "C - Carbon")
-        return element.toLowerCase().includes('carbon') ||
-               element.match(/^C\s*-/i); // Match "C - " au début
+        const element = (chem.element || '').toLowerCase();
+        return element.includes('carbon') ||
+          element === 'c' ||
+          element.startsWith('c -') ||
+          element.startsWith('c-');
       });
 
-      if (carbonElement && carbonElement.value) {
-        // La valeur est stockée en pourcentage (ex: 20 pour 20%)
-        // L'API Python attend un taux décimal (ex: 0.2 pour 20%)
-        const percentageValue = parseFloat(carbonElement.value);
-        carbonPercentageValue = percentageValue / 100; // Conversion % -> décimal
+      if (carbonElement) {
+        let percentageValue = null;
+
+        // Cas 1: Valeur stockée dans 'value' (String ou Number)
+        if (carbonElement.value !== undefined && carbonElement.value !== null && carbonElement.value !== '') {
+          // Normaliser la chaîne : remplacer virgule par point pour le parsing
+          const valueStr = String(carbonElement.value).replace(/,/g, '.').trim();
+
+          // Gérer les fourchettes (ex: "0.15-0.20" ou "0.15 - 0.20")
+          if (valueStr.includes('-')) {
+            const parts = valueStr.split('-').map(p => parseFloat(p.trim()));
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+              percentageValue = (parts[0] + parts[1]) / 2;
+            } else {
+              percentageValue = parseFloat(valueStr);
+            }
+          } else {
+            percentageValue = parseFloat(valueStr);
+          }
+        }
+        // Cas 2: Valeurs min_value/max_value (Keys identifiées via logs : max_value, min_value)
+        else if (carbonElement.min_value !== undefined && carbonElement.max_value !== undefined) {
+          const min = parseFloat(String(carbonElement.min_value).replace(/,/g, '.'));
+          const max = parseFloat(String(carbonElement.max_value).replace(/,/g, '.'));
+          if (!isNaN(min) && !isNaN(max)) {
+            percentageValue = (min + max) / 2;
+          }
+        }
+        // Cas 3: Fallback sur min/max (au cas où, pour compatibilité)
+        else if (carbonElement.min !== undefined && carbonElement.max !== undefined) {
+          const min = parseFloat(String(carbonElement.min).replace(/,/g, '.'));
+          const max = parseFloat(String(carbonElement.max).replace(/,/g, '.'));
+          if (!isNaN(min) && !isNaN(max)) {
+            percentageValue = (min + max) / 2;
+          }
+        }
+
+        // Si on a trouvé une valeur valide
+        if (percentageValue !== null && !isNaN(percentageValue)) {
+          // La valeur est stockée en pourcentage (ex: 0.20 pour 0.20%)
+          // Conversion pourcentage -> décimal
+          carbonPercentageValue = percentageValue / 100;
+        }
       }
     }
 

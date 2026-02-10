@@ -50,16 +50,17 @@ const createRecipeFromData = async (recipeData, transaction) => {
     }, { transaction });
   }
 
-  // Cycle thermique
+  // Cycle thermique (bulkCreate)
   if (Array.isArray(recipeData.thermal_cycle) && recipeData.thermal_cycle.length > 0) {
-    for (const step of recipeData.thermal_cycle) {
-      await ThermalModel.create({
+    await ThermalModel.bulkCreate(
+      recipeData.thermal_cycle.map(step => ({
         recipe_id: recipe.recipe_id,
         ramp: step.ramp || null,
         setpoint: step.setpoint || null,
         duration: step.duration || null
-      }, { transaction });
-    }
+      })),
+      { transaction }
+    );
   }
 
   // Cycle chimique
@@ -80,26 +81,34 @@ const createRecipeFromData = async (recipeData, transaction) => {
       cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
 
-    // Créer les steps du cycle chimique
-    for (const step of recipeData.chemical_cycle) {
-      const stepRec = await ChemicalStepModel.create({
+    // Créer les steps du cycle chimique (bulkCreate + retour des IDs)
+    const stepRecords = await ChemicalStepModel.bulkCreate(
+      recipeData.chemical_cycle.map(step => ({
         chemical_cycle_id: chemical.chemical_cycle_id,
         time: step.time || null,
         pressure: step.pressure || null,
         turbine: step.turbine || null
-      }, { transaction });
+      })),
+      { transaction, returning: true }
+    );
 
-      // Créer les gaz pour ce step
+    // Créer tous les gaz en une seule opération bulkCreate
+    const allGases = [];
+    stepRecords.forEach((stepRec, idx) => {
+      const step = recipeData.chemical_cycle[idx];
       if (Array.isArray(step.gases) && step.gases.length > 0) {
         for (const g of step.gases) {
-          await ChemicalGasModel.create({
+          allGases.push({
             step_id: stepRec.step_id,
             gas_name: g.gas || g.gas_name || null,
             debit: g.debit || null,
             gas_index: g.index || g.gas_index || null
-          }, { transaction });
+          });
         }
       }
+    });
+    if (allGases.length > 0) {
+      await ChemicalGasModel.bulkCreate(allGases, { transaction });
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 ||
     recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp ||
@@ -125,23 +134,25 @@ const createRecipeFromData = async (recipeData, transaction) => {
   if (recipeData.quench_data) {
     if (recipeData.quench_data.gas_quench) {
       const gq = await GasQuenchModel.create({ recipe_id: recipe.recipe_id }, { transaction });
-      if (Array.isArray(recipeData.quench_data.gas_quench.speed_parameters)) {
-        for (const s of recipeData.quench_data.gas_quench.speed_parameters) {
-          await GasQuenchSpeed.create({
+      if (Array.isArray(recipeData.quench_data.gas_quench.speed_parameters) && recipeData.quench_data.gas_quench.speed_parameters.length > 0) {
+        await GasQuenchSpeed.bulkCreate(
+          recipeData.quench_data.gas_quench.speed_parameters.map(s => ({
             gas_quench_id: gq.gas_quench_id,
             duration: s.duration || null,
             speed: s.speed || null
-          }, { transaction });
-        }
+          })),
+          { transaction }
+        );
       }
-      if (Array.isArray(recipeData.quench_data.gas_quench.pressure_parameters)) {
-        for (const p of recipeData.quench_data.gas_quench.pressure_parameters) {
-          await GasQuenchPressure.create({
+      if (Array.isArray(recipeData.quench_data.gas_quench.pressure_parameters) && recipeData.quench_data.gas_quench.pressure_parameters.length > 0) {
+        await GasQuenchPressure.bulkCreate(
+          recipeData.quench_data.gas_quench.pressure_parameters.map(p => ({
             gas_quench_id: gq.gas_quench_id,
             duration: p.duration || null,
             pressure: p.pressure || null
-          }, { transaction });
-        }
+          })),
+          { transaction }
+        );
       }
     }
 
@@ -156,14 +167,15 @@ const createRecipeFromData = async (recipeData, transaction) => {
         dripping_time_value: recipeData.quench_data.oil_quench.dripping_time?.value || null
       }, { transaction });
 
-      if (Array.isArray(recipeData.quench_data.oil_quench.speed_parameters)) {
-        for (const s of recipeData.quench_data.oil_quench.speed_parameters) {
-          await OilQuenchSpeed.create({
+      if (Array.isArray(recipeData.quench_data.oil_quench.speed_parameters) && recipeData.quench_data.oil_quench.speed_parameters.length > 0) {
+        await OilQuenchSpeed.bulkCreate(
+          recipeData.quench_data.oil_quench.speed_parameters.map(s => ({
             oil_quench_id: oq.oil_quench_id,
             duration: s.duration || null,
             speed: s.speed || null
-          }, { transaction });
-        }
+          })),
+          { transaction }
+        );
       }
     }
   }
@@ -186,73 +198,119 @@ const createResultsFromData = async (trialNodeId, resultsData, transaction) => {
   const CurveSeriesModel = sequelize.models.results_curve_series;
   const CurvePointModel = sequelize.models.results_curve_point;
 
-  for (const result of resultsData.results) {
-    // Créer result_step
-    const stepRec = await ResultStepModel.create({
+  // 1. Bulk create tous les steps
+  const stepRecords = await ResultStepModel.bulkCreate(
+    resultsData.results.map(result => ({
       trial_node_id: trialNodeId,
       step_number: result.step || null,
       description: result.description || null
-    }, { transaction });
+    })),
+    { transaction, returning: true }
+  );
 
-    if (!Array.isArray(result.samples) || result.samples.length === 0) continue;
-
+  // 2. Préparer et bulk create tous les samples
+  const allSamplesData = [];
+  const sampleToResultIndex = []; // Pour mapper sample -> result (pour hardness/ecd/curves)
+  stepRecords.forEach((stepRec, resultIdx) => {
+    const result = resultsData.results[resultIdx];
+    if (!Array.isArray(result.samples) || result.samples.length === 0) return;
     for (const sample of result.samples) {
-      // Créer result_sample
-      const sampleRec = await ResultSampleModel.create({
+      sampleToResultIndex.push({ resultIdx, sample });
+      allSamplesData.push({
         result_step_id: stepRec.result_step_id,
         sample_number: sample.step || null,
         description: sample.description || null,
         ecd_hardness_unit: sample.ecd?.hardness_unit || null,
         ecd_hardness_value: sample.ecd?.hardness_value || null
-      }, { transaction });
+      });
+    }
+  });
 
-      // Hardness points
-      if (Array.isArray(sample.hardness_points) && sample.hardness_points.length > 0) {
-        for (const hp of sample.hardness_points) {
-          await HardnessPointModel.create({
-            sample_id: sampleRec.sample_id,
-            unit: hp.unit || null,
-            value: hp.value || null,
-            location: hp.location || null
-          }, { transaction });
+  if (allSamplesData.length === 0) return;
+
+  const sampleRecords = await ResultSampleModel.bulkCreate(allSamplesData, { transaction, returning: true });
+
+  // 3. Préparer les données enfants (hardness, ecd, curves) par sample
+  const allHardnessData = [];
+  const allEcdData = [];
+  const allCurveSeriesData = [];
+  const curveSeriesMeta = []; // Pour mapper chaque série à ses points
+
+  sampleRecords.forEach((sampleRec, idx) => {
+    const { sample } = sampleToResultIndex[idx];
+
+    // Hardness points
+    if (Array.isArray(sample.hardness_points) && sample.hardness_points.length > 0) {
+      for (const hp of sample.hardness_points) {
+        allHardnessData.push({
+          sample_id: sampleRec.sample_id,
+          unit: hp.unit || null,
+          value: hp.value || null,
+          location: hp.location || null
+        });
+      }
+    }
+
+    // ECD positions
+    const ecdPoints = sample.ecd?.positions || sample.ecd?.ecd_points || sample.ecd?.ecdPoints;
+    if (ecdPoints && Array.isArray(ecdPoints) && ecdPoints.length > 0) {
+      for (const ecd of ecdPoints) {
+        allEcdData.push({
+          sample_id: sampleRec.sample_id,
+          distance: ecd.distance || null,
+          location: ecd.position || ecd.location || null,
+          hardness: ecd.hardness || null,
+          hardness_unit: ecd.hardness_unit || null
+        });
+      }
+    }
+
+    // Curve series
+    if (sample.curve_data?.distances && Array.isArray(sample.curve_data.series) && sample.curve_data.series.length > 0) {
+      for (const series of sample.curve_data.series) {
+        curveSeriesMeta.push({
+          sampleId: sampleRec.sample_id,
+          distances: sample.curve_data.distances,
+          values: series.values || []
+        });
+        allCurveSeriesData.push({
+          sample_id: sampleRec.sample_id,
+          name: series.name || null
+        });
+      }
+    }
+  });
+
+  // 4. Bulk create hardness, ecd, curve series en parallèle
+  const [, , seriesRecords] = await Promise.all([
+    allHardnessData.length > 0
+      ? HardnessPointModel.bulkCreate(allHardnessData, { transaction })
+      : Promise.resolve([]),
+    allEcdData.length > 0
+      ? EcdPositionModel.bulkCreate(allEcdData, { transaction })
+      : Promise.resolve([]),
+    allCurveSeriesData.length > 0
+      ? CurveSeriesModel.bulkCreate(allCurveSeriesData, { transaction, returning: true })
+      : Promise.resolve([])
+  ]);
+
+  // 5. Bulk create tous les curve points
+  if (seriesRecords.length > 0) {
+    const allCurvePoints = [];
+    seriesRecords.forEach((seriesRec, idx) => {
+      const meta = curveSeriesMeta[idx];
+      if (Array.isArray(meta.values) && meta.values.length > 0) {
+        for (let i = 0; i < meta.values.length; i++) {
+          allCurvePoints.push({
+            series_id: seriesRec.series_id,
+            distance: meta.distances[i] || null,
+            value: meta.values[i] || null
+          });
         }
       }
-
-      // ECD positions - supporter 'positions', 'ecd_points' et 'ecdPoints' (camelCase du frontend)
-      const ecdPoints = sample.ecd?.positions || sample.ecd?.ecd_points || sample.ecd?.ecdPoints;
-      if (ecdPoints && Array.isArray(ecdPoints) && ecdPoints.length > 0) {
-        for (const ecd of ecdPoints) {
-          await EcdPositionModel.create({
-            sample_id: sampleRec.sample_id,
-            distance: ecd.distance || null,
-            location: ecd.position || ecd.location || null,
-            hardness: ecd.hardness || null,
-            hardness_unit: ecd.hardness_unit || null
-          }, { transaction });
-        }
-      }
-
-      // Curve data (distances + series => series_id => points)
-      if (sample.curve_data?.distances && Array.isArray(sample.curve_data.series) && sample.curve_data.series.length > 0) {
-        for (const series of sample.curve_data.series) {
-          const seriesRec = await CurveSeriesModel.create({
-            sample_id: sampleRec.sample_id,
-            name: series.name || null
-          }, { transaction });
-
-          if (Array.isArray(series.values) && series.values.length > 0) {
-            for (let i = 0; i < series.values.length; i++) {
-              const distance = sample.curve_data.distances[i] || null;
-              const value = series.values[i] || null;
-              await CurvePointModel.create({
-                series_id: seriesRec.series_id,
-                distance,
-                value
-              }, { transaction });
-            }
-          }
-        }
-      }
+    });
+    if (allCurvePoints.length > 0) {
+      await CurvePointModel.bulkCreate(allCurvePoints, { transaction });
     }
   }
 };
@@ -265,22 +323,24 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
 
   const RecipeModel = sequelize.models.recipe;
 
-  // Supprimer les sous-éléments existants (approche simple)
+  // Supprimer les sous-éléments existants en batch
   // IMPORTANT: Ordre de suppression respectant les FK
 
-  // 1. Supprimer les gaz chimiques (FK vers chemical_steps)
+  // 1. Supprimer les gaz chimiques via sous-requête (pas de boucle)
   const chemicalCycle = await sequelize.models.recipe_chemical_cycle.findOne({
     where: { recipe_id: recipeId },
     transaction
   });
   if (chemicalCycle) {
-    const steps = await sequelize.models.recipe_chemical_step.findAll({
+    const stepIds = await sequelize.models.recipe_chemical_step.findAll({
       where: { chemical_cycle_id: chemicalCycle.chemical_cycle_id },
+      attributes: ['step_id'],
+      raw: true,
       transaction
     });
-    for (const step of steps) {
+    if (stepIds.length > 0) {
       await sequelize.models.recipe_chemical_gas.destroy({
-        where: { step_id: step.step_id },
+        where: { step_id: stepIds.map(s => s.step_id) },
         transaction
       });
     }
@@ -291,20 +351,22 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
   }
   await sequelize.models.recipe_chemical_cycle.destroy({ where: { recipe_id: recipeId }, transaction });
 
-  // 2. Supprimer trempe gaz (speed + pressure)
+  // 2. Supprimer trempe gaz (speed + pressure en batch)
   const gasQuench = await sequelize.models.recipe_gas_quench.findOne({
     where: { recipe_id: recipeId },
     transaction
   });
   if (gasQuench) {
-    await sequelize.models.recipe_gas_quench_speed.destroy({
-      where: { gas_quench_id: gasQuench.gas_quench_id },
-      transaction
-    });
-    await sequelize.models.recipe_gas_quench_pressure.destroy({
-      where: { gas_quench_id: gasQuench.gas_quench_id },
-      transaction
-    });
+    await Promise.all([
+      sequelize.models.recipe_gas_quench_speed.destroy({
+        where: { gas_quench_id: gasQuench.gas_quench_id },
+        transaction
+      }),
+      sequelize.models.recipe_gas_quench_pressure.destroy({
+        where: { gas_quench_id: gasQuench.gas_quench_id },
+        transaction
+      })
+    ]);
   }
   await sequelize.models.recipe_gas_quench.destroy({ where: { recipe_id: recipeId }, transaction });
 
@@ -321,9 +383,11 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
   }
   await sequelize.models.recipe_oil_quench.destroy({ where: { recipe_id: recipeId }, transaction });
 
-  // 4. Supprimer cycles simples
-  await sequelize.models.recipe_preox_cycle.destroy({ where: { recipe_id: recipeId }, transaction });
-  await sequelize.models.recipe_thermal_cycle.destroy({ where: { recipe_id: recipeId }, transaction });
+  // 4. Supprimer cycles simples en parallèle
+  await Promise.all([
+    sequelize.models.recipe_preox_cycle.destroy({ where: { recipe_id: recipeId }, transaction }),
+    sequelize.models.recipe_thermal_cycle.destroy({ where: { recipe_id: recipeId }, transaction })
+  ]);
 
   // Mettre à jour le numéro
   // await RecipeModel.update({ recipe_number: recipeData.number || null }, { where: { recipe_id: recipeId }, transaction });
@@ -341,14 +405,15 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
   }
 
   if (Array.isArray(recipeData.thermal_cycle) && recipeData.thermal_cycle.length > 0) {
-    for (const step of recipeData.thermal_cycle) {
-      await sequelize.models.recipe_thermal_cycle.create({
+    await sequelize.models.recipe_thermal_cycle.bulkCreate(
+      recipeData.thermal_cycle.map(step => ({
         recipe_id: recipeId,
         ramp: step.ramp || null,
         setpoint: step.setpoint || null,
         duration: step.duration || null
-      }, { transaction });
-    }
+      })),
+      { transaction }
+    );
   }
 
   if (Array.isArray(recipeData.chemical_cycle) && recipeData.chemical_cycle.length > 0) {
@@ -367,24 +432,33 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       cell_temp_unit: recipeData.cell_temp?.unit || null
     }, { transaction });
 
-    for (const step of recipeData.chemical_cycle) {
-      const stepRec = await sequelize.models.recipe_chemical_step.create({
+    // Bulk create steps puis gaz
+    const stepRecords = await sequelize.models.recipe_chemical_step.bulkCreate(
+      recipeData.chemical_cycle.map(step => ({
         chemical_cycle_id: chemical.chemical_cycle_id,
         time: step.time || null,
         pressure: step.pressure || null,
         turbine: step.turbine || null
-      }, { transaction });
+      })),
+      { transaction, returning: true }
+    );
 
+    const allGases = [];
+    stepRecords.forEach((stepRec, idx) => {
+      const step = recipeData.chemical_cycle[idx];
       if (Array.isArray(step.gases) && step.gases.length > 0) {
         for (const g of step.gases) {
-          await sequelize.models.recipe_chemical_gas.create({
+          allGases.push({
             step_id: stepRec.step_id,
             gas_name: g.gas || g.gas_name || null,
             debit: g.debit || null,
             gas_index: g.index || g.gas_index || null
-          }, { transaction });
+          });
         }
       }
+    });
+    if (allGases.length > 0) {
+      await sequelize.models.recipe_chemical_gas.bulkCreate(allGases, { transaction });
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 ||
     recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp ||
@@ -409,23 +483,25 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
   if (recipeData.quench_data) {
     if (recipeData.quench_data.gas_quench) {
       const gq = await sequelize.models.recipe_gas_quench.create({ recipe_id: recipeId }, { transaction });
-      if (Array.isArray(recipeData.quench_data.gas_quench.speed_parameters)) {
-        for (const s of recipeData.quench_data.gas_quench.speed_parameters) {
-          await sequelize.models.recipe_gas_quench_speed.create({
+      if (Array.isArray(recipeData.quench_data.gas_quench.speed_parameters) && recipeData.quench_data.gas_quench.speed_parameters.length > 0) {
+        await sequelize.models.recipe_gas_quench_speed.bulkCreate(
+          recipeData.quench_data.gas_quench.speed_parameters.map(s => ({
             gas_quench_id: gq.gas_quench_id,
             duration: s.duration || null,
             speed: s.speed || null
-          }, { transaction });
-        }
+          })),
+          { transaction }
+        );
       }
-      if (Array.isArray(recipeData.quench_data.gas_quench.pressure_parameters)) {
-        for (const p of recipeData.quench_data.gas_quench.pressure_parameters) {
-          await sequelize.models.recipe_gas_quench_pressure.create({
+      if (Array.isArray(recipeData.quench_data.gas_quench.pressure_parameters) && recipeData.quench_data.gas_quench.pressure_parameters.length > 0) {
+        await sequelize.models.recipe_gas_quench_pressure.bulkCreate(
+          recipeData.quench_data.gas_quench.pressure_parameters.map(p => ({
             gas_quench_id: gq.gas_quench_id,
             duration: p.duration || null,
             pressure: p.pressure || null
-          }, { transaction });
-        }
+          })),
+          { transaction }
+        );
       }
     }
 
@@ -440,14 +516,15 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
         dripping_time_value: recipeData.quench_data.oil_quench.dripping_time?.value || null
       }, { transaction });
 
-      if (Array.isArray(recipeData.quench_data.oil_quench.speed_parameters)) {
-        for (const s of recipeData.quench_data.oil_quench.speed_parameters) {
-          await sequelize.models.recipe_oil_quench_speed.create({
+      if (Array.isArray(recipeData.quench_data.oil_quench.speed_parameters) && recipeData.quench_data.oil_quench.speed_parameters.length > 0) {
+        await sequelize.models.recipe_oil_quench_speed.bulkCreate(
+          recipeData.quench_data.oil_quench.speed_parameters.map(s => ({
             oil_quench_id: oq.oil_quench_id,
             duration: s.duration || null,
             speed: s.speed || null
-          }, { transaction });
-        }
+          })),
+          { transaction }
+        );
       }
     }
   }
@@ -533,67 +610,52 @@ const updateResultsFromData = async (trialNodeId, resultsData, transaction) => {
     return shouldDelete;
   }, transaction);
 
-  // Supprimer les résultats existants dans l'ordre inverse des FK
-  // 1. Points de courbe (FK vers series)
+  // Supprimer les résultats existants en batch (pas de boucles)
+  // 1. Récupérer les IDs nécessaires pour les suppressions en cascade
   const existingSteps = await sequelize.models.results_step.findAll({
     where: { trial_node_id: trialNodeId },
-    include: [{
-      model: sequelize.models.results_sample,
-      as: 'samples',
-      include: [
-        { model: sequelize.models.results_curve_series, as: 'curveSeries' }
-      ]
-    }],
+    attributes: ['result_step_id'],
+    raw: true,
     transaction
   });
+  const stepIds = existingSteps.map(s => s.result_step_id);
 
-  for (const step of existingSteps) {
-    if (step.samples) {
-      for (const sample of step.samples) {
-        if (sample.curveSeries) {
-          for (const series of sample.curveSeries) {
-            await sequelize.models.results_curve_point.destroy({
-              where: { series_id: series.series_id },
-              transaction
-            });
-          }
-        }
-      }
+  if (stepIds.length > 0) {
+    const existingSamples = await sequelize.models.results_sample.findAll({
+      where: { result_step_id: stepIds },
+      attributes: ['sample_id'],
+      raw: true,
+      transaction
+    });
+    const sampleIds = existingSamples.map(s => s.sample_id);
+
+    if (sampleIds.length > 0) {
+      // Récupérer les series IDs pour supprimer les points
+      const existingSeries = await sequelize.models.results_curve_series.findAll({
+        where: { sample_id: sampleIds },
+        attributes: ['series_id'],
+        raw: true,
+        transaction
+      });
+      const seriesIds = existingSeries.map(s => s.series_id);
+
+      // 2. Supprimer les feuilles en batch (points, hardness, ecd, series)
+      await Promise.all([
+        seriesIds.length > 0
+          ? sequelize.models.results_curve_point.destroy({ where: { series_id: seriesIds }, transaction })
+          : Promise.resolve(),
+        sequelize.models.results_curve_series.destroy({ where: { sample_id: sampleIds }, transaction }),
+        sequelize.models.results_hardness_point.destroy({ where: { sample_id: sampleIds }, transaction }),
+        sequelize.models.results_ecd_position.destroy({ where: { sample_id: sampleIds }, transaction })
+      ]);
+
+      // 3. Supprimer les samples
+      await sequelize.models.results_sample.destroy({ where: { result_step_id: stepIds }, transaction });
     }
+
+    // 4. Supprimer les steps
+    await sequelize.models.results_step.destroy({ where: { trial_node_id: trialNodeId }, transaction });
   }
-
-  // 2. Séries de courbe, points de dureté, positions ECD (FK vers samples)
-  const existingSamples = await sequelize.models.results_sample.findAll({
-    where: { result_step_id: existingSteps.map(s => s.result_step_id) },
-    transaction
-  });
-
-  for (const sample of existingSamples) {
-    await sequelize.models.results_curve_series.destroy({
-      where: { sample_id: sample.sample_id },
-      transaction
-    });
-    await sequelize.models.results_hardness_point.destroy({
-      where: { sample_id: sample.sample_id },
-      transaction
-    });
-    await sequelize.models.results_ecd_position.destroy({
-      where: { sample_id: sample.sample_id },
-      transaction
-    });
-  }
-
-  // 3. Samples (FK vers steps)
-  await sequelize.models.results_sample.destroy({
-    where: { result_step_id: existingSteps.map(s => s.result_step_id) },
-    transaction
-  });
-
-  // 4. Steps
-  await sequelize.models.results_step.destroy({
-    where: { trial_node_id: trialNodeId },
-    transaction
-  });
 
   // Recréer tous les résultats
   await createResultsFromData(trialNodeId, resultsData, transaction);
@@ -813,67 +875,81 @@ const getTrialById = async (trialId) => {
       comments: trialValues.load_comments
     };
 
-    // Données de four (furnace_data) - à récupérer depuis furnace_id
-    if (trialValues.furnace_id) {
-      const furnaceRecord = await sequelize.models.furnace.findByPk(trialValues.furnace_id);
-      if (furnaceRecord) {
-        trialData.furnace_data = {
-          furnace_type: furnaceRecord.furnace_type,
-          furnace_size: furnaceRecord.furnace_size,
-          heating_cell: furnaceRecord.heating_cell,
-          cooling_media: furnaceRecord.cooling_media,
-          quench_cell: furnaceRecord.quench_cell
-        };
-      }
-    }
-
-    // Données de recette (recipe_data) - à récupérer depuis recipe_id
-    if (trialValues.recipe_id) {
-      const recipe = await sequelize.models.recipe.findByPk(trialValues.recipe_id, {
-        include: [
-          {
-            model: sequelize.models.recipe_preox_cycle,
-            as: 'preoxCycle'
-          },
-          {
-            model: sequelize.models.recipe_thermal_cycle,
-            as: 'thermalCycle'
-          },
-          {
-            model: sequelize.models.recipe_chemical_cycle,
-            as: 'chemicalCycle',
+    // Récupérer furnace, recipe et results en parallèle
+    const [furnaceRecord, recipe, resultsSteps] = await Promise.all([
+      // Furnace
+      trialValues.furnace_id
+        ? sequelize.models.furnace.findByPk(trialValues.furnace_id)
+        : Promise.resolve(null),
+      // Recipe
+      trialValues.recipe_id
+        ? sequelize.models.recipe.findByPk(trialValues.recipe_id, {
             include: [
+              { model: sequelize.models.recipe_preox_cycle, as: 'preoxCycle' },
+              { model: sequelize.models.recipe_thermal_cycle, as: 'thermalCycle' },
               {
-                model: sequelize.models.recipe_chemical_step,
-                as: 'steps',
+                model: sequelize.models.recipe_chemical_cycle,
+                as: 'chemicalCycle',
+                include: [{
+                  model: sequelize.models.recipe_chemical_step,
+                  as: 'steps',
+                  include: [{ model: sequelize.models.recipe_chemical_gas, as: 'gases' }]
+                }]
+              },
+              {
+                model: sequelize.models.recipe_gas_quench,
+                as: 'gasQuench',
                 include: [
-                  {
-                    model: sequelize.models.recipe_chemical_gas,
-                    as: 'gases'
-                  }
+                  { model: sequelize.models.recipe_gas_quench_speed, as: 'speedSteps' },
+                  { model: sequelize.models.recipe_gas_quench_pressure, as: 'pressureSteps' }
                 ]
+              },
+              {
+                model: sequelize.models.recipe_oil_quench,
+                as: 'oilQuench',
+                include: [{ model: sequelize.models.recipe_oil_quench_speed, as: 'speedSteps' }]
               }
             ]
-          },
-          {
-            model: sequelize.models.recipe_gas_quench,
-            as: 'gasQuench',
-            include: [
-              { model: sequelize.models.recipe_gas_quench_speed, as: 'speedSteps' },
-              { model: sequelize.models.recipe_gas_quench_pressure, as: 'pressureSteps' }
-            ]
-          },
-          {
-            model: sequelize.models.recipe_oil_quench,
-            as: 'oilQuench',
-            include: [
-              { model: sequelize.models.recipe_oil_quench_speed, as: 'speedSteps' }
-            ]
-          }
+          })
+        : Promise.resolve(null),
+      // Results
+      sequelize.models.results_step.findAll({
+        where: { trial_node_id: trialId },
+        include: [{
+          model: sequelize.models.results_sample,
+          as: 'samples',
+          include: [
+            { model: sequelize.models.results_hardness_point, as: 'hardnessPoints' },
+            { model: sequelize.models.results_ecd_position, as: 'ecdPositions' },
+            {
+              model: sequelize.models.results_curve_series,
+              as: 'curveSeries',
+              include: [{ model: sequelize.models.results_curve_point, as: 'points' }]
+            }
+          ]
+        }],
+        order: [
+          ['step_number', 'ASC'],
+          [{ model: sequelize.models.results_sample, as: 'samples' }, 'sample_number', 'ASC'],
+          [{ model: sequelize.models.results_sample, as: 'samples' }, { model: sequelize.models.results_hardness_point, as: 'hardnessPoints' }, 'hardness_point_id', 'ASC'],
+          [{ model: sequelize.models.results_sample, as: 'samples' }, { model: sequelize.models.results_ecd_position, as: 'ecdPositions' }, 'ecd_position_id', 'ASC']
         ]
-      });
+      })
+    ]);
 
-      if (recipe) {
+    // Données de four
+    if (furnaceRecord) {
+      trialData.furnace_data = {
+        furnace_type: furnaceRecord.furnace_type,
+        furnace_size: furnaceRecord.furnace_size,
+        heating_cell: furnaceRecord.heating_cell,
+        cooling_media: furnaceRecord.cooling_media,
+        quench_cell: furnaceRecord.quench_cell
+      };
+    }
+
+    // Données de recette
+    if (recipe) {
         // Construction de recipe_data
         trialData.recipe_data = {
           number: recipe.recipe_number
@@ -992,36 +1068,8 @@ const getTrialById = async (trialId) => {
           };
         }
       }
-    }
 
-    // Données de résultats (results_data) - à récupérer depuis results_steps
-    const resultsSteps = await sequelize.models.results_step.findAll({
-      where: { trial_node_id: trialId },
-      include: [
-        {
-          model: sequelize.models.results_sample,
-          as: 'samples',
-          include: [
-            { model: sequelize.models.results_hardness_point, as: 'hardnessPoints' },
-            { model: sequelize.models.results_ecd_position, as: 'ecdPositions' },
-            {
-              model: sequelize.models.results_curve_series,
-              as: 'curveSeries',
-              include: [
-                { model: sequelize.models.results_curve_point, as: 'points' }
-              ]
-            }
-          ]
-        }
-      ],
-      order: [
-        ['step_number', 'ASC'],
-        [{ model: sequelize.models.results_sample, as: 'samples' }, 'sample_number', 'ASC'],
-        [{ model: sequelize.models.results_sample, as: 'samples' }, { model: sequelize.models.results_hardness_point, as: 'hardnessPoints' }, 'hardness_point_id', 'ASC'],
-        [{ model: sequelize.models.results_sample, as: 'samples' }, { model: sequelize.models.results_ecd_position, as: 'ecdPositions' }, 'ecd_position_id', 'ASC']
-      ]
-    });
-
+    // Données de résultats (results_data) - déjà récupérées en parallèle ci-dessus
     if (resultsSteps && resultsSteps.length > 0) {
       trialData.results_data = {
         results: resultsSteps.map(resultStep => ({
@@ -1067,18 +1115,6 @@ const getTrialById = async (trialId) => {
       parent: trialNode.parent
     };
   }
-
-  // DEBUG: Logger les données avant de les retourner
-  logger.info(`Trial data structure pour trial ${trialId}:`, {
-    has_furnace_data: !!trialData.furnace_data,
-    has_load_data: !!trialData.load_data,
-    has_recipe_data: !!trialData.recipe_data,
-    has_quench_data: !!trialData.quench_data,
-    has_results_data: !!trialData.results_data,
-    has_node_parent: !!trialData.node?.parent,
-    furnace_id: trialNode.trial?.furnace_id,
-    recipe_id: trialNode.trial?.recipe_id
-  });
 
   return trialData;
 };
@@ -1477,13 +1513,8 @@ const updateTrial = async (trialId, trialData) => {
         }
 
         if (trialNode.trial && trialNode.trial.recipe_id) {
-          // Mise à jour : on préfère créer une nouvelle recette si le numéro change ou si on veut éviter les conflits
-          // Mais pour simplifier et résoudre le problème de contrainte unique, on crée TOUJOURS une nouvelle recette
-          // et on met à jour la référence dans le trial
-          const newRecipeId = await createRecipeFromData(completeRecipeData, transaction);
-          if (newRecipeId) {
-            await trialNode.trial.update({ recipe_id: newRecipeId }, { transaction });
-          }
+          // Mise à jour in-place : supprime les sous-éléments et recrée (même recipe_id, pas d'orphelins)
+          await updateRecipeFromData(trialNode.trial.recipe_id, completeRecipeData, transaction);
         } else {
           // Création
           const createdId = await createRecipeFromData(completeRecipeData, transaction);
@@ -1570,11 +1601,57 @@ const deleteTrial = async (trialId) => {
       transaction
     });
 
-    // 2. Ensuite supprimer les données spécifiques aux tests pour tous les descendants
+    // 2. Supprimer les données liées au trial (results, recipe) avant de supprimer le trial
+    //    Respecter l'ordre des FK : curve_points → curve_series/hardness/ecd → samples → steps
+    const trialDescIds = descendantIds.filter(id => id !== undefined);
+
+    // Récupérer les result_step IDs pour ce trial
+    const existingSteps = await sequelize.models.results_step.findAll({
+      where: { trial_node_id: trialDescIds },
+      attributes: ['result_step_id'],
+      raw: true,
+      transaction
+    });
+    const stepIds = existingSteps.map(s => s.result_step_id);
+
+    if (stepIds.length > 0) {
+      const existingSamples = await sequelize.models.results_sample.findAll({
+        where: { result_step_id: stepIds },
+        attributes: ['sample_id'],
+        raw: true,
+        transaction
+      });
+      const sampleIds = existingSamples.map(s => s.sample_id);
+
+      if (sampleIds.length > 0) {
+        const existingSeries = await sequelize.models.results_curve_series.findAll({
+          where: { sample_id: sampleIds },
+          attributes: ['series_id'],
+          raw: true,
+          transaction
+        });
+        const seriesIds = existingSeries.map(s => s.series_id);
+
+        await Promise.all([
+          seriesIds.length > 0
+            ? sequelize.models.results_curve_point.destroy({ where: { series_id: seriesIds }, transaction })
+            : Promise.resolve(),
+          sequelize.models.results_curve_series.destroy({ where: { sample_id: sampleIds }, transaction }),
+          sequelize.models.results_hardness_point.destroy({ where: { sample_id: sampleIds }, transaction }),
+          sequelize.models.results_ecd_position.destroy({ where: { sample_id: sampleIds }, transaction })
+        ]);
+
+        await sequelize.models.results_sample.destroy({ where: { result_step_id: stepIds }, transaction });
+      }
+
+      await sequelize.models.results_step.destroy({ where: { trial_node_id: trialDescIds }, transaction });
+    }
+
+    // Supprimer les données trial (table trials) pour tous les descendants de type trial
     for (const desc of descendants) {
       const nodeToDelete = await node.findByPk(desc.descendant_id, { transaction });
-      if (nodeToDelete && nodeToDelete.type === 'test') {
-        await test.destroy({
+      if (nodeToDelete && (nodeToDelete.type === 'trial' || nodeToDelete.type === 'test')) {
+        await trial.destroy({
           where: { node_id: nodeToDelete.id },
           transaction
         });

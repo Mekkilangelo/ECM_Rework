@@ -149,18 +149,18 @@ const GenericEntityList = ({
     if (!useHierarchyMode) {
       fetchIndependentData();
     }
-  }, [currentPage, itemsPerPage, independentSortBy, independentSortOrder]);
+  }, [currentPage, itemsPerPage, independentSortBy, independentSortOrder, independentSearchQuery]);
 
   // Refresh data function
   const refreshData = useHierarchyMode
     ? async () => {
-        await hierarchyData.refreshData();
-        if (onDataChanged) onDataChanged();
-      }
+      await hierarchyData.refreshData();
+      if (onDataChanged) onDataChanged();
+    }
     : async () => {
-        await fetchIndependentData();
-        if (onDataChanged) onDataChanged();
-      };
+      await fetchIndependentData();
+      if (onDataChanged) onDataChanged();
+    };
 
   // Modal state management
   const {
@@ -200,25 +200,25 @@ const GenericEntityList = ({
   const handleSearch = useHierarchyMode
     ? hierarchyData.handleSearch
     : (query) => {
-        setIndependentSearchQuery(query);
-        setCurrentPage(1);
-      };
+      setIndependentSearchQuery(query);
+      setCurrentPage(1);
+    };
 
   const clearSearch = useHierarchyMode
     ? hierarchyData.clearSearch
     : () => {
-        setIndependentSearchQuery('');
-        setCurrentPage(1);
-      };
+      setIndependentSearchQuery('');
+      setCurrentPage(1);
+    };
 
   // Sort handler
   const handleSort = useHierarchyMode
     ? hierarchyData.handleSort
     : (columnKey, direction) => {
-        setIndependentSortBy(columnKey);
-        setIndependentSortOrder(direction);
-        setCurrentPage(1);
-      };
+      setIndependentSortBy(columnKey);
+      setIndependentSortOrder(direction);
+      setCurrentPage(1);
+    };
 
   // Delete handler
   const handleDelete = async (itemId) => {
@@ -262,29 +262,29 @@ const GenericEntityList = ({
   // Add actions column if needed
   const columns = includeActionsColumn
     ? [
-        ...baseColumns,
-        {
-          key: 'actions',
-          label: t('common.actions'),
-          style: { width: hasEditRights ? '120px' : '80px' },
-          cellClassName: 'text-center',
-          sortable: false,
-          render: (item) => (
-            <ActionButtons
-              itemId={item.id}
-              onView={(e, id) => openDetailModal(item)}
-              onEdit={hasEditRights ? (e, id) => openEditModal(item) : undefined}
-              onDelete={hasEditRights ? (e, id) => handleDelete(id) : undefined}
-              hasEditRights={hasEditRights}
-              labels={{
-                view: t('common.view'),
-                edit: t('common.edit'),
-                delete: t('common.delete')
-              }}
-            />
-          )
-        }
-      ]
+      ...baseColumns,
+      {
+        key: 'actions',
+        label: t('common.actions'),
+        style: { width: hasEditRights ? '120px' : '80px' },
+        cellClassName: 'text-center',
+        sortable: false,
+        render: (item) => (
+          <ActionButtons
+            itemId={item.id}
+            onView={(e, id) => openDetailModal(item)}
+            onEdit={hasEditRights ? (e, id) => openEditModal(item) : undefined}
+            onDelete={hasEditRights ? (e, id) => handleDelete(id) : undefined}
+            hasEditRights={hasEditRights}
+            labels={{
+              view: t('common.view'),
+              edit: t('common.edit'),
+              delete: t('common.delete')
+            }}
+          />
+        )
+      }
+    ]
     : baseColumns;
 
   // Pagination handlers (independent mode)

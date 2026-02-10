@@ -199,6 +199,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     rowGap: 15,
+  },
+  descriptionBox: {
+    borderWidth: 1,
+    borderColor: BRAND_DARK,
+    padding: 10,
+    marginTop: 5,
+    marginBottom: 10,
   }
 });
 
@@ -334,6 +341,10 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                       <Text style={styles.value}>{partData.client_designation || '-'}</Text>
                     </View>
                     <View style={styles.row}>
+                      <Text style={styles.label}>DESIGNATION:</Text>
+                      <Text style={styles.value}>{partData.designation || partData.name || '-'}</Text>
+                    </View>
+                    <View style={styles.row}>
                       <Text style={styles.label}>REFERENCE:</Text>
                       <Text style={styles.value}>{partData.reference || '-'}</Text>
                     </View>
@@ -361,6 +372,16 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                     <Text style={styles.colHeaderLabel}>WEIGHT</Text>
                     <Text style={styles.weightValue}>
                       {weight ? `${weight} ${unitWeight}` : '-'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Part Description Box */}
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={{ ...styles.label, width: '100%', marginBottom: 2 }}>PART DESCRIPTION:</Text>
+                  <View style={styles.descriptionBox}>
+                    <Text style={{ ...styles.value, width: '100%' }}>
+                      {report.partDescription || '-'}
                     </Text>
                   </View>
                 </View>

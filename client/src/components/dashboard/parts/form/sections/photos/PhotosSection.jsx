@@ -18,9 +18,9 @@ const PhotosSection = ({
   
   // Configuration des différentes vues
   const views = useMemo(() => [
-    { id: 'front', name: t('parts.photos.views.front') },
-    { id: 'profile', name: t('parts.photos.views.profile') },
     { id: 'quarter', name: t('parts.photos.views.quarter') },
+    { id: 'profile', name: t('parts.photos.views.profile') },
+    { id: 'front', name: t('parts.photos.views.front') },
     { id: 'other', name: t('parts.photos.views.other') },
   ], [t]);
 

@@ -32,7 +32,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'recipe_oil_quench_speed',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['oil_quench_id'], name: 'idx_oq_speed_quench' }
+    ]
   });
 
   RecipeOilQuenchSpeed.associate = (models) => {

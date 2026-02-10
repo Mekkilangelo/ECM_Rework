@@ -38,6 +38,7 @@ export class Report {
 
     this.partId = partData?.node_id || partData?.id || null;
     this.partName = partData?.name || '';
+    this.partDescription = partData?.description || '';
 
     // Expose partData as 'part' with specifications
     this.part = partData ? {

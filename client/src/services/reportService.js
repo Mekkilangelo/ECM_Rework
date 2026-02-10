@@ -31,7 +31,7 @@ const reportService = {
 
       const url = `/reports/trials/${trialId}${params.toString() ? `?${params.toString()}` : ''}`;
       
-      const response = await api.get(url);
+      const response = await api.get(url, { timeout: 120000 });
       return response.data;
     } catch (error) {
       console.error(`Erreur lors de la récupération des données du rapport pour le trial ${trialId}:`, error);

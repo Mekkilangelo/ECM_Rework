@@ -31,6 +31,11 @@ const styles = StyleSheet.create({
     paddingBottom: 60, // Espace pour le footer
     paddingTop: 20,
   },
+  pageIdentification: {
+    ...COMMON_STYLES.page,
+    paddingBottom: 60,
+    paddingTop: 10, // Reduced padding for Identification Sheet
+  },
   // pageFooter removed - replaced by component
   section: {
     marginBottom: SPACING.section.marginBottom
@@ -238,11 +243,30 @@ export const CoverPage = ({ report, options }) => {
           <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
         </View>
         <View style={{ paddingHorizontal: 10 }}>
+          {/* Row 1: Client Designation & Designation */}
           <View style={coverStyles.row}>
-            <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
-            <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...coverStyles.label, width: '45%' }}>CLIENT DESIGNATION:</Text>
+              <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
+            </View>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...coverStyles.label, width: '35%' }}>DESIGNATION:</Text>
+              <Text style={coverStyles.value}>{partData.designation || '-'}</Text>
+            </View>
           </View>
-          <View style={coverStyles.row}>
+
+          {/* Row 2: Part Description (Boxed) */}
+          <View style={{ marginTop: 5, marginBottom: 10 }}>
+            <Text style={{ ...coverStyles.label, marginBottom: 2 }}>PART DESCRIPTION:</Text>
+            <View style={coverStyles.resultsBox}>
+              <Text style={coverStyles.value}>
+                {report.partDescription || '-'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Row 3: Steel Grade */}
+          <View style={{ ...coverStyles.row, marginTop: 5 }}>
             <Text style={coverStyles.label}>STEEL GRADE:</Text>
             <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
           </View>
@@ -439,12 +463,12 @@ export const CoverPage = ({ report, options }) => {
 
         {/* 5. Results */}
         <View style={coverStyles.sectionHeader}>
-          <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
+          <Text style={coverStyles.sectionHeaderText}>OBSERVATIONS</Text>
         </View>
         <View style={{ paddingHorizontal: 0 }}>
           {/* Removed Flux */}
+          {/* Removed Flux */}
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
             <View style={{ flex: 1, ...coverStyles.resultsBox }}>
               <Text>{trialData.observation || ''}</Text>
             </View>
@@ -465,9 +489,6 @@ export const CoverPage = ({ report, options }) => {
           <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
             {/* Conclusion Main Box - Flex 1 to fill remaining space */}
             <View style={{ flex: 1, flexDirection: 'column' }}>
-              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 2 }}>
-                <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
-              </View>
               <View style={{ ...coverStyles.resultsBox, flex: 1, minHeight: 0 }}>
                 {(() => {
                   const text = trialData.conclusion || '';
@@ -792,6 +813,11 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
     activeSections = [];
   }
 
+  // Determine report title
+  const reportTitle = report.metadata?.type === 'part-identification'
+    ? 'Identification Sheet'
+    : 'Trial Report';
+
   // Vérifier si la page de garde est activée
   const shouldShowCoverPage = activeSections.some(s => s.type === 'coverPage');
 
@@ -817,6 +843,7 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
         <Page size="A4" style={styles.page}>
           {includeHeader && (
             <CommonReportHeader
+              title={reportTitle}
               clientName={report.clientName}
               trialCode={report.testCode}
             />
@@ -840,9 +867,10 @@ export const ReportPDFDocument = ({ report, selectedPhotos = {}, options = {} })
 
       {/* Section Identification - Page séparée */}
       {activeSections.some(s => s.type === 'identification') && report && (
-        <Page size="A4" style={styles.page}>
+        <Page size="A4" style={report.metadata?.type === 'part-identification' ? styles.pageIdentification : styles.page}>
           {includeHeader && (
             <CommonReportHeader
+              title={reportTitle}
               clientName={report.clientName}
               loadNumber={report.trialData?.load_number}
               trialDate={report.trialData?.trial_date}
@@ -1272,21 +1300,67 @@ const SectionContent = ({ section, report, options }) => {
 
   switch (section.type) {
     case 'identification':
+      // Styles locaux pour la consistance avec Cover Page
+      const idStyles = {
+        label: {
+          fontSize: 9,
+          fontFamily: 'Helvetica-Bold',
+          color: '#64748b', // Slate 500
+          width: '30%'
+        },
+        value: {
+          fontSize: 9,
+          fontFamily: 'Helvetica',
+          color: '#0f172a', // Slate 900
+          flex: 1
+        },
+        row: {
+          flexDirection: 'row',
+          marginBottom: 4,
+          alignItems: 'center'
+        },
+        box: {
+          borderWidth: 1,
+          borderColor: '#1e3a8a', // Brand Dark
+          padding: 10,
+          marginTop: 5,
+          marginBottom: 10
+        }
+      };
+
+      const DataRow = ({ label, value }) => (
+        <View style={idStyles.row}>
+          <Text style={idStyles.label}>{label}:</Text>
+          <Text style={idStyles.value}>{value || '-'}</Text>
+        </View>
+      );
+
       return (
         <View>
-          <Text style={{ fontSize: 12, marginBottom: 10, fontFamily: 'Helvetica-Bold' }}>
-            Informations Client
+          <Text style={{ fontSize: 12, marginBottom: 10, fontFamily: 'Helvetica-Bold', color: '#1e3a8a' }}>
+            CLIENT INFORMATION
           </Text>
-          <DataRow label="Nom" value={clientData?.name} />
-          <DataRow label="Pays" value={clientData?.country} />
-          <DataRow label="Adresse" value={clientData?.address} />
+          <DataRow label="Name" value={clientData?.name} />
+          <DataRow label="Country" value={clientData?.country} />
+          <DataRow label="Address" value={clientData?.address} />
 
-          <Text style={{ fontSize: 12, marginTop: 15, marginBottom: 10, fontFamily: 'Helvetica-Bold' }}>
-            Informations Pièce
+          <Text style={{ fontSize: 12, marginTop: 15, marginBottom: 10, fontFamily: 'Helvetica-Bold', color: '#1e3a8a' }}>
+            PART IDENTIFICATION
           </Text>
-          <DataRow label="Référence" value={partData?.part_number} />
-          <DataRow label="Désignation" value={partData?.name} />
-          <DataRow label="Numéro de plan" value={partData?.drawing_number} />
+          <DataRow label="Reference" value={partData?.reference || partData?.part_number} />
+          <DataRow label="Client Designation" value={partData?.client_designation} />
+          <DataRow label="Designation" value={partData?.designation || partData?.name} />
+          <DataRow label="Steel Grade" value={partData?.steel?.grade || partData?.steelGrade} />
+
+          {/* Boxed Description */}
+          <View style={{ marginTop: 10 }}>
+            <Text style={{ ...idStyles.label, marginBottom: 2, width: '100%' }}>PART DESCRIPTION:</Text>
+            <View style={idStyles.box}>
+              <Text style={idStyles.value}>
+                {report.partDescription || '-'}
+              </Text>
+            </View>
+          </View>
         </View>
       );
 

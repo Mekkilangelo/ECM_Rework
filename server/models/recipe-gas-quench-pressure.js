@@ -32,7 +32,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'recipe_gas_quench_pressure',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['gas_quench_id'], name: 'idx_gq_pressure_quench' }
+    ]
   });
 
   RecipeGasQuenchPressure.associate = (models) => {

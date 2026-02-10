@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Row, Col, Form, Button, Table, Alert, Spinner } from 'react-bootstrap';
+import { Row, Col, Form, Button, Table, Alert, Spinner, OverlayTrigger, Popover, ListGroup, Badge } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faMagic, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faMagic, faExclamationTriangle, faInfoCircle, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import predictionService from '../../../../../../../../../../services/predictionService';
 import trialService from '../../../../../../../../../../services/trialService';
 
@@ -27,6 +27,70 @@ const ChemicalCycleSection = ({
   const [predicting, setPredicting] = useState(false);
   const [predictionError, setPredictionError] = useState(null);
   const [predictionSuccess, setPredictionSuccess] = useState(null);
+  const [checklistData, setChecklistData] = useState({ valid: false, missing: [] });
+
+  // Mettre à jour la checklist quand les données changent (au chargement ou ouverture popover)
+  const updateChecklist = async () => {
+    // 1. Récupérer l'ID du trial
+    const trialId = formData?.id || trial?.id || trial?.node_id;
+
+    // Si pas d'ID, on ne peut rien vérifier
+    if (!trialId) {
+      setChecklistData({
+        valid: false,
+        requirements: []
+      });
+      return;
+    }
+
+    try {
+      let parentPart = null;
+
+      // Essayer de récupérer depuis les props
+      if (trial && trial.node && trial.node.parent && trial.node.parent.type === 'part') {
+        parentPart = trial.node.parent;
+      }
+
+      // Si non trouvé dans les props, on fetch le trial complet
+      if (!parentPart) {
+        try {
+          const fullTrial = await trialService.getTrial(trialId);
+          if (fullTrial && fullTrial.node && fullTrial.node.parent && fullTrial.node.parent.type === 'part') {
+            parentPart = fullTrial.node.parent;
+          }
+        } catch (err) {
+          console.error("Erreur fetch trial pour checklist", err);
+        }
+      }
+
+      // Si toujours pas de parent, on ne peut pas afficher la checklist correctement
+      if (!parentPart) {
+        setChecklistData({
+          valid: false,
+          requirements: []
+        });
+        return;
+      }
+
+      const validation = predictionService.validateAndPrepareParams(formData, parentPart);
+
+      // Mapper les conditions manquantes vers une liste structurée
+      const requirements = [
+        { label: "Données de la pièce", valid: !!parentPart },
+        { label: "Spécification ECD (Dureté/Profondeur)", valid: !validation.missing.some(m => m.includes('ECD')) },
+        { label: "Poids de la charge", valid: !validation.missing.some(m => m.includes('charge')) },
+        { label: "Composition Acier (Carbone)", valid: !validation.missing.some(m => m.includes('carbone')) }
+      ];
+
+      setChecklistData({
+        valid: validation.valid,
+        requirements
+      });
+
+    } catch (e) {
+      console.error("Erreur checklist", e);
+    }
+  };
 
   /**
    * Handler pour prédire la recette via l'API ML
@@ -194,26 +258,26 @@ const ChemicalCycleSection = ({
   // Fonction pour calculer la durée totale du cycle chimique en minutes (incluant waitTime)
   const calculateChemicalCycleDurationMinutes = () => {
     if (!formData.recipeData?.chemicalCycle) return 0;
-    
+
     // Somme des temps du cycle chimique en secondes
     const totalSeconds = formData.recipeData.chemicalCycle.reduce((total, step) => {
       return total + (parseInt(step.time) || 0);
     }, 0);
-    
+
     // Convertir en minutes
     let totalMinutes = totalSeconds / 60;
-    
+
     // Ajouter le waitTime s'il existe
     const waitTime = parseInt(formData.recipeData?.waitTime) || 0;
     totalMinutes += waitTime;
-    
+
     return Math.round(totalMinutes); // Arrondi à la minute la plus proche (valeur entière)
   };
 
   // Fonction pour calculer la durée totale des steps en secondes (SANS wait time)
   const calculateStepsTotalSeconds = () => {
     if (!formData.recipeData?.chemicalCycle) return 0;
-    
+
     return formData.recipeData.chemicalCycle.reduce((total, step) => {
       return total + (parseInt(step.time) || 0);
     }, 0);
@@ -223,7 +287,7 @@ const ChemicalCycleSection = ({
   const formatSecondsToMinSec = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    
+
     if (minutes === 0) {
       return `${remainingSeconds}s`;
     } else if (remainingSeconds === 0) {
@@ -236,25 +300,25 @@ const ChemicalCycleSection = ({
   // Fonction pour calculer le total d'une colonne de gaz en minutes/secondes
   const calculateGasTotalTime = (gasNumber) => {
     if (!formData.recipeData?.chemicalCycle) return { seconds: 0, formatted: '0s' };
-    
+
     let totalSeconds = 0;
-    
+
     formData.recipeData.chemicalCycle.forEach(step => {
       const flowRate = parseFloat(step[`debit${gasNumber}`]) || 0;
       const stepTime = parseInt(step.time) || 0;
-      
+
       // Si le débit n'est pas 0, on compte le temps de cette étape
       if (flowRate > 0) {
         totalSeconds += stepTime;
       }
     });
-    
+
     return {
       seconds: totalSeconds,
       formatted: formatSecondsToMinSec(totalSeconds)
     };
   };
-  
+
   const gasOptions = [
     { value: 'N2', label: 'N2' },
     { value: 'NH3', label: 'NH3' },
@@ -290,7 +354,7 @@ const ChemicalCycleSection = ({
       }
     }
   };
-  
+
   const handleChemicalCycleChange = (index, field, value) => {
     const updatedChemicalCycle = [...formData.recipeData.chemicalCycle];
     updatedChemicalCycle[index] = { ...updatedChemicalCycle[index], [field]: value };
@@ -301,7 +365,7 @@ const ChemicalCycleSection = ({
       }
     });
   };
-  
+
   const handleTurbineChange = (index, checked) => {
     const updatedChemicalCycle = [...formData.recipeData.chemicalCycle];
     updatedChemicalCycle[index] = { ...updatedChemicalCycle[index], turbine: checked };
@@ -312,7 +376,7 @@ const ChemicalCycleSection = ({
       }
     });
   };
-  
+
   const handleGlobalGasChange = (option, gasNumber) => {
     handleChange({
       target: {
@@ -321,7 +385,34 @@ const ChemicalCycleSection = ({
       }
     });
   };
-  
+
+  // Popover content
+  const renderChecklist = (props) => (
+    <Popover id="prediction-checklist-popover" {...props}>
+      <Popover.Header as="h3">Pré-requis Prédiction</Popover.Header>
+      <Popover.Body>
+        {checklistData.requirements && checklistData.requirements.length > 0 ? (
+          <ListGroup variant="flush">
+            {checklistData.requirements.map((req, idx) => (
+              <ListGroup.Item key={idx} className="d-flex justify-content-between align-items-center px-0 py-1">
+                <span style={{ fontSize: '0.9em' }}>{req.label}</span>
+                {req.valid ? (
+                  <FontAwesomeIcon icon={faCheck} className="text-success" />
+                ) : (
+                  <FontAwesomeIcon icon={faTimes} className="text-danger" />
+                )}
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        ) : (
+          <div className="text-muted small">
+            Veuillez sauvegarder l'essai et lier une pièce pour voir la checklist.
+          </div>
+        )}
+      </Popover.Body>
+    </Popover>
+  );
+
   return (
     <>
       {/* Bouton de prédiction et alertes */}
@@ -329,24 +420,39 @@ const ChemicalCycleSection = ({
         <div className="mb-3">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h6 className="mb-0">{t('trials.before.recipeData.chemicalCycle.title')}</h6>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handlePredictRecipe}
-              disabled={predicting || loading}
-            >
-              {predicting ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  {t('trials.before.recipeData.chemicalCycle.predicting', 'Prédiction en cours...')}
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faMagic} className="me-2" />
-                  {t('trials.before.recipeData.chemicalCycle.predictRecipe', 'Prédire la recette')}
-                </>
-              )}
-            </Button>
+            <div>
+              {/* Info Checklist Button */}
+              <OverlayTrigger
+                trigger="click"
+                placement="left"
+                overlay={renderChecklist}
+                onEnter={updateChecklist}
+                rootClose
+              >
+                <Button variant="outline-info" size="sm" className="me-2">
+                  <FontAwesomeIcon icon={faInfoCircle} />
+                </Button>
+              </OverlayTrigger>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handlePredictRecipe}
+                disabled={predicting || loading}
+              >
+                {predicting ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    {t('trials.before.recipeData.chemicalCycle.predicting', 'Prédiction en cours...')}
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faMagic} className="me-2" />
+                    {t('trials.before.recipeData.chemicalCycle.predictRecipe', 'Prédire la recette')}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Alerte d'erreur */}
@@ -608,13 +714,13 @@ const ChemicalCycleSection = ({
           </Button>
         </div>
       )}
-      
+
       {/* Section des totaux de durée */}
       <div className="row mb-3">
         <div className="col-12">
           <h6 className="text-muted mb-3">{t('trials.before.recipeData.chemicalCycle.durationTotals')}</h6>
         </div>
-        
+
         {/* Total des steps en secondes et en format min/sec */}
         <div className="col-md-6">
           <div className="row">
@@ -715,11 +821,11 @@ const ChemicalCycleSection = ({
             readOnly
             style={{
               ...readOnlyFieldStyle,
-              backgroundColor: calculateProgramDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDurationMinutes()) < 0.1 
+              backgroundColor: calculateProgramDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDurationMinutes()) < 0.1
                 ? '#d4edda' // Vert si égal (avec tolérance de 0.1)
                 : '#f8d7da', // Rouge si différent
-              borderColor: calculateProgramDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDurationMinutes()) < 0.1 
-                ? '#c3e6cb' 
+              borderColor: calculateProgramDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDurationMinutes()) < 0.1
+                ? '#c3e6cb'
                 : '#f5c6cb'
             }}
           />

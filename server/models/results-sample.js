@@ -36,7 +36,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'results_samples',
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      { fields: ['result_step_id'], name: 'idx_res_sample_step' }
+    ]
   });
 
   ResultsSample.associate = (models) => {

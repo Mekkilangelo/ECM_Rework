@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
  * Composant d'entête commune pour le rapport PDF
  */
 export const CommonReportHeader = ({
+  title = 'Trial Report',
   clientName = '',
   loadNumber = '',
   trialDate = '',
@@ -177,7 +178,7 @@ export const CommonReportHeader = ({
       {/* Ligne du haut: Titre et Logo */}
       <View style={styles.topRow}>
         <View style={styles.titleContainer}>
-          <Text style={styles.mainTitle}>Trial Report</Text>
+          <Text style={styles.mainTitle}>{title}</Text>
           <Text style={styles.subTitle}>Quality Control & Heat Treatment</Text>
         </View>
 

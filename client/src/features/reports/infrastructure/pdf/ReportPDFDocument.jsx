@@ -255,12 +255,14 @@ export const CoverPage = ({ report, options }) => {
             </View>
           </View>
 
-          {/* Row 2: Part Description (Full Width) */}
-          <View style={{ ...coverStyles.row, flexDirection: 'column', alignItems: 'flex-start', marginTop: 5 }}>
-            <Text style={{ ...coverStyles.label, width: '100%', marginBottom: 2 }}>PART DESCRIPTION:</Text>
-            <Text style={{ ...coverStyles.value, width: '100%' }}>
-              {report.partDescription || '-'}
-            </Text>
+          {/* Row 2: Part Description (Boxed) */}
+          <View style={{ marginTop: 5, marginBottom: 10 }}>
+            <Text style={{ ...coverStyles.label, marginBottom: 2 }}>PART DESCRIPTION:</Text>
+            <View style={coverStyles.resultsBox}>
+              <Text style={coverStyles.value}>
+                {report.partDescription || '-'}
+              </Text>
+            </View>
           </View>
 
           {/* Row 3: Steel Grade */}
@@ -1298,21 +1300,67 @@ const SectionContent = ({ section, report, options }) => {
 
   switch (section.type) {
     case 'identification':
+      // Styles locaux pour la consistance avec Cover Page
+      const idStyles = {
+        label: {
+          fontSize: 9,
+          fontFamily: 'Helvetica-Bold',
+          color: '#64748b', // Slate 500
+          width: '30%'
+        },
+        value: {
+          fontSize: 9,
+          fontFamily: 'Helvetica',
+          color: '#0f172a', // Slate 900
+          flex: 1
+        },
+        row: {
+          flexDirection: 'row',
+          marginBottom: 4,
+          alignItems: 'center'
+        },
+        box: {
+          borderWidth: 1,
+          borderColor: '#1e3a8a', // Brand Dark
+          padding: 10,
+          marginTop: 5,
+          marginBottom: 10
+        }
+      };
+
+      const DataRow = ({ label, value }) => (
+        <View style={idStyles.row}>
+          <Text style={idStyles.label}>{label}:</Text>
+          <Text style={idStyles.value}>{value || '-'}</Text>
+        </View>
+      );
+
       return (
         <View>
-          <Text style={{ fontSize: 12, marginBottom: 10, fontFamily: 'Helvetica-Bold' }}>
-            Informations Client
+          <Text style={{ fontSize: 12, marginBottom: 10, fontFamily: 'Helvetica-Bold', color: '#1e3a8a' }}>
+            CLIENT INFORMATION
           </Text>
-          <DataRow label="Nom" value={clientData?.name} />
-          <DataRow label="Pays" value={clientData?.country} />
-          <DataRow label="Adresse" value={clientData?.address} />
+          <DataRow label="Name" value={clientData?.name} />
+          <DataRow label="Country" value={clientData?.country} />
+          <DataRow label="Address" value={clientData?.address} />
 
-          <Text style={{ fontSize: 12, marginTop: 15, marginBottom: 10, fontFamily: 'Helvetica-Bold' }}>
-            Informations Pièce
+          <Text style={{ fontSize: 12, marginTop: 15, marginBottom: 10, fontFamily: 'Helvetica-Bold', color: '#1e3a8a' }}>
+            PART IDENTIFICATION
           </Text>
-          <DataRow label="Référence" value={partData?.part_number} />
-          <DataRow label="Désignation" value={partData?.name} />
-          <DataRow label="Numéro de plan" value={partData?.drawing_number} />
+          <DataRow label="Reference" value={partData?.reference || partData?.part_number} />
+          <DataRow label="Client Designation" value={partData?.client_designation} />
+          <DataRow label="Designation" value={partData?.designation || partData?.name} />
+          <DataRow label="Steel Grade" value={partData?.steel?.grade || partData?.steelGrade} />
+
+          {/* Boxed Description */}
+          <View style={{ marginTop: 10 }}>
+            <Text style={{ ...idStyles.label, marginBottom: 2, width: '100%' }}>PART DESCRIPTION:</Text>
+            <View style={idStyles.box}>
+              <Text style={idStyles.value}>
+                {report.partDescription || '-'}
+              </Text>
+            </View>
+          </View>
         </View>
       );
 

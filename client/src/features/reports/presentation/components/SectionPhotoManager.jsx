@@ -166,9 +166,9 @@ const SectionPhotoManager = ({
         sources: [
           {
             category: 'photos',
-            subcategory: 'front',
-            label: tSafe('parts.photos.manager.sections.identification.categories.front', 'Vue de face'),
-            description: tSafe('parts.photos.manager.sections.identification.descriptions.front', 'Photos prises de face')
+            subcategory: 'quarter',
+            label: tSafe('parts.photos.manager.sections.identification.categories.quarter', 'Vue en trois-quarts'),
+            description: tSafe('parts.photos.manager.sections.identification.descriptions.quarter', 'Photos prises en trois-quarts')
           },
           {
             category: 'photos',
@@ -178,9 +178,9 @@ const SectionPhotoManager = ({
           },
           {
             category: 'photos',
-            subcategory: 'quarter',
-            label: tSafe('parts.photos.manager.sections.identification.categories.quarter', 'Vue en trois-quarts'),
-            description: tSafe('parts.photos.manager.sections.identification.descriptions.quarter', 'Photos prises en trois-quarts')
+            subcategory: 'front',
+            label: tSafe('parts.photos.manager.sections.identification.categories.front', 'Vue de face'),
+            description: tSafe('parts.photos.manager.sections.identification.descriptions.front', 'Photos prises de face')
           },
           {
             category: 'photos',

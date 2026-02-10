@@ -159,7 +159,8 @@ export class ReportBuilder {
       // IMPORTANT: Garder les spécifications
       hardnessSpecs: partData.hardnessSpecs || [],
       ecdSpecs: partData.ecdSpecs || [],
-      steel: partData.steel
+      steel: partData.steel,
+      description: apiData.partDescription || partData.description || ''
     };
 
     builder

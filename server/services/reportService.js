@@ -729,6 +729,7 @@ const getTrialReportData = async (trialId, selectedSections = []) => {
     if (partNode) {
       reportData.partId = partNode.id;
       reportData.partName = partNode.name;
+      reportData.partDescription = partNode.description; // Added description
       if (partNode.part) {
         const plainPartData = partNode.part.get ? partNode.part.get({ plain: true }) : partNode.part;
         reportData.partData = {

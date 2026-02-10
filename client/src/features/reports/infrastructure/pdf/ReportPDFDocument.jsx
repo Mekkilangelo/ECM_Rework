@@ -243,11 +243,28 @@ export const CoverPage = ({ report, options }) => {
           <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
         </View>
         <View style={{ paddingHorizontal: 10 }}>
+          {/* Row 1: Client Designation & Designation */}
           <View style={coverStyles.row}>
-            <Text style={coverStyles.label}>CLIENT DESIGNATION:</Text>
-            <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...coverStyles.label, width: '45%' }}>CLIENT DESIGNATION:</Text>
+              <Text style={coverStyles.value}>{partData.client_designation || 'Not specified'}</Text>
+            </View>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...coverStyles.label, width: '35%' }}>DESIGNATION:</Text>
+              <Text style={coverStyles.value}>{partData.designation || '-'}</Text>
+            </View>
           </View>
-          <View style={coverStyles.row}>
+
+          {/* Row 2: Part Description (Full Width) */}
+          <View style={{ ...coverStyles.row, flexDirection: 'column', alignItems: 'flex-start', marginTop: 5 }}>
+            <Text style={{ ...coverStyles.label, width: '100%', marginBottom: 2 }}>PART DESCRIPTION:</Text>
+            <Text style={{ ...coverStyles.value, width: '100%' }}>
+              {report.partDescription || '-'}
+            </Text>
+          </View>
+
+          {/* Row 3: Steel Grade */}
+          <View style={{ ...coverStyles.row, marginTop: 5 }}>
             <Text style={coverStyles.label}>STEEL GRADE:</Text>
             <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
           </View>
@@ -444,12 +461,12 @@ export const CoverPage = ({ report, options }) => {
 
         {/* 5. Results */}
         <View style={coverStyles.sectionHeader}>
-          <Text style={coverStyles.sectionHeaderText}>RESULTS</Text>
+          <Text style={coverStyles.sectionHeaderText}>OBSERVATIONS</Text>
         </View>
         <View style={{ paddingHorizontal: 0 }}>
           {/* Removed Flux */}
+          {/* Removed Flux */}
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Text style={[coverStyles.resultsLabel, { width: 80, marginTop: 5 }]}>Observations :</Text>
             <View style={{ flex: 1, ...coverStyles.resultsBox }}>
               <Text>{trialData.observation || ''}</Text>
             </View>
@@ -470,9 +487,6 @@ export const CoverPage = ({ report, options }) => {
           <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
             {/* Conclusion Main Box - Flex 1 to fill remaining space */}
             <View style={{ flex: 1, flexDirection: 'column' }}>
-              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 2 }}>
-                <Text style={coverStyles.resultsLabel}>Conclusion:</Text>
-              </View>
               <View style={{ ...coverStyles.resultsBox, flex: 1, minHeight: 0 }}>
                 {(() => {
                   const text = trialData.conclusion || '';

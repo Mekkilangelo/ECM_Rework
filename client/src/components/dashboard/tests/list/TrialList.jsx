@@ -94,28 +94,28 @@ const TrialList = ({ partId }) => {
         noValueText: t('trials.noName')
       }),
       createTextColumn({
-        key: 'trial.recipe_number',
+        key: 'recipe_number',
         label: t('trials.recipeNumber'),
         getValue: (trial) => trial.trial?.recipe?.recipe_number,
         centered: true,
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'trial.load_number',
+        key: 'load_number',
         label: t('trials.loadNumber'),
         getValue: (trial) => trial.trial?.load_number,
         centered: true,
         emptyText: '-'
       }),
       createTextColumn({
-        key: 'trial.test_date',
+        key: 'trial_date',
         label: t('trials.date'),
         getValue: (trial) => trial.trial?.trial_date || null,
         centered: true,
         emptyText: t('trials.notDoneYet')
       }),
       createTextColumn({
-        key: 'trial.location',
+        key: 'location',
         label: t('trials.location'),
         getValue: (trial) => trial.trial?.location,
         centered: true,

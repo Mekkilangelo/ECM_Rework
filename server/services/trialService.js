@@ -1601,11 +1601,57 @@ const deleteTrial = async (trialId) => {
       transaction
     });
 
-    // 2. Ensuite supprimer les données spécifiques aux tests pour tous les descendants
+    // 2. Supprimer les données liées au trial (results, recipe) avant de supprimer le trial
+    //    Respecter l'ordre des FK : curve_points → curve_series/hardness/ecd → samples → steps
+    const trialDescIds = descendantIds.filter(id => id !== undefined);
+
+    // Récupérer les result_step IDs pour ce trial
+    const existingSteps = await sequelize.models.results_step.findAll({
+      where: { trial_node_id: trialDescIds },
+      attributes: ['result_step_id'],
+      raw: true,
+      transaction
+    });
+    const stepIds = existingSteps.map(s => s.result_step_id);
+
+    if (stepIds.length > 0) {
+      const existingSamples = await sequelize.models.results_sample.findAll({
+        where: { result_step_id: stepIds },
+        attributes: ['sample_id'],
+        raw: true,
+        transaction
+      });
+      const sampleIds = existingSamples.map(s => s.sample_id);
+
+      if (sampleIds.length > 0) {
+        const existingSeries = await sequelize.models.results_curve_series.findAll({
+          where: { sample_id: sampleIds },
+          attributes: ['series_id'],
+          raw: true,
+          transaction
+        });
+        const seriesIds = existingSeries.map(s => s.series_id);
+
+        await Promise.all([
+          seriesIds.length > 0
+            ? sequelize.models.results_curve_point.destroy({ where: { series_id: seriesIds }, transaction })
+            : Promise.resolve(),
+          sequelize.models.results_curve_series.destroy({ where: { sample_id: sampleIds }, transaction }),
+          sequelize.models.results_hardness_point.destroy({ where: { sample_id: sampleIds }, transaction }),
+          sequelize.models.results_ecd_position.destroy({ where: { sample_id: sampleIds }, transaction })
+        ]);
+
+        await sequelize.models.results_sample.destroy({ where: { result_step_id: stepIds }, transaction });
+      }
+
+      await sequelize.models.results_step.destroy({ where: { trial_node_id: trialDescIds }, transaction });
+    }
+
+    // Supprimer les données trial (table trials) pour tous les descendants de type trial
     for (const desc of descendants) {
       const nodeToDelete = await node.findByPk(desc.descendant_id, { transaction });
-      if (nodeToDelete && nodeToDelete.type === 'test') {
-        await test.destroy({
+      if (nodeToDelete && (nodeToDelete.type === 'trial' || nodeToDelete.type === 'test')) {
+        await trial.destroy({
           where: { node_id: nodeToDelete.id },
           transaction
         });

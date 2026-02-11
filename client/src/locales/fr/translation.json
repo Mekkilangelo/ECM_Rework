@@ -981,7 +981,10 @@
           "totalStepsFormatted": "Total étapes (m:s)",
           "totalGas": "Total",
           "predictRecipe": "Prédire la recette",
-          "predicting": "Prédiction en cours..."
+          "predicting": "Prédiction en cours...",
+          "predictConfirmTitle": "Remplacer la recette",
+          "predictConfirmMessage": "La prédiction va remplacer les cycles thermique et chimique actuels. Cette action est irréversible. Voulez-vous continuer ?",
+          "predictConfirmButton": "Prédire et remplacer"
         },
         
         "graphs": {
@@ -1078,6 +1081,10 @@
         "enterDescription": "Entrer une description",
         "samples": "Échantillons",
         "addSample": "Ajouter un échantillon",
+        "deleteResultTitle": "Supprimer le résultat",
+        "deleteResultMessage": "Êtes-vous sûr de vouloir supprimer ce bloc de résultat et tous ses échantillons ? Cette action est irréversible.",
+        "deleteSampleTitle": "Supprimer l'échantillon",
+        "deleteSampleMessage": "Êtes-vous sûr de vouloir supprimer cet échantillon et toutes ses données (dureté, ECD, courbes) ? Cette action est irréversible.",
         "sampleNumber": "Échantillon {{number}}",
         "sampleDescription": "Description de l'échantillon",
         "enterSampleDescription": "Entrer une description de l'échantillon",

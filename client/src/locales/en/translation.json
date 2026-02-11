@@ -977,7 +977,10 @@
           "totalStepsFormatted": "Total steps (m:s)",
           "totalGas": "Total",
           "predictRecipe": "Predict Recipe",
-          "predicting": "Predicting..."
+          "predicting": "Predicting...",
+          "predictConfirmTitle": "Replace recipe",
+          "predictConfirmMessage": "The prediction will replace the current thermal and chemical cycles. This action is irreversible. Do you want to continue?",
+          "predictConfirmButton": "Predict and replace"
         },
         
         "graphs": {
@@ -1074,6 +1077,10 @@
         "enterDescription": "Enter a description",
         "samples": "Samples",
         "addSample": "Add sample",
+        "deleteResultTitle": "Delete result",
+        "deleteResultMessage": "Are you sure you want to delete this result block and all its samples? This action is irreversible.",
+        "deleteSampleTitle": "Delete sample",
+        "deleteSampleMessage": "Are you sure you want to delete this sample and all its data (hardness, ECD, curves)? This action is irreversible.",
         "sampleNumber": "Sample {{number}}",
         "sampleDescription": "Sample description",
         "enterSampleDescription": "Enter a sample description",

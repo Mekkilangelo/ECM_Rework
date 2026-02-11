@@ -106,8 +106,8 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
     );
   }
 
-  // Paramètres du graphique - Reduced whitespace
-  const padding = { top: 25, right: 30, bottom: 20, left: 35 };
+  // Paramètres du graphique - Expanded right padding for shifted axis
+  const padding = { top: 25, right: 60, bottom: 20, left: 35 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
@@ -117,19 +117,7 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
   const rawCellTemp = typeof recipeData.cell_temp === 'object'
     ? recipeData.cell_temp?.value
     : recipeData.cell_temp;
-
-  // Si cell_temp n'est pas défini, utiliser le premier setpoint du thermal cycle comme fallback
-  // Cela permet d'avoir une valeur cohérente même si cell_temp n'est pas stocké
-  let cellTemp = parseInt(rawCellTemp);
-  if (!cellTemp || isNaN(cellTemp)) {
-    // Fallback: utiliser le premier setpoint du thermal cycle ou 20 par défaut
-    const firstThermalStep = thermalCycle[0];
-    if (firstThermalStep?.setpoint) {
-      cellTemp = parseInt(firstThermalStep.setpoint) || 20;
-    } else {
-      cellTemp = 20;
-    }
-  }
+  const cellTemp = parseInt(rawCellTemp) || 20;
 
   const rawWaitTime = typeof recipeData.wait_time === 'object'
     ? recipeData.wait_time?.value
@@ -181,24 +169,14 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
     }
   });
 
-  // Rampe finale vers 0°C
+  // Point final au dernier setpoint (pas de chute artificielle à 0°C)
   const lastStep = thermalCycle[thermalCycle.length - 1];
   const lastTemp = lastStep ? (parseInt(lastStep.setpoint) || 0) : cellTemp;
-  const finalRampDuration = 1;
   temperaturePoints.push({ x: timeOffset, y: lastTemp });
-  temperaturePoints.push({ x: timeOffset + finalRampDuration, y: 0 });
-  const totalThermalTime = timeOffset + finalRampDuration;
+  const totalThermalTime = timeOffset;
 
   // ========== CONSTRUIRE LES COURBES DE GAZ ==========
-  // Calculer la durée totale du cycle chimique
-  const totalChemicalTime = chemicalCycle.reduce((total, step) => {
-    return total + ((parseInt(step.time) || 0) / 60); // Convertir secondes en minutes
-  }, 0);
-
-  // Le cycle chimique se termine en même temps que le cycle thermique
-  const chemicalEndTime = totalThermalTime;
-  const chemicalStartTime = waitTimeInMinutes;
-  const availableChemicalDuration = chemicalEndTime - chemicalStartTime;
+  // Le cycle chimique garde sa durée réelle (pas d'étirement pour matcher le thermique)
 
   // Initialiser les datasets pour chaque gaz
   const gasData = {};
@@ -222,15 +200,8 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
   chemicalCycle.forEach((step, stepIndex) => {
     const stepTime = (parseInt(step.time) || 0) / 60; // Convertir secondes en minutes
 
-    // Ajuster la durée proportionnellement
-    let adjustedStepTime = stepTime;
-    if (totalChemicalTime > 0) {
-      const scaleFactor = availableChemicalDuration / totalChemicalTime;
-      adjustedStepTime = stepTime * scaleFactor;
-    }
-
     const stepStart = chemTimeOffset;
-    const stepEnd = chemTimeOffset + adjustedStepTime;
+    const stepEnd = chemTimeOffset + stepTime;
 
     // Pour chaque gaz défini, créer les échelons
     gasTypes.forEach(gasType => {
@@ -271,57 +242,92 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
   });
 
   // ========== CALCULER LES ÉCHELLES ==========
-  // EXACTEMENT comme RecipePreviewChart: suggestedMax = cellTemp * 1.1 || 1000
-  // Chart.js utilise suggestedMax qui peut être dépassé, mais pour SVG on doit calculer le max réel
-  const maxTempFromData = Math.max(...temperaturePoints.map(p => p.y), 0);
-  const suggestedMaxFromCellTemp = (parseInt(cellTemp || 0) * 1.1) || 1000;
-  // Le max final doit accommoder les données ET la suggestion
-  const suggestedMaxTemp = Math.max(maxTempFromData * 1.1, suggestedMaxFromCellTemp);
-  const maxTime = Math.max(totalThermalTime, chemTimeOffset, 1);
 
-  // Calculer le débit max (suggestedMax: 3000 comme dans RecipePreviewChart)
-  let maxDebit = 100;
+  // 1. TEMPÉRATURE
+  // Trouver le max réel des données
+  const maxTempFromData = Math.max(...temperaturePoints.map(p => p.y), 0);
+  // Définir le pas (step)
+  let tempTickStep = 100;
+  if (maxTempFromData > 500) tempTickStep = 200;
+  if (maxTempFromData > 1200) tempTickStep = 500;
+
+  // Calculer le max de l'échelle (arrondi au step supérieur)
+  let domainMaxTemp = Math.ceil(maxTempFromData / tempTickStep) * tempTickStep;
+
+  // Si la donnée est trop proche du bord haut (> 90%), ajouter un step de marge
+  if (maxTempFromData > 0 && (maxTempFromData / domainMaxTemp) > 0.90) {
+    domainMaxTemp += tempTickStep;
+  }
+  domainMaxTemp = Math.max(domainMaxTemp, 500);
+
+  // 2. GAZ (Unified Axis)
+  let maxDebit = 0;
   Object.values(gasData).forEach(points => {
     points.forEach(p => {
       if (p.y > maxDebit) maxDebit = p.y;
     });
   });
-  const suggestedMaxDebit = Math.max(maxDebit * 1.1, 3000);
 
-  // Fonctions de conversion coordonnées (utilisées pour les paths et gasPaths)
+  // Pas pour les gaz
+  let gasTickStep = 250;
+  if (maxDebit > 1000) gasTickStep = 500;
+  if (maxDebit > 3000) gasTickStep = 1000;
+
+  // Max échelle gaz
+  let domainMaxDebit = Math.ceil(maxDebit / gasTickStep) * gasTickStep;
+  if (maxDebit > 0 && (maxDebit / domainMaxDebit) > 0.90) {
+    domainMaxDebit += gasTickStep;
+  }
+  domainMaxDebit = Math.max(domainMaxDebit, 500);
+
+  // 3. TEMPS
+  const maxTime = Math.max(totalThermalTime, chemTimeOffset, 1);
+
+  // Fonctions de scale
   const scaleX = (x) => (x / maxTime) * chartWidth;
-  const scaleYTemp = (y) => chartHeight - (y / suggestedMaxTemp) * chartHeight;
-  const scaleYGas = (y) => chartHeight - (y / suggestedMaxDebit) * chartHeight;
+  const scaleYTemp = (y) => chartHeight - (y / domainMaxTemp) * chartHeight;
+  const scaleYGas = (y) => chartHeight - (y / domainMaxDebit) * chartHeight;
 
   // ========== GRADUATIONS ==========
-  // Axe X (temps) - environ 6 graduations
-  const xTicks = [];
+
+  // Valeurs clés: setpoints température et temps de transition
+  const keySetpoints = [...new Set([
+    cellTemp,
+    ...thermalCycle.map(s => parseInt(s.setpoint) || 0)
+  ].filter(v => v > 0 && v <= domainMaxTemp))];
+
+  const keyTimes = [];
+  { let t = 0;
+    thermalCycle.forEach(step => {
+      t += parseInt(step.duration) || 0;
+      keyTimes.push(Math.round(t));
+    });
+  }
+
+  // X Ticks: graduations régulières + temps de transition réels
+  const xTicksRegular = [];
   const xTickStep = Math.ceil(maxTime / 6) || 1;
-  for (let i = 0; i <= maxTime; i += xTickStep) {
-    xTicks.push(Math.round(i));
-  }
-  // S'assurer que le max est inclus
-  if (xTicks.length > 0 && xTicks[xTicks.length - 1] < maxTime) {
-    xTicks.push(Math.round(maxTime));
-  }
+  for (let i = 0; i <= maxTime; i += xTickStep) xTicksRegular.push(Math.round(i));
+  if (xTicksRegular[xTicksRegular.length - 1] < maxTime) xTicksRegular.push(Math.round(maxTime));
+  // Fusionner avec les temps de transition, dédupliquer et trier
+  const xTicksSet = new Set(xTicksRegular);
+  keyTimes.forEach(t => { if (t > 0 && t <= maxTime) xTicksSet.add(t); });
+  const xTicks = [...xTicksSet].sort((a, b) => a - b);
 
-  // Axe Y température - valeurs rondes
-  const yTempTicks = [];
-  const tempTickStep = suggestedMaxTemp <= 500 ? 100 :
-    suggestedMaxTemp <= 1000 ? 200 :
-      suggestedMaxTemp <= 2000 ? 500 : 1000;
-  for (let i = 0; i <= suggestedMaxTemp; i += tempTickStep) {
-    yTempTicks.push(i);
-  }
+  // Y Temp Ticks: graduations régulières + setpoints réels
+  const yTempTicksRegular = [];
+  for (let i = 0; i <= domainMaxTemp; i += tempTickStep) yTempTicksRegular.push(i);
+  const yTempTicksSet = new Set(yTempTicksRegular);
+  keySetpoints.forEach(v => yTempTicksSet.add(v));
+  const yTempTicks = [...yTempTicksSet].sort((a, b) => a - b);
 
-  // Axe Y débit - valeurs rondes
+  // Y Gas Ticks
   const yGasTicks = [];
-  const gasTickStep = suggestedMaxDebit <= 1000 ? 250 :
-    suggestedMaxDebit <= 2000 ? 500 : 1000;
-  for (let i = 0; i <= suggestedMaxDebit; i += gasTickStep) {
-    yGasTicks.push(i);
-  }
-  // Filtrer les gaz qui ont vraiment des données (plus d'un point)
+  for (let i = 0; i <= domainMaxDebit; i += gasTickStep) yGasTicks.push(i);
+
+  // Layout pour l'axe Gaz décalé
+  const gasAxisOffset = 35; // Décalage vers la droite (en pixels)
+
   const activeGases = gasTypes.filter(gas => gasData[gas] && gasData[gas].length > 1);
 
   return (
@@ -344,80 +350,71 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
         </View>
 
         {/* Zone Graphique + Axes */}
-        <View style={{ flexDirection: 'row', height: chartHeight + padding.top + padding.bottom - 10 }}> {/* Hauteur ajustée */}
+        <View style={{ flexDirection: 'row', height: chartHeight + padding.top + padding.bottom - 10 }}>
 
-          {/* COLONNE GAUCHE: Labels Température */}
+          {/* COLONNE GAUCHE: Labels Température - setpoints en gras rouge */}
           <View style={{ width: padding.left, height: '100%', position: 'relative' }}>
-            {/* Titre Axe Gauche - Positionné juste au dessus de la colonne */}
-            <Text style={{
-              position: 'absolute',
-              top: 0,
-              right: 5,
-              fontSize: 7,
-              fontFamily: 'Helvetica-Bold',
-              color: TEMPERATURE_COLOR,
-              textAlign: 'right',
-              width: 50
-            }}>
-              T.(°C)
-            </Text>
-
-            {/* Grille Flex pour les ticks */}
-            <View style={{
-              marginTop: padding.top,
-              height: chartHeight,
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              paddingRight: 5
-            }}>
-              {yTempTicks.slice().reverse().map((tick, i) => (
-                <Text key={`ytick-${i}`} style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: TEMPERATURE_COLOR }}>
-                  {tick}
-                </Text>
-              ))}
+            <Text style={{ position: 'absolute', top: 0, right: 5, fontSize: 7, fontFamily: 'Helvetica-Bold', color: TEMPERATURE_COLOR, textAlign: 'right', width: 50 }}>T.(°C)</Text>
+            <View style={{ marginTop: padding.top, height: chartHeight, position: 'relative' }}>
+              {yTempTicks.map((tick, i) => {
+                const isKey = keySetpoints.includes(tick);
+                const top = scaleYTemp(tick) - 4;
+                return (
+                  <Text key={`ytick-${i}`} style={{
+                    position: 'absolute',
+                    top,
+                    right: 5,
+                    fontSize: isKey ? 7.5 : 6.5,
+                    fontFamily: 'Helvetica-Bold',
+                    color: isKey ? '#b91c1c' : '#999',
+                  }}>{tick}</Text>
+                );
+              })}
             </View>
           </View>
 
           {/* COLONNE CENTRALE: SVG */}
           <View style={{ flex: 1 }}>
-            <Svg width={chartWidth + 10} height={chartHeight + 15} viewBox={`-2 -5 ${chartWidth + 10} ${chartHeight + 15}`}>
+            {/* On agrandit le SVG pour inclure l'axe décalé à droite */}
+            <Svg width={chartWidth + gasAxisOffset + 30} height={chartHeight + 15} viewBox={`-2 -5 ${chartWidth + gasAxisOffset + 30} ${chartHeight + 15}`}>
 
-              {/* Grille Horizontale */}
+              {/* Grille Horizontale (Temp) - setpoints en trait plein rouge */}
               <G>
                 {yTempTicks.map((tick, i) => {
-                  const y = chartHeight - (tick / suggestedMaxTemp) * chartHeight;
-                  if (i === 0) return null;
+                  const y = scaleYTemp(tick);
+                  if (tick === 0) return null;
+                  const isKey = keySetpoints.includes(tick);
                   return (
                     <Line
                       key={`grid-y-${i}`}
                       x1={0} y1={y} x2={chartWidth} y2={y}
-                      stroke="#E5E7EB"
-                      strokeWidth={0.5}
-                      strokeDasharray="2 2"
+                      stroke={isKey ? 'rgba(220, 53, 69, 0.35)' : '#E5E7EB'}
+                      strokeWidth={isKey ? 0.8 : 0.5}
+                      strokeDasharray={isKey ? undefined : '2 2'}
                     />
                   );
                 })}
               </G>
 
-              {/* Grille Verticale */}
+              {/* Grille Verticale (Temps) - transitions en trait plein rouge */}
               <G>
                 {xTicks.map((tick, i) => {
-                  const x = (tick / maxTime) * chartWidth;
-                  if (i === 0) return null;
+                  const x = scaleX(tick);
+                  if (tick === 0) return null;
+                  const isKey = keyTimes.includes(tick);
                   return (
                     <Line
                       key={`grid-x-${i}`}
                       x1={x} y1={0} x2={x} y2={chartHeight}
-                      stroke="#E5E7EB"
-                      strokeWidth={0.5}
-                      strokeDasharray="2 2"
+                      stroke={isKey ? 'rgba(220, 53, 69, 0.35)' : '#E5E7EB'}
+                      strokeWidth={isKey ? 0.8 : 0.5}
+                      strokeDasharray={isKey ? undefined : '2 2'}
                     />
                   );
                 })}
               </G>
 
-              {/* Data Paths */}
-              {/* Temperature */}
+              {/* Courbe Température */}
               {temperaturePoints.length > 0 && (
                 <Path
                   d={temperaturePoints.map((point, i) => {
@@ -431,13 +428,17 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
                 />
               )}
 
-              {/* Gases */}
+              {/* Courbes Gaz (Toutes sur le même axe Y décalé) */}
               {Object.entries(gasData).map(([gas, points]) => {
                 if (points.length <= 1) return null;
+                // Rendu stepped: horizontal d'abord, puis vertical (comme Chart.js stepped: true)
                 const pathD = points.map((point, i) => {
                   const x = scaleX(point.x);
                   const y = scaleYGas(point.y);
-                  return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+                  if (i === 0) return `M ${x} ${y}`;
+                  const prevY = scaleYGas(points[i - 1].y);
+                  // D'abord horizontal au même y que le point précédent, puis vertical au nouveau y
+                  return `L ${x} ${prevY} L ${x} ${y}`;
                 }).join(' ');
                 return (
                   <Path
@@ -451,33 +452,69 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
               })}
 
               {/* --- AXES PRINCIPAUX --- */}
-              {/* Axe Y Gauche (Temp) - Trait Noir Vertical */}
+              {/* Axe Y Gauche (Temp) */}
               <Line x1={0} y1={0} x2={0} y2={chartHeight} stroke="#000000" strokeWidth={1} />
 
-              {/* Axe X (Temps) - Trait Noir Horizontal */}
-              <Line x1={0} y1={chartHeight} x2={chartWidth + 5} y2={chartHeight} stroke="#000000" strokeWidth={1} />
+              {/* Axe X (Temps) */}
+              <Line x1={0} y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#000000" strokeWidth={1} />
 
-              {/* Axe Y Droite (Débit) - Trait Noir Vertical */}
-              <Line x1={chartWidth} y1={0} x2={chartWidth} y2={chartHeight} stroke="#000000" strokeWidth={1} />
+              {/* Axe Y Droite (Gaz) - DÉCALÉ */}
+              {/* Ligne verticale décalée de gasAxisOffset pixels */}
+              <Line
+                x1={chartWidth + gasAxisOffset}
+                y1={0}
+                x2={chartWidth + gasAxisOffset}
+                y2={chartHeight}
+                stroke="#475569"
+                strokeWidth={1}
+              />
+
+              {/* Ticks de l'axe décalé */}
+              <G>
+                {yGasTicks.map((tick, i) => {
+                  const y = scaleYGas(tick);
+                  return (
+                    <Line
+                      key={`gas-tick-${i}`}
+                      x1={chartWidth + gasAxisOffset}
+                      y1={y}
+                      x2={chartWidth + gasAxisOffset + 3} // Petit trait vers l'extérieur
+                      y2={y}
+                      stroke="#475569"
+                      strokeWidth={1}
+                    />
+                  );
+                })}
+              </G>
 
               {/* --- Flèches --- */}
-              {/* Haut Gauche */}
-              <Path d="M 0 0 L -3 5 L 3 5 Z" fill="#000000" />
-              {/* Haut Droite */}
-              <Path d={`M ${chartWidth} 0 L ${chartWidth - 3} 5 L ${chartWidth + 3} 5 Z`} fill="#000000" />
-              {/* Droite Bas (Temps) */}
-              <Path d={`M ${chartWidth + 5} ${chartHeight} L ${chartWidth} ${chartHeight - 3} L ${chartWidth} ${chartHeight + 3} Z`} fill="#000000" />
+              <Path d="M 0 0 L -3 5 L 3 5 Z" fill="#000000" /> {/* Temp */}
+              <Path d={`M ${chartWidth} ${chartHeight} L ${chartWidth - 5} ${chartHeight - 3} L ${chartWidth - 5} ${chartHeight + 3} Z`} fill="#000000" /> {/* Temps */}
+
+              {/* Flèche Gaz Axis */}
+              <Path
+                d={`M ${chartWidth + gasAxisOffset} 0 L ${chartWidth + gasAxisOffset - 3} 5 L ${chartWidth + gasAxisOffset + 3} 5 Z`}
+                fill="#475569"
+              />
 
             </Svg>
 
-            {/* Labels Axe X (Temps) */}
+            {/* Labels Axe X (Temps) - transitions en gras rouge */}
             <View style={{ flexDirection: 'row', height: 12, marginTop: -5 }}>
-              <Text style={{ position: 'absolute', right: 0, top: 0, fontSize: 7, fontFamily: 'Helvetica-Bold' }}>min</Text>
-
+              <Text style={{ position: 'absolute', right: padding.right - 10, top: 0, fontSize: 7, fontFamily: 'Helvetica-Bold' }}>min</Text>
               {xTicks.map((tick, i) => {
-                const leftPos = (tick / maxTime) * chartWidth - 10;
+                const leftPos = Math.min((tick / maxTime) * chartWidth - 5, chartWidth - 10);
+                const isKey = keyTimes.includes(tick);
                 return (
-                  <Text key={`xlabel-${i}`} style={{ position: 'absolute', left: leftPos, width: 20, fontSize: 7, textAlign: 'center' }}>
+                  <Text key={`xlabel-${i}`} style={{
+                    position: 'absolute',
+                    left: leftPos,
+                    width: 24,
+                    fontSize: isKey ? 7.5 : 6.5,
+                    fontFamily: 'Helvetica-Bold',
+                    textAlign: 'center',
+                    color: isKey ? '#b91c1c' : '#666',
+                  }}>
                     {tick}
                   </Text>
                 );
@@ -485,31 +522,29 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
             </View>
           </View>
 
-          {/* COLONNE DROITE: Labels Débit */}
+          {/* COLONNE DROITE: Labels Débit avec Décalage */}
           <View style={{ width: padding.right, height: '100%', position: 'relative' }}>
-            {/* Titre Axe Droite */}
+            {/* Titre Axe Gaz */}
             <Text style={{
               position: 'absolute',
               top: 0,
-              left: 5,
+              left: gasAxisOffset - 10,
               fontSize: 7,
               fontFamily: 'Helvetica-Bold',
               color: '#475569',
               width: 50
-            }}>
-              Nl/h
-            </Text>
+            }}>Nl/h</Text>
 
-            {/* Grille Flex pour les ticks */}
+            {/* Ticks alignés verticalement avec l'axe décalé */}
             <View style={{
               marginTop: padding.top,
               height: chartHeight,
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              paddingLeft: 5
+              paddingLeft: gasAxisOffset + 5 // Pousse les labels à droite de l'axe décalé
             }}>
               {yGasTicks.slice().reverse().map((tick, i) => (
-                <Text key={`ygtick-${i}`} style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#475569' }}>
+                <Text key={`ygastick-${i}`} style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#475569' }}>
                   {tick}
                 </Text>
               ))}

@@ -23,7 +23,7 @@ const TEXT_GRAY = '#64748b';
 const styles = StyleSheet.create({
   // Main Section Container
   sectionContainer: {
-    marginBottom: 20,
+    marginBottom: 10,
     fontFamily: 'Helvetica',
   },
   gridPage: {
@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 5, // Reduced vertical padding
-    marginBottom: 8,
+    paddingVertical: 2, // Reduced vertical padding
+    marginBottom: 4,
   },
   sectionTitle: {
     color: '#ffffff',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
 
   // Technical Specs Block
   specsContainer: {
-    marginTop: 5,
+    marginTop: 2,
     marginBottom: 2,
   },
   specsTitle: {
@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND_DARK,
     paddingVertical: 4,
     paddingHorizontal: 15,
-    marginBottom: 30, // Increased to 30 for better vertical centering
-    marginTop: 15,
+    marginBottom: 10, // Reduced from 30
+    marginTop: 5,
   },
   photosTitle: {
     color: '#ffffff',
@@ -203,9 +203,9 @@ const styles = StyleSheet.create({
   descriptionBox: {
     borderWidth: 1,
     borderColor: BRAND_DARK,
-    padding: 10,
-    marginTop: 5,
-    marginBottom: 10,
+    padding: 5,
+    marginTop: 2,
+    marginBottom: 5,
   }
 });
 
@@ -377,10 +377,10 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                 </View>
 
                 {/* Part Description Box */}
-                <View style={{ marginBottom: 10 }}>
+                <View style={{ marginBottom: 4 }}>
                   <Text style={{ ...styles.label, width: '100%', marginBottom: 2 }}>PART DESCRIPTION:</Text>
                   <View style={styles.descriptionBox}>
-                    <Text style={{ ...styles.value, width: '100%' }}>
+                    <Text style={{ ...styles.value, width: '100%', fontSize: 8 }}>
                       {report.partDescription || '-'}
                     </Text>
                   </View>

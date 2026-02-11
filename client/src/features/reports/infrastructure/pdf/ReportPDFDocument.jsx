@@ -28,12 +28,12 @@ import { COLORS, TYPOGRAPHY, SPACING, COMMON_STYLES } from './theme';
 const styles = StyleSheet.create({
   page: {
     ...COMMON_STYLES.page,
-    paddingBottom: 60, // Espace pour le footer
+    paddingBottom: 35, // Reduced from 60
     paddingTop: 20,
   },
   pageIdentification: {
     ...COMMON_STYLES.page,
-    paddingBottom: 60,
+    paddingBottom: 35, // Reduced from 60
     paddingTop: 10, // Reduced padding for Identification Sheet
   },
   // pageFooter removed - replaced by component
@@ -349,6 +349,7 @@ export const CoverPage = ({ report, options }) => {
 
           // --- CALCS ---
           const waitTime = parseFloat(recipeData.wait_time?.value) || 0; // min
+          const waitTemp = recipeData.wait_temperature?.value || '-'; // usually °C
           const waitPressure = recipeData.wait_pressure?.value || '-'; // usually mb
 
           // Chemical (Heating) Details
@@ -356,8 +357,10 @@ export const CoverPage = ({ report, options }) => {
           const chemTotalSeconds = chemCycle.reduce((acc, step) => acc + (parseFloat(step.time) || 0), 0);
           const chemTotalMinutes = chemTotalSeconds / 60;
 
-          // Treatment Time (Wait + Chem)
-          const treatmentTime = waitTime + chemTotalMinutes;
+          // Treatment Time (Process Time) - Chem only
+          const processTime = chemTotalMinutes;
+          // Total includes Pre-Heating (waitTime) + Process (chem)
+          const treatmentTime = waitTime + processTime;
 
           // Quench Details
           let quenchTotalSeconds = 0;
@@ -377,7 +380,11 @@ export const CoverPage = ({ report, options }) => {
 
           const quenchTotalMinutes = quenchTotalSeconds / 60;
           const totalCycleMinutes = treatmentTime + quenchTotalMinutes;
-          const totalCycleHours = totalCycleMinutes / 60;
+
+          // Format Total Cycle Time as "X h Y min"
+          const totalHours = Math.floor(totalCycleMinutes / 60);
+          const totalMinutes = Math.round(totalCycleMinutes % 60);
+          const totalCycleStr = `${totalHours} h ${totalMinutes} min`;
 
           // Gas Totals
           const selectedGases = [recipeData.selected_gas1, recipeData.selected_gas2, recipeData.selected_gas3].filter(Boolean);
@@ -388,7 +395,8 @@ export const CoverPage = ({ report, options }) => {
             const stepDuration = (parseFloat(step.time) || 0) / 60;
             if (step.gases && Array.isArray(step.gases)) {
               step.gases.forEach(g => {
-                if (selectedGases.includes(g.gas)) {
+                const debit = parseFloat(g.debit || g.flow || 0);
+                if (selectedGases.includes(g.gas) && debit > 0) {
                   gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
                 }
               });
@@ -404,16 +412,16 @@ export const CoverPage = ({ report, options }) => {
                 </View>
                 <View style={coverStyles.cycleContent}>
                   <View style={coverStyles.cycleRow}>
-                    <Text style={coverStyles.cycleLabel}>Heating time:</Text>
+                    <Text style={coverStyles.cycleLabel}>Pre Heating time:</Text>
                     <Text style={coverStyles.cycleValue}>{waitTime} mn</Text>
                   </View>
                   <View style={coverStyles.cycleRow}>
-                    <Text style={coverStyles.cycleLabel}>Treatment time:</Text>
-                    <Text style={coverStyles.cycleValue}>{treatmentTime.toFixed(0)} mn</Text>
+                    <Text style={coverStyles.cycleLabel}>Process time:</Text>
+                    <Text style={coverStyles.cycleValue}>{processTime.toFixed(0)} mn</Text>
                   </View>
                   <View style={coverStyles.cycleRow}>
                     <Text style={coverStyles.cycleLabel}>Total cycle time:</Text>
-                    <Text style={coverStyles.cycleValue}>{totalCycleHours.toFixed(1)} h</Text>
+                    <Text style={coverStyles.cycleValue}>{totalCycleStr}</Text>
                   </View>
                 </View>
               </View>
@@ -437,6 +445,10 @@ export const CoverPage = ({ report, options }) => {
                   <View style={coverStyles.cycleRow}>
                     <Text style={coverStyles.cycleLabel}>Pressure:</Text>
                     <Text style={coverStyles.cycleValue}>{waitPressure} mb</Text>
+                  </View>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Cell Temp:</Text>
+                    <Text style={coverStyles.cycleValue}>{waitTemp} °C</Text>
                   </View>
                 </View>
               </View>
@@ -1316,15 +1328,15 @@ const SectionContent = ({ section, report, options }) => {
         },
         row: {
           flexDirection: 'row',
-          marginBottom: 4,
+          marginBottom: 2,
           alignItems: 'center'
         },
         box: {
           borderWidth: 1,
           borderColor: '#1e3a8a', // Brand Dark
-          padding: 10,
-          marginTop: 5,
-          marginBottom: 10
+          padding: 5,
+          marginTop: 2,
+          marginBottom: 5
         }
       };
 
@@ -1353,10 +1365,10 @@ const SectionContent = ({ section, report, options }) => {
           <DataRow label="Steel Grade" value={partData?.steel?.grade || partData?.steelGrade} />
 
           {/* Boxed Description */}
-          <View style={{ marginTop: 10 }}>
+          <View style={{ marginTop: 2 }}>
             <Text style={{ ...idStyles.label, marginBottom: 2, width: '100%' }}>PART DESCRIPTION:</Text>
             <View style={idStyles.box}>
-              <Text style={idStyles.value}>
+              <Text style={{ ...idStyles.value, fontSize: 8 }}>
                 {report.partDescription || '-'}
               </Text>
             </View>

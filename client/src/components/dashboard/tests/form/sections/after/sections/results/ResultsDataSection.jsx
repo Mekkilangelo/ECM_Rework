@@ -1,10 +1,11 @@
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Button, Card, Table } from 'react-bootstrap';
 import CreatableSelect from 'react-select/creatable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faFileExcel } from '@fortawesome/free-solid-svg-icons';
 import CollapsibleSection from '../../../../../../../common/CollapsibleSection/CollapsibleSection';
+import ConfirmationModal from '../../../../../../../common/ConfirmationModal/ConfirmationModal';
 import MicrographsSection from './modules/MicrographsSection';
 import ControlLocationSection from './modules/ControlLocationSection';
 import ResultCurveSection from './modules/ResultCurveSection';
@@ -49,6 +50,9 @@ const ResultsDataSection = forwardRef(({
   specifications
 }, ref) => {
   const { t } = useTranslation();
+
+  // State pour les modals de confirmation de suppression
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, resultIndex: null, sampleIndex: null });
 
   // Fonction pour créer une nouvelle unité de dureté
   const handleCreateHardnessUnit = (inputValue) =>
@@ -317,7 +321,7 @@ const ResultsDataSection = forwardRef(({
               <Button
                 variant="outline-danger"
                 size="sm"
-                onClick={() => handleResultBlocRemove(resultIndex)}
+                onClick={() => setDeleteConfirm({ show: true, type: 'result', resultIndex })}
                 disabled={loading}
               >
                 <FontAwesomeIcon icon={faTrash} className="me-1" /> {t('common.delete')}
@@ -369,7 +373,7 @@ const ResultsDataSection = forwardRef(({
                     <Button
                       variant="outline-danger"
                       size="sm"
-                      onClick={() => handleSampleRemove(resultIndex, sampleIndex)}
+                      onClick={() => setDeleteConfirm({ show: true, type: 'sample', resultIndex, sampleIndex })}
                       disabled={loading}
                     >
                       <FontAwesomeIcon icon={faTrash} className="me-1" /> {t('common.delete')}
@@ -785,6 +789,29 @@ const ResultsDataSection = forwardRef(({
           </div>
         </CollapsibleSection>
       ))}
+
+      <ConfirmationModal
+        show={deleteConfirm.show}
+        onHide={() => setDeleteConfirm({ show: false, type: null, resultIndex: null, sampleIndex: null })}
+        onConfirm={() => {
+          if (deleteConfirm.type === 'result') {
+            handleResultBlocRemove(deleteConfirm.resultIndex);
+          } else if (deleteConfirm.type === 'sample') {
+            handleSampleRemove(deleteConfirm.resultIndex, deleteConfirm.sampleIndex);
+          }
+        }}
+        title={deleteConfirm.type === 'result'
+          ? t('trials.after.results.deleteResultTitle', 'Supprimer le résultat')
+          : t('trials.after.results.deleteSampleTitle', 'Supprimer l\'échantillon')
+        }
+        message={deleteConfirm.type === 'result'
+          ? t('trials.after.results.deleteResultMessage', 'Êtes-vous sûr de vouloir supprimer ce bloc de résultat et tous ses échantillons ? Cette action est irréversible.')
+          : t('trials.after.results.deleteSampleMessage', 'Êtes-vous sûr de vouloir supprimer cet échantillon et toutes ses données (dureté, ECD, courbes) ? Cette action est irréversible.')
+        }
+        confirmText={t('common.delete', 'Supprimer')}
+        cancelText={t('common.cancel', 'Annuler')}
+        variant="danger"
+      />
     </div>
   );
 });

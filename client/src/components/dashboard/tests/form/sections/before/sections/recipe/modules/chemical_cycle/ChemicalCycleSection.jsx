@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faMagic, faExclamationTriangle, faInfoCircle, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import predictionService from '../../../../../../../../../../services/predictionService';
 import trialService from '../../../../../../../../../../services/trialService';
+import ConfirmationModal from '../../../../../../../../../common/ConfirmationModal/ConfirmationModal';
 
 const ChemicalCycleSection = ({
   formData,
@@ -28,6 +29,7 @@ const ChemicalCycleSection = ({
   const [predictionError, setPredictionError] = useState(null);
   const [predictionSuccess, setPredictionSuccess] = useState(null);
   const [checklistData, setChecklistData] = useState({ valid: false, missing: [] });
+  const [showPredictConfirm, setShowPredictConfirm] = useState(false);
 
   // Mettre à jour la checklist quand les données changent (au chargement ou ouverture popover)
   const updateChecklist = async () => {
@@ -437,7 +439,7 @@ const ChemicalCycleSection = ({
               <Button
                 variant="primary"
                 size="sm"
-                onClick={handlePredictRecipe}
+                onClick={() => setShowPredictConfirm(true)}
                 disabled={predicting || loading}
               >
                 {predicting ? (
@@ -831,6 +833,16 @@ const ChemicalCycleSection = ({
           />
         </div>
       </div>
+      <ConfirmationModal
+        show={showPredictConfirm}
+        onHide={() => setShowPredictConfirm(false)}
+        onConfirm={handlePredictRecipe}
+        title={t('trials.before.recipeData.chemicalCycle.predictConfirmTitle', 'Remplacer la recette')}
+        message={t('trials.before.recipeData.chemicalCycle.predictConfirmMessage', 'La prédiction va remplacer les cycles thermique et chimique actuels. Cette action est irréversible. Voulez-vous continuer ?')}
+        confirmText={t('trials.before.recipeData.chemicalCycle.predictConfirmButton', 'Prédire et remplacer')}
+        cancelText={t('common.cancel', 'Annuler')}
+        variant="warning"
+      />
     </>
   );
 };

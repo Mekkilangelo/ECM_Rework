@@ -5,7 +5,7 @@ import { getBaseUrl } from '../../../../../config/apiConfig';
 const styles = StyleSheet.create({
     footerContainer: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 10,
         left: 20,
         right: 20,
         borderTopWidth: 1,

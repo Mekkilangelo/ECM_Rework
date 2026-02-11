@@ -349,7 +349,7 @@ export const CoverPage = ({ report, options }) => {
 
           // --- CALCS ---
           const waitTime = parseFloat(recipeData.wait_time?.value) || 0; // min
-          const waitTemp = recipeData.wait_temperature?.value || '-'; // usually °C
+          const waitTemp = recipeData.cell_temp?.value || '-'; // usually °C
           const waitPressure = recipeData.wait_pressure?.value || '-'; // usually mb
 
           // Chemical (Heating) Details

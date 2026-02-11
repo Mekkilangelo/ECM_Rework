@@ -297,27 +297,47 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
   ].filter(v => v > 0 && v <= domainMaxTemp))];
 
   const keyTimes = [];
-  { let t = 0;
+  {
+    let t = 0;
     thermalCycle.forEach(step => {
       t += parseInt(step.duration) || 0;
       keyTimes.push(Math.round(t));
     });
   }
 
+  // 4. SMART TICKS - Filtration pour éviter les chevauchements
+  const filterCloseTicks = (regularTicks, keyTicks, domainMax, thresholdPct = 0.05) => {
+    const threshold = domainMax * thresholdPct;
+    return regularTicks.filter(rTick => {
+      // Garder le 0 et le Max
+      if (rTick === 0 || rTick === domainMax) return true;
+      // Retirer si trop proche d'un tick clé
+      return !keyTicks.some(kTick => Math.abs(kTick - rTick) < threshold);
+    });
+  };
+
   // X Ticks: graduations régulières + temps de transition réels
   const xTicksRegular = [];
   const xTickStep = Math.ceil(maxTime / 6) || 1;
   for (let i = 0; i <= maxTime; i += xTickStep) xTicksRegular.push(Math.round(i));
   if (xTicksRegular[xTicksRegular.length - 1] < maxTime) xTicksRegular.push(Math.round(maxTime));
-  // Fusionner avec les temps de transition, dédupliquer et trier
-  const xTicksSet = new Set(xTicksRegular);
-  keyTimes.forEach(t => { if (t > 0 && t <= maxTime) xTicksSet.add(t); });
+
+  // Filtrer les ticks temporel
+  const keyTimesSet = [...new Set(keyTimes)];
+  const filteredXTicks = filterCloseTicks(xTicksRegular, keyTimesSet, maxTime, 0.06);
+
+  const xTicksSet = new Set(filteredXTicks);
+  keyTimesSet.forEach(t => { if (t > 0 && t <= maxTime) xTicksSet.add(t); });
   const xTicks = [...xTicksSet].sort((a, b) => a - b);
 
   // Y Temp Ticks: graduations régulières + setpoints réels
   const yTempTicksRegular = [];
   for (let i = 0; i <= domainMaxTemp; i += tempTickStep) yTempTicksRegular.push(i);
-  const yTempTicksSet = new Set(yTempTicksRegular);
+
+  // Filtrer les ticks température (ex: virer 1000 si 950 est présent)
+  const filteredTempTicks = filterCloseTicks(yTempTicksRegular, keySetpoints, domainMaxTemp, 0.06);
+
+  const yTempTicksSet = new Set(filteredTempTicks);
   keySetpoints.forEach(v => yTempTicksSet.add(v));
   const yTempTicks = [...yTempTicksSet].sort((a, b) => a - b);
 
@@ -355,10 +375,11 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
           {/* COLONNE GAUCHE: Labels Température - setpoints en gras rouge */}
           <View style={{ width: padding.left, height: '100%', position: 'relative' }}>
             <Text style={{ position: 'absolute', top: 0, right: 5, fontSize: 7, fontFamily: 'Helvetica-Bold', color: TEMPERATURE_COLOR, textAlign: 'right', width: 50 }}>T.(°C)</Text>
-            <View style={{ marginTop: padding.top, height: chartHeight, position: 'relative' }}>
+            {/* marginTop: 5 aligne avec le viewBox y=-5 du SVG (chart y=0 → pixel 5) */}
+            <View style={{ marginTop: 5, height: chartHeight, position: 'relative' }}>
               {yTempTicks.map((tick, i) => {
                 const isKey = keySetpoints.includes(tick);
-                const top = scaleYTemp(tick) - 4;
+                const top = scaleYTemp(tick) - 3;
                 return (
                   <Text key={`ytick-${i}`} style={{
                     position: 'absolute',
@@ -536,18 +557,28 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
             }}>Nl/h</Text>
 
             {/* Ticks alignés verticalement avec l'axe décalé */}
+            {/* marginTop: 5 aligne avec le viewBox y=-5 du SVG */}
             <View style={{
-              marginTop: padding.top,
+              marginTop: 5,
               height: chartHeight,
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              paddingLeft: gasAxisOffset + 5 // Pousse les labels à droite de l'axe décalé
+              position: 'relative',
+              paddingLeft: gasAxisOffset + 5
             }}>
-              {yGasTicks.slice().reverse().map((tick, i) => (
-                <Text key={`ygastick-${i}`} style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#475569' }}>
-                  {tick}
-                </Text>
-              ))}
+              {yGasTicks.map((tick, i) => {
+                const top = scaleYGas(tick) - 3;
+                return (
+                  <Text key={`ygastick-${i}`} style={{
+                    position: 'absolute',
+                    top,
+                    left: gasAxisOffset + 5,
+                    fontSize: 6.5,
+                    fontFamily: 'Helvetica-Bold',
+                    color: '#475569'
+                  }}>
+                    {tick}
+                  </Text>
+                );
+              })}
             </View>
           </View>
 

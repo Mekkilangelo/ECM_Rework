@@ -242,7 +242,7 @@ const calculateRecipeStats = (recipeData, quenchData) => {
   // 4. Total Duration (Cycle + Quench)
   const totalDuration = totalCycleTime + quenchTotalMinutes;
 
-  // 5. Gas Totals (Modified to include gases even if flow is 0, if they are selected)
+  // 5. Gas Totals (Modified to include gases only if flow > 0)
   const gasTotals = {};
   const selectedGases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
 
@@ -253,8 +253,9 @@ const calculateRecipeStats = (recipeData, quenchData) => {
     const stepDuration = (parseFloat(step.time) || 0) / 60; // min
     if (step.gases && Array.isArray(step.gases)) {
       step.gases.forEach(g => {
-        // If the gas is in the selected list, add time (regardless of flow value)
-        if (selectedGases.includes(g.gas)) {
+        // If the gas is in the selected list AND has flow > 0, add time
+        const flow = parseFloat(g.debit || g.flow || 0);
+        if (selectedGases.includes(g.gas) && flow > 0) {
           gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
         }
       });
@@ -269,6 +270,14 @@ const calculateRecipeStats = (recipeData, quenchData) => {
     totalDuration,
     gasTotals
   };
+};
+
+const formatDurationMinSec = (minutes) => {
+  const totalSeconds = Math.round(minutes * 60);
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  if (s === 0) return `${m} min`;
+  return `${m}m ${s}s`;
 };
 
 const StatsColumn = ({ recipeData, stats }) => {
@@ -297,7 +306,10 @@ const StatsColumn = ({ recipeData, stats }) => {
       <View>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>GAS USAGE</Text>
         {Object.entries(stats.gasTotals).map(([gas, duration]) => (
-          <InfoRow key={gas} label={`${gas} Time`} value={duration.toFixed(1)} unit="min" />
+          <View key={gas} style={styles.row}>
+            <Text style={styles.label}>{gas} Time:</Text>
+            <Text style={styles.value}>{formatDurationMinSec(duration)}</Text>
+          </View>
         ))}
       </View>
     </View>

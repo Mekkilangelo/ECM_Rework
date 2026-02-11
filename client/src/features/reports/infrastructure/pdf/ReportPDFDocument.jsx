@@ -379,17 +379,17 @@ export const CoverPage = ({ report, options }) => {
           }
 
           const quenchTotalMinutes = quenchTotalSeconds / 60;
-          const totalCycleMinutes = treatmentTime + quenchTotalMinutes;
+          const totalCycleMinutes = treatmentTime; // Excludes quench time as per request
 
           // Format Total Cycle Time as "X h Y min"
           const totalHours = Math.floor(totalCycleMinutes / 60);
           const totalMinutes = Math.round(totalCycleMinutes % 60);
           const totalCycleStr = `${totalHours} h ${totalMinutes} min`;
 
-          // Gas Totals
+          // Gas Totals & Flow
           const selectedGases = [recipeData.selected_gas1, recipeData.selected_gas2, recipeData.selected_gas3].filter(Boolean);
-          const gasTotals = {};
-          selectedGases.forEach(g => gasTotals[g] = 0.0);
+          const gasStats = {};
+          selectedGases.forEach(g => gasStats[g] = { time: 0, flow: null });
 
           chemCycle.forEach(step => {
             const stepDuration = (parseFloat(step.time) || 0) / 60;
@@ -397,7 +397,8 @@ export const CoverPage = ({ report, options }) => {
               step.gases.forEach(g => {
                 const debit = parseFloat(g.debit || g.flow || 0);
                 if (selectedGases.includes(g.gas) && debit > 0) {
-                  gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
+                  gasStats[g.gas].time += stepDuration;
+                  if (gasStats[g.gas].flow === null) gasStats[g.gas].flow = debit;
                 }
               });
             }
@@ -435,8 +436,11 @@ export const CoverPage = ({ report, options }) => {
                   {selectedGases.length > 0 ? (
                     selectedGases.map(gas => (
                       <View key={gas} style={coverStyles.cycleRow}>
-                        <Text style={coverStyles.cycleLabel}>{gas} time:</Text>
-                        <Text style={coverStyles.cycleValue}>{gasTotals[gas]?.toFixed(0)} mn</Text>
+                        <Text style={coverStyles.cycleLabel}>{gas}:</Text>
+                        <Text style={coverStyles.cycleValue}>
+                          {gasStats[gas]?.time ? `${gasStats[gas].time.toFixed(0)} min` : '0 min'}
+                          {gasStats[gas]?.flow ? ` ${gasStats[gas].flow} Nl/h` : ''}
+                        </Text>
                       </View>
                     ))
                   ) : (
@@ -459,6 +463,10 @@ export const CoverPage = ({ report, options }) => {
                   <Text style={coverStyles.cycleHeaderText}>COOLING</Text>
                 </View>
                 <View style={coverStyles.cycleContent}>
+                  <View style={coverStyles.cycleRow}>
+                    <Text style={coverStyles.cycleLabel}>Cooling time:</Text>
+                    <Text style={coverStyles.cycleValue}>{quenchTotalMinutes.toFixed(1)} mn</Text>
+                  </View>
                   <View style={coverStyles.cycleRow}>
                     <Text style={coverStyles.cycleLabel}>Pressure:</Text>
                     <Text style={coverStyles.cycleValue}>{quenchPressure} mb</Text>

@@ -364,8 +364,8 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                     <View style={styles.dimList}>
                       {length && <View style={styles.dimRow}><Text style={styles.dimLabel}>Length :</Text><Text style={styles.dimValue}>{length} {unitRect}</Text></View>}
                       {width && <View style={styles.dimRow}><Text style={styles.dimLabel}>Width :</Text><Text style={styles.dimValue}>{width} {unitRect}</Text></View>}
-                      {diameterOut && <View style={styles.dimRow}><Text style={styles.dimLabel}>{diameterIn ? 'Ext. Diameter' : 'Diameter'} :</Text><Text style={styles.dimValue}>{diameterOut} {unitCirc}</Text></View>}
-                      {diameterIn && <View style={styles.dimRow}><Text style={styles.dimLabel}>{diameterOut ? 'Int. Diameter' : 'Diameter'} :</Text><Text style={styles.dimValue}>{diameterIn} {unitCirc}</Text></View>}
+                      {diameterOut && <View style={styles.dimRow}><Text style={styles.dimLabel}>Outer Diameter :</Text><Text style={styles.dimValue}>{diameterOut} {unitCirc}</Text></View>}
+                      {diameterIn && <View style={styles.dimRow}><Text style={styles.dimLabel}>Inner Diameter :</Text><Text style={styles.dimValue}>{diameterIn} {unitCirc}</Text></View>}
                       {height && <View style={styles.dimRow}><Text style={styles.dimLabel}>Height :</Text><Text style={styles.dimValue}>{height} {unitRect}</Text></View>}
                     </View>
                   </View>

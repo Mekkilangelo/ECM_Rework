@@ -246,8 +246,8 @@ const calculateRecipeStats = (recipeData, quenchData) => {
   const gasTotals = {};
   const selectedGases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
 
-  // Initialize selected gases to 0
-  selectedGases.forEach(g => gasTotals[g] = 0.0);
+  // Initialize selected gases
+  selectedGases.forEach(g => gasTotals[g] = { time: 0, flow: null });
 
   chemCycle.forEach(step => {
     const stepDuration = (parseFloat(step.time) || 0) / 60; // min
@@ -256,11 +256,15 @@ const calculateRecipeStats = (recipeData, quenchData) => {
         // If the gas is in the selected list AND has flow > 0, add time
         const flow = parseFloat(g.debit || g.flow || 0);
         if (selectedGases.includes(g.gas) && flow > 0) {
-          gasTotals[g.gas] = (gasTotals[g.gas] || 0) + stepDuration;
+          gasTotals[g.gas].time += stepDuration;
+          if (gasTotals[g.gas].flow === null) gasTotals[g.gas].flow = flow;
         }
       });
     }
   });
+
+  // 6. Pressure from first chemical cycle step
+  const chemPressure = chemCycle[0]?.pressure || null;
 
   return {
     waitTime,
@@ -268,7 +272,8 @@ const calculateRecipeStats = (recipeData, quenchData) => {
     totalCycleTime,
     quenchTotalMinutes,
     totalDuration,
-    gasTotals
+    gasTotals,
+    chemPressure
   };
 };
 
@@ -290,25 +295,27 @@ const StatsColumn = ({ recipeData, stats }) => {
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PARAMETERS</Text>
         <InfoRow label="Gases" value={gases.join(', ')} />
         <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
-        <InfoRow label="Wait Press" value={recipeData?.wait_pressure?.value} unit={recipeData?.wait_pressure?.unit} />
+        <InfoRow label="Pressure" value={stats.chemPressure} unit="mb" />
         <InfoRow label="Cell Temp" value={recipeData?.cell_temp?.value} unit={recipeData?.cell_temp?.unit} />
       </View>
 
       {/* Calculated Stats */}
       <View style={{ marginBottom: 10 }}>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>STATISTICS</Text>
-        <InfoRow label="Cycle Time" value={stats.totalCycleTime.toFixed(1)} unit="min" />
+        <InfoRow label="Process time" value={stats.chemTotalMinutes.toFixed(1)} unit="min" />
         <InfoRow label="Quench Time" value={stats.quenchTotalMinutes.toFixed(1)} unit="min" />
-        <InfoRow label="Total Duration" value={stats.totalDuration.toFixed(1)} unit="min" />
+        <InfoRow label="Total cycle time" value={`${Math.floor(stats.totalCycleTime / 60)} h ${Math.round(stats.totalCycleTime % 60)} min`} />
       </View>
 
       {/* Gas Totals */}
       <View>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>GAS USAGE</Text>
-        {Object.entries(stats.gasTotals).map(([gas, duration]) => (
+        {Object.entries(stats.gasTotals).map(([gas, data]) => (
           <View key={gas} style={styles.row}>
-            <Text style={styles.label}>{gas} Time:</Text>
-            <Text style={styles.value}>{formatDurationMinSec(duration)}</Text>
+            <Text style={styles.label}>{gas}:</Text>
+            <Text style={styles.value}>
+              {formatDurationMinSec(data.time)}{data.flow ? `  |  ${data.flow} Nl/h` : ''}
+            </Text>
           </View>
         ))}
       </View>

@@ -356,7 +356,7 @@ export const CoverPage = ({ report, options }) => {
           // --- CALCS ---
           const waitTime = parseFloat(recipeData.wait_time?.value) || 0; // min
           const waitTemp = recipeData.cell_temp?.value || '-'; // usually °C
-          const waitPressure = recipeData.wait_pressure?.value || '-'; // usually mb
+          const chemPressure = (recipeData.chemical_cycle || [])[0]?.pressure || '-';
 
           // Chemical (Heating) Details
           const chemCycle = recipeData.chemical_cycle || [];
@@ -445,7 +445,7 @@ export const CoverPage = ({ report, options }) => {
                         <Text style={coverStyles.cycleLabel}>{gas}:</Text>
                         <Text style={coverStyles.cycleValue}>
                           {gasStats[gas]?.time ? `${gasStats[gas].time.toFixed(0)} min` : '0 min'}
-                          {gasStats[gas]?.flow ? ` ${gasStats[gas].flow} Nl/h` : ''}
+                          {gasStats[gas]?.flow ? `  |  ${gasStats[gas].flow} Nl/h` : ''}
                         </Text>
                       </View>
                     ))
@@ -454,7 +454,7 @@ export const CoverPage = ({ report, options }) => {
                   )}
                   <View style={coverStyles.cycleRow}>
                     <Text style={coverStyles.cycleLabel}>Pressure:</Text>
-                    <Text style={coverStyles.cycleValue}>{waitPressure} mb</Text>
+                    <Text style={coverStyles.cycleValue}>{chemPressure} mb</Text>
                   </View>
                   <View style={coverStyles.cycleRow}>
                     <Text style={coverStyles.cycleLabel}>Cell Temp:</Text>

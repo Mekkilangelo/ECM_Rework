@@ -615,7 +615,7 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
                   <View>
                     <Text style={{ fontSize: 7, fontWeight: 'bold', textDecoration: 'underline', marginBottom: 1 }}>ECD</Text>
                     {partData.ecdSpecs.map((s, i) => (s.depthMin || s.depthMax) && (
-                      <Text key={i} style={{ fontSize: 8 }}>{s.name || 'D'}: {formatSpec(s.depthMin, s.depthMax, s.depthUnit || 'mm')}</Text>
+                      <Text key={i} style={{ fontSize: 8 }}>{s.name || 'D'}: {formatSpec(s.depthMin, s.depthMax, s.depthUnit || 'mm')}{s.hardness ? ` @ ${s.hardness} ${s.hardnessUnit || ''}` : ''}</Text>
                     ))}
                   </View>
                 )}

@@ -255,7 +255,19 @@ export const CoverPage = ({ report, options }) => {
             </View>
           </View>
 
-          {/* Row 2: Part Description (Boxed) */}
+          {/* Row 2: Steel Grade & Reference */}
+          <View style={coverStyles.row}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...coverStyles.label, width: '35%' }}>STEEL GRADE:</Text>
+              <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
+            </View>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ ...coverStyles.label, width: '35%' }}>REFERENCE:</Text>
+              <Text style={coverStyles.value}>{partData.reference || partData.part_number || '-'}</Text>
+            </View>
+          </View>
+
+          {/* Row 3: Part Description (Boxed) */}
           <View style={{ marginTop: 5, marginBottom: 10 }}>
             <Text style={{ ...coverStyles.label, marginBottom: 2 }}>PART DESCRIPTION:</Text>
             <View style={coverStyles.resultsBox}>
@@ -263,12 +275,6 @@ export const CoverPage = ({ report, options }) => {
                 {report.partDescription || '-'}
               </Text>
             </View>
-          </View>
-
-          {/* Row 3: Steel Grade */}
-          <View style={{ ...coverStyles.row, marginTop: 5 }}>
-            <Text style={coverStyles.label}>STEEL GRADE:</Text>
-            <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
           </View>
         </View>
 
@@ -319,7 +325,7 @@ export const CoverPage = ({ report, options }) => {
                         {(spec.depthMin != null || spec.depthMax != null) && (
                           <View style={coverStyles.techSpecItem}>
                             <Text style={coverStyles.techSpecLabel}>{spec.name || 'ECD'}:</Text>
-                            <Text style={coverStyles.techSpecValue}>{formatSpecValue(spec.depthMin, spec.depthMax, spec.depthUnit || 'mm')}</Text>
+                            <Text style={coverStyles.techSpecValue}>{formatSpecValue(spec.depthMin, spec.depthMax, spec.depthUnit || 'mm')}{spec.hardness ? ` @ ${spec.hardness} ${spec.hardnessUnit || ''}` : ''}</Text>
                           </View>
                         )}
                       </React.Fragment>

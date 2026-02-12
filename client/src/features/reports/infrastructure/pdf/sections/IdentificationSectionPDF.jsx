@@ -244,7 +244,8 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   const length = partData.dim_rect_length;
   const width = partData.dim_rect_width;
   const height = partData.dim_rect_height || partData.dim_circ_height; // Fallback
-  const diameter = partData.dim_circ_diameterOut;
+  const diameterOut = partData.dim_circ_diameterOut;
+  const diameterIn = partData.dim_circ_diameterIn;
   const unitRect = resolveUnit(partData.dim_rect_unit, partData.rectUnit);
   const unitCirc = resolveUnit(partData.dim_circ_unit, partData.circUnit);
 
@@ -363,7 +364,8 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                     <View style={styles.dimList}>
                       {length && <View style={styles.dimRow}><Text style={styles.dimLabel}>Length :</Text><Text style={styles.dimValue}>{length} {unitRect}</Text></View>}
                       {width && <View style={styles.dimRow}><Text style={styles.dimLabel}>Width :</Text><Text style={styles.dimValue}>{width} {unitRect}</Text></View>}
-                      {diameter && <View style={styles.dimRow}><Text style={styles.dimLabel}>Diameter :</Text><Text style={styles.dimValue}>{diameter} {unitCirc}</Text></View>}
+                      {diameterOut && <View style={styles.dimRow}><Text style={styles.dimLabel}>{diameterIn ? 'Ext. Diameter' : 'Diameter'} :</Text><Text style={styles.dimValue}>{diameterOut} {unitCirc}</Text></View>}
+                      {diameterIn && <View style={styles.dimRow}><Text style={styles.dimLabel}>{diameterOut ? 'Int. Diameter' : 'Diameter'} :</Text><Text style={styles.dimValue}>{diameterIn} {unitCirc}</Text></View>}
                       {height && <View style={styles.dimRow}><Text style={styles.dimLabel}>Height :</Text><Text style={styles.dimValue}>{height} {unitRect}</Text></View>}
                     </View>
                   </View>
@@ -422,7 +424,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                                 {partData.ecdSpecs.map((e, i) => (
                                   <View key={`e-${i}`} style={styles.row}>
                                     <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9, color: TEXT_GRAY, marginRight: 4 }}>{e.name || 'ECD'}:</Text>
-                                    <Text style={{ fontSize: 9, color: TEXT_DARK }}>{formatSpecValue(e.depthMin, e.depthMax, e.depthUnit || 'mm')}</Text>
+                                    <Text style={{ fontSize: 9, color: TEXT_DARK }}>{formatSpecValue(e.depthMin, e.depthMax, e.depthUnit || 'mm')}{e.hardness ? ` @ ${e.hardness} ${e.hardnessUnit || ''}` : ''}</Text>
                                   </View>
                                 ))}
                               </View>

@@ -26,10 +26,10 @@ export {
 
 // Styles globaux pré-composés pour réutilisation rapide
 export const COMMON_STYLES = {
-  // Style de base pour une page
+  // Style de base pour une page - Marges minimisées
   page: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
     fontSize: 10,
     fontFamily: 'Helvetica',
     backgroundColor: '#FFFFFF',

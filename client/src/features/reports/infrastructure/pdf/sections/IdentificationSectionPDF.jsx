@@ -36,9 +36,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 2, // Reduced vertical padding
-    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginBottom: 2,
   },
   sectionTitle: {
     color: '#ffffff',
@@ -55,41 +55,39 @@ const styles = StyleSheet.create({
   // 3-Column Data Layout
   dataGrid: {
     flexDirection: 'row',
-    marginBottom: 4,
-    // borderBottomWidth: 1, // Removed
-    // borderBottomColor: BRAND_DARK, // Removed
-    paddingBottom: 4,
+    marginBottom: 2,
+    paddingBottom: 2,
   },
 
   // Columns
   colCustomerData: {
     width: '40%',
-    paddingRight: 10,
+    paddingRight: 5,
     borderRightWidth: 1,
     borderRightColor: '#e2e8f0',
   },
   colDimensions: {
-    width: '35%', // Reduced width
-    paddingHorizontal: 10,
+    width: '35%',
+    paddingHorizontal: 5,
     borderRightWidth: 1,
     borderRightColor: '#e2e8f0',
   },
   colWeight: {
-    width: '25%', // Increased width slightly
-    paddingLeft: 10,
+    width: '25%',
+    paddingLeft: 5,
   },
 
   // Column Header
   colHeaderLabel: {
-    backgroundColor: '#0f4c81', // Blue accent for sub-headers
+    backgroundColor: '#0f4c81',
     color: '#ffffff',
     fontFamily: 'Helvetica-Bold',
     fontSize: 10,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    marginBottom: 6,
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+    marginBottom: 3,
     borderRadius: 2,
-    alignSelf: 'flex-start', // Fit content width
+    alignSelf: 'flex-start',
   },
 
   // Data Rows
@@ -148,16 +146,15 @@ const styles = StyleSheet.create({
     backgroundColor: BRAND_DARK,
     color: '#ffffff',
     fontSize: 12,
-
     fontFamily: 'Helvetica-Bold',
-    paddingVertical: 4,
-    paddingHorizontal: 15,
-    marginBottom: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    marginBottom: 3,
   },
   specsContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
   },
   specItem: {
     fontSize: 10,
@@ -169,10 +166,10 @@ const styles = StyleSheet.create({
   // Photos Section
   photosHeader: {
     backgroundColor: BRAND_DARK,
-    paddingVertical: 4,
-    paddingHorizontal: 15,
-    marginBottom: 10, // Reduced from 30
-    marginTop: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    marginBottom: 4,
+    marginTop: 2,
   },
   photosTitle: {
     color: '#ffffff',
@@ -198,7 +195,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 15,
+    rowGap: 6,
   },
   descriptionBox: {
     borderWidth: 1,
@@ -244,7 +241,8 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   const length = partData.dim_rect_length;
   const width = partData.dim_rect_width;
   const height = partData.dim_rect_height || partData.dim_circ_height; // Fallback
-  const diameter = partData.dim_circ_diameterOut;
+  const diameterOut = partData.dim_circ_diameterOut;
+  const diameterIn = partData.dim_circ_diameterIn;
   const unitRect = resolveUnit(partData.dim_rect_unit, partData.rectUnit);
   const unitCirc = resolveUnit(partData.dim_circ_unit, partData.circUnit);
 
@@ -363,7 +361,8 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                     <View style={styles.dimList}>
                       {length && <View style={styles.dimRow}><Text style={styles.dimLabel}>Length :</Text><Text style={styles.dimValue}>{length} {unitRect}</Text></View>}
                       {width && <View style={styles.dimRow}><Text style={styles.dimLabel}>Width :</Text><Text style={styles.dimValue}>{width} {unitRect}</Text></View>}
-                      {diameter && <View style={styles.dimRow}><Text style={styles.dimLabel}>Diameter :</Text><Text style={styles.dimValue}>{diameter} {unitCirc}</Text></View>}
+                      {diameterOut && <View style={styles.dimRow}><Text style={styles.dimLabel}>Outer Diameter :</Text><Text style={styles.dimValue}>{diameterOut} {unitCirc}</Text></View>}
+                      {diameterIn && <View style={styles.dimRow}><Text style={styles.dimLabel}>Inner Diameter :</Text><Text style={styles.dimValue}>{diameterIn} {unitCirc}</Text></View>}
                       {height && <View style={styles.dimRow}><Text style={styles.dimLabel}>Height :</Text><Text style={styles.dimValue}>{height} {unitRect}</Text></View>}
                     </View>
                   </View>
@@ -422,7 +421,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                                 {partData.ecdSpecs.map((e, i) => (
                                   <View key={`e-${i}`} style={styles.row}>
                                     <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9, color: TEXT_GRAY, marginRight: 4 }}>{e.name || 'ECD'}:</Text>
-                                    <Text style={{ fontSize: 9, color: TEXT_DARK }}>{formatSpecValue(e.depthMin, e.depthMax, e.depthUnit || 'mm')}</Text>
+                                    <Text style={{ fontSize: 9, color: TEXT_DARK }}>{formatSpecValue(e.depthMin, e.depthMax, e.depthUnit || 'mm')}{e.hardness ? ` @ ${e.hardness} ${e.hardnessUnit || ''}` : ''}</Text>
                                   </View>
                                 ))}
                               </View>

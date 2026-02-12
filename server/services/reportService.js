@@ -359,6 +359,12 @@ const buildRecipeData = (trialData) => {
       unit: recipe.chemicalCycle.cell_temp_unit || '°C'
     } : null,
 
+    // Température process
+    process_temp: recipe.chemicalCycle?.process_temp_value ? {
+      value: recipe.chemicalCycle.process_temp_value,
+      unit: recipe.chemicalCycle.process_temp_unit || '°C'
+    } : null,
+
     // Wait gas et wait flow
     wait_gas: recipe.chemicalCycle?.wait_gas || null,
     wait_flow: recipe.chemicalCycle?.wait_flow ? {

@@ -52,16 +52,14 @@
     "error": "Erreur",
     "success": "Succès"
   },
-
   "copyPaste": {
     "copySuccess": "Données copiées avec succès",
     "copyError": "Erreur lors de la copie",
-    "pasteSuccess": "Données collées avec succès", 
+    "pasteSuccess": "Données collées avec succès",
     "pasteError": "Erreur lors du collage",
     "noCachedData": "Aucune donnée copiée trouvée pour ce type de formulaire",
     "expiredData": "Les données copiées ont expiré"
   },
-  
   "pagination": {
     "show": "Afficher",
     "itemsPerPage": "Éléments par page",
@@ -71,11 +69,9 @@
     "page": "Page",
     "of": "sur"
   },
-  
   "form": {
     "requiredFields": "Champs obligatoires"
   },
-  
   "validation": {
     "required": {
       "name": "Le nom est requis",
@@ -122,7 +118,6 @@
       "minLessThanMax": "La valeur minimum doit être inférieure à la valeur maximum"
     }
   },
-  
   "api": {
     "success": {
       "created": "{{entityType}} créé avec succès !",
@@ -133,7 +128,6 @@
       "update": "Erreur lors de la modification du {{entityType}}"
     }
   },
-  
   "errors": {
     "notFound": {
       "client": "Client non trouvé"
@@ -154,13 +148,11 @@
     },
     "general": "Une erreur s'est produite. Veuillez réessayer plus tard."
   },
-  
   "success": {
     "delete": {
       "client": "Client supprimé avec succès"
     }
   },
-  
   "closeModal": {
     "title": "Confirmer la fermeture",
     "unsavedChanges": "Vous avez des modifications non enregistrées."
@@ -196,7 +188,6 @@
       "passwordRequirements": "Au moins 6 caractères requis"
     }
   },
-  
   "navigation": {
     "dashboard": "Tableau de bord",
     "reference": "Référentiel",
@@ -208,7 +199,6 @@
       "trials": "Essais"
     }
   },
-  
   "sidebar": {
     "dashboard": "Tableau de bord",
     "search": "Recherche",
@@ -226,7 +216,8 @@
     },
     "archivesReference": {
       "reference": "Référence"
-    },    "support": {
+    },
+    "support": {
       "createTicket": "Créer un ticket"
     },
     "logs": {
@@ -239,12 +230,10 @@
       "error": "Erreur lors de la suppression des données"
     }
   },
-  
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue sur le tableau de bord"
   },
-  
   "search": {
     "placeholder": "Rechercher données, clients, rapports...",
     "title": "Recherche",
@@ -363,7 +352,6 @@
       "allPositionTypes": "Tous les types de position"
     }
   },
-  
   "trialSearch": {
     "title": "Recherche d'Essais",
     "subtitle": "Recherchez et filtrez les essais",
@@ -387,7 +375,6 @@
     "sortByCode": "Code",
     "sortByName": "Nom"
   },
-
   "trialFilters": {
     "trialInfo": "Informations Essai",
     "clientInfo": "Client",
@@ -466,7 +453,6 @@
     "recipeNumberPlaceholder": "Ex: REC-2024-001",
     "part": "Pièce"
   },
-
   "trialResults": {
     "date": "Date",
     "location": "Lieu",
@@ -480,7 +466,6 @@
     "modified": "Modifié",
     "viewDetails": "Voir"
   },
-  
   "clients": {
     "title": "Clients",
     "name": "Nom du client",
@@ -510,7 +495,6 @@
     "noResultsFound": "Aucun client trouvé",
     "tryDifferentSearch": "Essayez une recherche différente"
   },
-  
   "orders": {
     "title": "Demandes d'essai",
     "list": "Liste des demandes d'essai",
@@ -555,7 +539,6 @@
     },
     "searchPlaceholder": "Rechercher une commande..."
   },
-  
   "parts": {
     "title": "Pièces",
     "list": "Liste des pièces",
@@ -757,7 +740,8 @@
       "reference": "Référence",
       "description": "Description",
       "selectDesignation": "Sélectionner ou ajouter une désignation"
-    },    "specifications": {
+    },
+    "specifications": {
       "depthMin": "Profondeur min",
       "depthMax": "Profondeur max",
       "depthUnit": "Unité de profondeur",
@@ -779,7 +763,6 @@
     "noResultsFound": "Aucune pièce trouvée",
     "tryDifferentSearch": "Essayez une recherche différente"
   },
-  
   "steels": {
     "title": "Aciers",
     "list": "Liste des aciers",
@@ -833,7 +816,6 @@
     "replaceSuccess": "Acier remplacé et supprimé avec succès",
     "replaceError": "Erreur lors du remplacement de l'acier"
   },
-  
   "trials": {
     "title": "Essais",
     "list": "Liste des essais",
@@ -841,7 +823,8 @@
     "form": "Formulaire d'essai",
     "add": "Ajouter un essai",
     "edit": "Modifier l'essai",
-    "new": "Nouvel essai",    "trialCode": "Code d'essai",
+    "new": "Nouvel essai",
+    "trialCode": "Code d'essai",
     "recipeNumber": "N° Recette",
     "loadNumber": "Numéro de charge",
     "date": "Date",
@@ -860,17 +843,14 @@
     "searchPlaceholder": "Rechercher un trial...",
     "noResultsFound": "Aucun essai trouvé",
     "tryDifferentSearch": "Essayez une recherche différente",
-    
     "sections": {
       "basicInfo": "Informations de base"
     },
-    
     "tabs": {
       "before": "Avant",
       "after": "Après",
       "report": "Rapport"
     },
-    
     "basicInfo": {
       "title": "Informations de base",
       "loadNumber": "Numéro de charge",
@@ -882,7 +862,6 @@
       "selectOrAddLocation": "Sélectionner ou ajouter un lieu",
       "selectStatus": "Sélectionner un statut"
     },
-    
     "before": {
       "furnaceData": {
         "title": "Données du four",
@@ -897,7 +876,6 @@
         "selectOrAddFurnaceSize": "Sélectionner ou ajouter une taille de four",
         "selectOrAddQuenchCell": "Sélectionner ou ajouter une cellule de trempe"
       },
-
       "trialType": {
         "title": "Type de trial",
         "mountingType": "Type de montage",
@@ -907,7 +885,6 @@
         "selectOrAddPositionType": "Sélectionner ou ajouter un type de position",
         "selectOrAddProcessType": "Sélectionner ou ajouter un type de processus"
       },
-      
       "loadData": {
         "title": "Données de charge",
         "loadDimensions": "Dimensions de charge",
@@ -921,7 +898,6 @@
         "weight": "Poids",
         "loadComments": "Commentaires sur la charge"
       },
-      
       "loadDesign": {
         "title": "Conception de la charge",
         "importLoadDesign": "Importer le load design",
@@ -929,11 +905,9 @@
         "loadFilesError": "Erreur lors du chargement des fichiers:",
         "associateFilesError": "Erreur lors de l'association des fichiers:"
       },
-
       "recipeData": {
         "title": "Données de recette",
         "recipeNumber": "Numéro de recette",
-        
         "preoxidation": {
           "title": "Préoxydation",
           "media": "Média",
@@ -941,7 +915,6 @@
           "duration": "Durée",
           "unit": "Unité"
         },
-        
         "thermalCycle": {
           "title": "Cycle Thermique",
           "step": "Étape",
@@ -958,13 +931,13 @@
           "programDuration": "Durée du programme",
           "calculatedField": "Champ calculé automatiquement",
           "cellTemp": "Température cellule",
+          "processTemp": "Température process",
           "waitPressure": "Pression d'attente",
           "waitGas": "Gaz de préchauffage",
           "waitFlow": "Débit du gaz (Wait Flow)",
           "selectGas": "Sélectionner un gaz...",
           "enterFlow": "Entrer le débit"
         },
-        
         "chemicalCycle": {
           "title": "Cycle Chimique",
           "gas": "Gaz",
@@ -986,7 +959,6 @@
           "predictConfirmMessage": "La prédiction va remplacer les cycles thermique et chimique actuels. Cette action est irréversible. Voulez-vous continuer ?",
           "predictConfirmButton": "Prédire et remplacer"
         },
-        
         "graphs": {
           "title": "Graphiques",
           "importGraph": "Importer un graphique",
@@ -994,11 +966,9 @@
           "loadFilesError": "Erreur lors du chargement des fichiers:",
           "associateFilesError": "Erreur lors de l'association des fichiers:"
         },
-        
         "previewChart": {
           "title": "Prévisualisation du graphique"
         },
-        
         "quenchData": {
           "title": "Données de trempe",
           "common": {
@@ -1029,12 +999,10 @@
           }
         }
       },
-      
       "chemicalCycle": {
         "totalCycleDuration": "Durée totale du cycle chimique (minutes)"
       }
     },
-
     "after": {
       "specifications": {
         "title": "Spécifications de la pièce",
@@ -1180,7 +1148,6 @@
       }
     }
   },
-  
   "userManagement": {
     "title": "Gestion des Utilisateurs",
     "users": "Utilisateurs",
@@ -1241,7 +1208,7 @@
       "passwordReset": "Mot de passe réinitialisé avec succès"
     }
   },
-    "logs": {
+  "logs": {
     "title": "Journaux d'Activité",
     "filters": "Filtres",
     "refresh": "Actualiser",
@@ -1267,7 +1234,8 @@
     "noLogs": "Aucun journal disponible",
     "timestamp": "Horodatage",
     "message": "Message",
-    "ip": "Adresse IP",    "details": "Détails",
+    "ip": "Adresse IP",
+    "details": "Détails",
     "viewDetails": "Voir les détails",
     "detailsTitle": "Détails du Journal",
     "technicalDetails": "Détails techniques",
@@ -1290,8 +1258,8 @@
     "errors": {
       "loadFailed": "Erreur lors du chargement des journaux",
       "exportFailed": "Erreur lors de l'export des journaux"
-    }  },
-  
+    }
+  },
   "fileHandling": {
     "loadError": "Erreur lors du chargement des fichiers:",
     "associateError": "Erreur lors de l'association des fichiers:",
@@ -1388,7 +1356,6 @@
       "generating": "Génération..."
     }
   },
-
   "references": {
     "title": "Gestion des Référentiels",
     "deleteConfirmTitle": "Confirmer la suppression",
@@ -1402,7 +1369,7 @@
     "tabs": {
       "steels": "Aciers",
       "furnaces": "Fours",
-      "parts": "Pièces", 
+      "parts": "Pièces",
       "units": "Unités",
       "process": "Processus"
     },
@@ -1437,7 +1404,6 @@
       "location": "Localisation"
     }
   },
-
   "logs": {
     "title": "Journal des activités",
     "quickFilters": "Filtres rapides",

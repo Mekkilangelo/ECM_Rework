@@ -81,7 +81,8 @@ const ChemicalCycleSection = ({
         { label: "Données de la pièce", valid: !!parentPart },
         { label: "Spécification ECD (Dureté/Profondeur)", valid: !validation.missing.some(m => m.includes('ECD')) },
         { label: "Poids de la charge", valid: !validation.missing.some(m => m.includes('charge')) },
-        { label: "Composition Acier (Carbone)", valid: !validation.missing.some(m => m.includes('carbone')) }
+        { label: "Composition Acier (Carbone)", valid: !validation.missing.some(m => m.includes('carbone')) },
+        { label: "Process Temp (880-990°C)", valid: !validation.missing.some(m => m.includes('empérature')) }
       ];
 
       setChecklistData({
@@ -213,7 +214,21 @@ const ChemicalCycleSection = ({
         console.log('Thermal cycle steps set:', thermalSteps);
       }
 
-      // 10. Pré-sélectionner les gaz si pas déjà fait
+      // 10. Pré-remplir la trempe gaz : 20000 mb, 3000 rpm, 15 min
+      handleChange({
+        target: {
+          name: 'quenchData.gasQuenchPressure',
+          value: [{ step: 1, duration: 900, pressure: 20000 }]
+        }
+      });
+      handleChange({
+        target: {
+          name: 'quenchData.gasQuenchSpeed',
+          value: [{ step: 1, duration: 900, speed: 3000 }]
+        }
+      });
+
+      // 11. Pré-sélectionner les gaz si pas déjà fait
       if (!formData.recipeData.selectedGas1) {
         handleChange({
           target: {
@@ -237,6 +252,7 @@ const ChemicalCycleSection = ({
         `Recette prédite avec succès :\n` +
         `• Cycle chimique : ${predictedCycles.length} step(s) généré(s)\n` +
         `• Cycle thermique : ${thermalCycleData ? thermalCycleData.totalTimeMinutes + ' minutes de traitement' : 'non calculé'}\n` +
+        `• Trempe gaz : 20000 mb, 3000 rpm, 15 min\n` +
         `• Gaz pré-sélectionnés : C2H2 (carburation), N2 (diffusion)\n\n` +
         `N'oubliez pas de définir les débits de gaz et la pression pour chaque étape.`;
 

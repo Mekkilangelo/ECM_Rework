@@ -372,9 +372,10 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
         {/* Zone Graphique + Axes */}
         <View style={{ flexDirection: 'row', height: chartHeight + padding.top + padding.bottom - 10 }}>
 
+
           {/* COLONNE GAUCHE: Labels Température - setpoints en gras rouge */}
           <View style={{ width: padding.left, height: '100%', position: 'relative' }}>
-            <Text style={{ position: 'absolute', top: 0, right: 5, fontSize: 7, fontFamily: 'Helvetica-Bold', color: TEMPERATURE_COLOR, textAlign: 'right', width: 50 }}>T.(°C)</Text>
+            <Text style={{ position: 'absolute', top: -5, right: 15, fontSize: 7, fontFamily: 'Helvetica-Bold', color: TEMPERATURE_COLOR, textAlign: 'right', width: 50 }}>T.(°C)</Text>
             {/* marginTop: 5 aligne avec le viewBox y=-5 du SVG (chart y=0 → pixel 5) */}
             <View style={{ marginTop: 5, height: chartHeight, position: 'relative' }}>
               {yTempTicks.map((tick, i) => {
@@ -384,7 +385,7 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
                   <Text key={`ytick-${i}`} style={{
                     position: 'absolute',
                     top,
-                    right: 5,
+                    right: 12,
                     fontSize: isKey ? 7.5 : 6.5,
                     fontFamily: 'Helvetica-Bold',
                     color: isKey ? '#b91c1c' : '#999',
@@ -522,7 +523,7 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
 
             {/* Labels Axe X (Temps) - transitions en gras rouge */}
             <View style={{ flexDirection: 'row', height: 12, marginTop: -5 }}>
-              <Text style={{ position: 'absolute', right: padding.right - 10, top: 0, fontSize: 7, fontFamily: 'Helvetica-Bold' }}>min</Text>
+              <Text style={{ position: 'absolute', right: 0, top: 8, fontSize: 7, fontFamily: 'Helvetica-Bold' }}>min</Text>
               {xTicks.map((tick, i) => {
                 const leftPos = Math.min((tick / maxTime) * chartWidth - 5, chartWidth - 10);
                 const isKey = keyTimes.includes(tick);
@@ -549,7 +550,7 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
             <Text style={{
               position: 'absolute',
               top: 0,
-              left: gasAxisOffset - 10,
+              left: gasAxisOffset,
               fontSize: 7,
               fontFamily: 'Helvetica-Bold',
               color: '#475569',
@@ -562,7 +563,7 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
               marginTop: 5,
               height: chartHeight,
               position: 'relative',
-              paddingLeft: gasAxisOffset + 5
+              paddingLeft: gasAxisOffset + 15
             }}>
               {yGasTicks.map((tick, i) => {
                 const top = scaleYGas(tick) - 3;
@@ -570,7 +571,7 @@ const RecipeCurveChartPDF = ({ recipeData, width = 500, height = 220 }) => {
                   <Text key={`ygastick-${i}`} style={{
                     position: 'absolute',
                     top,
-                    left: gasAxisOffset + 5,
+                    left: gasAxisOffset + 15,
                     fontSize: 6.5,
                     fontFamily: 'Helvetica-Bold',
                     color: '#475569'

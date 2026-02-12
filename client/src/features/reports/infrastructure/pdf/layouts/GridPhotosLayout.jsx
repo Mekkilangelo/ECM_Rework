@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
-    rowGap: 10, // Optimized gap for 2x3 grid
+    rowGap: 4, // Reduced gap for tighter grid
   },
   itemWrapper: {
     // No specific wrapper style needed for grid usually, but strictly speaking wrap={false} on item

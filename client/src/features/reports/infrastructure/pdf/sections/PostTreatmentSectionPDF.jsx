@@ -18,9 +18,9 @@ const BRAND_DARK = '#1e293b';
 // Styles matching LoadSectionPDF
 const styles = StyleSheet.create({
   sectionContainer: {
-    marginBottom: 20,
+    marginBottom: 4,
     fontFamily: 'Helvetica',
-    minHeight: 500, // Ensure minimum height for flex expansion
+    minHeight: 500,
   },
   // Section Header (Dark Blue Bar)
   sectionHeader: {
@@ -28,10 +28,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 12, // Consistent padding
-    marginBottom: 30, // Consistent spacing
-    minHeight: 40,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 6,
+    minHeight: 30,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -120,7 +120,7 @@ export const PostTreatmentSectionPDF = ({ report, photos = [] }) => {
 
                 {/* Layout: Initial (Hero + optional Small) */}
                 {page.type === 'initial' && (
-                  <View style={{ flex: 1, gap: 10 }}>
+                  <View style={{ flex: 1, gap: 4 }}>
                     {/* Hero Photo (Flex 3 = ~60%) */}
                     {page.photos[0] && (
                       <View style={{ flex: 3 }}>
@@ -135,7 +135,7 @@ export const PostTreatmentSectionPDF = ({ report, photos = [] }) => {
 
                     {/* Small Photos Row (Flex 2 = ~40%) */}
                     {page.photos.length > 1 && (
-                      <View style={{ flex: 2, flexDirection: 'row', gap: 10 }}>
+                      <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>
                         {page.photos.slice(1).map((p, i) => (
                           <View key={i} style={{ flex: 1 }}>
                             <PhotoContainer

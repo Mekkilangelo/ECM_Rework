@@ -15,8 +15,8 @@ import { calculateFontSize } from '../helpers/textHelpers';
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#1e293b', // Dark Slate Blue / Midnight
-    padding: 15, // Reduced from 20 to widen content
-    marginBottom: 5,
+    padding: 8,
+    marginBottom: 2,
     flexDirection: 'column',
   },
 
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 25,
+    marginBottom: 8,
   },
 
   titleContainer: {
@@ -50,12 +50,11 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     backgroundColor: '#ffffff',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     flexDirection: 'row',
     alignItems: 'center',
-    // gap: 15, // Gap not fully supported in all react-pdf versions, use margin
-    borderRadius: 2, // Légèrement arrondi si supporté, sinon ignoré
+    borderRadius: 2,
   },
 
   logoECM: {
@@ -82,12 +81,12 @@ const styles = StyleSheet.create({
 
   clientBox: {
     backgroundColor: '#ffffff',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     borderLeftWidth: 5,
-    borderLeftColor: '#ef4444', // Rouge accent
-    flexGrow: 1, // Allow to stretch
-    marginRight: 20, // Space between boxes
+    borderLeftColor: '#ef4444',
+    flexGrow: 1,
+    marginRight: 8,
   },
 
   clientName: {
@@ -99,11 +98,11 @@ const styles = StyleSheet.create({
 
   infoBox: {
     backgroundColor: '#ffffff',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     flexDirection: 'column',
     alignItems: 'flex-end',
-    minWidth: 180, // Allow it to be smaller if needed, but flex will handle
+    minWidth: 180,
   },
 
   infoRowPrimary: {

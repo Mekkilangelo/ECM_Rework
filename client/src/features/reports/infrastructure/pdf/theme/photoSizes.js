@@ -2,62 +2,62 @@
  * THEME: Tailles de photos standardisées pour le rapport PDF
  * 
  * Chaque section peut choisir les tailles appropriées selon son contexte.
- * La largeur de page utilisable est d'environ 515px (A4 - paddings).
+ * La largeur de page utilisable est d'environ 575px (A4 - paddings réduits).
  */
 
 export const PHOTO_SIZES = {
   // Photo principale / Hero (pleine largeur)
   hero: {
-    width: 500,
-    height: 300,
+    width: 565,
+    height: 340,
   },
 
   // Photo large (pleine largeur, moins haute)
   fullWidth: {
-    width: 480,
-    height: 200,
+    width: 555,
+    height: 230,
   },
 
   // Photo micrographie (optimisée pour 3 zooms par page)
   micrographySingle: {
-    width: 480,
-    height: 165,
+    width: 555,
+    height: 185,
   },
 
   // Grande photo empilée (pour layout vertical)
   stackedLarge: {
-    width: 500,
-    height: 340,
+    width: 565,
+    height: 370,
   },
 
   // Photo première page Load (1 grande + 2 petites)
   heroLoad: {
-    width: 500,
-    height: 280,
+    width: 565,
+    height: 320,
   },
 
   // Demi-largeur (2 photos côte à côte)
   half: {
-    width: 235,
-    height: 176,
+    width: 280,
+    height: 210,
   },
 
   // Demi-largeur pour row secondaire (Load)
   halfSecondary: {
-    width: 244,
-    height: 200,
+    width: 280,
+    height: 220,
   },
 
   // Photos petites en grille (2 colonnes, nombreuses)
   small: {
-    width: 235,
-    height: 140,
+    width: 280,
+    height: 170,
   },
 
   // Photos grille 2x2 (pour pages multiples)
   gridItem: {
-    width: 244,
-    height: 240,
+    width: 280,
+    height: 365,
   },
 
   // Miniatures (pour contrôle)
@@ -68,18 +68,18 @@ export const PHOTO_SIZES = {
 
   // Pleine page (pour Load avec 1 seule photo)
   fullPage: {
-    width: 500,
-    height: 700,
+    width: 565,
+    height: 740,
   },
 
   // Optimized Layout Sizes
   verticalItem: {
-    width: 500,
-    height: 180, // Tuned for Curves/Datapaq vertical stack
+    width: 565,
+    height: 200,
   },
   grid6Item: {
-    width: 220,
-    height: 125, // Tuned for Load/Datapaq 2x3 grid
+    width: 280,
+    height: 150,
   },
 };
 

@@ -81,7 +81,8 @@ const ChemicalCycleSection = ({
         { label: "Données de la pièce", valid: !!parentPart },
         { label: "Spécification ECD (Dureté/Profondeur)", valid: !validation.missing.some(m => m.includes('ECD')) },
         { label: "Poids de la charge", valid: !validation.missing.some(m => m.includes('charge')) },
-        { label: "Composition Acier (Carbone)", valid: !validation.missing.some(m => m.includes('carbone')) }
+        { label: "Composition Acier (Carbone)", valid: !validation.missing.some(m => m.includes('carbone')) },
+        { label: "Cell Temp (880-990°C)", valid: !validation.missing.some(m => m.includes('empérature')) }
       ];
 
       setChecklistData({

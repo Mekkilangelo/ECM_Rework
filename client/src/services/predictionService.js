@@ -83,12 +83,19 @@ class PredictionService {
     // === 5. IS_WEIGHT_UNKNOWN : 0 ou 1 selon disponibilité du poids ===
     const isWeightUnknown = (!partWeight || partWeight === '' || isNaN(partWeightValue)) ? 1 : 0;
 
-    // === 6-8. RECIPE_TEMPERATURE, CARBON_MAX, CARBON_FLOW : Fixes à 950° ===
-    const recipeTemperature = 950;
-    const recipeCarbonMax = 1.7;
-    const recipeCarbonFlow = 14.7;
+    // === 6-8. RECIPE_TEMPERATURE, CARBON_MAX, CARBON_FLOW : Calculés depuis cell_temp ===
+    const cellTemp = parseFloat(trialData.recipeData?.cellTemp);
+    if (!cellTemp || isNaN(cellTemp)) {
+      missing.push('Température de cellule (Cell Temp) dans les paramètres de programme');
+    } else if (cellTemp < 880 || cellTemp > 990) {
+      missing.push(`Température de cellule doit être entre 880°C et 990°C (actuelle : ${cellTemp}°C)`);
+    }
 
-    // TODO: Plus tard, permettre de varier la température et lookup dans le fichier Excel
+    const recipeTemperature = cellTemp || 950;
+    // Cmax = f(T) = 0.0125T - 10.2 (valide 880-990°C)
+    const recipeCarbonMax = 0.0125 * recipeTemperature - 10.2;
+    // Flux = f(T) = 0.09T - 71.2 (valide 880-980°C)
+    const recipeCarbonFlow = 0.09 * recipeTemperature - 71.2;
 
     // === 9. CARBON_PERCENTAGE : Depuis la composition de l'acier ===
     // L'acier est chargé via la relation steel du part

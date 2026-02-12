@@ -17,9 +17,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    marginBottom: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 4,
   },
   sectionTitle: {
     color: '#ffffff',

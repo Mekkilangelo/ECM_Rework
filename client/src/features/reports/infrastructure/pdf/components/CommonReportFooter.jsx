@@ -5,12 +5,12 @@ import { getBaseUrl } from '../../../../../config/apiConfig';
 const styles = StyleSheet.create({
     footerContainer: {
         position: 'absolute',
-        bottom: 10,
-        left: 20,
-        right: 20,
+        bottom: 5,
+        left: 10,
+        right: 10,
         borderTopWidth: 1,
-        borderTopColor: '#e2e8f0', // Light gray border
-        paddingTop: 8,
+        borderTopColor: '#e2e8f0',
+        paddingTop: 4,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',

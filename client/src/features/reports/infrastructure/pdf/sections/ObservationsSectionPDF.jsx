@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   observationText: {
     fontSize: 10,
     fontFamily: 'Helvetica',
-    marginBottom: 12,
+    marginBottom: 4,
     lineHeight: 1.5,
     color: '#1a1a1a',
     textAlign: 'justify',
@@ -48,12 +48,12 @@ const styles = StyleSheet.create({
 
 // Photo sizes specific to Observations section (same as Post-treatment)
 const OBSERVATIONS_PHOTO_SIZES = {
-  fullPage: { width: 500, height: 700 },
-  halfPage: { width: 500, height: 340 },
-  heroLarge: { width: 500, height: 280 },
-  pairSmall: { width: 244, height: 200 },
+  fullPage: { width: 565, height: 740 },
+  halfPage: { width: 565, height: 370 },
+  heroLarge: { width: 565, height: 320 },
+  pairSmall: { width: 280, height: 220 },
   // Grille 2x3 (6 par page) pour pages suivantes
-  gridItem: { width: 244, height: 155 },
+  gridItem: { width: 280, height: 180 },
 };
 
 /**

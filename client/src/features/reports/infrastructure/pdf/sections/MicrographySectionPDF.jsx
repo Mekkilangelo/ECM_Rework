@@ -27,13 +27,13 @@ const styles = StyleSheet.create({
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 4,
+    marginTop: 2,
     justifyContent: 'flex-start',
     gap: SPACING.photo.gap,
   },
   photoContainerHalf: {
-    width: '48%',
-    marginBottom: 4,
+    width: '49%',
+    marginBottom: 2,
     alignItems: 'center',
   },
 });
@@ -216,7 +216,7 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDes
   return (
     <>
       {pages.map((pagePhotos, pageIndex) => (
-        <View key={pageIndex} wrap={false} style={{ marginBottom: 8 }}>
+        <View key={pageIndex} wrap={false} style={{ marginBottom: 4 }}>
           {pageIndex === 0 && <SectionTitle sectionType={SECTION_TYPE}>{title}</SectionTitle>}
           {pageIndex > 0 && <SectionTitle sectionType={SECTION_TYPE} continuation>{title} (continued)</SectionTitle>}
 

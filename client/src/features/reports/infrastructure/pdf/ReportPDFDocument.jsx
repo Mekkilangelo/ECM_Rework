@@ -28,13 +28,13 @@ import { COLORS, TYPOGRAPHY, SPACING, COMMON_STYLES } from './theme';
 const styles = StyleSheet.create({
   page: {
     ...COMMON_STYLES.page,
-    paddingBottom: 35, // Reduced from 60
-    paddingTop: 20,
+    paddingBottom: 15,
+    paddingTop: 10,
   },
   pageIdentification: {
     ...COMMON_STYLES.page,
-    paddingBottom: 35, // Reduced from 60
-    paddingTop: 10, // Reduced padding for Identification Sheet
+    paddingBottom: 15,
+    paddingTop: 5,
   },
   // pageFooter removed - replaced by component
   section: {
@@ -109,10 +109,10 @@ export const CoverPage = ({ report, options }) => {
   const coverStyles = StyleSheet.create({
     sectionHeader: {
       backgroundColor: COLORS.brand.dark,
-      paddingVertical: 4,
-      paddingHorizontal: 10,
-      marginBottom: 8,
-      marginTop: 4,
+      paddingVertical: 3,
+      paddingHorizontal: 6,
+      marginBottom: 4,
+      marginTop: 2,
     },
     sectionHeaderText: {
       color: '#ffffff',
@@ -122,7 +122,7 @@ export const CoverPage = ({ report, options }) => {
     },
     row: {
       flexDirection: 'row',
-      marginBottom: 5,
+      marginBottom: 3,
     },
     label: {
       width: '30%',
@@ -213,7 +213,7 @@ export const CoverPage = ({ report, options }) => {
       borderColor: COLORS.brand.dark,
       // backgroundColor: '#dcfce7', // Removed green background
       padding: 10,
-      minHeight: 40,
+      minHeight: 30,
       fontSize: 9,
     },
     resultsLabel: {
@@ -242,7 +242,7 @@ export const CoverPage = ({ report, options }) => {
         <View style={coverStyles.sectionHeader}>
           <Text style={coverStyles.sectionHeaderText}>PART DESCRIPTION</Text>
         </View>
-        <View style={{ paddingHorizontal: 10 }}>
+        <View style={{ paddingHorizontal: 5 }}>
           {/* Row 1: Client Designation & Designation */}
           <View style={coverStyles.row}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
@@ -268,7 +268,7 @@ export const CoverPage = ({ report, options }) => {
           </View>
 
           {/* Row 3: Part Description (Boxed) */}
-          <View style={{ marginTop: 5, marginBottom: 10 }}>
+          <View style={{ marginTop: 3, marginBottom: 5 }}>
             <Text style={{ ...coverStyles.label, marginBottom: 2 }}>PART DESCRIPTION:</Text>
             <View style={coverStyles.resultsBox}>
               <Text style={coverStyles.value}>
@@ -285,7 +285,7 @@ export const CoverPage = ({ report, options }) => {
         <View style={coverStyles.sectionHeader}>
           <Text style={coverStyles.sectionHeaderText}>TECHNICAL SPECIFICATIONS</Text>
         </View>
-        <View style={{ paddingHorizontal: 10, ...coverStyles.techSpecRow }}>
+        <View style={{ paddingHorizontal: 5, ...coverStyles.techSpecRow }}>
           {/* Helper function defined inside render or use logic inline */}
           {(() => {
             const formatSpecValue = (min, max, unit) => {
@@ -494,7 +494,7 @@ export const CoverPage = ({ report, options }) => {
         <View style={{ paddingHorizontal: 0 }}>
           {/* Removed Flux */}
           {/* Removed Flux */}
-          <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flexDirection: 'row', gap: 5 }}>
             <View style={{ flex: 1, ...coverStyles.resultsBox }}>
               <Text>{trialData.observation || ''}</Text>
             </View>
@@ -512,7 +512,7 @@ export const CoverPage = ({ report, options }) => {
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 10, flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: 5, flex: 1 }}>
             {/* Conclusion Main Box - Flex 1 to fill remaining space */}
             <View style={{ flex: 1, flexDirection: 'column' }}>
               <View style={{ ...coverStyles.resultsBox, flex: 1, minHeight: 0 }}>

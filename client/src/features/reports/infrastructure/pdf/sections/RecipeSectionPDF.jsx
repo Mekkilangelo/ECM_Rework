@@ -34,7 +34,7 @@ const THEME = {
 
 const styles = StyleSheet.create({
   sectionContainer: {
-    marginBottom: 20,
+    marginBottom: 4,
     fontFamily: 'Helvetica',
   },
   // Header
@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 4,
-    marginBottom: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 4,
   },
   sectionTitle: {
     color: '#ffffff',
@@ -62,13 +62,13 @@ const styles = StyleSheet.create({
   // Main Layout
   mainContent: {
     flexDirection: 'column',
-    gap: 10,
+    gap: 4,
   },
 
   // 3-Column Grid
   detailsGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 4,
     alignItems: 'flex-start',
   },
 
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
     borderTopColor: '#cbd5e1',
     borderLeftWidth: 0.5,
     borderLeftColor: '#cbd5e1',
-    marginTop: 5,
-    marginBottom: 10,
+    marginTop: 3,
+    marginBottom: 4,
   },
   miniRow: {
     flexDirection: 'row',
@@ -141,9 +141,9 @@ const styles = StyleSheet.create({
   // Helper for column headers
   columnHeaderBase: {
     borderLeftWidth: 3,
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    marginBottom: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    marginBottom: 3,
   },
   columnTitleBase: {
     fontFamily: 'Helvetica-Bold',
@@ -153,13 +153,13 @@ const styles = StyleSheet.create({
 
   // Photos
   photoContainer: {
-    marginTop: 10,
+    marginTop: 4,
     alignItems: 'center',
   },
   photo: {
     maxWidth: '100%',
     maxHeight: 200,
-    marginBottom: 5,
+    marginBottom: 3,
   },
   photoCaption: {
     fontSize: 8,
@@ -289,9 +289,9 @@ const StatsColumn = ({ recipeData, stats }) => {
   const gases = [recipeData?.selected_gas1, recipeData?.selected_gas2, recipeData?.selected_gas3].filter(Boolean);
 
   return (
-    <View style={{ width: '33%', paddingLeft: 10, paddingTop: 15 }}>
+    <View style={{ width: '33%', paddingLeft: 5, paddingTop: 5 }}>
       {/* General Info (Moved from Chemical) */}
-      <View style={{ marginBottom: 10 }}>
+      <View style={{ marginBottom: 5 }}>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PARAMETERS</Text>
         <InfoRow label="Gases" value={gases.join(', ')} />
         <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
@@ -301,7 +301,7 @@ const StatsColumn = ({ recipeData, stats }) => {
       </View>
 
       {/* Calculated Stats */}
-      <View style={{ marginBottom: 10 }}>
+      <View style={{ marginBottom: 5 }}>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PROCESS</Text>
         <InfoRow label="Process time" value={stats.chemTotalMinutes.toFixed(1)} unit="min" />
         <InfoRow label="Quench Time" value={stats.quenchTotalMinutes.toFixed(1)} unit="min" />
@@ -340,7 +340,7 @@ const ThermalColumn = ({ recipeData }) => {
 
       {/* Preox */}
       {preox && (preox.temperature?.value || preox.duration?.value) && (
-        <View style={{ marginBottom: 5, paddingHorizontal: 2 }}>
+        <View style={{ marginBottom: 3, paddingHorizontal: 2 }}>
           <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', marginBottom: 2, textDecoration: 'underline', color: color.title }}>Preoxidation</Text>
           <InfoRow label="Temp" value={preox.temperature?.value} unit={preox.temperature?.unit} />
           <InfoRow label="Duration" value={preox.duration?.value} unit={preox.duration?.unit} />
@@ -451,7 +451,7 @@ const QuenchColumn = ({ quenchData }) => {
 
       {/* GAS QUENCH */}
       {hasGas && (
-        <View style={{ marginBottom: 10 }}>
+        <View style={{ marginBottom: 4 }}>
           <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', marginBottom: 2, textDecoration: 'underline', color: color.title }}>Gas Quench</Text>
           <InfoRow label="Delay" value={gas.inerting_delay?.value} unit={gas.inerting_delay?.unit} />
           <InfoRow label="Pressure" value={gas.inerting_pressure?.value} unit={gas.inerting_pressure?.unit} />
@@ -554,7 +554,7 @@ export const RecipeSectionPDF = ({ report, showRecipeDetails = true, showRecipeC
       <View style={styles.mainContent}>
 
         {/* TOP SECTION: Chart (2/3) + Stats (1/3) */}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', minHeight: 180, marginBottom: 15 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', minHeight: 180, marginBottom: 5 }}>
           {/* 1. Chart (Left 66%) */}
           {showRecipeCurve && (
             <View style={{ width: '66%' }}>
@@ -592,7 +592,7 @@ export const RecipeSectionPDF = ({ report, showRecipeDetails = true, showRecipeC
           {/* Photos Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             {photos.map((photo, i) => (
-              <View key={i} style={{ width: '48%', marginBottom: 10 }}>
+              <View key={i} style={{ width: '48%', marginBottom: 4 }}>
                 <Image
                   style={styles.photo}
                   src={photo.url || photo.viewPath}

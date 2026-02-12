@@ -25,9 +25,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    marginBottom: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: 4,
   },
   sectionTitle: {
     color: '#ffffff',
@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
   // Sub-category Title
   subCategoryTitle: {
     backgroundColor: '#3b82f6', // Lighter blue for subsections
-    padding: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
+    padding: 3,
+    paddingHorizontal: 6,
+    marginBottom: 4,
     alignSelf: 'flex-start',
     borderRadius: 2,
   },

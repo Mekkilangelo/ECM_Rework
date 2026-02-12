@@ -21,7 +21,7 @@ const TEXT_GRAY = '#64748b';
 
 const styles = StyleSheet.create({
   sectionContainer: {
-    marginBottom: 20,
+    marginBottom: 4,
     fontFamily: 'Helvetica',
   },
 
@@ -32,10 +32,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 12, // Increased to prevent cropping
-    marginBottom: 30, // Increased spacing between header and photos
-    minHeight: 40,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 6,
+    minHeight: 30,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -80,27 +80,27 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     paddingVertical: 4,
     paddingHorizontal: 15,
-    marginBottom: 10,
+    marginBottom: 4,
   },
 
   // Photo Layouts
   heroLayout: {
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 15, // Increased gap for Hero page
+    gap: 6,
   },
   heroRowSmall: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    gap: 10,
+    gap: 4,
   },
 
   gridLayout: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 15,
+    rowGap: 6,
   }
 });
 
@@ -238,7 +238,7 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
 
                 {/* Layout: Initial (Hero + optional Small) */}
                 {page.type === 'initial' && (
-                  <View style={{ flex: 1, gap: 10 }}>
+                  <View style={{ flex: 1, gap: 4 }}>
                     {/* Hero Photo */}
                     {page.photos[0] && (
                       <View style={{ flex: 3 }}>
@@ -253,7 +253,7 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
 
                     {/* Small Photos Row (if any) */}
                     {page.photos.length > 1 && (
-                      <View style={{ flex: 2, flexDirection: 'row', gap: 10 }}>
+                      <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>
                         {page.photos.slice(1).map((p, i) => (
                           <View key={i} style={{ flex: 1 }}>
                             <PhotoContainer

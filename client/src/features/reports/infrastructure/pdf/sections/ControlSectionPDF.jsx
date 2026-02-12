@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.brand.secondary,
     borderLeftWidth: 4,
     borderLeftColor: getAccentColor(SECTION_TYPE),
-    marginBottom: 10,
+    marginBottom: 4,
   },
   resultTitle: {
     ...TYPOGRAPHY.subsectionTitle,
@@ -30,9 +30,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
     borderLeftWidth: 4,
     borderLeftColor: getAccentColor(SECTION_TYPE),
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginBottom: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 5,
+    marginBottom: 3,
   },
   sampleTitle: {
     fontSize: 10,
@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
     color: '#334155'
   },
   chartContainer: {
-    marginBottom: 10,
-    padding: 6,
+    marginBottom: 4,
+    padding: 3,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -594,8 +594,8 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
       {pages.map((pBlocks, pId) => (
         <View key={pId} break={pId > 0}>
           {/* HEADER REPEATED ALWAYS */}
-          <View style={{ marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#ccc', paddingBottom: 2 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.brand.dark, padding: 4, marginBottom: 4 }}>
+          <View style={{ marginBottom: 4, borderBottomWidth: 1, borderBottomColor: '#ccc', paddingBottom: 2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', backgroundColor: COLORS.brand.dark, padding: 3, marginBottom: 2 }}>
               <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>CONTROL</Text>
               <Text style={{ color: '#fff', fontSize: 10 }}>{pId + 1} / {pages.length}</Text>
             </View>

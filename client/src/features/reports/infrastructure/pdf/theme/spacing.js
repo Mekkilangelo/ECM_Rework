@@ -3,55 +3,55 @@
  * Basé sur une unité de base de 4px
  */
 
-const BASE = 4;
+const BASE = 2;
 
 export const SPACING = {
-  // Espacements de base (multiples de 4)
-  xs: BASE,           // 4
-  sm: BASE * 2,       // 8
-  md: BASE * 3,       // 12
-  lg: BASE * 4,       // 16
-  xl: BASE * 5,       // 20
-  xxl: BASE * 6,      // 24
-  xxxl: BASE * 8,     // 32
-  
-  // Espacements sémantiques
+  // Espacements de base (multiples de 2) - Réduits pour maximiser l'espace
+  xs: BASE,           // 2
+  sm: BASE * 2,       // 4
+  md: BASE * 3,       // 6
+  lg: BASE * 4,       // 8
+  xl: BASE * 5,       // 10
+  xxl: BASE * 6,      // 12
+  xxxl: BASE * 8,     // 16
+
+  // Espacements sémantiques - Minimisés
   page: {
-    padding: 40,
-    headerMargin: 20,
-    footerMargin: 30,
+    padding: 15,
+    headerMargin: 8,
+    footerMargin: 10,
   },
-  
+
   section: {
-    marginBottom: 16,
-    titlePaddingV: 8,
-    titlePaddingH: 12,
-    titleMarginBottom: 12,
+    marginBottom: 6,
+    titlePaddingV: 3,
+    titlePaddingH: 6,
+    titleMarginBottom: 4,
   },
-  
+
   subsection: {
-    marginTop: 12,
-    marginBottom: 8,
-    paddingV: 6,
-    paddingH: 8,
+    marginTop: 4,
+    marginBottom: 3,
+    paddingV: 3,
+    paddingH: 5,
   },
-  
+
   photo: {
-    gap: 8,
-    marginBottom: 8,
-    captionMarginTop: 3,
+    gap: 4,
+    marginBottom: 3,
+    captionMarginTop: 2,
   },
-  
+
   dataRow: {
-    marginBottom: 8,
-    paddingBottom: 6,
+    marginBottom: 4,
+    paddingBottom: 3,
   },
-  
+
   table: {
-    cellPaddingH: 6,
-    cellPaddingV: 3,
-    marginTop: 6,
-    marginBottom: 10,
+    cellPaddingH: 4,
+    cellPaddingV: 2,
+    marginTop: 3,
+    marginBottom: 4,
   },
 };
 

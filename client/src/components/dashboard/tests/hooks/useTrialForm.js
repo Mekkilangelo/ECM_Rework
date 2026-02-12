@@ -13,35 +13,35 @@ import useCopyPaste from '../../../../hooks/useCopyPaste';
 const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode = false) => {
   const { hierarchyState } = useNavigation();
   const parentId = hierarchyState.partId;
-  
+
   // État pour stocker la fonction de rappel d'association de fichiers
   const [fileAssociationCallback, setFileAssociationCallback] = useState(null);
-  
+
   // État du formulaire et initialisation
-  const { 
-    formData, 
-    setFormData, 
-    errors, 
-    setErrors, 
-    loading, 
-    setLoading, 
-    message, 
-    setMessage 
+  const {
+    formData,
+    setFormData,
+    errors,
+    setErrors,
+    loading,
+    setLoading,
+    message,
+    setMessage
   } = useFormState();
 
   // Exposer setFormData pour l'import Excel via une méthode globale temporaire
   useEffect(() => {
     window.setFormDataForCurveImport = setFormData;
-    
+
     // Listener pour les mises à jour forcées de formData
     const handleForceUpdate = (event) => {
-      
-      
+
+
       setFormData(event.detail.formData);
     };
-    
+
     window.addEventListener('forceFormDataUpdate', handleForceUpdate);
-    
+
     return () => {
       delete window.setFormDataForCurveImport;
       window.removeEventListener('forceFormDataUpdate', handleForceUpdate);
@@ -74,19 +74,19 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     setMessage,
     setFetchingTest
   );
-  
+
   // Chargement des options pour les selects en utilisant le hook unifié
-  const { 
-    locationOptions, statusOptions, mountingTypeOptions, positionTypeOptions, 
-    processTypeOptions, preoxMediaOptions, furnaceTypeOptions, heatingCellOptions, 
+  const {
+    locationOptions, statusOptions, mountingTypeOptions, positionTypeOptions,
+    processTypeOptions, preoxMediaOptions, furnaceTypeOptions, heatingCellOptions,
     coolingMediaOptions, furnaceSizeOptions, quenchCellOptions, gasOptions, rampOptions,
-    selectStyles, getSelectedOption, lengthUnitOptions, weightUnitOptions, 
+    selectStyles, getSelectedOption, lengthUnitOptions, weightUnitOptions,
     timeUnitOptions, temperatureUnitOptions, pressureUnitOptions, hardnessUnitOptions,
-    getLengthUnitOptions, 
-    getWeightUnitOptions, 
-    getTimeUnitOptions, 
-    getTemperatureUnitOptions, 
-    getPressureUnitOptions, 
+    getLengthUnitOptions,
+    getWeightUnitOptions,
+    getTimeUnitOptions,
+    getTemperatureUnitOptions,
+    getPressureUnitOptions,
     getHardnessUnitOptions,
     refreshLocationOptions,
     refreshStatusOptions,
@@ -102,7 +102,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     refreshUnitOptions,
     refreshAllOptions
   } = useOptionsFetcher(setLoading, optionsConfig);
-  
+
   // Regrouper les fonctions de rafraîchissement pour les passer à useFormHandlers
   const refreshFunctions = {
     refreshLocationOptions,
@@ -125,15 +125,15 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
 
   // Soumission du formulaire au serveur
   const { handleSubmit } = useTrialSubmission(
-    formData, 
-    setFormData, 
-    validate, 
+    formData,
+    setFormData,
+    validate,
     parentId,
-    trial, 
-    setLoading, 
-    setMessage, 
+    trial,
+    setLoading,
+    setMessage,
     onTrialCreated,
-    onTrialUpdated, 
+    onTrialUpdated,
     onClose,
     fileAssociationCallback,
     viewMode,
@@ -141,16 +141,16 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
   );
 
   // Utiliser notre hook amélioré pour la gestion de la confirmation de fermeture
-  const { 
-    showConfirmModal, 
-    pendingClose, 
+  const {
+    showConfirmModal,
+    pendingClose,
     isModified,
     setModified,
     resetInitialState,
-    handleCloseRequest, 
-    confirmClose, 
-    cancelClose, 
-    saveAndClose 
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
+    saveAndClose
   } = useCloseConfirmation(
     formData,
     loading,
@@ -161,13 +161,13 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
   );
 
   // Handlers pour le formulaire
-  const { 
-    handleChange, handleSelectChange, 
+  const {
+    handleChange, handleSelectChange,
     handleThermalCycleAdd, handleThermalCycleRemove, handleThermalCycleChange,
     handleChemicalCycleAdd, handleChemicalCycleRemove,
     handleGasQuenchSpeedAdd, handleGasQuenchSpeedRemove,
     handleGasQuenchPressureAdd, handleGasQuenchPressureRemove,
-    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove, 
+    handleOilQuenchSpeedAdd, handleOilQuenchSpeedRemove,
     handleResultBlocAdd, handleResultBlocRemove,
     handleSampleAdd, handleSampleRemove,
     handleHardnessResultAdd, handleHardnessResultRemove,
@@ -215,7 +215,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
       mountingType: data.mountingType || '',
       positionType: data.positionType || '',
       processType: data.processType || '',
-      
+
       // Données du four
       furnaceData: {
         furnaceType: data.furnaceData?.furnaceType || '',
@@ -224,7 +224,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         furnaceSize: data.furnaceData?.furnaceSize || '',
         quenchCell: data.furnaceData?.quenchCell || '',
       },
-      
+
       // Données de charge
       loadData: {
         length: data.loadData?.length || '',
@@ -237,29 +237,29 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         weightUnit: data.loadData?.weightUnit || '',
         loadComments: data.loadData?.loadComments || '',
       },
-      
+
       // Données de recette
       recipeData: {
         recipeNumber: data.recipeData?.recipeNumber || '',
-        
+
         // Préoxydation
         preoxTemp: data.recipeData?.preoxTemp || '',
         preoxTempUnit: data.recipeData?.preoxTempUnit || '',
         preoxDuration: data.recipeData?.preoxDuration || '',
         preoxDurationUnit: data.recipeData?.preoxDurationUnit || '',
         preoxMedia: data.recipeData?.preoxMedia || '',
-        
+
         // Cycle thermique
         thermalCycle: data.recipeData?.thermalCycle || [],
-        
+
         // Configuration globale des gaz
         selectedGas1: data.recipeData?.selectedGas1 || '',
         selectedGas2: data.recipeData?.selectedGas2 || '',
         selectedGas3: data.recipeData?.selectedGas3 || '',
-        
+
         // Cycle chimique
         chemicalCycle: data.recipeData?.chemicalCycle || [],
-        
+
         // Autres paramètres de recette
         waitTime: data.recipeData?.waitTime || '',
         waitTimeUnit: data.recipeData?.waitTimeUnit || '',
@@ -269,10 +269,12 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         programDurationUnit: data.recipeData?.programDurationUnit || '',
         cellTemp: data.recipeData?.cellTemp || '',
         cellTempUnit: data.recipeData?.cellTempUnit || '',
+        processTemp: data.recipeData?.processTemp || '',
+        processTempUnit: data.recipeData?.processTempUnit || '',
         waitPressure: data.recipeData?.waitPressure || '',
         waitPressureUnit: data.recipeData?.waitPressureUnit || '',
       },
-      
+
       // Données de trempe
       quenchData: {
         gasQuenchSpeed: data.quenchData?.gasQuenchSpeed || [],
@@ -286,12 +288,12 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         oilDrippingTime: data.quenchData?.oilDrippingTime || '',
         oilDrippingTimeUnit: data.quenchData?.oilDrippingTimeUnit || ''
       },
-      
+
       // Données de résultats
       resultsData: {
         results: data.resultsData?.results || []
       },
-      
+
       // Notes (ancien champ)
       notes: data.notes || ''
     };
@@ -307,12 +309,12 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
       location: data.location || '',
       status: data.status || 'pending',
       description: data.description || '',
-      
+
       // Types de test
       mountingType: data.mountingType || '',
       positionType: data.positionType || '',
       processType: data.processType || '',
-      
+
       // Données du four
       furnaceData: {
         furnaceType: data.furnaceData?.furnaceType || '',
@@ -321,7 +323,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         furnaceSize: data.furnaceData?.furnaceSize || '',
         quenchCell: data.furnaceData?.quenchCell || '',
       },
-      
+
       // Données de charge
       loadData: {
         length: data.loadData?.length || '',
@@ -334,29 +336,29 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         weightUnit: data.loadData?.weightUnit || '',
         loadComments: data.loadData?.loadComments || '',
       },
-      
+
       // Données de recette
       recipeData: {
         recipeNumber: data.recipeData?.recipeNumber || '',
-        
+
         // Préoxydation
         preoxTemp: data.recipeData?.preoxTemp || '',
         preoxTempUnit: data.recipeData?.preoxTempUnit || '',
         preoxDuration: data.recipeData?.preoxDuration || '',
         preoxDurationUnit: data.recipeData?.preoxDurationUnit || '',
         preoxMedia: data.recipeData?.preoxMedia || '',
-        
+
         // Cycle thermique
         thermalCycle: data.recipeData?.thermalCycle || [],
-        
+
         // Configuration globale des gaz
         selectedGas1: data.recipeData?.selectedGas1 || '',
         selectedGas2: data.recipeData?.selectedGas2 || '',
         selectedGas3: data.recipeData?.selectedGas3 || '',
-        
+
         // Cycle chimique
         chemicalCycle: data.recipeData?.chemicalCycle || [],
-        
+
         // Autres paramètres de recette
         waitTime: data.recipeData?.waitTime || '',
         waitTimeUnit: data.recipeData?.waitTimeUnit || '',
@@ -366,10 +368,12 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         programDurationUnit: data.recipeData?.programDurationUnit || '',
         cellTemp: data.recipeData?.cellTemp || '',
         cellTempUnit: data.recipeData?.cellTempUnit || '',
+        processTemp: data.recipeData?.processTemp || '',
+        processTempUnit: data.recipeData?.processTempUnit || '',
         waitPressure: data.recipeData?.waitPressure || '',
         waitPressureUnit: data.recipeData?.waitPressureUnit || '',
       },
-      
+
       // Données de trempe
       quenchData: {
         gasQuenchSpeed: data.quenchData?.gasQuenchSpeed || [],
@@ -383,12 +387,12 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
         oilDrippingTime: data.quenchData?.oilDrippingTime || '',
         oilDrippingTimeUnit: data.quenchData?.oilDrippingTimeUnit || ''
       },
-      
+
       // Données de résultats
       resultsData: {
         results: data.resultsData?.results || []
       },
-      
+
       // Notes (ancien champ)
       notes: data.notes || ''
     };
@@ -413,7 +417,7 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     message: message || copyPasteMessage, // Combiner les messages
     setMessage,
     fetchingTest,
-    
+
     // Options et styles pour les selects
     locationOptions,
     statusOptions,
@@ -434,39 +438,39 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     temperatureUnitOptions,
     pressureUnitOptions,
     hardnessUnitOptions,
-    getLengthUnitOptions, 
-    getWeightUnitOptions, 
-    getTimeUnitOptions, 
-    getTemperatureUnitOptions, 
-    getPressureUnitOptions, 
+    getLengthUnitOptions,
+    getWeightUnitOptions,
+    getTimeUnitOptions,
+    getTemperatureUnitOptions,
+    getPressureUnitOptions,
     getHardnessUnitOptions,
     selectStyles,
-    
+
     // Nouvelle gestion des fichiers
     tempFileId,
     setTempFileId,
-    
+
     // Gestion de la confirmation de fermeture avec les nouveaux états et fonctions
-    showConfirmModal, 
+    showConfirmModal,
     pendingClose,
-    isModified,      
-    setModified,     
-    handleCloseRequest, 
-    confirmClose, 
-    cancelClose, 
+    isModified,
+    setModified,
+    handleCloseRequest,
+    confirmClose,
+    cancelClose,
     saveAndClose,
-    
+
     // Handlers
     handleChange,
     handleSelectChange,
     handleSubmit,
     getSelectedOption,
-    
+
     // Thermal cycle
     handleThermalCycleAdd,
     handleThermalCycleRemove,
     handleThermalCycleChange,
-    
+
     // Chemical cycle
     handleChemicalCycleAdd,
     handleChemicalCycleRemove,
@@ -486,14 +490,14 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     handleEcdPositionRemove,
     handleEcdPositionChange,
     handleCreateOption,
-    
+
     // Fonctions de gestion du temps
     convertSecondsToHMS,
     convertHMSToSeconds,
     handleTimeComponentChange,
     initializeTimeComponents,
     calculateProgramDuration,
-    
+
     // Fonctions de rafraîchissement
     refreshLocationOptions,
     refreshStatusOptions,
@@ -508,19 +512,19 @@ const useTrialForm = (trial, onClose, onTrialCreated, onTrialUpdated, viewMode =
     refreshQuenchCellOptions,
     refreshUnitOptions,
     refreshAllOptions,
-    
+
     // Gestion des fichiers
     setFileAssociationCallback,
-    
+
     // Fonctions d'import Excel
     fileInputRef,
     handleExcelImport,
     processExcelData,
-    
+
     // Référence et fonction pour la gestion des données de courbe
     resultsSectionRef,
     flushAllCurveData,
-    
+
     // Copy/Paste functionality
     handleCopy,
     handlePaste

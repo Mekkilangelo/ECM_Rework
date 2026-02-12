@@ -78,7 +78,9 @@ const createRecipeFromData = async (recipeData, transaction) => {
       wait_gas: recipeData.wait_gas || null,
       wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
-      cell_temp_unit: recipeData.cell_temp?.unit || null
+      cell_temp_unit: recipeData.cell_temp?.unit || null,
+      process_temp_value: recipeData.process_temp?.value || null,
+      process_temp_unit: recipeData.process_temp?.unit || null
     }, { transaction });
 
     // Créer les steps du cycle chimique (bulkCreate + retour des IDs)
@@ -111,7 +113,7 @@ const createRecipeFromData = async (recipeData, transaction) => {
       await ChemicalGasModel.bulkCreate(allGases, { transaction });
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 ||
-    recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp ||
+    recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp || recipeData.process_temp ||
     recipeData.wait_gas || recipeData.wait_flow) {
     // Si pas de chemical_cycle array mais qu'on a les métadonnées, les enregistrer quand même
     await ChemicalModel.create({
@@ -126,7 +128,9 @@ const createRecipeFromData = async (recipeData, transaction) => {
       wait_gas: recipeData.wait_gas || null,
       wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
-      cell_temp_unit: recipeData.cell_temp?.unit || null
+      cell_temp_unit: recipeData.cell_temp?.unit || null,
+      process_temp_value: recipeData.process_temp?.value || null,
+      process_temp_unit: recipeData.process_temp?.unit || null
     }, { transaction });
   }
 
@@ -429,7 +433,9 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       wait_gas: recipeData.wait_gas || null,
       wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
-      cell_temp_unit: recipeData.cell_temp?.unit || null
+      cell_temp_unit: recipeData.cell_temp?.unit || null,
+      process_temp_value: recipeData.process_temp?.value || null,
+      process_temp_unit: recipeData.process_temp?.unit || null
     }, { transaction });
 
     // Bulk create steps puis gaz
@@ -461,7 +467,7 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       await sequelize.models.recipe_chemical_gas.bulkCreate(allGases, { transaction });
     }
   } else if (recipeData.selected_gas1 || recipeData.selected_gas2 || recipeData.selected_gas3 ||
-    recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp ||
+    recipeData.wait_time || recipeData.wait_pressure || recipeData.cell_temp || recipeData.process_temp ||
     recipeData.wait_gas || recipeData.wait_flow) {
     // Si pas de chemical_cycle array mais qu'on a les métadonnées, les enregistrer quand même
     await sequelize.models.recipe_chemical_cycle.create({
@@ -476,7 +482,9 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
       wait_gas: recipeData.wait_gas || null,
       wait_flow: recipeData.wait_flow || null,
       cell_temp_value: recipeData.cell_temp?.value || null,
-      cell_temp_unit: recipeData.cell_temp?.unit || null
+      cell_temp_unit: recipeData.cell_temp?.unit || null,
+      process_temp_value: recipeData.process_temp?.value || null,
+      process_temp_unit: recipeData.process_temp?.unit || null
     }, { transaction });
   }
 
@@ -884,33 +892,33 @@ const getTrialById = async (trialId) => {
       // Recipe
       trialValues.recipe_id
         ? sequelize.models.recipe.findByPk(trialValues.recipe_id, {
-            include: [
-              { model: sequelize.models.recipe_preox_cycle, as: 'preoxCycle' },
-              { model: sequelize.models.recipe_thermal_cycle, as: 'thermalCycle' },
-              {
-                model: sequelize.models.recipe_chemical_cycle,
-                as: 'chemicalCycle',
-                include: [{
-                  model: sequelize.models.recipe_chemical_step,
-                  as: 'steps',
-                  include: [{ model: sequelize.models.recipe_chemical_gas, as: 'gases' }]
-                }]
-              },
-              {
-                model: sequelize.models.recipe_gas_quench,
-                as: 'gasQuench',
-                include: [
-                  { model: sequelize.models.recipe_gas_quench_speed, as: 'speedSteps' },
-                  { model: sequelize.models.recipe_gas_quench_pressure, as: 'pressureSteps' }
-                ]
-              },
-              {
-                model: sequelize.models.recipe_oil_quench,
-                as: 'oilQuench',
-                include: [{ model: sequelize.models.recipe_oil_quench_speed, as: 'speedSteps' }]
-              }
-            ]
-          })
+          include: [
+            { model: sequelize.models.recipe_preox_cycle, as: 'preoxCycle' },
+            { model: sequelize.models.recipe_thermal_cycle, as: 'thermalCycle' },
+            {
+              model: sequelize.models.recipe_chemical_cycle,
+              as: 'chemicalCycle',
+              include: [{
+                model: sequelize.models.recipe_chemical_step,
+                as: 'steps',
+                include: [{ model: sequelize.models.recipe_chemical_gas, as: 'gases' }]
+              }]
+            },
+            {
+              model: sequelize.models.recipe_gas_quench,
+              as: 'gasQuench',
+              include: [
+                { model: sequelize.models.recipe_gas_quench_speed, as: 'speedSteps' },
+                { model: sequelize.models.recipe_gas_quench_pressure, as: 'pressureSteps' }
+              ]
+            },
+            {
+              model: sequelize.models.recipe_oil_quench,
+              as: 'oilQuench',
+              include: [{ model: sequelize.models.recipe_oil_quench_speed, as: 'speedSteps' }]
+            }
+          ]
+        })
         : Promise.resolve(null),
       // Results
       sequelize.models.results_step.findAll({
@@ -950,124 +958,132 @@ const getTrialById = async (trialId) => {
 
     // Données de recette
     if (recipe) {
-        // Construction de recipe_data
-        trialData.recipe_data = {
-          number: recipe.recipe_number
+      // Construction de recipe_data
+      trialData.recipe_data = {
+        number: recipe.recipe_number
+      };
+
+      // Préoxydation
+      if (recipe.preoxCycle) {
+        trialData.recipe_data.preox = {
+          media: recipe.preoxCycle.media,
+          temperature: {
+            value: recipe.preoxCycle.temperature_value,
+            unit: recipe.preoxCycle.temperature_unit
+          },
+          duration: {
+            value: recipe.preoxCycle.duration_value,
+            unit: recipe.preoxCycle.duration_unit
+          }
+        };
+      }
+
+      // Cycle thermique
+      if (recipe.thermalCycle && recipe.thermalCycle.length > 0) {
+        trialData.recipe_data.thermal_cycle = recipe.thermalCycle.map(step => ({
+          ramp: step.ramp,
+          setpoint: step.setpoint,
+          duration: step.duration
+        }));
+      }
+
+      // Cycle chimique
+      if (recipe.chemicalCycle && recipe.chemicalCycle.steps && recipe.chemicalCycle.steps.length > 0) {
+        trialData.recipe_data.selected_gas1 = recipe.chemicalCycle.selected_gas1 || '';
+        trialData.recipe_data.selected_gas2 = recipe.chemicalCycle.selected_gas2 || '';
+        trialData.recipe_data.selected_gas3 = recipe.chemicalCycle.selected_gas3 || '';
+        trialData.recipe_data.wait_time = {
+          value: recipe.chemicalCycle.wait_time_value,
+          unit: recipe.chemicalCycle.wait_time_unit
+        };
+        trialData.recipe_data.wait_pressure = {
+          value: recipe.chemicalCycle.wait_pressure_value,
+          unit: recipe.chemicalCycle.wait_pressure_unit
+        };
+        trialData.recipe_data.wait_gas = recipe.chemicalCycle.wait_gas || '';
+        trialData.recipe_data.wait_flow = recipe.chemicalCycle.wait_flow || '';
+        trialData.recipe_data.cell_temp = {
+          value: recipe.chemicalCycle.cell_temp_value,
+          unit: recipe.chemicalCycle.cell_temp_unit
+        };
+        trialData.recipe_data.process_temp = {
+          value: recipe.chemicalCycle.process_temp_value,
+          unit: recipe.chemicalCycle.process_temp_unit
         };
 
-        // Préoxydation
-        if (recipe.preoxCycle) {
-          trialData.recipe_data.preox = {
-            media: recipe.preoxCycle.media,
-            temperature: {
-              value: recipe.preoxCycle.temperature_value,
-              unit: recipe.preoxCycle.temperature_unit
-            },
-            duration: {
-              value: recipe.preoxCycle.duration_value,
-              unit: recipe.preoxCycle.duration_unit
-            }
-          };
-        }
-
-        // Cycle thermique
-        if (recipe.thermalCycle && recipe.thermalCycle.length > 0) {
-          trialData.recipe_data.thermal_cycle = recipe.thermalCycle.map(step => ({
-            ramp: step.ramp,
-            setpoint: step.setpoint,
-            duration: step.duration
-          }));
-        }
-
-        // Cycle chimique
-        if (recipe.chemicalCycle && recipe.chemicalCycle.steps && recipe.chemicalCycle.steps.length > 0) {
-          trialData.recipe_data.selected_gas1 = recipe.chemicalCycle.selected_gas1 || '';
-          trialData.recipe_data.selected_gas2 = recipe.chemicalCycle.selected_gas2 || '';
-          trialData.recipe_data.selected_gas3 = recipe.chemicalCycle.selected_gas3 || '';
-          trialData.recipe_data.wait_time = {
-            value: recipe.chemicalCycle.wait_time_value,
-            unit: recipe.chemicalCycle.wait_time_unit
-          };
-          trialData.recipe_data.wait_pressure = {
-            value: recipe.chemicalCycle.wait_pressure_value,
-            unit: recipe.chemicalCycle.wait_pressure_unit
-          };
-          trialData.recipe_data.wait_gas = recipe.chemicalCycle.wait_gas || '';
-          trialData.recipe_data.wait_flow = recipe.chemicalCycle.wait_flow || '';
-          trialData.recipe_data.cell_temp = {
-            value: recipe.chemicalCycle.cell_temp_value,
-            unit: recipe.chemicalCycle.cell_temp_unit
-          };
-
-          trialData.recipe_data.chemical_cycle = recipe.chemicalCycle.steps.map(step => ({
-            time: step.time,
-            pressure: step.pressure,
-            turbine: step.turbine,
-            gases: step.gases ? step.gases.map(gas => ({
-              gas: gas.gas_name,
-              debit: gas.debit,
-              index: gas.gas_index
-            })) : []
-          }));
-        } else if (recipe.chemicalCycle) {
-          // Même sans steps, récupérer les métadonnées du cycle chimique incluant cell_temp
-          trialData.recipe_data.selected_gas1 = recipe.chemicalCycle.selected_gas1 || '';
-          trialData.recipe_data.selected_gas2 = recipe.chemicalCycle.selected_gas2 || '';
-          trialData.recipe_data.selected_gas3 = recipe.chemicalCycle.selected_gas3 || '';
-          trialData.recipe_data.wait_time = {
-            value: recipe.chemicalCycle.wait_time_value,
-            unit: recipe.chemicalCycle.wait_time_unit
-          };
-          trialData.recipe_data.wait_pressure = {
-            value: recipe.chemicalCycle.wait_pressure_value,
-            unit: recipe.chemicalCycle.wait_pressure_unit
-          };
-          trialData.recipe_data.wait_gas = recipe.chemicalCycle.wait_gas || '';
-          trialData.recipe_data.wait_flow = recipe.chemicalCycle.wait_flow || '';
-          trialData.recipe_data.cell_temp = {
-            value: recipe.chemicalCycle.cell_temp_value,
-            unit: recipe.chemicalCycle.cell_temp_unit
-          };
-        }
-
-        // Données de trempe
-        trialData.quench_data = {};
-
-        if (recipe.gasQuench) {
-          trialData.quench_data.gas_quench = {
-            speed_parameters: recipe.gasQuench.speedSteps ? recipe.gasQuench.speedSteps.map(sp => ({
-              duration: sp.duration,
-              speed: sp.speed
-            })) : [],
-            pressure_parameters: recipe.gasQuench.pressureSteps ? recipe.gasQuench.pressureSteps.map(pp => ({
-              duration: pp.duration,
-              pressure: pp.pressure
-            })) : []
-          };
-        }
-
-        if (recipe.oilQuench) {
-          trialData.quench_data.oil_quench = {
-            temperature: {
-              value: recipe.oilQuench.temperature_value,
-              unit: recipe.oilQuench.temperature_unit
-            },
-            inerting_pressure: recipe.oilQuench.pressure,
-            inerting_delay: {
-              value: recipe.oilQuench.inerting_delay_value,
-              unit: recipe.oilQuench.inerting_delay_unit
-            },
-            dripping_time: {
-              value: recipe.oilQuench.dripping_time_value,
-              unit: recipe.oilQuench.dripping_time_unit
-            },
-            speed_parameters: recipe.oilQuench.speedSteps ? recipe.oilQuench.speedSteps.map(sp => ({
-              duration: sp.duration,
-              speed: sp.speed
-            })) : []
-          };
-        }
+        trialData.recipe_data.chemical_cycle = recipe.chemicalCycle.steps.map(step => ({
+          time: step.time,
+          pressure: step.pressure,
+          turbine: step.turbine,
+          gases: step.gases ? step.gases.map(gas => ({
+            gas: gas.gas_name,
+            debit: gas.debit,
+            index: gas.gas_index
+          })) : []
+        }));
+      } else if (recipe.chemicalCycle) {
+        // Même sans steps, récupérer les métadonnées du cycle chimique incluant cell_temp
+        trialData.recipe_data.selected_gas1 = recipe.chemicalCycle.selected_gas1 || '';
+        trialData.recipe_data.selected_gas2 = recipe.chemicalCycle.selected_gas2 || '';
+        trialData.recipe_data.selected_gas3 = recipe.chemicalCycle.selected_gas3 || '';
+        trialData.recipe_data.wait_time = {
+          value: recipe.chemicalCycle.wait_time_value,
+          unit: recipe.chemicalCycle.wait_time_unit
+        };
+        trialData.recipe_data.wait_pressure = {
+          value: recipe.chemicalCycle.wait_pressure_value,
+          unit: recipe.chemicalCycle.wait_pressure_unit
+        };
+        trialData.recipe_data.wait_gas = recipe.chemicalCycle.wait_gas || '';
+        trialData.recipe_data.wait_flow = recipe.chemicalCycle.wait_flow || '';
+        trialData.recipe_data.cell_temp = {
+          value: recipe.chemicalCycle.cell_temp_value,
+          unit: recipe.chemicalCycle.cell_temp_unit
+        };
+        trialData.recipe_data.process_temp = {
+          value: recipe.chemicalCycle.process_temp_value,
+          unit: recipe.chemicalCycle.process_temp_unit
+        };
       }
+
+      // Données de trempe
+      trialData.quench_data = {};
+
+      if (recipe.gasQuench) {
+        trialData.quench_data.gas_quench = {
+          speed_parameters: recipe.gasQuench.speedSteps ? recipe.gasQuench.speedSteps.map(sp => ({
+            duration: sp.duration,
+            speed: sp.speed
+          })) : [],
+          pressure_parameters: recipe.gasQuench.pressureSteps ? recipe.gasQuench.pressureSteps.map(pp => ({
+            duration: pp.duration,
+            pressure: pp.pressure
+          })) : []
+        };
+      }
+
+      if (recipe.oilQuench) {
+        trialData.quench_data.oil_quench = {
+          temperature: {
+            value: recipe.oilQuench.temperature_value,
+            unit: recipe.oilQuench.temperature_unit
+          },
+          inerting_pressure: recipe.oilQuench.pressure,
+          inerting_delay: {
+            value: recipe.oilQuench.inerting_delay_value,
+            unit: recipe.oilQuench.inerting_delay_unit
+          },
+          dripping_time: {
+            value: recipe.oilQuench.dripping_time_value,
+            unit: recipe.oilQuench.dripping_time_unit
+          },
+          speed_parameters: recipe.oilQuench.speedSteps ? recipe.oilQuench.speedSteps.map(sp => ({
+            duration: sp.duration,
+            speed: sp.speed
+          })) : []
+        };
+      }
+    }
 
     // Données de résultats (results_data) - déjà récupérées en parallèle ci-dessus
     if (resultsSteps && resultsSteps.length > 0) {

@@ -24,7 +24,7 @@ const ThermalCycleSection = ({
   readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
-  
+
   // Options pour les gaz (même liste que dans ChemicalCycleSection)
   const gasOptions = [
     { value: 'N2', label: 'N2' },
@@ -33,7 +33,7 @@ const ThermalCycleSection = ({
     { value: 'N2O', label: 'N2O' },
     { value: 'CO2', label: 'CO2' }
   ];
-  
+
   const rampOptions = [
     { value: 'up', label: t('trials.before.recipeData.thermalCycle.rampUp'), icon: faArrowUp },
     { value: 'down', label: t('trials.before.recipeData.thermalCycle.rampDown'), icon: faArrowDown },
@@ -67,7 +67,7 @@ const ThermalCycleSection = ({
       }
     }
   };
-  
+
   return (
     <>
       <Table responsive bordered size="sm" className="mt-2" style={{ overflow: 'visible' }}>
@@ -179,7 +179,7 @@ const ThermalCycleSection = ({
           </Button>
         </div>
       )}
-        {/* Autres paramètres de recette */}
+      {/* Autres paramètres de recette */}
       <h5 className="mt-4 mb-2">{t('trials.before.recipeData.thermalCycle.otherParameters')}</h5>
       <Row>
         <Col md={6}>
@@ -192,7 +192,7 @@ const ThermalCycleSection = ({
               onChange={(e) => {
                 // Vérifier que e.target.name existe pour éviter l'erreur includes
                 if (!e.target.name) return;
-                
+
                 // Filtrer pour ne garder que les chiffres entiers
                 const value = e.target.value.replace(/[^0-9]/g, '');
                 // Créer un événement modifié avec la valeur filtrée
@@ -226,11 +226,11 @@ const ThermalCycleSection = ({
               readOnly
               disabled
               style={{
-                backgroundColor: calculateChemicalCycleDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDuration()) < 0.1 
+                backgroundColor: calculateChemicalCycleDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDuration()) < 0.1
                   ? '#d4edda' // Vert si égal (avec tolérance de 0.1)
                   : '#f8d7da', // Rouge si différent
-                borderColor: calculateChemicalCycleDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDuration()) < 0.1 
-                  ? '#c3e6cb' 
+                borderColor: calculateChemicalCycleDuration && Math.abs(calculateProgramDuration() - calculateChemicalCycleDuration()) < 0.1
+                  ? '#c3e6cb'
                   : '#f5c6cb',
                 cursor: 'not-allowed',
                 color: '#6c757d'
@@ -261,8 +261,8 @@ const ThermalCycleSection = ({
             <Form.Label>{t('trials.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.cellTempUnit"
-              value={formData.recipeData?.cellTempUnit 
-                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.cellTempUnit) 
+              value={formData.recipeData?.cellTempUnit
+                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.cellTempUnit)
                 : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.cellTempUnit' })}
               options={temperatureUnitOptions}
@@ -284,6 +284,49 @@ const ThermalCycleSection = ({
         </Col>
         <Col md={3}>
           <Form.Group className="mb-3">
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.processTemp')}</Form.Label>
+            <Form.Control
+              type="number"
+              name="recipeData.processTemp"
+              value={formData.recipeData?.processTemp}
+              onChange={handleChange}
+              step="0.1"
+              style={viewMode ? readOnlyFieldStyle : {}}
+              readOnly={viewMode}
+              disabled={loading || viewMode}
+            />
+          </Form.Group>
+        </Col>
+        <Col md={3}>
+          <Form.Group className="mb-3">
+            <Form.Label>{t('trials.before.recipeData.thermalCycle.unit')}</Form.Label>
+            <Select
+              name="recipeData.processTempUnit"
+              value={formData.recipeData?.processTempUnit
+                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.processTempUnit)
+                : temperatureUnitOptions[0] || null}
+              onChange={(option) => handleSelectChange(option, { name: 'recipeData.processTempUnit' })}
+              options={temperatureUnitOptions}
+              isClearable={!viewMode}
+              isDisabled={loading || viewMode}
+              styles={viewMode ? {
+                ...selectStyles,
+                control: (provided) => ({
+                  ...provided,
+                  ...readOnlyFieldStyle,
+                  cursor: 'default'
+                }),
+                dropdownIndicator: () => ({ display: 'none' }),
+                indicatorSeparator: () => ({ display: 'none' })
+              } : selectStyles}
+              placeholder={t('trials.before.recipeData.thermalCycle.unit')}
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+      <Row>
+        <Col md={3}>
+          <Form.Group className="mb-3">
             <Form.Label>{t('trials.before.recipeData.thermalCycle.waitPressure')}</Form.Label>
             <Form.Control
               type="number"
@@ -302,8 +345,8 @@ const ThermalCycleSection = ({
             <Form.Label>{t('trials.before.recipeData.thermalCycle.unit')}</Form.Label>
             <Select
               name="recipeData.waitPressureUnit"
-              value={formData.recipeData?.waitPressureUnit 
-                ? getSelectedOption(pressureUnitOptions, formData.recipeData?.waitPressureUnit) 
+              value={formData.recipeData?.waitPressureUnit
+                ? getSelectedOption(pressureUnitOptions, formData.recipeData?.waitPressureUnit)
                 : pressureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitPressureUnit' })}
               options={pressureUnitOptions}
@@ -332,8 +375,8 @@ const ThermalCycleSection = ({
             <Form.Label>{t('trials.before.recipeData.thermalCycle.waitGas')}</Form.Label>
             <Select
               name="recipeData.waitGas"
-              value={formData.recipeData?.waitGas 
-                ? getSelectedOption(gasOptions, formData.recipeData?.waitGas) 
+              value={formData.recipeData?.waitGas
+                ? getSelectedOption(gasOptions, formData.recipeData?.waitGas)
                 : null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.waitGas' })}
               options={gasOptions}

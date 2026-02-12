@@ -19,15 +19,15 @@ import { useState } from 'react';
  * @param {Function} flushAllCurveData - Fonction pour flusher les données de courbe avant soumission
  */
 const useTrialSubmission = (
-  formData, 
-  setFormData, 
-  validate, 
+  formData,
+  setFormData,
+  validate,
   parentId,
   trial,
-  setLoading, 
-  setMessage, 
+  setLoading,
+  setMessage,
   onTrialCreated,
-  onTrialUpdated, 
+  onTrialUpdated,
   onClose,
   fileAssociationCallback,
   viewMode = false,
@@ -93,7 +93,7 @@ const useTrialSubmission = (
       oilInertingDelayUnit: '',
       oilDrippingTime: '',
       oilDrippingTimeUnit: ''
-    },    resultsData: {
+    }, resultsData: {
       results: [
         {
           step: 1,
@@ -102,7 +102,7 @@ const useTrialSubmission = (
             {
               step: 1,
               description: '',
-              hardnessPoints: [{ location: '', value: '', unit: ''}],
+              hardnessPoints: [{ location: '', value: '', unit: '' }],
               ecd: {
                 hardnessValue: '',
                 hardnessUnit: '',
@@ -114,11 +114,12 @@ const useTrialSubmission = (
           ]
         }
       ]
-    }};
-  
+    }
+  };
+
   // État local pour suivre si une soumission est en cours
   const [loading, setLoadingState] = useState(false);
-  
+
   // Formatage des données pour l'API
   const formatDataForApi = () => {
     // Formatage du four
@@ -129,7 +130,7 @@ const useTrialSubmission = (
       furnace_size: formData.furnaceData.furnaceSize || null,
       quench_cell: formData.furnaceData.quenchCell || null
     };
-    
+
     // Formatage des données de charge
     const loadData = {
       size: {
@@ -154,7 +155,7 @@ const useTrialSubmission = (
       },
       comments: formData.loadData.loadComments || null
     };
-    
+
     // Formatage du cycle thermique
     const thermalCycleData = formData.recipeData.thermalCycle.length > 0 && formData.recipeData.thermalCycle.some(
       cycle => cycle.setpoint || cycle.duration
@@ -164,14 +165,14 @@ const useTrialSubmission = (
       setpoint: cycle.setpoint || null,
       duration: cycle.duration || null
     })) : null;
-    
+
     // Formatage du cycle chimique
     const chemicalCycleData = formData.recipeData.chemicalCycle.length > 0 && formData.recipeData.chemicalCycle.some(
       cycle => cycle.time || cycle.debit1 || cycle.debit2 || cycle.debit3 || cycle.pressure || cycle.turbine === true
     ) ? formData.recipeData.chemicalCycle.map((cycle, index) => {
       // Préparer les gaz pour chaque étape, mais maintenir la structure exacte
       const gases = [];
-      
+
       // Important: préserver les indices exacts des gaz, ne pas réorganiser
       if (formData.recipeData.selectedGas1) {
         gases.push({
@@ -180,7 +181,7 @@ const useTrialSubmission = (
           index: 1 // On ajoute un indice pour pouvoir reconstruire correctement
         });
       }
-      
+
       if (formData.recipeData.selectedGas2) {
         gases.push({
           gas: formData.recipeData.selectedGas2,
@@ -188,7 +189,7 @@ const useTrialSubmission = (
           index: 2 // On ajoute un indice pour pouvoir reconstruire correctement
         });
       }
-      
+
       if (formData.recipeData.selectedGas3) {
         gases.push({
           gas: formData.recipeData.selectedGas3,
@@ -196,7 +197,7 @@ const useTrialSubmission = (
           index: 3 // On ajoute un indice pour pouvoir reconstruire correctement
         });
       }
-      
+
       return {
         step: index + 1,
         time: cycle.time || null,
@@ -205,11 +206,11 @@ const useTrialSubmission = (
         turbine: cycle.turbine === true
       };
     }) : null;
-    
+
     // Formatage des données de recette
     const recipeData = {
       number: formData.recipeData.recipeNumber || null,
-      
+
       selected_gas1: formData.recipeData.selectedGas1 || null,
       selected_gas2: formData.recipeData.selectedGas2 || null,
       selected_gas3: formData.recipeData.selectedGas3 || null,
@@ -226,13 +227,17 @@ const useTrialSubmission = (
         media: formData.recipeData.preoxMedia || null
       },
       thermal_cycle: thermalCycleData,
-      chemical_cycle: chemicalCycleData,      wait_time: {
+      chemical_cycle: chemicalCycleData, wait_time: {
         value: formData.recipeData.waitTime || null,
         unit: 'minutes' // Stocker directement en minutes
       },
       cell_temp: {
         value: formData.recipeData.cellTemp || null,
         unit: formData.recipeData.cellTempUnit || null
+      },
+      process_temp: {
+        value: formData.recipeData.processTemp || null,
+        unit: formData.recipeData.processTempUnit || null
       },
       wait_pressure: {
         value: formData.recipeData.waitPressure || null,
@@ -241,7 +246,7 @@ const useTrialSubmission = (
       wait_gas: formData.recipeData.waitGas || null,
       wait_flow: formData.recipeData.waitFlow || null
     };
-    
+
     // Formatage des données de trempe au gaz
     const gasQuenchSpeedData = formData.quenchData.gasQuenchSpeed.length > 0 && formData.quenchData.gasQuenchSpeed.some(
       speed => speed.duration || speed.speed
@@ -250,7 +255,7 @@ const useTrialSubmission = (
       duration: speed.duration || null,
       speed: speed.speed || null
     })) : null;
-    
+
     // Formatage des données de pression de trempe au gaz
     const gasQuenchPressureData = formData.quenchData.gasQuenchPressure.length > 0 && formData.quenchData.gasQuenchPressure.some(
       pressure => pressure.duration || pressure.pressure
@@ -259,7 +264,7 @@ const useTrialSubmission = (
       duration: pressure.duration || null,
       pressure: pressure.pressure || null
     })) : null;
-    
+
     // Formatage des données de trempe à l'huile
     const oilQuenchSpeedData = formData.quenchData.oilQuenchSpeed.length > 0 && formData.quenchData.oilQuenchSpeed.some(
       speed => speed.duration || speed.speed
@@ -268,7 +273,7 @@ const useTrialSubmission = (
       duration: speed.duration || null,
       speed: speed.speed || null
     })) : null;
-    
+
     // Formatage des données de trempe
     const quenchData = {
       gas_quench: {
@@ -292,34 +297,34 @@ const useTrialSubmission = (
         }
       }
     };
-      // Formatage des données de résultat - NOUVELLE STRUCTURE AVEC ÉCHANTILLONS
-    const resultsData = formData.resultsData && formData.resultsData.results?.length > 0 && 
-    formData.resultsData.results.some(result => 
-      result.description || 
-      (result.samples && result.samples.some(sample =>
-        sample.description ||
-        (sample.hardnessPoints && sample.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
-        (sample.ecd && sample.ecd.ecdPoints && sample.ecd.ecdPoints.some(p => p.distance || p.position)) ||
-        (sample.curveData && (
-          (sample.curveData.points && sample.curveData.points.length > 0) ||
-          (sample.curveData.distances && sample.curveData.series && 
-           sample.curveData.distances.length > 0 && sample.curveData.series.length > 0)
+    // Formatage des données de résultat - NOUVELLE STRUCTURE AVEC ÉCHANTILLONS
+    const resultsData = formData.resultsData && formData.resultsData.results?.length > 0 &&
+      formData.resultsData.results.some(result =>
+        result.description ||
+        (result.samples && result.samples.some(sample =>
+          sample.description ||
+          (sample.hardnessPoints && sample.hardnessPoints.some(p => p.value || p.location || p.unit)) ||
+          (sample.ecd && sample.ecd.ecdPoints && sample.ecd.ecdPoints.some(p => p.distance || p.position)) ||
+          (sample.curveData && (
+            (sample.curveData.points && sample.curveData.points.length > 0) ||
+            (sample.curveData.distances && sample.curveData.series &&
+              sample.curveData.distances.length > 0 && sample.curveData.series.length > 0)
+          ))
         ))
-      ))
-    ) ? {
+      ) ? {
       results: formData.resultsData.results.map(result => {
         // Formatage des échantillons
-        const samples = result.samples && result.samples.length > 0 ? 
+        const samples = result.samples && result.samples.length > 0 ?
           result.samples.map((sample, sampleIdx) => {
             // Formatage des points de dureté
-            const hardnessPoints = sample.hardnessPoints?.length > 0 && 
-              sample.hardnessPoints.some(p => p.value || p.location || p.unit) ? 
+            const hardnessPoints = sample.hardnessPoints?.length > 0 &&
+              sample.hardnessPoints.some(p => p.value || p.location || p.unit) ?
               sample.hardnessPoints.map(point => ({
                 location: point.location || null,
                 value: point.value || null,
                 unit: point.unit || null
               })) : null;
-            
+
             // Formatage des données ECD
             const ecdData = sample.ecd ? {
               hardness_value: sample.ecd.hardnessValue || null,
@@ -332,22 +337,22 @@ const useTrialSubmission = (
                   hardness_unit: point.hardness_unit || null
                 })) : null
             } : null;
-            
+
             // Formatage des données de courbe
             // NOUVEAU : Enregistrer directement au format moderne {distances, series}
             let curveData = null;
-            
+
             if (sample.curveData) {
               // Nouveau format avec distances et series - GARDER TEL QUEL
               if (sample.curveData.distances && sample.curveData.series) {
                 // Nettoyer les données : convertir les valeurs vides en 0
                 const cleanedSeries = sample.curveData.series.map(serie => ({
                   name: serie.name || '',
-                  values: serie.values.map(value => 
+                  values: serie.values.map(value =>
                     (value === '' || value === null || value === undefined) ? 0 : parseFloat(value) || 0
                   )
                 }));
-                
+
                 curveData = {
                   distances: sample.curveData.distances,
                   series: cleanedSeries
@@ -355,12 +360,12 @@ const useTrialSubmission = (
               }
               // Ancien format avec points - CONVERTIR vers le nouveau format
               else if (sample.curveData.points && sample.curveData.points.length > 0) {
-                
-                
+
+
                 // Extraire les distances uniques
                 const distances = [...new Set(sample.curveData.points.map(p => p.distance))].sort((a, b) => a - b);
                 const seriesNames = new Set();
-                
+
                 // Découvrir tous les noms de séries
                 sample.curveData.points.forEach(point => {
                   Object.keys(point).forEach(key => {
@@ -369,7 +374,7 @@ const useTrialSubmission = (
                     }
                   });
                 });
-                
+
                 // Créer les séries
                 const series = Array.from(seriesNames).map(seriesName => ({
                   name: seriesName,
@@ -379,29 +384,29 @@ const useTrialSubmission = (
                     return parseFloat(value) || 0;
                   })
                 }));
-                
+
                 curveData = { distances, series };
               }
             }
-            
+
             // DEBUG LOG pour visualiser la donnée courbe importée et mappée
             if (process.env.NODE_ENV === 'development') {
-              
-              
-              
+
+
+
               if (sample.curveData?.distances && sample.curveData?.series) {
-                
-                
+
+
                 if (sample.curveData.series?.length > 0) {
-                  
+
                 }
               } else if (sample.curveData?.points) {
-                
+
                 if (sample.curveData.points?.length > 0) {
-                  
+
                 }
               }
-              
+
               if (curveData?.distances && curveData?.series) {
                 console.log('✅ Format MODERNE pour API - distances + series:', {
                   distancesCount: curveData.distances.length,
@@ -420,14 +425,14 @@ const useTrialSubmission = (
               ecd: ecdData,
               curve_data: curveData // snake_case pour l'API
             };
-          }) : null;        return {
-          step: result.step,
-          description: result.description || null,
-          samples: samples
-        };
+          }) : null; return {
+            step: result.step,
+            description: result.description || null,
+            samples: samples
+          };
       })
     } : null;
-    
+
     // DEBUG LOG pour vérifier les données finales envoyées à l'API
     if (process.env.NODE_ENV === 'development') {
       console.log('📦 Payload final envoyé à l\'API:', {
@@ -437,26 +442,26 @@ const useTrialSubmission = (
           resultsCount: resultsData.results?.length || 0
         } : null
       });
-      
+
       if (resultsData?.results) {
         resultsData.results.forEach((result, rIndex) => {
           console.log(`📋 Result ${rIndex}:`, {
             step: result.step,
             samplesCount: result.samples?.length || 0
           });
-          
+
           if (result.samples) {
             result.samples.forEach((sample, sIndex) => {
               console.log(`🧪 Sample [${rIndex}][${sIndex}]:`, {
                 step: sample.step,
                 hasCurveData: !!sample.curve_data,
-                curveDataFormat: sample.curve_data ? 
-                  (sample.curve_data.distances && sample.curve_data.series ? 
-                    'NOUVEAU (distances+series)' : 
+                curveDataFormat: sample.curve_data ?
+                  (sample.curve_data.distances && sample.curve_data.series ?
+                    'NOUVEAU (distances+series)' :
                     sample.curve_data.points ? 'ancien (points)' : 'format inconnu'
                   ) : 'pas de curveData'
               });
-              
+
               if (sample.curve_data?.distances && sample.curve_data?.series) {
                 console.log(`📊 Données MODERNES dans curve_data [${rIndex}][${sIndex}]:`, {
                   distancesCount: sample.curve_data.distances.length,
@@ -476,7 +481,7 @@ const useTrialSubmission = (
         });
       }
     }
-    
+
     return {
       parent_id: parentId,
       name: formData.name,
@@ -498,7 +503,7 @@ const useTrialSubmission = (
       results_data: resultsData
     };
   };
-  
+
   // Wrap le callback d'association de fichiers pour le faire fonctionner avec useApiSubmission
   const wrappedFileAssociationCallback = fileAssociationCallback ?
     async (nodeId) => {
@@ -515,21 +520,21 @@ const useTrialSubmission = (
       }
       return true;
     } : null;
-  
+
   const handleSubmit = async (e, isCloseAfterSave = false) => {
     if (e) {
       e.preventDefault();
     }
 
-    
-    
+
+
     // ÉTAPE 1 : FLUSHER LES DONNÉES DE COURBE AVANT VALIDATION
     if (flushAllCurveData && typeof flushAllCurveData === 'function') {
-      
+
       try {
         const flushed = flushAllCurveData();
         if (flushed) {
-          
+
           // Délai pour permettre la mise à jour du formData
           await new Promise(resolve => setTimeout(resolve, 300));
         } else {
@@ -539,88 +544,90 @@ const useTrialSubmission = (
         console.error('Error flushing curve data:', error);
       }
     } else {
-      
+
     }
 
     // Empêcher les soumissions multiples
     if (loading) return;
-    
+
     // Valider le formulaire
     const validationResults = validate(formData);
 
     // DEBUG: Afficher la structure complète de formData juste avant soumission
 
     if (!validationResults.isValid) {
-      
+
       return;
     }
-    
+
     setLoading(true);
-      try {
+    try {
       // Préparer les données pour l'API
       const trialData = formatDataForApi();
-      
+
       let response;
-      
+
       if (trial) {
         // Mode édition
         response = await trialService.updateTrial(trial.id, trialData);
-        
-        
+
+
         // Associer les fichiers temporaires au nœud
         if (fileAssociationCallback) {
           const associationResult = await fileAssociationCallback(trial.id);
-          
+
         }
-        
+
         setMessage({
           type: 'success',
           text: i18next.t('api.success.updated', { entityType: i18next.t('trials.title') })
         });
-        
+
         // Appeler le callback de mise à jour si fourni
         if (onTrialUpdated) {
           onTrialUpdated(response.data);
         }
-        
+
         // Si c'est une sauvegarde avant fermeture, fermer le formulaire
         if (isCloseAfterSave && onClose) {
           onClose();
-        }      } else {
+        }
+      } else {
         // Mode création
         response = await trialService.createTrial(trialData);
-        
-        
+
+
         // Réinitialiser le formulaire
         setFormData(defaultFormState);
-        
+
         setMessage({
           type: 'success',
           text: i18next.t('api.success.created', { entityType: i18next.t('trials.title') })
         });
-        
+
         // Associer les fichiers temporaires au nœud nouvellement créé
         if (fileAssociationCallback && response.data && response.data.id) {
           const associationResult = await fileAssociationCallback(response.data.id);
-          
+
         }
-        
+
         // Appeler le callback de création si fourni
         if (onTrialCreated) {
           onTrialCreated(response.data);
         }
-        
+
         // Fermer le formulaire après création réussie même sans isCloseAfterSave
         if (onClose) {
           onClose();
         }
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.error("Error submitting trial:", error);
       setMessage({
         type: 'danger',
         text: i18next.t('api.error.' + (trial ? 'update' : 'create'), { entityType: i18next.t('trials.title') })
       });
-      
+
       // If available, show more specific error message from the API
       if (error.response && error.response.data && error.response.data.message) {
         setMessage({
@@ -645,8 +652,8 @@ const useTrialSubmission = (
     onClose,
     formatDataForApi,
     customApiService: {
-      create: trialService.createTrial,      update: trialService.updateTrial
-    },    entityType: 'Trial',
+      create: trialService.createTrial, update: trialService.updateTrial
+    }, entityType: 'Trial',
     initialFormState: defaultFormState,
     fileAssociationCallback: wrappedFileAssociationCallback,  // Utiliser le wrapper ici
     parentId,

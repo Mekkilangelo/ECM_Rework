@@ -297,6 +297,7 @@ const StatsColumn = ({ recipeData, stats }) => {
         <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
         <InfoRow label="Pressure" value={stats.chemPressure} unit="mb" />
         <InfoRow label="Cell Temp" value={recipeData?.cell_temp?.value} unit={recipeData?.cell_temp?.unit} />
+        <InfoRow label="Process Temp" value={recipeData?.process_temp?.value} unit={recipeData?.process_temp?.unit} />
       </View>
 
       {/* Calculated Stats */}

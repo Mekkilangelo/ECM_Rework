@@ -83,12 +83,12 @@ class PredictionService {
     // === 5. IS_WEIGHT_UNKNOWN : 0 ou 1 selon disponibilité du poids ===
     const isWeightUnknown = (!partWeight || partWeight === '' || isNaN(partWeightValue)) ? 1 : 0;
 
-    // === 6-8. RECIPE_TEMPERATURE, CARBON_MAX, CARBON_FLOW : Calculés depuis cell_temp ===
-    const cellTemp = parseFloat(trialData.recipeData?.cellTemp);
+    // === 6-8. RECIPE_TEMPERATURE, CARBON_MAX, CARBON_FLOW : Calculés depuis process_temp ===
+    const cellTemp = parseFloat(trialData.recipeData?.processTemp);
     if (!cellTemp || isNaN(cellTemp)) {
-      missing.push('Température de cellule (Cell Temp) dans les paramètres de programme');
+      missing.push('Température process (Process Temp) dans les paramètres de programme');
     } else if (cellTemp < 880 || cellTemp > 990) {
-      missing.push(`Température de cellule doit être entre 880°C et 990°C (actuelle : ${cellTemp}°C)`);
+      missing.push(`Température process doit être entre 880°C et 990°C (actuelle : ${cellTemp}°C)`);
     }
 
     const recipeTemperature = cellTemp || 950;

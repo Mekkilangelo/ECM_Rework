@@ -50,16 +50,14 @@
     "usageDetails": "Usage Details",
     "calculated": "Calculated"
   },
-
   "copyPaste": {
     "copySuccess": "Data copied successfully",
     "copyError": "Error during copy",
     "pasteSuccess": "Data pasted successfully",
-    "pasteError": "Error during paste", 
+    "pasteError": "Error during paste",
     "noCachedData": "No copied data found for this form type",
     "expiredData": "Copied data has expired"
   },
-  
   "pagination": {
     "show": "Show",
     "itemsPerPage": "Items per page",
@@ -69,11 +67,9 @@
     "page": "Page",
     "of": "of"
   },
-  
   "form": {
     "requiredFields": "Required fields"
   },
-  
   "validation": {
     "required": {
       "name": "Name is required",
@@ -120,7 +116,6 @@
       "minLessThanMax": "Minimum value must be less than maximum value"
     }
   },
-  
   "api": {
     "success": {
       "created": "{{entityType}} successfully created",
@@ -131,7 +126,6 @@
       "update": "Error updating {{entityType}}"
     }
   },
-  
   "errors": {
     "notFound": {
       "client": "Client not found"
@@ -152,13 +146,11 @@
     },
     "general": "An error occurred. Please try again later."
   },
-  
   "success": {
     "delete": {
       "client": "Client successfully deleted"
     }
   },
-  
   "closeModal": {
     "title": "Confirm closure",
     "unsavedChanges": "You have unsaved changes."
@@ -194,7 +186,6 @@
       "passwordRequirements": "At least 6 characters required"
     }
   },
-  
   "navigation": {
     "dashboard": "Dashboard",
     "reference": "Reference",
@@ -206,7 +197,6 @@
       "trials": "Trials"
     }
   },
-  
   "sidebar": {
     "dashboard": "Dashboard",
     "search": "Search",
@@ -224,7 +214,8 @@
     },
     "archivesReference": {
       "reference": "Reference"
-    },    "support": {
+    },
+    "support": {
       "createTicket": "Create ticket"
     },
     "logs": {
@@ -237,12 +228,10 @@
       "error": "Error while deleting data"
     }
   },
-  
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome to the dashboard"
   },
-  
   "search": {
     "placeholder": "Search data, clients, reports...",
     "title": "Search",
@@ -361,7 +350,6 @@
       "allPositionTypes": "All position types"
     }
   },
-  
   "trialSearch": {
     "title": "Trial Search",
     "subtitle": "Search and filter trials",
@@ -385,7 +373,6 @@
     "sortByCode": "Code",
     "sortByName": "Name"
   },
-
   "trialFilters": {
     "trialInfo": "Trial Information",
     "clientInfo": "Client",
@@ -464,7 +451,6 @@
     "recipeNumberPlaceholder": "e.g: REC-2024-001",
     "part": "Part"
   },
-
   "trialResults": {
     "date": "Date",
     "location": "Location",
@@ -478,7 +464,6 @@
     "modified": "Modified",
     "viewDetails": "View"
   },
-  
   "clients": {
     "title": "Clients",
     "name": "Client name",
@@ -508,7 +493,6 @@
     "noResultsFound": "No clients found",
     "tryDifferentSearch": "Try a different search"
   },
-  
   "orders": {
     "title": "Trial Requests",
     "list": "Trial requests list",
@@ -553,7 +537,6 @@
     },
     "searchPlaceholder": "Search for an order..."
   },
-  
   "parts": {
     "title": "Parts",
     "list": "Parts list",
@@ -755,7 +738,8 @@
       "reference": "Reference",
       "description": "Description",
       "selectDesignation": "Select or add a designation"
-    },    "specifications": {
+    },
+    "specifications": {
       "depthMin": "Minimum Depth",
       "depthMax": "Maximum Depth",
       "depthUnit": "Depth Unit",
@@ -776,7 +760,6 @@
     "noResultsFound": "No parts found",
     "tryDifferentSearch": "Try a different search"
   },
-  
   "steels": {
     "title": "Steels",
     "list": "Steels list",
@@ -830,7 +813,6 @@
     "replaceSuccess": "Steel replaced and deleted successfully",
     "replaceError": "Error replacing steel"
   },
-  
   "trials": {
     "title": "Trials",
     "list": "Trials list",
@@ -838,7 +820,8 @@
     "form": "Trial form",
     "add": "Add trial",
     "edit": "Edit trial",
-    "new": "New trial",    "trialCode": "Trial code",
+    "new": "New trial",
+    "trialCode": "Trial code",
     "recipeNumber": "Recipe No.",
     "loadNumber": "Load Number",
     "date": "Date",
@@ -857,17 +840,14 @@
     "searchPlaceholder": "Search for a trial...",
     "noResultsFound": "No trials found",
     "tryDifferentSearch": "Try a different search",
-    
     "sections": {
       "basicInfo": "Basic information"
     },
-    
     "tabs": {
       "before": "Before",
       "after": "After",
       "report": "Report"
     },
-    
     "basicInfo": {
       "title": "Basic Information",
       "loadNumber": "Load Number",
@@ -879,7 +859,6 @@
       "selectOrAddLocation": "Select or add a location",
       "selectStatus": "Select a status"
     },
-    
     "before": {
       "furnaceData": {
         "title": "Furnace Data",
@@ -894,7 +873,6 @@
         "selectOrAddFurnaceSize": "Select or add a furnace size",
         "selectOrAddQuenchCell": "Select or add a quench cell"
       },
-
       "trialType": {
         "title": "Trial Type",
         "mountingType": "Mounting Type",
@@ -904,7 +882,6 @@
         "selectOrAddPositionType": "Select or add a position type",
         "selectOrAddProcessType": "Select or add a process type"
       },
-      
       "loadData": {
         "title": "Load Data",
         "loadDimensions": "Load Dimensions",
@@ -918,7 +895,6 @@
         "weight": "Weight",
         "loadComments": "Load Comments"
       },
-      
       "loadDesign": {
         "title": "Load Design",
         "importLoadDesign": "Import Load Design",
@@ -926,11 +902,9 @@
         "loadFilesError": "Error while loading files:",
         "associateFilesError": "Error while associating files:"
       },
-
       "recipeData": {
         "title": "Recipe Data",
         "recipeNumber": "Recipe Number",
-        
         "preoxidation": {
           "title": "Preoxidation",
           "media": "Media",
@@ -938,7 +912,6 @@
           "duration": "Duration",
           "unit": "Unit"
         },
-        
         "thermalCycle": {
           "title": "Thermal Cycle",
           "step": "Step",
@@ -954,13 +927,13 @@
           "unit": "Unit",
           "programDuration": "Program duration",
           "cellTemp": "Cell temperature",
+          "processTemp": "Process temperature",
           "waitPressure": "Wait pressure",
           "waitGas": "Preheat Gas",
           "waitFlow": "Gas Flow Rate (Wait Flow)",
           "selectGas": "Select gas...",
           "enterFlow": "Enter flow rate"
         },
-        
         "chemicalCycle": {
           "title": "Chemical Cycle",
           "gas": "Gas",
@@ -982,7 +955,6 @@
           "predictConfirmMessage": "The prediction will replace the current thermal and chemical cycles. This action is irreversible. Do you want to continue?",
           "predictConfirmButton": "Predict and replace"
         },
-        
         "graphs": {
           "title": "Graphs",
           "importGraph": "Import graph",
@@ -990,11 +962,9 @@
           "loadFilesError": "Error while loading files:",
           "associateFilesError": "Error while associating files:"
         },
-        
         "previewChart": {
           "title": "Chart Preview"
         },
-        
         "quenchData": {
           "title": "Quench Data",
           "common": {
@@ -1025,12 +995,10 @@
           }
         }
       },
-      
       "chemicalCycle": {
         "totalCycleDuration": "Total chemical cycle duration (minutes)"
       }
     },
-
     "after": {
       "specifications": {
         "title": "Part Specifications",
@@ -1175,7 +1143,6 @@
       }
     }
   },
-  
   "userManagement": {
     "title": "User Management",
     "users": "Users",
@@ -1234,8 +1201,8 @@
         "resetPassword": "Error resetting password"
       },
       "passwordReset": "Password reset successfully"
-    }  },
-  
+    }
+  },
   "logs": {
     "title": "Activity Logs",
     "filters": "Filters",
@@ -1281,8 +1248,8 @@
     "errors": {
       "loadFailed": "Error loading logs",
       "exportFailed": "Error exporting logs"
-    }  },
-  
+    }
+  },
   "fileHandling": {
     "loadError": "Error while loading files:",
     "associateError": "Error while associating files:",
@@ -1380,7 +1347,6 @@
       "generating": "Generating..."
     }
   },
-
   "references": {
     "title": "Reference Management",
     "deleteConfirmTitle": "Confirm Deletion",
@@ -1393,7 +1359,7 @@
     "deleteAnywayDescription": "If you delete this value, all references will be removed (set to NULL).",
     "tabs": {
       "steels": "Steels",
-      "furnaces": "Furnaces", 
+      "furnaces": "Furnaces",
       "parts": "Parts",
       "units": "Units",
       "process": "Process"
@@ -1429,7 +1395,6 @@
       "location": "Location"
     }
   },
-
   "logs": {
     "title": "Activity Logs",
     "filters": "Filters",

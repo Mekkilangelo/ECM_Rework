@@ -62,6 +62,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(50),
       allowNull: true
     },
+    process_temp_value: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    process_temp_unit: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      references: {
+        model: 'ref_units',
+        key: 'name'
+      }
+    },
     selected_gas1: {
       type: DataTypes.STRING(50),
       allowNull: true

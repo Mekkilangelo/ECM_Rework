@@ -214,7 +214,21 @@ const ChemicalCycleSection = ({
         console.log('Thermal cycle steps set:', thermalSteps);
       }
 
-      // 10. Pré-sélectionner les gaz si pas déjà fait
+      // 10. Pré-remplir la trempe gaz : 20000 mb, 3000 rpm, 15 min
+      handleChange({
+        target: {
+          name: 'quenchData.gasQuenchPressure',
+          value: [{ step: 1, duration: 900, pressure: 20000 }]
+        }
+      });
+      handleChange({
+        target: {
+          name: 'quenchData.gasQuenchSpeed',
+          value: [{ step: 1, duration: 900, speed: 3000 }]
+        }
+      });
+
+      // 11. Pré-sélectionner les gaz si pas déjà fait
       if (!formData.recipeData.selectedGas1) {
         handleChange({
           target: {
@@ -238,6 +252,7 @@ const ChemicalCycleSection = ({
         `Recette prédite avec succès :\n` +
         `• Cycle chimique : ${predictedCycles.length} step(s) généré(s)\n` +
         `• Cycle thermique : ${thermalCycleData ? thermalCycleData.totalTimeMinutes + ' minutes de traitement' : 'non calculé'}\n` +
+        `• Trempe gaz : 20000 mb, 3000 rpm, 15 min\n` +
         `• Gaz pré-sélectionnés : C2H2 (carburation), N2 (diffusion)\n\n` +
         `N'oubliez pas de définir les débits de gaz et la pression pour chaque étape.`;
 

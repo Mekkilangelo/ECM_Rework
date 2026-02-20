@@ -394,7 +394,7 @@ const updateRecipeFromData = async (recipeId, recipeData, transaction) => {
   ]);
 
   // Mettre à jour le numéro
-  // await RecipeModel.update({ recipe_number: recipeData.number || null }, { where: { recipe_id: recipeId }, transaction });
+  await RecipeModel.update({ recipe_number: recipeData.number || null }, { where: { recipe_id: recipeId }, transaction });
 
   // Recreate sub-entities manually (targeting existing recipeId)
   if (recipeData.preox) {

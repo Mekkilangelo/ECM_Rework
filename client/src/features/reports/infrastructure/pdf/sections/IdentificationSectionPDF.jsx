@@ -23,6 +23,7 @@ const TEXT_GRAY = '#64748b';
 const styles = StyleSheet.create({
   // Main Section Container
   sectionContainer: {
+    flex: 1, // Ensures the container fills the PDF page height
     marginBottom: 10,
     fontFamily: 'Helvetica',
   },
@@ -206,13 +207,6 @@ const styles = StyleSheet.create({
   }
 });
 
-// Photo Sizes
-const SIZES = {
-  heroLarge: { width: 340, height: 190 }, // Reduced from 380 to ensure fit
-  heroSmall: { width: 165, height: 110 }, // Reduced proportional
-  gridItem: { width: 220, height: 140 },  // Reduced from 240x160 to fit 6 per page
-};
-
 /**
  * Helper to resolve units (handles strings vs object relations)
  */
@@ -272,19 +266,19 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
     let remainingStartIndex = 0;
 
     // Add first photo (Hero)
-    page1Photos.push({ ...validPhotos[0], size: SIZES.heroLarge });
+    page1Photos.push({ ...validPhotos[0] });
     remainingStartIndex = 1;
 
     // If we have at least 2 more, add them as small row
     if (validPhotos.length >= 3) {
-      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
-      page1Photos.push({ ...validPhotos[2], size: SIZES.heroSmall });
+      page1Photos.push({ ...validPhotos[1] });
+      page1Photos.push({ ...validPhotos[2] });
       remainingStartIndex = 3;
     } else if (validPhotos.length === 2) {
       // Just 2 photos total? Maybe put 2nd one large too? Or side by side?
       // Let's stick to simple: 2nd photo is small or just pushed to next page?
       // Let's put 2nd photo as small to be safe
-      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
+      page1Photos.push({ ...validPhotos[1] });
       remainingStartIndex = 2;
     }
 
@@ -447,30 +441,28 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
 
                 <View style={{ flex: 1 }}> {/* Flex 1 to fill remaining space */}
 
-                  {/* Layout: Initial (Adaptive Flex) */}
+                  {/* Layout: Initial (Fixed 16:9 Sizes) */}
                   {page.type === 'initial' && (
-                    <View style={{ flex: 1, flexDirection: 'column', gap: 10 }}>
-                      {/* Hero Photo - Takes more space */}
+                    <View style={{ alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                      {/* Hero Photo - Exactly 16:9 (448x252) */}
                       {page.photos[0] && (
-                        <View style={{ flex: 6, minHeight: 180 }}> {/* Flex 6 (~55%) */}
+                        <View wrap={false} style={{ width: '100%', alignItems: 'center' }}>
                           <PhotoContainer
                             photo={page.photos[0]}
-                            style={{ width: '100%', height: '100%' }}
-                            customSize={{ width: '100%', height: '92%' }}
+                            customSize={{ width: 448, height: 252 }}
                             fit="contain"
                           />
                         </View>
                       )}
 
-                      {/* Secondary Row - Takes less space */}
+                      {/* Secondary Row - Exactly 16:9 (280x157) */}
                       {page.photos.length > 1 && (
-                        <View style={{ flex: 5, flexDirection: 'row', gap: 10, minHeight: 150 }}> {/* Flex 5 (~45%) */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 2, width: '100%' }} wrap={false}>
                           {page.photos.slice(1).map((p, i) => (
-                            <View key={i} style={{ flex: 1 }}>
+                            <View key={i} style={{ alignItems: 'center' }}>
                               <PhotoContainer
                                 photo={p}
-                                style={{ width: '100%', height: '100%' }}
-                                customSize={{ width: '100%', height: '85%' }}
+                                customSize={{ width: 280, height: 157 }}
                                 fit="contain"
                               />
                             </View>

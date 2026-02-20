@@ -21,6 +21,7 @@ const TEXT_GRAY = '#64748b';
 
 const styles = StyleSheet.create({
   sectionContainer: {
+    flex: 1, // Ensures the container fills the PDF page height
     marginBottom: 4,
     fontFamily: 'Helvetica',
   },
@@ -104,13 +105,7 @@ const styles = StyleSheet.create({
   }
 });
 
-// Photo Sizes - Optimized for Load Section (No Data Grid)
-const SIZES = {
-  // Hero can be larger as there is no data grid above it
-  heroLarge: { width: 450, height: 280 },
-  heroSmall: { width: 220, height: 140 }, // Match grid item size for consistency
-  gridItem: { width: 220, height: 140 }, // Standard Grid Size (6 per page)
-};
+
 
 /**
  * Component: Load Configuration Section for PDF
@@ -177,16 +172,16 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
     let remainingStartIndex = 0;
 
     // Add first photo (Hero)
-    page1Photos.push({ ...validPhotos[0], size: SIZES.heroLarge });
+    page1Photos.push({ ...validPhotos[0] });
     remainingStartIndex = 1;
 
     // We can definitely fit 2 more small photos below the large Hero on Page 1
     if (validPhotos.length >= 3) {
-      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
-      page1Photos.push({ ...validPhotos[2], size: SIZES.heroSmall });
+      page1Photos.push({ ...validPhotos[1] });
+      page1Photos.push({ ...validPhotos[2] });
       remainingStartIndex = 3;
     } else if (validPhotos.length === 2) {
-      page1Photos.push({ ...validPhotos[1], size: SIZES.heroSmall });
+      page1Photos.push({ ...validPhotos[1] });
       remainingStartIndex = 2;
     }
 
@@ -241,7 +236,7 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
                   <View style={{ flex: 1, gap: 4 }}>
                     {/* Hero Photo */}
                     {page.photos[0] && (
-                      <View style={{ flex: 3 }}>
+                      <View style={{ flex: 3 }} wrap={false}>
                         <PhotoContainer
                           photo={page.photos[0]}
                           style={{ width: '100%', height: '100%' }}
@@ -255,7 +250,7 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
                     {page.photos.length > 1 && (
                       <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>
                         {page.photos.slice(1).map((p, i) => (
-                          <View key={i} style={{ flex: 1 }}>
+                          <View key={i} style={{ flex: 1 }} wrap={false}>
                             <PhotoContainer
                               photo={p}
                               style={{ width: '100%', height: '100%' }}

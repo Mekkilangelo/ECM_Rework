@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Row, Col, Form, Button, Table, Alert, Spinner, OverlayTrigger, Popover, ListGroup, Badge } from 'react-bootstrap';
+import { Row, Col, Form, Button, Table, Alert, Spinner, OverlayTrigger, Popover, ListGroup, Badge, ButtonGroup } from 'react-bootstrap';
 import Select from 'react-select';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faMagic, faExclamationTriangle, faInfoCircle, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faMagic, faExclamationTriangle, faInfoCircle, faCheck, faTimes, faSyncAlt, faCog } from '@fortawesome/free-solid-svg-icons';
 import predictionService from '../../../../../../../../../../services/predictionService';
 import trialService from '../../../../../../../../../../services/trialService';
+import trialSearchService from '../../../../../../../../../../services/trialSearchService';
 import ConfirmationModal from '../../../../../../../../../common/ConfirmationModal/ConfirmationModal';
+import DiscreteSlider from '../../../../../../../../../../components/common/DiscreteSlider/DiscreteSlider';
 
 const ChemicalCycleSection = ({
   formData,
@@ -30,6 +32,41 @@ const ChemicalCycleSection = ({
   const [predictionSuccess, setPredictionSuccess] = useState(null);
   const [checklistData, setChecklistData] = useState({ valid: false, missing: [] });
   const [showPredictConfirm, setShowPredictConfirm] = useState(false);
+
+  // State pour gérer l'itération
+  const [showIterationSettings, setShowIterationSettings] = useState(false);
+  const [iterationRecipe, setIterationRecipe] = useState(null);
+  const [iterationMode, setIterationMode] = useState('neutral'); // 'faster' | 'neutral' | 'less_deformation'
+  const [recipeOptions, setRecipeOptions] = useState([]);
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
+
+  // Charger les numéros de recettes existants au montage
+  useEffect(() => {
+    const fetchRecipeOptions = async () => {
+      setLoadingRecipes(true);
+      try {
+        const filterOptions = await trialSearchService.getFilterOptions();
+        const recipes = (filterOptions.data?.recipeNumbers || []).map(r => ({
+          value: r,
+          label: r
+        }));
+        setRecipeOptions(recipes);
+      } catch (err) {
+        console.error('Erreur lors du chargement des recettes:', err);
+      } finally {
+        setLoadingRecipes(false);
+      }
+    };
+    fetchRecipeOptions();
+  }, []);
+
+  // Handler pour le bouton Iterate (placeholder)
+  const handleIterate = () => {
+    console.log('Iterate clicked', {
+      recipe: iterationRecipe,
+      mode: iterationMode
+    });
+  };
 
   // Mettre à jour la checklist quand les données changent (au chargement ou ouverture popover)
   const updateChecklist = async () => {
@@ -470,6 +507,17 @@ const ChemicalCycleSection = ({
                   </>
                 )}
               </Button>
+
+              {/* Bouton itération (cog discret) */}
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setShowIterationSettings(!showIterationSettings)}
+                title={t('trials.before.recipeData.chemicalCycle.iteration.title', 'Itération')}
+                className="ms-2"
+              >
+                <FontAwesomeIcon icon={faCog} />
+              </Button>
             </div>
           </div>
 
@@ -499,6 +547,61 @@ const ChemicalCycleSection = ({
               <strong>{t('common.success', 'Succès')} :</strong> {predictionSuccess}
             </Alert>
           )}
+        </div>
+      )}
+
+      {/* Panneau d'itération (affiché conditionnellement via le cog) */}
+      {!viewMode && showIterationSettings && (
+        <div className="mb-3 p-3 bg-light rounded">
+          <Row className="align-items-center g-2">
+            <Col md={4}>
+              <Form.Label className="mb-1 small">
+                <strong>{t('trials.before.recipeData.chemicalCycle.iteration.recipeNumber', 'Recette')}</strong>
+              </Form.Label>
+              <Select
+                value={iterationRecipe}
+                onChange={(option) => setIterationRecipe(option)}
+                options={recipeOptions}
+                styles={{
+                  ...selectStyles,
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                }}
+                isLoading={loadingRecipes}
+                isDisabled={loading || loadingRecipes}
+                placeholder={t('trials.before.recipeData.chemicalCycle.iteration.selectRecipe', 'Sélectionner...')}
+                isClearable
+                noOptionsMessage={() => t('common.noOptions', 'Aucune option')}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+              />
+            </Col>
+            <Col md={5}>
+              <Form.Label className="mb-1 small">
+                <strong>{t('trials.before.recipeData.chemicalCycle.iteration.mode', 'Mode')}</strong>
+              </Form.Label>
+              {/* Selection du mode d'itération */}
+              <DiscreteSlider
+                options={[
+                  { value: 'faster', label: t('trials.before.recipeData.chemicalCycle.iteration.faster', 'Faster') },
+                  { value: 'neutral', label: '—' },
+                  { value: 'less_deformation', label: t('trials.before.recipeData.chemicalCycle.iteration.lessDeformation', 'Less Deformation') }
+                ]}
+                value={iterationMode}
+                onChange={(val) => setIterationMode(val)}
+              />
+            </Col>
+            <Col md={3} className="d-flex align-items-end justify-content-end">
+              <Button
+                variant="outline-primary"
+                size="sm"
+                onClick={handleIterate}
+                disabled={loading}
+              >
+                <FontAwesomeIcon icon={faSyncAlt} className="me-1" />
+                {t('trials.before.recipeData.chemicalCycle.iteration.iterate', 'Iterate')}
+              </Button>
+            </Col>
+          </Row>
         </div>
       )}
 

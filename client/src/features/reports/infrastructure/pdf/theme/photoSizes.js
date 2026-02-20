@@ -38,8 +38,8 @@ export const PHOTO_SIZES = {
 
   // Demi-largeur (2 photos côte à côte)
   half: {
-    width: 280,
-    height: 210,
+    width: 285,
+    height: 230,
   },
 
   // Demi-largeur pour row secondaire (Load)

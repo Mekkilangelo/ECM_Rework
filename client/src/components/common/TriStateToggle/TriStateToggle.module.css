@@ -1,0 +1,64 @@
+.container {
+    position: relative;
+    display: flex;
+    background-color: #f0f2f5;
+    /* Light gray background */
+    border-radius: 12px;
+    padding: 4px;
+    /* Inner padding for the pill */
+    width: 100%;
+    max-width: 400px;
+    /* Adjust as needed */
+    height: 48px;
+    cursor: pointer;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* Subtle inner shadow */
+    overflow: hidden;
+    /* Ensure background slider doesn't overflow */
+    user-select: none;
+}
+
+.slider {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc((100% - 8px) / 3);
+    /* Width of one segment minus padding */
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* Smooth eased transition */
+    z-index: 1;
+}
+
+.option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6c757d;
+    /* Muted text color */
+    z-index: 2;
+    /* Text above the slider */
+    transition: color 0.3s ease;
+    padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.option.active {
+    color: #2c3e50;
+    /* Darker active text color */
+    font-weight: 600;
+}
+
+/* Specific colors for different modes if needed, but keeping it clean for now */
+.container:hover .slider {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}

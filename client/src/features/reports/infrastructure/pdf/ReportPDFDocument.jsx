@@ -28,7 +28,7 @@ import { COLORS, TYPOGRAPHY, SPACING, COMMON_STYLES } from './theme';
 const styles = StyleSheet.create({
   page: {
     ...COMMON_STYLES.page,
-    paddingBottom: 15,
+    paddingBottom: 60,
     paddingTop: 10,
   },
   pageIdentification: {
@@ -212,7 +212,7 @@ export const CoverPage = ({ report, options }) => {
       borderWidth: 1,
       borderColor: COLORS.brand.dark,
       // backgroundColor: '#dcfce7', // Removed green background
-      padding: 10,
+      padding: 5,
       minHeight: 30,
       fontSize: 9,
     },
@@ -355,7 +355,7 @@ export const CoverPage = ({ report, options }) => {
 
           // --- CALCS ---
           const waitTime = parseFloat(recipeData.wait_time?.value) || 0; // min
-          const waitTemp = recipeData.cell_temp?.value || '-'; // usually °C
+          const processTemp = recipeData.process_temp?.value || '-'; // usually °C
           const chemPressure = (recipeData.chemical_cycle || [])[0]?.pressure || '-';
 
           // Chemical (Heating) Details
@@ -457,8 +457,8 @@ export const CoverPage = ({ report, options }) => {
                     <Text style={coverStyles.cycleValue}>{chemPressure} mb</Text>
                   </View>
                   <View style={coverStyles.cycleRow}>
-                    <Text style={coverStyles.cycleLabel}>Cell Temp:</Text>
-                    <Text style={coverStyles.cycleValue}>{waitTemp} °C</Text>
+                    <Text style={coverStyles.cycleLabel}>Process Temp:</Text>
+                    <Text style={coverStyles.cycleValue}>{processTemp} °C</Text>
                   </View>
                 </View>
               </View>
@@ -491,7 +491,7 @@ export const CoverPage = ({ report, options }) => {
         <View style={coverStyles.sectionHeader}>
           <Text style={coverStyles.sectionHeaderText}>OBSERVATIONS</Text>
         </View>
-        <View style={{ paddingHorizontal: 0 }}>
+        <View style={{ paddingHorizontal: 5 }}>
           {/* Removed Flux */}
           {/* Removed Flux */}
           <View style={{ flexDirection: 'row', gap: 5 }}>
@@ -512,7 +512,7 @@ export const CoverPage = ({ report, options }) => {
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 5, flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: 5, flex: 1, paddingHorizontal: 5 }}>
             {/* Conclusion Main Box - Flex 1 to fill remaining space */}
             <View style={{ flex: 1, flexDirection: 'column' }}>
               <View style={{ ...coverStyles.resultsBox, flex: 1, minHeight: 0 }}>

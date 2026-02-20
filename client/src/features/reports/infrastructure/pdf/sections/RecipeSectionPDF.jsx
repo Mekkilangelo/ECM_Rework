@@ -290,14 +290,12 @@ const StatsColumn = ({ recipeData, stats }) => {
 
   return (
     <View style={{ width: '33%', paddingLeft: 5, paddingTop: 5 }}>
-      {/* General Info (Moved from Chemical) */}
+      {/* General Info (Renamed to WAIT PARAMETERS) */}
       <View style={{ marginBottom: 5 }}>
-        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PARAMETERS</Text>
-        <InfoRow label="Gases" value={gases.join(', ')} />
-        <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
-        <InfoRow label="Pressure" value={stats.chemPressure} unit="mb" />
+        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>WAIT PARAMETERS</Text>
         <InfoRow label="Cell Temp" value={recipeData?.cell_temp?.value} unit={recipeData?.cell_temp?.unit} />
-        <InfoRow label="Process Temp" value={recipeData?.process_temp?.value} unit={recipeData?.process_temp?.unit} />
+        <InfoRow label="Wait Time" value={recipeData?.wait_time?.value} unit={recipeData?.wait_time?.unit?.replace('minutes', 'min')} />
+        <InfoRow label="Wait Pressure" value={stats.chemPressure} unit="mb" />
       </View>
 
       {/* Calculated Stats */}
@@ -305,12 +303,14 @@ const StatsColumn = ({ recipeData, stats }) => {
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PROCESS</Text>
         <InfoRow label="Process time" value={stats.chemTotalMinutes.toFixed(1)} unit="min" />
         <InfoRow label="Quench Time" value={stats.quenchTotalMinutes.toFixed(1)} unit="min" />
+        <InfoRow label="Process Temp" value={recipeData?.process_temp?.value} unit={recipeData?.process_temp?.unit} />
         <InfoRow label="Total cycle time" value={`${Math.floor(stats.totalCycleTime / 60)} h ${Math.round(stats.totalCycleTime % 60)} min`} />
       </View>
 
       {/* Gas Totals */}
       <View>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>GAS USAGE</Text>
+        <InfoRow label="Gases" value={gases.join(', ')} />
         {Object.entries(stats.gasTotals).map(([gas, data]) => (
           <View key={gas} style={styles.row}>
             <Text style={styles.label}>{gas}:</Text>

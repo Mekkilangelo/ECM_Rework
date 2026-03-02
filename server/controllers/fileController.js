@@ -174,11 +174,7 @@ const getFileById = async (req, res) => {
         const maxSize = pdf ? 1280 : 1920;
         const quality = pdf ? 70 : 85;
 
-        logger.info(`[AUTO-OPTIMIZE] Image #${fileId}: ${(fileData.size / 1024).toFixed(2)} KB -> optimisation`, {
-          forPDF: !!pdf,
-          maxSize,
-          quality
-        });
+        logger.info(`[AUTO-OPTIMIZE] Image #${fileId}: ${(fileData.size / 1024).toFixed(2)}KB → ${maxSize}px @ ${quality}%`, { forPDF: !!pdf, maxSize, quality });
 
         // Traiter l'image avec Sharp
         // Note: Sharp depuis v0.30 applique automatiquement la rotation EXIF par défaut
@@ -198,7 +194,7 @@ const getFileById = async (req, res) => {
           .jpeg({ quality })
           .toBuffer();
 
-        logger.info(`[AUTO-OPTIMIZE] Image #${fileId}: Nouvelle taille ${(buffer.length / 1024).toFixed(2)} KB (${((1 - buffer.length/fileData.size) * 100).toFixed(1)}% réduction)`);
+        logger.info(`[AUTO-OPTIMIZE] Image #${fileId}: Nouvelle taille ${(buffer.length / 1024).toFixed(2)}KB (${((1 - buffer.length/fileData.size) * 100).toFixed(1)}% réduction)`);
 
         res.setHeader('Content-Type', 'image/jpeg');
         res.setHeader('Content-Length', buffer.length);

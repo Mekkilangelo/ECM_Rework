@@ -113,6 +113,8 @@ const styles = StyleSheet.create({
 export const LoadSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
+  // Pas de limite artificielle : le backend optimise automatiquement les images
+  // avec le paramètre ?pdf=true (1280px @ 70% qualité) pour éviter les crashs
   const validPhotos = validatePhotos(photos || []);
   const trialData = report.trialData || {};
 

@@ -6,33 +6,44 @@
 /**
  * Obtient l'URL complète d'une photo pour l'affichage
  * Gère les différents formats de photos (URL, file_path, ID)
+ * @param {Object} photo - Objet photo
+ * @param {boolean} forPDF - Si true, ajoute ?pdf=true pour optimisation agressive
  */
-export const getPhotoUrl = (photo) => {
+export const getPhotoUrl = (photo, forPDF = true) => {
   if (!photo) {
     console.warn('⚠️ getPhotoUrl: photo is null/undefined');
     return '';
   }
-  
+
+  let baseUrl = '';
+
   // URL directe (déjà absolue, construite par SectionPhotoManager)
   if (photo.url) {
-    return photo.url;
+    baseUrl = photo.url;
   }
-  
   // Chemin viewPath (déjà absolu, construit par SectionPhotoManager)
-  if (photo.viewPath) {
-    return photo.viewPath;
+  else if (photo.viewPath) {
+    baseUrl = photo.viewPath;
   }
-  
   // Fallback : construire depuis l'ID
-  if (photo.id || photo.node_id) {
+  else if (photo.id || photo.node_id) {
     const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-    const url = `${API_BASE}/files/${photo.id || photo.node_id}`;
-    console.log('⚙️ getPhotoUrl: Constructed from ID =', url, 'for photo:', photo);
-    return url;
+    baseUrl = `${API_BASE}/files/${photo.id || photo.node_id}`;
+    console.log('⚙️ getPhotoUrl: Constructed from ID =', baseUrl, 'for photo:', photo);
   }
-  
-  console.error('❌ getPhotoUrl: Impossible de construire l\'URL pour', photo);
-  return '';
+  else {
+    console.error('❌ getPhotoUrl: Impossible de construire l\'URL pour', photo);
+    return '';
+  }
+
+  // Ajouter le paramètre PDF pour optimisation agressive (1280px @ 70% qualité)
+  // Cela réduit drastiquement l'utilisation mémoire de @react-pdf/renderer
+  if (forPDF && baseUrl) {
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    return `${baseUrl}${separator}pdf=true`;
+  }
+
+  return baseUrl;
 };
 
 /**

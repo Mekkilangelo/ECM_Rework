@@ -196,12 +196,17 @@ const saveUploadedFiles = async (files, data, req = null) => {
       nodePath = `/temp/${tempId}/${uploadedFile.originalname}`;
     }
     
+    // Normaliser le nom du fichier pour éviter les problèmes d'encodage UTF-8
+    const normalizedOriginalName = uploadedFile.originalname
+      .normalize('NFD') // Décompose les caractères accentués (é → e + ´)
+      .replace(/[\u0300-\u036f]/g, ''); // Supprime les diacritiques (è → e)
+
     // Récupérer la description spécifique pour ce fichier (par index)
-    const fileDescription = descriptions[fileIndex] || uploadedFile.originalname;
-    
+    const fileDescription = descriptions[fileIndex] || normalizedOriginalName;
+
     // Créer l'enregistrement du nœud
     const fileNode = await node.create({
-      name: uploadedFile.originalname,
+      name: normalizedOriginalName,
       path: nodePath,
       type: 'file',
       parent_id: nodeId ? parseInt(nodeId) : null,
@@ -246,7 +251,7 @@ const saveUploadedFiles = async (files, data, req = null) => {
       
       const fileRecord = await file.create({
         node_id: fileNode.id,
-        original_name: uploadedFile.originalname,
+        original_name: normalizedOriginalName, // Utiliser le nom normalisé
         file_path: finalPath, // Garder pour compatibilité
         storage_key: storageKey, // ⭐ NOUVEAU
         size: uploadedFile.size,

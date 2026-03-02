@@ -58,15 +58,18 @@ class FileStorageService {
     const uuid = uuidv4().split('-')[0]; // Utiliser seulement les 8 premiers chars
     const ext = path.extname(originalFilename);
     const baseName = path.basename(originalFilename, ext);
-    
-    // Créer un nom sûr (alphanumerique + tirets/underscores)
+
+    // Normaliser et créer un nom sûr (alphanumerique + tirets/underscores)
+    // Convertir les caractères accentués en équivalents ASCII avant de les remplacer
     const safeName = baseName
-      .replace(/[^a-zA-Z0-9-_]/g, '_')
-      .replace(/_{2,}/g, '_')
+      .normalize('NFD') // Décompose les caractères accentués (é → e + ´)
+      .replace(/[\u0300-\u036f]/g, '') // Supprime les diacritiques
+      .replace(/[^a-zA-Z0-9-_]/g, '_') // Remplace les caractères spéciaux restants
+      .replace(/_{2,}/g, '_') // Remplace les underscores multiples par un seul
       .substring(0, 50);
-    
+
     const fileName = `${uuid}-${safeName}${ext}`;
-    
+
     return `${entityType}/${entityId}/${fileType}/${fileName}`;
   }
 

@@ -154,20 +154,32 @@ const getFilesByNode = async (req, res) => {
 const getFileById = async (req, res) => {
   try {
     const { fileId } = req.params;
-    
-    logger.info(`Récupération du fichier #${fileId}`);
-    
+    const { pdf } = req.query; // Détecte si l'image est pour un PDF
+
+    logger.info(`Récupération du fichier #${fileId}`, { forPDF: !!pdf });
+
     // Déléguer au service
     const fileData = await fileService.getFileById(fileId);
-    
-    // Pour toutes les images > 500KB, redimensionner automatiquement
+
+    // Pour toutes les images, redimensionner/optimiser automatiquement
+    // Cela supprime les métadonnées EXIF lourdes et normalise le format
+    // Limite critique pour @react-pdf/renderer : trop d'images non optimisées causent des crashs
     const isImage = fileData.mime_type?.startsWith('image/');
-    const SIZE_LIMIT = 500 * 1024; // 500KB
-    
-    if (isImage && fileData.size > SIZE_LIMIT) {
+
+    if (isImage) {
       try {
-        logger.info(`[AUTO-RESIZE] Image #${fileId}: ${(fileData.size / 1024).toFixed(2)} KB -> compression`);
-        
+        // Paramètres d'optimisation selon l'usage
+        // PDF : compression agressive (1280px @ 70% qualité) pour éviter surcharge mémoire
+        // Normal : qualité élevée (1920px @ 85% qualité)
+        const maxSize = pdf ? 1280 : 1920;
+        const quality = pdf ? 70 : 85;
+
+        logger.info(`[AUTO-OPTIMIZE] Image #${fileId}: ${(fileData.size / 1024).toFixed(2)} KB -> optimisation`, {
+          forPDF: !!pdf,
+          maxSize,
+          quality
+        });
+
         // Traiter l'image avec Sharp
         // Note: Sharp depuis v0.30 applique automatiquement la rotation EXIF par défaut
         // On laisse Sharp appliquer l'orientation EXIF pour afficher correctement les photos
@@ -178,30 +190,52 @@ const getFileById = async (req, res) => {
         })
           .rotate() // Applique automatiquement l'orientation EXIF
           .resize({
-            width: 1920,
-            height: 1920,
+            width: maxSize,
+            height: maxSize,
             fit: 'inside',
             withoutEnlargement: true
           })
-          .jpeg({ quality: 85 })
+          .jpeg({ quality })
           .toBuffer();
-        
-        logger.info(`[AUTO-RESIZE] Image #${fileId}: Nouvelle taille ${(buffer.length / 1024).toFixed(2)} KB (${((1 - buffer.length/fileData.size) * 100).toFixed(1)}% réduction)`);
-        
+
+        logger.info(`[AUTO-OPTIMIZE] Image #${fileId}: Nouvelle taille ${(buffer.length / 1024).toFixed(2)} KB (${((1 - buffer.length/fileData.size) * 100).toFixed(1)}% réduction)`);
+
         res.setHeader('Content-Type', 'image/jpeg');
         res.setHeader('Content-Length', buffer.length);
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         return res.send(buffer);
       } catch (sharpError) {
-        logger.error(`[AUTO-RESIZE] Erreur image #${fileId}: ${sharpError.message}`);
+        logger.error(`[AUTO-OPTIMIZE] Erreur image #${fileId}`, {
+          error: sharpError.message,
+          stack: sharpError.stack,
+          filePath: fileData.file_path,
+          mimeType: fileData.mime_type,
+          size: fileData.size
+        });
         // Fallback vers fichier original
       }
     }
-    
+
     // Servir le fichier original (petites images ou non-images)
-    res.setHeader('Content-Type', fileData.mime_type);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    fs.createReadStream(fileData.file_path).pipe(res);
+    try {
+      // Vérifier que le fichier existe avant d'essayer de le lire
+      if (!fs.existsSync(fileData.file_path)) {
+        logger.error(`[FILE-SERVE] Fichier physique introuvable #${fileId}`, {
+          filePath: fileData.file_path
+        });
+        return apiResponse.error(res, 'Fichier physique introuvable', 404);
+      }
+
+      res.setHeader('Content-Type', fileData.mime_type);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      fs.createReadStream(fileData.file_path).pipe(res);
+    } catch (streamError) {
+      logger.error(`[FILE-SERVE] Erreur lecture fichier #${fileId}`, {
+        error: streamError.message,
+        filePath: fileData.file_path
+      });
+      return apiResponse.error(res, 'Erreur lors de la lecture du fichier', 500);
+    }
     
   } catch (error) {
     if (error.name === 'NotFoundError') {

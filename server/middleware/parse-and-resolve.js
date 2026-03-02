@@ -63,8 +63,15 @@ const parseAndResolvePath = async (req, res, next) => {
         for (const file of req.files) {
           // Générer un nom sûr et unique
           const uniqueSuffix = uuidv4().split('-')[0];
-          const safeFileName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const fileName = `${uniqueSuffix}-${safeFileName}`;
+
+          // Normaliser le nom de fichier pour éviter les problèmes d'encodage UTF-8
+          // Convertir les caractères accentués en équivalents ASCII avant de les remplacer
+          const normalizedName = file.originalname
+            .normalize('NFD') // Décompose les caractères accentués (é → e + ´)
+            .replace(/[\u0300-\u036f]/g, '') // Supprime les diacritiques
+            .replace(/[^a-zA-Z0-9.-]/g, '_'); // Remplace les caractères spéciaux restants
+
+          const fileName = `${uniqueSuffix}-${normalizedName}`;
           const filePath = path.join(tempDir, fileName);
           
           // Écrire le fichier temporaire sur disque

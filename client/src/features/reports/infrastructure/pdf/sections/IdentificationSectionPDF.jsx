@@ -225,6 +225,7 @@ const resolveUnit = (directUnit, relationUnit) => {
 export const IdentificationSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
+  // Pas de limite : optimisation automatique backend avec ?pdf=true
   const validPhotos = validatePhotos(photos || []);
   const partData = report.partData || report.part || {};
 

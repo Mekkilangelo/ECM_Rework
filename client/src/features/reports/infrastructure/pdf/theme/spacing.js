@@ -38,8 +38,8 @@ export const SPACING = {
 
   photo: {
     gap: 4,
-    marginBottom: 3,
-    captionMarginTop: 2,
+    marginBottom: 0,
+    captionMarginTop: 1,
   },
 
   dataRow: {

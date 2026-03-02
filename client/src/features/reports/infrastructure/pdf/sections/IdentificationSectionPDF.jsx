@@ -27,10 +27,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontFamily: 'Helvetica',
   },
-  gridPage: {
-    minHeight: 500, // Ensure height for flex content on grid pages
-  },
-
   // Section Header (Dark Blue Bar)
   sectionHeader: {
     backgroundColor: BRAND_DARK,
@@ -312,7 +308,7 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
           // Better strategy: The Header is small. If we keep 'break' logic, content follows.
           // Is the Grid getting pushed?? 
           // Let's remove 'wrap={false}' from gridLayout strictly.
-          <View key={index} style={[styles.sectionContainer, page.type === 'grid' && styles.gridPage]} break={!isFirstPage}>
+          <View key={index} style={styles.sectionContainer} break={!isFirstPage}>
 
             {/* Wrap Header and Content in a View that *allows* breaking internally but tries to keep header with start of content */}
 
@@ -440,49 +436,49 @@ export const IdentificationSectionPDF = ({ report, photos = [] }) => {
                   </View>
                 )}
 
-                <View style={{ flex: 1 }}> {/* Flex 1 to fill remaining space */}
+                <View style={{ flex: 1 }}>
 
-                  {/* Layout: Initial (Fixed 16:9 Sizes) */}
+                  {/* Layout: Initial - Adaptive flex layout that fills remaining space */}
                   {page.type === 'initial' && (
-                    <View style={{ alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                      {/* Hero Photo - Exactly 16:9 (448x252) */}
+                    <View style={{ flex: 1, gap: 4 }}>
+                      {/* Hero Photo - ~60% of remaining space, capped at 320px */}
                       {page.photos[0] && (
-                        <View wrap={false} style={{ width: '100%', alignItems: 'center' }}>
+                        <View wrap={false} style={{ flex: 3, alignItems: 'center', maxHeight: 320 }}>
                           <PhotoContainer
                             photo={page.photos[0]}
-                            customSize={{ width: 448, height: 252 }}
+                            style={{ flex: 1 }}
+                            customSize={{ width: 460, height: '88%' }}
                             fit="contain"
                           />
                         </View>
                       )}
 
-                      {/* Secondary Row - Exactly 16:9 (280x157) */}
+                      {/* Secondary Row - ~40% of remaining space, capped at 220px */}
                       {page.photos.length > 1 && (
-                        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 2, width: '100%' }} wrap={false}>
+                        <View style={{ flex: 2, flexDirection: 'row', justifyContent: 'center', gap: 8, maxHeight: 220 }} wrap={false}>
                           {page.photos.slice(1).map((p, i) => (
-                            <View key={i} style={{ alignItems: 'center' }}>
-                              <PhotoContainer
-                                photo={p}
-                                customSize={{ width: 280, height: 157 }}
-                                fit="contain"
-                              />
-                            </View>
+                            <PhotoContainer
+                              key={i}
+                              photo={p}
+                              style={{ flex: 1, maxWidth: 260 }}
+                              customSize={{ width: '100%', height: '85%' }}
+                              fit="contain"
+                            />
                           ))}
                         </View>
                       )}
                     </View>
                   )}
 
-                  {/* Layout: Grid (Optimized 4 items Max) */}
+                  {/* Layout: Grid - Exactly 4 photos (2x2) with fixed sizes */}
                   {page.type === 'grid' && (
-                    <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
                       {page.photos.map((p, i) => (
-                        <View key={i} style={{ width: '49%', height: '49%', marginBottom: '1%' }}>
+                        <View key={i} wrap={false} style={{ width: '49%', marginBottom: 8 }}>
                           <PhotoContainer
                             photo={p}
-                            style={{ width: '100%', height: '100%' }}
-                            customSize={{ width: '100%', height: '94%' }} // Maximize photo area
-                            fit="contain" // Keep contain to avoid crop, but space is maximized
+                            customSize={{ width: '100%', height: 260 }}
+                            fit="contain"
                           />
                         </View>
                       ))}

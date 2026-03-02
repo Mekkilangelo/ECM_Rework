@@ -18,9 +18,9 @@ const BRAND_DARK = '#1e293b';
 // Styles matching LoadSectionPDF
 const styles = StyleSheet.create({
   sectionContainer: {
+    flex: 1,
     marginBottom: 4,
     fontFamily: 'Helvetica',
-    minHeight: 500,
   },
   // Section Header (Dark Blue Bar)
   sectionHeader: {
@@ -116,32 +116,30 @@ export const PostTreatmentSectionPDF = ({ report, photos = [] }) => {
 
             {/* --- Photos --- */}
             {page.photos.length > 0 && (
-              <View style={{ flex: 1, minHeight: 400 }}> {/* Flex 1 to fill space */}
+              <View style={{ flex: 1 }}>
 
-                {/* Layout: Initial (Hero + optional Small) */}
+                {/* Layout: Initial - Photo 1 full width on top, Photos 2 & 3 side by side below */}
                 {page.type === 'initial' && (
-                  <View style={{ flex: 1, gap: 4 }}>
-                    {/* Hero Photo (Flex 3 = ~60%) */}
+                  <View style={{ alignItems: 'center', gap: 6 }}>
+                    {/* Photo 1 - Full width, centered */}
                     {page.photos[0] && (
-                      <View style={{ flex: 3 }}>
+                      <View wrap={false} style={{ width: '100%', alignItems: 'center' }}>
                         <PhotoContainer
                           photo={page.photos[0]}
-                          style={{ width: '100%', height: '100%' }}
-                          customSize={{ width: '100%', height: '92%' }}
+                          customSize={{ width: 555, height: 390 }}
                           fit="contain"
                         />
                       </View>
                     )}
 
-                    {/* Small Photos Row (Flex 2 = ~40%) */}
+                    {/* Photos 2 & 3 - Side by side */}
                     {page.photos.length > 1 && (
-                      <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, width: '100%' }} wrap={false}>
                         {page.photos.slice(1).map((p, i) => (
-                          <View key={i} style={{ flex: 1 }}>
+                          <View key={i} style={{ alignItems: 'center' }}>
                             <PhotoContainer
                               photo={p}
-                              style={{ width: '100%', height: '100%' }}
-                              customSize={{ width: '100%', height: '90%' }}
+                              customSize={{ width: 272, height: 225 }}
                               fit="contain"
                             />
                           </View>
@@ -151,15 +149,14 @@ export const PostTreatmentSectionPDF = ({ report, photos = [] }) => {
                   </View>
                 )}
 
-                {/* Layout: Grid (Optimized 4 items Max - 49% Width/Height) */}
+                {/* Layout: Grid - Exactly 4 photos (2x2) with fixed sizes */}
                 {page.type === 'grid' && (
-                  <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
                     {page.photos.map((p, i) => (
-                      <View key={i} style={{ width: '49%', height: '49%', marginBottom: '1%' }}>
+                      <View key={i} wrap={false} style={{ width: '49%', marginBottom: 8 }}>
                         <PhotoContainer
                           photo={p}
-                          style={{ width: '100%', height: '100%' }}
-                          customSize={{ width: '100%', height: '94%' }} // Maximize photo area
+                          customSize={{ width: '100%', height: 260 }}
                           fit="contain"
                         />
                       </View>

@@ -20,7 +20,6 @@ const PreoxidationSection = ({
 
   return (
     <>
-      <h5 className="mt-3 mb-2">{t('trials.before.recipeData.preoxidation.title')}</h5>
       <Row>
         <Col md={3}>
           <Form.Group className="mb-3">
@@ -68,8 +67,8 @@ const PreoxidationSection = ({
             <Form.Label>{t('trials.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxTempUnit"
-              value={formData.recipeData?.preoxTempUnit 
-                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.preoxTempUnit) 
+              value={formData.recipeData?.preoxTempUnit
+                ? getSelectedOption(temperatureUnitOptions, formData.recipeData?.preoxTempUnit)
                 : temperatureUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxTempUnit' })}
               options={temperatureUnitOptions}
@@ -111,8 +110,8 @@ const PreoxidationSection = ({
             <Form.Label>{t('trials.before.recipeData.preoxidation.unit')}</Form.Label>
             <Select
               name="recipeData.preoxDurationUnit"
-              value={formData.recipeData?.preoxDurationUnit 
-                ? getSelectedOption(timeUnitOptions, formData.recipeData?.preoxDurationUnit) 
+              value={formData.recipeData?.preoxDurationUnit
+                ? getSelectedOption(timeUnitOptions, formData.recipeData?.preoxDurationUnit)
                 : timeUnitOptions[0] || null}
               onChange={(option) => handleSelectChange(option, { name: 'recipeData.preoxDurationUnit' })}
               options={timeUnitOptions}

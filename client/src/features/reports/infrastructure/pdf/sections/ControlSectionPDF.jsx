@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
 });
 
 const CHART_HEIGHT_STD = 200;
-const CHART_HEIGHT_MIN = 100;
 
 const SERIES_COLORS = [
   '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'
@@ -405,30 +404,7 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
     return <View style={styles.section}><Text style={styles.sectionTitle}>CONTROL</Text><Text style={styles.noData}>No data</Text></View>;
   }
 
-  // 1. Calculate Dynamic Header Height
-  const calculateHeaderHeight = () => {
-    let h = 30; // Banner + padding (Base)
-    const hSpecs = partData.hardnessSpecs || [];
-    const eSpecs = partData.ecdSpecs || [];
-
-    if (hSpecs.length > 0 || eSpecs.length > 0) {
-      const hHeight = hSpecs.length > 0 ? 12 + (hSpecs.length * 10) : 0;
-      const eHeight = eSpecs.length > 0 ? 12 + (eSpecs.length * 10) : 0;
-      h += Math.max(hHeight, eHeight);
-    } else {
-      h += 15; // "No specs" msg
-    }
-    return h + 5; // Reduced margin (was 10)
-  };
-
-  const HEADER_HEIGHT_DYN = calculateHeaderHeight();
-
-  // REDUCED SAFETY LIMIT: 680 ensures manual break happens BEFORE react-pdf auto-break
-  // This guarantees headers are always rendered manually.
-  const MAX_PAGE_HEIGHT = 680;
-
-  // 2. Prepare Blocks (Granular Split)
-  const renderBlocks = [];
+  // 2. Build photo index by sample key
   const photosBySample = {};
   if (Array.isArray(photos)) {
     photos.forEach(p => {
@@ -441,145 +417,57 @@ export const ControlSectionPDF = ({ report, photos = [] }) => {
     });
   }
 
-  resultsData.results.forEach((res, rIdx) => {
-    renderBlocks.push({ type: 'TITLE', data: res, resultIndex: rIdx });
+  // 3. Build pages: one page per sample, TITLE on first sample's page of each result
+  const pages = [];
 
-    res.samples?.forEach((sample, sIdx) => {
+  resultsData.results.forEach((res, rIdx) => {
+    const samples = res.samples || [];
+
+    if (samples.length === 0) {
+      pages.push([{ type: 'TITLE', data: res, resultIndex: rIdx }]);
+      return;
+    }
+
+    samples.forEach((sample, sIdx) => {
       const pKey = `r${rIdx + 1}-s${sIdx + 1}`;
       const sPhotos = photosBySample[pKey] || [];
       const hasH = sample.hardnessPoints?.some(v => v.value);
       const hasE = sample.ecdPositions?.some(v => v.distance);
       const hasC = sample.curveData?.series?.some(s => s.values?.length);
 
+      const pageBlocks = [];
+
+      // First sample of each result: include the result TITLE
+      if (sIdx === 0) {
+        pageBlocks.push({ type: 'TITLE', data: res, resultIndex: rIdx });
+      }
+
       if (hasH || hasE) {
-        renderBlocks.push({
+        pageBlocks.push({
           type: 'SAMPLE_INFO',
           data: sample,
           photos: sPhotos,
           sampleIndex: sIdx,
           resultIndex: rIdx,
-          useCompact: false // Start false
+          useCompact: false
         });
       }
+
       if (hasC) {
-        renderBlocks.push({
+        pageBlocks.push({
           type: 'SAMPLE_CHART',
           data: sample,
           sampleIndex: sIdx,
           resultIndex: rIdx,
-          specifiedHeight: null // Set dynamically
+          specifiedHeight: null
         });
+      }
+
+      if (pageBlocks.length > 0) {
+        pages.push(pageBlocks);
       }
     });
   });
-
-  // 3. Estimator
-  const estimateHeight = (block, compact, customChartHeight = null) => {
-    if (block.type === 'TITLE') return 36;
-
-    if (block.type === 'SAMPLE_INFO') {
-      let h = 28; // Title reduced
-      const rh = compact ? 12 : 14;
-
-      // FIX: More accurate overheads
-      // Hardness: Title(14) + TableMargin(6) + Header(rh) = ~34 + rows
-      let hH = 0, eH = 0, pH = 0;
-      if (block.data.hardnessPoints?.length) hH = 35 + block.data.hardnessPoints.length * rh;
-      if (block.data.ecdPositions?.length) eH = 35 + block.data.ecdPositions.length * rh;
-      // Photos: Title(14) + Container(108) + Margin(6) = ~128. Use 135 safe.
-      if (block.photos?.length) pH = 135;
-
-      h += Math.max(hH, eH, pH);
-      return h + 8; // Block margin
-    }
-
-    if (block.type === 'SAMPLE_CHART') {
-      const chartSvg = customChartHeight || CHART_HEIGHT_STD;
-      // Overhead = ContainerPad(12) + Title(17) + Legend(variable 20-40?) + Margin(10) ~ 80
-      // Use 100 safe.
-      return chartSvg + 100;
-    }
-    return 0;
-  };
-
-  // 4. Pagination
-  const pages = [];
-  let currentPage = [];
-  let currentH = HEADER_HEIGHT_DYN;
-
-  for (let i = 0; i < renderBlocks.length; i++) {
-    const block = renderBlocks[i];
-
-    // LOOKAHEAD LOGIC for ORPHAN TITLES
-    // If it's a TITLE, check if the NEXT block fits. 
-    // If next doesn't fit, break NOW so title goes to next page too.
-    if (block.type === 'TITLE') {
-      const nextBlock = renderBlocks[i + 1];
-      if (nextBlock) { // Only matters if there IS a next block
-        const titleH = estimateHeight(block, false);
-        const nextH = estimateHeight(nextBlock, false);
-
-        // Case: Both Title + Next won't fit?
-        if (currentH + titleH + nextH > MAX_PAGE_HEIGHT) {
-          // Force break immediately, push Title to next page
-          pages.push(currentPage);
-          currentPage = [];
-          currentH = HEADER_HEIGHT_DYN;
-        }
-      }
-    }
-
-    // Standard estimation
-    const stdH = estimateHeight(block, false);
-
-    if (currentH + stdH <= MAX_PAGE_HEIGHT) {
-      block.useCompact = false;
-      block.specifiedHeight = null; // Use standard
-      currentPage.push(block);
-      currentH += stdH;
-    } else {
-      // ADAPTIVE CHART SIZING LOGIC
-      let placed = false;
-      if (block.type === 'SAMPLE_CHART') {
-        const overhead = 100; // Match estimator safe overhead
-        const remainingSpace = MAX_PAGE_HEIGHT - currentH;
-        const availableChartH = remainingSpace - overhead;
-
-        if (availableChartH >= CHART_HEIGHT_MIN) {
-          // FIT IT!
-          block.specifiedHeight = availableChartH;
-          currentPage.push(block);
-          currentH += (availableChartH + overhead);
-          placed = true;
-        }
-      }
-
-      if (!placed) {
-        // Try Compact for Info
-        const cptH = estimateHeight(block, true);
-        if (block.type === 'SAMPLE_INFO' && currentH + cptH <= MAX_PAGE_HEIGHT) {
-          block.useCompact = true;
-          currentPage.push(block);
-          currentH += cptH;
-        } else {
-          // Break Page
-          pages.push(currentPage);
-          currentPage = [];
-          currentH = HEADER_HEIGHT_DYN;
-
-          // Retry on new page
-          block.useCompact = false;
-          block.specifiedHeight = null;
-          // Even on new page, check if huge
-          const newPageH = estimateHeight(block, false);
-          currentH += newPageH;
-          currentPage.push(block);
-        }
-      }
-    }
-  }
-
-  if (currentPage.length) pages.push(currentPage);
 
   // 5. Render
   const formatSpec = (min, max, u) => {

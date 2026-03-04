@@ -969,6 +969,12 @@
         "previewChart": {
           "title": "Prévisualisation du graphique"
         },
+        "simulation": {
+          "title": "Simulation",
+          "fillConfirmTitle": "Remplir les cycles depuis la simulation",
+          "fillConfirmMessage": "Cette action va remplacer les cycles thermique et chimique existants par les cycles calculés depuis la simulation. Cette opération est irréversible. Voulez-vous continuer ?",
+          "fillConfirmButton": "Remplir et remplacer"
+        },
         "quenchData": {
           "title": "Données de trempe",
           "common": {

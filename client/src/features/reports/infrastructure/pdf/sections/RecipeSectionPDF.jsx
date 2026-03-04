@@ -301,10 +301,10 @@ const StatsColumn = ({ recipeData, stats }) => {
       {/* Calculated Stats */}
       <View style={{ marginBottom: 5 }}>
         <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#333', textDecoration: 'underline' }}>PROCESS</Text>
-        <InfoRow label="Process time" value={stats.chemTotalMinutes.toFixed(1)} unit="min" />
-        <InfoRow label="Quench Time" value={stats.quenchTotalMinutes.toFixed(1)} unit="min" />
         <InfoRow label="Process Temp" value={recipeData?.process_temp?.value} unit={recipeData?.process_temp?.unit} />
+        <InfoRow label="Process time" value={stats.chemTotalMinutes.toFixed(1)} unit="min" />
         <InfoRow label="Total cycle time" value={`${Math.floor(stats.totalCycleTime / 60)} h ${Math.round(stats.totalCycleTime % 60)} min`} />
+        <InfoRow label="Quench time" value={stats.quenchTotalMinutes.toFixed(1)} unit="min" />
       </View>
 
       {/* Gas Totals */}

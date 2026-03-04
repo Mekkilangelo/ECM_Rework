@@ -241,7 +241,7 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
                       <View wrap={false} style={{ width: '100%', alignItems: 'center' }}>
                         <PhotoContainer
                           photo={page.photos[0]}
-                          customSize={{ width: 555, height: 390 }}
+                          customSize={{ width: 555, height: 375 }}
                           fit="contain"
                         />
                       </View>
@@ -254,7 +254,7 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
                           <View key={i} style={{ alignItems: 'center' }}>
                             <PhotoContainer
                               photo={p}
-                              customSize={{ width: 272, height: 225 }}
+                              customSize={{ width: 272, height: 215 }}
                               fit="contain"
                             />
                           </View>

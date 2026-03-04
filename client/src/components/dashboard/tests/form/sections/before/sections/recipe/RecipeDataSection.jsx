@@ -7,6 +7,7 @@ import ThermalCycleSection from './modules/thermal_cycle/ThermalCycleSection';
 import ChemicalCycleSection from './modules/chemical_cycle/ChemicalCycleSection';
 import QuenchDataSection from './modules/quench/QuenchDataSection';
 import RecipePreviewChart from './modules/recipe_preview/RecipePreviewChart';
+import SimulationSection from './modules/simulation/SimulationSection';
 
 const RecipeDataSection = ({
   formData,
@@ -37,28 +38,28 @@ const RecipeDataSection = ({
   readOnlyFieldStyle = {}
 }) => {
   const { t } = useTranslation();
-  
+
   // Fonction pour calculer la durée totale du cycle chimique en minutes (incluant waitTime)
   const calculateChemicalCycleDuration = () => {
     if (!formData.recipeData?.chemicalCycle) return 0;
-    
+
     // Somme des temps du cycle chimique en secondes
     const totalSeconds = formData.recipeData.chemicalCycle.reduce((total, step) => {
       return total + (parseInt(step.time) || 0);
     }, 0);
-    
+
     // Convertir en minutes
     let totalMinutes = totalSeconds / 60;
-    
+
     // Ajouter le waitTime s'il existe
     const waitTime = parseInt(formData.recipeData?.waitTime) || 0;
     totalMinutes += waitTime;
-    
+
     return Math.round(totalMinutes); // Arrondi à la minute la plus proche (valeur entière)
   };
-  
+
   return (
-    <>    
+    <>
       {/* Recipe Number */}
       <Row>
         <Col md={12}>
@@ -75,21 +76,46 @@ const RecipeDataSection = ({
           </Form.Group>
         </Col>
       </Row>
-      
-      {/* Preoxidation Section */}      <PreoxidationSection
-        formData={formData}
-        handleChange={handleChange}
-        handleSelectChange={handleSelectChange}
-        getSelectedOption={getSelectedOption}
-        coolingMediaOptions={coolingMediaOptions}
-        temperatureUnitOptions={temperatureUnitOptions}
-        timeUnitOptions={timeUnitOptions}
-        loading={loading}
-        selectStyles={selectStyles}
-        viewMode={viewMode}
-        readOnlyFieldStyle={readOnlyFieldStyle}
-      />
-      
+
+      {/* Simulation CBPWin */}
+      <CollapsibleSection
+        title={t('trials.before.recipeData.simulation.title', 'Simulation')}
+        isExpandedByDefault={false}
+        sectionId="trial-simulation"
+        rememberState={true}
+        level={1}
+      >
+        <SimulationSection
+          formData={formData}
+          trial={trial}
+          viewMode={viewMode}
+          handleChange={handleChange}
+        />
+      </CollapsibleSection>
+
+      {/* Preoxidation Section */}
+      <CollapsibleSection
+        title={t('trials.before.recipeData.preoxidation.title')}
+        isExpandedByDefault={false}
+        sectionId="trial-preoxidation-cycle"
+        rememberState={true}
+        level={1}
+      >
+        <PreoxidationSection
+          formData={formData}
+          handleChange={handleChange}
+          handleSelectChange={handleSelectChange}
+          getSelectedOption={getSelectedOption}
+          coolingMediaOptions={coolingMediaOptions}
+          temperatureUnitOptions={temperatureUnitOptions}
+          timeUnitOptions={timeUnitOptions}
+          loading={loading}
+          selectStyles={selectStyles}
+          viewMode={viewMode}
+          readOnlyFieldStyle={readOnlyFieldStyle}
+        />
+      </CollapsibleSection>
+
       <CollapsibleSection
         title={t('trials.before.recipeData.thermalCycle.title')}
         isExpandedByDefault={false}
@@ -115,14 +141,14 @@ const RecipeDataSection = ({
           readOnlyFieldStyle={readOnlyFieldStyle}
         />
       </CollapsibleSection>
-      
+
       <CollapsibleSection
         title={t('trials.before.recipeData.chemicalCycle.title')}
         isExpandedByDefault={false}
         sectionId="trial-chemical-cycle"
         rememberState={true}
         level={1}
-      >  
+      >
         {/* Chemical Cycle Section */}        <ChemicalCycleSection
           formData={formData}
           handleChange={handleChange}
@@ -138,7 +164,7 @@ const RecipeDataSection = ({
           trial={trial}
         />
       </CollapsibleSection>
-      
+
       {/* Ajout de la nouvelle section pour la prévisualisation du graphique */}
       <CollapsibleSection
         title={t('trials.before.recipeData.previewChart.title', 'Prévisualisation du graphique')}
@@ -149,7 +175,7 @@ const RecipeDataSection = ({
       >
         <RecipePreviewChart formData={formData} />
       </CollapsibleSection>
-      
+
       <CollapsibleSection
         title={t('trials.before.recipeData.quenchData.title')}
         isExpandedByDefault={false}

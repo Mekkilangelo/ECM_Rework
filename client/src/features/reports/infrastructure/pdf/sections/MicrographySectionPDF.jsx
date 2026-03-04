@@ -151,94 +151,108 @@ const SampleMicrographsPage = ({ resultIndex, sampleIndex, sampleData, resultDes
     );
   }
 
-  // UPDATED ZOOM ORDER (Added x100, x200)
-  const zoomOrder = ['x50', 'x100', 'x200', 'x500', 'x1000', 'other'];
-  const availableZooms = Object.keys(sampleData.zooms).sort((a, b) => {
-    const indexA = zoomOrder.indexOf(a);
-    const indexB = zoomOrder.indexOf(b);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-  });
+  const standardZoomOrder = ['x50', 'x100', 'x200', 'x500', 'x1000'];
 
-  // LOGIC: Hide Control Location if 'other' zoom exists
-  const hasOtherZooms = sampleData.zooms['other'] && sampleData.zooms['other'].length > 0;
-  const showControlLocation = !hasOtherZooms && controlLocationPhotos && controlLocationPhotos.length > 0;
+  // Show control location if there are any standard zoom photos (regardless of "other")
+  const hasStandardZooms = standardZoomOrder.some(z => sampleData.zooms[z]?.length > 0);
+  const hasOtherZooms = sampleData.zooms['other']?.length > 0;
+  const showControlLocation = hasStandardZooms && controlLocationPhotos && controlLocationPhotos.length > 0;
 
-  const allPhotos = [];
+  // x50 placeholder: keep existing rule (only when control location is shown)
+  const hasHigherStandardZooms = ['x100', 'x200', 'x500', 'x1000'].some(z => sampleData.zooms[z]?.length > 0);
+  const hasX50 = sampleData.zooms['x50']?.length > 0;
 
-  // 1. Control Location (First slot if shown)
+  // --- Group 1: standard zoom photos (control location + x50/.../x1000) ---
+  const standardPhotos = [];
+
   if (showControlLocation) {
-    allPhotos.push({
+    standardPhotos.push({
       ...controlLocationPhotos[0],
       isControlLocation: true,
       caption: 'Control Location'
     });
   }
 
-  // 2. Micrographs
-  // LOGIC: x50 Placeholder. 
-  // If we are processing 'x50' slot, but it's empty, AND we have higher standard zooms, insert placeholder.
-  const standardZoomsToCheck = ['x100', 'x200', 'x500', 'x1000'];
-  const hasHigherStandardZooms = standardZoomsToCheck.some(z => sampleData.zooms[z]?.length > 0);
-  const hasX50 = sampleData.zooms['x50']?.length > 0;
-
-  zoomOrder.forEach(zoom => {
-    // Special Check for x50 Placeholder
-    // Only insert if:
-    // 1. We are at x50 step (conceptually) - actually we are iterating zoomOrder
-    // 2. We DO NOT have x50 photos
-    // 3. We DO have higher standard zooms (so we want x100 to start on next row)
-    // 4. We are showing Control Location (so x50 would have been the 2nd slot)
+  standardZoomOrder.forEach(zoom => {
+    // x50 placeholder: no x50 but higher standard zooms exist and control location is shown
     if (zoom === 'x50' && !hasX50 && hasHigherStandardZooms && showControlLocation) {
-      allPhotos.push({ isPlaceholder: true });
+      standardPhotos.push({ isPlaceholder: true });
     }
-
     const photos = sampleData.zooms[zoom];
     if (photos) {
-      photos.forEach(photo => {
-        allPhotos.push({
-          ...photo,
-          zoomLabel: formatZoomName(zoom),
-          caption: getPhotoCaption(photo)
-        });
-      });
+      photos.forEach(photo => standardPhotos.push({
+        ...photo,
+        zoomLabel: formatZoomName(zoom),
+        caption: getPhotoCaption(photo)
+      }));
     }
   });
 
-  // Paginator: 4 photos per page
+  // --- Group 2: "other" zoom photos (separate pages) ---
+  const otherPhotos = (sampleData.zooms['other'] || []).map(photo => ({
+    ...photo,
+    zoomLabel: formatZoomName('other'),
+    caption: getPhotoCaption(photo)
+  }));
+
+  // Paginate each group independently (4 per page)
   const photosPerPage = 4;
-  const pages = [];
-  for (let i = 0; i < allPhotos.length; i += photosPerPage) {
-    pages.push(allPhotos.slice(i, i + photosPerPage));
-  }
+  const paginate = (arr) => {
+    const pages = [];
+    for (let i = 0; i < arr.length; i += photosPerPage) pages.push(arr.slice(i, i + photosPerPage));
+    return pages;
+  };
+  const standardPages = paginate(standardPhotos);
+  const otherPages    = paginate(otherPhotos);
+
+  const renderGrid = (pagePhotos) => (
+    <View style={styles.photoGrid}>
+      {pagePhotos.map((photo, idx) => {
+        if (photo.isPlaceholder) {
+          return <View key={idx} style={styles.photoContainerHalf} />;
+        }
+        return (
+          <View key={idx} style={styles.photoContainerHalf}>
+            <PhotoContainer
+              photo={photo}
+              size="half"
+              captionText={photo.isControlLocation
+                ? 'Control Location'
+                : `${photo.zoomLabel} - ${photo.caption}`
+              }
+            />
+          </View>
+        );
+      })}
+    </View>
+  );
 
   return (
     <>
-      {pages.map((pagePhotos, pageIndex) => (
-        <View key={pageIndex} wrap={false} style={{ marginBottom: 4 }}>
+      {/* Standard zoom pages (control location + x50/x100/.../x1000) */}
+      {standardPages.map((pagePhotos, pageIndex) => (
+        <View key={`std-${pageIndex}`} wrap={false} style={{ marginBottom: 4 }}>
           {pageIndex === 0 && <SectionTitle sectionType={SECTION_TYPE}>{title}</SectionTitle>}
           {pageIndex > 0 && <SectionTitle sectionType={SECTION_TYPE} continuation>{title} (continued)</SectionTitle>}
+          {renderGrid(pagePhotos)}
+        </View>
+      ))}
 
-          <View style={styles.photoGrid}>
-            {pagePhotos.map((photo, idx) => {
-              if (photo.isPlaceholder) {
-                return <View key={idx} style={styles.photoContainerHalf} />;
-              }
-              return (
-                <View key={idx} style={styles.photoContainerHalf}>
-                  <PhotoContainer
-                    photo={photo}
-                    size="half"
-                    captionText={photo.isControlLocation
-                      ? 'Control Location'
-                      : `${photo.zoomLabel} - ${photo.caption}`
-                    }
-                  />
-                </View>
-              );
-            })}
-          </View>
+      {/* "Other" zoom pages — page break before first, only if standard pages were rendered */}
+      {otherPages.map((pagePhotos, pageIndex) => (
+        <View key={`other-${pageIndex}`} wrap={false} style={{ marginBottom: 4 }}
+          break={pageIndex === 0 && standardPages.length > 0}
+        >
+          {pageIndex === 0 && standardPages.length === 0 && (
+            <SectionTitle sectionType={SECTION_TYPE}>{title}</SectionTitle>
+          )}
+          {pageIndex === 0 && standardPages.length > 0 && (
+            <SectionTitle sectionType={SECTION_TYPE} continuation>{title} (Other)</SectionTitle>
+          )}
+          {pageIndex > 0 && (
+            <SectionTitle sectionType={SECTION_TYPE} continuation>{title} (Other, continued)</SectionTitle>
+          )}
+          {renderGrid(pagePhotos)}
         </View>
       ))}
     </>

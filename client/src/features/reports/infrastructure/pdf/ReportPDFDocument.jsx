@@ -258,7 +258,7 @@ export const CoverPage = ({ report, options }) => {
           {/* Row 2: Steel Grade & Reference */}
           <View style={coverStyles.row}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ ...coverStyles.label, width: '35%' }}>STEEL GRADE:</Text>
+              <Text style={{ ...coverStyles.label, width: '45%' }}>STEEL GRADE:</Text>
               <Text style={coverStyles.value}>{partData.steel?.grade || partData.steelGrade || 'Not specified'}</Text>
             </View>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>

@@ -37,6 +37,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: SPACING.photo.captionMarginTop,
     color: COLORS.text.light,
+    textOverflow: 'ellipsis',
   },
 });
 
@@ -77,7 +78,7 @@ export const PhotoContainer = ({
         />
       </View>
       {showCaption && caption && (
-        <Text style={styles.caption}>{caption}</Text>
+        <Text style={styles.caption} maxLines={1}>{caption}</Text>
       )}
     </View>
   );

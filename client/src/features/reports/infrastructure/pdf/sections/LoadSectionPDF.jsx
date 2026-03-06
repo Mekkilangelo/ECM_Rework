@@ -1,61 +1,23 @@
 /**
  * INFRASTRUCTURE: Load Configuration Section for PDF
- * Displays load photos and weight information
- * 
- * Design:
- * - Section Header with Weight Info & Pagination
- * - Page 1: Hero Photo (Large) + 2 Small photos (if space allows)
- * - Page 2+: Grid 2x3
+ * Displays load photos and weight information.
+ * Layout delegated to PhotoPagesLayoutPDF.
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import { PhotoContainer } from '../primitives';
 import { validatePhotos } from '../helpers/photoHelpers';
+import { PhotoPagesLayoutPDF } from './PhotoPagesLayoutPDF';
 
-// Brand Colors
-const BRAND_DARK = '#1e293b';
-const BRAND_RED = '#ef4444';
-const TEXT_DARK = '#1a1a1a';
 const TEXT_GRAY = '#64748b';
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    flex: 1, // Ensures the container fills the PDF page height
-    marginBottom: 4,
-    fontFamily: 'Helvetica',
-  },
-
-  // Section Header (Dark Blue Bar)
-  // Section Header (Dark Blue Bar)
-  sectionHeader: {
-    backgroundColor: BRAND_DARK,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginBottom: 6,
-    minHeight: 30,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-    flex: 1, // Allow taking available space
-  },
-  sectionTitle: {
-    color: '#ffffff',
-    fontFamily: 'Helvetica-Bold',
-    fontSize: 12, // Slightly reduced to fit
-    textTransform: 'uppercase',
-  },
   loadInfo: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 5,
     marginLeft: 10,
-    flexShrink: 0, // Prevent shrinking
+    flexShrink: 0,
   },
   loadLabel: {
     color: '#cbd5e1',
@@ -67,78 +29,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Helvetica-Bold',
   },
-  sectionPagination: {
-    color: '#cbd5e1',
-    fontSize: 10,
-    fontFamily: 'Helvetica',
-  },
-
-  // Photos Section
-  photosTitle: {
-    backgroundColor: BRAND_DARK,
-    color: '#ffffff',
-    fontSize: 12,
-    fontFamily: 'Helvetica-Bold',
-    paddingVertical: 4,
-    paddingHorizontal: 15,
-    marginBottom: 4,
-  },
-
-  // Photo Layouts
-  heroLayout: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 6,
-  },
-  heroRowSmall: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    gap: 4,
-  },
-
-  gridLayout: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 6,
-  }
 });
 
-
-
-/**
- * Component: Load Configuration Section for PDF
- */
 export const LoadSectionPDF = ({ report, photos = [] }) => {
   if (!report) return null;
 
-  // Pas de limite artificielle : le backend optimise automatiquement les images
-  // avec le paramètre ?pdf=true (1280px @ 70% qualité) pour éviter les crashs
-  const validPhotos = validatePhotos(photos || []);
   const trialData = report.trialData || {};
 
-  // Extract Load Weight Info
+  // Parse load data
   let loadDataRaw = report.loadData || report.trialData?.load_data || {};
-
-  // Safe parsing if string
   let loadData = loadDataRaw;
   if (typeof loadDataRaw === 'string') {
-    try {
-      loadData = JSON.parse(loadDataRaw);
-    } catch (e) {
-      console.error('Error parsing loadData in LoadSectionPDF:', e);
-      loadData = {};
-    }
+    try { loadData = JSON.parse(loadDataRaw); } catch (e) { loadData = {}; }
   }
 
-  console.log('🔍 LoadSectionPDF Debug:', {
-    raw: loadDataRaw,
-    parsed: loadData,
-    trialProps: report.trialData
-  });
-
-  // Extract Weight Value - Handle nested structure from trialService (weight.value)
+  // Extract weight value
   let loadWeight = null;
   if (loadData.weight && typeof loadData.weight === 'object') {
     loadWeight = loadData.weight.value;
@@ -146,10 +51,9 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
     loadWeight = loadData.weight || trialData.load_weight_value || trialData.load_weight;
   }
 
-  // Extract Unit - Check nested objects or direct properties
-  let loadWeightUnit = 'kg'; // Default
-
-  if (loadData.weight && typeof loadData.weight === 'object' && loadData.weight.unit) {
+  // Extract weight unit
+  let loadWeightUnit = 'kg';
+  if (loadData.weight?.unit) {
     loadWeightUnit = loadData.weight.unit;
   } else if (loadData.weightUnit) {
     loadWeightUnit = typeof loadData.weightUnit === 'object' ? loadData.weightUnit.name : loadData.weightUnit;
@@ -159,138 +63,24 @@ export const LoadSectionPDF = ({ report, photos = [] }) => {
     loadWeightUnit = trialData.load_weight_unit;
   }
 
-  // Debug final values
-  console.log('⚖️ Load Weight Final:', { loadWeight, loadWeightUnit });
+  const headerExtra = loadWeight ? (
+    <View style={styles.loadInfo}>
+      <Text style={styles.loadLabel}>WEIGHT:</Text>
+      <Text style={styles.loadValue}>{loadWeight} {loadWeightUnit}</Text>
+    </View>
+  ) : null;
 
-  // --- Layout Logic ---
-  // Page 1: Hero (Large) + 2 Small (if available) -> No Data Grid, so we have plenty of space.
-  // Page 2+: Grid 2x3
-
-  const layoutPages = [];
-
-  if (validPhotos.length > 0) {
-    // Page 1 Photos
-    const page1Photos = [];
-    let remainingStartIndex = 0;
-
-    // Add first photo (Hero)
-    page1Photos.push({ ...validPhotos[0] });
-    remainingStartIndex = 1;
-
-    // We can definitely fit 2 more small photos below the large Hero on Page 1
-    if (validPhotos.length >= 3) {
-      page1Photos.push({ ...validPhotos[1] });
-      page1Photos.push({ ...validPhotos[2] });
-      remainingStartIndex = 3;
-    } else if (validPhotos.length === 2) {
-      page1Photos.push({ ...validPhotos[1] });
-      remainingStartIndex = 2;
-    }
-
-    layoutPages.push({ type: 'initial', photos: page1Photos });
-
-    // Subsequent Pages (Grid 2x2 = 4 photos max)
-    const GRID_SIZE = 4;
-    while (remainingStartIndex < validPhotos.length) {
-      const chunk = validPhotos.slice(remainingStartIndex, remainingStartIndex + GRID_SIZE);
-      layoutPages.push({ type: 'grid', photos: chunk });
-      remainingStartIndex += GRID_SIZE;
-    }
-  } else {
-    // No photos, still need 1 page for data
-    layoutPages.push({ type: 'initial_no_photos', photos: [] });
-  }
-
-  const totalPages = layoutPages.length;
+  const emptyContent = (
+    <Text style={{ color: TEXT_GRAY, fontSize: 10 }}>No photos available.</Text>
+  );
 
   return (
-    <>
-      {layoutPages.map((page, index) => {
-        const isFirstPage = index === 0;
-        const pageNum = index + 1;
-
-        return (
-          <View key={index} style={styles.sectionContainer} break={!isFirstPage}>
-
-            {/* Wrap Header and Content to prevent detachment */}
-
-            {/* --- Section Header --- */}
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={styles.sectionTitle}>LOAD CONFIGURATION</Text>
-                {/* Load Weight Info in Header */}
-                {(loadWeight) && (
-                  <View style={styles.loadInfo}>
-                    <Text style={styles.loadLabel}>WEIGHT:</Text>
-                    <Text style={styles.loadValue}>{loadWeight} {loadWeightUnit}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.sectionPagination}>{pageNum} / {totalPages}</Text>
-            </View>
-
-            {/* --- Photos --- */}
-            {page.photos.length > 0 && (
-              <View style={{ flex: 1 }}>
-
-                {/* Layout: Initial - Photo 1 full width on top, Photos 2 & 3 side by side below */}
-                {page.type === 'initial' && (
-                  <View style={{ alignItems: 'center', gap: 6 }}>
-                    {/* Photo 1 - Full width, centered */}
-                    {page.photos[0] && (
-                      <View wrap={false} style={{ width: '100%', alignItems: 'center' }}>
-                        <PhotoContainer
-                          photo={page.photos[0]}
-                          customSize={{ width: 555, height: 350 }}
-                          fit="contain"
-                        />
-                      </View>
-                    )}
-
-                    {/* Photos 2 & 3 - Side by side */}
-                    {page.photos.length > 1 && (
-                      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, width: '100%' }} wrap={false}>
-                        {page.photos.slice(1).map((p, i) => (
-                          <View key={i} style={{ alignItems: 'center' }}>
-                            <PhotoContainer
-                              photo={p}
-                              customSize={{ width: 272, height: 225 }}
-                              fit="contain"
-                            />
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {/* Layout: Grid - Exactly 4 photos (2x2) with fixed sizes */}
-                {page.type === 'grid' && (
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'flex-start' }}>
-                    {page.photos.map((p, i) => (
-                      <View key={i} wrap={false} style={{ width: '49%', marginBottom: 8 }}>
-                        <PhotoContainer
-                          photo={p}
-                          customSize={{ width: '100%', height: 260 }}
-                          fit="contain"
-                        />
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
-
-            {page.photos.length === 0 && (
-              <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={{ color: TEXT_GRAY, fontSize: 10 }}>No photos available.</Text>
-              </View>
-            )}
-
-          </View>
-        );
-      })}
-    </>
+    <PhotoPagesLayoutPDF
+      title="LOAD CONFIGURATION"
+      photos={validatePhotos(photos || [])}
+      headerExtra={headerExtra}
+      emptyContent={emptyContent}
+    />
   );
 };
 

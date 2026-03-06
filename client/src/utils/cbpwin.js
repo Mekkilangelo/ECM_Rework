@@ -12,24 +12,29 @@ const STEEL_DENSITY = 7.87;      // g/cm³
 
 class CBPWinSimulator {
   constructor() {
-    // Tableau des couches (index 0..CBPWIN_MAX_LAYERS)
-    this.layerArray = new Array(CBPWIN_MAX_LAYERS + 1).fill(0);
+    // Float64Array = double IEEE 754 64-bit, identique au C++ CBPWinReal (typedef double)
+    this.layerArray = new Float64Array(CBPWIN_MAX_LAYERS + 1);
     this.diffusionFactorStatic = 0;
     this.outCarbonQuantity = 0;
     this.currentLayerMax = 1;
     this.currentTotalTime = 0;
+    this.initialCarbon = 0;
   }
 
   /**
    * Initialisation — portage exact de CBPWinEngineIterative::calculation()
    */
   initialize(params) {
-    const { temperature, carbon_flow, initial_carbon } = params;
+    const { temperature, carbon_flow, initial_carbon, mass } = params;
+    const steelMass = (mass != null && !isNaN(mass) && mass > 0) ? mass : STEEL_DENSITY;
 
     this.diffusionFactorStatic =
       DIFFUSION_D0 * Math.exp(-ACTIVATION_K / (temperature + 273.15));
     this.outCarbonQuantity =
-      carbon_flow * (1.0 / (3600.0 * STEEL_DENSITY * 0.05));
+      carbon_flow * (1.0 / (3600.0 * steelMass * 0.05));
+
+    // Stocker initial_carbon pour maintenir l'invariant C++ après la phase Final
+    this.initialCarbon = initial_carbon;
 
     for (let i = 0; i <= CBPWIN_MAX_LAYERS; i++) {
       this.layerArray[i] = initial_carbon;
@@ -259,11 +264,9 @@ class CBPWinSimulator {
     const history = [];
     let totalCarb = 0;
     let totalDiff = 0;
-    let lastFinalTime = 0;
+    let cumulativeFinalTime = 0;
     let finalDepth = 0;
     let numCycles = 0;
-    let lastFinalProfile = null;
-    let lastFinalSurfaceCarbon = 0;
 
     for (let step = 0; step < CBPWIN_MAX_STEPS; step++) {
       numCycles = step + 1;
@@ -271,7 +274,9 @@ class CBPWinSimulator {
       // === Boost (Cémentation) ===
       const carbTime = this.calcLayersCarburizing(carbon_max);
       totalCarb += carbTime;
-      const carburizingSnapshot = this.layerArray.slice(0, this.currentLayerMax + 1);
+      // Sauvegarder layerMax au moment du snapshot — critique pour la restauration
+      const carbLayerMax = this.currentLayerMax;
+      const carburizingSnapshot = this.layerArray.slice(0, carbLayerMax + 1);
 
       history.push({
         cycle: step + 1,
@@ -283,12 +288,15 @@ class CBPWinSimulator {
       });
 
       // === Diffusion ===
-      for (let i = 0; i <= this.currentLayerMax; i++) {
+      // Restaurer l'état post-boost (tableau ET currentLayerMax)
+      this.currentLayerMax = carbLayerMax;
+      for (let i = 0; i <= carbLayerMax; i++) {
         this.layerArray[i] = carburizingSnapshot[i];
       }
       const diffTime = this.calcLayersDiffusion(carbon_min);
       totalDiff += diffTime;
-      const diffusionSnapshot = this.layerArray.slice(0, this.currentLayerMax + 1);
+      const diffLayerMax = this.currentLayerMax;
+      const diffusionSnapshot = this.layerArray.slice(0, diffLayerMax + 1);
 
       history.push({
         cycle: step + 1,
@@ -299,43 +307,63 @@ class CBPWinSimulator {
         profile: this._buildProfile(),
       });
 
-      // === Final (mesure ECD — non exposé dans l'historique) ===
-      for (let i = 0; i <= this.currentLayerMax; i++) {
+      // === Final (mesure ECD) ===
+      // Restaurer l'état post-diffusion (tableau ET currentLayerMax)
+      this.currentLayerMax = diffLayerMax;
+      for (let i = 0; i <= diffLayerMax; i++) {
         this.layerArray[i] = diffusionSnapshot[i];
       }
       const finalTime = this.calcLayersFinal(carbon_final);
-      lastFinalTime = finalTime;
+      cumulativeFinalTime += finalTime;
       finalDepth = Math.round(this.calculateEffectiveDepth(eff_carbon) * 1000) / 1000;
-      lastFinalProfile = this._buildProfile();
-      lastFinalSurfaceCarbon = parseFloat(Math.max(0, this.layerArray[0]).toFixed(4));
+      const finalSurfaceCarbon = parseFloat(Math.max(0, this.layerArray[0]).toFixed(4));
+
+      history.push({
+        cycle: step + 1,
+        phase: 'Final',
+        duration: finalTime,
+        cumulativeDuration: cumulativeFinalTime,
+        surfaceCarbon: finalSurfaceCarbon,
+        depth: finalDepth,
+        profile: this._buildProfile(),
+      });
 
       if (finalDepth >= target_depth || step >= CBPWIN_MAX_STEPS - 1) {
         break;
       }
 
-      // Préparer le cycle suivant depuis l'état diffusion
-      for (let i = 0; i <= this.currentLayerMax; i++) {
+      // Préparer le cycle suivant depuis l'état diffusion (PAS final)
+      // La phase Final peut avoir avancé currentLayerMax au-delà de diffLayerMax.
+      // On sauvegarde cette borne avant de restaurer.
+      const finalLayerMax = this.currentLayerMax;
+
+      // Restaurer tableau ET currentLayerMax
+      this.currentLayerMax = diffLayerMax;
+      for (let i = 0; i <= diffLayerMax; i++) {
         this.layerArray[i] = diffusionSnapshot[i];
       }
+
+      // Invariant C++ (§4ter.C du md) : les couches au-delà de currentLayerMax
+      // doivent valoir initial_carbon. La phase Final les a modifiées — on les remet.
+      for (let i = diffLayerMax + 1; i <= finalLayerMax; i++) {
+        this.layerArray[i] = this.initialCarbon;
+      }
     }
+
+    const lastFinalEntry = history.filter(e => e.phase === 'Final').slice(-1)[0] || null;
 
     return {
       history,
       summary: {
         num_cycles: numCycles,
         total_carb: totalCarb,
-        total_diff: totalDiff + lastFinalTime,
-        total_time: totalCarb + totalDiff + lastFinalTime,
+        total_diff: totalDiff,
+        cumulative_final_time: cumulativeFinalTime,
+        total_time: totalCarb + totalDiff + cumulativeFinalTime,
         final_depth: finalDepth,
-        last_final_time: lastFinalTime,
-        final_entry: lastFinalProfile ? {
-          cycle: numCycles,
-          phase: 'Final',
-          duration: lastFinalTime,
-          surfaceCarbon: lastFinalSurfaceCarbon,
-          depth: finalDepth,
-          profile: lastFinalProfile,
-        } : null,
+        // Compat backward — dernier entry Final
+        last_final_time: lastFinalEntry?.duration ?? 0,
+        final_entry: lastFinalEntry,
       },
     };
   }

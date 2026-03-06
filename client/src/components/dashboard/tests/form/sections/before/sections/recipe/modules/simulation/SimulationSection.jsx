@@ -50,20 +50,26 @@ function getTheme(isDark) {
 
 // ── Groupes de paramètres ─────────────────────────────────────────────────────
 
+const TEMP_RANGE    = { min: 850, max: 1050 };
+const DIFFUSION_D0  = 9.332;    // cm²/s
+const ACTIVATION_K  = 21393.1;  // K
+const DEFAULT_MASS  = 7.87;     // g/cm³
+
 const GROUPS = [
   {
     label: 'Pièce',
     fields: [
-      { key: 'initial_carbon', label: 'C₀',              unit: '%',  step: '0.001', min: 0,   max: 1    },
-      { key: 'eff_carbon',     label: '% ECD',            unit: '%',  step: '0.001', min: 0,   max: 1    },
-      { key: 'target_depth',   label: 'Profondeur cible', unit: 'mm', step: '0.01',  min: 0,   max: 10   },
+      { key: 'initial_carbon', label: 'Initial Carbon',    unit: '%',      step: '0.001', min: 0, max: 1   },
+      { key: 'eff_carbon',     label: 'ECD(%carbon)',      unit: '%',      step: '0.001', min: 0, max: 1   },
+      { key: 'target_depth',   label: 'Profondeur cible',  unit: 'mm',     step: '0.01',  min: 0, max: 10  },
+      { key: 'mass',           label: 'Volumic mass',      unit: 'g/cm³',  step: '0.01',  min: 1, max: 20  },
     ],
   },
   {
     label: 'Process',
     fields: [
-      { key: 'temperature',  label: 'Température', unit: '°C', step: '1',    min: 800, max: 1100 },
-      { key: 'carbon_flow',  label: 'Flux C₂H₂',  unit: '%',  step: '0.01', min: 0,   max: 100  },
+      { key: 'temperature', label: 'Température', unit: '°C',         step: '1',    min: 800, max: 1100 },
+      { key: 'carbon_flow', label: 'Flux',        unit: 'mg/(h.cm²)', step: '0.01', min: 0,   max: 100  },
     ],
   },
   {
@@ -79,7 +85,7 @@ const GROUPS = [
 const EMPTY_PARAMS = {
   initial_carbon: '', temperature: '', carbon_flow: '',
   carbon_max: '', carbon_min: '', carbon_final: '',
-  eff_carbon: '', target_depth: '',
+  eff_carbon: '', target_depth: '', mass: DEFAULT_MASS,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -138,25 +144,32 @@ function extractPartParams(part) {
   return updates;
 }
 
+function isTempInRange(temp) {
+  return temp >= TEMP_RANGE.min && temp <= TEMP_RANGE.max;
+}
+
 function extractTempParams(temp) {
-  const cmax = parseFloat((0.0125 * temp - 10.2).toFixed(4));
+  const cmaxRaw    = 0.0125 * temp - 10.2;
+  const flowRaw    = 0.09   * temp - 71.2;
+  const cmax       = parseFloat(Math.max(0, cmaxRaw).toFixed(4));
+  const flow       = parseFloat(Math.max(0, flowRaw).toFixed(4));
   return {
     temperature:  temp,
-    carbon_flow:  parseFloat((0.09 * temp - 71.2).toFixed(4)),
+    carbon_flow:  flow,
     carbon_max:   cmax,
     carbon_min:   parseFloat((0.7  * cmax).toFixed(4)),
     carbon_final: parseFloat((0.69 * cmax).toFixed(4)),
   };
 }
 
+
 /**
- * Resample le profil carbone à des intervalles réguliers de `step` % en carbone.
- * Retourne des points {x: carbon%, y: depth_mm} interpolés linéairement.
- * Garantit une résolution de tooltip de `step` % sur l'axe X du graphique.
+ * Rééchantillonne le profil carbone à des intervalles réguliers de 0.01 % en carbone.
+ * Retourne des points {x: depth_mm, y: carbon%} interpolés linéairement.
  */
-function resampleProfile(profile, step = 0.01) {
+function resampleProfileByCarbon(profile, step = 0.01) {
   if (!profile || profile.length < 2) {
-    return profile.map((p) => ({ x: p.carbon, y: p.depth }));
+    return profile.map((p) => ({ x: p.depth, y: p.carbon }));
   }
 
   let maxC = -Infinity;
@@ -169,9 +182,8 @@ function resampleProfile(profile, step = 0.01) {
   const result = [];
 
   // Point de surface exact
-  result.push({ x: parseFloat(maxC.toFixed(4)), y: parseFloat(profile[0].depth.toFixed(4)) });
+  result.push({ x: parseFloat(profile[0].depth.toFixed(4)), y: parseFloat(maxC.toFixed(4)) });
 
-  // Premier multiple de step en dessous de maxC (pour éviter le doublon avec le point surface)
   let c = parseFloat((Math.floor(maxC / step) * step).toFixed(4));
   if (c >= maxC - step * 0.001) c = parseFloat((c - step).toFixed(4));
 
@@ -179,14 +191,13 @@ function resampleProfile(profile, step = 0.01) {
     const cTarget = parseFloat(c.toFixed(4));
     if (cTarget < minC) break;
 
-    // Interpolation linéaire dans le segment du profil contenant cTarget
+    // Interpolation linéaire dans le segment contenant cTarget
     let depth = null;
     for (let i = 0; i < profile.length - 1; i++) {
-      const c0    = profile[i].carbon;
-      const c1    = profile[i + 1].carbon;
-      const cHigh = c0 >= c1 ? c0 : c1;
-      const cLow  = c0 < c1 ? c0 : c1;
-
+      const c0   = profile[i].carbon;
+      const c1   = profile[i + 1].carbon;
+      const cHigh = Math.max(c0, c1);
+      const cLow  = Math.min(c0, c1);
       if (cTarget <= cHigh && cTarget >= cLow) {
         if (Math.abs(c0 - c1) < 1e-10) {
           depth = profile[i].depth;
@@ -199,7 +210,7 @@ function resampleProfile(profile, step = 0.01) {
     }
 
     if (depth !== null) {
-      result.push({ x: cTarget, y: parseFloat(depth.toFixed(4)) });
+      result.push({ x: parseFloat(depth.toFixed(4)), y: cTarget });
     }
     c = parseFloat((c - step).toFixed(10));
   }
@@ -239,17 +250,20 @@ const Field = ({ def, value, onChange, disabled, isDark }) => {
  */
 const CLR_FINAL = '#7c3aed';
 
-const CyclesGrid = ({ history, selectedEntry, onSelect, isDark, finalEntry }) => {
+const CyclesGrid = ({ history, selectedEntry, onSelect, isDark }) => {
   const TH = getTheme(isDark);
 
   const cycles = useMemo(() => {
     const map = [];
     history.forEach((e) => {
-      if (e.phase === 'Boost') map.push({ n: e.cycle, boost: e, diff: null });
-      else if (map.length > 0) map[map.length - 1].diff = e;
+      if (e.phase === 'Boost') map.push({ n: e.cycle, boost: e, diff: null, final: null });
+      else if (e.phase === 'Diffusion' && map.length > 0) map[map.length - 1].diff = e;
+      else if (e.phase === 'Final'     && map.length > 0) map[map.length - 1].final = e;
     });
     return map;
   }, [history]);
+
+  const hasFinal = cycles.some((c) => c.final !== null);
 
   // Toggle : cliquer sur une entrée déjà sélectionnée la désélectionne
   const handleSelect = (entry) => {
@@ -268,7 +282,6 @@ const CyclesGrid = ({ history, selectedEntry, onSelect, isDark, finalEntry }) =>
     transition: 'background-color 0.12s, border-color 0.12s',
   };
 
-  const hasFinal = !!finalEntry;
   const cols = hasFinal ? '32px 1fr 1fr 1fr' : '32px 1fr 1fr';
 
   return (
@@ -294,9 +307,9 @@ const CyclesGrid = ({ history, selectedEntry, onSelect, isDark, finalEntry }) =>
 
       {/* Lignes */}
       {cycles.map((c, idx) => {
-        const isLast     = idx === cycles.length - 1;
         const boostActive = selectedEntry?.cycle === c.n && selectedEntry?.phase === 'Boost';
         const diffActive  = selectedEntry?.cycle === c.n && selectedEntry?.phase === 'Diffusion';
+        const finalActive = selectedEntry?.cycle === c.n && selectedEntry?.phase === 'Final';
         return (
           <div
             key={c.n}
@@ -306,7 +319,7 @@ const CyclesGrid = ({ history, selectedEntry, onSelect, isDark, finalEntry }) =>
               borderBottom: `1px solid ${TH.borderFaint}`,
             }}
           >
-            {/* N° cycle */}
+            {/* N° step */}
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.65rem', fontWeight: 700, color: TH.faint,
@@ -357,25 +370,25 @@ const CyclesGrid = ({ history, selectedEntry, onSelect, isDark, finalEntry }) =>
               </div>
             ) : <div />}
 
-            {/* Cellule Final — uniquement sur la dernière ligne */}
+            {/* Cellule Final — tous les steps */}
             {hasFinal && (
-              isLast ? (
+              c.final ? (
                 <div
-                  onClick={() => handleSelect(finalEntry)}
+                  onClick={() => handleSelect(c.final)}
                   style={{
                     ...cellBase,
                     cursor: 'pointer',
-                    borderLeft: `2px solid ${selectedEntry?.phase === 'Final' ? CLR_FINAL : 'transparent'}`,
-                    backgroundColor: selectedEntry?.phase === 'Final' ? 'rgba(124,58,237,0.10)' : 'transparent',
+                    borderLeft: `2px solid ${finalActive ? CLR_FINAL : 'transparent'}`,
+                    backgroundColor: finalActive ? 'rgba(124,58,237,0.10)' : 'transparent',
                   }}
                 >
                   <div style={{ fontSize: '0.72rem', color: TH.text, fontWeight: 500 }}>
-                    {finalEntry.duration}s
+                    {c.final.duration}s
                   </div>
                   <div style={{ fontSize: '0.64rem', color: TH.muted }}>
-                    Cs {finalEntry.surfaceCarbon.toFixed(2)} % ·{' '}
+                    Cs {c.final.surfaceCarbon.toFixed(2)} % ·{' '}
                     <span style={{ color: CLR.depth, fontWeight: 600 }}>
-                      {finalEntry.depth.toFixed(2)} mm
+                      {c.final.depth.toFixed(2)} mm
                     </span>
                   </div>
                 </div>
@@ -388,19 +401,22 @@ const CyclesGrid = ({ history, selectedEntry, onSelect, isDark, finalEntry }) =>
   );
 };
 
-/** Graphique profil carbone — X = carbone %, Y = profondeur mm */
+/** Graphique profil carbone — X = profondeur mm, Y = carbone % */
 const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }) => {
   const TH         = getTheme(isDark);
   const curveColor = phase === 'Boost' ? CLR.boost : phase === 'Final' ? CLR_FINAL : CLR.diff;
 
+  const maxDepth = useMemo(
+    () => (profile.length > 0 ? profile[profile.length - 1].depth : 1),
+    [profile]
+  );
   const maxCarbon = useMemo(
     () => (profile.length > 0 ? Math.max(...profile.map((p) => p.carbon)) : effCarbon + 0.2),
     [profile, effCarbon]
   );
-  const maxDepth = profile.length > 0 ? profile[profile.length - 1].depth : 1;
 
-  // Données rééchantillonnées à 0.01 % pour une résolution de tooltip précise
-  const resampledData = useMemo(() => resampleProfile(profile, 0.01), [profile]);
+  // Rééchantillonnage à 0.01 % de carbone pour une résolution tooltip précise
+  const resampledData = useMemo(() => resampleProfileByCarbon(profile, 0.01), [profile]);
 
   const chartData = useMemo(() => ({
     datasets: [
@@ -419,7 +435,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
       },
       {
         label: `ECD ${effCarbon.toFixed(2)} %`,
-        data: [{ x: effCarbon, y: 0 }, { x: effCarbon, y: maxDepth }],
+        data: [{ x: 0, y: effCarbon }, { x: maxDepth + 0.1, y: effCarbon }],
         borderColor: `${CLR.ecd}99`,
         borderDash: [4, 4],
         borderWidth: 1.5,
@@ -429,7 +445,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
       },
       {
         label: `${selectedDepth.toFixed(2)} mm`,
-        data: [{ x: maxCarbon + 0.05, y: selectedDepth }, { x: 0, y: selectedDepth }],
+        data: [{ x: selectedDepth, y: 0 }, { x: selectedDepth, y: maxCarbon + 0.05 }],
         borderColor: `${CLR.depth}99`,
         borderDash: [4, 4],
         borderWidth: 1.5,
@@ -438,7 +454,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
         tension: 0,
       },
     ],
-  }), [resampledData, effCarbon, selectedDepth, maxCarbon, maxDepth, curveColor]);
+  }), [resampledData, effCarbon, selectedDepth, maxDepth, maxCarbon, curveColor]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
@@ -448,18 +464,16 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
     scales: {
       x: {
         type: 'linear',
-        reverse: true,
-        grid: { color: TH.gridLines },
-        border: { display: false },
-        title: { display: true, text: 'Carbon (%)', font: { size: 10 }, color: TH.tickColor },
-        ticks: { stepSize: 0.1, font: { size: 9 }, color: TH.tickColor, callback: (v) => Number(v).toFixed(2) },
-      },
-      y: {
-        type: 'linear',
-        reverse: true,
         grid: { color: TH.gridLines },
         border: { display: false },
         title: { display: true, text: 'Depth (mm)', font: { size: 10 }, color: TH.tickColor },
+        ticks: { font: { size: 9 }, color: TH.tickColor, callback: (v) => Number(v).toFixed(2) },
+      },
+      y: {
+        type: 'linear',
+        grid: { color: TH.gridLines },
+        border: { display: false },
+        title: { display: true, text: 'Carbon (%)', font: { size: 10 }, color: TH.tickColor },
         ticks: { font: { size: 9 }, color: TH.tickColor, callback: (v) => Number(v).toFixed(2) },
       },
     },
@@ -472,11 +486,11 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
         bodyColor: '#a1a1aa',
         borderWidth: 0,
         callbacks: {
-          title: (items) => items[0] ? `${Number(items[0].parsed.x).toFixed(2)} % C` : '',
+          title: (items) => items[0] ? `${Number(items[0].parsed.x).toFixed(2)} mm` : '',
           label: (item) => {
-            if (item.datasetIndex === 0) return `  Profondeur : ${item.parsed.y.toFixed(2)} mm`;
-            if (item.datasetIndex === 1) return `  Seuil ECD : ${item.parsed.x.toFixed(2)} %`;
-            return `  Profondeur ECD : ${item.parsed.y.toFixed(2)} mm`;
+            if (item.datasetIndex === 0) return `  Carbon : ${item.parsed.y.toFixed(3)} %`;
+            if (item.datasetIndex === 1) return `  Seuil ECD : ${item.parsed.y.toFixed(2)} %`;
+            return `  Profondeur ECD : ${item.parsed.x.toFixed(2)} mm`;
           },
         },
       },
@@ -502,6 +516,21 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
     if (temp && !isNaN(temp)) return { ...EMPTY_PARAMS, ...extractTempParams(temp) };
     return { ...EMPTY_PARAMS };
   });
+
+  const tempOutOfRange = useMemo(() => {
+    const t = parseFloat(params.temperature);
+    return !isNaN(t) && t > 0 && !isTempInRange(t);
+  }, [params.temperature]);
+
+  const thresholdError = useMemo(() => {
+    const cmax   = parseFloat(params.carbon_max);
+    const cmin   = parseFloat(params.carbon_min);
+    const cfinal = parseFloat(params.carbon_final);
+    if (isNaN(cmax) || isNaN(cmin) || isNaN(cfinal)) return null;
+    if (cmax < cmin)   return 'C max doit être ≥ C min';
+    if (cmin < cfinal) return 'C min doit être ≥ C final';
+    return null;
+  }, [params.carbon_max, params.carbon_min, params.carbon_final]);
   const [result, setResult]               = useState(null);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [simLoading, setSimLoading]       = useState(false);
@@ -575,11 +604,11 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
       }
     });
 
-    const lastFinalTime = result.summary.last_final_time || 0;
+    const cumulativeFinalTime = result.summary.cumulative_final_time || 0;
     const reconstructedRecipe = cycles.map((c, idx) => {
       const isLast = idx === cycles.length - 1;
-      if (isLast && lastFinalTime > 0) {
-        return [c.boost || 0, c.diff || 0, lastFinalTime];
+      if (isLast && cumulativeFinalTime > 0) {
+        return [c.boost || 0, c.diff || 0, cumulativeFinalTime];
       }
       return [c.boost || 0, c.diff || 0];
     });
@@ -649,10 +678,23 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
               <Col xs={6}>
                 <Field def={GROUPS[0].fields[1]} value={params.eff_carbon} onChange={handleParamChange} disabled={viewMode} isDark={isDarkTheme} />
               </Col>
-              <Col xs={12} className="mt-2">
+              <Col xs={6} className="mt-2">
                 <Field def={GROUPS[0].fields[2]} value={params.target_depth} onChange={handleParamChange} disabled={viewMode} isDark={isDarkTheme} />
               </Col>
+              <Col xs={6} className="mt-2">
+                <Field def={GROUPS[0].fields[3]} value={params.mass} onChange={handleParamChange} disabled={viewMode} isDark={isDarkTheme} />
+              </Col>
             </Row>
+            {/* Constantes acier — lecture seule */}
+            <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: `1px solid ${TH.borderFaint}` }}>
+              <div style={{ fontSize: '0.62rem', color: TH.faint, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+                Constantes acier
+              </div>
+              <div style={{ fontSize: '0.68rem', color: TH.muted, lineHeight: 1.7 }}>
+                <span>D₀ = {DIFFUSION_D0} cm²/s</span><br />
+                <span>k = {ACTIVATION_K} K</span>
+              </div>
+            </div>
           </Col>
 
           {/* Process */}
@@ -666,7 +708,14 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
 
           {/* Seuils */}
           <Col md={5} style={{ paddingLeft: '14px' }}>
-            <div style={labelStyle}>Seuils carbone</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={labelStyle}>Seuils carbone</div>
+              {thresholdError && (
+                <span style={{ fontSize: '0.65rem', color: '#dc2626', fontWeight: 600 }}>
+                  ⚠ {thresholdError}
+                </span>
+              )}
+            </div>
             <Row className="g-2">
               {GROUPS[2].fields.map((f) => (
                 <Col key={f.key} xs={4}>
@@ -677,6 +726,13 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
           </Col>
         </Row>
       </div>
+
+      {/* ── Avertissement température hors plage abaque ── */}
+      {tempOutOfRange && (
+        <Alert variant="warning" className="py-2 mb-2" style={{ fontSize: '0.82rem' }}>
+          Température hors plage abaque ({TEMP_RANGE.min}–{TEMP_RANGE.max} °C). Les valeurs de flux et C max calculées automatiquement peuvent être incorrectes — vérifiez-les manuellement.
+        </Alert>
+      )}
 
       {/* ── Chargement ── */}
       {simLoading && (
@@ -702,7 +758,7 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
           }}>
             <span>
               <strong style={{ color: TH.text }}>{result.summary.num_cycles}</strong>
-              <span style={{ color: TH.muted, marginLeft: '4px' }}>cycle{result.summary.num_cycles > 1 ? 's' : ''}</span>
+              <span style={{ color: TH.muted, marginLeft: '4px' }}>step{result.summary.num_cycles > 1 ? 's' : ''}</span>
             </span>
             <span style={{ color: TH.separator }}>|</span>
             <span>
@@ -713,6 +769,11 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
             <span>
               <strong style={{ color: CLR.diff }}>{formatTime(result.summary.total_diff)}</strong>
               <span style={{ color: TH.muted, marginLeft: '4px' }}>diff</span>
+            </span>
+            <span style={{ color: TH.separator }}>|</span>
+            <span>
+              <strong style={{ color: CLR_FINAL }}>{formatTime(result.summary.cumulative_final_time)}</strong>
+              <span style={{ color: TH.muted, marginLeft: '4px' }}>final</span>
             </span>
             <span style={{ color: TH.separator }}>|</span>
             <span>
@@ -749,7 +810,6 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
                   selectedEntry={selectedEntry}
                   onSelect={setSelectedEntry}
                   isDark={isDarkTheme}
-                  finalEntry={result.summary.final_entry}
                 />
               </div>
             </Col>

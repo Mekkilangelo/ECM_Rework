@@ -277,7 +277,7 @@ deploy_services() {
     fi
     
     log "Nettoyage des ressources Docker inutilisées..."
-    docker system prune -f --volumes || warning "Nettoyage partiel"
+    docker system prune -f || warning "Nettoyage partiel"  # --volumes volontairement absent : protège mysql_data_prod et uploads_data
     
     log "Démarrage des nouveaux services..."
     if docker compose up -d; then

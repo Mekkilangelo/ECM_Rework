@@ -206,7 +206,7 @@ const TrialForm = forwardRef(({
           </div>
         )}
         
-        <Form onSubmit={handleFormSubmit}>
+        <Form onSubmit={handleFormSubmit} noValidate>
 
           <CollapsibleSection 
             title={t('trials.sections.basicInfo')}

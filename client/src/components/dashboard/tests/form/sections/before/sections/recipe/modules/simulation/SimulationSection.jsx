@@ -402,18 +402,22 @@ const CyclesGrid = ({ history, selectedEntry, onSelect, isDark }) => {
 };
 
 /** Graphique profil carbone — X = profondeur mm, Y = carbone % */
-const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }) => {
+const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark, globalMaxDepth, globalMaxCarbon }) => {
   const TH         = getTheme(isDark);
   const curveColor = phase === 'Boost' ? CLR.boost : phase === 'Final' ? CLR_FINAL : CLR.diff;
 
-  const maxDepth = useMemo(
+  const localMaxDepth = useMemo(
     () => (profile.length > 0 ? profile[profile.length - 1].depth : 1),
     [profile]
   );
-  const maxCarbon = useMemo(
+  const localMaxCarbon = useMemo(
     () => (profile.length > 0 ? Math.max(...profile.map((p) => p.carbon)) : effCarbon + 0.2),
     [profile, effCarbon]
   );
+
+  // Axes fixes : priorité aux bornes globales (profil final), fallback sur le profil courant
+  const xMax = globalMaxDepth ?? localMaxDepth;
+  const yMax = globalMaxCarbon ?? localMaxCarbon;
 
   // Rééchantillonnage à 0.01 % de carbone pour une résolution tooltip précise
   const resampledData = useMemo(() => resampleProfileByCarbon(profile, 0.01), [profile]);
@@ -435,7 +439,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
       },
       {
         label: `ECD ${effCarbon.toFixed(2)} %`,
-        data: [{ x: 0, y: effCarbon }, { x: maxDepth + 0.1, y: effCarbon }],
+        data: [{ x: 0, y: effCarbon }, { x: xMax * 1.05, y: effCarbon }],
         borderColor: `${CLR.ecd}99`,
         borderDash: [4, 4],
         borderWidth: 1.5,
@@ -445,7 +449,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
       },
       {
         label: `${selectedDepth.toFixed(2)} mm`,
-        data: [{ x: selectedDepth, y: 0 }, { x: selectedDepth, y: maxCarbon + 0.05 }],
+        data: [{ x: selectedDepth, y: 0 }, { x: selectedDepth, y: yMax * 1.1 }],
         borderColor: `${CLR.depth}99`,
         borderDash: [4, 4],
         borderWidth: 1.5,
@@ -454,7 +458,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
         tension: 0,
       },
     ],
-  }), [resampledData, effCarbon, selectedDepth, maxDepth, maxCarbon, curveColor]);
+  }), [resampledData, effCarbon, selectedDepth, xMax, yMax, curveColor]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
@@ -464,6 +468,8 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
     scales: {
       x: {
         type: 'linear',
+        min: 0,
+        max: parseFloat((xMax * 1.05).toFixed(3)),
         grid: { color: TH.gridLines },
         border: { display: false },
         title: { display: true, text: 'Depth (mm)', font: { size: 10 }, color: TH.tickColor },
@@ -471,6 +477,8 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
       },
       y: {
         type: 'linear',
+        min: 0,
+        max: parseFloat((yMax * 1.1).toFixed(3)),
         grid: { color: TH.gridLines },
         border: { display: false },
         title: { display: true, text: 'Carbon (%)', font: { size: 10 }, color: TH.tickColor },
@@ -495,7 +503,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark }
         },
       },
     },
-  }), [isDark]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), [isDark, xMax, yMax]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ height: '250px', position: 'relative' }}>
@@ -650,6 +658,21 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
       handleChange({ target: { name: 'recipeData.thermalCycle', value: thermalSteps } });
     }
   };
+
+  // Bornes globales : profondeur max du dernier step, carbone max sur tous les steps
+  const globalBounds = useMemo(() => {
+    if (!result) return null;
+    const lastEntry = result.history[result.history.length - 1];
+    const lastProfile = lastEntry?.profile || [];
+    const maxDepth = lastProfile.length > 0 ? lastProfile[lastProfile.length - 1].depth : 1;
+    let maxCarbon = 1;
+    for (const entry of result.history) {
+      for (const p of (entry?.profile || [])) {
+        if (p.carbon > maxCarbon) maxCarbon = p.carbon;
+      }
+    }
+    return { maxDepth, maxCarbon };
+  }, [result]);
 
   const phaseColor = selectedEntry?.phase === 'Boost' ? CLR.boost
     : selectedEntry?.phase === 'Final' ? CLR_FINAL
@@ -856,6 +879,8 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
                     selectedDepth={selectedEntry.depth}
                     phase={selectedEntry.phase}
                     isDark={isDarkTheme}
+                    globalMaxDepth={globalBounds?.maxDepth}
+                    globalMaxCarbon={globalBounds?.maxCarbon}
                   />
                 </div>
               ) : (() => {
@@ -899,6 +924,8 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
                       selectedDepth={defaultEntry?.depth}
                       phase={defaultEntry?.phase}
                       isDark={isDarkTheme}
+                      globalMaxDepth={globalBounds?.maxDepth}
+                      globalMaxCarbon={globalBounds?.maxCarbon}
                     />
                   </div>
                 );

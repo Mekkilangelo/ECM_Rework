@@ -15,6 +15,7 @@ export const PostTreatmentSectionPDF = ({ report, photos = [] }) => {
     <PhotoPagesLayoutPDF
       title="POST-TRAITEMENT"
       photos={validatePhotos(photos || [])}
+      gridFromStart
     />
   );
 };

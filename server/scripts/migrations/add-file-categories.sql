@@ -11,7 +11,8 @@ INSERT IGNORE INTO ref_file_category (name) VALUES
   ('micrography'),       -- Normalisation pour micrographies
   ('control-location'),  -- Zones de contrôle
   ('part_documents'),    -- Documents de la pièce
-  ('trial_documents');   -- Documents de l'essai
+  ('trial_documents'),   -- Documents de l'essai
+  ('simulation');        -- Fichiers de simulation CBPWin
 
 -- Afficher les catégories créées
 SELECT * FROM ref_file_category ORDER BY name;

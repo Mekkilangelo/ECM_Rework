@@ -16,6 +16,8 @@ import { runCBPWinSimulation } from '../../../../../../../../../../utils/cbpwin'
 import trialService from '../../../../../../../../../../services/trialService';
 import predictionService from '../../../../../../../../../../services/predictionService';
 import ConfirmationModal from '../../../../../../../../../common/ConfirmationModal/ConfirmationModal';
+import CollapsibleSection from '../../../../../../../../../common/CollapsibleSection/CollapsibleSection';
+import SimulationFilesSection from './SimulationFilesSection';
 import { useTheme } from '../../../../../../../../../../context/ThemeContext';
 
 ChartJS.register(LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
@@ -514,7 +516,7 @@ const CarbonProfileChart = ({ profile, effCarbon, selectedDepth, phase, isDark, 
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-const SimulationSection = ({ formData, trial = null, viewMode = false, handleChange }) => {
+const SimulationSection = ({ formData, trial = null, viewMode = false, handleChange, trialNodeId, onFileAssociationNeeded }) => {
   const { t } = useTranslation();
   const { isDarkTheme } = useTheme();
   const TH = getTheme(isDarkTheme);
@@ -941,6 +943,21 @@ const SimulationSection = ({ formData, trial = null, viewMode = false, handleCha
           Renseignez les paramètres pour lancer la simulation automatiquement.
         </p>
       )}
+
+      {/* ── Fichiers de simulation ── */}
+      <CollapsibleSection
+        title={t('trials.before.recipeData.simulation.files.title')}
+        isExpandedByDefault={false}
+        sectionId="trial-simulation-files"
+        rememberState={true}
+        level={2}
+      >
+        <SimulationFilesSection
+          trialNodeId={trialNodeId}
+          onFileAssociationNeeded={onFileAssociationNeeded}
+          viewMode={viewMode}
+        />
+      </CollapsibleSection>
 
       <ConfirmationModal
         show={showFillConfirm}

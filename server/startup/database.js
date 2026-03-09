@@ -4,6 +4,7 @@
  */
 const database = require('../config/database');
 const logger = require('../utils/logger');
+const { runMigrations } = require('./migrator');
 
 /**
  * Initialiser la connexion et synchroniser les modèles
@@ -22,6 +23,9 @@ async function initializeDatabase() {
 
     // 3. Synchroniser les modèles
     await database.syncModels();
+
+    // 4. Exécuter les migrations en attente
+    await runMigrations(database.getSequelize());
 
     return database;
   } catch (error) {

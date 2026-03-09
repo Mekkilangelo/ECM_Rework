@@ -973,7 +973,12 @@
           "title": "Simulation",
           "fillConfirmTitle": "Remplir les cycles depuis la simulation",
           "fillConfirmMessage": "Cette action va remplacer les cycles thermique et chimique existants par les cycles calculés depuis la simulation. Cette opération est irréversible. Voulez-vous continuer ?",
-          "fillConfirmButton": "Remplir et remplacer"
+          "fillConfirmButton": "Remplir et remplacer",
+          "files": {
+            "title": "Fichiers de simulation",
+            "import": "Importer des fichiers de simulation",
+            "loadError": "Erreur lors du chargement des fichiers de simulation:"
+          }
         },
         "quenchData": {
           "title": "Données de trempe",

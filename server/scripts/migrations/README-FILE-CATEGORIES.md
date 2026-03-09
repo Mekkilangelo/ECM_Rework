@@ -42,6 +42,7 @@ INSERT INTO ref_file_category (name) VALUES
 | `control-location` | Zones de contrôle | Sous-section Control Location (Results) |
 | `part_documents` | Documents de pièce | Section Part Documents |
 | `trial_documents` | Documents d'essai | Section Trial Documents |
+| `simulation` | Fichiers de simulation CBPWin | Sous-section Fichiers (Simulation, Before tab) |
 | `general` | Catégorie par défaut | Fallback système |
 
 ## 🔍 Vérification

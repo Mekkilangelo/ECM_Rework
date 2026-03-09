@@ -23,5 +23,9 @@ INSERT IGNORE INTO ref_file_subcategory (name) VALUES
 
 -- Pour control-location, le pattern est: 'result-{resultIndex}-sample-{sampleIndex}'
 
+-- Sous-catégories pour simulation
+INSERT IGNORE INTO ref_file_subcategory (name) VALUES
+  ('simulation');
+
 -- Afficher les sous-catégories créées
 SELECT * FROM ref_file_subcategory ORDER BY name;

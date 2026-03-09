@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "main": "server.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --forceExit --detectOpenHandles",
@@ -16,6 +16,7 @@
     "dev": "nodemon server.js",
     "db:clean": "node scripts/clean-database.js",
     "db:clean:silent": "node scripts/clean-database.js --silent",
+    "migration:create": "node scripts/create-migration.js",
     "workflow": "node scripts/full-workflow.js",
     "workflow:silent": "node scripts/full-workflow.js --silent",
     "etl:help": "node scripts/etl-help.js",

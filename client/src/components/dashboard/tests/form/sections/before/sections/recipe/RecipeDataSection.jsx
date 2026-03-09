@@ -90,6 +90,8 @@ const RecipeDataSection = ({
           trial={trial}
           viewMode={viewMode}
           handleChange={handleChange}
+          trialNodeId={trial?.id ?? null}
+          onFileAssociationNeeded={handleFileAssociationNeeded}
         />
       </CollapsibleSection>
 

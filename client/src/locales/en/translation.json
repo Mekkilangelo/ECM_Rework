@@ -969,7 +969,12 @@
           "title": "Simulation",
           "fillConfirmTitle": "Fill cycles from simulation",
           "fillConfirmMessage": "This action will replace the existing thermal and chemical cycles with the cycles calculated from the simulation. This operation is irreversible. Do you want to continue?",
-          "fillConfirmButton": "Fill and replace"
+          "fillConfirmButton": "Fill and replace",
+          "files": {
+            "title": "Simulation Files",
+            "import": "Import simulation files",
+            "loadError": "Error loading simulation files:"
+          }
         },
         "quenchData": {
           "title": "Quench Data",
